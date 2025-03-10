@@ -1,0 +1,22 @@
+{
+  "name": "AquaMind Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "runArgs": ["--network=aquamind-net"],
+  "postCreateCommand": "pip install -r requirements.txt && npm install",
+  "containerEnv": {
+    "DATABASE_URL": "postgresql://postgres:aquapass12345@timescale-db:5432/aquamind_db"
+  },
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-vscode.vscode-typescript-tslint-plugin",
+    "dbaeumer.vscode-eslint"
+  ]
+}
