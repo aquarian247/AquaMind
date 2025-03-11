@@ -1,11 +1,6 @@
-# Core backend framework
+# Core backend framework (LTS version for stability)
 django==4.2.11
-
-# Database connectivity for PostgreSQL/TimescaleDB
+# Database connectivity for PostgreSQL/TimescaleDB (latest minor version)
 psycopg2-binary==2.9.10
-
-# Windsurf (assuming it’s a pip-installable package)
-windsurf
-
-# Optional: Django REST Framework for API development
+# Optional: Django REST Framework for API development (latest minor version)
 djangorestframework==3.15.2
