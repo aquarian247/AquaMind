@@ -2,10 +2,10 @@
 django==4.2.11
 
 # Database connectivity for PostgreSQL/TimescaleDB
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 
 # Windsurf (assuming it’s a pip-installable package)
 windsurf
 
 # Optional: Django REST Framework for API development
-djangorestframework==3.15.1
+djangorestframework==3.15.2
