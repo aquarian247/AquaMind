@@ -7,5 +7,5 @@ psycopg2-binary==2.9.9
 # Windsurf (assuming it’s a pip-installable package)
 windsurf
 
-# Optional: Django REST Framework for API development (if needed)
+# Optional: Django REST Framework for API development
 djangorestframework==3.15.1
