@@ -2,5 +2,26 @@
 django==4.2.11
 # Database connectivity for PostgreSQL/TimescaleDB (latest minor version)
 psycopg2-binary==2.9.10
-# Optional: Django REST Framework for API development (latest minor version)
+# REST API framework
 djangorestframework==3.15.2
+# API filtering
+django-filter==24.1
+# CORS support for API
+django-cors-headers==4.3.1
+# Environment variable management
+python-dotenv==1.0.1
+# Time series data queries and optimization
+django-pandas==0.6.6
+pandas==2.2.0
+numpy==1.26.3
+# API documentation
+drf-yasg==1.21.7
+# Maps and geospatial functionality
+django-leaflet==0.31.0
+django-geojson==4.2.0
+# Testing and development tools
+pytest==7.4.4
+pytest-django==4.7.0
+flake8==7.0.0
+black==24.1.1
+# Frontend (Vue.js will be installed separately)

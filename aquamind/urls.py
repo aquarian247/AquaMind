@@ -16,8 +16,46 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.views.generic import RedirectView
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+# Swagger/OpenAPI documentation setup
+schema_view = get_schema_view(
+    openapi.Info(
+        title="AquaMind API",
+        default_version='v1',
+        description="API for AquaMind aquaculture management system",
+        contact=openapi.Contact(email="contact@example.com"),
+        license=openapi.License(name="Commercial License"),
+    ),
+    public=True,
+    permission_classes=(permissions.IsAuthenticated,),
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    
+    # API documentation
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    
+    # Redirect root URL to admin for now
+    path('', RedirectView.as_view(url='/admin/'), name='index'),
+    
+    # API endpoints
+    path("api/", include([
+        # Uncomment other app URLs as they become available
+        # path("infrastructure/", include("apps.infrastructure.urls")),
+        # path("batch/", include("apps.batch.urls")),
+        path("environmental/", include("apps.environmental.urls")),
+        # path("operational/", include("apps.operational.urls")),
+        # path("inventory/", include("apps.inventory.urls")),
+        # path("medical/", include("apps.medical.urls")),
+        # path("users/", include("apps.users.urls")),
+    ])),
+    # Include REST framework authentication URLs
+    path("api-auth/", include("rest_framework.urls")),
 ]

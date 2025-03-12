@@ -1,0 +1,28 @@
+# Coding Guidelines
+
+## General
+- My project's programming language is Python 3.11.
+- Use early returns when possible to improve readability.
+- Document all functions and classes with docstrings following PEP 257.
+- Use flake8 for linting Python code.
+
+## Django
+- My project is a Django 4.2.11 application.
+- Follow Django’s MTV (Model-Template-View) architecture strictly.
+- Use Django migrations for all schema changes. Do not alter the database schema manually.
+- Follow Django’s security best practices (e.g., protect against SQL injection, use settings.SECRET_KEY).
+- Optimize database queries with select_related and prefetch_related for foreign key lookups.
+
+## Database
+- My project uses TimescaleDB for time-series data.
+- Use TimescaleDB hypertables for time-series data tables like environmental_reading.
+- Always define hypertables with create_hypertable after table creation.
+- Adhere to the proposed data model defined in \docs\data model.md unless it conflicts with the database schema or proves insufficient. In that case always suggest a plan for implementing scema changes before implementing changes
+
+## Frontend
+- Use Vue.js 3 for the frontend unless a specific feature requires another framework (e.g., React for complex state management).
+
+## Quality & Safety
+- Write unit tests for all new functions and classes using Django’s testing framework.
+- Implement try-except blocks for database operations and API calls.
+- Commit changes to Git with clear, descriptive messages. Do not commit incomplete or broken code.
