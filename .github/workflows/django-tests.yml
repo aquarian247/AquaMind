@@ -50,7 +50,7 @@ jobs:
     
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=aquamind.settings_ci
+        python manage.py migrate --settings=test_settings
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -59,7 +59,7 @@ jobs:
     
     - name: Run tests
       run: |
-        python manage.py test --settings=aquamind.settings_ci
+        python manage.py test --settings=test_settings
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -69,7 +69,7 @@ jobs:
     - name: Generate test coverage report
       run: |
         pip install coverage
-        coverage run --source='.' manage.py test --settings=aquamind.settings_ci
+        coverage run --source='.' manage.py test --settings=test_settings
         coverage report --fail-under=70
       env:
         POSTGRES_DB: postgres
