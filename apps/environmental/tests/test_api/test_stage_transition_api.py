@@ -18,19 +18,83 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
     def setUp(self):
         """Set up test data."""
-        # Create required related objects
-        self.batch = Batch.objects.create(
-            name="Test Batch",
-            start_date=timezone.now().date(),
-            expected_end_date=timezone.now().date()
+        # Create required related objects first
+        from apps.infrastructure.models import Container, ContainerType, Area, Geography
+        from apps.batch.models import Species, LifeCycleStage
+        
+        # Create a species
+        self.species = Species.objects.create(
+            name="Test Species",
+            scientific_name="Testus fishus"
         )
         
+        # Create lifecycle stages
+        self.source_stage = LifeCycleStage.objects.create(
+            name="EGG",
+            species=self.species,
+            order=1
+        )
+        
+        self.dest_stage = LifeCycleStage.objects.create(
+            name="FRY",
+            species=self.species,
+            order=2
+        )
+        
+        # Create Geography and Area for our Container
+        self.geography = Geography.objects.create(
+            name="Test Geography"
+        )
+        
+        self.area = Area.objects.create(
+            name="Test Area",
+            geography=self.geography,
+            latitude=Decimal('60.000000'),
+            longitude=Decimal('-5.000000'),
+            max_biomass=Decimal('10000.00')
+        )
+        
+        # Create container type and container
+        self.container_type = ContainerType.objects.create(
+            name="Test Tank",
+            category="TANK",
+            max_volume_m3=Decimal('10.00')
+        )
+        
+        self.container = Container.objects.create(
+            name="Test Container",
+            container_type=self.container_type,
+            area=self.area,  # Associate with an area
+            active=True,
+            volume_m3=Decimal('5.00'),
+            max_biomass_kg=Decimal('500.00')  # Add required max biomass field
+        )
+        
+        # Create a batch
+        self.batch = Batch.objects.create(
+            batch_number="TEST-BATCH-001",
+            species=self.species,
+            lifecycle_stage=self.source_stage,
+            container=self.container,
+            population_count=1000,
+            biomass_kg=Decimal('100.00'),
+            avg_weight_g=Decimal('100.00'),
+            start_date=timezone.now().date()
+        )
+        
+        # Create a batch transfer
         self.batch_transfer = BatchTransfer.objects.create(
-            batch=self.batch,
+            source_batch=self.batch,
+            transfer_type="LIFECYCLE",
             transfer_date=timezone.now().date(),
-            from_stage="EGG",
-            to_stage="FRY",
-            quantity=1000
+            source_count=1000,
+            transferred_count=1000,
+            source_biomass_kg=Decimal('100.00'),
+            transferred_biomass_kg=Decimal('100.00'),
+            source_lifecycle_stage=self.source_stage,
+            destination_lifecycle_stage=self.dest_stage,
+            source_container=self.container,
+            destination_container=self.container
         )
         
         # Create stage transition environmental data
@@ -56,12 +120,19 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
     def test_create_transition(self):
         """Test creating a new stage transition environmental record."""
+        # Create a second batch transfer with proper field names
         new_batch_transfer = BatchTransfer.objects.create(
-            batch=self.batch,
+            source_batch=self.batch,
+            transfer_type="LIFECYCLE",
             transfer_date=timezone.now().date(),
-            from_stage="FRY",
-            to_stage="FINGERLING",
-            quantity=950
+            source_count=950,
+            transferred_count=950,
+            source_biomass_kg=Decimal('100.00'),
+            transferred_biomass_kg=Decimal('100.00'),
+            source_lifecycle_stage=self.source_stage,
+            destination_lifecycle_stage=self.dest_stage,
+            source_container=self.container,
+            destination_container=self.container
         )
         
         new_data = {
@@ -128,9 +199,35 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
     def test_value_validation(self):
         """Test validation of environmental values."""
+        # Create a new batch transfer for this test to avoid unique constraint violation
+        validation_batch = Batch.objects.create(
+            batch_number="TEST-BATCH-003",
+            species=self.species,
+            lifecycle_stage=self.source_stage,
+            container=self.container,
+            population_count=500,
+            biomass_kg=Decimal('50.00'),
+            avg_weight_g=Decimal('100.00'),
+            start_date=timezone.now().date()
+        )
+        
+        validation_transfer = BatchTransfer.objects.create(
+            source_batch=validation_batch,
+            transfer_type="LIFECYCLE",
+            transfer_date=timezone.now().date(),
+            source_count=500,
+            transferred_count=500,
+            source_biomass_kg=Decimal('50.00'),
+            transferred_biomass_kg=Decimal('50.00'),
+            source_lifecycle_stage=self.source_stage,
+            destination_lifecycle_stage=self.dest_stage,
+            source_container=self.container,
+            destination_container=self.container
+        )
+        
         # Test negative temperature
         invalid_data = {
-            'batch_transfer': self.batch_transfer.id,
+            'batch_transfer': validation_transfer.id,
             'temperature': '-5.0',  # Invalid: negative temperature
             'oxygen': '90.00',
             'ph': '7.20',
@@ -142,7 +239,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
         # Test negative oxygen
         invalid_data = {
-            'batch_transfer': self.batch_transfer.id,
+            'batch_transfer': validation_transfer.id,
             'temperature': '12.50',
             'oxygen': '-10.00',  # Invalid: negative oxygen
             'ph': '7.20',
@@ -154,7 +251,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
         # Test pH out of range (0-14)
         invalid_data = {
-            'batch_transfer': self.batch_transfer.id,
+            'batch_transfer': validation_transfer.id,
             'temperature': '12.50',
             'oxygen': '90.00',
             'ph': '15.00',  # Invalid: pH > 14
@@ -166,7 +263,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
         # Test negative salinity
         invalid_data = {
-            'batch_transfer': self.batch_transfer.id,
+            'batch_transfer': validation_transfer.id,
             'temperature': '12.50',
             'oxygen': '90.00',
             'ph': '7.20',
@@ -178,13 +275,31 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
     def test_filter_by_batch_transfer(self):
         """Test filtering by batch transfer."""
-        # Create a second batch transfer and associated environmental data
+        # Create another batch and transfer
+        second_batch = Batch.objects.create(
+            batch_number="TEST-BATCH-002",
+            species=self.species,
+            lifecycle_stage=self.source_stage,
+            container=self.container,
+            population_count=800,
+            biomass_kg=Decimal('80.00'),
+            avg_weight_g=Decimal('100.00'),
+            start_date=timezone.now().date()
+        )
+        
+        # Create a second batch transfer with the correct field names
         second_batch_transfer = BatchTransfer.objects.create(
-            batch=self.batch,
+            source_batch=second_batch,
+            transfer_type="LIFECYCLE",
             transfer_date=timezone.now().date(),
-            from_stage="FRY",
-            to_stage="FINGERLING",
-            quantity=950
+            source_count=800,
+            transferred_count=800,
+            source_biomass_kg=Decimal('80.00'),
+            transferred_biomass_kg=Decimal('80.00'),
+            source_lifecycle_stage=self.source_stage,
+            destination_lifecycle_stage=self.dest_stage,
+            source_container=self.container,
+            destination_container=self.container
         )
         
         StageTransitionEnvironmental.objects.create(

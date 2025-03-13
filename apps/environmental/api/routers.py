@@ -15,11 +15,11 @@ from apps.environmental.api.viewsets import (
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
-router.register(r'parameters', EnvironmentalParameterViewSet)
-router.register(r'readings', EnvironmentalReadingViewSet)
-router.register(r'photoperiod', PhotoperiodDataViewSet)
-router.register(r'weather', WeatherDataViewSet)
-router.register(r'stage-transitions', StageTransitionEnvironmentalViewSet)
+router.register(r'parameters', EnvironmentalParameterViewSet, basename='parameter')
+router.register(r'readings', EnvironmentalReadingViewSet, basename='reading')
+router.register(r'photoperiod', PhotoperiodDataViewSet, basename='photoperiod')
+router.register(r'weather', WeatherDataViewSet, basename='weather')
+router.register(r'stage-transitions', StageTransitionEnvironmentalViewSet, basename='transition')
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls

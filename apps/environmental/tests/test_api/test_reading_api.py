@@ -43,7 +43,8 @@ class EnvironmentalReadingAPITest(APITestCase):
         self.container_type = ContainerType.objects.create(
             name="Test Tank",
             category="TANK",
-            description="Test tank description"
+            description="Test tank description",
+            max_volume_m3=Decimal('100.00')
         )
         
         self.container = Container.objects.create(
