@@ -57,9 +57,19 @@ jobs:
         POSTGRES_PASSWORD: postgres
         POSTGRES_HOST: localhost
     
+    - name: Prepare test database
+      run: |
+        # Drop the test database if it exists to avoid the interactive prompt
+        PGPASSWORD=postgres psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS test_aquamind;'
+      env:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
+        
     - name: Run tests
       run: |
-        python manage.py test --settings=test_settings
+        # Use --noinput flag to prevent any interactive prompts
+        python manage.py test --settings=test_settings --noinput
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -69,7 +79,7 @@ jobs:
     - name: Generate test coverage report
       run: |
         pip install coverage
-        coverage run --source='.' manage.py test --settings=test_settings
+        coverage run --source='.' manage.py test --settings=test_settings --noinput
         coverage report --fail-under=70
       env:
         POSTGRES_DB: postgres
