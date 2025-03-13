@@ -45,17 +45,8 @@ urlpatterns = [
     # Redirect root URL to admin for now
     path('', RedirectView.as_view(url='/admin/'), name='index'),
     
-    # API endpoints
-    path("api/", include([
-        # Uncomment other app URLs as they become available
-        # path("infrastructure/", include("apps.infrastructure.urls")),
-        # path("batch/", include("apps.batch.urls")),
-        path("environmental/", include("apps.environmental.urls")),
-        # path("operational/", include("apps.operational.urls")),
-        # path("inventory/", include("apps.inventory.urls")),
-        # path("medical/", include("apps.medical.urls")),
-        # path("users/", include("apps.users.urls")),
-    ])),
+    # API endpoints using our centralized router
+    path("api/v1/", include("aquamind.api.router")),
     # Include REST framework authentication URLs
     path("api-auth/", include("rest_framework.urls")),
 ]
