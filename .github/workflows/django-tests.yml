@@ -50,23 +50,32 @@ jobs:
     
     - name: Run migrations
       run: |
-        python manage.py migrate
+        python manage.py migrate --settings=aquamind.settings_ci
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_aquamind
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
     
     - name: Run tests
       run: |
-        python manage.py test
+        python manage.py test --settings=aquamind.settings_ci
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_aquamind
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
     
     - name: Generate test coverage report
       run: |
         pip install coverage
-        coverage run --source='.' manage.py test
+        coverage run --source='.' manage.py test --settings=aquamind.settings_ci
         coverage report --fail-under=70
       env:
-        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_aquamind
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
 
   deploy-staging:
     needs: test
