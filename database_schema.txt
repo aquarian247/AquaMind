@@ -1,0 +1,487 @@
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#   * Rearrange models' order
+#   * Make sure each model has one field with primary_key=True
+#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+# Feel free to rename the models, but don't rename db_table values or field names.
+from django.db import models
+
+
+class AuthGroup(models.Model):
+    name = models.CharField(unique=True, max_length=150)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group'
+
+
+class AuthGroupPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+    permission = models.ForeignKey('AuthPermission', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_group_permissions'
+        unique_together = (('group', 'permission'),)
+
+
+class AuthPermission(models.Model):
+    name = models.CharField(max_length=255)
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING)
+    codename = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_permission'
+        unique_together = (('content_type', 'codename'),)
+
+
+class AuthUser(models.Model):
+    password = models.CharField(max_length=128)
+    last_login = models.DateTimeField(blank=True, null=True)
+    is_superuser = models.BooleanField()
+    username = models.CharField(unique=True, max_length=150)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    email = models.CharField(max_length=254)
+    is_staff = models.BooleanField()
+    is_active = models.BooleanField()
+    date_joined = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user'
+
+
+class AuthUserGroups(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_groups'
+        unique_together = (('user', 'group'),)
+
+
+class AuthUserUserPermissions(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'auth_user_user_permissions'
+        unique_together = (('user', 'permission'),)
+
+
+class AuthtokenToken(models.Model):
+    key = models.CharField(primary_key=True, max_length=40)
+    created = models.DateTimeField()
+    user = models.OneToOneField(AuthUser, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'authtoken_token'
+
+
+class BatchBatch(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    batch_number = models.CharField(unique=True, max_length=50)
+    status = models.CharField(max_length=20)
+    population_count = models.IntegerField()
+    biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    avg_weight_g = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField()
+    expected_end_date = models.DateField(blank=True, null=True)
+    actual_end_date = models.DateField(blank=True, null=True)
+    notes = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    container = models.ForeignKey('InfrastructureContainer', models.DO_NOTHING)
+    lifecycle_stage = models.ForeignKey('BatchLifecyclestage', models.DO_NOTHING)
+    species = models.ForeignKey('BatchSpecies', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'batch_batch'
+
+
+class BatchBatchtransfer(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    transfer_type = models.CharField(max_length=20)
+    transfer_date = models.DateField()
+    source_count = models.IntegerField()
+    transferred_count = models.IntegerField()
+    mortality_count = models.IntegerField()
+    source_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    transferred_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    notes = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    destination_batch = models.ForeignKey(BatchBatch, models.DO_NOTHING, blank=True, null=True)
+    destination_container = models.ForeignKey('InfrastructureContainer', models.DO_NOTHING, blank=True, null=True)
+    destination_lifecycle_stage = models.ForeignKey('BatchLifecyclestage', models.DO_NOTHING, blank=True, null=True)
+    source_batch = models.ForeignKey(BatchBatch, models.DO_NOTHING, related_name='batchbatchtransfer_source_batch_set')
+    source_container = models.ForeignKey('InfrastructureContainer', models.DO_NOTHING, related_name='batchbatchtransfer_source_container_set')
+    source_lifecycle_stage = models.ForeignKey('BatchLifecyclestage', models.DO_NOTHING, related_name='batchbatchtransfer_source_lifecycle_stage_set')
+
+    class Meta:
+        managed = False
+        db_table = 'batch_batchtransfer'
+
+
+class BatchGrowthsample(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    sample_date = models.DateField()
+    sample_size = models.IntegerField()
+    avg_weight_g = models.DecimalField(max_digits=10, decimal_places=2)
+    avg_length_cm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    std_deviation_weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    std_deviation_length = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    min_weight_g = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    max_weight_g = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    condition_factor = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    notes = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    batch = models.ForeignKey(BatchBatch, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'batch_growthsample'
+
+
+class BatchLifecyclestage(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(unique=True, max_length=100)
+    order = models.SmallIntegerField()
+    description = models.TextField()
+    expected_weight_min_g = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    expected_weight_max_g = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    expected_length_min_cm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    expected_length_max_cm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    species = models.ForeignKey('BatchSpecies', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'batch_lifecyclestage'
+        unique_together = (('species', 'order'),)
+
+
+class BatchMortalityevent(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    event_date = models.DateField()
+    count = models.IntegerField()
+    biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    cause = models.CharField(max_length=20)
+    description = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    batch = models.ForeignKey(BatchBatch, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'batch_mortalityevent'
+
+
+class BatchSpecies(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(unique=True, max_length=100)
+    scientific_name = models.CharField(unique=True, max_length=200)
+    description = models.TextField()
+    optimal_temperature_min = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    optimal_temperature_max = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    optimal_oxygen_min = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    optimal_ph_min = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    optimal_ph_max = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'batch_species'
+
+
+class DjangoAdminLog(models.Model):
+    action_time = models.DateTimeField()
+    object_id = models.TextField(blank=True, null=True)
+    object_repr = models.CharField(max_length=200)
+    action_flag = models.SmallIntegerField()
+    change_message = models.TextField()
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'django_admin_log'
+
+
+class DjangoContentType(models.Model):
+    app_label = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'django_content_type'
+        unique_together = (('app_label', 'model'),)
+
+
+class DjangoMigrations(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
+class DjangoSession(models.Model):
+    session_key = models.CharField(primary_key=True, max_length=40)
+    session_data = models.TextField()
+    expire_date = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_session'
+
+
+class EnvironmentalEnvironmentalparameter(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    unit = models.CharField(max_length=20)
+    description = models.TextField()
+    min_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    max_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    optimal_min = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    optimal_max = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'environmental_environmentalparameter'
+
+
+class EnvironmentalEnvironmentalreading(models.Model):
+    id = models.BigAutoField(primary_key=True)  # The composite primary key (id, reading_time) found, that is not supported. The first column is selected.
+    value = models.DecimalField(max_digits=10, decimal_places=4)
+    reading_time = models.DateTimeField()
+    is_manual = models.BooleanField()
+    notes = models.TextField()
+    created_at = models.DateTimeField()
+    batch = models.ForeignKey(BatchBatch, models.DO_NOTHING, blank=True, null=True)
+    container = models.ForeignKey('InfrastructureContainer', models.DO_NOTHING)
+    parameter = models.ForeignKey(EnvironmentalEnvironmentalparameter, models.DO_NOTHING)
+    recorded_by = models.ForeignKey(AuthUser, models.DO_NOTHING, blank=True, null=True)
+    sensor = models.ForeignKey('InfrastructureSensor', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'environmental_environmentalreading'
+        unique_together = (('id', 'reading_time'),)
+
+
+class EnvironmentalPhotoperioddata(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    date = models.DateField()
+    day_length_hours = models.DecimalField(max_digits=5, decimal_places=2)
+    light_intensity = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    is_interpolated = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    area = models.ForeignKey('InfrastructureArea', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'environmental_photoperioddata'
+        unique_together = (('area', 'date'),)
+
+
+class EnvironmentalStagetransitionenvironmental(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    temperature = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    oxygen = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    salinity = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    ph = models.DecimalField(max_digits=4, decimal_places=2, blank=True, null=True)
+    additional_parameters = models.JSONField(blank=True, null=True)
+    notes = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    batch_transfer = models.OneToOneField(BatchBatchtransfer, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'environmental_stagetransitionenvironmental'
+
+
+class EnvironmentalWeatherdata(models.Model):
+    id = models.BigAutoField(primary_key=True)  # The composite primary key (id, timestamp) found, that is not supported. The first column is selected.
+    timestamp = models.DateTimeField()
+    temperature = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    wind_speed = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    wind_direction = models.IntegerField(blank=True, null=True)
+    precipitation = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    wave_height = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    wave_period = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    wave_direction = models.IntegerField(blank=True, null=True)
+    cloud_cover = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    area = models.ForeignKey('InfrastructureArea', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'environmental_weatherdata'
+        unique_together = (('id', 'timestamp'),)
+
+
+class InfrastructureArea(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    max_biomass = models.DecimalField(max_digits=12, decimal_places=2)
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    geography = models.ForeignKey('InfrastructureGeography', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_area'
+
+
+class InfrastructureContainer(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    volume_m3 = models.DecimalField(max_digits=10, decimal_places=2)
+    max_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    area = models.ForeignKey(InfrastructureArea, models.DO_NOTHING, blank=True, null=True)
+    container_type = models.ForeignKey('InfrastructureContainertype', models.DO_NOTHING)
+    hall = models.ForeignKey('InfrastructureHall', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_container'
+
+
+class InfrastructureContainertype(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=20)
+    max_volume_m3 = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_containertype'
+
+
+class InfrastructureFeedcontainer(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    container_type = models.CharField(max_length=20)
+    capacity_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    area = models.ForeignKey(InfrastructureArea, models.DO_NOTHING, blank=True, null=True)
+    hall = models.ForeignKey('InfrastructureHall', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_feedcontainer'
+
+
+class InfrastructureFreshwaterstation(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    station_type = models.CharField(max_length=20)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    description = models.TextField()
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    geography = models.ForeignKey('InfrastructureGeography', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_freshwaterstation'
+
+
+class InfrastructureGeography(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(unique=True, max_length=100)
+    description = models.TextField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_geography'
+
+
+class InfrastructureHall(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    area_sqm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    freshwater_station = models.ForeignKey(InfrastructureFreshwaterstation, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_hall'
+
+
+class InfrastructureSensor(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    sensor_type = models.CharField(max_length=20)
+    serial_number = models.CharField(max_length=100)
+    manufacturer = models.CharField(max_length=100)
+    installation_date = models.DateField(blank=True, null=True)
+    last_calibration_date = models.DateField(blank=True, null=True)
+    active = models.BooleanField()
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    container = models.ForeignKey(InfrastructureContainer, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'infrastructure_sensor'
+
+
+class UsersUserprofile(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    profile_picture = models.CharField(max_length=100, blank=True, null=True)
+    job_title = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    language_preference = models.CharField(max_length=5)
+    date_format_preference = models.CharField(max_length=10)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+    user = models.OneToOneField(AuthUser, models.DO_NOTHING)
+    full_name = models.CharField(max_length=150)
+    geography = models.CharField(max_length=3)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    role = models.CharField(max_length=5)
+    subsidiary = models.CharField(max_length=3)
+
+    class Meta:
+        managed = False
+        db_table = 'users_userprofile'
