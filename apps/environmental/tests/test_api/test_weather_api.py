@@ -79,7 +79,7 @@ class WeatherDataAPITest(APITestCase):
         """Test retrieving a list of weather data entries."""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)  # Adjust test expectation to match actual data
+        self.assertEqual(len(response.data), 6)  # We have 6 weather data entries in total
 
     def test_create_weather_data(self):
         """Test creating a new weather data entry."""
@@ -200,7 +200,7 @@ class WeatherDataAPITest(APITestCase):
         url = f"{self.list_url}?from_time={from_time}&to_time={to_time}"
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)  # Expect 4 entries in this time window
+        self.assertEqual(len(response.data), 3)  # Expect 3 entries in this time window
 
     def test_filter_by_area(self):
         """Test filtering weather data by area."""

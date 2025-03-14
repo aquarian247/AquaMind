@@ -68,7 +68,8 @@ jobs:
         
     - name: Run tests
       run: |
-        # Only run tests for the weather API since others are not implemented yet
+        # Only run tests for implemented features
+        # As we complete more features from the implementation plan, we'll add their tests here
         python manage.py test apps.environmental.tests.test_api.test_weather_api --settings=test_settings --noinput
       env:
         POSTGRES_DB: postgres
@@ -79,9 +80,9 @@ jobs:
     - name: Generate test coverage report
       run: |
         pip install coverage
-        # Only generate coverage for the weather API tests since others are not implemented yet
+        # Only generate coverage for implemented features
         coverage run --source='.' manage.py test apps.environmental.tests.test_api.test_weather_api --settings=test_settings --noinput
-        # Temporarily reduce coverage requirement until more tests are implemented
+        # Low coverage requirement since we're only testing a small portion of the codebase
         coverage report --fail-under=20
       env:
         POSTGRES_DB: postgres
