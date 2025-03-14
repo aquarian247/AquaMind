@@ -6,6 +6,13 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-03-14: Comprehensive TimescaleDB Testing Strategy
+- Implemented a complete strategy for testing TimescaleDB features manually while allowing other tests to run normally
+- Created dedicated helper modules (`migrations_helpers.py`) for handling TimescaleDB operations conditionally
+- Developed separate test settings and scripts for regular automated testing and manual TimescaleDB testing
+- Added comprehensive documentation in `timescaledb_testing_strategy.md` with clear guidelines for testing
+- Ensured TimescaleDB-specific tests are properly skipped in automated testing environments
+
 ### 2025-03-14: Full Database and Code Inspection
 - Conducted comprehensive inspection of codebase and database schema
 - Identified significant progress in infrastructure, batch, and environmental modules

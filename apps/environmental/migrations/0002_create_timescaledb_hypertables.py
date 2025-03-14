@@ -1,9 +1,52 @@
-from django.db import migrations
+from django.db import migrations, connection
+
+# Import our custom helper functions for TimescaleDB operations
+from apps.environmental.migrations_helpers import (
+    run_timescale_sql,
+    create_hypertable,
+    set_compression,
+    is_timescaledb_available
+)
+
+
+# Custom operations for TimescaleDB
+def create_environmentalreading_hypertable(apps, schema_editor):
+    """Create TimescaleDB hypertable for environmental readings"""
+    create_hypertable(
+        schema_editor,
+        'environmental_environmentalreading',
+        'reading_time',
+        if_not_exists=True,
+        compression_params={
+            'segmentby': 'container_id,parameter_id',
+            'compress_after': '7 days'
+        }
+    )
+
+
+def create_weatherdata_hypertable(apps, schema_editor):
+    """Create TimescaleDB hypertable for weather data"""
+    create_hypertable(
+        schema_editor,
+        'environmental_weatherdata',
+        'timestamp',
+        if_not_exists=True,
+        compression_params={
+            'segmentby': 'area_id',
+            'compress_after': '7 days'
+        }
+    )
+
+
+# Migration noop for reverse operations that don't need to do anything
+def noop(apps, schema_editor):
+    pass
+
 
 class Migration(migrations.Migration):
     """
     Custom migration to set up TimescaleDB hypertables for time-series data.
-    Following the windsurf rule: 'Always define hypertables with create_hypertable after table creation'
+    Modified to use conditional helpers that check if TimescaleDB is available.
     """
 
     dependencies = [
@@ -11,73 +54,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Step 1: Create hypertables
-        migrations.RunSQL(
-            """
-            SELECT create_hypertable('environmental_environmentalreading', 'reading_time', 
-                                    if_not_exists => TRUE);
-            """,
-            reverse_sql="SELECT 1;"  # No need to reverse this operation
+        # Create hypertables with compression using our helper functions
+        migrations.RunPython(
+            create_environmentalreading_hypertable,
+            reverse_code=noop
         ),
-        migrations.RunSQL(
-            """
-            SELECT create_hypertable('environmental_weatherdata', 'timestamp', 
-                                    if_not_exists => TRUE);
-            """,
-            reverse_sql="SELECT 1;"  # No need to reverse this operation
-        ),
-        
-        # Step 2: Enable compression on hypertables (need to do this before adding compression policies)
-        migrations.RunSQL(
-            """
-            -- Enable compression on environmental readings
-            ALTER TABLE environmental_environmentalreading SET (
-                timescaledb.compress,
-                timescaledb.compress_segmentby = 'container_id,parameter_id'
-            );
-            """,
-            reverse_sql="""
-            ALTER TABLE environmental_environmentalreading SET (
-                timescaledb.compress = false
-            );
-            """
-        ),
-        migrations.RunSQL(
-            """
-            -- Enable compression on weather data
-            ALTER TABLE environmental_weatherdata SET (
-                timescaledb.compress,
-                timescaledb.compress_segmentby = 'area_id'
-            );
-            """,
-            reverse_sql="""
-            ALTER TABLE environmental_weatherdata SET (
-                timescaledb.compress = false
-            );
-            """
-        ),
-        
-        # Step 3: Add compression policy with a 7-day retention policy
-        migrations.RunSQL(
-            """
-            -- Set compression policy for environmental readings (older than 7 days)
-            SELECT add_compression_policy('environmental_environmentalreading', 
-                                        INTERVAL '7 days',
-                                        if_not_exists => TRUE);
-            """,
-            reverse_sql="""
-            SELECT remove_compression_policy('environmental_environmentalreading', if_not_exists => TRUE);
-            """
-        ),
-        migrations.RunSQL(
-            """
-            -- Set compression policy for weather data (older than 7 days)
-            SELECT add_compression_policy('environmental_weatherdata', 
-                                        INTERVAL '7 days',
-                                        if_not_exists => TRUE);
-            """,
-            reverse_sql="""
-            SELECT remove_compression_policy('environmental_weatherdata', if_not_exists => TRUE);
-            """
+        migrations.RunPython(
+            create_weatherdata_hypertable,
+            reverse_code=noop
         ),
     ]

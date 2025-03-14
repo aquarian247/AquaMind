@@ -108,6 +108,10 @@ DATABASES = {
 }
 
 
+# Test runner
+# Custom test runner to handle TimescaleDB-specific requirements
+TEST_RUNNER = 'apps.core.test_runner.TimescaleDBTestRunner'
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 

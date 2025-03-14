@@ -53,15 +53,18 @@ class EnvironmentalReading(models.Model):
     """
     Time-series data of environmental parameters recorded either by sensors or manually.
     This model is configured as a TimescaleDB hypertable for efficient time-series data handling.
+    
+    For TimescaleDB compatibility, we use a migration to modify the primary key constraint to include
+    the partitioning column (reading_time) at the database level, allowing for proper hypertable creation.
     """
-    # Keep Django's standard primary key approach
+    # In Django model we keep id as primary_key, but in the migration we'll create a composite primary key
     id = models.BigAutoField(primary_key=True)
     parameter = models.ForeignKey(EnvironmentalParameter, on_delete=models.PROTECT)
     container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='environmental_readings')
     batch = models.ForeignKey(Batch, on_delete=models.SET_NULL, null=True, blank=True, related_name='environmental_readings')
     sensor = models.ForeignKey(Sensor, on_delete=models.SET_NULL, null=True, blank=True, related_name='readings')
     value = models.DecimalField(max_digits=10, decimal_places=4)
-    # TimescaleDB partitioning column
+    # TimescaleDB partitioning column - must be part of the primary key
     reading_time = models.DateTimeField()  
     is_manual = models.BooleanField(default=False, help_text="Whether this reading was entered manually")
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -73,8 +76,8 @@ class EnvironmentalReading(models.Model):
             models.Index(fields=['container', 'parameter', 'reading_time']),
             models.Index(fields=['batch', 'parameter', 'reading_time']),
         ]
-        # We'll add a unique constraint in the migration that will include reading_time
-        # This will work with TimescaleDB hypertables
+        # TimescaleDB requires the partitioning column (reading_time) to be part of the primary key
+        # This is handled via a migration to maintain both Django and TimescaleDB compatibility
     
     def __str__(self):
         return f"{self.parameter.name}: {self.value} {self.parameter.unit} at {self.reading_time}"
@@ -119,11 +122,14 @@ class PhotoperiodData(models.Model):
 class WeatherData(models.Model):
     """
     Weather conditions by area, stored as a TimescaleDB hypertable for efficient time-series data handling.
+    
+    For TimescaleDB compatibility, we use a migration to modify the primary key constraint to include
+    the partitioning column (timestamp) at the database level, allowing for proper hypertable creation.
     """
-    # Keep Django's standard primary key approach
+    # In Django model we keep id as primary_key, but in the migration we'll create a composite primary key
     id = models.BigAutoField(primary_key=True)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='weather_data')
-    # TimescaleDB partitioning column
+    # TimescaleDB partitioning column - must be part of the primary key
     timestamp = models.DateTimeField()  
     temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Air temperature in °C")
     wind_speed = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, help_text="Wind speed in m/s")
@@ -154,8 +160,8 @@ class WeatherData(models.Model):
         indexes = [
             models.Index(fields=['area', 'timestamp']),
         ]
-        # We'll add a unique constraint in the migration that will include timestamp
-        # This will work with TimescaleDB hypertables
+        # TimescaleDB requires the partitioning column (timestamp) to be part of the primary key
+        # This is handled via a migration to maintain both Django and TimescaleDB compatibility
     
     def __str__(self):
         return f"Weather for {self.area.name} at {self.timestamp}"
