@@ -4,6 +4,15 @@
 
 This document outlines the phased implementation strategy for the AquaMind system. The plan follows an iterative approach, starting with core infrastructure and gradually building more complex features. Each phase builds upon the previous one, ensuring we maintain a functional system throughout development.
 
+## Completed Milestones
+
+### 2025-03-14: User Authentication System
+- Updated user authentication system to use Django's built-in User model with an extended UserProfile structure
+- Fixed and updated tests in `test_serializers.py` and `test_views.py` to work with the new User/UserProfile structure
+- Implemented proper permission checks for user-related API endpoints based on role-based access control
+- Ensured JWT authentication works correctly with the UserProfile data
+- All 26 authentication tests now passing successfully
+
 ## Implementation Phases
 
 ### Phase 1: Foundation and Core Infrastructure (Weeks 1-3)
@@ -17,7 +26,7 @@ This document outlines the phased implementation strategy for the AquaMind syste
 #### 1.2 Core Application Structure
 - [x] Define Django app structure
 - [x] Implement base models and migrations
-- [ ] Set up authentication and user management
+- [x] Set up authentication and user management
 - [ ] Create basic URL routing system
 
 #### 1.3 Base API Framework

@@ -16,6 +16,9 @@ pandas==2.2.0
 numpy==1.26.3
 # API documentation
 drf-yasg==1.21.7
+# JWT Authentication
+djangorestframework-simplejwt==5.3.1
+Pillow==10.1.0  # For ImageField support
 # Maps and geospatial functionality
 django-leaflet==0.31.0
 django-geojson==4.2.0

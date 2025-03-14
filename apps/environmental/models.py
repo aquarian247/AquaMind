@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 
 from apps.infrastructure.models import Container, Area, Sensor
 from apps.batch.models import Batch
@@ -63,7 +64,7 @@ class EnvironmentalReading(models.Model):
     # TimescaleDB partitioning column
     reading_time = models.DateTimeField()  
     is_manual = models.BooleanField(default=False, help_text="Whether this reading was entered manually")
-    recorded_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)  # When the record was created in the system
     

@@ -11,6 +11,7 @@ from drf_yasg import openapi
 
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
+# Import the users URLs
 
 # Create a schema view for API documentation
 schema_view = get_schema_view(
@@ -35,4 +36,5 @@ urlpatterns = [
     # API endpoints for each app
     path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
     path('environmental/', include((environmental_router.urls, 'environmental'))),
+    path('users/', include('apps.users.urls')),
 ]

@@ -149,10 +149,6 @@ python manage.py test
 - Optimize database queries with select_related and prefetch_related
 - When working with TimescaleDB tables, ensure time-based partitioning columns are included in primary keys or unique constraints
 
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
