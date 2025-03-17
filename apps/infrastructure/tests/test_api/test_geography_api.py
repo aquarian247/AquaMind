@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import Geography
 

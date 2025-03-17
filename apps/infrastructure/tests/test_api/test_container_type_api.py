@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import ContainerType
 
@@ -129,7 +130,7 @@ class ContainerTypeAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only TANK container types are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['category'], 'TANK')
         
         # Test filtering by PEN category
@@ -137,5 +138,5 @@ class ContainerTypeAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only PEN container types are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['category'], 'PEN')

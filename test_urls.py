@@ -11,6 +11,7 @@ from drf_yasg import openapi
 # Import routers directly
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
+from apps.batch.api.routers import router as batch_router
 
 # Swagger/OpenAPI documentation setup
 schema_view = get_schema_view(
@@ -33,8 +34,9 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
     # Register API routes explicitly for testing with proper namespaces
-    path('api/infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
-    path('api/environmental/', include((environmental_router.urls, 'environmental'))),
+    path('api/v1/infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
+    path('api/v1/environmental/', include((environmental_router.urls, 'environmental'))),
+    path('api/v1/batch/', include((batch_router.urls, 'batch'))),
     
     # Include REST framework authentication URLs
     path("api-auth/", include("rest_framework.urls")),

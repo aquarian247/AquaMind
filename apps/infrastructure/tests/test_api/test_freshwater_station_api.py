@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import Geography, FreshwaterStation
 
@@ -173,12 +174,12 @@ class FreshwaterStationAPITest(APITestCase):
         response = self.client.get(f"{self.list_url}?station_type=FRESHWATER")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check that only freshwater stations are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['station_type'], 'FRESHWATER')
         
         # Test filtering by broodstock
         response = self.client.get(f"{self.list_url}?station_type=BROODSTOCK")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check that only broodstock stations are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['station_type'], 'BROODSTOCK')

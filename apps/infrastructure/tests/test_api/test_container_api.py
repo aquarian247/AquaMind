@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import Geography, Area, FreshwaterStation, Hall, ContainerType, Container
 
@@ -258,7 +259,8 @@ class ContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only containers in the hall are returned
-        for item in response.data['results']:
+        items = get_response_items(response)
+        for item in items:
             self.assertEqual(item['hall'], self.hall.id)
             self.assertIsNone(item['area'])
 
@@ -268,6 +270,7 @@ class ContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only containers in the area are returned
-        for item in response.data['results']:
+        items = get_response_items(response)
+        for item in items:
             self.assertEqual(item['area'], self.area.id)
             self.assertIsNone(item['hall'])

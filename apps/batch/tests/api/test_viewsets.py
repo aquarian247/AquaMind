@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 from decimal import Decimal
 import datetime
 import json
@@ -71,7 +72,8 @@ class SpeciesViewSetTest(APITestCase):
         url = get_batch_url('species')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
 
     def test_create_species(self):
         """Test creating a species."""
@@ -136,8 +138,9 @@ class SpeciesViewSetTest(APITestCase):
         url = get_batch_url('species') + '?name=Atlantic Salmon'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], 'Atlantic Salmon')
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['name'], 'Atlantic Salmon')
 
     def test_search_species(self):
         """Test searching species."""
@@ -151,8 +154,9 @@ class SpeciesViewSetTest(APITestCase):
         url = get_batch_url('species') + '?search=salar'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], 'Atlantic Salmon')
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['name'], 'Atlantic Salmon')
 
 
 class BatchViewSetTest(APITestCase):
@@ -241,7 +245,8 @@ class BatchViewSetTest(APITestCase):
         url = get_batch_url('batches')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
 
     def test_create_batch(self):
         """Test creating a batch."""
@@ -326,5 +331,6 @@ class BatchViewSetTest(APITestCase):
         url = get_batch_url('batches') + '?status=ACTIVE'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['batch_number'], 'BATCH001')
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['batch_number'], 'BATCH001')

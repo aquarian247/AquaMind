@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import Geography, Area, ContainerType, Container, Sensor
 
@@ -190,7 +191,7 @@ class SensorAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only TEMPERATURE sensors are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['sensor_type'], 'TEMPERATURE')
         
         # Test filtering by OXYGEN
@@ -198,7 +199,7 @@ class SensorAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only OXYGEN sensors are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['sensor_type'], 'OXYGEN')
 
     def test_filter_by_container(self):
@@ -227,7 +228,7 @@ class SensorAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only sensors in the original container are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['container'], self.container.id)
         
         # Test filtering by new container
@@ -235,5 +236,5 @@ class SensorAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only sensors in the new container are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['container'], another_container.id)

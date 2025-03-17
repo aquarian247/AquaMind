@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
+from apps.core.test_utils import get_response_items
 
 from apps.infrastructure.models import (
     Geography, Area, FreshwaterStation, Hall, FeedContainer
@@ -229,7 +230,7 @@ class FeedContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only SILO feed containers are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['container_type'], 'SILO')
         
         # Test filtering by BARGE
@@ -237,7 +238,7 @@ class FeedContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only BARGE feed containers are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['container_type'], 'BARGE')
 
     def test_filter_by_hall(self):
@@ -246,7 +247,7 @@ class FeedContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only feed containers in the hall are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['hall'], self.hall.id)
             self.assertIsNone(item['area'])
 
@@ -256,6 +257,6 @@ class FeedContainerAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Check that only feed containers in the area are returned
-        for item in response.data['results']:
+        for item in get_response_items(response):
             self.assertEqual(item['area'], self.area.id)
             self.assertIsNone(item['hall'])
