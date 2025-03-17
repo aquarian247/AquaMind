@@ -36,6 +36,24 @@
 - Commit changes to Git with clear, descriptive messages. Do not commit incomplete or broken code.
 - Adhere to the "AquaMind Testing Strategy" document in /docs
 
+## API URL Testing
+- For testing API endpoints, prefer using a URL helper function in test classes over direct reverse lookup to ensure consistency:
+  ```python
+  def get_api_url(app_name, endpoint, detail=False, **kwargs):
+      """Helper function to construct URLs for API endpoints"""
+      if detail:
+          pk = kwargs.get('pk')
+          return f'/api/v1/{app_name}/{endpoint}/{pk}/'
+      return f'/api/v1/{app_name}/{endpoint}/'
+- Ensure each app with API endpoints has:
+- A router in app_name/api/routers.py that registers all viewsets
+- A properly configured urls.py with app_name set correctly
+- Its URL patterns included in the main API router at aquamind/api/router.py
+- When implementing a new module's tests, check existing API test patterns in the infrastructure module for reference
+- Validate URL patterns in isolation before implementing complex test logic to catch routing issues early
+- For serializers that update calculated fields (like biomass_kg from population_count), ensure the update logic is correctly applied in both PUT and PATCH operations
+- Use the same URL naming and structure patterns across all modules for consistency
+
 # Implementation Progress Tracking Rule
 
 When we complete any milestone defined in the "implementation plan and progress.md" document:

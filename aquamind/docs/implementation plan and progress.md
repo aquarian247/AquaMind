@@ -6,6 +6,13 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-03-17: Batch API Testing Implementation and Fixes
+- Fixed URL routing issues in Batch API tests using direct URL construction
+- Implemented proper serializer logic for calculated fields (biomass_kg) in BatchSerializer
+- Added custom create and update methods to handle field calculations in BatchSerializer
+- Created standardized API URL testing guidelines in project coding rules
+- Ensured all Batch API tests pass with proper validation and calculated field updates
+
 ### 2025-03-17: Infrastructure API Testing Implementation
 - Implemented comprehensive API tests for all remaining Infrastructure models
 - Created test files for FreshwaterStation, Hall, ContainerType, Container, Sensor, and FeedContainer
@@ -119,7 +126,7 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [x] Implement batch creation and management
 - [x] Create batch-container assignment system
 - [x] Develop batch history tracking
-- [ ] Build batch search and filtering
+- [x] Build batch search and filtering
 
 #### 3.2 Stage Transitions
 - [x] Implement lifecycle stage management (Egg, Fry, Parr, Smolt, PostSmolt, Adult)
