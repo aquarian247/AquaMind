@@ -55,7 +55,9 @@ jobs:
     
     - name: Run tests for implemented features only
       run: |
-        python manage.py test apps.environmental.tests.api.test_weather_api --settings=test_settings
+        # Only run tests for implemented features
+        # As we complete more features from the implementation plan, we'll add their tests here
+        python manage.py test apps.environmental.tests.test_api.test_weather_api --settings=test_settings --noinput
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
