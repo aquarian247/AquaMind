@@ -29,8 +29,8 @@ def is_timescaledb_available():
     if connection.vendor != 'postgresql':
         return False
     
-    # Skip if explicitly disabled in settings
-    if hasattr(settings, 'USE_TIMESCALEDB') and not settings.USE_TIMESCALEDB:
+    # Skip if explicitly disabled in settings (check both setting names)
+    if (hasattr(settings, 'USE_TIMESCALEDB') and not settings.USE_TIMESCALEDB) or        (hasattr(settings, 'TIMESCALE_ENABLED') and not settings.TIMESCALE_ENABLED):
         return False
     
     # Skip if running in test mode and not explicitly enabled via environment variable
