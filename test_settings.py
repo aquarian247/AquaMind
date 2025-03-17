@@ -22,8 +22,8 @@ DATABASES = {
         'USER': os.getenv('POSTGRES_USER', 'postgres'),
         # Use the correct password for the TimescaleDB container
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'aquapass12345'),  
-        # Connect to the container by name
-        'HOST': os.getenv('POSTGRES_HOST', 'timescale-db'),
+        # Use localhost for CI, container name for dev
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
         'OPTIONS': {},  # Remove any TimescaleDB-specific options
         'CONN_MAX_AGE': 0,  # Force new connections to test connectivity

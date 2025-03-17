@@ -46,7 +46,19 @@ jobs:
     - name: Run migrations with --noinput flag
       run: |
         python manage.py migrate --settings=test_settings --noinput
+      env:
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
     
     - name: Run tests for implemented features only
       run: |
         python manage.py test apps.environmental.tests.api.test_weather_api --settings=test_settings
+      env:
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
