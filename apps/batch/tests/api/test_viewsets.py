@@ -10,19 +10,19 @@ from decimal import Decimal
 import datetime
 import json
 
+from apps.batch.tests.api.test_helpers import get_api_url
+
 # Helper function to construct URLs for the batch app endpoints
 def get_batch_url(endpoint, detail=False, **kwargs):
     """Helper function to construct URLs for batch API endpoints"""
-    base_url = '/api/v1/batch/'
-    if detail:
-        pk = kwargs.get('pk')
-        return f'{base_url}{endpoint}/{pk}/'
-    return f'{base_url}{endpoint}/'
+    return get_api_url('batch', endpoint, detail, **kwargs)
 
 from apps.batch.models import (
     Species,
     LifeCycleStage,
     Batch,
+    BatchContainerAssignment,
+    BatchComposition,
     BatchTransfer,
     MortalityEvent,
     GrowthSample
@@ -334,3 +334,420 @@ class BatchViewSetTest(APITestCase):
         items = get_response_items(response)
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]['batch_number'], 'BATCH001')
+
+
+class BatchContainerAssignmentViewSetTest(APITestCase):
+    """Test the BatchContainerAssignment viewset."""
+
+    def setUp(self):
+        # Create user
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.client.force_authenticate(user=self.user)
+
+        # Create geography/area
+        self.geography = Geography.objects.create(
+            name='Test Geography',
+        )
+        self.area = Area.objects.create(
+            name='Test Area',
+            geography=self.geography,
+            latitude=10.0,
+            longitude=10.0,
+            max_biomass=1000.0
+        )
+        
+        # Create container type and container
+        self.container_type = ContainerType.objects.create(
+            name='Test Container Type',
+            category='TANK',
+            max_volume_m3=10.0
+        )
+        self.container = Container.objects.create(
+            name='Test Container',
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=8.0,
+            max_biomass_kg=100.0,
+            active=True
+        )
+        
+        # Create species
+        self.species = Species.objects.create(
+            name='Test Species',
+            scientific_name='Testus testus'
+        )
+        
+        # Create lifecycle stage
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name='Test Stage',
+            species=self.species,
+            order=1
+        )
+        
+        # Create batch
+        self.batch = Batch.objects.create(
+            batch_number='BATCH001',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=150,  # Increased to allow for multiple assignments
+            biomass_kg=15.0,       # Increased proportionally 
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
+        )
+        
+        # Create container assignment
+        self.assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            population_count=100,
+            biomass_kg=10.0,
+            assignment_date=datetime.date.today(),
+            is_active=True
+        )
+
+    def test_list_assignments(self):
+        """Test listing container assignments."""
+        url = get_batch_url('container-assignments')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['batch']['batch_number'], 'BATCH001')
+        self.assertEqual(items[0]['container']['name'], 'Test Container')
+        self.assertEqual(items[0]['population_count'], 100)
+        self.assertEqual(Decimal(items[0]['biomass_kg']), Decimal('10.0'))
+        
+    def test_create_assignment(self):
+        """Test creating a container assignment."""
+        url = get_batch_url('container-assignments')
+        
+        # Create another container for testing
+        container2 = Container.objects.create(
+            name='Test Container 2',
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=8.0,
+            max_biomass_kg=100.0,
+            active=True
+        )
+        
+        data = {
+            'batch_id': self.batch.id,
+            'container_id': container2.id,
+            'population_count': 50,
+            'biomass_kg': 5.0,
+            'assignment_date': datetime.date.today().isoformat(),
+            'is_active': True
+        }
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Check that the assignment was created in the database
+        self.assertEqual(BatchContainerAssignment.objects.count(), 2)
+        new_assignment = BatchContainerAssignment.objects.get(container=container2)
+        self.assertEqual(new_assignment.population_count, 50)
+        self.assertEqual(new_assignment.biomass_kg, Decimal('5.0'))
+        
+    def test_retrieve_assignment(self):
+        """Test retrieving a container assignment."""
+        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['batch']['batch_number'], 'BATCH001')
+        self.assertEqual(response.data['container']['name'], 'Test Container')
+        self.assertEqual(response.data['population_count'], 100)
+        self.assertEqual(Decimal(response.data['biomass_kg']), Decimal('10.0'))
+        
+    def test_update_assignment(self):
+        """Test updating a container assignment."""
+        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        data = {
+            'batch_id': self.batch.id,
+            'container_id': self.container.id,
+            'population_count': 75,  # Updated count
+            'biomass_kg': 7.5,       # Updated biomass
+            'assignment_date': datetime.date.today().isoformat(),
+            'is_active': True
+        }
+        
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Refresh from database
+        self.assignment.refresh_from_db()
+        self.assertEqual(self.assignment.population_count, 75)
+        self.assertEqual(self.assignment.biomass_kg, Decimal('7.5'))
+        
+    def test_delete_assignment(self):
+        """Test deleting a container assignment."""
+        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(BatchContainerAssignment.objects.count(), 0)
+
+    def test_filter_assignments(self):
+        """Test filtering container assignments."""
+        # Create a second batch and assignment for filtering
+        batch2 = Batch.objects.create(
+            batch_number='BATCH002',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=200,
+            biomass_kg=20.0,
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
+        )
+        
+        container2 = Container.objects.create(
+            name='Test Container 2',
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=8.0,
+            max_biomass_kg=100.0,
+            active=True
+        )
+        
+        BatchContainerAssignment.objects.create(
+            batch=batch2,
+            container=container2,
+            population_count=200,
+            biomass_kg=20.0,
+            assignment_date=datetime.date.today(),
+            is_active=True
+        )
+        
+        # Filter by batch
+        url = f"{get_batch_url('container-assignments')}?batch={self.batch.id}"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['batch']['batch_number'], 'BATCH001')
+        
+        # Filter by container
+        url = f"{get_batch_url('container-assignments')}?container={container2.id}"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['batch']['batch_number'], 'BATCH002')
+        
+        # Filter by is_active
+        url = f"{get_batch_url('container-assignments')}?is_active=true"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 2)
+
+
+class BatchCompositionViewSetTest(APITestCase):
+    """Test the BatchComposition viewset."""
+
+    def setUp(self):
+        # Create user
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.client.force_authenticate(user=self.user)
+
+        # Create species
+        self.species = Species.objects.create(
+            name='Test Species',
+            scientific_name='Testus testus'
+        )
+        
+        # Create lifecycle stage
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name='Test Stage',
+            species=self.species,
+            order=1
+        )
+        
+        # Create source batches
+        self.source_batch1 = Batch.objects.create(
+            batch_number='SOURCE001',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=80,  # Was 100, now 80 after 20 moved to mixed batch
+            biomass_kg=8.0,       # Was 10, now 8 after 2 moved to mixed batch
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
+        )
+        
+        self.source_batch2 = Batch.objects.create(
+            batch_number='SOURCE002',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=150,  # Was 200, now 150 after 50 moved to mixed batch
+            biomass_kg=15.0,       # Was 20, now 15 after 5 moved to mixed batch
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
+        )
+        
+        # Create mixed batch
+        self.mixed_batch = Batch.objects.create(
+            batch_number='MIXED001',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=70,   # 20 from batch1 + 50 from batch2
+            biomass_kg=7.0,        # 2 from batch1 + 5 from batch2
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='MIXED'
+        )
+        
+        # Create batch compositions
+        self.composition1 = BatchComposition.objects.create(
+            mixed_batch=self.mixed_batch,
+            source_batch=self.source_batch1,
+            percentage=Decimal('28.57'),  # 20 fish out of 70 total
+            population_count=20,
+            biomass_kg=2.0
+        )
+        
+        self.composition2 = BatchComposition.objects.create(
+            mixed_batch=self.mixed_batch,
+            source_batch=self.source_batch2,
+            percentage=Decimal('71.43'),  # 50 fish out of 70 total
+            population_count=50,
+            biomass_kg=5.0
+        )
+
+    def test_list_compositions(self):
+        """Test listing batch compositions."""
+        url = get_batch_url('batch-compositions')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 2)
+        
+        # Sort by percentage descending
+        items = sorted(items, key=lambda x: Decimal(x['percentage']), reverse=True)
+        
+        self.assertEqual(items[0]['source_batch']['batch_number'], 'SOURCE002')
+        self.assertEqual(Decimal(items[0]['percentage']), Decimal('71.43'))
+        self.assertEqual(items[0]['population_count'], 50)
+        self.assertEqual(Decimal(items[0]['biomass_kg']), Decimal('5.0'))
+        
+        self.assertEqual(items[1]['source_batch']['batch_number'], 'SOURCE001')
+        self.assertEqual(Decimal(items[1]['percentage']), Decimal('28.57'))
+        self.assertEqual(items[1]['population_count'], 20)
+        self.assertEqual(Decimal(items[1]['biomass_kg']), Decimal('2.0'))
+        
+    def test_create_composition(self):
+        """Test creating a batch composition."""
+        # Create another source batch
+        source_batch3 = Batch.objects.create(
+            batch_number='SOURCE003',
+            status='ACTIVE',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=100,
+            biomass_kg=10.0,
+            avg_weight_g=100.0,
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
+        )
+        
+        url = get_batch_url('batch-compositions')
+        data = {
+            'mixed_batch_id': self.mixed_batch.id,
+            'source_batch_id': source_batch3.id,
+            'percentage': 10.0,  # Adding a small percentage to existing mixed batch
+            'population_count': 10,
+            'biomass_kg': 1.0
+        }
+        
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Check that the composition was created in the database
+        self.assertEqual(BatchComposition.objects.count(), 3)
+        new_composition = BatchComposition.objects.get(source_batch=source_batch3)
+        self.assertEqual(new_composition.population_count, 10)
+        self.assertEqual(new_composition.biomass_kg, Decimal('1.0'))
+        
+    def test_retrieve_composition(self):
+        """Test retrieving a batch composition."""
+        url = get_batch_url('batch-compositions', detail=True, pk=self.composition1.id)
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['mixed_batch']['batch_number'], 'MIXED001')
+        self.assertEqual(response.data['source_batch']['batch_number'], 'SOURCE001')
+        self.assertEqual(Decimal(response.data['percentage']), Decimal('28.57'))
+        self.assertEqual(response.data['population_count'], 20)
+        self.assertEqual(Decimal(response.data['biomass_kg']), Decimal('2.0'))
+        
+    def test_update_composition(self):
+        """Test updating a batch composition."""
+        url = get_batch_url('batch-compositions', detail=True, pk=self.composition1.id)
+        data = {
+            'mixed_batch_id': self.mixed_batch.id,
+            'source_batch_id': self.source_batch1.id,
+            'percentage': 35.0,      # Updated percentage
+            'population_count': 25,   # Updated count
+            'biomass_kg': 2.5        # Updated biomass
+        }
+        
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Refresh from database
+        self.composition1.refresh_from_db()
+        self.assertEqual(self.composition1.population_count, 25)
+        self.assertEqual(self.composition1.biomass_kg, Decimal('2.5'))
+        self.assertEqual(self.composition1.percentage, Decimal('35.0'))
+        
+    def test_delete_composition(self):
+        """Test deleting a batch composition."""
+        url = get_batch_url('batch-compositions', detail=True, pk=self.composition1.id)
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(BatchComposition.objects.filter(id=self.composition1.id).count(), 0)
+        self.assertEqual(BatchComposition.objects.count(), 1)  # Only composition2 should remain
+        
+    def test_filter_compositions(self):
+        """Test filtering batch compositions."""
+        # Filter by mixed_batch
+        url = f"{get_batch_url('batch-compositions')}?mixed_batch={self.mixed_batch.id}"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 2)
+        
+        # Filter by source_batch
+        url = f"{get_batch_url('batch-compositions')}?source_batch={self.source_batch1.id}"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['source_batch']['batch_number'], 'SOURCE001')

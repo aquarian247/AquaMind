@@ -9,6 +9,8 @@ from apps.batch.models import (
     Species,
     LifeCycleStage,
     Batch,
+    BatchContainerAssignment,
+    BatchComposition,
     BatchTransfer,
     MortalityEvent,
     GrowthSample
@@ -22,7 +24,7 @@ class SpeciesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Species
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ('created_at',)
 
     def validate(self, data):
         """Validate temperature and pH ranges."""
@@ -53,7 +55,7 @@ class LifeCycleStageSerializer(serializers.ModelSerializer):
     class Meta:
         model = LifeCycleStage
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ('created_at',)
     
     def validate(self, data):
         """Validate weight and length ranges."""
@@ -174,7 +176,7 @@ class BatchTransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = BatchTransfer
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ('created_at',)
     
     def validate(self, data):
         """
@@ -236,7 +238,7 @@ class MortalityEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = MortalityEvent
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ('created_at',)
     
     def validate(self, data):
         """
@@ -263,6 +265,129 @@ class MortalityEventSerializer(serializers.ModelSerializer):
                         f"Mortality biomass ({data['biomass_kg']} kg) exceeds batch "
                         f"biomass ({batch.biomass_kg} kg)."
                     )
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+
+
+class BatchContainerAssignmentSerializer(serializers.ModelSerializer):
+    """Serializer for the BatchContainerAssignment model."""
+    
+    class NestedBatchSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Batch
+            fields = ['id', 'batch_number', 'status']
+    
+    class NestedContainerSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Container
+            fields = ['id', 'name', 'active']
+    
+    batch = NestedBatchSerializer(read_only=True)
+    batch_id = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all(), source='batch', write_only=True)
+    container = NestedContainerSerializer(read_only=True)
+    container_id = serializers.PrimaryKeyRelatedField(queryset=Container.objects.all(), source='container', write_only=True)
+    
+    class Meta:
+        model = BatchContainerAssignment
+        fields = ['id', 'batch', 'batch_id', 'container', 'container_id', 'population_count', 'biomass_kg',
+                  'assignment_date', 'is_active', 'notes', 'created_at', 'updated_at']
+        read_only_fields = ('created_at',)
+    
+    def validate(self, data):
+        """
+        Validate that:
+        - The container has sufficient capacity for the assigned biomass
+        - The batch population count assigned doesn't exceed the batch's total population
+        """
+        errors = {}
+        
+        # Get the batch and container from data
+        batch = data.get('batch')
+        container = data.get('container')
+        assignment_id = self.instance.id if self.instance else None
+        
+        if batch and container and 'biomass_kg' in data:
+            # Check container capacity
+            existing_biomass = BatchContainerAssignment.objects.filter(
+                container=container, 
+                is_active=True
+            ).exclude(id=assignment_id).values_list('biomass_kg', flat=True)
+            
+            total_existing_biomass = sum(existing_biomass)
+            new_total_biomass = total_existing_biomass + data['biomass_kg']
+            
+            # Check if container has a maximum biomass capacity set
+            if container.max_biomass_kg and new_total_biomass > container.max_biomass_kg:
+                errors['biomass_kg'] = (
+                    f"Total biomass ({new_total_biomass} kg) exceeds container capacity "
+                    f"({container.max_biomass_kg} kg)."
+                )
+        
+        # Check if the assignment population doesn't exceed the batch's total population
+        if batch and 'population_count' in data:
+            # Get existing assignments for this batch, excluding this one if updating
+            existing_assignments = BatchContainerAssignment.objects.filter(
+                batch=batch, 
+                is_active=True
+            ).exclude(id=assignment_id)
+            
+            total_assigned = sum(a.population_count for a in existing_assignments)
+            
+            if total_assigned + data['population_count'] > batch.population_count:
+                errors['population_count'] = (
+                    f"Total assigned population ({total_assigned + data['population_count']}) "
+                    f"exceeds batch population ({batch.population_count})."
+                )
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+        
+        return data
+
+
+class BatchCompositionSerializer(serializers.ModelSerializer):
+    """Serializer for the BatchComposition model."""
+    
+    class NestedBatchSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Batch
+            fields = ['id', 'batch_number', 'status']
+    
+    mixed_batch = NestedBatchSerializer(read_only=True)
+    mixed_batch_id = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all(), source='mixed_batch', write_only=True)
+    source_batch = NestedBatchSerializer(read_only=True)
+    source_batch_id = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all(), source='source_batch', write_only=True)
+    
+    class Meta:
+        model = BatchComposition
+        fields = ['id', 'mixed_batch', 'mixed_batch_id', 'source_batch', 'source_batch_id', 
+                  'population_count', 'biomass_kg', 'percentage', 'created_at']
+        read_only_fields = ('created_at',)
+    
+    def validate(self, data):
+        """
+        Validate that:
+        - The population count doesn't exceed the source batch's population
+        - The percentage is between 0 and 100
+        """
+        errors = {}
+        
+        # Check if the population count doesn't exceed the source batch's population
+        source_batch = data.get('source_batch')
+        if source_batch and 'population_count' in data:
+            if data['population_count'] > source_batch.population_count:
+                errors['population_count'] = (
+                    f"Population count ({data['population_count']}) exceeds source batch "
+                    f"population ({source_batch.population_count})."
+                )
+        
+        # Check if the percentage is between 0 and 100
+        if 'percentage' in data:
+            if data['percentage'] < 0 or data['percentage'] > 100:
+                errors['percentage'] = "Percentage must be between 0 and 100."
         
         if errors:
             raise serializers.ValidationError(errors)
