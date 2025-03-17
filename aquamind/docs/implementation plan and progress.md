@@ -6,6 +6,13 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-03-17: CI/CD Pipeline Fixes and Testing Improvements
+- Fixed API test failures in CI/CD pipeline by addressing URL structure and response handling
+- Created a cross-application helper function (`get_response_items`) to handle both paginated and non-paginated responses
+- Updated test_urls.py to properly include all app routers with correct API path prefixes (/api/v1/...)
+- Created a utility script (update_tests.py) to standardize test files and ensure consistent API response handling
+- Improved test resilience to different pagination configurations between environments
+
 ### 2025-03-17: Batch API Testing Implementation and Fixes
 - Fixed URL routing issues in Batch API tests using direct URL construction
 - Implemented proper serializer logic for calculated fields (biomass_kg) in BatchSerializer
