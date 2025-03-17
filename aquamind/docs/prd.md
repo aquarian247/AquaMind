@@ -93,7 +93,7 @@ The system serves executive management, country management, subsidiary companies
 
 **Functionality**:
 - Create scenarios by adjusting variables (e.g., feed, temperature).
-- Simulate growth using models like TGC, SGR, and EGI.
+- Simulate growth using models like TGC, SGR.
 - Compare scenarios with visual outputs (e.g., growth curves).
 
 **Behavior**:

@@ -197,7 +197,6 @@ This document outlines the phased implementation strategy for the AquaMind syste
 #### 8.2 Growth Modeling
 - [ ] Implement TGC (Thermal Growth Coefficient) model
 - [ ] Create SGR (Specific Growth Rate) calculations
-- [ ] Build EGI (Extended Growth Index) functionality
 - [ ] Develop growth visualization tools
 
 #### 8.3 Scenario Analytics
