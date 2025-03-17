@@ -1,4 +1,4 @@
-name: Django CI/CD
+name: AquaMind CI/CD
 
 on:
   push:
@@ -70,7 +70,7 @@ jobs:
       run: |
         # Only run tests for implemented features
         # As we complete more features from the implementation plan, we'll add their tests here
-        python manage.py test apps.environmental.tests.test_api.test_weather_api --settings=test_settings --noinput
+        python manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=test_settings --noinput
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -81,9 +81,9 @@ jobs:
       run: |
         pip install coverage
         # Only generate coverage for implemented features
-        coverage run --source='.' manage.py test apps.environmental.tests.test_api.test_weather_api --settings=test_settings --noinput
-        # Low coverage requirement since we're only testing a small portion of the codebase
-        coverage report --fail-under=20
+        coverage run --source='.' manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=test_settings --noinput
+        # Increasing coverage requirement as we implement more features
+        coverage report --fail-under=40
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -113,8 +113,9 @@ jobs:
         echo "Deploying to staging environment"
         # Add actual deployment commands here
         # This is a placeholder for your deployment process
-      env:
-        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      # Will add environment variables when actual deployment is implemented
+      # env:
+      #   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
   
   deploy-production:
     needs: test
@@ -139,5 +140,6 @@ jobs:
         echo "Deploying to production environment"
         # Add actual deployment commands here
         # This is a placeholder for your deployment process
-      env:
-        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      # Will add environment variables when actual deployment is implemented
+      # env:
+      #   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}

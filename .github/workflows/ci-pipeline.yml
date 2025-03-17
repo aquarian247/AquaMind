@@ -1,10 +1,11 @@
 name: CI Pipeline
 
+# This workflow is being deprecated in favor of django-tests.yml
+# It is kept temporarily for reference but will not execute
+
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # Disabling this workflow by setting to manual only
+  workflow_dispatch:
 
 jobs:
   test:
