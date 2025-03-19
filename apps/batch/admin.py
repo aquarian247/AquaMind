@@ -37,16 +37,16 @@ class LifeCycleStageAdmin(admin.ModelAdmin):
 @admin.register(Batch)
 class BatchAdmin(admin.ModelAdmin):
     list_display = (
-        'batch_number', 'species', 'lifecycle_stage', 'container',
+        'batch_number', 'species', 'lifecycle_stage', 'batch_type',
         'population_count', 'avg_weight_g', 'biomass_kg', 'status', 'start_date'
     )
-    list_filter = ('species', 'lifecycle_stage', 'status', 'container')
+    list_filter = ('species', 'lifecycle_stage', 'status', 'batch_type')
     search_fields = ('batch_number', 'notes')
     date_hierarchy = 'start_date'
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {
-            'fields': ('batch_number', 'species', 'lifecycle_stage', 'container', 'status')
+            'fields': ('batch_number', 'species', 'lifecycle_stage', 'batch_type', 'status')
         }),
         ('Population Details', {
             'fields': ('population_count', 'biomass_kg', 'avg_weight_g')
@@ -63,8 +63,8 @@ class BatchAdmin(admin.ModelAdmin):
 @admin.register(BatchTransfer)
 class BatchTransferAdmin(admin.ModelAdmin):
     list_display = (
-        'source_batch', 'transfer_type', 'transfer_date', 'source_container',
-        'destination_container', 'transferred_count', 'mortality_count'
+        'source_batch', 'transfer_type', 'transfer_date', 
+        'transferred_count', 'mortality_count'
     )
     list_filter = ('transfer_type', 'transfer_date')
     search_fields = ('source_batch__batch_number', 'destination_batch__batch_number', 'notes')
@@ -83,8 +83,8 @@ class BatchTransferAdmin(admin.ModelAdmin):
         ('Lifecycle', {
             'fields': ('source_lifecycle_stage', 'destination_lifecycle_stage')
         }),
-        ('Location', {
-            'fields': ('source_container', 'destination_container')
+        ('Assignments', {
+            'fields': ('source_assignment', 'destination_assignment')
         }),
         ('Additional Information', {
             'fields': ('notes', 'created_at', 'updated_at')
