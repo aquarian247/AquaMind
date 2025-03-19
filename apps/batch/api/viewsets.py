@@ -454,8 +454,8 @@ class BatchTransferViewSet(viewsets.ModelViewSet):
         'transfer_type', 
         'source_lifecycle_stage', 
         'destination_lifecycle_stage',
-        'source_container',
-        'destination_container'
+        'source_assignment',
+        'destination_assignment'
     ]
     search_fields = [
         'source_batch__batch_number', 
