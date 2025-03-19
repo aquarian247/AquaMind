@@ -88,11 +88,30 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             start_date=timezone.now().date()
         )
         
-        # Create BatchContainerAssignment
+        # Create BatchContainerAssignment for source and destination
         from apps.batch.models import BatchContainerAssignment
-        self.batch_assignment = BatchContainerAssignment.objects.create(
+        self.source_assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            population_count=1000,
+            biomass_kg=Decimal('100.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        
+        # Create a second container for the destination
+        self.container2 = Container.objects.create(
+            name="Test Container 2",
+            container_type=self.container_type,
+            area=self.area,
+            active=True,
+            volume_m3=Decimal('6.00'),
+            max_biomass_kg=Decimal('600.00')
+        )
+        
+        self.destination_assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container2,  # Use different container
             population_count=1000,
             biomass_kg=Decimal('100.00'),
             assignment_date=timezone.now().date(),
@@ -110,8 +129,8 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             transferred_biomass_kg=Decimal('100.00'),
             source_lifecycle_stage=self.source_stage,
             destination_lifecycle_stage=self.dest_stage,
-            source_container=self.container,
-            destination_container=self.container
+            source_assignment=self.source_assignment,
+            destination_assignment=self.destination_assignment
         )
         
         # Create stage transition environmental data
@@ -149,8 +168,8 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             transferred_biomass_kg=Decimal('100.00'),
             source_lifecycle_stage=self.source_stage,
             destination_lifecycle_stage=self.dest_stage,
-            source_container=self.container,
-            destination_container=self.container
+            source_assignment=self.source_assignment,
+            destination_assignment=self.destination_assignment
         )
         
         new_data = {
@@ -231,9 +250,29 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         
         # Create BatchContainerAssignment
         from apps.batch.models import BatchContainerAssignment
-        validation_batch_assignment = BatchContainerAssignment.objects.create(
+        from apps.infrastructure.models import Container
+        validation_source_assignment = BatchContainerAssignment.objects.create(
             batch=validation_batch,
             container=self.container,
+            population_count=500,
+            biomass_kg=Decimal('50.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        
+        # Create a third container for this test
+        validation_container = Container.objects.create(
+            name="Validation Container",
+            container_type=self.container_type,
+            area=self.area,
+            active=True,
+            volume_m3=Decimal('8.00'),
+            max_biomass_kg=Decimal('800.00')
+        )
+        
+        validation_dest_assignment = BatchContainerAssignment.objects.create(
+            batch=validation_batch,
+            container=validation_container,
             population_count=500,
             biomass_kg=Decimal('50.00'),
             assignment_date=timezone.now().date(),
@@ -250,8 +289,8 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             transferred_biomass_kg=Decimal('50.00'),
             source_lifecycle_stage=self.source_stage,
             destination_lifecycle_stage=self.dest_stage,
-            source_container=self.container,
-            destination_container=self.container
+            source_assignment=validation_source_assignment,
+            destination_assignment=validation_dest_assignment
         )
         
         # Test negative temperature
@@ -318,9 +357,29 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         
         # Create BatchContainerAssignment
         from apps.batch.models import BatchContainerAssignment
-        second_batch_assignment = BatchContainerAssignment.objects.create(
+        from apps.infrastructure.models import Container
+        second_source_assignment = BatchContainerAssignment.objects.create(
             batch=second_batch,
             container=self.container,
+            population_count=800,
+            biomass_kg=Decimal('80.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        
+        # Create a fourth container for this test
+        second_container = Container.objects.create(
+            name="Second Test Container",
+            container_type=self.container_type,
+            area=self.area,
+            active=True,
+            volume_m3=Decimal('7.00'),
+            max_biomass_kg=Decimal('700.00')
+        )
+        
+        second_dest_assignment = BatchContainerAssignment.objects.create(
+            batch=second_batch,
+            container=second_container,
             population_count=800,
             biomass_kg=Decimal('80.00'),
             assignment_date=timezone.now().date(),
@@ -338,8 +397,8 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             transferred_biomass_kg=Decimal('80.00'),
             source_lifecycle_stage=self.source_stage,
             destination_lifecycle_stage=self.dest_stage,
-            source_container=self.container,
-            destination_container=self.container
+            source_assignment=second_source_assignment,
+            destination_assignment=second_dest_assignment
         )
         
         StageTransitionEnvironmental.objects.create(

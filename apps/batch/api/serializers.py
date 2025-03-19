@@ -170,13 +170,9 @@ class BatchTransferSerializer(serializers.ModelSerializer):
     destination_lifecycle_stage_name = serializers.StringRelatedField(
         source='destination_lifecycle_stage', read_only=True
     )
-    # Legacy container name fields - kept for backward compatibility
-    source_container_name = serializers.StringRelatedField(source='source_container', read_only=True)
-    destination_container_name = serializers.StringRelatedField(source='destination_container', read_only=True)
-    
-    # New assignment-based container fields
-    source_assignment_container = serializers.StringRelatedField(source='source_assignment.container', read_only=True)
-    destination_assignment_container = serializers.StringRelatedField(source='destination_assignment.container', read_only=True)
+    # Container information fields from assignments
+    source_container_name = serializers.StringRelatedField(source='source_assignment.container', read_only=True)
+    destination_container_name = serializers.StringRelatedField(source='destination_assignment.container', read_only=True)
 
     class Meta:
         model = BatchTransfer
@@ -209,8 +205,8 @@ class BatchTransferSerializer(serializers.ModelSerializer):
                 errors['destination_lifecycle_stage'] = "Destination lifecycle stage is required for lifecycle transfers."
             
             # For container transfers, validate that destination container is specified
-            if transfer_type == 'CONTAINER' and not data.get('destination_container'):
-                errors['destination_container'] = "Destination container is required for container transfers."
+            if transfer_type == 'CONTAINER' and not data.get('destination_assignment'):
+                errors['destination_assignment'] = "Destination assignment is required for container transfers."
             
             # For batch splits, validate that a destination batch is specified
             if transfer_type == 'SPLIT' and not data.get('destination_batch'):

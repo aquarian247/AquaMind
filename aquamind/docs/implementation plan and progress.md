@@ -6,6 +6,14 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-03-19: Database Alignment with Multi-Container Model
+- Removed redundant container fields (`source_container` and `destination_container`) from BatchTransfer model
+- Updated BatchTransferSerializer to derive container information from container assignments
+- Updated the filters in BatchTransferViewSet to use assignment references
+- Created and applied a database migration to remove the redundant fields
+- Updated all tests in batch and environmental modules to use the new assignment-based model
+- Successfully ran all tests to verify the changes maintain functionality
+
 ### 2025-03-20: Batch API Multi-Container Model Test Fixes
 - Updated Batch API tests to support the multi-container model architecture
 - Fixed tests in BatchViewSetTest to properly create and update batches and container assignments separately

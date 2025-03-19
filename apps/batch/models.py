@@ -309,21 +309,7 @@ class BatchTransfer(models.Model):
         help_text="New lifecycle stage after transfer"
     )
     
-    # Container information (for convenience and historical reference)
-    source_container = models.ForeignKey(
-        Container, 
-        on_delete=models.PROTECT, 
-        related_name='transfers_as_source',
-        help_text="Container before transfer"
-    )
-    destination_container = models.ForeignKey(
-        Container, 
-        on_delete=models.PROTECT, 
-        related_name='transfers_as_destination',
-        null=True, 
-        blank=True,
-        help_text="New container after transfer"
-    )
+    # Container information is now derived from source_assignment and destination_assignment
     
     # Was this a mixing of populations (emergency case)?
     is_emergency_mixing = models.BooleanField(

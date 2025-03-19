@@ -345,7 +345,7 @@ class BatchTransferSerializerTest(TestCase):
         
         # Create a container assignment for the source batch
         from apps.batch.models import BatchContainerAssignment
-        BatchContainerAssignment.objects.create(
+        self.source_assignment = BatchContainerAssignment.objects.create(
             batch=self.source_batch,
             container=self.container1,
             population_count=10000,
@@ -367,7 +367,7 @@ class BatchTransferSerializerTest(TestCase):
         )
         
         # Create a container assignment for the destination batch
-        BatchContainerAssignment.objects.create(
+        self.destination_assignment = BatchContainerAssignment.objects.create(
             batch=self.destination_batch,
             container=self.container2,
             population_count=5000,
@@ -389,8 +389,8 @@ class BatchTransferSerializerTest(TestCase):
             'transferred_biomass_kg': Decimal('12.00'),
             'source_lifecycle_stage': self.lifecycle_stage1.id,
             'destination_lifecycle_stage': self.lifecycle_stage1.id,
-            'source_container': self.container1.id,
-            'destination_container': self.container2.id,
+            'source_assignment': self.source_assignment.id,
+            'destination_assignment': self.destination_assignment.id,
             'notes': 'Test transfer'
         }
 
@@ -425,13 +425,13 @@ class BatchTransferSerializerTest(TestCase):
 
     def test_transfer_type_validation(self):
         """Test validation of required fields based on transfer type."""
-        # Test container transfer without destination container
+        # Test container transfer without destination assignment
         invalid_data = self.valid_transfer_data.copy()
-        invalid_data['destination_container'] = None
+        invalid_data['destination_assignment'] = None
         
         serializer = BatchTransferSerializer(data=invalid_data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('destination_container', serializer.errors)
+        self.assertIn('destination_assignment', serializer.errors)
         
         # Test lifecycle transfer without destination lifecycle stage
         invalid_data = self.valid_transfer_data.copy()
