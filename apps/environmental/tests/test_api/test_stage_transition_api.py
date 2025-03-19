@@ -81,11 +81,22 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             batch_number="TEST-BATCH-001",
             species=self.species,
             lifecycle_stage=self.source_stage,
-            container=self.container,
+            batch_type="STANDARD",
             population_count=1000,
             biomass_kg=Decimal('100.00'),
             avg_weight_g=Decimal('100.00'),
             start_date=timezone.now().date()
+        )
+        
+        # Create BatchContainerAssignment
+        from apps.batch.models import BatchContainerAssignment
+        self.batch_assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            population_count=1000,
+            biomass_kg=Decimal('100.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
         )
         
         # Create a batch transfer
@@ -211,11 +222,22 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             batch_number="TEST-BATCH-003",
             species=self.species,
             lifecycle_stage=self.source_stage,
-            container=self.container,
+            batch_type="STANDARD",
             population_count=500,
             biomass_kg=Decimal('50.00'),
             avg_weight_g=Decimal('100.00'),
             start_date=timezone.now().date()
+        )
+        
+        # Create BatchContainerAssignment
+        from apps.batch.models import BatchContainerAssignment
+        validation_batch_assignment = BatchContainerAssignment.objects.create(
+            batch=validation_batch,
+            container=self.container,
+            population_count=500,
+            biomass_kg=Decimal('50.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
         )
         
         validation_transfer = BatchTransfer.objects.create(
@@ -287,11 +309,22 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             batch_number="TEST-BATCH-002",
             species=self.species,
             lifecycle_stage=self.source_stage,
-            container=self.container,
+            batch_type="STANDARD",
             population_count=800,
             biomass_kg=Decimal('80.00'),
             avg_weight_g=Decimal('100.00'),
             start_date=timezone.now().date()
+        )
+        
+        # Create BatchContainerAssignment
+        from apps.batch.models import BatchContainerAssignment
+        second_batch_assignment = BatchContainerAssignment.objects.create(
+            batch=second_batch,
+            container=self.container,
+            population_count=800,
+            biomass_kg=Decimal('80.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
         )
         
         # Create a second batch transfer with the correct field names
