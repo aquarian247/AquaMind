@@ -9,6 +9,8 @@ from apps.batch.api.viewsets import (
     SpeciesViewSet,
     LifeCycleStageViewSet,
     BatchViewSet,
+    BatchContainerAssignmentViewSet,
+    BatchCompositionViewSet,
     BatchTransferViewSet,
     MortalityEventViewSet,
     GrowthSampleViewSet
@@ -19,6 +21,8 @@ router = DefaultRouter()
 router.register(r'species', SpeciesViewSet)
 router.register(r'lifecycle-stages', LifeCycleStageViewSet)
 router.register(r'batches', BatchViewSet)
+router.register(r'container-assignments', BatchContainerAssignmentViewSet)
+router.register(r'batch-compositions', BatchCompositionViewSet)
 router.register(r'transfers', BatchTransferViewSet)
 router.register(r'mortality-events', MortalityEventViewSet)
 router.register(r'growth-samples', GrowthSampleViewSet)

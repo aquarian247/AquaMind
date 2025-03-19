@@ -107,6 +107,9 @@ class LifeCycleStage(models.Model):
 class Batch(models.Model):
     """
     Fish batches that are tracked through their lifecycle.
+    Note: Batches are no longer directly tied to containers. Instead, use BatchContainerAssignment
+    to track batch portions across containers, which allows multiple batches per container and
+    portions of batches across different containers.
     """
     BATCH_STATUS_CHOICES = [
         ('ACTIVE', 'Active'),
@@ -114,12 +117,19 @@ class Batch(models.Model):
         ('TERMINATED', 'Terminated'),
     ]
     
+    BATCH_TYPE_CHOICES = [
+        ('STANDARD', 'Standard'),
+        ('MIXED', 'Mixed Population'),
+    ]
+    
     batch_number = models.CharField(max_length=50, unique=True)
     species = models.ForeignKey(Species, on_delete=models.PROTECT, related_name='batches')
     lifecycle_stage = models.ForeignKey(LifeCycleStage, on_delete=models.PROTECT, related_name='batches')
-    container = models.ForeignKey(Container, on_delete=models.PROTECT, related_name='batches')
     status = models.CharField(max_length=20, choices=BATCH_STATUS_CHOICES, default='ACTIVE')
+    batch_type = models.CharField(max_length=20, choices=BATCH_TYPE_CHOICES, default='STANDARD')
+    # Total population count across all containers
     population_count = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    # Total biomass across all containers
     biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
     avg_weight_g = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
@@ -130,7 +140,8 @@ class Batch(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Batch {self.batch_number} - {self.species.name} ({self.lifecycle_stage.name})"
+        batch_type_str = " (Mixed)" if self.batch_type == "MIXED" else ""
+        return f"Batch {self.batch_number} - {self.species.name} ({self.lifecycle_stage.name}){batch_type_str}"
     
     def save(self, *args, **kwargs):
         # Calculate biomass from population count and average weight if not provided
@@ -140,28 +151,149 @@ class Batch(models.Model):
         elif not self.avg_weight_g and self.biomass_kg and self.population_count:
             self.avg_weight_g = (self.biomass_kg * 1000) / self.population_count
         super().save(*args, **kwargs)
+        
+    @property
+    def containers(self):
+        """Return all containers this batch is currently in"""
+        return Container.objects.filter(
+            batchcontainerassignment__batch=self,
+            batchcontainerassignment__is_active=True
+        ).distinct()
+    
+    @property
+    def is_mixed(self):
+        """Check if this batch is a mixed population"""
+        return self.batch_type == 'MIXED'
+        
+    @property
+    def component_batches(self):
+        """Get the original component batches if this is a mixed batch"""
+        if not self.is_mixed:
+            return []
+        return [comp.source_batch for comp in self.components.all()]
+
+
+class BatchContainerAssignment(models.Model):
+    """
+    Tracks which portions of batches are in which containers.
+    This enables multiple batches to be in one container and portions of a batch to be in
+    multiple containers simultaneously. It also supports tracking of mixed populations.
+    """
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='container_assignments')
+    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='batch_assignments')
+    population_count = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    assignment_date = models.DateField()
+    is_active = models.BooleanField(default=True, help_text="Whether this assignment is current/active")
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-assignment_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['batch', 'container'],
+                condition=models.Q(is_active=True),
+                name='unique_active_batch_container'
+            )
+        ]
+    
+    def __str__(self):
+        return f"{self.batch.batch_number} in {self.container.name} ({self.population_count} fish)"
+    
+    def save(self, *args, **kwargs):
+        # Calculate biomass if not provided but count and weight are available
+        if not self.biomass_kg and self.population_count:
+            self.biomass_kg = (self.population_count * self.batch.avg_weight_g) / 1000
+        super().save(*args, **kwargs)
+
+
+class BatchComposition(models.Model):
+    """
+    Tracks the composition of mixed batches.
+    When batches are mixed in a container, this model records the percentages
+    and relationships between the original source batches and the new mixed batch.
+    """
+    mixed_batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='components')
+    source_batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='mixed_into')
+    percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Percentage of this source batch in the mixed batch"
+    )
+    population_count = models.PositiveIntegerField(
+        validators=[MinValueValidator(0)],
+        help_text="Number of fish from this source batch in the mixed batch"
+    )
+    biomass_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        help_text="Biomass from this source batch in the mixed batch"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-percentage']
+        verbose_name_plural = "Batch compositions"
+    
+    def __str__(self):
+        return f"{self.source_batch.batch_number} ({self.percentage}%) in {self.mixed_batch.batch_number}"
 
 
 class BatchTransfer(models.Model):
     """
-    Records transfers of fish batches between containers, or lifecycle stage transitions.
+    Records transfers of fish batches between containers, lifecycle stage transitions,
+    batch splits, and batch merges. Enhanced to support multi-population containers and
+    mixed batch scenarios.
     """
     TRANSFER_TYPE_CHOICES = [
-        ('CONTAINER', 'Container Transfer'),
-        ('LIFECYCLE', 'Lifecycle Stage Change'),
-        ('SPLIT', 'Batch Split'),
-        ('MERGE', 'Batch Merge'),
+        ('CONTAINER', 'Container Transfer'),   # Move fish between containers
+        ('LIFECYCLE', 'Lifecycle Stage Change'),  # Change stage but not container
+        ('SPLIT', 'Batch Split'),            # Divide batch across containers
+        ('MERGE', 'Batch Merge'),            # Combine batches in a container
+        ('MIXED_TRANSFER', 'Mixed Batch Transfer')  # Transfer mixed population
     ]
     
     source_batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name='transfers_out')
-    destination_batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name='transfers_in', null=True, blank=True)
+    destination_batch = models.ForeignKey(
+        Batch, 
+        on_delete=models.PROTECT, 
+        related_name='transfers_in', 
+        null=True, 
+        blank=True,
+        help_text="Destination batch for merges or new batch for splits; may be null for simple transfers"
+    )
     transfer_type = models.CharField(max_length=20, choices=TRANSFER_TYPE_CHOICES)
     transfer_date = models.DateField()
+    
+    # Source/destination assignment entries for tracking specific container assignments
+    source_assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.PROTECT,
+        related_name='transfers_as_source',
+        null=True,  # Allow null for migration purposes
+        blank=True,
+        help_text="Source batch-container assignment"
+    )
+    destination_assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.PROTECT,
+        related_name='transfers_as_destination',
+        null=True,
+        blank=True,
+        help_text="Destination batch-container assignment"
+    )
+    
+    # Transfer details
     source_count = models.PositiveIntegerField(help_text="Population count before transfer")
     transferred_count = models.PositiveIntegerField(help_text="Number of fish transferred")
     mortality_count = models.PositiveIntegerField(default=0, help_text="Number of mortalities during transfer")
     source_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2, help_text="Biomass before transfer in kg")
     transferred_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2, help_text="Biomass transferred in kg")
+    
+    # Lifecycle information
     source_lifecycle_stage = models.ForeignKey(
         LifeCycleStage, 
         on_delete=models.PROTECT, 
@@ -176,6 +308,8 @@ class BatchTransfer(models.Model):
         blank=True,
         help_text="New lifecycle stage after transfer"
     )
+    
+    # Container information (for convenience and historical reference)
     source_container = models.ForeignKey(
         Container, 
         on_delete=models.PROTECT, 
@@ -190,12 +324,22 @@ class BatchTransfer(models.Model):
         blank=True,
         help_text="New container after transfer"
     )
+    
+    # Was this a mixing of populations (emergency case)?
+    is_emergency_mixing = models.BooleanField(
+        default=False,
+        help_text="Whether this was an emergency mixing of different batches"
+    )
+    
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        ordering = ['-transfer_date', '-created_at']
+    
     def __str__(self):
-        return f"Transfer {self.transfer_type}: {self.source_batch.batch_number} on {self.transfer_date}"
+        return f"Transfer {self.get_transfer_type_display()}: {self.source_batch.batch_number} on {self.transfer_date}"
 
 
 class MortalityEvent(models.Model):
