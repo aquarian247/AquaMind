@@ -170,8 +170,13 @@ class BatchTransferSerializer(serializers.ModelSerializer):
     destination_lifecycle_stage_name = serializers.StringRelatedField(
         source='destination_lifecycle_stage', read_only=True
     )
+    # Legacy container name fields - kept for backward compatibility
     source_container_name = serializers.StringRelatedField(source='source_container', read_only=True)
     destination_container_name = serializers.StringRelatedField(source='destination_container', read_only=True)
+    
+    # New assignment-based container fields
+    source_assignment_container = serializers.StringRelatedField(source='source_assignment.container', read_only=True)
+    destination_assignment_container = serializers.StringRelatedField(source='destination_assignment.container', read_only=True)
 
     class Meta:
         model = BatchTransfer
