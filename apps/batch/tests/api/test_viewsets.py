@@ -218,12 +218,23 @@ class BatchViewSetTest(APITestCase):
             batch_number='BATCH001',
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
-            container=self.container,
             status='ACTIVE',
+            batch_type='STANDARD',
             population_count=10000,
             avg_weight_g=Decimal('2.50'),
             biomass_kg=Decimal('25.00'),
             start_date=datetime.date.today()
+        )
+        
+        # Create BatchContainerAssignment
+        from apps.batch.models import BatchContainerAssignment
+        self.batch_assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            population_count=10000,
+            biomass_kg=Decimal('25.00'),
+            assignment_date=datetime.date.today(),
+            is_active=True
         )
         
         # Batch data for API tests
@@ -231,13 +242,23 @@ class BatchViewSetTest(APITestCase):
             'batch_number': 'BATCH002',
             'species': self.species.id,
             'lifecycle_stage': self.lifecycle_stage.id,
-            'container': self.container.id,
             'status': 'ACTIVE',
+            'batch_type': 'STANDARD',
             'population_count': 5000,
             'avg_weight_g': '3.00',
             'start_date': datetime.date.today().isoformat(),
             'expected_end_date': (datetime.date.today() + datetime.timedelta(days=30)).isoformat(),
             'notes': 'Test batch'
+        }
+        
+        # Container assignment data
+        self.assignment_data = {
+            'batch_id': None,  # Will be set after batch creation
+            'container_id': self.container.id,
+            'population_count': 5000,
+            'biomass_kg': '15.00',
+            'assignment_date': datetime.date.today().isoformat(),
+            'is_active': True
         }
 
     def test_list_batches(self):
@@ -249,7 +270,8 @@ class BatchViewSetTest(APITestCase):
         self.assertEqual(len(items), 1)
 
     def test_create_batch(self):
-        """Test creating a batch."""
+        """Test creating a batch and assigning it to a container."""
+        # Create batch
         url = get_batch_url('batches')
         response = self.client.post(url, self.batch_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -259,6 +281,19 @@ class BatchViewSetTest(APITestCase):
         self.assertEqual(new_batch.avg_weight_g, Decimal('3.00'))
         # Check biomass calculation: 5000 * 3g / 1000 = 15kg
         self.assertEqual(new_batch.biomass_kg, Decimal('15.00'))
+        
+        # Now create container assignment
+        url = get_batch_url('container-assignments')
+        self.assignment_data['batch_id'] = new_batch.id
+        response = self.client.post(url, self.assignment_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Verify the assignment was created
+        from apps.batch.models import BatchContainerAssignment
+        assignments = BatchContainerAssignment.objects.filter(batch=new_batch)
+        self.assertEqual(assignments.count(), 1)
+        self.assertEqual(assignments[0].population_count, 5000)
+        self.assertEqual(assignments[0].biomass_kg, Decimal('15.00'))
 
     def test_retrieve_batch(self):
         """Test retrieving a batch."""
@@ -275,8 +310,8 @@ class BatchViewSetTest(APITestCase):
             'batch_number': 'BATCH001',
             'species': self.species.id,
             'lifecycle_stage': self.lifecycle_stage.id,
-            'container': self.container.id,
             'status': 'ACTIVE',
+            'batch_type': 'STANDARD',
             'population_count': 8000,
             'avg_weight_g': '3.00',
             'start_date': self.batch.start_date.isoformat(),
@@ -289,6 +324,18 @@ class BatchViewSetTest(APITestCase):
         self.assertEqual(self.batch.notes, 'Updated notes')
         # Check biomass recalculation: 8000 * 3g / 1000 = 24kg
         self.assertEqual(self.batch.biomass_kg, Decimal('24.00'))
+        
+        # The container assignment should be updated separately
+        url = get_batch_url('container-assignments', detail=True, pk=self.batch_assignment.id)
+        assignment_update = {
+            'batch_id': self.batch.id,
+            'container_id': self.container.id,
+            'population_count': 8000,
+            'biomass_kg': '24.00',
+            'is_active': True
+        }
+        response = self.client.patch(url, assignment_update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_partial_update_batch(self):
         """Test partially updating a batch."""
@@ -315,17 +362,28 @@ class BatchViewSetTest(APITestCase):
     def test_filter_batches(self):
         """Test filtering batches."""
         # Create another batch
-        Batch.objects.create(
+        batch = Batch.objects.create(
             batch_number='BATCH003',
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
-            container=self.container,
             status='COMPLETED',
+            batch_type='STANDARD',
             population_count=2000,
             avg_weight_g=Decimal('5.00'),
             biomass_kg=Decimal('10.00'),
             start_date=datetime.date.today(),
             actual_end_date=datetime.date.today()
+        )
+        
+        # Create BatchContainerAssignment for the new batch
+        from apps.batch.models import BatchContainerAssignment
+        BatchContainerAssignment.objects.create(
+            batch=batch,
+            container=self.container,
+            population_count=2000,
+            biomass_kg=Decimal('10.00'),
+            assignment_date=datetime.date.today(),
+            is_active=True
         )
         
         url = get_batch_url('batches') + '?status=ACTIVE'
