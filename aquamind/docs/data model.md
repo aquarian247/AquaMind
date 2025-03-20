@@ -36,19 +36,22 @@ sensor → container
 feed_containers → area or hall
 
 2. Batch Management
-Tracks fish batches through their lifecycle.
+Tracks fish batches through their lifecycle, including support for multi-population containers and batch traceability.
 
-batch: Core batch data (counts by stage, average weight).
-batch_container_assignment: Assigns batches to containers (stage, count).
-batch_transfer: Records batch movements between containers.
-batch_history: Historical batch snapshots.
+batch: Core batch data (species, lifecycle stage, status, date ranges).
+batch_container_assignment: Assigns batch portions to containers with counts and biomass measurements, enabling multiple batches per container.
+batch_composition: Tracks mixed-batch compositions for cases where batches get combined.
+batch_transfer: Records batch movements between containers, including splits, merges, and lifecycle transitions.
+batch_history: Historical batch snapshots for auditing and traceability.
 batch_media: Media files linked to batches.
+
 Key Relationships:
 
-batch_container_assignment → batch, container
-batch_distribution → batch, container (from/to)
-batch_history → batch
-batch_media → batch
+batch_container_assignment → batch, container: Many-to-many relationship allowing multiple batches in one container and portions of a batch across containers.
+batch_composition → batch: Self-referential relationship tracking mixed-batch components and percentages.
+batch_transfer → batch, batch_container_assignment: Records movements with detailed source/destination information.
+batch_history → batch: Captures point-in-time snapshots of batch state.
+batch_media → batch: Links media files for documentation.
 
 3. Broodstock Management
 Manages genetic traits, breeding programs, and simulations for the Broodstock Department to support selective breeding and genetic innovation.

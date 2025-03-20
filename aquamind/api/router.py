@@ -34,6 +34,9 @@ urlpatterns = [
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
+    # Authentication endpoints
+    path('auth/', include('apps.users.api.urls')),
+    
     # API endpoints for each app
     path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
     path('environmental/', include((environmental_router.urls, 'environmental'))),

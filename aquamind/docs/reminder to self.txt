@@ -1,0 +1,2 @@
+Remember to check if the postgresql windows service is running, if having issues with the database.
+Don't forget audit trail tables. 

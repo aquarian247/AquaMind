@@ -22,7 +22,7 @@ The system serves executive management, country management, subsidiary companies
 **Purpose**: Provide the foundational structure for managing physical assets and locations, enabling all other features like batch management, scenario planning, and operational optimization.
 
 **Functionality**:
-- Create and maintain freshwater stations, broodstock stations, and sea areas, each with geo-positioning (latitude/longitude) to collect daylight (via astronomical formulas) and weather data (via external APIs, e.g., OpenWeatherMap).
+- Create and maintain freshwater stations, broodstock stations, and sea areas, each with geo-positioning (latitude/longitude) and weather data (via external APIs, e.g., OpenWeatherMap).
 - Define container types (e.g., tanks, pens) and assign them to stations or areas.
 - Manage Logistics assets (e.g., ships) and track their operations, such as transporting fish (e.g., "Ship A moved PostSmolt from Station B to Area C on [date]") or performing treatments (e.g., "Ship D deliced Pens X, Y, Z on [date]"), with associated costs logged.
 
@@ -43,10 +43,14 @@ The system serves executive management, country management, subsidiary companies
 - Assign batches to containers (e.g., tanks, pens) and record manual stage transitions.
 - Track stages: Egg, Fry, Parr, Smolt, PostSmolt, Adult.
 - Log health metrics (e.g., mortality, disease) and treatments.
+- Support mixed-population containers for emergency scenarios.
+- Trace batch lineage through splits, merges, and transfers.
 
 **Behavior**:
 - Stage transitions are manual, recorded post-action with details like fish counts and treatments.
 - Display batch history and status in a tabular format.
+- When batches are mixed in a container (e.g., due to logistical emergencies), the system maintains traceability of the original batches.
+- Subsequent transfers of mixed batches preserve the composition information.
 
 **Justification**:
 - *Freshwater (including Hatcheries)*: Ensures accurate logging of frequent stage transitions.
@@ -124,11 +128,11 @@ The system serves executive management, country management, subsidiary companies
 **Purpose**: Optimize feed and resource planning for cost efficiency.
 
 **Functionality**:
-- Track feed types, quantities, and usage.
+- Track feed types,feed type batches, quantities, and usage.
 - Predict needs based on growth and plans.
 
 **Behavior**:
-- Suggest reorder points and align feed schedules.
+- Suggest reorder points, track feed batches and align feed schedules.
 
 **Justification**:
 - *Farming/Logistics*: Ensures resource availability.
