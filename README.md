@@ -54,11 +54,46 @@ The application follows Django's Model-Template-View (MTV) architecture with the
 
 ### Prerequisites
 
-- Python 3.11
-- PostgreSQL with TimescaleDB extension
-- Node.js and npm (for frontend development)
+- Docker and Docker Compose (recommended)
+- Alternatively: Python 3.11, PostgreSQL with TimescaleDB extension, and Node.js with npm
 
 ### Installation
+
+#### Option 1: Using Docker (Recommended)
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/yourusername/AquaMind.git
+cd AquaMind
+```
+
+2. **Start the development environment with Docker Compose**
+
+```bash
+docker-compose up -d
+```
+
+3. **Apply migrations**
+
+```bash
+docker-compose exec web python manage.py migrate
+```
+
+4. **Create a superuser**
+
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+
+5. **Access the application**
+
+- Django backend: http://localhost:8000
+- Vue.js frontend: http://localhost:5173
+
+For more details on the Docker environment, see [Docker Development Environment](docs/docker_environment.md).
+
+#### Option 2: Manual Installation
 
 1. **Clone the repository**
 
@@ -110,6 +145,7 @@ python manage.py runserver
 
 ```
 AquaMind/
+├── .devcontainer/          # VS Code Dev Container configuration
 ├── apps/                   # Application modules
 │   ├── core/               # Core functionality and utilities
 │   ├── users/              # User authentication and permissions
@@ -125,8 +161,11 @@ AquaMind/
 │   └── wsgi.py             # WSGI configuration
 ├── docs/                   # Documentation
 │   ├── prd.md              # Product Requirements Document
-│   └── data model.md       # Database schema documentation
-├── frontend/               # Vue.js frontend (to be implemented)
+│   ├── data model.md       # Database schema documentation
+│   └── docker_environment.md # Docker setup documentation
+├── frontend/               # Vue.js 3 frontend
+├── Dockerfile.dev          # Development Dockerfile
+├── docker-compose.yml      # Docker Compose configuration
 ├── requirements.txt        # Python dependencies
 └── manage.py               # Django management script
 ```
