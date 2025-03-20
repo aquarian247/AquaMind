@@ -6,8 +6,9 @@ import { useAuthStore } from '@/store/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const username = ref('')
-const password = ref('')
+// Pre-fill with test credentials for development
+const username = ref('testuser')
+const password = ref('password123')
 const errorMessage = ref('')
 const isLoading = ref(false)
 

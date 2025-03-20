@@ -10,7 +10,12 @@ export const useAuthStore = defineStore('auth', {
     // Loading state
     loading: false,
     // Error message
-    error: null
+    error: null,
+    // For testing - hardcoded credentials
+    testCredentials: {
+      username: 'testuser',
+      password: 'password123'
+    }
   }),
   
   getters: {
@@ -26,11 +31,15 @@ export const useAuthStore = defineStore('auth', {
       
       try {
         console.log('Auth store: login attempt')
+        // Use test credentials for debugging
+        const credentials = {
+          username: username || this.testCredentials.username,
+          password: password || this.testCredentials.password
+        }
+        console.log('Using credentials:', credentials.username)
+        
         // Call the Django token auth endpoint
-        const response = await axios.post('/api/auth/token/', {
-          username,
-          password
-        })
+        const response = await axios.post('/api/auth/token/', credentials)
         
         console.log('Auth store: received response', response.data)
         

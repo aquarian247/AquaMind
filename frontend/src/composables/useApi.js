@@ -17,9 +17,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Token ${token}`
     }
+    console.log(`Sending ${config.method?.toUpperCase()} request to ${config.url}`, { headers: config.headers, params: config.params })
     return config
   },
   (error) => {
+    console.error('Request interceptor error:', error)
     return Promise.reject(error)
   }
 )
@@ -27,13 +29,20 @@ api.interceptors.request.use(
 // Response interceptor for API calls
 api.interceptors.response.use(
   (response) => {
+    console.log(`Response from ${response.config.url}:`, { status: response.status, data: response.data })
     return response
   },
   async (error) => {
+    console.error(`API Error: ${error.config?.url}`, {
+      status: error.response?.status,
+      message: error.message,
+      response: error.response?.data
+    })
+    
     const originalRequest = error.config
     
     // Handle token refresh or redirect to login on auth errors
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true
       
       // You could implement token refresh logic here

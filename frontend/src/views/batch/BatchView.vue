@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AppLayout from '@/components/common/AppLayout.vue'
+import BatchTimeline from '@/components/batch/BatchTimeline.vue'
 import { useApi } from '@/composables/useApi'
 
 const api = useApi()
@@ -10,6 +11,7 @@ const batches = ref([])
 const selectedBatch = ref(null)
 const batchDetails = ref(null)
 const detailsLoading = ref(false)
+const activeTab = ref('details') // 'details' or 'timeline'
 
 // Status class mapping
 const statusClasses = {
@@ -65,6 +67,11 @@ async function fetchBatchDetails(batchId) {
 // Handle batch selection
 function selectBatch(batchId) {
   fetchBatchDetails(batchId)
+}
+
+// Switch between tabs
+function setActiveTab(tab) {
+  activeTab.value = tab
 }
 
 // Format date for display
@@ -134,7 +141,27 @@ onMounted(() => {
         <!-- Batch details -->
         <div class="md:col-span-3">
           <div v-if="selectedBatch" class="mb-4">
-            <h2 class="text-lg font-semibold mb-3">Batch Details: {{ selectedBatch.batch_number }}</h2>
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-lg font-semibold">Batch: {{ selectedBatch.batch_number }}</h2>
+              
+              <!-- Tab navigation -->
+              <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <button 
+                  @click="setActiveTab('details')"
+                  class="px-3 py-1 text-sm rounded-md focus:outline-none"
+                  :class="activeTab === 'details' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                >
+                  Details
+                </button>
+                <button 
+                  @click="setActiveTab('timeline')"
+                  class="px-3 py-1 text-sm rounded-md focus:outline-none"
+                  :class="activeTab === 'timeline' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                >
+                  Timeline
+                </button>
+              </div>
+            </div>
             
             <!-- Batch details loading indicator -->
             <div v-if="detailsLoading" class="flex justify-center py-8">
@@ -142,7 +169,7 @@ onMounted(() => {
             </div>
             
             <!-- Batch details content -->
-            <div v-else-if="batchDetails" class="space-y-6">
+            <div v-else-if="batchDetails && activeTab === 'details'" class="space-y-6">
               <!-- Basic information card -->
               <div class="bg-white shadow rounded-lg overflow-hidden">
                 <div class="px-4 py-5 sm:p-6">
@@ -267,8 +294,13 @@ onMounted(() => {
               </div>
             </div>
             
+            <!-- Timeline view -->
+            <div v-else-if="batchDetails && activeTab === 'timeline'" class="mt-4">
+              <BatchTimeline :batchId="selectedBatch.id" />
+            </div>
+            
             <!-- No batch details found state -->
-            <div v-else class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
+            <div v-else-if="!batchDetails" class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
               Failed to load batch details.
             </div>
           </div>
