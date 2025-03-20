@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/workspaces/AquaMind
+    ports:
+      - "8000:8000"
+    depends_on:
+      - timescale-db
+    environment:
+      - DATABASE_URL=postgresql://postgres:aquapass12345@timescale-db:5432/aquamind_db
+      - DJANGO_SETTINGS_MODULE=aquamind.settings
+    networks:
+      - aquamind-net
+    command: python manage.py runserver 0.0.0.0:8000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    networks:
+      - aquamind-net
+
+  timescale-db:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      - POSTGRES_DB=aquamind_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=aquapass12345
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    networks:
+      - aquamind-net
+
+networks:
+  aquamind-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
