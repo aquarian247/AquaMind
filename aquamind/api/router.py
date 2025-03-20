@@ -12,6 +12,7 @@ from drf_yasg import openapi
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
 from apps.batch.api.routers import router as batch_router
+from apps.inventory.api.routers import router as inventory_router
 # Import the users URLs
 
 # Create a schema view for API documentation
@@ -41,5 +42,6 @@ urlpatterns = [
     path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
     path('environmental/', include((environmental_router.urls, 'environmental'))),
     path('batch/', include((batch_router.urls, 'batch'))),
+    path('inventory/', include((inventory_router.urls, 'inventory'))),
     path('users/', include('apps.users.urls')),
 ]

@@ -64,7 +64,8 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # Temporarily commented out for development in Cascade browser preview
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -74,6 +75,9 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True  # Only for development
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:40199', 'http://localhost:40199', 'http://127.0.0.1:*', 'http://localhost:*']
 
 ROOT_URLCONF = "aquamind.urls"
 
