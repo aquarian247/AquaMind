@@ -1,11 +1,16 @@
+"""
+ViewSets for the inventory app API.
+
+These ViewSets provide the CRUD operations for feed and inventory-related models.
+"""
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
 
-from .models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
-from .serializers import (
+from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
+from apps.inventory.serializers import (
     FeedSerializer,
     FeedPurchaseSerializer,
     FeedStockSerializer,
