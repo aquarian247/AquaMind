@@ -237,6 +237,9 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [x] Implement API documentation with Swagger
 - [x] Create API test framework
 
+#### 1.4 Configure TimescaleDB Hypertables
+- [x] Configure TimescaleDB hypertables for environmental data
+
 ### Phase 2: Infrastructure Management (Weeks 4-6)
 
 #### 2.1 Geo-Location Management
@@ -418,3 +421,9 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [ ] Create accounting system connectivity
 - [ ] Build external reporting integration
 - [ ] Develop API for third-party systems
+
+## Completed Milestones
+
+### 2025-03-31: Configured TimescaleDB Hypertables for Environmental Data
+- Implemented Django migration `environmental/migrations/0006_correctly_enable_hypertables.py` using `RunSQL` to execute `CREATE HYPERTABLE` commands for `environmental_environmentalreading` (partitioned by `reading_time`, `sensor_id`) and `environmental_weatherdata` (partitioned by `timestamp`, `area_id`).
+- Debugged and corrected the database inspection script (`inspect_db_schema.py`) to reliably detect hypertables by querying `_timescaledb_catalog` tables directly, as the `timescaledb_information` views proved unreliable in the development environment.

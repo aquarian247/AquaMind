@@ -177,7 +177,7 @@ def inspect_hypertables(conn):
             print("TimescaleDB extension is not installed in this database.")
             return
         
-        # Query TimescaleDB hypertables - improved query that works with TimescaleDB
+        # Query TimescaleDB hypertables - use internal catalog tables as information schema view is unreliable here
         cursor.execute("""
             SELECT 
                 t.table_name,
@@ -187,21 +187,23 @@ def inspect_hypertables(conn):
                 _timescaledb_catalog.hypertable t
             JOIN 
                 _timescaledb_catalog.dimension d ON t.id = d.hypertable_id
-            WHERE 
-                d.column_type = 1
             ORDER BY 
-                t.table_name
+                t.table_name, d.column_name
         """)
         
         hypertables = cursor.fetchall()
         
         if hypertables:
-            print(f"Found {len(hypertables)} hypertables:\n")
-            print(f"{'Table Name':<35} {'Schema':<15} {'Time Dimension'}")
+            print(f"Found {len(hypertables)} hypertable dimensions:\n")
+            print(f"{'Table Name':<35} {'Schema':<15} {'Dimension Column'}")
             print(f"{'-'*35} {'-'*15} {'-'*20}")
             
-            for table, schema, time_dim in hypertables:
-                print(f"{table:<35} {schema:<15} {time_dim}")
+            processed_tables = set()
+            for table, schema, dim_col in hypertables:
+                # Print each dimension found, note if table is repeated
+                marker = "" if table not in processed_tables else " (duplicate dimension)"
+                print(f"{table:<35} {schema:<15} {dim_col}{marker}")
+                processed_tables.add(table)
         else:
             print("No TimescaleDB hypertables found in the database.")
             
