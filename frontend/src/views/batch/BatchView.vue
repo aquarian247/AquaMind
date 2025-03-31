@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import AppLayout from '@/components/common/AppLayout.vue'
 import BatchTimeline from '@/components/batch/BatchTimeline.vue'
+import BatchPerformanceDashboard from '@/components/batch/BatchPerformanceDashboard.vue'
 import { useApi } from '@/composables/useApi'
 
 const api = useApi()
@@ -11,7 +12,7 @@ const batches = ref([])
 const selectedBatch = ref(null)
 const batchDetails = ref(null)
 const detailsLoading = ref(false)
-const activeTab = ref('details') // 'details' or 'timeline'
+const activeTab = ref('details') // 'details', 'timeline', or 'performance'
 
 // Status class mapping
 const statusClasses = {
@@ -160,6 +161,13 @@ onMounted(() => {
                 >
                   Timeline
                 </button>
+                <button 
+                  @click="setActiveTab('performance')"
+                  class="px-3 py-1 text-sm rounded-md focus:outline-none"
+                  :class="activeTab === 'performance' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                >
+                  Performance
+                </button>
               </div>
             </div>
             
@@ -297,6 +305,11 @@ onMounted(() => {
             <!-- Timeline view -->
             <div v-else-if="batchDetails && activeTab === 'timeline'" class="mt-4">
               <BatchTimeline :batchId="selectedBatch.id" />
+            </div>
+            
+            <!-- Performance Dashboard view -->
+            <div v-else-if="batchDetails && activeTab === 'performance'" class="mt-4">
+              <BatchPerformanceDashboard :batchId="selectedBatch.id" />
             </div>
             
             <!-- No batch details found state -->
