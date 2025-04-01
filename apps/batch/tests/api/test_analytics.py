@@ -133,6 +133,7 @@ class BatchAnalyticsTestCase(APITestCase):
         self.assignment1 = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             assignment_date=date.today() - timedelta(days=30),
             population_count=1000,
             biomass_kg=Decimal('100.00'),
@@ -142,6 +143,7 @@ class BatchAnalyticsTestCase(APITestCase):
         self.assignment2 = BatchContainerAssignment.objects.create(
             batch=self.batch2,
             container=self.container2,
+            lifecycle_stage=self.lifecycle_stage,
             assignment_date=date.today() - timedelta(days=20),
             population_count=1500,
             biomass_kg=Decimal('120.00'),

@@ -103,19 +103,28 @@ WSGI_APPLICATION = "aquamind.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# PostgreSQL configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'aquamind_db',
         'USER': 'postgres',
-        'PASSWORD': 'aquapass12345',
-        'HOST': 'timescale-db',
+        'PASSWORD': 'adminpass1234',  # Updated with the correct password
+        'HOST': 'localhost',  # Changed from 'timescale-db' to 'localhost'
         'PORT': '5432',
         'OPTIONS': {
             'options': '-c search_path=public'
         }
     }
 }
+
+# SQLite configuration (commented out)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Test runner

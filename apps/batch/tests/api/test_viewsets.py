@@ -231,6 +231,7 @@ class BatchViewSetTest(APITestCase):
         self.batch_assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=10000,
             biomass_kg=Decimal('25.00'),
             assignment_date=datetime.date.today(),
@@ -255,6 +256,7 @@ class BatchViewSetTest(APITestCase):
         self.assignment_data = {
             'batch_id': None,  # Will be set after batch creation
             'container_id': self.container.id,
+            'lifecycle_stage_id': self.lifecycle_stage.id,
             'population_count': 5000,
             'biomass_kg': '15.00',
             'assignment_date': datetime.date.today().isoformat(),
@@ -380,6 +382,7 @@ class BatchViewSetTest(APITestCase):
         BatchContainerAssignment.objects.create(
             batch=batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=2000,
             biomass_kg=Decimal('10.00'),
             assignment_date=datetime.date.today(),
@@ -464,6 +467,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=100,
             biomass_kg=10.0,
             assignment_date=datetime.date.today(),
@@ -500,6 +504,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         data = {
             'batch_id': self.batch.id,
             'container_id': container2.id,
+            'lifecycle_stage_id': self.lifecycle_stage.id,
             'population_count': 50,
             'biomass_kg': 5.0,
             'assignment_date': datetime.date.today().isoformat(),
@@ -532,6 +537,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         data = {
             'batch_id': self.batch.id,
             'container_id': self.container.id,
+            'lifecycle_stage_id': self.lifecycle_stage.id,
             'population_count': 75,  # Updated count
             'biomass_kg': 7.5,       # Updated biomass
             'assignment_date': datetime.date.today().isoformat(),
@@ -581,6 +587,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         BatchContainerAssignment.objects.create(
             batch=batch2,
             container=container2,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=200,
             biomass_kg=20.0,
             assignment_date=datetime.date.today(),

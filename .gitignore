@@ -37,9 +37,9 @@ static/
 
 # Virtual Environment
 venv/
+.venv/
 ENV/
 .env
-.venv
 pip-log.txt
 pip-delete-this-directory.txt
 
@@ -84,11 +84,27 @@ dist/
 ehthumbs.db
 Thumbs.db
 
+# Cache folders
+.cache/
+**/.cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
 # AquaMind specific
 debug_*.py
 check_*.py
 .env.*
 !.env.example
+**/.ipynb_checkpoints/
+**/migrations/__pycache__/
+**/apps/*/__pycache__/
+**/apps/*/*/__pycache__/
 
 # Keep these files even if they match patterns above
 !.gitkeep
+!**/__init__.py  # Keep all __init__.py files as they're essential for Python packages

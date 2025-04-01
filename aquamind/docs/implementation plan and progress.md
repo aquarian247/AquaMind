@@ -308,121 +308,147 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [ ] Build alert and threshold management
 - [ ] Develop environmental reporting
 
-### Phase 5: Operational Planning and Optimization (Weeks 15-18)
+### Phase 5: CI/CD and Testing Infrastructure (Weeks 15-16)
 
-#### 5.1 Infrastructure Status Tracking
+#### 5.1 Testing Strategy Implementation
+- [x] Make TimescaleDB migrations compatible with SQLite for CI
+- [x] Update test fixtures to support the latest model changes
+- [x] Fix authentication and API test issues
+- [ ] Implement comprehensive test coverage reporting
+
+#### 5.2 Database Testing Strategy
+- [x] Implement conditional execution of TimescaleDB operations based on database type
+- [x] Create helper functions for database type detection
+- [ ] Set up automated database schema validation
+- [ ] Implement database migration testing in CI pipeline
+
+#### 5.3 CI/CD Pipeline Enhancement
+- [ ] Set up GitHub Actions for automated testing
+- [ ] Implement deployment automation for staging environment
+- [ ] Create documentation for CI/CD workflow
+- [ ] Set up performance testing in CI pipeline
+
+#### 5.4 Code Quality and Maintenance
+- [ ] Implement code linting in CI pipeline
+- [ ] Set up automated code quality checks
+- [ ] Create contribution guidelines
+- [ ] Implement automated dependency updates
+
+### Phase 6: Operational Planning and Optimization (Weeks 17-20)
+
+#### 6.1 Infrastructure Status Tracking
 - [ ] Implement real-time infrastructure state monitoring
 - [ ] Create density and capacity management
 - [ ] Build dashboard for infrastructure utilization
 - [ ] Develop alerts for capacity issues
 
-#### 5.2 Recommendation Engine
+#### 6.2 Recommendation Engine
 - [ ] Implement recommendation framework
 - [ ] Create prioritization system for actions
 - [ ] Build recommendation notification system
 - [ ] Develop recommendation tracking and outcomes
 
-#### 5.3 Resource Optimization
+#### 6.3 Resource Optimization
 - [ ] Implement batch distribution optimization
 - [ ] Create feeding schedule optimization
 - [ ] Build treatment planning system
 - [ ] Develop resource utilization reporting
 
-### Phase 6: Inventory and Feed Management (Weeks 19-22)
+### Phase 7: Inventory and Feed Management (Weeks 21-24)
 
-#### 6.1 Feed Management
+#### 7.1 Feed Management
 - [x] Implement feed types and composition tracking
 - [x] Create feed purchase and inventory system
 - [x] Build feeding event logging
 - [x] Develop feed stock monitoring
 - [x] Track feed batches from suppliers
 
-#### 6.2 Inventory Analytics
+#### 7.2 Inventory Analytics
 - [ ] Implement Feed Conversion Ratio (FCR) calculations
 - [ ] Create feed usage forecasting
 - [ ] Build feed cost analysis
 - [ ] Develop inventory optimization recommendations
 
-#### 6.3 Resource Planning
+#### 7.3 Resource Planning
 - [ ] Implement reorder point management
 - [ ] Create inventory level alerts
 - [ ] Build resource planning dashboards
 - [ ] Develop cost optimization tools
 
-### Phase 7: Health Monitoring and Medical Journal (Weeks 23-26)
+### Phase 8: Health Monitoring and Medical Journal (Weeks 25-28)
 
-#### 7.1 Journal System
+#### 8.1 Journal System
 - [ ] Implement journal entry framework
 - [ ] Create categorization and severity tracking
 - [ ] Build observation and action logging
 - [ ] Develop journal search and filtering
 
-#### 7.2 Health Tracking
+#### 8.2 Health Tracking
 - [ ] Implement mortality tracking and reasons
 - [ ] Create vaccination management
 - [ ] Build treatment recording and tracking
 - [ ] Develop withholding period monitoring
 
-#### 7.3 Parasite Management
+#### 8.3 Parasite Management
 - [ ] Implement sea lice counting system
 - [ ] Create treatment effectiveness analysis
 - [ ] Build parasite level visualization
 - [ ] Develop intervention planning tools
 
-### Phase 8: Scenario Planning and Simulation (Weeks 27-30)
+### Phase 9: Scenario Planning and Simulation (Weeks 29-32)
 
-#### 8.1 Scenario Framework
+#### 9.1 Scenario Framework
 - [ ] Implement scenario creation and management
 - [ ] Create variable adjustment system
 - [ ] Build scenario comparison tools
 - [ ] Develop scenario versioning
 
-#### 8.2 Growth Modeling
+#### 9.2 Growth Modeling
 - [ ] Implement TGC (Thermal Growth Coefficient) model
 - [ ] Create SGR (Specific Growth Rate) calculations
 - [ ] Develop growth visualization tools
 
-#### 8.3 Scenario Analytics
+#### 9.3 Scenario Analytics
 - [ ] Implement scenario outcome predictions
 - [ ] Create cost and resource projections
 - [ ] Build scenario optimization recommendations
 - [ ] Develop what-if analysis tools
 
-### Phase 9: Regulatory Compliance and Reporting (Weeks 31-34)
+### Phase 10: Regulatory Compliance and Reporting (Weeks 33-36)
 
-#### 9.1 Compliance Framework
+#### 10.1 Compliance Framework
 - [ ] Implement compliance requirement tracking
 - [ ] Create deadline management system
 - [ ] Build regulatory parameter monitoring
 - [ ] Develop compliance dashboards
 
-#### 9.2 Reporting System
+#### 10.2 Reporting System
 - [ ] Implement report generation framework
 - [ ] Create customizable report templates
 - [ ] Build scheduled report generation
 - [ ] Develop compliance evidence collection
 
-#### 9.3 Audit Management
+#### 10.3 Audit Management
 - [ ] Implement audit trail functionality
 - [ ] Create inspection record management
 - [ ] Build corrective action tracking
 - [ ] Develop audit preparation tools
 
-### Phase 10: Advanced Features and Integration (Weeks 35-40)
+### Phase 11: Advanced Features and Integration (Weeks 37-40)
 
-#### 10.1 Broodstock Management
+#### 11.1 Broodstock Management
 - [ ] Implement genetic trait tracking
 - [ ] Create breeding program management
 - [ ] Build genetic profile analysis
 - [ ] Develop genetic scenario planning
 
-#### 10.2 Advanced Analytics
+#### 11.2 Advanced Analytics
 - [ ] Implement predictive analytics for growth
 - [ ] Create cost optimization models
 - [ ] Build production forecast system
 - [ ] Develop business intelligence dashboards
 
-#### 10.3 External System Integration
+#### 11.3 External System Integration
 - [ ] Implement ERP system integration
 - [ ] Create accounting system connectivity
 - [ ] Build external reporting integration

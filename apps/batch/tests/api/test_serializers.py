@@ -250,6 +250,7 @@ class BatchSerializerTest(TestCase):
         assignment = BatchContainerAssignment.objects.create(
             batch=batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=10000,
             biomass_kg=Decimal('400.00'),
             assignment_date=datetime.date.today(),
@@ -258,6 +259,7 @@ class BatchSerializerTest(TestCase):
         
         self.assertEqual(assignment.batch, batch)
         self.assertEqual(assignment.container, self.container)
+        self.assertEqual(assignment.lifecycle_stage, self.lifecycle_stage)
         self.assertEqual(assignment.population_count, 10000)
 
     def test_end_date_validation(self):
@@ -348,6 +350,7 @@ class BatchTransferSerializerTest(TestCase):
         self.source_assignment = BatchContainerAssignment.objects.create(
             batch=self.source_batch,
             container=self.container1,
+            lifecycle_stage=self.lifecycle_stage1,
             population_count=10000,
             biomass_kg=Decimal('25.00'),
             assignment_date=datetime.date.today(),
@@ -370,6 +373,7 @@ class BatchTransferSerializerTest(TestCase):
         self.destination_assignment = BatchContainerAssignment.objects.create(
             batch=self.destination_batch,
             container=self.container2,
+            lifecycle_stage=self.lifecycle_stage2,
             population_count=5000,
             biomass_kg=Decimal('50.00'),
             assignment_date=datetime.date.today(),
@@ -507,6 +511,7 @@ class MortalityEventSerializerTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=10000,
             biomass_kg=Decimal('25.00'),
             assignment_date=datetime.date.today(),
@@ -624,6 +629,7 @@ class BatchContainerAssignmentSerializerTest(TestCase):
         self.valid_assignment_data = {
             'batch_id': self.batch.id,
             'container_id': self.container.id,
+            'lifecycle_stage_id': self.lifecycle_stage.id,
             'population_count': 5000,
             'biomass_kg': Decimal('12.50'),
             'assignment_date': datetime.date.today(),
@@ -638,6 +644,7 @@ class BatchContainerAssignmentSerializerTest(TestCase):
         assignment = serializer.save()
         self.assertEqual(assignment.batch, self.batch)
         self.assertEqual(assignment.container, self.container)
+        self.assertEqual(assignment.lifecycle_stage, self.lifecycle_stage)
         self.assertEqual(assignment.population_count, 5000)
         self.assertEqual(assignment.biomass_kg, Decimal('12.50'))
         self.assertTrue(assignment.is_active)
@@ -648,6 +655,7 @@ class BatchContainerAssignmentSerializerTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=5000,
             biomass_kg=Decimal('450.00'),  # 450 kg of 500 kg capacity
             assignment_date=datetime.date.today(),
@@ -668,6 +676,7 @@ class BatchContainerAssignmentSerializerTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=8000,  # 8000 of 10000 total
             biomass_kg=Decimal('20.00'),
             assignment_date=datetime.date.today(),
@@ -834,6 +843,7 @@ class GrowthSampleSerializerTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
             population_count=10000,
             biomass_kg=Decimal('25.00'),
             assignment_date=datetime.date.today(),

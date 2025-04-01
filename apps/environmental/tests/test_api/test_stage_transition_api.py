@@ -93,6 +93,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         self.source_assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
+            lifecycle_stage=self.source_stage,
             population_count=1000,
             biomass_kg=Decimal('100.00'),
             assignment_date=timezone.now().date(),
@@ -112,6 +113,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         self.destination_assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container2,  # Use different container
+            lifecycle_stage=self.source_stage,
             population_count=1000,
             biomass_kg=Decimal('100.00'),
             assignment_date=timezone.now().date(),
@@ -254,6 +256,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         validation_source_assignment = BatchContainerAssignment.objects.create(
             batch=validation_batch,
             container=self.container,
+            lifecycle_stage=self.source_stage,
             population_count=500,
             biomass_kg=Decimal('50.00'),
             assignment_date=timezone.now().date(),
@@ -273,6 +276,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         validation_dest_assignment = BatchContainerAssignment.objects.create(
             batch=validation_batch,
             container=validation_container,
+            lifecycle_stage=self.source_stage,
             population_count=500,
             biomass_kg=Decimal('50.00'),
             assignment_date=timezone.now().date(),
@@ -361,6 +365,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         second_source_assignment = BatchContainerAssignment.objects.create(
             batch=second_batch,
             container=self.container,
+            lifecycle_stage=self.source_stage,
             population_count=800,
             biomass_kg=Decimal('80.00'),
             assignment_date=timezone.now().date(),
@@ -380,6 +385,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         second_dest_assignment = BatchContainerAssignment.objects.create(
             batch=second_batch,
             container=second_container,
+            lifecycle_stage=self.source_stage,
             population_count=800,
             biomass_kg=Decimal('80.00'),
             assignment_date=timezone.now().date(),

@@ -23,8 +23,8 @@ def get_db_connection():
     conn = psycopg2.connect(
         dbname='aquamind_db',
         user='postgres',
-        password='aquapass12345',
-        host='timescale-db',
+        password='adminpass1234',
+        host='localhost',
         port='5432'
     )
     # Set autocommit mode to avoid transaction issues

@@ -286,15 +286,22 @@ class BatchContainerAssignmentSerializer(serializers.ModelSerializer):
             model = Container
             fields = ['id', 'name', 'active']
     
+    class NestedLifeCycleStageSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = LifeCycleStage
+            fields = ['id', 'name']
+    
     batch = NestedBatchSerializer(read_only=True)
     batch_id = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all(), source='batch', write_only=True)
     container = NestedContainerSerializer(read_only=True)
     container_id = serializers.PrimaryKeyRelatedField(queryset=Container.objects.all(), source='container', write_only=True)
+    lifecycle_stage = NestedLifeCycleStageSerializer(read_only=True)
+    lifecycle_stage_id = serializers.PrimaryKeyRelatedField(queryset=LifeCycleStage.objects.all(), source='lifecycle_stage', write_only=True)
     
     class Meta:
         model = BatchContainerAssignment
-        fields = ['id', 'batch', 'batch_id', 'container', 'container_id', 'population_count', 'biomass_kg',
-                  'assignment_date', 'is_active', 'notes', 'created_at', 'updated_at']
+        fields = ['id', 'batch', 'batch_id', 'container', 'container_id', 'lifecycle_stage', 'lifecycle_stage_id', 
+                  'population_count', 'biomass_kg', 'assignment_date', 'is_active', 'notes', 'created_at', 'updated_at']
         read_only_fields = ('created_at',)
     
     def validate(self, data):

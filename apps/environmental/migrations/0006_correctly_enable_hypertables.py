@@ -39,6 +39,79 @@ SELECT create_hypertable(
 );
 '''
 
+def run_timescaledb_sql(apps, schema_editor):
+    """
+    Run TimescaleDB operations only if using PostgreSQL.
+    Skip for SQLite and other databases.
+    """
+    if schema_editor.connection.vendor != 'postgresql':
+        print("Skipping TimescaleDB operations - not using PostgreSQL")
+        return
+    
+    # Check if TimescaleDB is available
+    try:
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute("SELECT extname FROM pg_extension WHERE extname = 'timescaledb';")
+            timescaledb_available = cursor.fetchone() is not None
+    except Exception:
+        timescaledb_available = False
+    
+    if not timescaledb_available:
+        print("Skipping TimescaleDB operations - TimescaleDB extension not available")
+        return
+    
+    # --- Environmental Reading ---
+    
+    # 1. Drop default 'id' based primary key if it exists
+    schema_editor.execute(
+        DROP_DEFAULT_PK_SQL.format(table_name='environmental_environmentalreading')
+    )
+    
+    # 2. Set the composite primary key (reading_time, sensor_id)
+    schema_editor.execute(
+        SET_COMPOSITE_PK_SQL.format(
+            table_name='environmental_environmentalreading', 
+            pk_columns='reading_time, sensor_id'
+        )
+    )
+    
+    # 3. Create the hypertable
+    schema_editor.execute(
+        CREATE_HYPERTABLE_SQL.format(
+            table_name='environmental_environmentalreading',
+            time_column='reading_time',
+            partition_column='sensor_id',
+            num_partitions=16,
+            chunk_interval='7 days'
+        )
+    )
+    
+    # --- Weather Data ---
+    
+    # 1. Drop default 'id' based primary key if it exists
+    schema_editor.execute(
+        DROP_DEFAULT_PK_SQL.format(table_name='environmental_weatherdata')
+    )
+    
+    # 2. Set the composite primary key (timestamp, area_id)
+    schema_editor.execute(
+        SET_COMPOSITE_PK_SQL.format(
+            table_name='environmental_weatherdata', 
+            pk_columns='timestamp, area_id'
+        )
+    )
+    
+    # 3. Create the hypertable
+    schema_editor.execute(
+        CREATE_HYPERTABLE_SQL.format(
+            table_name='environmental_weatherdata',
+            time_column='timestamp',
+            partition_column='area_id',
+            num_partitions=16,
+            chunk_interval='1 month'
+        )
+    )
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -47,61 +120,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # --- Environmental Reading ---
-        
-        # 1. Drop default 'id' based primary key if it exists
-        migrations.RunSQL(
-            sql=DROP_DEFAULT_PK_SQL.format(table_name='environmental_environmentalreading'),
-            reverse_sql=migrations.RunSQL.noop, # Reversing complex PK changes is tricky
-        ),
-
-        # 2. Set the composite primary key (reading_time, sensor_id)
-        migrations.RunSQL(
-            sql=SET_COMPOSITE_PK_SQL.format(
-                table_name='environmental_environmentalreading', 
-                pk_columns='reading_time, sensor_id'
-            ),
-            reverse_sql=migrations.RunSQL.noop, # Define reverse if needed, e.g., back to 'id'
-        ),
-
-        # 3. Create the hypertable
-        migrations.RunSQL(
-            sql=CREATE_HYPERTABLE_SQL.format(
-                table_name='environmental_environmentalreading',
-                time_column='reading_time',
-                partition_column='sensor_id',
-                num_partitions=16,
-                chunk_interval='7 days'
-            ),
-            reverse_sql="SELECT 1;", # Simplistic reverse
-        ),
-
-        # --- Weather Data ---
-        
-        # 1. Drop default 'id' based primary key if it exists
-        migrations.RunSQL(
-            sql=DROP_DEFAULT_PK_SQL.format(table_name='environmental_weatherdata'),
-            reverse_sql=migrations.RunSQL.noop,
-        ),
-
-        # 2. Set the composite primary key (timestamp, area_id)
-        migrations.RunSQL(
-            sql=SET_COMPOSITE_PK_SQL.format(
-                table_name='environmental_weatherdata', 
-                pk_columns='timestamp, area_id'
-            ),
-            reverse_sql=migrations.RunSQL.noop,
-        ),
-
-        # 3. Create the hypertable
-        migrations.RunSQL(
-            sql=CREATE_HYPERTABLE_SQL.format(
-                table_name='environmental_weatherdata',
-                time_column='timestamp',
-                partition_column='area_id',
-                num_partitions=16,
-                chunk_interval='1 month'
-            ),
-            reverse_sql="SELECT 1;", # Simplistic reverse
+        migrations.RunPython(
+            run_timescaledb_sql,
+            reverse_code=migrations.RunPython.noop
         ),
     ]
