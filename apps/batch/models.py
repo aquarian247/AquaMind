@@ -109,7 +109,7 @@ class Batch(models.Model):
     Fish batches that are tracked through their lifecycle.
     Note: Batches are no longer directly tied to containers. Instead, use BatchContainerAssignment
     to track batch portions across containers, which allows multiple batches per container and
-    portions of batches across different containers.
+    portions of batches across different containers simultaneously. It also supports tracking of mixed populations.
     """
     BATCH_STATUS_CHOICES = [
         ('ACTIVE', 'Active'),
@@ -144,6 +144,14 @@ class Batch(models.Model):
         return f"Batch {self.batch_number} - {self.species.name} ({self.lifecycle_stage.name}){batch_type_str}"
     
     def save(self, *args, **kwargs):
+        """
+        Overrides the default save method.
+
+        Automatically calculates biomass_kg from population_count and avg_weight_g
+        if biomass_kg is not provided.
+        Automatically calculates avg_weight_g from biomass_kg and population_count
+        if avg_weight_g is not provided.
+        """
         # Calculate biomass from population count and average weight if not provided
         if not self.biomass_kg and self.population_count and self.avg_weight_g:
             self.biomass_kg = (self.population_count * self.avg_weight_g) / 1000
@@ -203,6 +211,12 @@ class BatchContainerAssignment(models.Model):
         return f"{self.batch.batch_number} in {self.container.name} ({self.population_count} fish)"
     
     def save(self, *args, **kwargs):
+        """
+        Overrides the default save method.
+
+        Automatically calculates biomass_kg based on the assigned population_count
+        and the average weight of the associated batch, if biomass_kg is not provided.
+        """
         # Calculate biomass if not provided but count and weight are available
         if not self.biomass_kg and self.population_count:
             self.biomass_kg = (self.population_count * self.batch.avg_weight_g) / 1000
@@ -390,6 +404,12 @@ class GrowthSample(models.Model):
         return self.condition_factor
     
     def save(self, *args, **kwargs):
+        """
+        Overrides the default save method.
+
+        Automatically calculates the condition_factor using the calculate_condition_factor
+        method if it hasn't been provided and both avg_weight_g and avg_length_cm are available.
+        """
         # Calculate condition factor if not provided
         if not self.condition_factor and self.avg_weight_g and self.avg_length_cm:
             self.calculate_condition_factor()

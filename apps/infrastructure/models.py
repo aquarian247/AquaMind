@@ -253,6 +253,14 @@ class FeedContainer(models.Model):
         ]
     
     def clean(self):
+        """Validate the feed container model.
+
+        Ensures that the feed container is linked to either a hall or a sea area,
+        but not both.
+
+        Raises:
+            ValidationError: If the container is linked to both or neither location.
+        """
         from django.core.exceptions import ValidationError
         
         if self.hall and self.area:
