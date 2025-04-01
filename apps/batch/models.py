@@ -186,9 +186,11 @@ class BatchContainerAssignment(models.Model):
     Tracks which portions of batches are in which containers.
     This enables multiple batches to be in one container and portions of a batch to be in
     multiple containers simultaneously. It also supports tracking of mixed populations.
+    It explicitly tracks the lifecycle stage for the fish in this specific assignment.
     """
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='container_assignments')
     container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='batch_assignments')
+    lifecycle_stage = models.ForeignKey(LifeCycleStage, on_delete=models.PROTECT, related_name='container_assignments')
     population_count = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
     assignment_date = models.DateField()

@@ -6,6 +6,12 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-04-01: Refactor Batch Model for Accurate Stage Tracking
+- Modified the `BatchContainerAssignment` model by adding a `lifecycle_stage` ForeignKey.
+- This allows tracking the specific lifecycle stage for different portions of a batch residing in different containers, accurately reflecting gradual transitions.
+- Kept `Batch.current_stage` as a high-level indicator of the batch's primary target stage.
+- Updated data model documentation and applied database migrations.
+
 ### 2025-03-31: Batch Performance Dashboard Implementation
 - Implemented a comprehensive performance dashboard for batch analytics using Vue.js and Chart.js
 - Created dashboard sections for current metrics summary, growth analysis with charts, mortality analysis, and container metrics

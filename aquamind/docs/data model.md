@@ -20,6 +20,7 @@ Primary Keys: Each table uses an auto-incrementing integer column named id.
 Foreign Keys: Extensive relationships ensure data integrity.
 Data Types: Primarily integer, double precision, character varying, timestamp without time zone, with some json and text.
 TimescaleDB: Hypertables (environmental_reading, weather_data) manage time-series data efficiently.
+
 1. Infrastructure Management
 Manages physical locations and assets.
 
@@ -39,7 +40,8 @@ feed_containers → area or hall
 Tracks fish batches through their lifecycle, including support for multi-population containers and batch traceability.
 
 batch: Core batch data (species, lifecycle stage, status, date ranges).
-batch_container_assignment: Assigns batch portions to containers with counts and biomass measurements, enabling multiple batches per container.
+batch_lifecyclestage: Defines the distinct stages (Egg, Fry, Parr, Smolt, etc.).
+batch_container_assignment: Assigns batch portions to containers with counts, biomass, and the specific lifecycle stage for that portion.
 batch_composition: Tracks mixed-batch compositions for cases where batches get combined.
 batch_transfer: Records batch movements between containers, including splits, merges, and lifecycle transitions.
 batch_history: Historical batch snapshots for auditing and traceability.
