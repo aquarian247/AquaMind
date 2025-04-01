@@ -6,6 +6,14 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-04-01: CI/CD Pipeline and Testing Infrastructure Improvements
+- Made TimescaleDB migrations compatible with SQLite for CI environments
+- Updated test fixtures to support the latest model changes including lifecycle_stage
+- Fixed authentication and weather API tests to ensure compatibility across environments
+- Created helper functions for conditional database operations based on environment
+- Implemented comprehensive repository cleanup and maintenance scripts
+- Updated implementation plan with dedicated CI/CD and Testing Infrastructure phase
+
 ### 2025-04-01: Refactor Batch Model for Accurate Stage Tracking
 - Modified the `BatchContainerAssignment` model by adding a `lifecycle_stage` ForeignKey.
 - This allows tracking the specific lifecycle stage for different portions of a batch residing in different containers, accurately reflecting gradual transitions.
@@ -453,9 +461,3 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [ ] Create accounting system connectivity
 - [ ] Build external reporting integration
 - [ ] Develop API for third-party systems
-
-## Completed Milestones
-
-### 2025-03-31: Configured TimescaleDB Hypertables for Environmental Data
-- Implemented Django migration `environmental/migrations/0006_correctly_enable_hypertables.py` using `RunSQL` to execute `CREATE HYPERTABLE` commands for `environmental_environmentalreading` (partitioned by `reading_time`, `sensor_id`) and `environmental_weatherdata` (partitioned by `timestamp`, `area_id`).
-- Debugged and corrected the database inspection script (`inspect_db_schema.py`) to reliably detect hypertables by querying `_timescaledb_catalog` tables directly, as the `timescaledb_information` views proved unreliable in the development environment.
