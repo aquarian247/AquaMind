@@ -19,7 +19,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aquamind.settings")
 django.setup()
 
 # Import models
-from apps.infrastructure.models import Geography, Area, FreshwaterStation, ContainerType, Hall, Container
+from apps.infrastructure.models import Geography, Area, FreshwaterStation, ContainerType, Hall, Container, FeedContainer
 from apps.batch.models import Species, LifeCycleStage
 
 # Helper function to print creation status
@@ -52,7 +52,8 @@ def create_test_data():
             "name": "A57 - Fuglafjørður",
             "geography": faroe_islands,
             "latitude": 62.2341,  # Example coordinates
-            "longitude": -6.8143
+            "longitude": -6.8143,
+            "max_biomass": 20000000.00  # 20,000 tonnes capacity from test_data_backup.json
         }
     )
     print_status("Area", area_a57, created)
@@ -73,12 +74,12 @@ def create_test_data():
     
     # ====== Initialize Container Types ======
     container_types = [
-        {"id": 8, "name": "Egg&Alevin Trays", "category": "TRAY"},
-        {"id": 9, "name": "Fry Rearing Tanks", "category": "TANK"},
-        {"id": 10, "name": "Parr Rearing Tanks", "category": "TANK"},
-        {"id": 11, "name": "Smolt Tanks", "category": "TANK"},
-        {"id": 12, "name": "Post-Smolt Tanks", "category": "TANK"},
-        {"id": 13, "name": "Sea Pens", "category": "PEN"}
+        {"id": 8, "name": "Egg&Alevin Trays", "category": "TRAY", "max_volume_m3": 3.00},
+        {"id": 9, "name": "Fry Rearing Tanks", "category": "TANK", "max_volume_m3": 15.00},
+        {"id": 10, "name": "Parr Rearing Tanks", "category": "TANK", "max_volume_m3": 50.00},
+        {"id": 11, "name": "Smolt Tanks", "category": "TANK", "max_volume_m3": 400.00},
+        {"id": 12, "name": "Post-Smolt Tanks", "category": "TANK", "max_volume_m3": 1200.00},
+        {"id": 13, "name": "Sea Pens", "category": "PEN", "max_volume_m3": 50000.00}
     ]
     
     ct_objects = {}
@@ -87,7 +88,8 @@ def create_test_data():
             id=ct_data["id"],
             defaults={
                 "name": ct_data["name"],
-                "category": ct_data["category"]
+                "category": ct_data["category"],
+                "max_volume_m3": ct_data["max_volume_m3"]
             }
         )
         ct_objects[ct_data["name"]] = ct_obj
@@ -152,8 +154,8 @@ def create_test_data():
             defaults={
                 "container_type": ct_objects["Egg&Alevin Trays"],
                 "hall": halls["A"],
-                "volume_m3": 3,
-                "max_biomass_kg": 15,  # Example value
+                "volume_m3": 3.00,
+                "max_biomass_kg": 15.00,
                 "active": True,
                 "area": None  # Not in an area
             }
@@ -168,8 +170,8 @@ def create_test_data():
                 defaults={
                     "container_type": ct_objects["Fry Rearing Tanks"],
                     "hall": halls[hall_name],
-                    "volume_m3": 15,
-                    "max_biomass_kg": 150,  # Example value
+                    "volume_m3": 15.00,
+                    "max_biomass_kg": 150.00,
                     "active": True,
                     "area": None  # Not in an area
                 }
@@ -184,8 +186,8 @@ def create_test_data():
                 defaults={
                     "container_type": ct_objects["Parr Rearing Tanks"],
                     "hall": halls[hall_name],
-                    "volume_m3": 50,
-                    "max_biomass_kg": 750,  # Example value
+                    "volume_m3": 50.00,
+                    "max_biomass_kg": 750.00,
                     "active": True,
                     "area": None  # Not in an area
                 }
@@ -200,8 +202,8 @@ def create_test_data():
                 defaults={
                     "container_type": ct_objects["Smolt Tanks"],
                     "hall": halls[hall_name],
-                    "volume_m3": 400,
-                    "max_biomass_kg": 8000,  # Example value
+                    "volume_m3": 400.00,
+                    "max_biomass_kg": 8000.00,
                     "active": True,
                     "area": None  # Not in an area
                 }
@@ -216,8 +218,8 @@ def create_test_data():
                 defaults={
                     "container_type": ct_objects["Post-Smolt Tanks"],
                     "hall": halls[hall_name],
-                    "volume_m3": 1200,
-                    "max_biomass_kg": 30000,  # Example value
+                    "volume_m3": 1200.00,
+                    "max_biomass_kg": 30000.00,
                     "active": True,
                     "area": None  # Not in an area
                 }
@@ -231,13 +233,44 @@ def create_test_data():
             defaults={
                 "container_type": ct_objects["Sea Pens"],
                 "hall": None,  # Not in a hall
-                "volume_m3": 42000,
-                "max_biomass_kg": 800000,  # Example value
+                "volume_m3": 42000.00,
+                "max_biomass_kg": 800000.00,
                 "active": True,
                 "area": area_a57
             }
         )
         print_status("Container", container, created)
+    
+    # ====== Create Feed Containers ======
+    print("\n--- Creating Feed Containers ---")
+    
+    # Create feed silos for each hall (one per hall)
+    for hall_name in hall_names:
+        feed_container, created = FeedContainer.objects.get_or_create(
+            name=f"{hall_name}-FeedSilo",
+            defaults={
+                "container_type": "SILO",
+                "hall": halls[hall_name],
+                "area": None,
+                "capacity_kg": 5000.00,  # 5 tonnes capacity
+                "active": True
+            }
+        )
+        print_status("Feed Container", feed_container, created)
+    
+    # Create feed barges for the sea area
+    for i in range(1, 3):
+        feed_container, created = FeedContainer.objects.get_or_create(
+            name=f"A57-FeedBarge{i:02d}",
+            defaults={
+                "container_type": "BARGE",
+                "hall": None,
+                "area": area_a57,
+                "capacity_kg": 200000.00,  # 200 tonnes capacity
+                "active": True
+            }
+        )
+        print_status("Feed Container", feed_container, created)
     
     print("\n=== Test Data Initialization Complete ===")
 

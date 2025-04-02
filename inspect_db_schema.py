@@ -9,14 +9,23 @@ from decimal import Decimal
 
 def get_db_connection():
     """Get a connection to the production database using direct connection details."""
-    conn = psycopg2.connect(
-        dbname='aquamind_db',
-        user='postgres',
-        password='aquapass12345',
-        host='timescale-db', 
-        port='5432'
-    )
-    return conn
+    try:
+        conn = psycopg2.connect(
+            dbname='aquamind_db',
+            user='postgres',
+            password='adminpass1234',
+            host='localhost', 
+            port='5432'
+        )
+        print("✓ Successfully connected to the database.")
+        return conn
+    except psycopg2.OperationalError as e:
+        print(f"× Error connecting to the database: {e}")
+        print("× Please check your connection details and database status.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"× Unexpected error: {e}")
+        sys.exit(1)
 
 def print_section_header(title):
     """Print a formatted section header."""
@@ -177,38 +186,74 @@ def inspect_hypertables(conn):
             print("TimescaleDB extension is not installed in this database.")
             return
         
-        # Query TimescaleDB hypertables - use internal catalog tables as information schema view is unreliable here
-        cursor.execute("""
-            SELECT 
-                t.table_name,
-                t.schema_name,
-                d.column_name as time_dimension
-            FROM 
-                _timescaledb_catalog.hypertable t
-            JOIN 
-                _timescaledb_catalog.dimension d ON t.id = d.hypertable_id
-            ORDER BY 
-                t.table_name, d.column_name
-        """)
+        print("✓ TimescaleDB extension is installed.")
         
-        hypertables = cursor.fetchall()
+        # Try to query TimescaleDB hypertables - first check if catalog tables exist
+        try:
+            # Query TimescaleDB hypertables
+            cursor.execute("""
+                SELECT 
+                    t.table_name,
+                    t.schema_name,
+                    d.column_name as time_dimension
+                FROM 
+                    _timescaledb_catalog.hypertable t
+                JOIN 
+                    _timescaledb_catalog.dimension d ON t.id = d.hypertable_id
+                ORDER BY 
+                    t.table_name, d.column_name
+            """)
+            
+            hypertables = cursor.fetchall()
+            
+            if hypertables:
+                print(f"Found {len(hypertables)} hypertable dimensions:\n")
+                print(f"{'Table Name':<35} {'Schema':<15} {'Dimension Column'}")
+                print(f"{'-'*35} {'-'*15} {'-'*20}")
+                
+                processed_tables = set()
+                for table, schema, dim_col in hypertables:
+                    # Print table name only once
+                    if table not in processed_tables:
+                        print(f"{table:<35} {schema:<15} {dim_col}")
+                        processed_tables.add(table)
+                    else:
+                        print(f"{'':<35} {'':<15} {dim_col}")
+            else:
+                print("No hypertables found in the database.")
+                
+        except psycopg2.errors.UndefinedTable:
+            # Try using the information schema view instead (available in newer TimescaleDB versions)
+            try:
+                cursor.execute("""
+                    SELECT 
+                        hypertable_name,
+                        hypertable_schema,
+                        'N/A' as dimension_column
+                    FROM 
+                        timescaledb_information.hypertables
+                    ORDER BY 
+                        hypertable_name
+                """)
+                
+                hypertables = cursor.fetchall()
+                
+                if hypertables:
+                    print(f"Found {len(hypertables)} hypertables (using information schema):\n")
+                    print(f"{'Table Name':<35} {'Schema':<15} {'Info'}")
+                    print(f"{'-'*35} {'-'*15} {'-'*20}")
+                    
+                    for table, schema, _ in hypertables:
+                        print(f"{table:<35} {schema:<15} {'(TimescaleDB hypertable)'}")
+                else:
+                    print("No hypertables found in the database.")
+            except Exception as e:
+                print(f"Could not query hypertables using information schema: {e}")
+                print("The database may be using a different TimescaleDB schema or version.")
         
-        if hypertables:
-            print(f"Found {len(hypertables)} hypertable dimensions:\n")
-            print(f"{'Table Name':<35} {'Schema':<15} {'Dimension Column'}")
-            print(f"{'-'*35} {'-'*15} {'-'*20}")
-            
-            processed_tables = set()
-            for table, schema, dim_col in hypertables:
-                # Print each dimension found, note if table is repeated
-                marker = "" if table not in processed_tables else " (duplicate dimension)"
-                print(f"{table:<35} {schema:<15} {dim_col}{marker}")
-                processed_tables.add(table)
-        else:
-            print("No TimescaleDB hypertables found in the database.")
-            
     except Exception as e:
-        print(f"Error inspecting hypertables: {e}")
+        print(f"Error inspecting TimescaleDB hypertables: {e}")
+        print("This may occur if the database is not PostgreSQL with TimescaleDB.")
 
 def main():
     """Main function to inspect the database schema."""
