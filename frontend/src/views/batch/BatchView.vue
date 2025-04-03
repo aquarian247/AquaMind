@@ -131,7 +131,7 @@ onMounted(() => {
                     {{ batch.status }}
                   </span>
                   <span class="ml-2 text-sm text-gray-500">
-                    {{ batch.species ? batch.species.name : 'Unknown species' }}
+                    {{ batch.species_name || 'Unknown species' }}
                   </span>
                 </div>
               </li>
@@ -199,11 +199,11 @@ onMounted(() => {
                     </div>
                     <div>
                       <h3 class="text-sm font-medium text-gray-500">Species</h3>
-                      <p class="mt-1">{{ batchDetails.species ? batchDetails.species.name : 'Unknown' }}</p>
+                      <p class="mt-1">{{ batchDetails.species_name || 'Unknown' }}</p>
                     </div>
                     <div>
                       <h3 class="text-sm font-medium text-gray-500">Lifecycle Stage</h3>
-                      <p class="mt-1">{{ batchDetails.lifecycle_stage ? batchDetails.lifecycle_stage.name : 'Unknown' }}</p>
+                      <p class="mt-1">{{ batchDetails.lifecycle_stage_name || 'Unknown' }}</p>
                     </div>
                     <div>
                       <h3 class="text-sm font-medium text-gray-500">Population Count</h3>

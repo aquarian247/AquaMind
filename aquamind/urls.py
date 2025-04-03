@@ -23,6 +23,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
+from apps.core.views import CSRFTokenView
 
 # Swagger/OpenAPI documentation setup
 schema_view = get_schema_view(
@@ -56,4 +57,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/token/', CustomObtainAuthToken.as_view(), name='api-token-auth'),
+    
+    # CSRF token endpoint
+    path('api/csrf/', CSRFTokenView.as_view(), name='csrf-token'),
 ]

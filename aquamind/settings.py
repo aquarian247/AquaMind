@@ -64,12 +64,14 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # Temporarily commented out for development in Cascade browser preview
-    # "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
 ]
+
+
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Only for development
@@ -84,7 +86,7 @@ ROOT_URLCONF = "aquamind.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -113,7 +115,7 @@ DATABASES = {
         'HOST': 'localhost',  # Changed from 'timescale-db' to 'localhost'
         'PORT': '5432',
         'OPTIONS': {
-            'options': '-c search_path=public'
+            'options': '-c search_path=public -c client_encoding=utf8'
         }
     }
 }
@@ -237,6 +239,13 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8080',
     'http://127.0.0.1:46285',
     'http://127.0.0.1:36307',
+    'http://127.0.0.1:51091',
+    'http://127.0.0.1:54934',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:57274',
 ]
 
 # Swagger settings

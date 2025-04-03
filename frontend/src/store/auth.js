@@ -1,6 +1,31 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+// Create a specific instance for auth with CSRF support
+const authApi = axios.create({
+  baseURL: '/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+})
+
+// Function to get CSRF token from cookies
+function getCsrfToken() {
+  const name = 'csrftoken='
+  const decodedCookie = decodeURIComponent(document.cookie)
+  const cookieArray = decodedCookie.split(';')
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim()
+    if (cookie.indexOf(name) === 0) {
+      return cookie.substring(name.length, cookie.length)
+    }
+  }
+  return ''
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     // User info
@@ -38,8 +63,18 @@ export const useAuthStore = defineStore('auth', {
         }
         console.log('Using credentials:', credentials.username)
         
-        // Call the Django token auth endpoint
-        const response = await axios.post('/api/auth/token/', credentials)
+        // First, get the CSRF token by making a GET request to the Django server
+        await axios.get('/api/csrf/', { withCredentials: true })
+        
+        // Get the CSRF token from cookies
+        const csrfToken = getCsrfToken()
+        
+        // Call the Django token auth endpoint with CSRF token
+        const response = await authApi.post('/auth/token/', credentials, {
+          headers: {
+            'X-CSRFToken': csrfToken
+          }
+        })
         
         console.log('Auth store: received response', response.data)
         

@@ -7,16 +7,42 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  }
+  },
+  withCredentials: true // Important for CSRF handling
 })
+
+// Function to get CSRF token from cookies
+function getCsrfToken() {
+  const name = 'csrftoken='
+  const decodedCookie = decodeURIComponent(document.cookie)
+  const cookieArray = decodedCookie.split(';')
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim()
+    if (cookie.indexOf(name) === 0) {
+      return cookie.substring(name.length, cookie.length)
+    }
+  }
+  return ''
+}
 
 // Request interceptor for API calls
 api.interceptors.request.use(
   (config) => {
+    // Add token authentication header
     const token = localStorage.getItem('token')
     if (token) {
       config.headers['Authorization'] = `Token ${token}`
     }
+    
+    // Add CSRF token for non-GET requests
+    if (config.method !== 'get') {
+      const csrfToken = getCsrfToken()
+      if (csrfToken) {
+        config.headers['X-CSRFToken'] = csrfToken
+      }
+    }
+    
     console.log(`Sending ${config.method?.toUpperCase()} request to ${config.url}`, { headers: config.headers, params: config.params })
     return config
   },

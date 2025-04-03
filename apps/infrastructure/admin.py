@@ -122,8 +122,8 @@ class HallAdmin(admin.ModelAdmin):
     list_display = ('name', 'freshwater_station', 'area_sqm_display', 'active')
     
     def area_sqm_display(self, obj):
-        return f"{float(obj.area_sqm):,.2f} m²" if obj.area_sqm is not None else "N/A"
-    area_sqm_display.short_description = "Area (m²)"
+        return format_html("{:.2f} m<sup>2</sup>", float(obj.area_sqm)) if obj.area_sqm is not None else "N/A"
+    area_sqm_display.short_description = format_html("Area (m<sup>2</sup>)")
     list_filter = ('freshwater_station', 'active')
     search_fields = ('name', 'description')
 
@@ -133,8 +133,8 @@ class ContainerTypeAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'max_volume_m3_display')
     
     def max_volume_m3_display(self, obj):
-        return f"{float(obj.max_volume_m3):,.2f} m³" if obj.max_volume_m3 is not None else "N/A"
-    max_volume_m3_display.short_description = "Max Volume (m³)"
+        return format_html("{:.2f} m<sup>3</sup>", float(obj.max_volume_m3)) if obj.max_volume_m3 is not None else "N/A"
+    max_volume_m3_display.short_description = format_html("Max Volume (m<sup>3</sup>)")
     list_filter = ('category',)
     search_fields = ('name', 'description')
 
@@ -144,8 +144,8 @@ class ContainerAdmin(admin.ModelAdmin):
     list_display = ('name', 'container_type', 'get_location', 'volume_m3_display', 'max_biomass_kg_display', 'active')
     
     def volume_m3_display(self, obj):
-        return f"{float(obj.volume_m3):,.2f} m³" if obj.volume_m3 is not None else "N/A"
-    volume_m3_display.short_description = "Volume (m³)"
+        return format_html("{:.2f} m<sup>3</sup>", float(obj.volume_m3)) if obj.volume_m3 is not None else "N/A"
+    volume_m3_display.short_description = format_html("Volume (m<sup>3</sup>)")
     
     def max_biomass_kg_display(self, obj):
         return f"{float(obj.max_biomass_kg):,.2f} kg" if obj.max_biomass_kg is not None else "N/A"
