@@ -18,10 +18,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         # Use environment variables or default values from docker-compose
-        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'NAME': os.getenv('POSTGRES_DB', 'aquamind_db'),
         'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        # Use the correct password for the TimescaleDB container
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'aquapass12345'),  
+        # Use the correct password from the user's environment
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'adminpass1234'),  
         # Use localhost for CI, container name for dev
         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),

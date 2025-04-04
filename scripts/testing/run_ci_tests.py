@@ -12,16 +12,21 @@ Usage:
 import os
 import sys
 import subprocess
-from django.core.management import call_command
-from django.db import connection
+
+# Add the project root directory to the Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, project_root)
 
 # Set environment variable to disable TimescaleDB testing
 os.environ['USE_TIMESCALEDB_TESTING'] = 'false'
 
 # Configure Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.test_settings')
+# Use the test settings file in the scripts/testing directory
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scripts.testing.test_settings')
 
 import django
+from django.core.management import call_command
+from django.db import connection
 django.setup()
 
 def fake_timescaledb_migrations():
@@ -46,29 +51,30 @@ def fake_timescaledb_migrations():
         except Exception as e:
             print(f"⚠ Failed to fake migration {app}.{migration}: {e}")
 
-def run_tests():
+def run_tests(app_name=None):
     """Run the tests."""
-    # Get the app name from command line arguments
-    app_name = sys.argv[1] if len(sys.argv) > 1 else None
+    print("Running tests with Django test runner...")
     
-    # Build the test command
-    test_cmd = ['python', 'manage.py', 'test']
+    # Use the Python executable from the virtual environment
+    python_exe = sys.executable
+    
+    test_command = [python_exe, 'manage.py', 'test']
     if app_name:
-        test_cmd.append(f'apps.{app_name}')
+        test_command.append(app_name)
     
-    test_cmd.extend([
-        '--settings=aquamind.test_settings',
-        '--noinput',
-        '--testrunner=apps.core.test_runner.TimescaleDBTestRunner'
-    ])
+    # Use the correct settings module path
+    test_command.extend(['--settings=scripts.testing.test_settings', '--noinput', '--testrunner=apps.core.test_runner.TimescaleDBTestRunner'])
     
-    # Run the tests
-    print(f"Running tests: {' '.join(test_cmd)}")
-    return subprocess.call(test_cmd)
+    try:
+        subprocess.run(test_command, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Tests failed with exit code {e.returncode}")
+        sys.exit(e.returncode)
 
 if __name__ == '__main__':
     # Fake the problematic TimescaleDB migrations
     fake_timescaledb_migrations()
     
     # Run the tests
-    sys.exit(run_tests())
+    app_name = sys.argv[1] if len(sys.argv) > 1 else None
+    sys.exit(run_tests(app_name))

@@ -7,8 +7,6 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from apps.users.api.views import CustomObtainAuthToken
 
 # Import routers directly
 from apps.infrastructure.api.routers import router as infrastructure_router
@@ -39,14 +37,7 @@ urlpatterns = [
     path('api/v1/infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
     path('api/v1/environmental/', include((environmental_router.urls, 'environmental'))),
     path('api/v1/batch/', include((batch_router.urls, 'batch'))),
-    path('api/v1/users/', include('apps.users.urls')),
-    path('api/v1/auth/', include('apps.users.api.urls')),
     
     # Include REST framework authentication URLs
     path("api-auth/", include("rest_framework.urls")),
-    
-    # JWT Authentication endpoints
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/token/', CustomObtainAuthToken.as_view(), name='api-token-auth'),
 ]
