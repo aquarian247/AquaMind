@@ -50,7 +50,7 @@ jobs:
     
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=test_settings
+        python manage.py migrate --settings=scripts.testing.test_settings
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -70,7 +70,7 @@ jobs:
       run: |
         # Only run tests for implemented features
         # As we complete more features from the implementation plan, we'll add their tests here
-        python manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=test_settings --noinput
+        python manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=scripts.testing.test_settings --noinput
       env:
         POSTGRES_DB: postgres
         POSTGRES_USER: postgres
@@ -81,7 +81,7 @@ jobs:
       run: |
         pip install coverage
         # Only generate coverage for implemented features
-        coverage run --source='.' manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=test_settings --noinput
+        coverage run --source='.' manage.py test apps.environmental.tests.test_api.test_weather_api apps.infrastructure.tests apps.batch.tests --settings=scripts.testing.test_settings --noinput
         # Increasing coverage requirement as we implement more features
         coverage report --fail-under=40
       env:
