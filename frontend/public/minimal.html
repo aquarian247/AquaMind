@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaMind Minimal Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fa;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #0056b3;
+    }
+    .button {
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AquaMind Test Page</h1>
+    
+    <div id="app">
+      <h2>Vue 3 Test</h2>
+      <p>{{ message }}</p>
+      <button class="button" @click="incrementCounter">Count: {{ counter }}</button>
+      
+      <div style="margin-top: 20px;">
+        <h3>Vue Environment Info:</h3>
+        <pre>{{ vueInfo }}</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global error handler
+    window.addEventListener('error', function(event) {
+      console.error('Global error caught:', event.message);
+      alert('Error: ' + event.message);
+    });
+
+    console.log('Starting Vue application test...');
+    
+    try {
+      const { createApp, ref, computed } = Vue;
+      
+      const app = createApp({
+        setup() {
+          const message = ref('If you can see this, Vue 3 is working correctly!');
+          const counter = ref(0);
+          
+          // Get Vue version and environment info
+          const vueInfo = computed(() => {
+            return {
+              version: Vue.version,
+              mode: Vue.mode || 'unknown',
+              timestamp: new Date().toISOString()
+            };
+          });
+          
+          function incrementCounter() {
+            counter.value++;
+          }
+          
+          return {
+            message,
+            counter,
+            incrementCounter,
+            vueInfo
+          };
+        }
+      });
+      
+      console.log('Mounting Vue app...');
+      app.mount('#app');
+      console.log('Vue app mounted successfully!');
+    } catch (error) {
+      console.error('Error in Vue initialization:', error);
+      document.getElementById('app').innerHTML = `
+        <div style="color: red; border: 1px solid red; padding: 10px; margin-top: 20px;">
+          <h3>Vue Error:</h3>
+          <p>${error.message}</p>
+          <pre>${error.stack}</pre>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

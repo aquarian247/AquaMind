@@ -5,9 +5,101 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AquaMind</title>
+    <!-- Direct CSS link for basic styles -->
+    <link rel="stylesheet" href="/src/assets/styles/basic.css">
+    <style>
+      .fallback-error {
+        display: none;
+        margin: 20px;
+        padding: 20px;
+        border: 1px solid #f56c6c;
+        background-color: #fef0f0;
+        color: #f56c6c;
+        border-radius: 4px;
+        font-family: 'Arial', sans-serif;
+      }
+      
+      #loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f5f7fa;
+        z-index: 1000;
+      }
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 20px auto;
+        border: 4px solid rgba(0, 86, 179, 0.2);
+        border-top-color: #0056b3;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
+    <!-- Loading indicator that shows until the app mounts -->
+    <div id="loading-indicator">
+      <h2>Loading AquaMind...</h2>
+      <div class="spinner"></div>
+      <p>If this takes too long, check the console for errors</p>
+    </div>
+    
+    <!-- Vue app container -->
     <div id="app"></div>
+    
+    <!-- Fallback error display -->
+    <div id="app-error" class="fallback-error">
+      <h3>Error Loading Application</h3>
+      <p>There was a problem loading the AquaMind application. Please check the browser console for more details.</p>
+      <div id="error-details"></div>
+    </div>
+    
+    <script>
+      // Simple error handler that will display errors if Vue fails to load
+      window.addEventListener('error', function(event) {
+        const errorMsg = event.message || 'Unknown error';
+        const errorSrc = event.filename || 'Unknown source';
+        const errorLine = event.lineno || 'Unknown line';
+        
+        document.getElementById('app-error').style.display = 'block';
+        document.getElementById('error-details').innerHTML = 
+          `<strong>Error:</strong> ${errorMsg}<br>
+           <strong>Source:</strong> ${errorSrc}<br>
+           <strong>Line:</strong> ${errorLine}`;
+      });
+      
+      // Hide loading indicator once app is mounted or after timeout
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingIndicator = document.getElementById('loading-indicator');
+          if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+          }
+          
+          // If app div is still empty after timeout, show error
+          if (document.getElementById('app').children.length === 0) {
+            document.getElementById('app-error').style.display = 'block';
+            document.getElementById('error-details').innerHTML = 
+              '<strong>Error:</strong> Application failed to mount. Check the console for details.';
+          }
+        }, 5000); // 5-second timeout
+      });
+    </script>
+    
+    <!-- Main application script -->
+    <!-- Main application script -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

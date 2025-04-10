@@ -133,13 +133,22 @@ class Container(models.Model):
     Can be in a hall (within a station) or in a sea area.
     """
     name = models.CharField(max_length=100)
-    container_type = models.ForeignKey(ContainerType, on_delete=models.PROTECT)
+    container_type = models.ForeignKey(ContainerType, on_delete=models.PROTECT, related_name='containers')
     
-    # A container can be in either a hall (within a station) or a sea area, but not both
+    # A container can be in either a hall or a sea area, but not both
     hall = models.ForeignKey(Hall, on_delete=models.CASCADE, related_name='containers', null=True, blank=True)
     area = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='containers', null=True, blank=True)
     
-    volume_m3 = models.DecimalField(max_digits=10, decimal_places=2, help_text="Actual volume in cubic meters")
+    volume_m3 = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        validators=[MinValueValidator(0.01)], 
+        help_text="Container volume in cubic meters"
+    )
+    feed_recommendations_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether feed recommendations should be generated for this container"
+    )
     max_biomass_kg = models.DecimalField(max_digits=10, decimal_places=2, help_text="Maximum biomass in kg")
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

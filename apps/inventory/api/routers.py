@@ -10,7 +10,8 @@ from apps.inventory.api.viewsets import (
     FeedPurchaseViewSet,
     FeedStockViewSet,
     FeedingEventViewSet,
-    BatchFeedingSummaryViewSet
+    BatchFeedingSummaryViewSet,
+    FeedRecommendationViewSet
 )
 
 # Create a router and register our viewsets with it
@@ -20,6 +21,7 @@ router.register(r'feed-purchases', FeedPurchaseViewSet)
 router.register(r'feed-stocks', FeedStockViewSet)
 router.register(r'feeding-events', FeedingEventViewSet)
 router.register(r'batch-feeding-summaries', BatchFeedingSummaryViewSet)
+router.register(r'feed-recommendations', FeedRecommendationViewSet)
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls

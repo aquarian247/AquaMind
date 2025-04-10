@@ -79,7 +79,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # CSRF settings
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:40199', 'http://localhost:40199', 'http://127.0.0.1:*', 'http://localhost:*']
+# Use wildcards to cover all possible ports for local development and browser previews
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://127.0.0.1:*', 'https://localhost:*']
 
 ROOT_URLCONF = "aquamind.urls"
 
@@ -232,20 +233,12 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # CSRF settings
+# Use wildcards to cover all possible ports for local development and browser previews
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:46285',
-    'http://127.0.0.1:36307',
-    'http://127.0.0.1:51091',
-    'http://127.0.0.1:54934',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:57274',
+    'http://localhost:*',  # Cover all localhost ports
+    'http://127.0.0.1:*',  # Cover all 127.0.0.1 ports
+    'https://localhost:*',  # Cover https as well
+    'https://127.0.0.1:*',  # Cover https as well
 ]
 
 # Swagger settings

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
+from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary, FeedRecommendation
 
 @admin.register(Feed)
 class FeedAdmin(admin.ModelAdmin):
@@ -30,3 +30,10 @@ class BatchFeedingSummaryAdmin(admin.ModelAdmin):
     list_display = ['batch', 'period_start', 'period_end', 'total_feed_kg', 'feed_conversion_ratio', 'average_feeding_percentage']
     list_filter = ['batch', 'period_start', 'period_end']
     search_fields = ['batch__name']
+
+@admin.register(FeedRecommendation)
+class FeedRecommendationAdmin(admin.ModelAdmin):
+    list_display = ['batch_container_assignment', 'feed', 'recommended_date', 'recommended_feed_kg', 'feeding_percentage', 'is_followed']
+    list_filter = ['recommended_date', 'feed', 'is_followed']
+    search_fields = ['batch_container_assignment__batch__batch_number', 'recommendation_reason']
+    readonly_fields = ['created_at', 'updated_at']

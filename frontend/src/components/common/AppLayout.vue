@@ -13,7 +13,8 @@ const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: 'chart-pie' },
   { name: 'Infrastructure', path: '/infrastructure', icon: 'building' },
   { name: 'Batch', path: '/batch', icon: 'fish' },
-  { name: 'Environmental', path: '/environmental', icon: 'thermometer' }
+  { name: 'Inventory', path: '/inventory', icon: 'box' },
+  // { name: 'Environmental', path: '/environmental', icon: 'thermometer' } // Removed non-existent route
 ]
 
 // Logout function

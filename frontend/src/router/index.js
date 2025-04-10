@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
 // Import the route components
 import LoginView from '../views/auth/LoginView.vue'
@@ -6,23 +7,25 @@ import DashboardView from '../views/dashboard/DashboardView.vue'
 
 // Authentication guard
 function requireAuth(to, from, next) {
-  // Check if the user is authenticated (has a valid token)
-  const token = localStorage.getItem('token')
-  console.log('Auth check for route:', to.path, 'Token exists:', !!token)
+  const authStore = useAuthStore()
   
-  if (!token) {
+  // Auth check is guaranteed to be complete by the time the guard runs (due to main.js change)
+  console.log('Router Guard: Checking authentication status.');
+  
+  if (!authStore.isAuthenticated) {
     // User is not authenticated, redirect to login
-    console.log('No token found, redirecting to login')
-    return next({ name: 'login' })
+    console.log('Router Guard: Not authenticated, redirecting to login')
+    // Pass the intended route as a query param for redirecting back after login
+    next({ name: 'login', query: { redirect: to.fullPath } })
+  } else {
+    // User is authenticated, proceed
+    console.log('Router Guard: Authenticated, proceeding to route:', to.path)
+    next()
   }
-  
-  // User is authenticated, proceed
-  console.log('User authenticated, proceeding to route:', to.path)
-  next()
 }
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/'),
   routes: [
     {
       path: '/',
@@ -49,6 +52,12 @@ const router = createRouter({
       path: '/batch',
       name: 'batch',
       component: () => import('../views/batch/BatchView.vue'),
+      beforeEnter: requireAuth
+    },
+    {
+      path: '/inventory',
+      name: 'inventory',
+      component: () => import('../views/inventory/InventoryView.vue'),
       beforeEnter: requireAuth
     }
   ]

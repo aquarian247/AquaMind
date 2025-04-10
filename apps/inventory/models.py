@@ -324,3 +324,82 @@ class BatchFeedingSummary(models.Model):
         )
         
         return summary
+
+
+class FeedRecommendation(models.Model):
+    """
+    Feed recommendations for specific batch container assignments.
+    
+    These recommendations are tailored to each container's conditions and batch characteristics,
+    considering environmental readings, biomass, and lifecycle stage to optimize feeding.
+    """
+    batch_container_assignment = models.ForeignKey(
+        'batch.BatchContainerAssignment', 
+        on_delete=models.CASCADE, 
+        related_name='feed_recommendations'
+    )
+    feed = models.ForeignKey(
+        Feed, 
+        on_delete=models.PROTECT, 
+        related_name='recommendations',
+        help_text="Recommended feed type"
+    )
+    recommended_date = models.DateField(
+        help_text="Date for which this recommendation applies"
+    )
+    recommended_feed_kg = models.DecimalField(
+        max_digits=10, 
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+        help_text="Recommended feed amount in kilograms"
+    )
+    feeding_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Recommended feeding as percentage of biomass"
+    )
+    feedings_per_day = models.PositiveSmallIntegerField(
+        default=2,
+        help_text="Recommended number of feedings per day"
+    )
+    # Environmental conditions at time of recommendation
+    water_temperature_c = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        help_text="Water temperature at time of recommendation (°C)"
+    )
+    dissolved_oxygen_mg_l = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        help_text="Dissolved oxygen at time of recommendation (mg/L)"
+    )
+    recommendation_reason = models.TextField(
+        help_text="Explanation of factors that influenced this recommendation"
+    )
+    is_followed = models.BooleanField(
+        default=False,
+        help_text="Whether this recommendation was followed"
+    )
+    expected_fcr = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        help_text="Expected Feed Conversion Ratio if recommendation is followed"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-recommended_date', '-created_at']
+        verbose_name_plural = "Feed recommendations"
+        # Ensure we don't have duplicate recommendations for the same assignment on the same day
+        unique_together = ['batch_container_assignment', 'recommended_date']
+    
+    def __str__(self):
+        return f"Feed recommendation for {self.batch_container_assignment} on {self.recommended_date} ({self.recommended_feed_kg} kg)"

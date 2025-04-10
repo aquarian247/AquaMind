@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from django.conf import settings
+from django.contrib.auth.models import User
 
 class CustomObtainAuthToken(APIView):
     """
@@ -34,3 +37,45 @@ class CustomObtainAuthToken(APIView):
             'username': user.username,
             'email': user.email
         })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def dev_auth(request):
+    """
+    Development-only endpoint to get a valid auth token automatically.
+    This endpoint is disabled in production environments.
+    
+    Returns:
+        Response: A response containing a valid token and user information
+    """
+    if not settings.DEBUG:
+        return Response(
+            {"error": "This endpoint is only available in development environments"}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Get or create a development user
+    username = 'devuser'
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            'is_staff': True,
+            'is_active': True,
+            'email': 'dev@example.com'
+        }
+    )
+    
+    if created:
+        user.set_password('devpassword')
+        user.save()
+    
+    # Get or create token
+    token, _ = Token.objects.get_or_create(user=user)
+    
+    return Response({
+        'token': token.key,
+        'user_id': user.pk,
+        'username': user.username,
+        'email': user.email
+    })

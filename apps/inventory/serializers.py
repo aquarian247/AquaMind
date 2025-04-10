@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
+from .models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary, FeedRecommendation
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container, FeedContainer
 
@@ -152,3 +152,71 @@ class BatchFeedingSummaryGenerateSerializer(serializers.Serializer):
             raise serializers.ValidationError("No feeding events found in this period")
 
         return summary
+
+
+class FeedRecommendationSerializer(serializers.ModelSerializer):
+    """Serializer for the FeedRecommendation model."""
+    feed_name = serializers.StringRelatedField(source='feed', read_only=True)
+    container_name = serializers.SerializerMethodField()
+    batch_name = serializers.SerializerMethodField()
+    lifecycle_stage = serializers.SerializerMethodField()
+    biomass_kg = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FeedRecommendation
+        fields = [
+            'id', 'batch_container_assignment', 'feed', 'feed_name', 'container_name', 'batch_name',
+            'lifecycle_stage', 'biomass_kg', 'recommended_date', 'recommended_feed_kg',
+            'feeding_percentage', 'feedings_per_day', 'water_temperature_c', 'dissolved_oxygen_mg_l',
+            'recommendation_reason', 'is_followed', 'expected_fcr', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def get_container_name(self, obj):
+        return str(obj.batch_container_assignment.container)
+    
+    def get_batch_name(self, obj):
+        return str(obj.batch_container_assignment.batch)
+    
+    def get_lifecycle_stage(self, obj):
+        return str(obj.batch_container_assignment.lifecycle_stage)
+    
+    def get_biomass_kg(self, obj):
+        return obj.batch_container_assignment.biomass_kg
+
+
+class FeedRecommendationGenerateSerializer(serializers.Serializer):
+    """Serializer for generating feed recommendations on demand."""
+    container_id = serializers.IntegerField(required=False)
+    batch_id = serializers.IntegerField(required=False)
+    date = serializers.DateField(required=False)
+    
+    def validate(self, data):
+        """Validate the request parameters."""
+        if not data.get('container_id') and not data.get('batch_id'):
+            raise serializers.ValidationError("Either container_id or batch_id must be provided")
+            
+        # If date is not provided, use today's date
+        if 'date' not in data:
+            data['date'] = timezone.now().date()
+            
+        # If container_id is provided, validate that it exists and has recommendations enabled
+        if 'container_id' in data:
+            try:
+                container = Container.objects.get(pk=data['container_id'])
+                if not container.feed_recommendations_enabled:
+                    raise serializers.ValidationError(
+                        f"Feed recommendations are disabled for container {container.name}"
+                    )
+                data['container'] = container
+            except Container.DoesNotExist:
+                raise serializers.ValidationError("Container does not exist")
+                
+        # If batch_id is provided, validate that it exists
+        if 'batch_id' in data:
+            try:
+                data['batch'] = Batch.objects.get(pk=data['batch_id'])
+            except Batch.DoesNotExist:
+                raise serializers.ValidationError("Batch does not exist")
+                
+        return data

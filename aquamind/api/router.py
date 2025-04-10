@@ -8,6 +8,7 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from apps.core.views import health_check
 
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
@@ -37,6 +38,9 @@ urlpatterns = [
     
     # Authentication endpoints
     path('auth/', include('apps.users.api.urls')),
+    
+    # Health check endpoint
+    path('health-check/', health_check, name='health-check'),
     
     # API endpoints for each app
     path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
