@@ -6,6 +6,11 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Completed Milestones
 
+### 2025-04-11: Inventory Test Fixes and Documentation Updates
+- Resolved multiple test failures (`AssertionError`, `AttributeError`, `NameError`) in `apps/inventory/tests/test_services.py` related to `FeedRecommendationService` by correcting assertions, fixing attribute access, ensuring correct test setup, and importing `QuerySet`.
+- Verified the functionality of the database schema inspection script (`scripts/database/inspect_db_schema.py`).
+- Updated `data model.md` by adding annotations to sections 7, 8, and 9 to indicate planned features whose tables are not yet implemented.
+
 ### 2025-04-10: Feed Recommendations, Frontend Fixes, and Project Cleanup
 - Implemented core Feed Recommendation feature (backend models, serializers, views, services, API endpoints) within the `inventory` app.
 - Developed frontend view (`FeedRecommendationsView.vue`) to display and generate feed recommendations, integrating with backend APIs (`GET /api/v1/inventory/feed-recommendations/`, `POST /api/v1/inventory/feed-recommendations/generate/`).

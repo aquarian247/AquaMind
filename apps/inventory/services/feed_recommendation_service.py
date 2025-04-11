@@ -8,7 +8,7 @@ import datetime
 from decimal import Decimal
 from typing import Optional, Dict, Tuple, List, Any
 
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, QuerySet
 from django.utils import timezone
 
 from apps.batch.models import BatchContainerAssignment, LifeCycleStage
@@ -312,7 +312,7 @@ class FeedRecommendationService:
             
         # Check if a recommendation already exists for this assignment and date
         existing = FeedRecommendation.objects.filter(
-            batch_container_assignment=assignment,
+            batch_container_assignment=assignment, 
             recommended_date=target_date
         ).first()
         
@@ -329,7 +329,7 @@ class FeedRecommendationService:
             
         # Create the recommendation object
         recommendation = FeedRecommendation(
-            batch_container_assignment=recommendation_data['batch_container_assignment'],
+            batch_container_assignment=recommendation_data['batch_container_assignment'], 
             recommended_date=recommendation_data['recommended_date'],
             feed=recommendation_data['feed'],
             recommended_feed_kg=recommendation_data['recommended_feed_kg'],
@@ -391,12 +391,18 @@ class FeedRecommendationService:
         return recommendations
     
     @classmethod
-    def generate_all_recommendations(cls, target_date: Optional[datetime.date] = None) -> int:
+    def generate_all_recommendations(
+        cls, 
+        target_date: Optional[datetime.date] = None, 
+        assignments: Optional[QuerySet[BatchContainerAssignment]] = None
+    ) -> int:
         """
-        Generate feed recommendations for all active batch container assignments.
+        Generate feed recommendations for active batch container assignments.
         
         Args:
-            target_date: The date for which to generate recommendations (defaults to today)
+            target_date: The date for which to generate recommendations (defaults to today).
+            assignments: Optional queryset of assignments to process. If None, queries all active
+                         assignments in containers with recommendations enabled.
             
         Returns:
             int: Number of recommendations created
@@ -405,11 +411,12 @@ class FeedRecommendationService:
         if target_date is None:
             target_date = timezone.now().date()
             
-        # Get all active batch container assignments where container has recommendations enabled
-        assignments = BatchContainerAssignment.objects.filter(
-            is_active=True,
-            container__feed_recommendations_enabled=True
-        )
+        # Get assignments if not provided
+        if assignments is None:
+            assignments = BatchContainerAssignment.objects.filter(
+                is_active=True,
+                container__feed_recommendations_enabled=True
+            )
         
         count = 0
         for assignment in assignments:

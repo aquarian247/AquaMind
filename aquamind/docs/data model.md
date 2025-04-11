@@ -124,8 +124,10 @@ feeding_event → batch, container, feed
 batch_feeding_summary → batch
 
 7. Health Monitoring (Medical Journal)
-Records health observations and treatments.
 
+***Note:** This feature is planned. The tables listed below (except `mortality_record`/`batch_mortalityevent`) are not yet implemented in the current database schema (as of 2025-04-11).*
+
+Records health observations and treatments.
 journal_entry: Health observations (appearance, behavior).
 lice_count: Sea lice counts.
 mortality_record: Mortality events with reasons.
@@ -141,8 +143,10 @@ mortality_record → batch, container, mortality_reason
 treatment → batch, container, user
 
 8. Scenario Planning
-Supports hypothetical scenario creation and comparison.
 
+***Note:** This feature is planned. The tables listed below are not yet implemented in the current database schema (as of 2025-04-11).*
+
+Supports hypothetical scenario creation and comparison.
 batch_scenario: Scenario definitions (name, growth model).
 batch_scenario_container: Container assignments for scenarios.
 batch_scenario_growth: Growth targets (TGC, SGR).
@@ -158,8 +162,10 @@ batch_scenario_environmental → batch_scenario
 scenario_comparison → batch_scenario (via JSON or many-to-many)
 
 9. Operational Planning
-Facilitates real-time planning and recommendations.
 
+***Note:** This feature is planned. The tables listed below are not yet implemented in the current database schema (as of 2025-04-11).*
+
+Facilitates real-time planning and recommendations.
 infrastructure_state: Container state (capacity, health, density).
 planning_recommendation: Operational recommendations (type, priority, details as JSON).
 recommendation_action: Actions on recommendations (action taken, user).
