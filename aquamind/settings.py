@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.scenario",
     "apps.operational",
     "apps.users",
+    "apps.health.apps.HealthConfig",  # Use full config path for the health app
 ]
 
 MIDDLEWARE = [

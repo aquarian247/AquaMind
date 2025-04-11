@@ -4,7 +4,13 @@
 
 This document outlines the phased implementation strategy for the AquaMind system. The plan follows an iterative approach, starting with core infrastructure and gradually building more complex features. Each phase builds upon the previous one, ensuring we maintain a functional system throughout development.
 
-## Completed Milestones
+## Progress Updates
+
+### 2025-04-11: Medical Journal Feature Completion
+- **Feature**: Completed implementation of the Medical Journal (Health Monitoring) feature within the `health` app.
+- **Details**: All related database tables (`journal_entry`, `lice_count`, `mortality_record`, `mortality_reason`, `treatment`, `vaccination_type`, `sample_type`) are now part of the schema. API endpoints for CRUD operations are implemented via Django REST Framework.
+- **Code Quality**: Fixed all line length issues to comply with `flake8` standards (79-character limit).
+- **Documentation**: Updated `data model.md` to reflect the implemented status of the Health Monitoring feature with accurate descriptions of each table.
 
 ### 2025-04-11: Inventory Test Fixes and Documentation Updates
 - Resolved multiple test failures (`AssertionError`, `AttributeError`, `NameError`) in `apps/inventory/tests/test_services.py` related to `FeedRecommendationService` by correcting assertions, fixing attribute access, ensuring correct test setup, and importing `QuerySet`.
@@ -428,10 +434,10 @@ This document outlines the phased implementation strategy for the AquaMind syste
 ### Phase 8: Health Monitoring and Medical Journal (Weeks 25-28)
 
 #### 8.1 Journal System
-- [ ] Implement journal entry framework
-- [ ] Create categorization and severity tracking
-- [ ] Build observation and action logging
-- [ ] Develop journal search and filtering
+- [x] Implement journal entry framework
+- [x] Create categorization and severity tracking
+- [x] Build observation and action logging
+- [x] Develop journal search and filtering
 
 #### 8.2 Health Tracking
 - [ ] Implement mortality tracking and reasons

@@ -125,22 +125,22 @@ batch_feeding_summary → batch
 
 7. Health Monitoring (Medical Journal)
 
-***Note:** This feature is planned. The tables listed below (except `mortality_record`/`batch_mortalityevent`) are not yet implemented in the current database schema (as of 2025-04-11).*
+*Note: This feature is now implemented as of 2025-04-11. All tables listed below are part of the current database schema.*
 
-Records health observations and treatments.
-journal_entry: Health observations (appearance, behavior).
-lice_count: Sea lice counts.
-mortality_record: Mortality events with reasons.
-mortality_reason: Mortality reason categories.
-treatment: Applied treatments (type, outcome).
-vaccination_type: Vaccination types.
-sample_type: Sample types.
-Key Relationships:
+Records health observations, treatments, and mortality events for fish batches and containers.
+- **journal_entry**: Health observations including category, severity, and resolution status.
+- **lice_count**: Sea lice counts with details on adult female, male, and juvenile counts.
+- **mortality_record**: Mortality events with counts and associated reasons.
+- **mortality_reason**: Categories for reasons behind mortality events.
+- **treatment**: Applied treatments including type (medication, vaccination, delicing, other), dosage, and outcome.
+- **vaccination_type**: Types of vaccinations used in fish health management.
+- **sample_type**: Types of samples taken for health monitoring.
 
-journal_entry → batch, container, user
-lice_count → batch, container, user
-mortality_record → batch, container, mortality_reason
-treatment → batch, container, user
+**Key Relationships:**
+- **journal_entry** → batch, container
+- **lice_count** → batch, container
+- **mortality_record** → batch, container, mortality_reason
+- **treatment** → batch, container
 
 8. Scenario Planning
 
