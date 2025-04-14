@@ -295,6 +295,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
   - `summary`: varchar(255)
   - `description`: text (nullable)
+  - `health_scores`: jsonb (nullable) # Stores quantifiable health scores (e.g., {'gill_health': 1, 'eye_condition': 2})
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`health_licecount`** # Linked to a JournalEntry

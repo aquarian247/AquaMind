@@ -2,13 +2,15 @@ from rest_framework import viewsets, permissions
 
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
-    VaccinationType, Treatment, SampleType
+    VaccinationType, Treatment, SampleType,
+    HealthParameter
 )
 from apps.health.api.serializers import (
     JournalEntrySerializer, MortalityReasonSerializer,
     MortalityRecordSerializer, LiceCountSerializer,
     VaccinationTypeSerializer, TreatmentSerializer,
-    SampleTypeSerializer
+    SampleTypeSerializer,
+    HealthParameterSerializer
 )
 
 
@@ -16,6 +18,10 @@ class JournalEntryViewSet(viewsets.ModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        """Automatically set the user to the logged-in user."""
+        serializer.save(user=self.request.user)
 
 
 class MortalityReasonViewSet(viewsets.ModelViewSet):
@@ -52,3 +58,11 @@ class SampleTypeViewSet(viewsets.ModelViewSet):
     queryset = SampleType.objects.all()
     serializer_class = SampleTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class HealthParameterViewSet(viewsets.ModelViewSet):
+    """API endpoint for managing Health Parameters."""
+    # Allow seeing inactive ones, frontend can filter if needed
+    queryset = HealthParameter.objects.all()
+    serializer_class = HealthParameterSerializer
+    permission_classes = [permissions.IsAuthenticated] # Adjust permissions as needed

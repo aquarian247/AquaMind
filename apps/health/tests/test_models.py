@@ -1,11 +1,13 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError # Import for testing constraints
 
 from apps.batch.models import Batch, Species, LifeCycleStage
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
-    VaccinationType, Treatment, SampleType
+    VaccinationType, Treatment, SampleType,
+    HealthParameter, HealthObservation # Added
 )
 
 User = get_user_model()
@@ -103,6 +105,20 @@ class HealthModelsTestCase(TestCase):
             print(f"Error creating Container: {e}")
             raise
 
+        # Add a HealthParameter for use in tests
+        try:
+            self.gill_health_param = HealthParameter.objects.create(
+                name='Gill Health',
+                description_score_1='Perfect gills, pink and healthy.',
+                description_score_2='Slight paleness or minor mucus.',
+                description_score_3='Noticeable lesions or heavy mucus.',
+                description_score_4='Severe damage, necrosis.'
+            )
+            print("HealthParameter created successfully")
+        except Exception as e:
+            print(f"Error creating HealthParameter: {e}")
+            raise
+
     def test_journal_entry_creation(self):
         entry = JournalEntry.objects.create(
             batch=self.batch,
@@ -117,6 +133,51 @@ class HealthModelsTestCase(TestCase):
         self.assertEqual(entry.description, 'Fish appear healthy.')
         self.assertFalse(entry.resolution_status)
         self.assertEqual(str(entry), f"Observation - {entry.entry_date.strftime('%Y-%m-%d')}")
+
+    def test_health_parameter_creation(self):
+        param = HealthParameter.objects.create(
+            name='Eye Condition',
+            description_score_1='Clear, bright eyes.',
+            description_score_2='Slight cloudiness.',
+            description_score_3='Significant cloudiness or bulging.',
+            description_score_4='Severe damage or loss of eye.'
+        )
+        self.assertEqual(param.name, 'Eye Condition')
+        self.assertTrue(param.is_active)
+        self.assertEqual(str(param), 'Eye Condition')
+
+    def test_health_observation_creation(self):
+        # Explicitly fetch the user created in setUp to ensure it exists
+        try:
+            test_user = User.objects.get(username='testuser')
+            print(f"[Debug] Fetched user for test: {test_user.username} (ID: {test_user.id})")
+        except User.DoesNotExist:
+            print("[Debug] User 'testuser' not found in DB before creating JournalEntry!")
+            raise # Re-raise to fail the test clearly if user doesn't exist
+
+        entry = JournalEntry.objects.create(
+            batch=self.batch,
+            user=test_user, # Use the fetched user
+            category='observation',
+            description='Routine check.' # Reverted to original description
+        )
+        observation = HealthObservation.objects.create(
+            journal_entry=entry,
+            parameter=self.gill_health_param,
+            score=2
+        )
+        self.assertEqual(observation.journal_entry, entry)
+        self.assertEqual(observation.parameter, self.gill_health_param)
+        self.assertEqual(observation.score, 2)
+        self.assertEqual(str(observation), f"{entry} - Gill Health: 2")
+
+        # Test unique_together constraint
+        with self.assertRaises(IntegrityError):
+            HealthObservation.objects.create(
+                journal_entry=entry,
+                parameter=self.gill_health_param, # Same parameter for same entry
+                score=3
+            )
 
     def test_mortality_reason_creation(self):
         reason = MortalityReason.objects.create(name='Disease', description='Infectious disease outbreak')

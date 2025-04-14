@@ -81,7 +81,7 @@ CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # CSRF settings
 # Use wildcards to cover all possible ports for local development and browser previews
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://127.0.0.1:*', 'https://localhost:*']
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://127.0.0.1:*', 'https://localhost:*', 'http://127.0.0.1:51414']
 
 ROOT_URLCONF = "aquamind.urls"
 
@@ -240,6 +240,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:*',  # Cover all 127.0.0.1 ports
     'https://localhost:*',  # Cover https as well
     'https://127.0.0.1:*',  # Cover https as well
+    'http://127.0.0.1:51414'  # Added for Codeium Browser Preview proxy
 ]
 
 # Swagger settings

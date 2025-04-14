@@ -6,6 +6,21 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-04-14: Journal Entry User Enforcement and API Fixes
+- **Refinement**: Ensured `JournalEntry` always records the creating user.
+- **Model**: Made `user` field non-nullable (`null=False`) on `health.JournalEntry` model.
+- **API**: Implemented automatic user assignment via `perform_create` in `JournalEntryViewSet`.
+- **API**: Restored custom `create` method in `JournalEntrySerializer` to correctly handle nested `HealthObservation` creation when user is auto-assigned.
+- **Admin**: Made `user` field read-only in `JournalEntryAdmin`.
+- **Testing**: Fixed related test failures in `test_models.py` and `test_api.py`.
+- **Dev Env**: Added browser preview proxy origin to `CSRF_TRUSTED_ORIGINS` in `settings.py` to resolve CSRF issues during development.
+
+### 2025-04-14: Add Quantifiable Health Scores to Journal Entry
+- **Feature Enhancement**: Added a `health_scores` JSONField to the `health.JournalEntry` model (as per PRD 3.1.4) to store quantifiable health parameters (e.g., gill health, eye condition).
+- **Database**: Created and applied database migration (`health.0002_journalentry_health_scores`).
+- **Testing**: Updated model tests (`test_models.py`) and API tests (`test_api.py`) in the `health` app to include the new field in creation and assertions.
+- **Documentation**: Updated the `health_journalentry` table definition in `data model.md` to include the `health_scores` field.
+
 ### 2025-04-11: Medical Journal Feature Completion
 - **Feature**: Completed implementation of the Medical Journal (Health Monitoring) feature within the `health` app.
 - **Details**: All related database tables (`journal_entry`, `lice_count`, `mortality_record`, `mortality_reason`, `treatment`, `vaccination_type`, `sample_type`) are now part of the schema. API endpoints for CRUD operations are implemented via Django REST Framework.

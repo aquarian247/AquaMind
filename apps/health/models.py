@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
@@ -16,6 +18,10 @@ class JournalEntry(models.Model):
         ('observation', 'Observation'),
         ('issue', 'Issue'),
         ('action', 'Action'),
+        ('diagnosis', 'Diagnosis'),  
+        ('treatment', 'Treatment'),  
+        ('vaccination', 'Vaccination'), 
+        ('sample', 'Sample'),      
     )
     SEVERITY_CHOICES = (
         ('low', 'Low'),
@@ -25,26 +31,29 @@ class JournalEntry(models.Model):
 
     batch = models.ForeignKey(
         Batch, on_delete=models.CASCADE, related_name='journal_entries',
-        null=True, blank=True
+        help_text="The batch associated with this journal entry."
     )
     container = models.ForeignKey(
-        Container, on_delete=models.CASCADE, related_name='journal_entries',
-        null=True, blank=True
+        Container, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='journal_entries',
+        help_text="The specific container, if applicable."
     )
     user = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name='journal_entries',
-        null=True
+        User, on_delete=models.PROTECT,
+        related_name='journal_entries',
+        help_text="User who created the entry."
     )
-    entry_date = models.DateTimeField(auto_now_add=True)
-    category = models.CharField(
-        max_length=20, choices=CATEGORY_CHOICES, default='observation'
-    )
+    entry_date = models.DateTimeField(default=timezone.now)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     severity = models.CharField(
-        max_length=10, choices=SEVERITY_CHOICES, default='low'
+        max_length=10, choices=SEVERITY_CHOICES, default='low', blank=True, null=True 
     )
     description = models.TextField()
     resolution_status = models.BooleanField(default=False)
     resolution_notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name_plural = "Journal Entries"
@@ -56,8 +65,44 @@ class JournalEntry(models.Model):
             f"{self.entry_date.strftime('%Y-%m-%d')}"
         )
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+
+class HealthParameter(models.Model):
+    """Defines quantifiable health parameters measured in observations."""
+    name = models.CharField(max_length=100, unique=True,
+                          help_text="Name of the health parameter (e.g., Gill Health).")
+    description_score_1 = models.TextField(help_text="Description for score 1 (Good).")
+    description_score_2 = models.TextField(help_text="Description for score 2.")
+    description_score_3 = models.TextField(help_text="Description for score 3.")
+    description_score_4 = models.TextField(help_text="Description for score 4 (Bad).")
+    is_active = models.BooleanField(default=True, help_text="Is this parameter currently in use?")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class HealthObservation(models.Model):
+    """Links a JournalEntry to a specific HealthParameter observation score."""
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='health_observations')
+    parameter = models.ForeignKey(HealthParameter, on_delete=models.PROTECT, related_name='observations')
+    score = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(4)],
+        help_text="Score from 1 (Good) to 4 (Bad)."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('journal_entry', 'parameter') 
+
+    def __str__(self):
+        return (
+            f"{self.journal_entry} - "
+            f"{self.parameter.name}: {self.score}"
+        )
 
 
 class MortalityReason(models.Model):
