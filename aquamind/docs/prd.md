@@ -114,32 +114,45 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Historical stock levels are available in a time-series chart.
 
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
-- **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions.
+- **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations and quantified health metrics.
 - **Functionality**:
   - The system shall track health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination, Sample.
   - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, potentially `health_vaccinationrecord`, `health_samplerecord` (all linked back to `health_journalentry`).
-  - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (likely via a separate Media model with generic relations).
-  - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`).
+  - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (via a separate Media model with generic relations) and quantify health parameters on a 1-to-4 scale (1 being great, 4 being bad).
+  - Quantifiable health parameters shall include:
+    - Gill Health: Assesses gill condition (e.g., mucus, lesions).
+    - Eye Condition: Evaluates eye clarity and damage.
+    - Wounds: Measures skin lesions and severity.
+    - Fin Condition: Assesses fin erosion or damage.
+    - Body Condition: Evaluates overall physical shape and deformities.
+    - Swimming Behavior: Monitors activity levels and movement patterns.
+    - Appetite: Assesses feeding response.
+    - Mucous Membrane Condition: Evaluates mucus layer on skin.
+    - Color/Pigmentation: Monitors abnormal color changes.
+  - Health scores for these parameters shall be stored in a `health_scores` JSON field in `health_journalentry` (e.g., `{"gill_health": 2, "eye_condition": 1, "wounds": 3}`).
+  - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`, average health scores over time).
   - The system shall support predefined categories via `health_mortalityreason`, `health_vaccinationtype`, `health_sampletype`.
 - **Behavior**:
-  - Health records (`health_journalentry` and related tables) shall be timestamped (`created_at`, `updated_at`) and should be treated as immutable once finalized.
-  - Pictures and videos shall be uploaded with a maximum file size (e.g., 50MB) enforced.
-  - Trends shall be visualized on a dashboard with filtering by batch (`batch_batch`), container (`infrastructure_container`), or time range.
+  - Health records (`health_journalentry` and related tables) shall be timestamped (`created_at`, `updated_at`) and treated as immutable once finalized.
+  - Pictures and videos shall be uploaded with a maximum file size of 50MB enforced.
+  - Trends, including average health scores for each parameter, shall be visualized on a dashboard with filtering by batch (`batch_batch`), container (`infrastructure_container`), or time range.
   - Entries are linked to the user who created them via `health_journalentry.created_by_id` (FK to `auth_user`).
-- **Justification**: Enables proactive health management, supports regulatory compliance, and improves batch outcomes.
-- **User Story**: As a Veterinarian, I want to log a health observation (`health_journalentry`) with pictures and videos so that I can document conditions for a specific batch assignment (`batch_batchcontainerassignment`).
+- **Justification**: Enables proactive health management through standardized, quantifiable assessments, supports regulatory compliance, and improves batch outcomes.
+- **User Story**: As a Veterinarian, I want to log a health observation (`health_journalentry`) with pictures, videos, and quantified health scores so that I can document conditions for a specific batch assignment (`batch_batchcontainerassignment`).
   - **Acceptance Criteria**:
     - The UI allows users with appropriate permissions to create a `health_journalentry` linked to a `batch_batchcontainerassignment`.
     - Users can attach text, pictures, and videos.
     - Uploaded media is linked to the journal entry and viewable in the UI.
     - File uploads are validated for size (≤50MB) and allowed formats.
+    - The UI provides dropdowns to score health parameters (e.g., gill health, eye condition) on a 1-to-4 scale.
+    - Health scores are saved in the `health_scores` JSON field (e.g., `{"gill_health": 2, "eye_condition": 1}`).
     - The entry is automatically linked to the logged-in user (`created_by_id`).
 - **User Story**: As a Manager, I want to view health trends for a batch (`batch_batch`) so that I can identify potential issues.
   - **Acceptance Criteria**:
-    - The UI displays trends (e.g., mortality rate aggregated from `health_mortalityrecord`, avg lice counts from `health_licecount`) in a chart format.
+    - The UI displays trends (e.g., mortality rate aggregated from `health_mortalityrecord`, avg lice counts from `health_licecount`, avg health scores for each parameter) in a chart format.
     - Users can filter trends by batch, container, or date range.
-    - Alerts are generated for trends exceeding configurable thresholds (e.g., weekly mortality rate > 5%).
-    - Detailed health records (`health_journalentry`), including media, are accessible directly from the trend view.
+    - Alerts are generated for trends exceeding configurable thresholds (e.g., weekly mortality rate > 5%, avg gill health score > 3).
+    - Detailed health records (`health_journalentry`), including media and health scores, are accessible directly from the trend view.
 
 #### 3.1.5 Environmental Monitoring (`environmental` app)
 - **Purpose**: To monitor environmental conditions in real-time using TimescaleDB hypertables, ensuring optimal conditions for fish batches.
