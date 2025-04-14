@@ -1,208 +1,469 @@
-Technical Description of the AquaMind Database Schema
-The AquaMind database is a relational database implemented in PostgreSQL with the TimescaleDB extension, designed to support an aquaculture management system. All tables reside in the public schema.
+# AquaMind Data Model
 
-Overview
-The schema comprises over 40 tables, organized into ten categories:
+## 1. Introduction
 
-Infrastructure Management
-Batch Management
-Broodstock Management (new)
-Growth and Species Parameters
-Environmental Monitoring
-Feed and Inventory Management
-Health Monitoring (Medical Journal)
-Scenario Planning
-Operational Planning
-User Management (updated)
-Key Characteristics
-Tables: 40+
-Primary Keys: Each table uses an auto-incrementing integer column named id.
-Foreign Keys: Extensive relationships ensure data integrity.
-Data Types: Primarily integer, double precision, character varying, timestamp without time zone, with some json and text.
-TimescaleDB: Hypertables (environmental_reading, weather_data) manage time-series data efficiently.
+This document defines the data model for AquaMind, an aquaculture management system. It integrates the database schema details obtained from direct inspection (`inspect_db_schema.py`) and Django model introspection. It aims to provide an accurate representation of the *implemented* schema while also outlining *planned* features. The database uses PostgreSQL with the TimescaleDB extension.
 
-1. Infrastructure Management
-Manages physical locations and assets.
+**Note on Naming**: This document uses the actual database table names following the Django convention (`appname_modelname`).
 
-area: Sea areas with geo-positioning (latitude, longitude, name).
-freshwater_station: Freshwater stations with geo-positioning.
-hall: Halls within stations.
-container: Tanks or pens with type, capacity; linked to area or hall.
-sensor: Sensors in containers for monitoring.
-feed_containers: Feed storage units linked to areas or halls.
-Key Relationships:
+## 2. Database Overview
 
-container → area or hall
-sensor → container
-feed_containers → area or hall
+- **Database**: PostgreSQL with TimescaleDB extension.
+- **Schema**: All tables reside in the `public` schema.
+- **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`).
+- **Implementation Status**:
+  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`).
+  - **Planned Apps/Domains**: Broodstock Management enhancements, Operational Planning, Scenario Planning, Advanced Analytics.
 
-2. Batch Management
-Tracks fish batches through their lifecycle, including support for multi-population containers and batch traceability.
+## 3. Implemented Data Model Domains
 
-batch: Core batch data (species, lifecycle stage, status, date ranges).
-batch_lifecyclestage: Defines the distinct stages (Egg, Fry, Parr, Smolt, etc.).
-batch_container_assignment: Assigns batch portions to containers with counts, biomass, and the specific lifecycle stage for that portion.
-batch_composition: Tracks mixed-batch compositions for cases where batches get combined.
-batch_transfer: Records batch movements between containers, including splits, merges, and lifecycle transitions.
-batch_history: Historical batch snapshots for auditing and traceability.
-batch_media: Media files linked to batches.
+### 3.1 Infrastructure Management (`infrastructure` app)
+**Purpose**: Manages physical assets and locations.
 
-Key Relationships:
+#### Tables
+- **`infrastructure_geography`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_area`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
+  - `latitude`: double precision (nullable)
+  - `longitude`: double precision (nullable)
+  - `max_biomass`: double precision (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_freshwaterstation`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
+  - `location_description`: text (nullable)
+  - `latitude`: double precision (nullable)
+  - `longitude`: double precision (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_hall`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=CASCADE)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_containertype`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_container`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `container_type_id`: bigint (FK to `infrastructure_containertype`, on_delete=PROTECT)
+  - `hall_id`: bigint (FK to `infrastructure_hall`, on_delete=CASCADE, nullable)
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable) # Added based on schema possibility
+  - `capacity_kg`: double precision (nullable)
+  - `capacity_m3`: double precision (nullable) # Added based on schema possibility
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_sensor`**
+  - `id`: bigint (PK, auto-increment)
+  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=CASCADE)
+  - `sensor_id_external`: varchar(100) (Unique) # Sensor identifier in external system (e.g., WonderWare)
+  - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=PROTECT) # Link to parameter type
+  - `status`: varchar(50)
+  - `last_reading_time`: timestamptz (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`infrastructure_feedcontainer`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=CASCADE, nullable) # Nullable if linked to Area
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable) # Nullable if linked to Station
+  - `capacity_kg`: double precision
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-batch_container_assignment → batch, container: Many-to-many relationship allowing multiple batches in one container and portions of a batch across containers.
-batch_composition → batch: Self-referential relationship tracking mixed-batch components and percentages.
-batch_transfer → batch, batch_container_assignment: Records movements with detailed source/destination information.
-batch_history → batch: Captures point-in-time snapshots of batch state.
-batch_media → batch: Links media files for documentation.
+#### Relationships (Inferred `on_delete` where script failed)
+- `infrastructure_geography` ← `infrastructure_area` (PROTECT)
+- `infrastructure_area` ← `infrastructure_freshwaterstation` (CASCADE)
+- `infrastructure_freshwaterstation` ← `infrastructure_hall` (CASCADE)
+- `infrastructure_hall` ← `infrastructure_container` (CASCADE)
+- `infrastructure_area` ← `infrastructure_container` (CASCADE) # If applicable
+- `infrastructure_containertype` ← `infrastructure_container` (PROTECT)
+- `infrastructure_container` ← `infrastructure_sensor` (CASCADE)
+- `infrastructure_freshwaterstation` ← `infrastructure_feedcontainer` (CASCADE)
+- `infrastructure_area` ← `infrastructure_feedcontainer` (CASCADE) # If applicable
+- `environmental_environmentalparameter` ← `infrastructure_sensor` (PROTECT)
 
-3. Broodstock Management
-Manages genetic traits, breeding programs, and simulations for the Broodstock Department to support selective breeding and genetic innovation.
+### 3.2 Batch Management (`batch` app)
+**Purpose**: Tracks fish batches through their lifecycle.
 
-genetic_trait:
-Purpose: Catalog genetic traits of interest (e.g., disease resistance, growth rate).
-Columns: id, name, description, measurement_unit
-batch_genetic_profile:
-Purpose: Associate genetic traits with batches, storing measured or estimated trait values.
-Columns: id, batch_id, trait_id, value
-breeding_program:
-Purpose: Organize selective breeding initiatives with goals and timelines.
-Columns: id, name, description, start_date, end_date, geneticist_id
-breeding_pair:
-Purpose: Record breeding pairs and their offspring within a program.
-Columns: id, program_id, parent1_batch_id, parent2_batch_id, offspring_batch_id
-genetic_scenario:
-Purpose: Simulate breeding outcomes and assess trait trade-offs.
-Columns: id, name, description, program_id, target_trait_id, environmental_factors (JSON), predicted_outcomes (JSON)
-trait_tradeoff:
-Purpose: Quantify relationships between traits (e.g., correlation coefficients).
-Columns: id, trait1_id, trait2_id, correlation_coefficient
-Key Relationships:
+#### Tables
+- **`batch_species`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `scientific_name`: varchar(100) (Unique)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_lifecyclestage`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(50) (Unique, e.g., "Egg", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult")
+  - `description`: text (nullable)
+  - `order`: integer (for sequencing stages)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_batch`**
+  - `id`: bigint (PK, auto-increment)
+  - `batch_number`: varchar(50) (Unique)
+  - `species_id`: bigint (FK to `batch_species`, on_delete=PROTECT)
+  - `current_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT, nullable) # High-level indicator
+  - `start_date`: date
+  - `end_date`: date (nullable)
+  - `origin`: varchar(100) (nullable) # e.g., hatchery name
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_batchcontainerassignment`**
+  - `id`: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
+  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT)
+  - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT) # Stage *within* this container
+  - `population_count`: integer
+  - `avg_weight_g`: double precision # Average weight in grams
+  - `biomass_kg`: double precision # Calculated: (population_count * avg_weight_g) / 1000
+  - `assignment_date`: date
+  - `departure_date`: date (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_batchcomposition`** # Tracks components if batches are mixed
+  - `id`: bigint (PK, auto-increment)
+  - `mixed_batch_id`: bigint (FK to `batch_batch`, related_name='components', on_delete=CASCADE) # The resulting mixed batch
+  - `source_batch_id`: bigint (FK to `batch_batch`, related_name='mixed_in', on_delete=CASCADE) # The original batch component
+  - `percentage`: double precision # Percentage this source contributes
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_batchtransfer`**
+  - `id`: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
+  - `from_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT, nullable) # Null if initial placement
+  - `to_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT)
+  - `population_count`: integer
+  - `avg_weight_g`: double precision
+  - `transfer_date`: date
+  - `transfer_type`: varchar(50) # e.g., Split, Merge, Move
+  - `reason`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_mortalityevent`**
+  - `id`: bigint (PK, auto-increment)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
+  - `event_date`: date
+  - `count`: integer
+  - `reason_id`: bigint (FK to `health_mortalityreason`, on_delete=PROTECT, nullable) # Link to health app
+  - `notes`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`batch_growthsample`**
+    - `id`: bigint (PK, auto-increment)
+    - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE)
+    - `sample_date`: date
+    - `avg_weight_g`: double precision
+    - `avg_length_cm`: double precision (nullable)
+    - `sample_size`: integer
+    - `notes`: text (nullable)
+    - `created_at`: timestamptz
+    - `updated_at`: timestamptz
+- **`batch_batchhistory`** (Likely handled by audit logging tools like django-auditlog, may not be a separate model)
+- **`batch_batchmedia`** (Potentially generic relation via ContentType or dedicated model)
 
-batch_genetic_profile → batch, genetic_trait: Links genetic traits to specific batches.
-breeding_pair → breeding_program, batch: Connects pairs to programs and batches (parents and offspring).
-genetic_scenario → breeding_program, genetic_trait: Ties simulations to programs and target traits.
-trait_tradeoff → genetic_trait: Relates pairs of traits for trade-off analysis.
-These tables integrate with existing tables like environmental_reading and growth_metric to enable comprehensive analysis of genetic, environmental, and health data, supporting the Broodstock Department’s needs.
+#### Relationships (Inferred `on_delete` where script failed)
+- `batch_species` ← `batch_batch` (PROTECT)
+- `batch_lifecyclestage` ← `batch_batch` (PROTECT, for `current_stage_id`)
+- `batch_batch` ← `batch_batchcontainerassignment` (CASCADE)
+- `infrastructure_container` ← `batch_batchcontainerassignment` (PROTECT)
+- `batch_lifecyclestage` ← `batch_batchcontainerassignment` (PROTECT)
+- `batch_batch` ← `batch_batchcomposition` (CASCADE, both FKs)
+- `batch_batch` ← `batch_batchtransfer` (CASCADE)
+- `infrastructure_container` ← `batch_batchtransfer` (PROTECT, both FKs)
+- `batch_batchcontainerassignment` ← `batch_mortalityevent` (CASCADE)
+- `health_mortalityreason` ← `batch_mortalityevent` (PROTECT)
+- `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 
-4. Growth and Species Parameters
-Manages growth metrics and species-specific parameters.
+### 3.3 Feed and Inventory Management (`inventory` app)
+**Purpose**: Manages feed resources and feeding events.
 
-growth_metric: Batch growth data (weight, TGC, SGR).
-atlantic_salmon_parameters: Parameters for Atlantic salmon growth models.
-species_parameters: Generic species parameters.
-Key Relationships:
+#### Tables
+- **`inventory_feed`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `manufacturer`: varchar(100) (nullable)
+  - `feed_type`: varchar(50) # e.g., Pellet, Crumble
+  - `pellet_size_mm`: double precision (nullable)
+  - `nutritional_composition`: jsonb (nullable) # Store protein, fat, etc.
+  - `suitable_for_stages`: ManyToManyField to `batch_lifecyclestage` (creates `inventory_feed_suitable_for_stages` table)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`inventory_feedpurchase`**
+  - `id`: bigint (PK, auto-increment)
+  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
+  - `supplier`: varchar(100) (nullable)
+  - `purchase_date`: date
+  - `quantity_kg`: double precision
+  - `unit_cost`: decimal (max_digits=10, decimal_places=2)
+  - `total_cost`: decimal (max_digits=12, decimal_places=2)
+  - `lot_number`: varchar(100) (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`inventory_feedstock`**
+  - `id`: bigint (PK, auto-increment)
+  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
+  - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`, on_delete=CASCADE)
+  - `quantity_kg`: double precision
+  - `last_updated`: timestamptz
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`inventory_feedingevent`**
+  - `id`: bigint (PK, auto-increment)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
+  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
+  - `quantity_kg`: double precision
+  - `event_time`: timestamptz
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`inventory_batchfeedingsummary`**
+  - `id`: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE, unique=True) # One summary per batch
+  - `total_feed_kg`: double precision
+  - `start_date`: date
+  - `end_date`: date (nullable)
+  - `calculated_fcr`: double precision (nullable) # Feed Conversion Ratio
+  - `last_calculated`: timestamptz (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`inventory_feedrecommendation`** (NEW - based on recent features)
+  - `id`: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
+  - `recommendation_date`: date
+  - `recommended_feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
+  - `recommended_quantity_kg`: double precision
+  - `reasoning`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-growth_metric → batch, container
+#### Relationships (Inferred `on_delete` where script failed)
+- `inventory_feed` ← `inventory_feedpurchase` (PROTECT)
+- `inventory_feed` ← `inventory_feedstock` (PROTECT)
+- `infrastructure_feedcontainer` ← `inventory_feedstock` (CASCADE)
+- `batch_batchcontainerassignment` ← `inventory_feedingevent` (CASCADE)
+- `inventory_feed` ← `inventory_feedingevent` (PROTECT)
+- `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE)
+- `batch_batch` ← `inventory_feedrecommendation` (CASCADE)
+- `inventory_feed` ← `inventory_feedrecommendation` (PROTECT)
+- `inventory_feed` ↔ `batch_lifecyclestage` (ManyToMany)
 
-5. Environmental Monitoring
-Handles environmental data, including time-series.
+### 3.4 Health Monitoring (`health` app)
+**Purpose**: Tracks health observations, treatments, and mortality.
 
-environmental_reading: Time-series sensor/manual data (hypertable).
-photoperiod_data: Day length data by area.
-weather_data: Weather conditions by area (hypertable).
-stage_transition_environmental: Environmental conditions during stage transitions.
-Key Relationships:
+#### Tables
+- **`health_mortalityreason`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (nullable)
+  - `category`: varchar(50) (nullable, e.g., Disease, Environment, Handling)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_vaccinationtype`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (nullable)
+  - `manufacturer`: varchar(100) (nullable)
+  - `target_diseases`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_sampletype`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (nullable)
+  - `unit`: varchar(50) (nullable) # e.g., cells/mL, mg/L
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_journalentry`**
+  - `id`: bigint (PK, auto-increment)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
+  - `entry_type`: varchar(50) # Observation, Diagnosis, Treatment, Vaccination, Sample
+  - `entry_time`: timestamptz
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `summary`: varchar(255)
+  - `description`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_licecount`** # Linked to a JournalEntry
+  - `id`: bigint (PK, auto-increment)
+  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `lice_stage`: varchar(50) # e.g., Adult Female, Mobile, Chalimus
+  - `count`: integer
+  - `sample_size`: integer # Number of fish sampled
+  - `avg_per_fish`: double precision # Calculated
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_mortalityrecord`** # Linked to a JournalEntry
+  - `id`: bigint (PK, auto-increment)
+  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `count`: integer
+  - `reason_id`: bigint (FK to `health_mortalityreason`, on_delete=PROTECT, nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_treatment`** # Linked to a JournalEntry
+  - `id`: bigint (PK, auto-increment)
+  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `treatment_type`: varchar(100) # e.g., Medication, Bath, Physical
+  - `product_name`: varchar(100) (nullable)
+  - `dosage`: varchar(50) (nullable)
+  - `duration_days`: integer (nullable)
+  - `withdrawal_period_days`: integer (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_vaccinationrecord`** (Likely part of `health_treatment` or linked to `health_journalentry`)
+- **`health_samplerecord`** (Likely linked to `health_journalentry`)
 
-environmental_reading → container, batch, sensor
-photoperiod_data → area
-weather_data → area
-stage_transition_environmental → batch_distribution
+#### Relationships (Inferred `on_delete` where script failed)
+- `batch_batchcontainerassignment` ← `health_journalentry` (CASCADE)
+- `auth_user` ← `health_journalentry` (SET_NULL)
+- `health_journalentry` ← `health_licecount` (CASCADE)
+- `health_journalentry` ← `health_mortalityrecord` (CASCADE)
+- `health_mortalityreason` ← `health_mortalityrecord` (PROTECT)
+- `health_journalentry` ← `health_treatment` (CASCADE)
 
-6. Feed and Inventory Management
-Manages feed types, stock, and feeding events.
+### 3.5 Environmental Monitoring (`environmental` app)
+**Purpose**: Captures time-series data for environmental conditions.
 
-feed: Feed types (brand, composition).
-feed_purchase: Feed purchase records.
-feed_stock: Current stock in feed containers.
-feeding_event: Individual feeding events (amount, FCR).
-batch_feeding_summary: Feeding summaries per batch.
-Key Relationships:
+#### Tables
+- **`environmental_environmentalparameter`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique) # e.g., Temperature, Dissolved Oxygen, Salinity
+  - `unit`: varchar(20) # e.g., °C, mg/L, ppt
+  - `description`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`environmental_environmentalreading`** (TimescaleDB Hypertable)
+  - `id`: bigint (PK) # Managed by TimescaleDB
+  - `sensor_id`: bigint (FK to `infrastructure_sensor`, on_delete=CASCADE)
+  - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=PROTECT) # Redundant? Sensor already linked. Check design.
+  - `value`: double precision
+  - `reading_time`: timestamptz (Hypertable partitioning key, Index)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`environmental_weatherdata`** (TimescaleDB Hypertable)
+  - `id`: bigint (PK) # Managed by TimescaleDB
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
+  - `source`: varchar(50) # e.g., OpenWeatherMap, Sensor
+  - `temperature_c`: double precision (nullable)
+  - `humidity_percent`: double precision (nullable)
+  - `precipitation_mm`: double precision (nullable)
+  - `wind_speed_mps`: double precision (nullable)
+  - `wind_direction_deg`: double precision (nullable)
+  - `cloud_cover_percent`: double precision (nullable)
+  - `timestamp`: timestamptz (Hypertable partitioning key, Index)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`environmental_photoperioddata`** (NEW)
+    - `id`: bigint (PK, auto-increment)
+    - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
+    - `date`: date (Unique per area)
+    - `sunrise_time`: time
+    - `sunset_time`: time
+    - `daylight_hours`: double precision
+    - `created_at`: timestamptz
+    - `updated_at`: timestamptz
+- **`environmental_stagetransitionenvironmental`** (NEW - likely for planning/simulation)
+    - `id`: bigint (PK, auto-increment)
+    - `from_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=CASCADE)
+    - `to_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=CASCADE)
+    - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=CASCADE)
+    - `min_value`: double precision (nullable)
+    - `max_value`: double precision (nullable)
+    - `optimal_value`: double precision (nullable)
+    - `created_at`: timestamptz
+    - `updated_at`: timestamptz
 
-feed_purchase → feed
-feed_stock → feed, feed_containers
-feeding_event → batch, container, feed
-batch_feeding_summary → batch
+#### Relationships (Inferred `on_delete` where script failed)
+- `infrastructure_sensor` ← `environmental_environmentalreading` (CASCADE)
+- `environmental_environmentalparameter` ← `environmental_environmentalreading` (PROTECT)
+- `infrastructure_area` ← `environmental_weatherdata` (CASCADE)
+- `infrastructure_area` ← `environmental_photoperioddata` (CASCADE)
+- `batch_lifecyclestage` ← `environmental_stagetransitionenvironmental` (CASCADE, both FKs)
+- `environmental_environmentalparameter` ← `environmental_stagetransitionenvironmental` (CASCADE)
 
-7. Health Monitoring (Medical Journal)
+### 3.6 User Management (`auth` and `users` apps)
+**Purpose**: Manages user accounts and access control.
 
-*Note: This feature is now implemented as of 2025-04-11. All tables listed below are part of the current database schema.*
+#### Tables
+- **`auth_user`** (Django built-in)
+  - `id`: integer (PK, auto-increment)
+  - `password`: varchar(128)
+  - `last_login`: timestamptz (nullable)
+  - `is_superuser`: boolean
+  - `username`: varchar(150) (Unique)
+  - `first_name`: varchar(150)
+  - `last_name`: varchar(150)
+  - `email`: varchar(254)
+  - `is_staff`: boolean
+  - `is_active`: boolean
+  - `date_joined`: timestamptz
+- **`auth_group`** (Django built-in)
+  - `id`: integer (PK, auto-increment)
+  - `name`: varchar(150) (Unique)
+- **`auth_permission`** (Django built-in)
+  - `id`: integer (PK, auto-increment)
+  - `name`: varchar(255)
+  - `content_type_id`: integer (FK to `django_content_type`)
+  - `codename`: varchar(100)
+- **`auth_user_groups`** (ManyToMany link table)
+- **`auth_user_user_permissions`** (ManyToMany link table)
+- **`auth_group_permissions`** (ManyToMany link table)
+- **`users_userprofile`** (Custom profile model)
+  - `id`: bigint (PK, auto-increment)
+  - `user_id`: integer (FK to `auth_user`, on_delete=CASCADE, unique=True) # One-to-One
+  - `role`: varchar(100) (nullable)
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=SET_NULL, nullable)
+  - `subsidiary`: varchar(100) (nullable) # Assuming this might be a choice field or simple text for now
+  - `phone_number`: varchar(20) (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-Records health observations, treatments, and mortality events for fish batches and containers.
-- **journal_entry**: Health observations including category, severity, and resolution status.
-- **lice_count**: Sea lice counts with details on adult female, male, and juvenile counts.
-- **mortality_record**: Mortality events with counts and associated reasons.
-- **mortality_reason**: Categories for reasons behind mortality events.
-- **treatment**: Applied treatments including type (medication, vaccination, delicing, other), dosage, and outcome.
-- **vaccination_type**: Types of vaccinations used in fish health management.
-- **sample_type**: Types of samples taken for health monitoring.
+#### Relationships
+- `auth_user` ← `users_userprofile` (CASCADE, One-to-One)
+- `infrastructure_geography` ← `users_userprofile` (SET_NULL)
+- `auth_user` ↔ `auth_group` (ManyToMany)
+- `auth_user` ↔ `auth_permission` (ManyToMany)
+- `auth_group` ↔ `auth_permission` (ManyToMany)
 
-**Key Relationships:**
-- **journal_entry** → batch, container
-- **lice_count** → batch, container
-- **mortality_record** → batch, container, mortality_reason
-- **treatment** → batch, container
+## 4. Planned Data Model Domains (Not Yet Implemented)
 
-8. Scenario Planning
+### 4.1 Broodstock Management
+**Purpose**: Manage genetic lines and breeding programs.
+**Tables**: `broodstock`, `genetic_trait`, `batch_genetic_profile`, `breeding_program`, `breeding_pair`, `genetic_scenario`, `trait_tradeoff`, `snp_panel`, `breeding_value`, `photoperiod_regime`, `temperature_regime`. (Details omitted for brevity - refer to PRD/previous draft).
 
-***Note:** This feature is planned. The tables listed below are not yet implemented in the current database schema (as of 2025-04-11).*
+### 4.2 Operational Planning
+**Purpose**: Provide operational recommendations.
+**Tables**: `batch_operational_plan`, `planning_recommendation`. (Details omitted).
 
-Supports hypothetical scenario creation and comparison.
-batch_scenario: Scenario definitions (name, growth model).
-batch_scenario_container: Container assignments for scenarios.
-batch_scenario_growth: Growth targets (TGC, SGR).
-batch_scenario_feeding: Feeding plans.
-batch_scenario_environmental: Environmental targets.
-scenario_comparison: Comparisons between scenarios (id, name, scenarios as JSON).
-Key Relationships:
+### 4.3 Scenario Planning
+**Purpose**: Simulate hypothetical scenarios.
+**Tables**: `batch_scenario`, `scenario_model`. (Details omitted).
 
-batch_scenario_container → batch_scenario, container
-batch_scenario_growth → batch_scenario
-batch_scenario_feeding → batch_scenario, feed
-batch_scenario_environmental → batch_scenario
-scenario_comparison → batch_scenario (via JSON or many-to-many)
+### 4.4 Analytics
+**Purpose**: Support AI/ML predictions.
+**Tables**: `analytics_model`, `prediction`. (Details omitted).
 
-9. Operational Planning
+## 5. Data Governance
 
-***Note:** This feature is planned. The tables listed below are not yet implemented in the current database schema (as of 2025-04-11).*
+- **Audit Trails**: Standard `created_at`, `updated_at` fields exist. Consider integrating `django-auditlog` for comprehensive tracking.
+- **Validation**: ORM-level validation exists. Database constraints (Foreign Keys, Uniqueness) are enforced. `on_delete` behavior specified where known/inferred.
+- **Partitioning and Indexing**: TimescaleDB hypertables are partitioned. Relevant indexes exist on Foreign Keys and timestamp columns.
 
-Facilitates real-time planning and recommendations.
-infrastructure_state: Container state (capacity, health, density).
-planning_recommendation: Operational recommendations (type, priority, details as JSON).
-recommendation_action: Actions on recommendations (action taken, user).
-Key Relationships:
+## 6. Appendix: Developer Notes
 
-infrastructure_state → container
-planning_recommendation → batch, container (from/to)
-recommendation_action → planning_recommendation, user
-
-10. User Management
-Manages user accounts and access control, leveraging Django's built-in authentication and permission systems while extending them to fully support AquaMind's complex organizational structure.
-
-user:
-Extended Django User Model with additional fields:
-geography: Links to the user's region (e.g., Faroe Islands, Scotland).
-subsidiary: Ties to the user's company (e.g., Farming, Logistics).
-role: Defines the user's role (e.g., manager, veterinarian).
-geography:
-Purpose: Define regions of operation.
-Columns: id, name (e.g., "Faroe Islands", "Scotland")
-subsidiary:
-Purpose: Define companies within regions.
-Columns: id, name, geography_id
-Access Control:
-
-Authentication: Handled by Django's User model and built-in views for login, logout, and password management.
-Permissions: Model-level access via Django groups (e.g., "Finance Group") and permissions (e.g., can_view_batch), assigned based on role.
-Row-Level Security: Implemented with custom QuerySets or django-guardian to restrict access to specific data instances (e.g., batches or programs) based on geography, subsidiary, or user-specific assignments.
-Audit Logging: Uses django-auditlog or Django signals to track changes, ensuring accountability (e.g., who updated a batch record).
-Key Relationships:
-
-user → geography, subsidiary: Ties users to their organizational context.
-Referenced across tables for auditing (e.g., recorded_by in feeding_event, journal_entry, or breeding_program).
-This enhanced structure supports role-based, geography-based, and subsidiary-based access control, ensuring data security and operational integrity across AquaMind’s multi-dimensional organizational hierarchy.
-
-Notes for Developers
-All tables are in the public schema.
-Hypertables leverage TimescaleDB for efficient time-series data management.
-Map tables to Django models with appropriate relationships (e.g., ForeignKey, ManyToManyField).
-Optimize for large datasets, particularly in Scenario Planning, Environmental Monitoring, and now Broodstock Management.
+- **TimescaleDB Setup**: Ensure `timescaledb` extension is enabled. Use Django migrations (potentially with `RunSQL`) or manual commands (`SELECT create_hypertable(...)`) to manage hypertables.
+- **Calculated Fields**: Fields like `batch_batchcontainerassignment.biomass_kg` are calculated in the application logic (e.g., model `save()` method or serializers), not stored directly unless denormalized.
+- **User Profile**: Access extended user information via `user.userprofile`. Geography is linked via FK, subsidiary requires clarification (FK or CharField?).

@@ -75,18 +75,24 @@ def inspect_model_relationships(model):
     print("Forward Relationships (this model -> other models):")
     for field in model._meta.get_fields():
         if isinstance(field, (ForeignKey, ManyToManyField, OneToOneField)):
-            related_name = getattr(field, 'related_name', None) or f'{model.__name__.lower()}_set'
-            print(f"- {field.name} -> {field.related_model.__name__} (accessed as: {model.__name__}.{field.name})")
-            print(f"  Reverse accessor: {field.related_model.__name__}.{related_name}")
-    
-    # Reverse relationships (other models -> this model)
+            # Check if related_model exists before accessing its name
+            if field.related_model:
+                related_name = getattr(field, 'related_name', None) or f'{field.related_model.__name__.lower()}_set'
+                print(f"- {field.name} -> {field.related_model.__name__} (accessed as: {model.__name__}.{field.name})")
+                print(f"  Reverse accessor: {field.related_model.__name__}.{related_name}")
+            else:
+                print(f"- {field.name} -> [Generic Relation or Undefined Model]") # Handle generic or other cases
+
+    # Reverse relationships (other models -> this model):
     print("\nReverse Relationships (other models -> this model):")
     for relation in model._meta.get_fields():
-        if hasattr(relation, 'related_model') and not isinstance(relation, (ForeignKey, ManyToManyField, OneToOneField)):
+        # Check if it's a reverse relation object AND related_model is not None
+        if hasattr(relation, 'related_model') and relation.related_model and not isinstance(relation, (ForeignKey, ManyToManyField, OneToOneField)):
             if relation.related_model != model:  # Skip self-relations
-                field_name = relation.name
-                related_model = relation.related_model.__name__
-                print(f"- {related_model} -> {model.__name__} (accessed as: {model.__name__}.{field_name})")
+                field_name = relation.name # This is usually the related_query_name or similar
+                related_model_name = relation.related_model.__name__
+                # Adjust how the accessor is displayed for reverse relations if needed
+                print(f"- {related_model_name} -> {model.__name__} (reverse accessor usually: {related_model_name}.{field_name})")
 
 def main():
     """Main function to inspect all models or specific ones."""
