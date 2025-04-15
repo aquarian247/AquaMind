@@ -6,6 +6,13 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-04-15: Enhance Health/Growth Serializers and Tests
+- **Refactor**: Updated `HealthParameter` model/serializer for 1-5 score scale. Updated `HealthObservation` model/serializer for 1-5 score, added optional `fish_identifier`, removed `unique_together`.
+- **GrowthSample**: Added `individual_weights` list to `GrowthSampleSerializer` for automated calculation of average weight, standard deviation, and updated condition factor logic to use individual K-factors.
+- **JournalEntry**: Enhanced `JournalEntrySerializer` to handle nested creation/update of multiple `HealthObservation` instances and an optional single `GrowthSample` instance (supporting both manual averages and individual measurement lists).
+- **Testing**: Significantly updated tests in `apps.batch.tests.api.test_serializers.GrowthSampleSerializerTest` to cover new calculation and validation logic. Created new test file `apps.health.tests.api.test_serializers.py` with comprehensive tests for `HealthParameterSerializer`, `HealthObservationSerializer`, and `JournalEntrySerializer` (including nested operations).
+- **Documentation**: Updated `data model.md` to reflect model changes and clarify calculated fields in `GrowthSample`.
+
 ### 2025-04-14: Journal Entry User Enforcement and API Fixes
 - **Refinement**: Ensured `JournalEntry` always records the creating user.
 - **Model**: Made `user` field non-nullable (`null=False`) on `health.JournalEntry` model.

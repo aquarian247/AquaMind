@@ -337,5 +337,5 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
 class GrowthSampleViewSet(viewsets.ModelViewSet):
     queryset = GrowthSample.objects.all()
     serializer_class = GrowthSampleSerializer
-    filterset_fields = ['batch', 'sample_date']
+    filterset_fields = ['assignment', 'sample_date'] 
     search_fields = ['notes']

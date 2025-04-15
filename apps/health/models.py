@@ -70,10 +70,11 @@ class HealthParameter(models.Model):
     """Defines quantifiable health parameters measured in observations."""
     name = models.CharField(max_length=100, unique=True,
                           help_text="Name of the health parameter (e.g., Gill Health).")
-    description_score_1 = models.TextField(help_text="Description for score 1 (Good).")
-    description_score_2 = models.TextField(help_text="Description for score 2.")
-    description_score_3 = models.TextField(help_text="Description for score 3.")
-    description_score_4 = models.TextField(help_text="Description for score 4 (Bad).")
+    description_score_1 = models.TextField(help_text="Description for score 1 (Best/Excellent).")
+    description_score_2 = models.TextField(help_text="Description for score 2 (Good).")
+    description_score_3 = models.TextField(help_text="Description for score 3 (Fair/Moderate).")
+    description_score_4 = models.TextField(help_text="Description for score 4 (Poor/Severe).")
+    description_score_5 = models.TextField(help_text="Description for score 5 (Worst/Critical).", default="")
     is_active = models.BooleanField(default=True, help_text="Is this parameter currently in use?")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,19 +89,24 @@ class HealthObservation(models.Model):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='health_observations')
     parameter = models.ForeignKey(HealthParameter, on_delete=models.PROTECT, related_name='observations')
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(4)],
-        help_text="Score from 1 (Good) to 4 (Bad)."
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score from 1 (Best) to 5 (Worst)."
+    )
+    fish_identifier = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text="Identifier for individual fish within a sample (e.g., 1-75), if applicable."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('journal_entry', 'parameter') 
+        pass
 
     def __str__(self):
+        entry_str = f"{self.journal_entry}"
         return (
-            f"{self.journal_entry} - "
+            f"{entry_str} - "
             f"{self.parameter.name}: {self.score}"
         )
 

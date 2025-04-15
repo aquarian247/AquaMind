@@ -68,13 +68,17 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall calculate derived metrics like `biomass_kg` (within `BatchContainerAssignment.save()` or serializers: `population_count * avg_weight_g / 1000`).
   - The system shall log batch transfers between containers using `batch_batchtransfer`, recording `from_container_id`, `to_container_id`, `population_count`, `transfer_type`, etc.
   - The system shall track growth via sampling events logged in `batch_growthsample` (linked to `batch_batchcontainerassignment`). Mortality is tracked via `batch_mortalityevent`.
+  - The system shall calculate Fulton’s Condition Factor (K-factor) for each growth sample using the formula \(K = 100 \times \frac{W}{L^3}\), where \(W\) is the average weight in grams (`batch_growthsample.avg_weight_g`) and \(L\) is the average length in centimeters (`batch_growthsample.avg_length_cm`) for that specific sample.
+  - The K-factor shall be stored in the existing `condition_factor` field on the `batch_growthsample` model.
+  - The `batch_growthsample.avg_length_cm` and `batch_growthsample.std_deviation_length` fields shall be calculated from a list of individual fish lengths provided by the user during the sampling process.
   - The system shall simulate, for testing purposes, a full lifecycle (approx. 850-900 days) with stage-appropriate container transitions, involving creation of new `BatchContainerAssignment` records upon stage changes or transfers (Ref: `simulate_full_lifecycle.py` script).
   - Batch history will be managed via audit logging tools (e.g., `django-auditlog`). Media attachments (`batch_batchmedia`) might use generic relations or a dedicated media model.
 - **Behavior**:
   - Batch lifecycle stage transitions typically trigger the creation of new `BatchContainerAssignment` records or `BatchTransfer` records to reflect the change in location or status.
   - Transfers (`batch_batchtransfer`) shall require user confirmation and log the reason (`batch_batchtransfer.reason`).
   - Biomass calculations (`batch_batchcontainerassignment.biomass_kg`) shall update automatically when relevant fields (`population_count`, `avg_weight_g`) are modified.
-- **Justification**: Provides complete visibility into batch lifecycles and container assignments, enabling precise management, accurate biomass tracking, and traceability.
+  - The K-factor (`batch_growthsample.condition_factor`) shall be calculated automatically within the `GrowthSample` model's `save` method whenever `avg_weight_g` and calculated `avg_length_cm` are available for a sample.
+- **Justification**: Provides complete visibility into batch lifecycles and container assignments, enabling precise management, accurate biomass tracking, and traceability. Allows for granular health assessment through the K-factor calculated at the time of sampling for specific container assignments.
 - **User Story**: As a Farm Operator, I want to track the specific lifecycle stage (`batch_lifecyclestage`) of the fish within each container assignment (`batch_batchcontainerassignment`) for a given batch (`batch_batch`).
   - **Acceptance Criteria**:
     - The UI displays the active `batch_batchcontainerassignment` records for a selected `batch_batch`.
@@ -86,6 +90,11 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - The UI provides a batch history view (e.g., audit log entries filtered for the `batch_batch` instance) with timestamps, description of changes (e.g., stage change, transfer, population update), and user details.
     - Media attachments are accessible if implemented.
     - Users can filter history by date range or event type.
+- **User Story**: As a Farm Operator, I want to view the K-factor for a batch so that I can assess its overall condition and growth.
+  - **Acceptance Criteria**:
+    - The UI displays the K-factor for a selected batch alongside other metrics (e.g., `biomass_kg`).
+    - The K-factor is updated whenever `avg_weight_g`, `avg_length_cm`, or `std_deviation_length` changes.
+    - An alert is generated if the K-factor falls below a configurable threshold (e.g., K < 0.8).
 
 #### 3.1.3 Feed and Inventory Management (`inventory` app)
 - **Purpose**: To manage feed resources (`inventory_feed`) and ensure optimal feeding practices for batches.
@@ -118,7 +127,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 - **Functionality**:
   - The system shall track health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination, Sample.
   - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, potentially `health_vaccinationrecord`, `health_samplerecord` (all linked back to `health_journalentry`).
-  - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (via a separate Media model with generic relations) and quantify health parameters on a 1-to-4 scale (1 being great, 4 being bad).
+  - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (via a separate Media model with generic relations) and quantify health parameters on a 1-to-5 scale (1 being best, 5 being worst) using the defined `health_healthparameter` and `health_healthobservation` models.
   - Quantifiable health parameters shall include:
     - Gill Health: Assesses gill condition (e.g., mucus, lesions).
     - Eye Condition: Evaluates eye clarity and damage.
@@ -129,7 +138,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Appetite: Assesses feeding response.
     - Mucous Membrane Condition: Evaluates mucus layer on skin.
     - Color/Pigmentation: Monitors abnormal color changes.
-  - Health scores for these parameters shall be stored in a `health_scores` JSON field in `health_journalentry` (e.g., `{"gill_health": 2, "eye_condition": 1, "wounds": 3}`).
+  - Health scores for these parameters shall be stored using the `health_healthobservation` model, linking a `health_journalentry` to a `health_healthparameter` with a score (1-5).
   - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`, average health scores over time).
   - The system shall support predefined categories via `health_mortalityreason`, `health_vaccinationtype`, `health_sampletype`.
 - **Behavior**:
@@ -144,12 +153,12 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Users can attach text, pictures, and videos.
     - Uploaded media is linked to the journal entry and viewable in the UI.
     - File uploads are validated for size (≤50MB) and allowed formats.
-    - The UI provides dropdowns to score health parameters (e.g., gill health, eye condition) on a 1-to-4 scale.
-    - Health scores are saved in the `health_scores` JSON field (e.g., `{"gill_health": 2, "eye_condition": 1}`).
+    - The UI provides dropdowns to score health parameters (e.g., gill health, eye condition) on a 1-to-5 scale.
+    - Health scores are saved correctly using the `health_healthobservation` model.
     - The entry is automatically linked to the logged-in user (`created_by_id`).
 - **User Story**: As a Manager, I want to view health trends for a batch (`batch_batch`) so that I can identify potential issues.
   - **Acceptance Criteria**:
-    - The UI displays trends (e.g., mortality rate aggregated from `health_mortalityrecord`, avg lice counts from `health_licecount`, avg health scores for each parameter) in a chart format.
+    - The UI displays trends (e.g., mortality rate aggregated from `health_mortalityrecord`, avg lice counts from `health_licecount`, average health scores for each parameter) in a chart format.
     - Users can filter trends by batch, container, or date range.
     - Alerts are generated for trends exceeding configurable thresholds (e.g., weekly mortality rate > 5%, avg gill health score > 3).
     - Detailed health records (`health_journalentry`), including media and health scores, are accessible directly from the trend view.

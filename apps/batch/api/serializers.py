@@ -16,6 +16,8 @@ from apps.batch.models import (
     GrowthSample
 )
 from apps.infrastructure.models import Container
+import statistics
+import decimal
 
 
 class SpeciesSerializer(serializers.ModelSerializer):
@@ -404,40 +406,235 @@ class BatchCompositionSerializer(serializers.ModelSerializer):
 
 
 class GrowthSampleSerializer(serializers.ModelSerializer):
-    """Serializer for the GrowthSample model."""
-    
-    batch_number = serializers.StringRelatedField(source='batch', read_only=True)
+    """
+    Serializer for the GrowthSample model.
+    Handles calculation of avg/std dev for weight/length and condition_factor from individual measurements if provided.
+    """
+    # Use PrimaryKeyRelatedField for writing the assignment relation
+    assignment = serializers.PrimaryKeyRelatedField(
+        queryset=BatchContainerAssignment.objects.all(),
+        help_text="ID of the BatchContainerAssignment this sample belongs to."
+    )
+    # Add write-only fields to accept individual measurements
+    individual_lengths = serializers.ListField(
+        child=serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False),
+        write_only=True,
+        required=False,
+        allow_empty=True,
+        help_text="Optional: List of individual fish lengths (cm). If provided, avg_length_cm and std_deviation_length will be calculated."
+    )
+    individual_weights = serializers.ListField(
+        child=serializers.DecimalField(max_digits=8, decimal_places=2, coerce_to_string=False),
+        write_only=True,
+        required=False,
+        allow_empty=True,
+        help_text="Optional: List of individual fish weights (g). If provided, avg_weight_g and std_deviation_weight will be calculated."
+    )
+
+    # Add a read-only field to show assignment details (optional, can customize)
+    assignment_details = serializers.StringRelatedField(source='assignment', read_only=True)
 
     class Meta:
         model = GrowthSample
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at', 'condition_factor')
-    
+        fields = [
+            'id', 'assignment', 'assignment_details', 'sample_date', 'sample_size',
+            'avg_weight_g', 'avg_length_cm', 'std_deviation_weight',
+            'std_deviation_length', 'min_weight_g', 'max_weight_g',
+            'condition_factor', 'notes', 'created_at', 'updated_at',
+            'individual_lengths', 'individual_weights' # Include write-only fields
+        ]
+        read_only_fields = (
+            'id',
+            'assignment_details', # Read-only representation
+            'avg_length_cm', # Calculated if individual_lengths provided
+            'std_deviation_length', # Calculated if individual_lengths provided
+            'avg_weight_g', # Calculated if individual_weights provided
+            'std_deviation_weight', # Calculated if individual_weights provided
+            'condition_factor', # Calculated if both lists provided
+            'created_at',
+            'updated_at'
+        )
+
+    def _calculate_stats(self, data_list, field_name):
+        """Helper to calculate avg and std dev from a list of Decimal numbers."""
+        avg = None
+        std_dev = None
+        if data_list:
+            if not all(isinstance(item, decimal.Decimal) for item in data_list):
+                 # Convert to Decimal for precision if not already
+                 try:
+                     data_list = [decimal.Decimal(str(item)) for item in data_list]
+                 except (decimal.InvalidOperation, TypeError) as e:
+                     raise serializers.ValidationError({field_name: f"Invalid numeric value found: {e}"})
+
+            try:
+                avg = statistics.mean(data_list)
+                if len(data_list) > 1:
+                    std_dev = statistics.stdev(data_list)
+                else:
+                    std_dev = decimal.Decimal(0) # Std dev is 0 for a single sample
+
+                # Quantize results for consistency
+                avg = avg.quantize(decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+                if std_dev is not None:
+                    std_dev = std_dev.quantize(decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+
+            except (statistics.StatisticsError, decimal.InvalidOperation, TypeError) as e:
+                raise serializers.ValidationError({field_name: f"Error calculating statistics: {e}"})
+        return avg, std_dev
+
+    def _calculate_condition_factor_from_individuals(self, weights, lengths):
+        """Calculate the average condition factor from lists of weights and lengths."""
+        if not weights or not lengths or len(weights) != len(lengths):
+            return None # Cannot calculate if lists are missing, empty, or mismatched
+
+        k_factors = []
+        try:
+            # Ensure Decimals
+            weights_decimal = [decimal.Decimal(str(w)) for w in weights]
+            lengths_decimal = [decimal.Decimal(str(l)) for l in lengths]
+
+            for w, l in zip(weights_decimal, lengths_decimal):
+                if l is not None and l > 0 and w is not None:
+                    k = (100 * w / (l ** 3))
+                    k_factors.append(k)
+                # else: skip pair if length is zero/null or weight is null
+
+            if not k_factors:
+                return None # No valid pairs to calculate K
+
+            avg_k = statistics.mean(k_factors)
+            return avg_k.quantize(decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+
+        except (decimal.InvalidOperation, decimal.DivisionByZero, statistics.StatisticsError, TypeError) as e:
+             raise serializers.ValidationError({"condition_factor": f"Error calculating condition factor: {e}"})
+
     def validate(self, data):
         """
-        Validate that sample size doesn't exceed batch population and
-        that min weight is not greater than max weight.
+        Validate input data:
+        - Sample size vs assignment population.
+        - Sample size vs length of individual measurement lists.
+        - Consistency between individual weights and lengths lists.
+        - Min/Max weight consistency.
         """
         errors = {}
-        
-        # Get the batch from data
-        batch = data.get('batch')
-        if batch:
-            # Check if sample size doesn't exceed batch population
-            if 'sample_size' in data:
-                if data['sample_size'] > batch.population_count:
-                    errors['sample_size'] = (
-                        f"Sample size ({data['sample_size']}) exceeds batch "
-                        f"population ({batch.population_count})."
-                    )
-        
-        # Check if min weight is not greater than max weight
-        if ('min_weight_g' in data and 'max_weight_g' in data and
-                data['min_weight_g'] and data['max_weight_g']):
-            if data['min_weight_g'] > data['max_weight_g']:
+        assignment = data.get('assignment', getattr(self.instance, 'assignment', None))
+        sample_size = data.get('sample_size', getattr(self.instance, 'sample_size', None))
+        individual_lengths = data.get('individual_lengths')
+        individual_weights = data.get('individual_weights')
+
+        # Check sample size vs assignment population
+        if assignment and sample_size is not None:
+            if sample_size > assignment.population_count:
+                errors['sample_size'] = (
+                    f"Sample size ({sample_size}) exceeds assignment "
+                    f"population ({assignment.population_count})."
+                )
+
+        # Check sample size vs individual measurement lists
+        if individual_lengths is not None and sample_size != len(individual_lengths):
+             errors['sample_size'] = (
+                 f"Sample size ({sample_size}) does not match the number "
+                 f"of individual lengths provided ({len(individual_lengths)})."
+             )
+        if individual_weights is not None and sample_size != len(individual_weights):
+            errors['sample_size'] = (
+                f"Sample size ({sample_size}) does not match the number "
+                f"of individual weights provided ({len(individual_weights)})."
+            )
+
+        # Check consistency between measurement lists
+        if individual_lengths is not None and individual_weights is not None:
+            if len(individual_lengths) != len(individual_weights):
+                errors['individual_measurements'] = (
+                    f"Number of individual lengths ({len(individual_lengths)}) does not match "
+                    f"number of individual weights ({len(individual_weights)})."
+                )
+
+        # Check min/max weight
+        min_weight = data.get('min_weight_g', getattr(self.instance, 'min_weight_g', None))
+        max_weight = data.get('max_weight_g', getattr(self.instance, 'max_weight_g', None))
+        if min_weight is not None and max_weight is not None:
+            if min_weight > max_weight:
                 errors['min_weight_g'] = "Minimum weight cannot be greater than maximum weight."
-        
+
         if errors:
             raise serializers.ValidationError(errors)
-        
+
         return data
+
+    def _process_individual_measurements(self, validated_data):
+        """Calculate stats from individual lists and update validated_data."""
+        individual_lengths = validated_data.pop('individual_lengths', None)
+        individual_weights = validated_data.pop('individual_weights', None)
+
+        if individual_lengths:
+            avg_len, std_dev_len = self._calculate_stats(individual_lengths, 'individual_lengths')
+            validated_data['avg_length_cm'] = avg_len
+            validated_data['std_deviation_length'] = std_dev_len
+
+        if individual_weights:
+            avg_wgt, std_dev_wgt = self._calculate_stats(individual_weights, 'individual_weights')
+            validated_data['avg_weight_g'] = avg_wgt
+            validated_data['std_deviation_weight'] = std_dev_wgt
+
+        # Calculate condition factor only if both lists were provided *in this request*
+        if individual_lengths and individual_weights:
+            validated_data['condition_factor'] = self._calculate_condition_factor_from_individuals(
+                individual_weights, individual_lengths
+            )
+        # If only one list provided, let the model's save method handle K calculation later if possible
+        elif individual_lengths or individual_weights:
+             validated_data['condition_factor'] = None # Explicitly set to None for recalculation trigger
+
+        return validated_data
+
+    def create(self, validated_data):
+        """
+        Create a GrowthSample instance, calculating stats if individual measurements provided.
+        """
+        validated_data = self._process_individual_measurements(validated_data)
+        # Ensure condition factor is None if not calculated, allowing model's save to try
+        if 'condition_factor' not in validated_data:
+             validated_data['condition_factor'] = None
+
+        # Remove calculated fields that are read-only from direct creation input
+        # (They are set above based on calculations)
+        read_only_calculated = ['avg_length_cm', 'std_deviation_length', 'avg_weight_g', 'std_deviation_weight', 'condition_factor']
+        creation_data = {k: v for k, v in validated_data.items() if k not in read_only_calculated or v is not None}
+
+        # Need to re-add calculated values if they exist
+        for field in read_only_calculated:
+            if field in validated_data and validated_data[field] is not None:
+                creation_data[field] = validated_data[field]
+
+        return super().create(creation_data)
+
+
+    def update(self, instance, validated_data):
+        """
+        Update a GrowthSample instance, recalculating stats if individual measurements provided.
+        """
+        validated_data = self._process_individual_measurements(validated_data)
+
+        # Update instance fields directly before calling super().update
+        # This ensures the model's save method (called by super().update) has the latest calculated values
+        instance.avg_length_cm = validated_data.get('avg_length_cm', instance.avg_length_cm)
+        instance.std_deviation_length = validated_data.get('std_deviation_length', instance.std_deviation_length)
+        instance.avg_weight_g = validated_data.get('avg_weight_g', instance.avg_weight_g)
+        instance.std_deviation_weight = validated_data.get('std_deviation_weight', instance.std_deviation_weight)
+        instance.condition_factor = validated_data.get('condition_factor', instance.condition_factor)
+
+        # If condition_factor was set to None by _process_individual_measurements because only one list was provided,
+        # ensure it's None on the instance so the model's save method attempts recalculation.
+        if 'condition_factor' in validated_data and validated_data['condition_factor'] is None:
+             instance.condition_factor = None
+
+        # Remove lists and calculated fields from validated_data passed to super(), as they are handled above
+        validated_data.pop('individual_lengths', None)
+        validated_data.pop('individual_weights', None)
+        calculated_fields = ['avg_length_cm', 'std_deviation_length', 'avg_weight_g', 'std_deviation_weight', 'condition_factor']
+        for field in calculated_fields:
+             validated_data.pop(field, None)
+
+        return super().update(instance, validated_data)

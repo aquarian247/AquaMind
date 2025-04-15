@@ -4,8 +4,9 @@ Tests for the batch app API serializers.
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 import datetime
+import statistics  # Added for std dev calculation
 
 from apps.batch.models import (
     Species,
@@ -784,114 +785,326 @@ class GrowthSampleSerializerTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        # Create Species and Lifecycle Stage
-        self.species = Species.objects.create(
-            name='Atlantic Salmon',
-            scientific_name='Salmo salar'
-        )
-        
-        self.lifecycle_stage = LifeCycleStage.objects.create(
-            name='Fry',
-            species=self.species,
-            order=2
-        )
-        
-        # Create Geography and Area
-        self.geography = Geography.objects.create(
-            name='Faroe Islands',
-            description='Faroe Islands operations'
-        )
-        
-        self.area = Area.objects.create(
-            name='Test Area',
-            geography=self.geography,
-            latitude=62.0,
-            longitude=7.0,
-            max_biomass=10000
-        )
-        
-        # Create Container Type and Container
-        self.container_type = ContainerType.objects.create(
-            name='Standard Tank',
-            category='TANK',
-            max_volume_m3=100
-        )
-        
-        self.container = Container.objects.create(
-            name='Tank 1',
-            container_type=self.container_type,
-            area=self.area,
-            volume_m3=80,
-            max_biomass_kg=500
-        )
-        
-        # Create Batch
+        self.species = Species.objects.create(name="Trout")
+        self.stage = LifeCycleStage.objects.create(species=self.species, name="Fingerling", order=1)
         self.batch = Batch.objects.create(
-            batch_number='BATCH001',
+            batch_number='B001',
             species=self.species,
-            lifecycle_stage=self.lifecycle_stage,
-            status='ACTIVE',
-            batch_type='STANDARD',
-            population_count=10000,
-            avg_weight_g=Decimal('2.50'),
-            biomass_kg=Decimal('25.00'),
-            start_date=datetime.date.today()
+            start_date=datetime.date.today() - datetime.timedelta(days=30),
+            initial_count=1000,
+            initial_biomass_kg=Decimal('10.0')
         )
-        
-        # Create BatchContainerAssignment
-        from apps.batch.models import BatchContainerAssignment
-        BatchContainerAssignment.objects.create(
+        self.container = Container.objects.create(name='Tank 1', volume_m3=Decimal('50.0'))
+        self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
-            lifecycle_stage=self.lifecycle_stage,
-            population_count=10000,
-            biomass_kg=Decimal('25.00'),
-            assignment_date=datetime.date.today(),
-            is_active=True
+            assignment_date=datetime.date.today() - datetime.timedelta(days=30),
+            population_count=1000, # Population for validation
+            biomass_kg=Decimal('10.0'),
+            lifecycle_stage=self.stage
         )
-        
-        # Valid growth sample data
+
         self.valid_sample_data = {
-            'batch': self.batch.id,
+            'assignment': self.assignment.id,
             'sample_date': datetime.date.today(),
-            'sample_size': 100,
+            'sample_size': 10,
             'avg_weight_g': Decimal('3.00'),
-            'avg_length_cm': Decimal('4.50'),
+            'avg_length_cm': Decimal('5.50'), # Required if no individual lengths
             'std_deviation_weight': Decimal('0.50'),
-            'std_deviation_length': Decimal('0.30'),
+            'std_deviation_length': Decimal('0.25'), # Required if no individual lengths
             'min_weight_g': Decimal('2.00'),
             'max_weight_g': Decimal('4.00'),
-            'notes': 'Test growth sample'
+            # condition_factor will be calculated by model save if possible
+            'notes': 'Routine sample'
         }
 
-    def test_valid_growth_sample_serialization(self):
-        """Test growth sample serialization with valid data."""
-        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
-        self.assertTrue(serializer.is_valid())
-        sample = serializer.save()
-        self.assertEqual(sample.batch, self.batch)
-        self.assertEqual(sample.sample_size, 100)
-        self.assertEqual(sample.avg_weight_g, Decimal('3.00'))
-        self.assertEqual(sample.avg_length_cm, Decimal('4.50'))
-        # Condition factor should be calculated automatically: K = 100 * weight(g) / length(cm)^3
-        expected_condition_factor = Decimal('100') * Decimal('3.00') / (Decimal('4.50') ** 3)
-        self.assertAlmostEqual(float(sample.condition_factor), float(expected_condition_factor), places=2)
+        self.lengths_data = [Decimal('5.0'), Decimal('5.5'), Decimal('6.0')]
+        self.weights_data = [Decimal('2.8'), Decimal('3.0'), Decimal('3.2')]
 
-    def test_sample_size_validation(self):
-        """Test validation that sample size doesn't exceed batch population."""
+        self.sample_data_with_lengths = {
+            'assignment': self.assignment.id,
+            'sample_date': datetime.date.today(),
+            'sample_size': len(self.lengths_data),
+            'individual_lengths': [str(l) for l in self.lengths_data],
+            # avg_length_cm, std_deviation_length, condition_factor should be calculated
+            # Provide avg_weight_g as it's not calculable from lengths alone
+            'avg_weight_g': Decimal('3.0'),
+            'notes': 'Sample with individual lengths'
+        }
+
+        self.sample_data_with_weights = {
+            'assignment': self.assignment.id,
+            'sample_date': datetime.date.today(),
+            'sample_size': len(self.weights_data),
+            'individual_weights': [str(w) for w in self.weights_data],
+            # avg_weight_g, std_deviation_weight should be calculated
+            # Provide avg_length_cm as it's not calculable from weights alone
+            'avg_length_cm': Decimal('5.5'),
+            'notes': 'Sample with individual weights'
+        }
+
+        self.sample_data_with_both = {
+            'assignment': self.assignment.id,
+            'sample_date': datetime.date.today(),
+            'sample_size': len(self.weights_data),
+            'individual_weights': [str(w) for w in self.weights_data],
+            'individual_lengths': [str(l) for l in self.lengths_data],
+            # All stats should be calculated
+            'notes': 'Sample with individual weights and lengths'
+        }
+
+    def test_valid_sample_serialization(self):
+        """Test basic sample serialization with manually entered stats."""
+        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
+        self.assertTrue(serializer.is_valid(), msg=f"Serializer errors: {serializer.errors}")
+        sample = serializer.save()
+        self.assertEqual(sample.sample_size, 10)
+        self.assertEqual(sample.avg_weight_g, Decimal('3.00'))
+        self.assertEqual(sample.avg_length_cm, Decimal('5.50'))
+        self.assertIsNotNone(sample.condition_factor) # Should be calculated by model save
+
+    def test_validation(self):
+        """Test various validation rules."""
+        # 1. Sample size exceeds population
         invalid_data = self.valid_sample_data.copy()
-        invalid_data['sample_size'] = 15000  # More than batch population
-        
+        invalid_data['sample_size'] = 2000 # Exceeds assignment.population_count (1000)
         serializer = GrowthSampleSerializer(data=invalid_data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('sample_size', serializer.errors)
 
-    def test_weight_range_validation(self):
-        """Test validation that min weight is not greater than max weight."""
+        # 2. Min weight > Max weight
         invalid_data = self.valid_sample_data.copy()
         invalid_data['min_weight_g'] = Decimal('5.00')
         invalid_data['max_weight_g'] = Decimal('4.00')
-        
         serializer = GrowthSampleSerializer(data=invalid_data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('min_weight_g', serializer.errors)
+
+        # 3. Sample size mismatch with individual_lengths
+        invalid_data = self.sample_data_with_lengths.copy()
+        invalid_data['sample_size'] = 5 # Doesn't match len(individual_lengths) which is 3
+        serializer = GrowthSampleSerializer(data=invalid_data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('sample_size', serializer.errors)
+
+        # 4. Sample size mismatch with individual_weights
+        invalid_data = self.sample_data_with_weights.copy()
+        invalid_data['sample_size'] = 1 # Doesn't match len(individual_weights) which is 3
+        serializer = GrowthSampleSerializer(data=invalid_data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('sample_size', serializer.errors)
+
+        # 5. Mismatched lengths of individual_weights and individual_lengths
+        invalid_data = self.sample_data_with_both.copy()
+        invalid_data['individual_lengths'] = ['5.0', '5.5'] # Length 2
+        # individual_weights has length 3
+        serializer = GrowthSampleSerializer(data=invalid_data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('individual_measurements', serializer.errors)
+
+
+    def test_valid_sample_serialization_with_lengths(self):
+        """Test calculating length stats from individual_lengths."""
+        serializer = GrowthSampleSerializer(data=self.sample_data_with_lengths)
+        self.assertTrue(serializer.is_valid(), msg=f"Serializer errors: {serializer.errors}")
+        sample = serializer.save()
+
+        expected_avg_length = statistics.mean(self.lengths_data)
+        expected_std_dev_length = statistics.stdev(self.lengths_data)
+        # K factor should be calculated by model's save as avg_weight provided
+        expected_k = (100 * self.sample_data_with_lengths['avg_weight_g']) / (expected_avg_length ** 3)
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(sample.avg_length_cm.quantize(quantizer), expected_avg_length.quantize(quantizer))
+        self.assertEqual(sample.std_deviation_length.quantize(quantizer), expected_std_dev_length.quantize(quantizer))
+        self.assertEqual(sample.avg_weight_g, self.sample_data_with_lengths['avg_weight_g']) # Should remain as provided
+        self.assertIsNone(sample.std_deviation_weight) # Not calculated
+        self.assertIsNotNone(sample.condition_factor)
+        self.assertEqual(sample.condition_factor.quantize(quantizer), expected_k.quantize(quantizer))
+
+    def test_valid_sample_serialization_with_weights(self):
+        """Test calculating weight stats from individual_weights."""
+        serializer = GrowthSampleSerializer(data=self.sample_data_with_weights)
+        self.assertTrue(serializer.is_valid(), msg=f"Serializer errors: {serializer.errors}")
+        sample = serializer.save()
+
+        expected_avg_weight = statistics.mean(self.weights_data)
+        expected_std_dev_weight = statistics.stdev(self.weights_data)
+        # K factor should be calculated by model's save as avg_length provided
+        expected_k = (100 * expected_avg_weight) / (self.sample_data_with_weights['avg_length_cm'] ** 3)
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(sample.avg_weight_g.quantize(quantizer), expected_avg_weight.quantize(quantizer))
+        self.assertEqual(sample.std_deviation_weight.quantize(quantizer), expected_std_dev_weight.quantize(quantizer))
+        self.assertEqual(sample.avg_length_cm, self.sample_data_with_weights['avg_length_cm']) # Should remain as provided
+        self.assertIsNone(sample.std_deviation_length) # Not calculated
+        self.assertIsNotNone(sample.condition_factor)
+        self.assertEqual(sample.condition_factor.quantize(quantizer), expected_k.quantize(quantizer))
+
+    def test_valid_sample_serialization_with_both(self):
+        """Test calculating all stats when both individual lists are provided."""
+        serializer = GrowthSampleSerializer(data=self.sample_data_with_both)
+        self.assertTrue(serializer.is_valid(), msg=f"Serializer errors: {serializer.errors}")
+        sample = serializer.save()
+
+        expected_avg_length = statistics.mean(self.lengths_data)
+        expected_std_dev_length = statistics.stdev(self.lengths_data)
+        expected_avg_weight = statistics.mean(self.weights_data)
+        expected_std_dev_weight = statistics.stdev(self.weights_data)
+
+        # Calculate expected average K from individuals
+        k_factors = [(100 * w) / (l ** 3) for w, l in zip(self.weights_data, self.lengths_data) if l > 0]
+        expected_avg_k = statistics.mean(k_factors) if k_factors else None
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(sample.avg_length_cm.quantize(quantizer), expected_avg_length.quantize(quantizer))
+        self.assertEqual(sample.std_deviation_length.quantize(quantizer), expected_std_dev_length.quantize(quantizer))
+        self.assertEqual(sample.avg_weight_g.quantize(quantizer), expected_avg_weight.quantize(quantizer))
+        self.assertEqual(sample.std_deviation_weight.quantize(quantizer), expected_std_dev_weight.quantize(quantizer))
+        self.assertIsNotNone(sample.condition_factor)
+        if expected_avg_k:
+            self.assertEqual(sample.condition_factor.quantize(quantizer), expected_avg_k.quantize(quantizer))
+        else:
+            self.assertIsNone(sample.condition_factor)
+
+
+    def test_update_sample_with_lengths(self):
+        """Test updating a sample with new individual_lengths."""
+        # First, create a sample using manual stats
+        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
+        self.assertTrue(serializer.is_valid())
+        sample = serializer.save()
+        original_avg_length = sample.avg_length_cm
+        original_k_factor = sample.condition_factor
+
+        # Now, prepare update data with individual_lengths
+        update_lengths = [Decimal('6.0'), Decimal('6.5')] # New lengths
+        # Provide an avg_weight_g for K factor calculation update
+        # If avg_weight is not updated, K will use the original weight
+        update_avg_weight = sample.avg_weight_g # Use original weight for this test
+
+        update_data = {
+            'individual_lengths': [str(l) for l in update_lengths],
+            'sample_size': len(update_lengths) # Match new lengths
+            # 'avg_weight_g': update_avg_weight, # Not updating weight here
+        }
+
+        update_serializer = GrowthSampleSerializer(instance=sample, data=update_data, partial=True)
+        self.assertTrue(update_serializer.is_valid(), msg=f"Update serializer errors: {update_serializer.errors}")
+        updated_sample = update_serializer.save()
+
+        # Verify calculated fields after update
+        expected_avg_length = statistics.mean(update_lengths)
+        expected_std_dev = statistics.stdev(update_lengths) if len(update_lengths) > 1 else Decimal('0.00')
+        # K factor recalculation depends on the model's save method using the *new* avg_length
+        # and the *existing* avg_weight (since we didn't provide a new one or individual_weights)
+        expected_condition_factor = (Decimal('100') * updated_sample.avg_weight_g) / (expected_avg_length ** 3)
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(updated_sample.avg_length_cm.quantize(quantizer), expected_avg_length.quantize(quantizer))
+        self.assertEqual(updated_sample.std_deviation_length.quantize(quantizer), expected_std_dev.quantize(quantizer))
+        self.assertNotEqual(updated_sample.avg_length_cm, original_avg_length) # Ensure length changed
+        # Check if K factor was recalculated (it should if avg_length changed)
+        self.assertIsNotNone(updated_sample.condition_factor)
+        # self.assertNotEqual(updated_sample.condition_factor.quantize(quantizer), original_k_factor.quantize(quantizer)) # Might fail if rounding is identical
+        self.assertEqual(updated_sample.condition_factor.quantize(quantizer), expected_condition_factor.quantize(quantizer))
+
+    def test_update_sample_with_weights(self):
+        """Test updating a sample with new individual_weights."""
+        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
+        self.assertTrue(serializer.is_valid())
+        sample = serializer.save()
+        original_avg_weight = sample.avg_weight_g
+
+        update_weights = [Decimal('3.5'), Decimal('4.0')] # New weights
+        update_data = {
+            'individual_weights': [str(w) for w in update_weights],
+            'sample_size': len(update_weights)
+        }
+
+        update_serializer = GrowthSampleSerializer(instance=sample, data=update_data, partial=True)
+        self.assertTrue(update_serializer.is_valid(), msg=f"Update serializer errors: {update_serializer.errors}")
+        updated_sample = update_serializer.save()
+
+        expected_avg_weight = statistics.mean(update_weights)
+        expected_std_dev = statistics.stdev(update_weights) if len(update_weights) > 1 else Decimal('0.00')
+        expected_condition_factor = (Decimal('100') * expected_avg_weight) / (updated_sample.avg_length_cm ** 3)
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(updated_sample.avg_weight_g.quantize(quantizer), expected_avg_weight.quantize(quantizer))
+        self.assertEqual(updated_sample.std_deviation_weight.quantize(quantizer), expected_std_dev.quantize(quantizer))
+        self.assertNotEqual(updated_sample.avg_weight_g, original_avg_weight)
+        self.assertIsNotNone(updated_sample.condition_factor)
+        self.assertEqual(updated_sample.condition_factor.quantize(quantizer), expected_condition_factor.quantize(quantizer))
+
+    def test_update_sample_with_both(self):
+        """Test updating a sample with new individual_weights and individual_lengths."""
+        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
+        self.assertTrue(serializer.is_valid())
+        sample = serializer.save()
+
+        update_weights = [Decimal('3.8'), Decimal('4.2')] # New weights
+        update_lengths = [Decimal('6.1'), Decimal('6.3')] # New lengths
+        update_data = {
+            'individual_weights': [str(w) for w in update_weights],
+            'individual_lengths': [str(l) for l in update_lengths],
+            'sample_size': len(update_weights)
+        }
+
+        update_serializer = GrowthSampleSerializer(instance=sample, data=update_data, partial=True)
+        self.assertTrue(update_serializer.is_valid(), msg=f"Update serializer errors: {update_serializer.errors}")
+        updated_sample = update_serializer.save()
+
+        expected_avg_weight = statistics.mean(update_weights)
+        expected_std_dev_weight = statistics.stdev(update_weights)
+        expected_avg_length = statistics.mean(update_lengths)
+        expected_std_dev_length = statistics.stdev(update_lengths)
+        k_factors = [(100 * w) / (l ** 3) for w, l in zip(update_weights, update_lengths) if l > 0]
+        expected_avg_k = statistics.mean(k_factors) if k_factors else None
+
+        quantizer = Decimal('0.01')
+        self.assertEqual(updated_sample.avg_weight_g.quantize(quantizer), expected_avg_weight.quantize(quantizer))
+        self.assertEqual(updated_sample.std_deviation_weight.quantize(quantizer), expected_std_dev_weight.quantize(quantizer))
+        self.assertEqual(updated_sample.avg_length_cm.quantize(quantizer), expected_avg_length.quantize(quantizer))
+        self.assertEqual(updated_sample.std_deviation_length.quantize(quantizer), expected_std_dev_length.quantize(quantizer))
+        if expected_avg_k:
+            self.assertIsNotNone(updated_sample.condition_factor)
+            self.assertEqual(updated_sample.condition_factor.quantize(quantizer), expected_avg_k.quantize(quantizer))
+        else:
+            self.assertIsNone(updated_sample.condition_factor)
+
+
+    def test_calculation_if_no_individual_measurements(self):
+        """ Test behavior when no individual measurement lists are provided. """
+        # Create sample without individual lists
+        serializer = GrowthSampleSerializer(data=self.valid_sample_data)
+        self.assertTrue(serializer.is_valid())
+        sample = serializer.save()
+
+        # Check that calculated fields match provided values (or are calculated by model)
+        self.assertEqual(sample.avg_weight_g, self.valid_sample_data['avg_weight_g'])
+        self.assertEqual(sample.std_deviation_weight, self.valid_sample_data['std_deviation_weight'])
+        self.assertEqual(sample.avg_length_cm, self.valid_sample_data['avg_length_cm'])
+        self.assertEqual(sample.std_deviation_length, self.valid_sample_data['std_deviation_length'])
+        # Condition factor should be calculated by model's save based on provided averages
+        expected_k = (100 * sample.avg_weight_g) / (sample.avg_length_cm ** 3)
+        self.assertIsNotNone(sample.condition_factor)
+        self.assertEqual(sample.condition_factor.quantize(Decimal('0.01')), expected_k.quantize(Decimal('0.01')))
+
+        # Update sample without providing lists
+        update_data = {'notes': 'Updated notes'}
+        update_serializer = GrowthSampleSerializer(instance=sample, data=update_data, partial=True)
+        self.assertTrue(update_serializer.is_valid())
+        updated_sample = update_serializer.save()
+
+        # Ensure calculated fields remain unchanged
+        self.assertEqual(updated_sample.avg_weight_g, sample.avg_weight_g)
+        self.assertEqual(updated_sample.std_deviation_weight, sample.std_deviation_weight)
+        self.assertEqual(updated_sample.avg_length_cm, sample.avg_length_cm)
+        self.assertEqual(updated_sample.std_deviation_length, sample.std_deviation_length)
+        self.assertEqual(updated_sample.condition_factor, sample.condition_factor)
+
+    # Removed test_length_validation_if_no_individual_lengths as the
+    # serializer now correctly handles absent lists by not calculating stats,
+    # relying on model defaults or provided averages.
+    # The test_calculation_if_no_individual_measurements covers this scenario.

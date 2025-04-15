@@ -104,21 +104,27 @@ class MortalityEventAdmin(admin.ModelAdmin):
 @admin.register(GrowthSample)
 class GrowthSampleAdmin(admin.ModelAdmin):
     list_display = (
-        'batch', 'sample_date', 'sample_size', 'avg_weight_g',
+        'assignment', 
+        'sample_date', 'sample_size', 'avg_weight_g',
         'avg_length_cm', 'condition_factor'
     )
-    list_filter = ('sample_date',)
-    search_fields = ('batch__batch_number', 'notes')
+    list_filter = ('sample_date', 'assignment__container__name', 'assignment__batch__batch_number') 
+    search_fields = (
+        'assignment__batch__batch_number', 
+        'assignment__id', 
+        'notes'
+        )
     date_hierarchy = 'sample_date'
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('condition_factor', 'created_at', 'updated_at') 
     fieldsets = (
         (None, {
-            'fields': ('batch', 'sample_date', 'sample_size')
+            'fields': ('assignment', 'sample_date', 'sample_size') 
         }),
         ('Measurements', {
             'fields': (
                 'avg_weight_g', 'avg_length_cm', 'std_deviation_weight',
-                'std_deviation_length', 'min_weight_g', 'max_weight_g', 'condition_factor'
+                'std_deviation_length', 'min_weight_g', 'max_weight_g',
+                'condition_factor' 
             )
         }),
         ('Additional Information', {
