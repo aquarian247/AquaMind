@@ -408,7 +408,10 @@ class JournalEntrySerializerTest(APITestCase):
 
     def test_create_journal_entry_with_growth_sample_individuals(self):
         """Test creating a JournalEntry with a nested GrowthSample using individual lists."""
+        # Use a unique date for this test to avoid conflicts with other tests
+        sample_date = datetime.date.today() - datetime.timedelta(days=5)
         growth_data = {
+            'sample_date': sample_date,  # Add sample_date to growth_data
             'sample_size': 3,
             'individual_weights_g': [100, 110, 120],
             'individual_lengths_mm': [150, 155, 160],
