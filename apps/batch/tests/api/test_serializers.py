@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from decimal import Decimal, ROUND_HALF_UP
 import datetime
 import statistics  # Added for std dev calculation
+import unittest
 
 from apps.batch.models import (
     Species,
@@ -32,7 +33,9 @@ from apps.infrastructure.models import (
     Geography,
     Area,
     ContainerType,
-    Container
+    Container,
+    FreshwaterStation,
+    Hall
 )
 
 
@@ -790,18 +793,39 @@ class GrowthSampleSerializerTest(TestCase):
         self.batch = Batch.objects.create(
             batch_number='B001',
             species=self.species,
-            start_date=datetime.date.today() - datetime.timedelta(days=30),
-            initial_count=1000,
-            initial_biomass_kg=Decimal('10.0')
+            lifecycle_stage=self.stage,
+            status='ACTIVE',
+            population_count=1000,
+            avg_weight_g=Decimal('10.0'),
+            biomass_kg=Decimal('10.0'),
+            start_date=datetime.date.today(),
+            batch_type='STANDARD'
         )
-        self.container = Container.objects.create(name='Tank 1', volume_m3=Decimal('50.0'))
+        self.geography = Geography.objects.create(name='Test Region') # Removed type='Region'
+        self.station = FreshwaterStation.objects.create(
+            name='Test Station', 
+            geography=self.geography, 
+            station_type='FRESHWATER',
+            latitude=Decimal('0.0'), # Add default lat
+            longitude=Decimal('0.0') # Add default lon
+        )
+        self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
+        self.container_type = ContainerType.objects.create(name='Test Tank Type', max_volume_m3=Decimal('100.0'))
+        self.container = Container.objects.create(
+            name='Test Tank',
+            container_type=self.container_type,
+            hall=self.hall,
+            volume_m3=Decimal('50.0'),
+            max_biomass_kg=Decimal('100.0')
+        )
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
             container=self.container,
-            assignment_date=datetime.date.today() - datetime.timedelta(days=30),
+            lifecycle_stage=self.stage,
+            assignment_date=datetime.date.today(),
             population_count=1000, # Population for validation
             biomass_kg=Decimal('10.0'),
-            lifecycle_stage=self.stage
+            is_active=True
         )
 
         self.valid_sample_data = {
@@ -866,42 +890,41 @@ class GrowthSampleSerializerTest(TestCase):
     def test_validation(self):
         """Test various validation rules."""
         # 1. Sample size exceeds population
-        invalid_data = self.valid_sample_data.copy()
-        invalid_data['sample_size'] = 2000 # Exceeds assignment.population_count (1000)
-        serializer = GrowthSampleSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('sample_size', serializer.errors)
+        invalid_data_1 = self.valid_sample_data.copy()
+        invalid_data_1['sample_size'] = 2000  # Exceeds assignment.population_count (1000)
+        serializer_1 = GrowthSampleSerializer(data=invalid_data_1)
+        self.assertFalse(serializer_1.is_valid())
+        self.assertIn('sample_size', serializer_1.errors)
 
         # 2. Min weight > Max weight
-        invalid_data = self.valid_sample_data.copy()
-        invalid_data['min_weight_g'] = Decimal('5.00')
-        invalid_data['max_weight_g'] = Decimal('4.00')
-        serializer = GrowthSampleSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('min_weight_g', serializer.errors)
+        invalid_data_2 = self.valid_sample_data.copy()
+        invalid_data_2['min_weight_g'] = Decimal('5.00')
+        invalid_data_2['max_weight_g'] = Decimal('4.00')
+        serializer_2 = GrowthSampleSerializer(data=invalid_data_2)
+        self.assertFalse(serializer_2.is_valid())
+        self.assertIn('min_weight_g', serializer_2.errors)
 
         # 3. Sample size mismatch with individual_lengths
-        invalid_data = self.sample_data_with_lengths.copy()
-        invalid_data['sample_size'] = 5 # Doesn't match len(individual_lengths) which is 3
-        serializer = GrowthSampleSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('sample_size', serializer.errors)
+        invalid_data_3 = self.sample_data_with_lengths.copy()
+        invalid_data_3['sample_size'] = 5  # Doesn't match len(individual_lengths) which is 3
+        serializer_3 = GrowthSampleSerializer(data=invalid_data_3)
+        self.assertFalse(serializer_3.is_valid())
+        self.assertIn('sample_size', serializer_3.errors)
 
         # 4. Sample size mismatch with individual_weights
-        invalid_data = self.sample_data_with_weights.copy()
-        invalid_data['sample_size'] = 1 # Doesn't match len(individual_weights) which is 3
-        serializer = GrowthSampleSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('sample_size', serializer.errors)
+        invalid_data_4 = self.sample_data_with_weights.copy()
+        invalid_data_4['sample_size'] = 1  # Doesn't match len(individual_weights) which is 3
+        serializer_4 = GrowthSampleSerializer(data=invalid_data_4)
+        self.assertFalse(serializer_4.is_valid())
+        self.assertIn('sample_size', serializer_4.errors)
 
         # 5. Mismatched lengths of individual_weights and individual_lengths
-        invalid_data = self.sample_data_with_both.copy()
-        invalid_data['individual_lengths'] = ['5.0', '5.5'] # Length 2
+        invalid_data_5 = self.sample_data_with_both.copy()
+        invalid_data_5['individual_lengths'] = ['5.0', '5.5']  # Length 2
         # individual_weights has length 3
-        serializer = GrowthSampleSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('individual_measurements', serializer.errors)
-
+        serializer_5 = GrowthSampleSerializer(data=invalid_data_5)
+        self.assertFalse(serializer_5.is_valid())
+        self.assertIn('individual_measurements', serializer_5.errors)
 
     def test_valid_sample_serialization_with_lengths(self):
         """Test calculating length stats from individual_lengths."""
@@ -951,8 +974,6 @@ class GrowthSampleSerializerTest(TestCase):
         expected_std_dev_length = statistics.stdev(self.lengths_data)
         expected_avg_weight = statistics.mean(self.weights_data)
         expected_std_dev_weight = statistics.stdev(self.weights_data)
-
-        # Calculate expected average K from individuals
         k_factors = [(100 * w) / (l ** 3) for w, l in zip(self.weights_data, self.lengths_data) if l > 0]
         expected_avg_k = statistics.mean(k_factors) if k_factors else None
 
@@ -961,8 +982,8 @@ class GrowthSampleSerializerTest(TestCase):
         self.assertEqual(sample.std_deviation_length.quantize(quantizer), expected_std_dev_length.quantize(quantizer))
         self.assertEqual(sample.avg_weight_g.quantize(quantizer), expected_avg_weight.quantize(quantizer))
         self.assertEqual(sample.std_deviation_weight.quantize(quantizer), expected_std_dev_weight.quantize(quantizer))
-        self.assertIsNotNone(sample.condition_factor)
         if expected_avg_k:
+            self.assertIsNotNone(sample.condition_factor)
             self.assertEqual(sample.condition_factor.quantize(quantizer), expected_avg_k.quantize(quantizer))
         else:
             self.assertIsNone(sample.condition_factor)

@@ -273,9 +273,12 @@ class Treatment(models.Model):
     @property
     def withholding_end_date(self):
         from datetime import timedelta
-        return self.treatment_date + timedelta(
+        # Calculate the end date by adding the withholding period
+        end_datetime = self.treatment_date + timedelta(
             days=self.withholding_period_days
         )
+        # Return the date part only, not the full datetime
+        return end_datetime.date()
 
 
 class SampleType(models.Model):

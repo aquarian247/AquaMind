@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
+from django.utils import timezone
 
 from apps.infrastructure.models import Container, Area, Sensor
 from apps.batch.models import Batch
@@ -154,7 +155,8 @@ class WeatherData(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="Cloud cover percentage (0-100)"
     )
-    created_at = models.DateTimeField(auto_now_add=True)  # When the record was created in the system
+    # Use timezone.now for default to ensure timezone-aware datetime
+    created_at = models.DateTimeField(default=timezone.now)  # When the record was created in the system
     
     class Meta:
         indexes = [

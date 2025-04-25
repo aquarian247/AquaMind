@@ -14,6 +14,7 @@ from apps.users.api.views import CustomObtainAuthToken
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
 from apps.batch.api.routers import router as batch_router
+from apps.health.api.routers import router as health_router
 
 # Swagger/OpenAPI documentation setup
 schema_view = get_schema_view(
@@ -39,6 +40,7 @@ urlpatterns = [
     path('api/v1/infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
     path('api/v1/environmental/', include((environmental_router.urls, 'environmental'))),
     path('api/v1/batch/', include((batch_router.urls, 'batch'))),
+    path('api/v1/health/', include((health_router.urls, 'health'))),
     path('api/v1/users/', include('apps.users.urls')),
     path('api/v1/auth/', include('apps.users.api.urls')),
     

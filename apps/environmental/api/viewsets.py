@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg, Min, Max, Count
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from datetime import timedelta
 
 from apps.environmental.models import (
@@ -59,18 +60,34 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         """
         Override to provide time-based filtering support.
         Supports from_time and to_time query parameters.
+        Parses time strings into aware datetime objects for reliable filtering.
         """
         queryset = super().get_queryset()
         
-        from_time = self.request.query_params.get('from_time')
-        to_time = self.request.query_params.get('to_time')
+        from_time_str = self.request.query_params.get('from_time')
+        to_time_str = self.request.query_params.get('to_time')
         
-        if from_time:
-            queryset = queryset.filter(reading_time__gte=from_time)
-        
-        if to_time:
-            queryset = queryset.filter(reading_time__lte=to_time)
-        
+        try:
+            if from_time_str:
+                from_time = parse_datetime(from_time_str)
+                if from_time and timezone.is_naive(from_time):
+                    # Attempt to make naive datetime aware using the current timezone
+                    # Adjust this logic if a specific timezone is expected from the client
+                    from_time = timezone.make_aware(from_time, timezone.get_current_timezone())
+                if from_time:
+                    queryset = queryset.filter(reading_time__gte=from_time)
+
+            if to_time_str:
+                to_time = parse_datetime(to_time_str)
+                if to_time and timezone.is_naive(to_time):
+                    # Attempt to make naive datetime aware using the current timezone
+                    to_time = timezone.make_aware(to_time, timezone.get_current_timezone())
+                if to_time:
+                    queryset = queryset.filter(reading_time__lte=to_time)
+        except ValueError: 
+            # Handle potential parsing errors gracefully, maybe log or ignore
+            pass # Or raise ParseError("Invalid datetime format")
+
         return queryset
     
     @action(detail=False, methods=['get'])

@@ -152,7 +152,7 @@ class BatchAnalyticsTestCase(APITestCase):
         
         # Create growth samples for the first batch
         self.growth_sample1 = GrowthSample.objects.create(
-            batch=self.batch,
+            assignment=self.assignment1,
             sample_date=date.today() - timedelta(days=30),
             sample_size=50,
             avg_weight_g=Decimal('100.00'),
@@ -161,7 +161,7 @@ class BatchAnalyticsTestCase(APITestCase):
         )
         
         self.growth_sample2 = GrowthSample.objects.create(
-            batch=self.batch,
+            assignment=self.assignment1,
             sample_date=date.today() - timedelta(days=20),
             sample_size=50,
             avg_weight_g=Decimal('120.00'),
@@ -170,7 +170,7 @@ class BatchAnalyticsTestCase(APITestCase):
         )
         
         self.growth_sample3 = GrowthSample.objects.create(
-            batch=self.batch,
+            assignment=self.assignment1,
             sample_date=date.today() - timedelta(days=10),
             sample_size=50,
             avg_weight_g=Decimal('140.00'),
@@ -180,7 +180,7 @@ class BatchAnalyticsTestCase(APITestCase):
         
         # Create growth samples for the second batch
         self.growth_sample4 = GrowthSample.objects.create(
-            batch=self.batch2,
+            assignment=self.assignment2,
             sample_date=date.today() - timedelta(days=20),
             sample_size=50,
             avg_weight_g=Decimal('80.00'),
@@ -189,7 +189,7 @@ class BatchAnalyticsTestCase(APITestCase):
         )
         
         self.growth_sample5 = GrowthSample.objects.create(
-            batch=self.batch2,
+            assignment=self.assignment2,
             sample_date=date.today() - timedelta(days=10),
             sample_size=50,
             avg_weight_g=Decimal('105.00'),

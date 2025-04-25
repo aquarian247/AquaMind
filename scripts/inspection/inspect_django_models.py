@@ -13,7 +13,10 @@ from django.db import models
 from django.db.models import ForeignKey, ManyToManyField, OneToOneField
 
 # Set up Django environment
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Go up two levels from the script's directory (scripts/inspection) to reach the project root
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(PROJECT_ROOT)
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aquamind.settings")
 django.setup()
 
@@ -32,8 +35,7 @@ def inspect_model(model):
     print(f"Verbose Name: {model._meta.verbose_name}")
     
     print("\nFields:")
-    print(f"{'Name':<25} {'Type':<25} {'Null':<8} {'Blank':<8} {'Choices':<12} {'Relationship'}")
-    print("-" * 100)
+    print("-" * 80)
     
     for field in model._meta.get_fields():
         field_type = field.__class__.__name__
@@ -48,8 +50,16 @@ def inspect_model(model):
             relationship = f"<-> {field.related_model.__name__}"
         elif hasattr(field, 'related_model') and field.related_model:
             relationship = f"<- {field.related_model.__name__}"
-            
-        print(f"{field.name:<25} {field_type:<25} {str(null):<8} {str(blank):<8} {str(bool(choices)):<12} {relationship}")
+        
+        print(f"  Field: {field.name}")
+        print(f"    Type: {field_type}")
+        print(f"    Null: {null}")
+        print(f"    Blank: {blank}")
+        if choices:
+            print(f"    Has Choices: True")
+        if relationship:
+            print(f"    Relationship: {relationship}")
+        print("")
     
     # Print model methods
     print("\nMethods:")
@@ -73,26 +83,45 @@ def inspect_model_relationships(model):
     
     # Forward relationships (ForeignKey, ManyToManyField)
     print("Forward Relationships (this model -> other models):")
+    print("-" * 80)
+    
+    has_forward = False
     for field in model._meta.get_fields():
         if isinstance(field, (ForeignKey, ManyToManyField, OneToOneField)):
+            has_forward = True
             # Check if related_model exists before accessing its name
             if field.related_model:
                 related_name = getattr(field, 'related_name', None) or f'{field.related_model.__name__.lower()}_set'
-                print(f"- {field.name} -> {field.related_model.__name__} (accessed as: {model.__name__}.{field.name})")
-                print(f"  Reverse accessor: {field.related_model.__name__}.{related_name}")
+                print(f"  {field.name} -> {field.related_model.__name__}")
+                print(f"    Accessed as: {model.__name__}.{field.name}")
+                print(f"    Reverse accessor: {field.related_model.__name__}.{related_name}")
+                print("")
             else:
-                print(f"- {field.name} -> [Generic Relation or Undefined Model]") # Handle generic or other cases
+                print(f"  {field.name} -> [Generic Relation or Undefined Model]")
+                print("")
+    
+    if not has_forward:
+        print("  None found.")
+        print("")
 
     # Reverse relationships (other models -> this model):
     print("\nReverse Relationships (other models -> this model):")
+    print("-" * 80)
+    
+    has_reverse = False
     for relation in model._meta.get_fields():
         # Check if it's a reverse relation object AND related_model is not None
         if hasattr(relation, 'related_model') and relation.related_model and not isinstance(relation, (ForeignKey, ManyToManyField, OneToOneField)):
             if relation.related_model != model:  # Skip self-relations
+                has_reverse = True
                 field_name = relation.name # This is usually the related_query_name or similar
                 related_model_name = relation.related_model.__name__
-                # Adjust how the accessor is displayed for reverse relations if needed
-                print(f"- {related_model_name} -> {model.__name__} (reverse accessor usually: {related_model_name}.{field_name})")
+                print(f"  {related_model_name} -> {model.__name__}")
+                print(f"    Accessed as: {related_model_name}.{field_name}")
+                print("")
+    
+    if not has_reverse:
+        print("  None found.")
 
 def main():
     """Main function to inspect all models or specific ones."""
@@ -107,14 +136,17 @@ def main():
     # Sort models by app and name
     all_models.sort(key=lambda x: (x._meta.app_label, x.__name__))
     
-    # Print list of all models
+    # Print list of all models in a more structured format
     print(f"Found {len(all_models)} models across {len(apps.get_app_configs())} apps:")
+    print("-" * 80)
+    
     current_app = ""
     for model in all_models:
         if model._meta.app_label != current_app:
             current_app = model._meta.app_label
-            print(f"\n[{current_app}]")
-        print(f"- {model.__name__}")
+            print(f"\nApp: {current_app}")
+            print("-" * 40)
+        print(f"  - {model.__name__}")
     
     # Ask user which model to inspect
     print("\nEnter model name to inspect (or 'all' for all models, 'q' to quit): ", end="")

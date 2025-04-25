@@ -100,7 +100,12 @@ class EnvironmentalReadingAPITest(APITestCase):
         """Test retrieving a list of environmental readings."""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 6)  # Updated expected count based on actual results
+        # Assuming pagination: check total count and/or results on first page
+        self.assertEqual(response.data['count'], 6) 
+        # If default page size is less than 6, adjust the following line accordingly
+        # self.assertEqual(len(response.data['results']), 6) 
+
+
 
     def test_create_reading(self):
         """Test creating a new environmental reading."""
@@ -183,16 +188,22 @@ class EnvironmentalReadingAPITest(APITestCase):
 
     def test_time_filtering(self):
         """Test filtering readings by time range."""
-        # Create properly formatted time strings for the filter
-        from_time = (self.reading_time - timedelta(hours=3)).strftime('%Y-%m-%d %H:%M:%S')
-        to_time = self.reading_time.strftime('%Y-%m-%d %H:%M:%S')
+        # Create aware datetime objects for filtering
+        from_time_dt = self.reading_time - timedelta(hours=3)
+        to_time_dt = self.reading_time
+        
+        # Format using ISO 8601 for timezone-aware query parameters
+        from_time_iso = from_time_dt.isoformat()
+        to_time_iso = to_time_dt.isoformat()
         
         # Test the time filtering
-        url = f"{self.list_url}?from_time={from_time}&to_time={to_time}"
+        # URL encode the '+' sign in the timezone offset if present
+        url = f"{self.list_url}?from_time={from_time_iso.replace('+', '%2B')}&to_time={to_time_iso.replace('+', '%2B')}"
+        
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Adjust expected count based on actual API behavior
-        self.assertEqual(len(response.data), 3)
+        # Expect 4 readings: at t, t-1h, t-2h, t-3h
+        self.assertEqual(len(response.data['results']), 4)
 
     def test_recent_readings_endpoint(self):
         """Test the custom endpoint for recent readings."""

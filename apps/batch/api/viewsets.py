@@ -98,7 +98,7 @@ class BatchViewSet(viewsets.ModelViewSet):
         batch = self.get_object()
         
         # Get all growth samples for this batch, ordered by sample_date
-        growth_samples = batch.growth_samples.all().order_by('sample_date')
+        growth_samples = GrowthSample.objects.filter(assignment__batch=batch).order_by('sample_date')
         
         if not growth_samples.exists():
             return Response(
@@ -265,7 +265,7 @@ class BatchViewSet(viewsets.ModelViewSet):
             result['container_metrics'] = containers_data
         
         # Get growth metrics if available
-        latest_samples = batch.growth_samples.order_by('-sample_date')[:5]
+        latest_samples = GrowthSample.objects.filter(assignment__batch=batch).order_by('-sample_date')[:5]
         if latest_samples.exists():
             growth_data = []
             for sample in latest_samples:
@@ -343,8 +343,9 @@ class BatchViewSet(viewsets.ModelViewSet):
             
             for batch in batches:
                 # Get first and last growth samples
-                first_sample = batch.growth_samples.order_by('sample_date').first()
-                last_sample = batch.growth_samples.order_by('sample_date').last()
+                batch_growth_samples = GrowthSample.objects.filter(assignment__batch=batch).order_by('sample_date')
+                first_sample = batch_growth_samples.first()
+                last_sample = batch_growth_samples.last()
                 
                 batch_growth = {
                     'batch_id': batch.id,

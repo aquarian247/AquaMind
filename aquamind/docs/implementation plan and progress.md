@@ -6,6 +6,15 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-04-18: Fix Date/Datetime Handling in Health and Batch Serializers
+- **Serializer Fixes**: Resolved fundamental date/datetime inconsistency issues in `JournalEntrySerializer` and `GrowthSampleSerializer`. The code previously assumed all date fields were consistently formatted, but date objects were sometimes processed as datetime objects, causing validation failures.
+- **Validation Logic**: Improved the `GrowthSampleSerializer._process_individual_measurements` method to defensively check for `initial_data` availability before processing measurements, preventing errors during certain update operations.
+- **Relationship Management**: Enhanced `JournalEntrySerializer` to properly handle the indirect relationship between JournalEntry and GrowthSample through BatchContainerAssignment, fixing model relationship modeling issues.
+- **Transaction Handling**: Implemented robust transaction management in `JournalEntrySerializer.update()` to ensure data integrity when replacing health observations or removing growth samples.
+- **Nested Object Handling**: Fixed the growth sample deletion logic when null is provided, resolving a critical issue with object lifecycle management.
+- **Test Consistency**: Updated all tests to consistently use the explicitly set sample_date rather than relying on derived entry_date values, resolving subtle test inconsistency issues.
+- **Documentation**: Added clearer docstrings explaining the data conversion and validation requirements for serializers that handle date fields.
+
 ### 2025-04-15: Enhance Health/Growth Serializers and Tests
 - **Refactor**: Updated `HealthParameter` model/serializer for 1-5 score scale. Updated `HealthObservation` model/serializer for 1-5 score, added optional `fish_identifier`, removed `unique_together`.
 - **GrowthSample**: Added `individual_weights` list to `GrowthSampleSerializer` for automated calculation of average weight, standard deviation, and updated condition factor logic to use individual K-factors.

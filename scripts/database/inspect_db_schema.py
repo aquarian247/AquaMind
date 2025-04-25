@@ -88,13 +88,16 @@ def inspect_table_columns(conn, tables):
         
         columns = cursor.fetchall()
         
-        print(f"{'Column':<25} {'Type':<20} {'Nullable':<10} {'Default':<20} {'Max Length'}")
-        print(f"{'-'*25} {'-'*20} {'-'*10} {'-'*20} {'-'*10}")
-        
         for col_name, data_type, is_nullable, default, max_length in columns:
             nullable = "YES" if is_nullable == "YES" else "NO"
-            default = str(default)[:18] + "..." if default and len(str(default)) > 20 else default
-            print(f"{col_name:<25} {data_type:<20} {nullable:<10} {default or '':<20} {max_length or ''}")
+            default_str = str(default)[:18] + "..." if default and len(str(default)) > 20 else default or 'None'
+            print(f"  Column: {col_name}")
+            print(f"    Type: {data_type}")
+            print(f"    Nullable: {nullable}")
+            print(f"    Default: {default_str}")
+            if max_length:
+                print(f"    Max Length: {max_length}")
+            print("")
 
 def inspect_foreign_keys(conn, tables):
     """Get all foreign key relationships."""
@@ -122,15 +125,14 @@ def inspect_foreign_keys(conn, tables):
                 AND tc.table_name=%s
         """, (table,))
         
-        foreign_keys = cursor.fetchall()
+        fkeys = cursor.fetchall()
         
-        if foreign_keys:
-            print(f"\nForeign Keys for table: {table}")
-            print(f"{'Column':<25} {'References Table':<25} {'References Column'}")
-            print(f"{'-'*25} {'-'*25} {'-'*25}")
+        if fkeys:
+            print(f"\nForeign Keys for {table}:")
+            print("-" * 80)
             
-            for column, ref_table, ref_column in foreign_keys:
-                print(f"{column:<25} {ref_table:<25} {ref_column}")
+            for col, ftable, fcol in fkeys:
+                print(f"  {col} -> {ftable}.{fcol}")
 
 def inspect_indexes(conn, tables):
     """Get all indexes for the tables."""
@@ -158,20 +160,24 @@ def inspect_indexes(conn, tables):
                 AND t.relkind = 'r'
                 AND t.relname = %s
             ORDER BY
-                t.relname,
-                i.relname
+                i.relname, a.attnum
         """, (table,))
         
         indexes = cursor.fetchall()
         
         if indexes:
-            print(f"\nIndexes for table: {table}")
-            print(f"{'Index Name':<35} {'Column':<25} {'Unique'}")
-            print(f"{'-'*35} {'-'*25} {'-'*10}")
+            print(f"\nIndexes for {table}:")
+            print("-" * 80)
             
+            current_index = ""
             for idx_name, column, is_unique in indexes:
-                unique = "YES" if is_unique else "NO"
-                print(f"{idx_name:<35} {column:<25} {unique}")
+                if idx_name != current_index:
+                    current_index = idx_name
+                    unique_str = "(UNIQUE)" if is_unique else ""
+                    print(f"  Index: {idx_name} {unique_str}")
+                    print(f"    Column: {column}")
+                else:
+                    print(f"    Column: {column}")
 
 def inspect_hypertables(conn):
     """Identify TimescaleDB hypertables."""
@@ -207,20 +213,19 @@ def inspect_hypertables(conn):
             hypertables = cursor.fetchall()
             
             if hypertables:
-                print(f"Found {len(hypertables)} hypertable dimensions:\n")
-                print(f"{'Table Name':<35} {'Schema':<15} {'Dimension Column'}")
-                print(f"{'-'*35} {'-'*15} {'-'*20}")
+                print(f"\nFound {len(hypertables)} hypertable dimensions:")
+                print("-" * 80)
                 
-                processed_tables = set()
+                current_table = ""
                 for table, schema, dim_col in hypertables:
-                    # Print table name only once
-                    if table not in processed_tables:
-                        print(f"{table:<35} {schema:<15} {dim_col}")
-                        processed_tables.add(table)
+                    if table != current_table:
+                        current_table = table
+                        print(f"\nHypertable: {table} (Schema: {schema})")
+                        print(f"  Dimension Column: {dim_col}")
                     else:
-                        print(f"{'':<35} {'':<15} {dim_col}")
+                        print(f"  Dimension Column: {dim_col}")
             else:
-                print("No hypertables found in the database.")
+                print("\nNo hypertables found in the database.")
                 
         except psycopg2.errors.UndefinedTable:
             # Try using the information schema view instead (available in newer TimescaleDB versions)
@@ -239,14 +244,13 @@ def inspect_hypertables(conn):
                 hypertables = cursor.fetchall()
                 
                 if hypertables:
-                    print(f"Found {len(hypertables)} hypertables (using information schema):\n")
-                    print(f"{'Table Name':<35} {'Schema':<15} {'Info'}")
-                    print(f"{'-'*35} {'-'*15} {'-'*20}")
+                    print(f"\nFound {len(hypertables)} hypertables (using information schema):")
+                    print("-" * 80)
                     
                     for table, schema, _ in hypertables:
-                        print(f"{table:<35} {schema:<15} {'(TimescaleDB hypertable)'}")
+                        print(f"Hypertable: {table} (Schema: {schema})")
                 else:
-                    print("No hypertables found in the database.")
+                    print("\nNo hypertables found in the database.")
             except Exception as e:
                 print(f"Could not query hypertables using information schema: {e}")
                 print("The database may be using a different TimescaleDB schema or version.")
