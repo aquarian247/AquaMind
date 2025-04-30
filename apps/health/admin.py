@@ -76,12 +76,12 @@ class SampleTypeAdmin(admin.ModelAdmin):
 class HealthParameterAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_active', 'updated_at')
     list_filter = ('is_active',)
-    search_fields = ('name', 'description_score_1', 'description_score_2', 'description_score_3', 'description_score_4')
+    search_fields = ('name', 'description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
     fieldsets = (
         (None, {
             'fields': ('name', 'is_active')
         }),
-        ('Score Descriptions (1=Good, 4=Bad)', {
-            'fields': ('description_score_1', 'description_score_2', 'description_score_3', 'description_score_4')
+        ('Score Descriptions (1=Good, 5=Bad)', {
+            'fields': ('description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
         }),
     )
