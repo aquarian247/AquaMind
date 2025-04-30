@@ -522,6 +522,7 @@ Records a specific health parameter score for a journal entry.
 ### `batch_growthsample`
 
 Stores growth sample data for a batch within a specific container assignment.
+*Note: Growth Samples are created and managed independently via the `/api/v1/batch/growth-samples/` endpoint.*
 
 | Field                  | Type                 | Null | Default | Unique | Description                                                                                                                             |
 |------------------------|----------------------|------|---------|--------|-----------------------------------------------------------------------------------------------------------------------------------------|
@@ -544,33 +545,4 @@ Stores growth sample data for a batch within a specific container assignment.
 
 ## 5. Relationship Clarifications
 
-### 5.1 JournalEntry and GrowthSample Relationship
-
-#### Important Relationship Structure
-
-One critical relationship that requires explicit clarification is between `health_journalentry` and `batch_growthsample` models. This relationship is **indirect** and operates through `batch_batchcontainerassignment`:
-
-```
-JournalEntry (health app) → BatchContainerAssignment (batch app) ← GrowthSample (batch app)
-```
-
-**Key Points:**
-
-1. **No Direct Foreign Key:** There is no direct FK from `batch_growthsample` to `health_journalentry` or vice versa. The association is logical, not enforced at the database level.
-
-2. **Relationship Flow:**
-   - A `health_journalentry` record is created for a specific batch and container (targeting a specific `batch_batchcontainerassignment`)
-   - A `batch_growthsample` is also associated with a specific `batch_batchcontainerassignment` (via the `assignment` FK field)
-   - The serializers (`JournalEntrySerializer` and `GrowthSampleSerializer`) handle creating/linking these records during API operations
-
-3. **Implementation Considerations:**
-   - The `JournalEntrySerializer` includes a nested `GrowthSampleSerializer` for convenient creation/updates
-   - However, this is API-level convenience, not a database-level relationship
-   - Date fields (`sample_date` on GrowthSample, `entry_date` on JournalEntry) must be properly converted between date/datetime formats
-
-4. **Potential Misunderstandings:**
-   - The current implementation had assumed a direct relationship model, which led to bugs in serializers
-   - Trying to associate a GrowthSample directly with a JournalEntry (via a non-existent `journal_entry` field) caused errors
-   - The correct pattern is to use the common `batch_batchcontainerassignment` as the linking entity
-
-This indirect relationship design allows GrowthSample records to exist independently in the batch app while still being referenced from health journal entries as needed.
+*(Section intentionally left blank after removal of obsolete content)*

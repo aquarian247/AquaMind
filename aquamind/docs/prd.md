@@ -67,7 +67,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall support assigning portions of batches to specific containers at specific lifecycle stages using the `batch_batchcontainerassignment` model. This model tracks `population_count`, `avg_weight_g`, and the `lifecycle_stage_id` for that specific assignment.
   - The system shall calculate derived metrics like `biomass_kg` (within `BatchContainerAssignment.save()` or serializers: `population_count * avg_weight_g / 1000`).
   - The system shall log batch transfers between containers using `batch_batchtransfer`, recording `from_container_id`, `to_container_id`, `population_count`, `transfer_type`, etc.
-  - The system shall track growth via sampling events logged in `batch_growthsample` (linked to `batch_batchcontainerassignment`). Mortality is tracked via `batch_mortalityevent`.
+  - The system shall track growth via `batch_growthsample` records (linked to `batch_batchcontainerassignment`). Mortality is tracked via `batch_mortalityevent`.
   - The system shall calculate Fulton’s Condition Factor (K-factor) for each growth sample using the formula \(K = 100 \times \frac{W}{L^3}\), where \(W\) is the average weight in grams (`batch_growthsample.avg_weight_g`) and \(L\) is the average length in centimeters (`batch_growthsample.avg_length_cm`) for that specific sample.
   - The K-factor shall be stored in the existing `condition_factor` field on the `batch_growthsample` model.
   - The `batch_growthsample.avg_length_cm` and `batch_growthsample.std_deviation_length` fields shall be calculated from a list of individual fish lengths provided by the user during the sampling process.
@@ -125,8 +125,8 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
 - **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations and quantified health metrics.
 - **Functionality**:
-  - The system shall track health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination, Sample.
-  - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, potentially `health_vaccinationrecord`, `health_samplerecord` (all linked back to `health_journalentry`).
+  - The system shall track health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination.
+  - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, potentially `health_vaccinationrecord` (all linked back to `health_journalentry`).
   - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (via a separate Media model with generic relations) and quantify health parameters on a 1-to-5 scale (1 being best, 5 being worst) using the defined `health_healthparameter` and `health_healthobservation` models.
   - Quantifiable health parameters shall include:
     - Gill Health: Assesses gill condition (e.g., mucus, lesions).

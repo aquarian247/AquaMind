@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, mixins
 
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,

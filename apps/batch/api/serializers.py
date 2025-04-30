@@ -429,7 +429,7 @@ class GrowthSampleSerializer(serializers.ModelSerializer):
             'avg_weight_g', 'avg_length_cm', 'std_deviation_weight',
             'std_deviation_length', 'min_weight_g', 'max_weight_g',
             'condition_factor', 'notes', 'created_at', 'updated_at',
-            'individual_lengths', 'individual_weights' # Include write-only fields
+            'individual_lengths', 'individual_weights'
         ]
         read_only_fields = (
             'id',
@@ -469,7 +469,7 @@ class GrowthSampleSerializer(serializers.ModelSerializer):
             if 'sample_date' not in data:
                 raise serializers.ValidationError({'sample_date': 'This field is required when creating a GrowthSample.'})
 
-        # --- Validation using initial_data ---
+        # --- Restore validation using initial_data ---
         initial_data_errors = {}
 
         # Check if we have initial_data (might not be set in certain contexts)
@@ -507,9 +507,9 @@ class GrowthSampleSerializer(serializers.ModelSerializer):
         # Raise collected errors if any
         if initial_data_errors:
             raise serializers.ValidationError(initial_data_errors)
-         # --- End validation using initial_data ---
+         # --- End restored validation using initial_data ---
 
-        # --- Validation using validated_data (runs after super().validate()) ---
+        # --- Calculation logic if individual lists not provided ---
         sample_size = data.get('sample_size')  # Use validated sample_size now
         assignment = data.get('assignment')
 
@@ -546,7 +546,7 @@ class GrowthSampleSerializer(serializers.ModelSerializer):
             )
 
         # Process individual measurements to calculate stats before final validation
-        # Note: This uses initial_data again because the fields were write_only
+        # Note: This uses initial_data again because the fields were write_only=True
         data = self._process_individual_measurements(data)
         return data
 

@@ -3,8 +3,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth import get_user_model
 import unittest
+import decimal
+from django.utils import timezone
+from datetime import date, datetime
 
-from apps.batch.models import Batch, Species, LifeCycleStage
+from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssignment
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
@@ -116,6 +119,21 @@ class HealthAPITestCase(APITestCase):
             print("Container created successfully")
         except Exception as e:
             print(f"Error creating Container: {e}")
+            raise
+
+        try:
+            # Create BatchContainerAssignment for testing
+            self.assignment = BatchContainerAssignment.objects.create(
+                batch=self.batch,
+                container=self.container,
+                assignment_date='2023-01-15',
+                population_count=self.batch.population_count, # Initial population
+                biomass_kg=self.batch.biomass_kg, # Initial biomass
+                lifecycle_stage=self.lifecycle_stage # Initial lifecycle stage
+            )
+            print("BatchContainerAssignment created successfully")
+        except Exception as e:
+            print(f"Error creating BatchContainerAssignment: {e}")
             raise
 
         try:

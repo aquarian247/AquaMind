@@ -18,12 +18,12 @@ Apply this rule in the following scenarios:
    ```
    or if you're using a virtual environment:
    ```bash
-   .\venv\Scripts\python.exe inspect_db_schema.py
+   .\venv\Scripts\database\python.exe inspect_db_schema.py
    ```
 
 2. For a more focused inspection of Django models and their relationships, use the `inspect_django_models.py` script:
    ```bash
-   .\venv\Scripts\python.exe inspect_django_models.py
+   .\venv\Scripts\inspection\python.exe inspect_django_models.py
    ```
 
 3. For targeted queries of specific tables, use SQL directly via psycopg2 through a custom script, or create a specific inspection script for your needs.

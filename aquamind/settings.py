@@ -46,18 +46,17 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     
-    # AquaMind apps
+    # AquaMind apps (Ensure this list is accurate)
     "apps.infrastructure",
     "apps.batch",
     "apps.broodstock",
-    "apps.growth",
+    "apps.core", 
     "apps.environmental",
+    "apps.health",
     "apps.inventory",
-    "apps.medical",
-    "apps.scenario",
     "apps.operational",
+    "apps.scenario",
     "apps.users",
-    "apps.health.apps.HealthConfig",  # Use full config path for the health app
 ]
 
 MIDDLEWARE = [

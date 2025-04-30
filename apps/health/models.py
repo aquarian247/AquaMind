@@ -120,6 +120,7 @@ class MortalityReason(models.Model):
 
     class Meta:
         verbose_name_plural = "Mortality Reasons"
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -211,6 +212,7 @@ class VaccinationType(models.Model):
 
     class Meta:
         verbose_name_plural = "Vaccination Types"
+        ordering = ['name']
 
     def __str__(self):
         return self.name

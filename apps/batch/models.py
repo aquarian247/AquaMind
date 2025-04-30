@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.infrastructure.models import Container, Area, Hall
 import decimal
+from decimal import Decimal
 
 class Species(models.Model):
     """
@@ -234,9 +235,9 @@ class BatchComposition(models.Model):
     mixed_batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='components')
     source_batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='mixed_into')
     percentage = models.DecimalField(
-        max_digits=5, 
+        max_digits=5,
         decimal_places=2,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))],
         help_text="Percentage of this source batch in the mixed batch"
     )
     population_count = models.PositiveIntegerField(
@@ -388,7 +389,7 @@ class GrowthSample(models.Model):
     min_weight_g = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Minimum weight in grams")
     max_weight_g = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Maximum weight in grams")
     condition_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Average Condition Factor (K) calculated from individual measurements if provided.")
-    notes = models.TextField(blank=True)
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

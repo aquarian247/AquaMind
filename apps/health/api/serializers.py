@@ -1,3 +1,5 @@
+# Test comment to verify editing capability after IDE reinstall
+
 from rest_framework import serializers
 from django.db import transaction
 from datetime import datetime
@@ -120,7 +122,6 @@ class JournalEntrySerializer(serializers.ModelSerializer):
     health_observations = HealthObservationSerializer(many=True, required=False, read_only=True) # Renamed from 'observations'
     # Write-only field for creating/updating observations
     health_observations_write = HealthObservationSerializer(many=True, required=False, write_only=True)
-    growth_sample = GrowthSampleSerializer(required=False, allow_null=True)
 
     batch = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all())
     container = serializers.PrimaryKeyRelatedField(queryset=Container.objects.all(), allow_null=True, required=False)
@@ -132,14 +133,13 @@ class JournalEntrySerializer(serializers.ModelSerializer):
             'description', 'category', 'severity', 'resolution_status', 'resolution_notes',
             'health_observations', # Use renamed field
             'health_observations_write', # Write field
-            'growth_sample', 
-            'created_at', 'updated_at', 'user' # Include user if it should be set/shown
+            'created_at', 'updated_at', 'user', # Include user if it should be set/shown
         ]
-        read_only_fields = ('id', 'created_at', 'updated_at', 'user')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'user') # Add sampling_event_id
 
     def create(self, validated_data):
         observations_data = validated_data.pop('health_observations_write', [])
-        growth_sample_data = validated_data.pop('growth_sample', None)
+        # growth_sample_data = validated_data.pop('growth_sample', None) # Ensure it's popped if passed, though it shouldn't be in validated_data now
 
         # Get user from context
         request = self.context.get('request')
@@ -159,48 +159,10 @@ class JournalEntrySerializer(serializers.ModelSerializer):
             for observation_data in observations_data:
                 HealthObservation.objects.create(journal_entry=journal_entry, **observation_data)
 
-            # Handle growth sample if provided
-            if growth_sample_data:
-                # Get the BatchContainerAssignment for this journal entry
-                try:
-                    # First, find the assignment
-                    assignment = BatchContainerAssignment.objects.get(
-                        batch=journal_entry.batch, 
-                        container=journal_entry.container,
-                        is_active=True
-                    )
-                    
-                    # Prepare growth sample data
-                    growth_sample_data['assignment'] = assignment.pk
-                    
-                    # Ensure sample_date is a date, not a datetime
-                    if 'sample_date' not in growth_sample_data:
-                        if hasattr(journal_entry.entry_date, 'date'):
-                            growth_sample_data['sample_date'] = journal_entry.entry_date.date()
-                        else:
-                            growth_sample_data['sample_date'] = journal_entry.entry_date
-                    
-                    # Clear any existing growth samples for this assignment/date to avoid conflicts
-                    GrowthSample.objects.filter(
-                        assignment=assignment,
-                        sample_date=growth_sample_data['sample_date']
-                    ).delete()
-                    
-                    # Create the growth sample with a clean validator
-                    growth_serializer = GrowthSampleSerializer(data=growth_sample_data)
-                    
-                    if growth_serializer.is_valid(raise_exception=True):
-                        # Save without passing journal_entry as it's not a field on GrowthSample
-                        growth_sample = growth_serializer.save()
-                except BatchContainerAssignment.DoesNotExist:
-                    # Log error but don't fail the entire transaction
-                    print(f"Error: Could not find BatchContainerAssignment for batch {journal_entry.batch.id} and container {journal_entry.container.id if journal_entry.container else 'None'}")
-
         return journal_entry
 
     def update(self, instance, validated_data):
         observations_data = validated_data.pop('health_observations_write', None)
-        growth_sample_data = validated_data.pop('growth_sample', None)
 
         with transaction.atomic():
             # Update JournalEntry fields (excluding nested ones handled below)
@@ -221,83 +183,6 @@ class JournalEntrySerializer(serializers.ModelSerializer):
                         **observation_data
                     )
                     
-
-            # Handle growth sample
-            if growth_sample_data is not None:
-                # Try to find assignment
-                try:
-                    assignment = BatchContainerAssignment.objects.get(
-                        batch=instance.batch, 
-                        container=instance.container,
-                        is_active=True
-                    )
-                    
-                    # Set assignment in growth_sample_data
-                    growth_sample_data['assignment'] = assignment.pk
-                    
-                    # Handle sample_date field
-                    if 'sample_date' not in growth_sample_data:
-                        if hasattr(instance.entry_date, 'date'):
-                            growth_sample_data['sample_date'] = instance.entry_date.date()
-                        else:
-                            growth_sample_data['sample_date'] = instance.entry_date
-                    
-                    # Find existing growth samples
-                    existing_samples = GrowthSample.objects.filter(
-                        assignment=assignment,
-                        sample_date=growth_sample_data['sample_date']
-                    )
-                    
-                    # Update or create the growth sample
-                    if existing_samples.exists():
-                        # Update the existing sample - using update() to guarantee the change happens
-                        existing_sample = existing_samples.first()
-                        
-                        # Apply each field from growth_sample_data to the existing sample
-                        for key, value in growth_sample_data.items():
-                            if key != 'assignment':  # Skip assignment as it's already set
-                                setattr(existing_sample, key, value)
-                        
-                        # Save the updated growth sample to ensure changes are persisted
-                        existing_sample.save()
-                        
-                        # Double-check with refresh_from_db to ensure changes were saved
-                        existing_sample.refresh_from_db()
-                    else:
-                        # Create a new sample
-                        growth_serializer = GrowthSampleSerializer(data=growth_sample_data)
-                        if growth_serializer.is_valid(raise_exception=True):
-                            # Save without passing journal_entry
-                            growth_serializer.save()
-                            
-                except BatchContainerAssignment.DoesNotExist:
-                    print(f"No active BatchContainerAssignment found for batch {instance.batch.id} and container {instance.container.id if instance.container else None}")
-                except Exception as e:
-                    print(f"Error updating GrowthSample: {str(e)}")
-            # Handle explicit null for growth_sample (deletion case)
-            elif growth_sample_data is None and 'growth_sample' in self.initial_data:
-                with transaction.atomic():
-                    try:
-                        # Find the assignment for this journal entry
-                        assignment = BatchContainerAssignment.objects.get(
-                            batch=instance.batch,
-                            container=instance.container,
-                            is_active=True
-                        )
-                        
-                        # Find and delete all GrowthSamples for this assignment
-                        # This will delete any samples regardless of the date to ensure test passes
-                        deleted_count, _ = GrowthSample.objects.filter(
-                            assignment=assignment,
-                        ).delete()
-                        
-                        # Log deletion for debugging
-                        print(f"Deleted {deleted_count} growth samples for assignment {assignment.id}")
-                        
-                    except BatchContainerAssignment.DoesNotExist:
-                        print(f"No assignment found for batch {instance.batch.id} and container {instance.container.id if instance.container else None}")
-                    except Exception as e:
-                        print(f"Error deleting growth sample: {str(e)}")
 
         return instance
 

@@ -6,6 +6,19 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-04-30: Rollback of Combined Sampling Event Logic
+- **Refactor & Simplification**: Rolled back the implementation that combined the creation of `health.JournalEntry` and `batch.GrowthSample` through a single `SamplingEvent` endpoint and nested serializers.
+- **Rationale**: The combined approach, while attempting API convenience, introduced significant complexity, instability (including `TypeError` and date/datetime inconsistencies), and tightly coupled the `health` and `batch` applications. This violated the desired separation of concerns and made serializers brittle and hard to maintain.
+- **New Approach**: `batch.GrowthSample` and `health.JournalEntry` are now created and managed entirely independently via their respective app APIs (`/api/v1/batch/growth-samples/` and `/api/v1/health/journal-entries/`). The logical link remains the shared `batch.BatchContainerAssignment` ID, but they are decoupled at the API and model levels.
+- **Actions Taken**:
+  - Removed `sampling_event_id` fields from `GrowthSample` and `JournalEntry` models.
+  - Deleted `SamplingEventViewSet`, `SamplingEventSerializer`, and associated API routes.
+  - Cleaned up `JournalEntrySerializer` and `GrowthSampleSerializer` to remove nested logic and obsolete fields.
+  - Removed related tests from `health.tests.test_api` and serializers tests.
+  - Created and applied a database migration (`health.0012_drop_sampling_event_sequence`) to remove the orphaned `sampling_event_id_seq` sequence.
+  - Updated `data model.md` and `prd.md` to reflect the decoupled approach.
+- **Outcome**: Increased code stability, improved maintainability, and enforced clearer boundaries between the `batch` and `health` applications.
+
 ### 2025-04-18: Fix Date/Datetime Handling in Health and Batch Serializers
 - **Serializer Fixes**: Resolved fundamental date/datetime inconsistency issues in `JournalEntrySerializer` and `GrowthSampleSerializer`. The code previously assumed all date fields were consistently formatted, but date objects were sometimes processed as datetime objects, causing validation failures.
 - **Validation Logic**: Improved the `GrowthSampleSerializer._process_individual_measurements` method to defensively check for `initial_data` availability before processing measurements, preventing errors during certain update operations.
