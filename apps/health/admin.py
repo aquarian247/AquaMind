@@ -3,15 +3,11 @@ from django.contrib import admin
 from .models import (
     JournalEntry, MortalityReason, LiceCount, MortalityRecord, Treatment,
     VaccinationType, SampleType,
-    HealthParameter, HealthObservation # Added new models
+    HealthParameter,
+    HealthSamplingEvent,
+    IndividualFishObservation,
+    FishParameterScore
 )
-
-# Inline Admin for Health Observations within Journal Entry
-class HealthObservationInline(admin.TabularInline):
-    model = HealthObservation
-    extra = 1 # Show 1 extra blank forms by default
-    fields = ('parameter', 'score')
-    autocomplete_fields = ['parameter'] # Use autocomplete for parameter selection
 
 @admin.register(JournalEntry)
 class JournalEntryAdmin(admin.ModelAdmin):
@@ -33,7 +29,6 @@ class JournalEntryAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    inlines = [HealthObservationInline] # Added inline
 
 @admin.register(MortalityReason)
 class MortalityReasonAdmin(admin.ModelAdmin):
@@ -85,3 +80,44 @@ class HealthParameterAdmin(admin.ModelAdmin):
             'fields': ('description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
         }),
     )
+
+class IndividualFishObservationInline(admin.TabularInline):
+    model = IndividualFishObservation
+    extra = 1
+    fields = ('fish_identifier', 'length_cm', 'weight_g')
+    # Potentially add FishParameterScoreInline here if desired
+
+class FishParameterScoreInline(admin.TabularInline):
+    model = FishParameterScore
+    extra = 1
+    fields = ('parameter', 'score')
+    autocomplete_fields = ['parameter']
+
+@admin.register(HealthSamplingEvent)
+class HealthSamplingEventAdmin(admin.ModelAdmin):
+    list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'sampled_by', 'created_at')
+    list_filter = ('sampling_date', 'sampled_by', 'assignment__batch__batch_number', 'assignment__container__name')
+    search_fields = ('notes', 'sampled_by__username', 'assignment__batch__batch_number', 'assignment__container__name')
+    autocomplete_fields = ['assignment', 'sampled_by']
+    inlines = [IndividualFishObservationInline]
+    date_hierarchy = 'sampling_date'
+
+@admin.register(IndividualFishObservation)
+class IndividualFishObservationAdmin(admin.ModelAdmin):
+    list_display = ('sampling_event', 'fish_identifier', 'length_cm', 'weight_g', 'created_at')
+    list_filter = (
+        'sampling_event__sampling_date',
+        'sampling_event__assignment__batch__batch_number',
+        'sampling_event__assignment__container__name',
+        'sampling_event__sampled_by__username'
+    )
+    search_fields = ('fish_identifier',)
+    autocomplete_fields = ['sampling_event']
+    inlines = [FishParameterScoreInline]
+
+@admin.register(FishParameterScore)
+class FishParameterScoreAdmin(admin.ModelAdmin):
+    list_display = ('individual_fish_observation', 'parameter', 'score', 'created_at')
+    list_filter = ('parameter', 'score', 'individual_fish_observation__sampling_event__sampling_date')
+    search_fields = ('individual_fish_observation__fish_identifier', 'parameter__name')
+    autocomplete_fields = ['individual_fish_observation', 'parameter']

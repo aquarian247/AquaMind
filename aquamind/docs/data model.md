@@ -298,61 +298,86 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `is_active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_journalentry`**
+- **`health_healthsamplingevent`** (NEW - Replaces general JournalEntry for structured health data collection)
   - `id`: bigint (PK, auto-increment)
   - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
-  - `entry_type`: varchar(50) # Observation, Diagnosis, Treatment, Vaccination, Sample
-  - `entry_time`: timestamptz
+  - `event_time`: timestamptz
   - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
-  - `summary`: varchar(255)
-  - `description`: text (nullable)
-  - `health_scores`: jsonb (nullable) # Stores quantifiable health scores (e.g., {'gill_health': 1, 'eye_condition': 2})
+  - `event_type`: varchar(100) (e.g., "General Health Check", "Pre-Transfer Check", "Disease Screening")
+  - `notes`: text (nullable)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_healthobservation`**
+- **`health_individualfishobservation`** (NEW - Detailed observation for a single fish within a sampling event)
   - `id`: bigint (PK, auto-increment)
-  - `score`: integer
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE)
+  - `fish_identifier`: integer # Identifier for the fish within this sampling event (e.g., 1, 2, 3...)
+  - `length_cm`: decimal(5,2) (nullable)
+  - `weight_g`: decimal(7,2) (nullable)
+  - `condition_factor`: decimal(5,3) (nullable) # Calculated: (weight_g / (length_cm^3)) * 100
+  - `is_culled`: boolean (default=False)
+  - `notes`: text (nullable)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+- **`health_fishparameterscore`** (NEW - Specific health parameter score for an individual fish observation)
+  - `id`: bigint (PK, auto-increment)
+  - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`, on_delete=CASCADE)
   - `parameter_id`: bigint (FK to `health_healthparameter`, on_delete=PROTECT)
-  - `fish_identifier`: integer (nullable)
-- **`health_licecount`** # Linked to a JournalEntry
+  - `score`: integer # Typically 1-5 based on HealthParameter descriptions
+  - `comment`: text (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`health_licecount`** # Potentially linked to HealthSamplingEvent
   - `id`: bigint (PK, auto-increment)
-  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE
+  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # Alternative or additional context
   - `lice_stage`: varchar(50) # e.g., Adult Female, Mobile, Chalimus
   - `count`: integer
-  - `sample_size`: integer # Number of fish sampled
+  - `sample_size`: integer # Number of fish sampled for this count
   - `avg_per_fish`: double precision # Calculated
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_mortalityrecord`** # Linked to a JournalEntry
+- **`health_mortalityrecord`** # Potentially linked to HealthSamplingEvent or BatchContainerAssignment directly
   - `id`: bigint (PK, auto-increment)
-  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE - if mortality observed during sampling
+  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # More common for general mortality
+  - `record_date`: date # Date mortality was recorded
   - `count`: integer
   - `reason_id`: bigint (FK to `health_mortalityreason`, on_delete=PROTECT, nullable)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_treatment`** # Linked to a JournalEntry
+- **`health_treatment`** # Potentially linked to HealthSamplingEvent or BatchContainerAssignment
   - `id`: bigint (PK, auto-increment)
-  - `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE)
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE - if treatment decision from sampling
+  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # More common for group treatments
   - `treatment_type`: varchar(100) # e.g., Medication, Bath, Physical
   - `product_name`: varchar(100) (nullable)
   - `dosage`: varchar(50) (nullable)
+  - `application_method`: varchar(100) (nullable)
+  - `start_date`: date
+  - `end_date`: date (nullable)
   - `duration_days`: integer (nullable)
   - `withdrawal_period_days`: integer (nullable)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_vaccinationrecord`** (Likely part of `health_treatment` or linked to `health_journalentry`)
-- **`health_samplerecord`** (Likely linked to `health_journalentry`)
+- **`health_vaccinationrecord`** (Review: May be a type of Treatment or linked to HealthSamplingEvent)
+- **`health_samplerecord`** (Review: May be covered by HealthSamplingEvent and IndividualFishObservation or relate to lab samples)
 
 #### Relationships (Inferred `on_delete` where script failed)
-- `batch_batchcontainerassignment` ← `health_journalentry` (CASCADE)
-- `auth_user` ← `health_journalentry` (SET_NULL)
-- `health_journalentry` ← `health_licecount` (CASCADE)
-- `health_journalentry` ← `health_mortalityrecord` (CASCADE)
+- `batch_batchcontainerassignment` ← `health_healthsamplingevent` (CASCADE)
+- `auth_user` ← `health_healthsamplingevent` (SET_NULL)
+- `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE)
+- `health_individualfishobservation` ← `health_fishparameterscore` (CASCADE)
+- `health_healthparameter` ← `health_fishparameterscore` (PROTECT)
+- `health_healthsamplingevent` ← `health_licecount` (CASCADE, if applicable)
+- `batch_batchcontainerassignment` ← `health_licecount` (CASCADE, if applicable)
+- `health_healthsamplingevent` ← `health_mortalityrecord` (CASCADE, if applicable)
+- `batch_batchcontainerassignment` ← `health_mortalityrecord` (CASCADE, if applicable)
 - `health_mortalityreason` ← `health_mortalityrecord` (PROTECT)
-- `health_journalentry` ← `health_treatment` (CASCADE)
+- `health_healthsamplingevent` ← `health_treatment` (CASCADE, if applicable)
+- `batch_batchcontainerassignment` ← `health_treatment` (CASCADE, if applicable)
 
 ### 3.5 Environmental Monitoring (`environmental` app)
 **Purpose**: Captures time-series data for environmental conditions.

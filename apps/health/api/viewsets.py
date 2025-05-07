@@ -3,14 +3,20 @@ from rest_framework import viewsets, permissions, mixins
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
     VaccinationType, Treatment, SampleType,
-    HealthParameter
+    HealthParameter,
+    HealthSamplingEvent,
+    IndividualFishObservation,
+    FishParameterScore
 )
 from apps.health.api.serializers import (
     JournalEntrySerializer, MortalityReasonSerializer,
     MortalityRecordSerializer, LiceCountSerializer,
     VaccinationTypeSerializer, TreatmentSerializer,
     SampleTypeSerializer,
-    HealthParameterSerializer
+    HealthParameterSerializer,
+    HealthSamplingEventSerializer,
+    IndividualFishObservationSerializer,
+    FishParameterScoreSerializer
 )
 
 
@@ -66,3 +72,31 @@ class HealthParameterViewSet(viewsets.ModelViewSet):
     queryset = HealthParameter.objects.all()
     serializer_class = HealthParameterSerializer
     permission_classes = [permissions.IsAuthenticated] # Adjust permissions as needed
+
+
+# New ViewSets for Health Sampling
+
+class HealthSamplingEventViewSet(viewsets.ModelViewSet):
+    """API endpoint for managing Health Sampling Events."""
+    queryset = HealthSamplingEvent.objects.select_related('assignment', 'sampled_by').prefetch_related('individual_fish_observations__parameter_scores__parameter').all()
+    serializer_class = HealthSamplingEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        """Automatically set the sampled_by user to the logged-in user if not provided."""
+        if not serializer.validated_data.get('sampled_by') and self.request.user.is_authenticated:
+            serializer.save(sampled_by=self.request.user)
+        else:
+            serializer.save()
+
+class IndividualFishObservationViewSet(viewsets.ModelViewSet):
+    """API endpoint for managing Individual Fish Observations."""
+    queryset = IndividualFishObservation.objects.select_related('sampling_event').prefetch_related('parameter_scores__parameter').all()
+    serializer_class = IndividualFishObservationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class FishParameterScoreViewSet(viewsets.ModelViewSet):
+    """API endpoint for managing Fish Parameter Scores."""
+    queryset = FishParameterScore.objects.select_related('individual_fish_observation__sampling_event', 'parameter').all()
+    serializer_class = FishParameterScoreSerializer
+    permission_classes = [permissions.IsAuthenticated]

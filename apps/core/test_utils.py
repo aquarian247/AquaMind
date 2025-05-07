@@ -22,3 +22,15 @@ def get_response_items(response):
     else:
         # Something else, return as is
         return response.data
+
+
+def get_api_url(app_name, endpoint, detail=False, **kwargs):
+    """Helper function to construct URLs for API endpoints."""
+    # Ensure trailing slashes for consistency with DRF router
+    base_url = f'/api/v1/{app_name}/{endpoint}/'
+    if detail:
+        pk = kwargs.get('pk')
+        if pk is None:
+            raise ValueError("pk must be provided for detail URLs")
+        return f'{base_url}{pk}/'
+    return base_url

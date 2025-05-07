@@ -4,11 +4,13 @@ from rest_framework import serializers
 from django.db import transaction
 from datetime import datetime
 from ..models import (
-    JournalEntry, HealthParameter, HealthObservation,
-    MortalityReason, MortalityRecord, LiceCount, VaccinationType, Treatment, SampleType, HealthParameter
+    JournalEntry, HealthParameter, 
+    MortalityReason, MortalityRecord, LiceCount, VaccinationType, Treatment, SampleType,
+    HealthSamplingEvent,
+    IndividualFishObservation,
+    FishParameterScore
 )
-from apps.batch.models import GrowthSample, BatchContainerAssignment, Batch, Container
-from apps.batch.api.serializers import GrowthSampleSerializer
+from apps.batch.models import BatchContainerAssignment, Batch, Container 
 
 # HealthParameterSerializer is defined at the bottom of this file with more specific fields
 
@@ -91,38 +93,10 @@ class SampleTypeSerializer(serializers.ModelSerializer):
         model = SampleType
         fields = ['id', 'name', 'description']
 
-class HealthObservationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for HealthObservation model.
-    Includes validation to ensure parameter is correctly specified.
-    """
-    # Add field for parameter name for read operations
-    parameter_name = serializers.CharField(source='parameter.name', read_only=True)
-    
-    # parameter field needs to be both readable and writable to work with nested serializers
-    parameter = serializers.PrimaryKeyRelatedField(queryset=HealthParameter.objects.all())
-    
-    # journal_entry is set by the parent JournalEntrySerializer
-    journal_entry = serializers.PrimaryKeyRelatedField(queryset=JournalEntry.objects.all(), required=False)
-
-    class Meta:
-        model = HealthObservation
-        fields = ['id', 'journal_entry', 'parameter', 'parameter_name', 'score', 'fish_identifier', 'created_at', 'updated_at']
-        read_only_fields = ('id', 'created_at', 'updated_at', 'parameter_name')
-        
-    # Removed custom parameter validation that was causing issues
-    # DRF's default validation for PrimaryKeyRelatedField is sufficient
-
 class JournalEntrySerializer(serializers.ModelSerializer):
     """
     Serializer for JournalEntry model.
-    Handles nested creation/update of HealthObservations and optionally GrowthSample.
     """
-    # Read-only field for displaying existing observations
-    health_observations = HealthObservationSerializer(many=True, required=False, read_only=True) # Renamed from 'observations'
-    # Write-only field for creating/updating observations
-    health_observations_write = HealthObservationSerializer(many=True, required=False, write_only=True)
-
     batch = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all())
     container = serializers.PrimaryKeyRelatedField(queryset=Container.objects.all(), allow_null=True, required=False)
 
@@ -131,59 +105,140 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'batch', 'container', 'entry_date', 
             'description', 'category', 'severity', 'resolution_status', 'resolution_notes',
-            'health_observations', # Use renamed field
-            'health_observations_write', # Write field
-            'created_at', 'updated_at', 'user', # Include user if it should be set/shown
+            'created_at', 'updated_at', 'user', 
         ]
-        read_only_fields = ('id', 'created_at', 'updated_at', 'user') # Add sampling_event_id
+        read_only_fields = ('id', 'created_at', 'updated_at', 'user')
 
     def create(self, validated_data):
-        observations_data = validated_data.pop('health_observations_write', [])
-        # growth_sample_data = validated_data.pop('growth_sample', None) # Ensure it's popped if passed, though it shouldn't be in validated_data now
-
-        # Get user from context
         request = self.context.get('request')
         if not request or not hasattr(request, 'user'):
             raise serializers.ValidationError("Serializer context must include request with user.")
         user = request.user
 
-        # Ensure user is set in validated_data if not already present
         if 'user' not in validated_data:
             validated_data['user'] = user
 
         with transaction.atomic():
-            # Create the journal entry
             journal_entry = JournalEntry.objects.create(**validated_data)
-
-            # Create health observations
-            for observation_data in observations_data:
-                HealthObservation.objects.create(journal_entry=journal_entry, **observation_data)
-
         return journal_entry
 
     def update(self, instance, validated_data):
-        observations_data = validated_data.pop('health_observations_write', None)
-
         with transaction.atomic():
-            # Update JournalEntry fields (excluding nested ones handled below)
             for key, value in validated_data.items():
                 setattr(instance, key, value)
             instance.save()
 
-            # Handle nested HealthObservations update/replace
-            if observations_data is not None:
-                # Clear existing observations before adding new ones
-                instance.health_observations.all().delete()
-                
-                # Create new observations
-                for observation_data in observations_data:
-                    # Create observation directly with the journal_entry relationship
-                    HealthObservation.objects.create(
-                        journal_entry=instance,
-                        **observation_data
-                    )
-                    
+        return instance
 
+
+# New Serializers for Health Sampling
+
+class FishParameterScoreSerializer(serializers.ModelSerializer):
+    """Serializer for FishParameterScore model."""
+    parameter_name = serializers.CharField(source='parameter.name', read_only=True)
+    # parameter is still needed to choose which parameter is being scored.
+    parameter = serializers.PrimaryKeyRelatedField(queryset=HealthParameter.objects.filter(is_active=True))
+
+    class Meta:
+        model = FishParameterScore
+        # 'individual_fish_observation' is removed. It will be handled by the parent serializer.
+        fields = ['id', 'parameter', 'parameter_name', 'score'] 
+        read_only_fields = ['id', 'parameter_name']
+
+class IndividualFishObservationSerializer(serializers.ModelSerializer):
+    """Serializer for IndividualFishObservation model, with nested Parameter Scores."""
+    parameter_scores = FishParameterScoreSerializer(many=True, required=False)
+
+    class Meta:
+        model = IndividualFishObservation
+        fields = [
+            'id', 'fish_identifier', 'length_cm', 'weight_g',
+            'parameter_scores'
+        ]
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        scores_data = validated_data.pop('parameter_scores', [])
+        sampling_event = self.context.get('sampling_event')
+        if not sampling_event:
+            # This case should ideally be prevented by how the view calls the serializer
+            # or by a validator if sampling_event were part of the serializer fields.
+            # For now, raising an error makes the requirement explicit.
+            raise serializers.ValidationError({"sampling_event": "Sampling event must be provided in the context."}) 
+
+        observation = IndividualFishObservation.objects.create(
+            sampling_event=sampling_event, 
+            **validated_data
+        )
+        for score_data in scores_data:
+            FishParameterScore.objects.create(individual_fish_observation=observation, **score_data)
+        return observation
+
+    def update(self, instance, validated_data):
+        scores_data = validated_data.pop('parameter_scores', None)
+
+        instance.fish_identifier = validated_data.get('fish_identifier', instance.fish_identifier)
+        instance.length_cm = validated_data.get('length_cm', instance.length_cm)
+        instance.weight_g = validated_data.get('weight_g', instance.weight_g)
+        instance.save()
+
+        if scores_data is not None:
+            instance.parameter_scores.all().delete()
+            for score_data in scores_data:
+                FishParameterScore.objects.create(individual_fish_observation=instance, **score_data)
+        return instance
+
+class HealthSamplingEventSerializer(serializers.ModelSerializer):
+    """Serializer for HealthSamplingEvent, with nested Individual Fish Observations."""
+    individual_fish_observations = IndividualFishObservationSerializer(many=True, required=False)
+    assignment_details = serializers.StringRelatedField(source='assignment', read_only=True)
+    sampled_by_username = serializers.CharField(source='sampled_by.username', read_only=True, allow_null=True)
+
+    class Meta:
+        model = HealthSamplingEvent
+        fields = [
+            'id', 'assignment', 'assignment_details', 'sampling_date', 'number_of_fish_sampled',
+            'sampled_by', 'sampled_by_username', 'notes',
+            'individual_fish_observations', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'assignment_details', 'sampled_by_username']
+
+    def create(self, validated_data):
+        observations_data = validated_data.pop('individual_fish_observations', [])
+        request = self.context.get('request')
+        user = request.user if request and hasattr(request, 'user') else None
+        
+        # If sampled_by is not provided, default to the request user
+        if 'sampled_by' not in validated_data or validated_data['sampled_by'] is None:
+            validated_data['sampled_by'] = user
+            
+        sampling_event = HealthSamplingEvent.objects.create(**validated_data)
+        for obs_data in observations_data:
+            scores_data = obs_data.pop('parameter_scores', [])
+            observation = IndividualFishObservation.objects.create(sampling_event=sampling_event, **obs_data)
+            for score_data in scores_data:
+                FishParameterScore.objects.create(individual_fish_observation=observation, **score_data)
+        return sampling_event
+
+    def update(self, instance, validated_data):
+        observations_data = validated_data.pop('individual_fish_observations', None)
+
+        # Update HealthSamplingEvent fields
+        instance.assignment = validated_data.get('assignment', instance.assignment)
+        instance.sampling_date = validated_data.get('sampling_date', instance.sampling_date)
+        instance.number_of_fish_sampled = validated_data.get('number_of_fish_sampled', instance.number_of_fish_sampled)
+        instance.sampled_by = validated_data.get('sampled_by', instance.sampled_by)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.save()
+
+        if observations_data is not None:
+            # Simple approach: delete existing and create new. More complex diffing could be implemented if needed.
+            instance.individual_fish_observations.all().delete()
+            for obs_data in observations_data:
+                scores_data = obs_data.pop('parameter_scores', [])
+                observation = IndividualFishObservation.objects.create(sampling_event=instance, **obs_data)
+                for score_data in scores_data:
+                    FishParameterScore.objects.create(individual_fish_observation=observation, **score_data)
         return instance
 
 class HealthParameterSerializer(serializers.ModelSerializer):

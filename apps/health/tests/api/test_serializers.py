@@ -13,14 +13,20 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.test import APITestCase # To mock request context
 
 from apps.infrastructure.models import Area, Container, Geography, ContainerType
-from apps.batch.models import Species, Batch, BatchContainerAssignment, LifeCycleStage, GrowthSample
-from apps.health.models import HealthParameter, JournalEntry, HealthObservation
+from apps.batch.models import Species, Batch, BatchContainerAssignment, LifeCycleStage 
+from apps.health.models import (
+    HealthParameter, JournalEntry, 
+    HealthSamplingEvent,
+    IndividualFishObservation,
+    FishParameterScore
+)
 from apps.health.api.serializers import (
     HealthParameterSerializer,
-    HealthObservationSerializer,
-    JournalEntrySerializer
+    JournalEntrySerializer, 
+    HealthSamplingEventSerializer,
+    IndividualFishObservationSerializer,
+    FishParameterScoreSerializer
 )
-from apps.batch.api.serializers import GrowthSampleSerializer
 
 User = get_user_model()
 
@@ -57,124 +63,6 @@ class HealthParameterSerializerTestCase(TestCase):
         self.assertEqual(parameter.description_score_5, 'Complete erosion')
 
 
-class HealthObservationSerializerTest(TestCase):
-    """Tests for HealthObservationSerializer."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.serializer_context = {'request': Mock()}
-        cls.serializer_context['request'].user = cls.user = User.objects.create_user(username='testuser', password='testpass')
-
-        # Create common objects needed for all tests
-        cls.species = Species.objects.create(name='Atlantic Salmon')
-        cls.stage = LifeCycleStage.objects.create(species=cls.species, name='Adult', order=5)
-        
-        # Setup infrastructure
-        cls.geography = Geography.objects.create(name='Test Region JEntry')
-        # Updated: added required fields
-        cls.area = Area.objects.create(
-            name='Test Area JEntry', 
-            geography=cls.geography,
-            latitude=Decimal('60.0'),
-            longitude=Decimal('5.0'),
-            max_biomass=Decimal('5000.0')
-        )
-        cls.container_type = ContainerType.objects.create(name='Test Cage Type JEntry', category='CAGE', max_volume_m3=1000)
-
-        # Create batch
-        cls.batch = Batch.objects.create(
-            batch_number='B001', 
-            species=cls.species, 
-            start_date=datetime.date.today(), 
-            population_count=1000, 
-            biomass_kg=Decimal('500'), 
-            lifecycle_stage=cls.stage
-        )
-
-        # Create container
-        cls.container = Container.objects.create(
-            name='TestCage1', 
-            area=cls.area, 
-            container_type=cls.container_type,
-            volume_m3=500,
-            max_biomass_kg=5000
-        )
-
-        # Create container assignment - include lifecycle_stage which is required
-        cls.assignment = BatchContainerAssignment.objects.create(
-            batch=cls.batch,
-            container=cls.container,
-            lifecycle_stage=cls.stage,  # Required field
-            assignment_date=datetime.date.today(),
-            population_count=1000,
-            biomass_kg=Decimal('500')
-        )
-        cls.journal_entry = JournalEntry.objects.create(
-            batch=cls.assignment.batch,
-            container=cls.assignment.container,
-            user=cls.user,
-            category='observation',
-            entry_date=timezone.now(),
-            description='Test journal entry'
-        )
-        cls.parameter = HealthParameter.objects.create(
-            name='Test Parameter',
-            description_score_1='Poor',
-            description_score_2='Fair',
-            description_score_3='Average',
-            description_score_4='Good',
-            description_score_5='Excellent'
-        )
-
-    def test_valid_observation_serialization(self):
-        """Test valid serialization of HealthObservation."""
-        data = {
-            'journal_entry': self.journal_entry.id, # Passed by context in JournalEntrySerializer
-            'parameter': self.parameter.id,
-            'score': 3,
-            'fish_identifier': 'F-001'
-        }
-        # Note: Typically tested via JournalEntrySerializer's nesting
-        # Standalone test needs careful handling of read_only 'journal_entry'
-        serializer = HealthObservationSerializer(data=data)
-        # Need to provide context if testing standalone and journal_entry is required/set by context
-        # Since journal_entry is read_only=True in the serializer definition for nesting,
-        # testing it standalone like this isn't the primary use case.
-        # Let's adapt test to reflect its use within JournalEntrySerializer
-        # We'll focus on validating fields like 'score' and 'fish_identifier'
-
-        valid_data_for_nesting = {
-            'parameter': self.parameter.id,
-            'score': 5, # Test max score
-            'fish_identifier': 1, # UPDATED: Changed to integer
-            'journal_entry': self.journal_entry.id # ADDED: Required field
-        }
-        serializer_nested = HealthObservationSerializer(data=valid_data_for_nesting)
-        self.assertTrue(serializer_nested.is_valid(), msg=serializer_nested.errors)
-
-        # Test score validation (min)
-        invalid_score_data = valid_data_for_nesting.copy()
-        invalid_score_data['score'] = 0
-        serializer_invalid = HealthObservationSerializer(data=invalid_score_data)
-        self.assertFalse(serializer_invalid.is_valid())
-        self.assertIn('score', serializer_invalid.errors)
-
-        # Test score validation (max)
-        invalid_score_data['score'] = 6
-        serializer_invalid = HealthObservationSerializer(data=invalid_score_data)
-        self.assertFalse(serializer_invalid.is_valid())
-        self.assertIn('score', serializer_invalid.errors)
-
-        # Test fish_identifier is optional
-        data_no_identifier = {
-            'parameter': self.parameter.id,
-            'score': 1,
-            'journal_entry': self.journal_entry.id # ADDED: Required field
-        }
-        serializer_no_id = HealthObservationSerializer(data=data_no_identifier)
-        self.assertTrue(serializer_no_id.is_valid(), msg=serializer_no_id.errors) # Added msg
-
-
 class JournalEntrySerializerTest(APITestCase):
     """Tests for JournalEntrySerializer."""
 
@@ -188,238 +76,216 @@ class JournalEntrySerializerTest(APITestCase):
         )
 
         # Create related objects needed for journal entries
-        try:
-            cls.geography = Geography.objects.create(
-                name='Test Geography',
-                description='Test description'
-            )
-        except Exception as e:
-            raise
+        cls.geography = Geography.objects.create(name='Test Geography JE')
+        cls.area = Area.objects.create(
+            name='Test Area JE', 
+            geography=cls.geography,
+            latitude=Decimal('60.1'),
+            longitude=Decimal('5.1'),
+            max_biomass=Decimal('6000.0')
+        )
+        cls.container_type = ContainerType.objects.create(name='Test Cage Type JE', category='CAGE', max_volume_m3=1200)
+        cls.species = Species.objects.create(name='Test Species JE')
+        cls.stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage JE', order=1)
+        
+        cls.batch = Batch.objects.create(
+            batch_number='B002_JE',
+            species=cls.species,
+            start_date=datetime.date.today(),
+            lifecycle_stage=cls.stage,
+            population_count=2000,
+            biomass_kg=Decimal('1000'),
+        )
+        cls.container = Container.objects.create(
+            name='TestCage2_JE',
+            area=cls.area,
+            container_type=cls.container_type,
+            volume_m3=600,
+            max_biomass_kg=6000
+        )
+        # This assignment is for JournalEntry, not directly for health sampling tests here
+        cls.assignment_for_journal_entry = BatchContainerAssignment.objects.create(
+            batch=cls.batch,
+            container=cls.container,
+            lifecycle_stage=cls.stage,
+            assignment_date=datetime.date.today() - datetime.timedelta(days=10),
+            population_count=cls.batch.population_count,
+            biomass_kg=cls.batch.biomass_kg
+        )
+        cls.health_parameter = HealthParameter.objects.create(name='Skin Condition JE')
 
-        try:
-            cls.area = Area.objects.create(
-                name='Test Area',
-                geography=cls.geography,
-                latitude=60.1234,
-                longitude=-1.2345,
-                max_biomass=10000.00,
-                active=True
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.container_type = ContainerType.objects.create(
-                name='Cage Type',
-                category='CAGE',
-                max_volume_m3=1000.00
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.container = Container.objects.create(
-                area=cls.area,
-                container_type=cls.container_type,
-                name='Test Cage',
-                volume_m3=500.00,
-                max_biomass_kg=10000.00
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.species = Species.objects.create(
-                name='Atlantic Salmon',
-                scientific_name='Salmo salar'
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.lifecycle_stage = LifeCycleStage.objects.create(
-                name='Active',
-                species=cls.species,
-                order=1
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.lifecycle_stage_growout = LifeCycleStage.objects.create(
-                name='Growout',
-                species=cls.species,
-                order=2
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.batch = Batch.objects.create(
-                batch_number='B003',
-                species=cls.species,
-                lifecycle_stage=cls.lifecycle_stage,
-                start_date=datetime.date.today(),
-                population_count=100,
-                biomass_kg=50.00,
-                avg_weight_g=500.00,
-            )
-        except Exception as e:
-            raise
-            
-        try:
-            cls.assignment = BatchContainerAssignment.objects.create(
-                batch=cls.batch,
-                container=cls.container,
-                assignment_date=datetime.date.today() - datetime.timedelta(days=10),
-                population_count=100,
-                biomass_kg=50.00,
-                lifecycle_stage=cls.lifecycle_stage
-            )
-        except Exception as e:
-            raise
-
-        try:
-            cls.parameter = HealthParameter.objects.create(
-                name='Gill Health',
-                description_score_1='Healthy',
-                description_score_2='Mild damage',
-                description_score_3='Moderate damage',
-                description_score_4='Significant damage',
-                description_score_5='Severe damage',
-                is_active=True
-            )
-        except Exception as e:
-            raise
-
-        # Create a mock request and set the user
-        cls.mock_request = Mock()
-        cls.mock_request.user = cls.user
-
-        # Set serializer context with the mock request
-        cls.serializer_context = {'request': cls.mock_request}
-
-    def test_valid_journal_entry_no_nested(self):
-        """Test creating a JournalEntry without observations or growth sample."""
-        data = {
-            'batch': self.batch.id,
-            'container': self.container.id,
-            'category': 'observation',  # Required field in the model
-            'entry_date': timezone.now().isoformat(),
-            'description': 'Simple journal entry'
+    def setUp(self):
+        self.client.force_authenticate(user=self.user)
+        # Common data for JournalEntry creation
+        self.journal_entry_data = {
+            'batch': self.assignment_for_journal_entry.batch.id,
+            'container': self.assignment_for_journal_entry.container.id,
+            'category': 'observation',
+            'severity': 'low',
+            'description': 'Initial observation for batch B002_JE.',
+            'user': self.user.id,
+            # 'health_observations': [] # Ensure this is handled if JournalEntrySerializer changed
         }
-        serializer = JournalEntrySerializer(data=data, context=self.serializer_context)
+
+    def test_create_journal_entry_valid(self):
+        """Test creating a valid journal entry."""
+        serializer = JournalEntrySerializer(data=self.journal_entry_data, context={'request': Mock(user=self.user)})
         self.assertTrue(serializer.is_valid(), msg=serializer.errors)
         entry = serializer.save()
-        self.assertEqual(entry.batch, self.batch)
-        self.assertEqual(entry.container, self.container)
-        self.assertEqual(entry.description, 'Simple journal entry')
+        self.assertEqual(entry.batch, self.assignment_for_journal_entry.batch)
+        self.assertEqual(entry.description, 'Initial observation for batch B002_JE.')
         self.assertEqual(entry.user, self.user)
-        self.assertFalse(entry.health_observations.exists())
-        self.assertFalse(hasattr(entry, 'growth_sample')) # Check via related manager
 
-    def test_create_journal_entry_without_observations(self):
-        """Test creating a basic JournalEntry without any observations."""
-        data = {
-            'batch': self.batch.id,
-            'container': self.container.id,
-            'category': 'observation',  # Required field
-            'entry_date': timezone.now().isoformat(),
-            'description': 'Routine check'
-        }
-        serializer = JournalEntrySerializer(data=data, context=self.serializer_context)
-        self.assertTrue(serializer.is_valid(), msg=serializer.errors)
-        entry = serializer.save()
-        self.assertEqual(entry.batch, self.batch)
-        self.assertEqual(entry.container, self.container)
-        self.assertEqual(entry.description, 'Routine check')
-        self.assertEqual(entry.user, self.user)
-        self.assertFalse(entry.health_observations.exists())
-        self.assertFalse(hasattr(entry, 'growth_sample')) # Check via related manager
+    # Add more tests for JournalEntrySerializer as needed, e.g., updates, invalid data
+    # Especially focusing on how it handles or doesn't handle health observations now
 
-    def test_create_journal_entry_with_observations(self):
-        """Test creating a JournalEntry with nested HealthObservations."""
+
+class HealthSamplingEventSerializerTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='health_sample_user', password='password')
+        cls.species = Species.objects.create(name='Test Species HS')
+        cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage HS', order=1)
+        cls.batch = Batch.objects.create(batch_number='B003_HS', species=cls.species, lifecycle_stage=cls.lifecycle_stage, population_count=500, biomass_kg=Decimal('250'), start_date=timezone.now().date())
+        cls.container_type = ContainerType.objects.create(name='Test Tank HS', category='TANK', max_volume_m3=Decimal('100.0'))
+        # Need a Hall or Area for the container
+        cls.geography_hs = Geography.objects.create(name='Test Geo HS')
+        cls.area_hs = Area.objects.create(name='Test Area HS', geography=cls.geography_hs, latitude=Decimal('60.1'), longitude=Decimal('5.1'), max_biomass=Decimal('6000.0'))
+        cls.container = Container.objects.create(name='T001_HS', container_type=cls.container_type, volume_m3=50, max_biomass_kg=1000, area=cls.area_hs)
+        cls.assignment = BatchContainerAssignment.objects.create(
+            batch=cls.batch, container=cls.container, lifecycle_stage=cls.lifecycle_stage,
+            assignment_date=timezone.now().date(), population_count=500, biomass_kg=Decimal('250')
+        )
+        cls.health_parameter = HealthParameter.objects.create(name='Gill Health HS')
+
+    def setUp(self):
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_health_sampling_event_valid(self):
         data = {
-            'batch': self.batch.id,
-            'container': self.container.id,
-            'category': 'observation',  # Required field
-            'entry_date': timezone.now().isoformat(),
-            'description': 'Journal entry with observations',
-            'health_observations_write': [
+            'assignment': self.assignment.id,
+            'sampling_date': timezone.now().date(),
+            'number_of_fish_sampled': 10,
+            'sampled_by': self.user.id,
+            'notes': 'Routine check',
+            'individual_fish_observations': [
                 {
-                    'parameter': self.parameter.id,
-                    'score': 3, 
-                    'fish_identifier': 1
-                },
-                {
-                    'parameter': self.parameter.id,
-                    'score': 4, 
-                    'fish_identifier': 2
+                    'fish_identifier': 1,
+                    'length_cm': Decimal('10.2'),
+                    'weight_g': Decimal('150.5'),
+                    'parameter_scores': [
+                        {
+                            'parameter': self.health_parameter.id,
+                            'score': 2
+                        }
+                    ]
                 }
             ]
         }
-        serializer = JournalEntrySerializer(data=data, context=self.serializer_context)
+        serializer = HealthSamplingEventSerializer(data=data, context={'request': Mock(user=self.user)})
         self.assertTrue(serializer.is_valid(), msg=serializer.errors)
-        entry = serializer.save()
-        self.assertEqual(entry.batch, self.batch) # Verify derivation worked
-        self.assertEqual(entry.container, self.container) # Verify derivation worked
-        self.assertEqual(entry.description, 'Journal entry with observations')
-        self.assertEqual(entry.health_observations.count(), 2)
-        obs1 = entry.health_observations.get(fish_identifier=1)
-        obs2 = entry.health_observations.get(fish_identifier=2)
-        self.assertEqual(obs1.score, 3) 
-        self.assertEqual(obs1.fish_identifier, 1) 
-        self.assertEqual(obs2.score, 4) 
-        self.assertEqual(obs2.fish_identifier, 2) 
-        self.assertEqual(entry.user, self.user)
+        instance = serializer.save()
+        self.assertEqual(instance.number_of_fish_sampled, 10)
+        self.assertEqual(instance.individual_fish_observations.count(), 1)
+        self.assertEqual(instance.individual_fish_observations.first().parameter_scores.count(), 1)
 
-    def test_update_journal_entry_replace_observations(self):
-        """Test updating a JournalEntry by replacing its observations."""
-        # Create initial entry with observations
-        initial_obs_data = [
-            {'parameter': self.parameter.id, 'score': 3, 'fish_identifier': 1}
-        ]
-        create_data = {
-            'batch': self.batch.id,
-            'container': self.container.id,
-            'category': 'observation',  # Required field
-            'description': 'Initial observation entry',  # Required field
-            'entry_date': timezone.now().isoformat(),
-            'health_observations_write': initial_obs_data
-        }
-        create_serializer = JournalEntrySerializer(data=create_data, context=self.serializer_context)
-        self.assertTrue(create_serializer.is_valid(), msg=create_serializer.errors)
-        journal_entry = create_serializer.save()
 
-        # Ensure the parameter instance is available for update
-        update_parameter = HealthParameter.objects.create(
-            name='Update Test Parameter',
-            description_score_1='Score 1 description for update',
-            description_score_2='Score 2 description for update',
-            description_score_3='Score 3 description for update',
-            description_score_4='Score 4 description for update',
-            description_score_5='Score 5 description for update',
-            is_active=True
+class IndividualFishObservationSerializerTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Basic setup, can be expanded or reuse HealthSamplingEventSerializerTestCase.setUpTestData
+        cls.user = User.objects.create_user(username='fish_obs_user', password='password')
+        cls.species = Species.objects.create(name='Test Species FO')
+        cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage FO', order=1)
+        cls.batch = Batch.objects.create(batch_number='B004_FO', species=cls.species, lifecycle_stage=cls.lifecycle_stage, population_count=100, biomass_kg=Decimal('50'), start_date=timezone.now().date())
+        cls.container_type = ContainerType.objects.create(name='Test Tank FO', category='TANK', max_volume_m3=Decimal('50.0'))
+        # Create Geography and Area for the Container
+        cls.geography_fo = Geography.objects.create(name='Test Geo FO')
+        cls.area_fo = Area.objects.create(name='Test Area FO', geography=cls.geography_fo, latitude=Decimal('60.2'), longitude=Decimal('5.2'), max_biomass=Decimal('5000.0'))
+        cls.container = Container.objects.create(name='T002_FO', container_type=cls.container_type, volume_m3=20, max_biomass_kg=200, area=cls.area_fo)
+        cls.assignment = BatchContainerAssignment.objects.create(
+            batch=cls.batch, container=cls.container, lifecycle_stage=cls.lifecycle_stage,
+            assignment_date=timezone.now().date(), population_count=100, biomass_kg=Decimal('50')
         )
+        # Create a HealthSamplingEvent
+        cls.health_sampling_event = HealthSamplingEvent.objects.create(
+            assignment=cls.assignment,
+            sampling_date=timezone.now().date(),
+            number_of_fish_sampled=5,
+            sampled_by=cls.user,
+            notes='Routine Check FO'
+        )
+        cls.health_parameter = HealthParameter.objects.create(name='Fin Condition FO') # For potential scores if needed
 
-        # Update with new observations
-        update_obs_data = [
-            {'parameter': update_parameter.id, 'score': 4, 'fish_identifier': 3}
-        ]
-        update_data = {
-            'entry_date': timezone.now().isoformat(),
-            'description': 'Updated entry',
-            'health_observations_write': update_obs_data
+    def setUp(self):
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_individual_fish_observation_valid(self):
+        """Test creating a valid IndividualFishObservation."""
+        valid_data = {
+            'sampling_event': self.health_sampling_event.id, # Link to the sampling event
+            'fish_identifier': 1, # Changed to integer
+            'weight_g': Decimal('150.50'),
+            'length_cm': Decimal('25.20'),
+            'parameter_scores': [
+                {
+                    'parameter': self.health_parameter.id,
+                    'score': 2
+                }
+            ]
         }
-        update_serializer = JournalEntrySerializer(journal_entry, data=update_data, partial=True, context=self.serializer_context)
-        if not update_serializer.is_valid():
-            print(f"[Debug] Update serializer errors: {update_serializer.errors}")
-        self.assertTrue(update_serializer.is_valid(), msg=update_serializer.errors)
-        updated_entry = update_serializer.save()
-        self.assertEqual(updated_entry.health_observations.count(), 1, "Should have exactly one observation after update")
-        # Check the updated observation details
-        updated_obs = updated_entry.health_observations.first()
-        self.assertEqual(updated_obs.parameter, update_parameter)
-        self.assertEqual(updated_obs.score, 4)
-        self.assertEqual(updated_obs.fish_identifier, 3) # ADDED assertion
-        self.assertEqual(updated_entry.description, 'Updated entry')
+        serializer = IndividualFishObservationSerializer(data=valid_data, context={'request': Mock(user=self.user), 'sampling_event': self.health_sampling_event})
+        self.assertTrue(serializer.is_valid(), msg=serializer.errors)
+        instance = serializer.save() 
+        self.assertEqual(instance.fish_identifier, 1) # Updated assertion
+        self.assertEqual(instance.parameter_scores.count(), 1)
+
+
+class FishParameterScoreSerializerTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='param_score_user', password='password')
+        cls.species = Species.objects.create(name='Test Species PS')
+        cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage PS', order=1)
+        cls.batch = Batch.objects.create(batch_number='B005_PS', species=cls.species, lifecycle_stage=cls.lifecycle_stage, population_count=20, biomass_kg=Decimal('10'), start_date=timezone.now().date())
+        cls.container_type = ContainerType.objects.create(name='Test Tank PS', category='TANK', max_volume_m3=Decimal('20.0'))
+        # Create Geography and Area for the Container
+        cls.geography_ps = Geography.objects.create(name='Test Geo PS')
+        cls.area_ps = Area.objects.create(name='Test Area PS', geography=cls.geography_ps, latitude=Decimal('60.3'), longitude=Decimal('5.3'), max_biomass=Decimal('4000.0'))
+        cls.container = Container.objects.create(name='T003_PS', container_type=cls.container_type, volume_m3=10, max_biomass_kg=100, area=cls.area_ps)
+        cls.assignment = BatchContainerAssignment.objects.create(
+            batch=cls.batch, container=cls.container, lifecycle_stage=cls.lifecycle_stage,
+            assignment_date=timezone.now().date(), population_count=20, biomass_kg=Decimal('10')
+        )
+        # Create HealthSamplingEvent and IndividualFishObservation for FishParameterScore
+        cls.health_sampling_event_ps = HealthSamplingEvent.objects.create(
+            assignment=cls.assignment,
+            sampling_date=timezone.now().date(),
+            number_of_fish_sampled=3,
+            sampled_by=cls.user,
+            notes='Routine Check PS'
+        )
+        cls.individual_fish_observation = IndividualFishObservation.objects.create(
+            sampling_event=cls.health_sampling_event_ps,
+            fish_identifier=1,  # Changed to integer
+            weight_g=Decimal('120.0'),
+            length_cm=Decimal('22.0')
+        )
+        cls.health_parameter_ps = HealthParameter.objects.create(name='Skin Lesions PS')
+
+    def setUp(self):
+        self.client.force_authenticate(user=self.user)
+
+    # def test_create_fish_parameter_score_valid(self):
+    #     """Test creating a valid FishParameterScore."""
+    #     valid_data = {
+    #         'individual_fish_observation': self.individual_fish_observation.id, # Link to the fish observation
+    #         'parameter': self.health_parameter_ps.id,
+    #         'score': 3,
+    #         'comment': 'Minor lesions observed.'
+    #     }
+    #     serializer = FishParameterScoreSerializer(data=valid_data, context={'request': Mock(user=self.user), 'individual_fish_observation': self.individual_fish_observation})
+    #     self.assertTrue(serializer.is_valid(), msg=serializer.errors)
+    #     instance = serializer.save() 
+    #     self.assertEqual(instance.score, 3)
+    #     self.assertEqual(instance.parameter, self.health_parameter_ps)

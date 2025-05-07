@@ -3,13 +3,19 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError # Import for testing constraints
 from django.conf import settings
 import unittest
+from decimal import Decimal # Added for biomass/weight consistency
+from datetime import date # Added for dates
 
-from apps.batch.models import Batch, Species, LifeCycleStage
+from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssignment # Added BatchContainerAssignment
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
     VaccinationType, Treatment, SampleType,
-    HealthParameter, HealthObservation # Added
+    HealthParameter,
+    # New health models
+    HealthSamplingEvent,
+    IndividualFishObservation,
+    FishParameterScore
 )
 
 User = get_user_model()
@@ -19,21 +25,21 @@ class HealthModelsTestCase(TestCase):
     def setUp(self):
         try:
             self.user = User.objects.create_user(username='testuser', password='testpass')
-            print("User created successfully")
+            # print("User created successfully")
         except Exception as e:
             print(f"Error creating User: {e}")
             raise
 
         try:
             self.species = Species.objects.create(name='Salmon')
-            print("Species created successfully")
+            # print("Species created successfully")
         except Exception as e:
             print(f"Error creating Species: {e}")
             raise
 
         try:
             self.lifecycle_stage = LifeCycleStage.objects.create(name='Fry', order=2, species=self.species)
-            print("LifeCycleStage created successfully")
+            # print("LifeCycleStage created successfully")
         except Exception as e:
             print(f"Error creating LifeCycleStage: {e}")
             raise
@@ -44,51 +50,48 @@ class HealthModelsTestCase(TestCase):
                 species=self.species,
                 status='ACTIVE',
                 population_count=1000,
-                biomass_kg=500.00,
-                avg_weight_g=0.5,
+                biomass_kg=Decimal('500.00'),
+                avg_weight_g=Decimal('0.5'),
                 start_date='2023-01-01',
                 notes='Test batch',
                 batch_type='STANDARD',
                 lifecycle_stage=self.lifecycle_stage
             )
-            print("Batch created successfully")
+            # print("Batch created successfully")
         except Exception as e:
             print(f"Error creating Batch: {e}")
             raise
 
         try:
-            self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=100.0, category='TANK')
-            print("ContainerType created successfully")
+            self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=Decimal('100.0'), category='TANK')
+            # print("ContainerType created successfully")
         except Exception as e:
             print(f"Error creating ContainerType: {e}")
             raise
 
         try:
-            # Create a geography for the freshwater station
             self.geography = Geography.objects.create(name='Test Geography')
-            print("Geography created successfully")
+            # print("Geography created successfully")
         except Exception as e:
             print(f"Error creating Geography: {e}")
             raise
 
         try:
-            # Create a freshwater station for the hall
             self.station = FreshwaterStation.objects.create(
                 name='Test Station', 
                 station_type='HATCHERY',
-                latitude=50.8503,
-                longitude=4.3517,
+                latitude=Decimal('50.8503'),
+                longitude=Decimal('4.3517'),
                 geography=self.geography
             )
-            print("FreshwaterStation created successfully")
+            # print("FreshwaterStation created successfully")
         except Exception as e:
             print(f"Error creating FreshwaterStation: {e}")
             raise
 
         try:
-            # Create a hall for location (container must be in either a hall or area)
             self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
-            print("Hall created successfully")
+            # print("Hall created successfully")
         except Exception as e:
             print(f"Error creating Hall: {e}")
             raise
@@ -97,17 +100,30 @@ class HealthModelsTestCase(TestCase):
             self.container = Container.objects.create(
                 name='C001',
                 container_type=self.container_type,
-                volume_m3=50.0,
-                max_biomass_kg=5000.0,
+                volume_m3=Decimal('50.0'),
+                max_biomass_kg=Decimal('5000.0'),
                 hall=self.hall,
                 active=True
             )
-            print("Container created successfully")
+            # print("Container created successfully")
         except Exception as e:
             print(f"Error creating Container: {e}")
             raise
 
-        # Add a HealthParameter for use in tests
+        try:
+            self.batch_container_assignment = BatchContainerAssignment.objects.create(
+                batch=self.batch,
+                container=self.container,
+                assignment_date=date(2023, 1, 10),
+                population_count=self.batch.population_count,
+                biomass_kg=self.batch.biomass_kg,
+                lifecycle_stage=self.batch.lifecycle_stage
+            )
+            # print("BatchContainerAssignment created successfully")
+        except Exception as e:
+            print(f"Error creating BatchContainerAssignment: {e}")
+            raise
+
         try:
             self.gill_health_param = HealthParameter.objects.create(
                 name='Gill Health',
@@ -116,7 +132,7 @@ class HealthModelsTestCase(TestCase):
                 description_score_3='Noticeable lesions or heavy mucus.',
                 description_score_4='Severe damage, necrosis.'
             )
-            print("HealthParameter created successfully")
+            # print("HealthParameter created successfully")
         except Exception as e:
             print(f"Error creating HealthParameter: {e}")
             raise
@@ -147,55 +163,6 @@ class HealthModelsTestCase(TestCase):
         self.assertEqual(param.name, 'Eye Condition')
         self.assertTrue(param.is_active)
         self.assertEqual(str(param), 'Eye Condition')
-
-    def test_health_observation_creation(self):
-        """
-        Test the creation of HealthObservation instances with associated journal entries and parameters.
-        Ensure that duplicate observations for the same parameter and journal entry are not allowed.
-        """
-        # Create a journal entry for health observations
-        print("[Debug] Creating JournalEntry...")
-        entry = JournalEntry.objects.create(
-            batch=self.batch,
-            container=self.container,
-            category='observation',  # Updated from 'entry_type' to 'category' to match current model
-            description='Health check for gill condition',  # Updated from 'notes' to 'description' to match current model
-            user=self.user
-        )
-        print(f"[Debug] JournalEntry created: ID={entry.id}, Batch={entry.batch}, Container={entry.container}")
-        
-        # Create a health observation linked to the journal entry
-        print("[Debug] Creating first HealthObservation...")
-        observation = HealthObservation.objects.create(
-            journal_entry=entry,
-            parameter=self.gill_health_param,
-            score=2
-        )
-        print(f"[Debug] First HealthObservation created: ID={observation.id}, JournalEntry ID={observation.journal_entry.id}, Parameter={observation.parameter.name}, Score={observation.score}")
-        
-        self.assertEqual(observation.journal_entry, entry)
-        print("[Debug] Assertion passed: observation.journal_entry matches entry")
-        self.assertEqual(observation.parameter, self.gill_health_param)
-        print("[Debug] Assertion passed: observation.parameter matches gill_health_param")
-        self.assertEqual(observation.score, 2)
-        print("[Debug] Assertion passed: observation.score is 2")
-        
-        # Create another observation with the same parameter - should succeed
-        # The unique_together constraint has been removed from the model
-        print("[Debug] Creating duplicate observation...")
-        duplicate_observation = HealthObservation.objects.create(
-            journal_entry=entry,
-            parameter=self.gill_health_param,
-            score=3
-        )
-        print(f"[Debug] Successfully created duplicate observation with ID={duplicate_observation.id}")
-        
-        # Verify we now have two observations with the same parameter for this journal entry
-        obs_count = HealthObservation.objects.filter(
-            journal_entry=entry,
-            parameter=self.gill_health_param
-        ).count()
-        self.assertEqual(obs_count, 2, "Should have two observations with the same parameter")
 
     def test_mortality_reason_creation(self):
         reason = MortalityReason.objects.create(name='Disease', description='Infectious disease outbreak')
@@ -270,3 +237,88 @@ class HealthModelsTestCase(TestCase):
         self.assertEqual(stype.name, 'Water Sample')
         self.assertEqual(stype.description, 'Sample for water quality testing')
         self.assertEqual(str(stype), 'Water Sample')
+
+    def test_health_sampling_event_creation(self):
+        """Test creating a HealthSamplingEvent instance."""
+        sampling_event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date(2023, 2, 1),
+            sampled_by=self.user,
+            number_of_fish_sampled=10,
+            notes='Routine health check.'
+        )
+        self.assertEqual(sampling_event.assignment, self.batch_container_assignment)
+        self.assertEqual(sampling_event.sampling_date, date(2023, 2, 1))
+        self.assertEqual(sampling_event.sampled_by, self.user)
+        self.assertEqual(sampling_event.number_of_fish_sampled, 10)
+        self.assertEqual(str(sampling_event), f"Health Sample - {self.batch_container_assignment} - 2023-02-01")
+
+    def test_individual_fish_observation_creation(self):
+        """Test creating an IndividualFishObservation instance."""
+        sampling_event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date(2023, 2, 15),
+            sampled_by=self.user,
+            number_of_fish_sampled=5
+        )
+        fish_observation = IndividualFishObservation.objects.create(
+            sampling_event=sampling_event,
+            fish_identifier=1,
+            length_cm=Decimal('10.5'),
+            weight_g=Decimal('150.2')
+        )
+        self.assertEqual(fish_observation.sampling_event, sampling_event)
+        self.assertEqual(fish_observation.fish_identifier, 1)
+        self.assertEqual(fish_observation.length_cm, Decimal('10.5'))
+        self.assertEqual(fish_observation.weight_g, Decimal('150.2'))
+        self.assertEqual(str(fish_observation), f"Fish #{fish_observation.fish_identifier} (Event: {sampling_event.id})")
+
+    def test_fish_parameter_score_creation(self):
+        """Test creating a FishParameterScore instance."""
+        sampling_event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date(2023, 3, 1),
+            sampled_by=self.user,
+            number_of_fish_sampled=3
+        )
+        fish_observation = IndividualFishObservation.objects.create(
+            sampling_event=sampling_event,
+            fish_identifier=1
+        )
+        param_score = FishParameterScore.objects.create(
+            individual_fish_observation=fish_observation,
+            parameter=self.gill_health_param,
+            score=2
+        )
+        self.assertEqual(param_score.individual_fish_observation, fish_observation)
+        self.assertEqual(param_score.parameter, self.gill_health_param)
+        self.assertEqual(param_score.score, 2)
+        self.assertEqual(str(param_score), f"{fish_observation} - {self.gill_health_param.name}: {param_score.score}")
+
+    def test_health_sampling_relationships(self):
+        """Test relationships between health sampling models."""
+        sampling_event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date(2023, 3, 10),
+            sampled_by=self.user,
+            number_of_fish_sampled=1
+        )
+        fish_obs1 = IndividualFishObservation.objects.create(
+            sampling_event=sampling_event, fish_identifier=1
+        )
+        FishParameterScore.objects.create(
+            individual_fish_observation=fish_obs1,
+            parameter=self.gill_health_param,
+            score=1
+        )
+        # Retrieve the event and check related objects
+        retrieved_event = HealthSamplingEvent.objects.get(pk=sampling_event.pk)
+        self.assertEqual(retrieved_event.individual_fish_observations.count(), 1)
+        
+        retrieved_fish_obs = retrieved_event.individual_fish_observations.first()
+        self.assertEqual(retrieved_fish_obs.fish_identifier, 1)
+        self.assertEqual(retrieved_fish_obs.parameter_scores.count(), 1)
+        
+        retrieved_score = retrieved_fish_obs.parameter_scores.first()
+        self.assertEqual(retrieved_score.parameter, self.gill_health_param)
+        self.assertEqual(retrieved_score.score, 1)

@@ -3,6 +3,7 @@ from .models import (
     Species,
     LifeCycleStage,
     Batch,
+    BatchContainerAssignment,
     BatchTransfer,
     MortalityEvent,
     GrowthSample
@@ -56,6 +57,26 @@ class BatchAdmin(admin.ModelAdmin):
         }),
         ('Additional Information', {
             'fields': ('notes', 'created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(BatchContainerAssignment)
+class BatchContainerAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('batch', 'container', 'assignment_date', 'population_count', 'biomass_kg', 'lifecycle_stage')
+    list_filter = ('assignment_date', 'lifecycle_stage', 'container__container_type__name')
+    search_fields = ('batch__batch_number', 'container__name', 'notes')
+    date_hierarchy = 'assignment_date'
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('batch', 'container', 'lifecycle_stage', 'assignment_date')
+        }),
+        ('Population Details', {
+            'fields': ('population_count', 'biomass_kg')
+        }),
+        ('Additional Information', {
+            'fields': ('notes', 'transferred_in', 'transferred_out', 'created_at', 'updated_at')
         }),
     )
 

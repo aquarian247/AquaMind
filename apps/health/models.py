@@ -18,10 +18,10 @@ class JournalEntry(models.Model):
         ('observation', 'Observation'),
         ('issue', 'Issue'),
         ('action', 'Action'),
-        ('diagnosis', 'Diagnosis'),  
-        ('treatment', 'Treatment'),  
-        ('vaccination', 'Vaccination'), 
-        ('sample', 'Sample'),      
+        ('diagnosis', 'Diagnosis'),
+        ('treatment', 'Treatment'),
+        ('vaccination', 'Vaccination'),
+        ('sample', 'Sample'),
     )
     SEVERITY_CHOICES = (
         ('low', 'Low'),
@@ -46,7 +46,7 @@ class JournalEntry(models.Model):
     entry_date = models.DateTimeField(default=timezone.now)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     severity = models.CharField(
-        max_length=10, choices=SEVERITY_CHOICES, default='low', blank=True, null=True 
+        max_length=10, choices=SEVERITY_CHOICES, default='low', blank=True, null=True
     )
     description = models.TextField()
     resolution_status = models.BooleanField(default=False)
@@ -84,31 +84,97 @@ class HealthParameter(models.Model):
         return self.name
 
 
-class HealthObservation(models.Model):
-    """Links a JournalEntry to a specific HealthParameter observation score."""
-    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='health_observations')
-    parameter = models.ForeignKey(HealthParameter, on_delete=models.PROTECT, related_name='observations')
-    score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score from 1 (Best) to 5 (Worst)."
+class HealthSamplingEvent(models.Model):
+    """Parent event for a health sampling session, linked to a BatchContainerAssignment."""
+    assignment = models.ForeignKey(
+        BatchContainerAssignment, 
+        on_delete=models.CASCADE, 
+        related_name='health_sampling_events',
+        help_text="The specific batch and container assignment being sampled."
     )
-    fish_identifier = models.PositiveIntegerField(
-        null=True, blank=True, db_index=True,
-        help_text="Identifier for individual fish within a sample (e.g., 1-75), if applicable."
+    sampling_date = models.DateField(default=timezone.now)
+    number_of_fish_sampled = models.PositiveIntegerField(
+        help_text="Total number of individual fish examined in this sampling event."
     )
-
+    sampled_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='health_sampling_events_conducted',
+        help_text="User who conducted the sampling."
+    )
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        pass
+        ordering = ['-sampling_date', '-created_at']
+        verbose_name = "Health Sampling Event"
+        verbose_name_plural = "Health Sampling Events"
 
     def __str__(self):
-        entry_str = f"{self.journal_entry}"
-        return (
-            f"{entry_str} - "
-            f"{self.parameter.name}: {self.score}"
-        )
+        return f"Health Sample - {self.assignment} - {self.sampling_date}"
+
+
+class IndividualFishObservation(models.Model):
+    """Records metrics for an individual fish observed during a HealthSamplingEvent."""
+    sampling_event = models.ForeignKey(
+        HealthSamplingEvent, 
+        on_delete=models.CASCADE, 
+        related_name='individual_fish_observations'
+    )
+    fish_identifier = models.PositiveIntegerField(
+        help_text="Sequential identifier for the fish within this sampling event (e.g., 1, 2, 3...)."
+    )
+    length_cm = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Length of the fish in centimeters."
+    )
+    weight_g = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text="Weight of the fish in grams."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('sampling_event', 'fish_identifier')
+        ordering = ['sampling_event', 'fish_identifier']
+        verbose_name = "Individual Fish Observation"
+        verbose_name_plural = "Individual Fish Observations"
+
+    def __str__(self):
+        return f"Fish #{self.fish_identifier} (Event: {self.sampling_event_id})"
+
+
+class FishParameterScore(models.Model):
+    """Stores a specific health parameter score for an IndividualFishObservation."""
+    individual_fish_observation = models.ForeignKey(
+        IndividualFishObservation, 
+        on_delete=models.CASCADE, 
+        related_name='parameter_scores'
+    )
+    parameter = models.ForeignKey(
+        HealthParameter, 
+        on_delete=models.PROTECT, # Protect HealthParameters from being deleted if scored
+        related_name='fish_scores'
+    )
+    score = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score from 1 (Best) to 5 (Worst) for the health parameter."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('individual_fish_observation', 'parameter')
+        ordering = ['individual_fish_observation', 'parameter']
+        verbose_name = "Fish Parameter Score"
+        verbose_name_plural = "Fish Parameter Scores"
+
+    def __str__(self):
+        return f"{self.individual_fish_observation} - {self.parameter.name}: {self.score}"
 
 
 class MortalityReason(models.Model):

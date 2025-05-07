@@ -17,14 +17,14 @@ def get_db_connection():
             host='localhost', 
             port='5432'
         )
-        print("✓ Successfully connected to the database.")
+        print("[OK] Successfully connected to the database.")
         return conn
     except psycopg2.OperationalError as e:
-        print(f"× Error connecting to the database: {e}")
-        print("× Please check your connection details and database status.")
+        print(f"[ERROR] Error connecting to the database: {e}")
+        print("[INFO] Please check your connection details and database status.")
         sys.exit(1)
     except Exception as e:
-        print(f"× Unexpected error: {e}")
+        print(f"[ERROR] Unexpected error: {e}")
         sys.exit(1)
 
 def print_section_header(title):
@@ -192,7 +192,7 @@ def inspect_hypertables(conn):
             print("TimescaleDB extension is not installed in this database.")
             return
         
-        print("✓ TimescaleDB extension is installed.")
+        print("[OK] TimescaleDB extension is installed.")
         
         # Try to query TimescaleDB hypertables - first check if catalog tables exist
         try:

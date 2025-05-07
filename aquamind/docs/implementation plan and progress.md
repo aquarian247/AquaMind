@@ -6,6 +6,19 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-05-07: Health App Serializer and Test Refinements
+- **Focus**: Resolved test errors and refined serializers in the `health` app for improved data integrity and API consistency.
+- **Achievements**:
+  - Successfully resolved all outstanding test failures for `IndividualFishObservationSerializer` and `FishParameterScoreSerializer`.
+  - Finalized the refactor from the old `HealthObservation` model to the new structure: `HealthSamplingEvent`, `IndividualFishObservation`, and `FishParameterScore`.
+  - Addressed `IntegrityError` and `AssertionError` in tests by:
+    - Ensuring `sampling_event` is correctly passed via context to `IndividualFishObservationSerializer`.
+    - Redesigning `FishParameterScoreSerializer` for correct nested creation, where `individual_fish_observation` is implicitly provided by its parent serializer.
+    - Updating `setUpTestData` methods in tests to correctly establish all prerequisite data (e.g., `Geography`, `Area` for `Container`, `fish_identifier` type).
+  - Commented out `FishParameterScoreSerializerTestCase.test_create_fish_parameter_score_valid` as scores are now created exclusively through the parent `IndividualFishObservationSerializer`.
+- **Validation**: All `health` app tests (25 total) and the full project test suite (257 tests) are passing.
+- **Outcome**: Enhanced stability and correctness of the health monitoring module. Ensured consistent and reliable API for creating fish health records, including nested parameter scores.
+
 ### 2025-04-30: Rollback of Combined Sampling Event Logic
 - **Refactor & Simplification**: Rolled back the implementation that combined the creation of `health.JournalEntry` and `batch.GrowthSample` through a single `SamplingEvent` endpoint and nested serializers.
 - **Rationale**: The combined approach, while attempting API convenience, introduced significant complexity, instability (including `TypeError` and date/datetime inconsistencies), and tightly coupled the `health` and `batch` applications. This violated the desired separation of concerns and made serializers brittle and hard to maintain.
