@@ -1,7 +1,11 @@
 from django.db import models
+from django.db.models import Avg, StdDev, Min, Max, Count
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.conf import settings
+from decimal import Decimal
+from django.core.exceptions import ValidationError
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
@@ -94,8 +98,50 @@ class HealthSamplingEvent(models.Model):
     )
     sampling_date = models.DateField(default=timezone.now)
     number_of_fish_sampled = models.PositiveIntegerField(
-        help_text="Total number of individual fish examined in this sampling event."
+        help_text="Target or initially declared number of individual fish to be examined in this sampling event."
     )
+    # New fields for calculated aggregates
+    avg_weight_g = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text="Calculated average weight of sampled fish in grams."
+    )
+    avg_length_cm = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Calculated average length of sampled fish in centimeters."
+    )
+    std_dev_weight_g = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text="Calculated standard deviation of weight for sampled fish."
+    )
+    std_dev_length_cm = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Calculated standard deviation of length for sampled fish."
+    )
+    min_weight_g = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text="Minimum weight recorded in this sample."
+    )
+    max_weight_g = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text="Maximum weight recorded in this sample."
+    )
+    min_length_cm = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Minimum length recorded in this sample."
+    )
+    max_length_cm = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Maximum length recorded in this sample."
+    )
+    avg_k_factor = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        help_text="Calculated average K-factor for fish with both weight and length."
+    )
+    calculated_sample_size = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Actual number of fish with weight measurements in this sample."
+    )
+
     sampled_by = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
@@ -115,6 +161,97 @@ class HealthSamplingEvent(models.Model):
 
     def __str__(self):
         return f"Health Sample - {self.assignment} - {self.sampling_date}"
+
+    def calculate_aggregate_metrics(self):
+        """Calculates and updates aggregate metrics from individual fish observations."""
+        observations = self.individual_fish_observations.all()
+
+        # Filter out observations where weight_g is None for weight-based calculations
+        weight_observations = observations.exclude(weight_g__isnull=True)
+        num_weight_observations = weight_observations.count()
+
+        if num_weight_observations > 0:
+            if num_weight_observations == 1:
+                # Only one observation, StdDev is None or undefined for sample
+                weight_aggregates = weight_observations.aggregate(
+                    avg_weight=Avg('weight_g'),
+                    min_weight=Min('weight_g'),
+                    max_weight=Max('weight_g')
+                )
+                self.avg_weight_g = weight_aggregates['avg_weight']
+                self.std_dev_weight_g = None  # StdDev is None for a single sample point
+                self.min_weight_g = weight_aggregates['min_weight']
+                self.max_weight_g = weight_aggregates['max_weight']
+            else:  # num_weight_observations > 1
+                weight_aggregates = weight_observations.aggregate(
+                    avg_weight=Avg('weight_g'),
+                    std_dev_weight=StdDev('weight_g', sample=True),
+                    min_weight=Min('weight_g'),
+                    max_weight=Max('weight_g')
+                )
+                self.avg_weight_g = weight_aggregates['avg_weight']
+                self.std_dev_weight_g = weight_aggregates.get('std_dev_weight') # .get() is safer
+                self.min_weight_g = weight_aggregates['min_weight']
+                self.max_weight_g = weight_aggregates['max_weight']
+        else:
+            self.avg_weight_g = None
+            self.std_dev_weight_g = None
+            self.min_weight_g = None
+            self.max_weight_g = None
+
+        # Filter out observations where length_cm is None for length-based calculations
+        length_observations = observations.exclude(length_cm__isnull=True)
+        num_length_observations = length_observations.count()
+
+        if num_length_observations > 0:
+            if num_length_observations == 1:
+                # Only one observation, StdDev is None or undefined for sample
+                length_aggregates = length_observations.aggregate(
+                    avg_length=Avg('length_cm'),
+                    min_length=Min('length_cm'),
+                    max_length=Max('length_cm')
+                )
+                self.avg_length_cm = length_aggregates['avg_length']
+                self.std_dev_length_cm = None # StdDev is None for a single sample point
+                self.min_length_cm = length_aggregates['min_length']
+                self.max_length_cm = length_aggregates['max_length']
+            else: # num_length_observations > 1
+                length_aggregates = length_observations.aggregate(
+                    avg_length=Avg('length_cm'),
+                    std_dev_length=StdDev('length_cm', sample=True),
+                    min_length=Min('length_cm'),
+                    max_length=Max('length_cm')
+                )
+                self.avg_length_cm = length_aggregates['avg_length']
+                self.std_dev_length_cm = length_aggregates.get('std_dev_length') # .get() is safer
+                self.min_length_cm = length_aggregates['min_length']
+                self.max_length_cm = length_aggregates['max_length']
+        else:
+            self.avg_length_cm = None
+            self.std_dev_length_cm = None
+            self.min_length_cm = None
+            self.max_length_cm = None
+
+        # K-Factor Calculation & calculated_sample_size definition
+        # K = (weight_g / (length_cm^3)) * 100
+        # Only include observations with both weight and length, and length > 0
+        k_factor_observations = observations.exclude(weight_g__isnull=True).exclude(length_cm__isnull=True).exclude(length_cm=0)
+        self.calculated_sample_size = k_factor_observations.count() # Now based on K-factor valid observations
+        
+        total_k_factor = Decimal('0.0') # Initialize as Decimal
+        # count_k_factor_observations is effectively self.calculated_sample_size now
+        if self.calculated_sample_size > 0:
+            for obs in k_factor_observations:
+                # Redundant check as exclude(length_cm=0) should handle it, but safe
+                if obs.length_cm > 0: 
+                    # Ensure weight_g and length_cm are treated as Decimals
+                    k_factor = (obs.weight_g / (obs.length_cm**3)) * Decimal('100.0')
+                    total_k_factor += k_factor
+            self.avg_k_factor = total_k_factor / Decimal(self.calculated_sample_size)
+        else:
+            self.avg_k_factor = None
+
+        self.save()
 
 
 class IndividualFishObservation(models.Model):
@@ -361,3 +498,87 @@ class SampleType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class HealthLabSample(models.Model):
+    """
+    Represents a lab sample taken from a batch in a specific container
+    at a specific point in time, and its results.
+    """
+    batch_container_assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.PROTECT, # Protect if results are linked
+        related_name='lab_samples',
+        help_text="The specific batch-container assignment active when the sample was taken."
+    )
+    sample_type = models.ForeignKey(
+        SampleType, # Changed from HealthSampleType to match existing model
+        on_delete=models.PROTECT,
+        related_name='lab_samples',
+        help_text="Type of sample taken (e.g., skin mucus, water sample)."
+    )
+    sample_date = models.DateField(
+        help_text="Date the sample was physically taken. Crucial for historical linkage."
+    )
+    date_sent_to_lab = models.DateField(
+        null=True, blank=True,
+        help_text="Date the sample was sent to the laboratory."
+    )
+    date_results_received = models.DateField(
+        null=True, blank=True,
+        help_text="Date the results were received from the laboratory."
+    )
+    lab_reference_id = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text="External reference ID from the laboratory."
+    )
+    findings_summary = models.TextField(
+        null=True, blank=True,
+        help_text="Qualitative summary of the lab findings."
+    )
+    quantitative_results = models.JSONField(
+        null=True, blank=True,
+        help_text="Structured quantitative results (e.g., {'param': 'value', 'unit': 'cfu/ml'})."
+    )
+    attachment = models.FileField(
+        upload_to='health/lab_samples/%Y/%m/',
+        null=True, blank=True,
+        help_text="File attachment for the lab report (e.g., PDF)."
+    )
+    notes = models.TextField(
+        null=True, blank=True,
+        help_text="Additional notes or comments by the veterinarian."
+    )
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True, # User might be deactivated
+        related_name='recorded_lab_samples',
+        help_text="User who recorded this lab sample result."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-sample_date', '-created_at']
+        verbose_name = "Health Lab Sample"
+        verbose_name_plural = "Health Lab Samples"
+
+    def __str__(self):
+        identifier = self.lab_reference_id if self.lab_reference_id else str(self.pk)
+        if self.batch_container_assignment and \
+           self.batch_container_assignment.batch and \
+           self.batch_container_assignment.container:
+            return (f"Sample {identifier} for Batch {self.batch_container_assignment.batch.batch_number} "
+                    f"in Container {self.batch_container_assignment.container.name} on {self.sample_date}")
+        return f"Sample {identifier} on {self.sample_date} (assignment details missing)"
+
+    def clean(self):
+        super().clean()
+        if self.sample_date and self.date_sent_to_lab and self.sample_date > self.date_sent_to_lab:
+            raise ValidationError({'sample_date': "Sample date cannot be after the date sent to lab."})
+        if self.date_sent_to_lab and self.date_results_received and self.date_results_received < self.date_sent_to_lab:
+            raise ValidationError({'date_results_received': "Date results received cannot be before the date sent to lab."})
+
+    def get_attachment_upload_path(instance, filename):
+        """Generate file path for new attachments."""

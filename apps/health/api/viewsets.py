@@ -1,4 +1,7 @@
 from rest_framework import viewsets, permissions, mixins
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
@@ -6,7 +9,8 @@ from apps.health.models import (
     HealthParameter,
     HealthSamplingEvent,
     IndividualFishObservation,
-    FishParameterScore
+    FishParameterScore,
+    HealthLabSample
 )
 from apps.health.api.serializers import (
     JournalEntrySerializer, MortalityReasonSerializer,
@@ -16,7 +20,8 @@ from apps.health.api.serializers import (
     HealthParameterSerializer,
     HealthSamplingEventSerializer,
     IndividualFishObservationSerializer,
-    FishParameterScoreSerializer
+    FishParameterScoreSerializer,
+    HealthLabSampleSerializer
 )
 
 
@@ -89,6 +94,14 @@ class HealthSamplingEventViewSet(viewsets.ModelViewSet):
         else:
             serializer.save()
 
+    @action(detail=True, methods=['post'], url_path='calculate-aggregates')
+    def calculate_aggregates(self, request, pk=None):
+        """Triggers the calculation of aggregate metrics for the sampling event."""
+        sampling_event = self.get_object()
+        sampling_event.calculate_aggregate_metrics() # This method now saves the instance
+        serializer = self.get_serializer(sampling_event)
+        return Response(serializer.data)
+
 class IndividualFishObservationViewSet(viewsets.ModelViewSet):
     """API endpoint for managing Individual Fish Observations."""
     queryset = IndividualFishObservation.objects.select_related('sampling_event').prefetch_related('parameter_scores__parameter').all()
@@ -100,3 +113,32 @@ class FishParameterScoreViewSet(viewsets.ModelViewSet):
     queryset = FishParameterScore.objects.select_related('individual_fish_observation__sampling_event', 'parameter').all()
     serializer_class = FishParameterScoreSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class HealthLabSampleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing Health Lab Samples.
+    Provides CRUD operations and filtering.
+    """
+    queryset = HealthLabSample.objects.select_related(
+        'batch_container_assignment__batch',
+        'batch_container_assignment__container',
+        'sample_type',
+        'recorded_by'
+    ).all()
+    serializer_class = HealthLabSampleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {
+        'batch_container_assignment__batch__id': ['exact'],
+        'batch_container_assignment__container__id': ['exact'],
+        'sample_type__id': ['exact'],
+        'sample_date': ['exact', 'gte', 'lte'], # Allows for exact date, date_after (gte), date_before (lte)
+        'lab_reference_id': ['exact', 'icontains'],
+        'recorded_by__id': ['exact']
+    }
+
+    # The serializer already handles setting 'recorded_by' and resolving 'batch_container_assignment'
+    # during creation, so perform_create might not be needed unless for other side effects.
+
+    # Default ModelViewSet methods (list, create, retrieve, update, partial_update, destroy)
+    # will be used.

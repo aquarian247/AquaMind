@@ -21,6 +21,15 @@ DROP SEQUENCE IF EXISTS sampling_event_id_seq;
 """
 
 
+def conditionally_create_or_drop_sequence(apps, schema_editor, forward=True):
+    if schema_editor.connection.vendor == 'postgresql':
+        if forward:
+            schema_editor.execute(CREATE_SEQUENCE_SQL)
+        else:
+            schema_editor.execute(DROP_SEQUENCE_SQL)
+    # If not postgresql, do nothing (noop)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -28,10 +37,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Only run this operation if the database is PostgreSQL
-        # This adheres to the rule of making migrations SQLite compatible for CI
-        migrations.RunSQL(
-            sql=CREATE_SEQUENCE_SQL,
-            reverse_sql=DROP_SEQUENCE_SQL,
-        ) if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql' else migrations.RunSQL.noop,
+        migrations.RunPython(
+            lambda apps, schema_editor: conditionally_create_or_drop_sequence(apps, schema_editor, forward=True),
+            lambda apps, schema_editor: conditionally_create_or_drop_sequence(apps, schema_editor, forward=False),
+        ),
     ]

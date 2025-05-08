@@ -167,9 +167,16 @@ This document defines the data model for AquaMind, an aquaculture management sys
     - `id`: bigint (PK, auto-increment)
     - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE)
     - `sample_date`: date
-    - `avg_weight_g`: double precision
-    - `avg_length_cm`: double precision (nullable)
     - `sample_size`: integer
+    - `avg_weight_g`: decimal(7, 2) (nullable) # Calculated average weight in grams
+    - `std_deviation_weight`: decimal(7, 2) (nullable) # Calculated standard deviation of weight
+    - `min_weight_g`: decimal(7, 2) (nullable) # Calculated minimum weight
+    - `max_weight_g`: decimal(7, 2) (nullable) # Calculated maximum weight
+    - `avg_length_cm`: decimal(5, 2) (nullable) # Calculated average length in cm
+    - `std_deviation_length`: decimal(5, 2) (nullable) # Calculated standard deviation of length
+    - `min_length_cm`: decimal(5, 2) (nullable) # Calculated minimum length
+    - `max_length_cm`: decimal(5, 2) (nullable) # Calculated maximum length
+    - `condition_factor`: decimal(5, 2) (nullable) # Calculated condition factor (K)
     - `notes`: text (nullable)
     - `created_at`: timestamptz
     - `updated_at`: timestamptz
@@ -298,13 +305,24 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `is_active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`health_healthsamplingevent`** (NEW - Replaces general JournalEntry for structured health data collection)
+- **`health_healthsamplingevent`**
   - `id`: bigint (PK, auto-increment)
   - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
-  - `event_time`: timestamptz
-  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
-  - `event_type`: varchar(100) (e.g., "General Health Check", "Pre-Transfer Check", "Disease Screening")
+  - `sampling_date`: date # Date of the sampling event
+  - `number_of_fish_sampled`: integer # Total number of fish physically sampled in this event
+  - `sampled_by_id`: integer (FK to `users_customuser`, on_delete=SET_NULL, nullable) # User who performed the sampling
   - `notes`: text (nullable)
+  - `avg_weight_g`: decimal(7, 2) (nullable) # Calculated average weight in grams
+  - `std_dev_weight_g`: decimal(7, 2) (nullable) # Calculated standard deviation of weight
+  - `min_weight_g`: decimal(7, 2) (nullable) # Calculated minimum weight
+  - `max_weight_g`: decimal(7, 2) (nullable) # Calculated maximum weight
+  - `avg_length_cm`: decimal(5, 2) (nullable) # Calculated average length in cm
+  - `std_dev_length_cm`: decimal(5, 2) (nullable) # Calculated standard deviation of length
+  - `min_length_cm`: decimal(5, 2) (nullable) # Calculated minimum length
+  - `max_length_cm`: decimal(5, 2) (nullable) # Calculated maximum length
+  - `avg_k_factor`: decimal(5, 2) (nullable) # Calculated average K-factor
+  - `uniformity_percentage`: decimal(5, 2) (nullable) # Calculated uniformity percentage
+  - `calculated_sample_size`: integer (nullable) # Number of fish with complete data for metric calculations
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`health_individualfishobservation`** (NEW - Detailed observation for a single fish within a sampling event)
@@ -364,10 +382,25 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `updated_at`: timestamptz
 - **`health_vaccinationrecord`** (Review: May be a type of Treatment or linked to HealthSamplingEvent)
 - **`health_samplerecord`** (Review: May be covered by HealthSamplingEvent and IndividualFishObservation or relate to lab samples)
+- **`health_healthlabsample`**
+  - `id`: bigint (PK, auto-increment)
+  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=PROTECT)
+  - `sample_type_id`: bigint (FK to `health_sampletype`, on_delete=PROTECT)
+  - `sample_date`: date
+  - `date_sent_to_lab`: date (nullable)
+  - `date_results_received`: date (nullable)
+  - `lab_reference_id`: varchar(100) (nullable)
+  - `findings_summary`: text (nullable)
+  - `quantitative_results`: jsonb (nullable)
+  - `attachment`: FileField (upload_to='health/lab_samples/%Y/%m/')
+  - `notes`: text (nullable)
+  - `recorded_by_id`: bigint (FK to `users_customuser`, on_delete=SET_NULL, nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
 #### Relationships (Inferred `on_delete` where script failed)
 - `batch_batchcontainerassignment` ← `health_healthsamplingevent` (CASCADE)
-- `auth_user` ← `health_healthsamplingevent` (SET_NULL)
+- `users_customuser` ← `health_healthsamplingevent` (SET_NULL)
 - `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE)
 - `health_individualfishobservation` ← `health_fishparameterscore` (CASCADE)
 - `health_healthparameter` ← `health_fishparameterscore` (PROTECT)
@@ -378,6 +411,9 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `health_mortalityreason` ← `health_mortalityrecord` (PROTECT)
 - `health_healthsamplingevent` ← `health_treatment` (CASCADE, if applicable)
 - `batch_batchcontainerassignment` ← `health_treatment` (CASCADE, if applicable)
+- `batch_batchcontainerassignment` ← `health_healthlabsample` (PROTECT)
+- `health_sampletype` ← `health_healthlabsample` (PROTECT)
+- `users_customuser` ← `health_healthlabsample` (SET_NULL)
 
 ### 3.5 Environmental Monitoring (`environmental` app)
 **Purpose**: Captures time-series data for environmental conditions.
@@ -512,62 +548,3 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **TimescaleDB Setup**: Ensure `timescaledb` extension is enabled. Use Django migrations (potentially with `RunSQL`) or manual commands (`SELECT create_hypertable(...)`) to manage hypertables.
 - **Calculated Fields**: Fields like `batch_batchcontainerassignment.biomass_kg` are calculated in the application logic (e.g., model `save()` method or serializers), not stored directly unless denormalized.
 - **User Profile**: Access extended user information via `user.userprofile`. Geography is linked via FK, subsidiary requires clarification (FK or CharField?).
-
-### `health_healthparameter`
-
-Represents quantifiable health parameters measured during observations.
-
-| Field                 | Type              | Null | Default | Unique | Description                                      |
-|-----------------------|-------------------|------|---------|--------|--------------------------------------------------|
-| `id`                  | `bigserial` (PK)  |      |         |        | Unique identifier for the health parameter.      |
-| `name`                | `varchar(100)`    |      |         | ✓      | Unique name of the health parameter.             |
-| `description_score_1` | `text`            |      |         |        | Description of the parameter condition for score 1. |
-| `description_score_2` | `text`            |      |         |        | Description of the parameter condition for score 2. |
-| `description_score_3` | `text`            |      |         |        | Description of the parameter condition for score 3. |
-| `description_score_4` | `text`            |      |         |        | Description of the parameter condition for score 4. |
-| `description_score_5` | `text`            | ✓    | `''`    |        | Description of the parameter condition for score 5. |
-| `is_active`           | `boolean`         |      | `true`  |        | Indicates if the parameter is currently in use.  |
-
-### `health_healthobservation`
-
-Records a specific health parameter score for a journal entry.
-
-| Field             | Type              | Null | Default | Unique | Description                                                        |
-|-------------------|-------------------|------|---------|--------|--------------------------------------------------------------------|
-| `id`              | `bigserial` (PK)  |      |         |        | Unique identifier for the health observation.                      |
-| `journal_entry`   | `bigint` (FK)     |      |         |        | Reference to the journal entry (`health_journalentry.id`).       |
-| `parameter`       | `bigint` (FK)     |      |         |        | Reference to the health parameter (`health_healthparameter.id`). |
-| `score`           | `integer`         |      |         |        | Score assigned (1-5, validated by model).                          |
-| `fish_identifier` | `varchar(100)`    | ✓    |         |        | Optional identifier for a specific fish within a sample/batch.     |
-| `created_at`      | `timestamptz`     |      | `now()` |        | Timestamp when the observation was created.                      |
-| `updated_at`      | `timestamptz`     |      | `now()` |        | Timestamp when the observation was last updated.                 |
-
-*Note: The previous `unique_together` constraint on `journal_entry` and `parameter` has been removed to allow multiple observations of the same parameter within a single journal entry (e.g., for different individual fish).* 
-
-### `batch_growthsample`
-
-Stores growth sample data for a batch within a specific container assignment.
-*Note: Growth Samples are created and managed independently via the `/api/v1/batch/growth-samples/` endpoint.*
-
-| Field                  | Type                 | Null | Default | Unique | Description                                                                                                                             |
-|------------------------|----------------------|------|---------|--------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `id`                   | `bigserial` (PK)     |      |         |        | Unique identifier for the growth sample.                                                                                              |
-| `assignment`           | `bigint` (FK)        |      |         |        | Reference to the batch container assignment (`batch_batchcontainerassignment.id`).                                                     |
-| `sample_date`          | `date`               |      |         |        | Date the sample was taken.                                                                                                              |
-| `sample_size`          | `integer`            |      |         |        | Number of fish sampled. Must be <= population count in the assignment.                                                                  |
-| `avg_weight_g`         | `decimal(10, 2)`     | ✓    |         |        | Average weight in grams. Calculated from `individual_weights` if provided via serializer, otherwise stores manually entered value.      |
-| `std_deviation_weight` | `decimal(10, 2)`     | ✓    |         |        | Standard deviation of weight in grams. Calculated from `individual_weights` if provided via serializer, otherwise stores manually entered value. |
-| `min_weight_g`         | `decimal(10, 2)`     | ✓    |         |        | Minimum weight observed in the sample.                                                                                                  |
-| `max_weight_g`         | `decimal(10, 2)`     | ✓    |         |        | Maximum weight observed in the sample.                                                                                                  |
-| `avg_length_cm`        | `decimal(10, 2)`     | ✓    |         |        | Average length in centimeters. Calculated from `individual_lengths` if provided via serializer, otherwise stores manually entered value.     |
-| `std_deviation_length` | `decimal(10, 2)`     | ✓    |         |        | Standard deviation of length in centimeters. Calculated from `individual_lengths` if provided via serializer, otherwise stores manually entered value.|
-| `min_length_cm`        | `decimal(10, 2)`     | ✓    |         |        | Minimum length observed in the sample.                                                                                                  |
-| `max_length_cm`        | `decimal(10, 2)`     | ✓    |         |        | Maximum length observed in the sample.                                                                                                  |
-| `condition_factor`     | `decimal(10, 2)`     | ✓    |         |        | Condition Factor (K). Calculated from average weight/length, or average of individual K-factors if both lists provided via serializer. |
-| `notes`                | `text`               | ✓    |         |        | Additional notes about the sample.                                                                                                      |
-| `created_at`           | `timestamptz`        |      | `now()` |        | Timestamp when the sample record was created.                                                                                           |
-| `updated_at`           | `timestamptz`        |      | `now()` |        | Timestamp when the sample record was last updated.                                                                                      |
-
-## 5. Relationship Clarifications
-
-*(Section intentionally left blank after removal of obsolete content)*

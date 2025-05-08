@@ -76,7 +76,7 @@ class BatchContainerAssignmentAdmin(admin.ModelAdmin):
             'fields': ('population_count', 'biomass_kg')
         }),
         ('Additional Information', {
-            'fields': ('notes', 'transferred_in', 'transferred_out', 'created_at', 'updated_at')
+            'fields': ('notes', 'created_at', 'updated_at')
         }),
     )
 

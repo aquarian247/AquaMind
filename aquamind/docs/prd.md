@@ -123,13 +123,42 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Historical stock levels are available in a time-series chart.
 
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
-- **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations and quantified health metrics.
+- **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations, general health logging, and quantified health/growth metrics.
 - **Functionality**:
-  - The system shall track health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination.
-  - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, potentially `health_vaccinationrecord` (all linked back to `health_journalentry`).
-  - Veterinarians (`users_userprofile.role == 'Veterinarian'`) shall be able to log journal entries (`health_journalentry`) with pictures and videos attached (via a separate Media model with generic relations) and quantify health parameters on a 1-to-5 scale (1 being best, 5 being worst) using the defined `health_healthparameter` and `health_healthobservation` models.
-  - Quantifiable health parameters shall include:
-    - Gill Health: Assesses gill condition (e.g., mucus, lesions).
+  - **General Health Journaling**:
+    - The system shall track general health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination.
+    - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, `health_vaccinationrecord` (all typically linked back to a `health_journalentry`).
+    - Veterinarians and authorized personnel (`users_userprofile.role`) shall be able to log `health_journalentry` records with rich text notes, and optionally attach pictures and videos (via a separate Media model or generic relations).
+    - For `health_journalentry` of type 'Observation', users can record scores for predefined `health_healthparameter`s using the `health_healthobservation` model, linking the journal entry to a parameter with a score (e.g., 1-5 scale).
+
+  - **Detailed Health Sampling & Growth Metrics**:
+    - The system shall support creation of `health_healthsamplingevent` records, each representing a specific, detailed sampling session for a `batch_batchcontainerassignment`.
+    - Each `HealthSamplingEvent` can have multiple associated `health_individualfishobservation` records, capturing data for each fish sampled (e.g., weight, length, visual abnormalities, and specific parameter scores).
+    - For each `IndividualFishObservation`, users can record scores for predefined `health_healthparameter`s (e.g., Gill Condition, Skin Condition) using the `health_fishparameterscore` model, linking the individual fish's observation to a parameter with a score (1-5 scale).
+    - Based on the collection of `IndividualFishObservation` data within a `HealthSamplingEvent`, the system shall automatically calculate and store the following aggregate growth metrics on the `HealthSamplingEvent` itself:
+      - `avg_weight_g`, `std_dev_weight_g`, `min_weight_g`, `max_weight_g`
+      - `avg_length_cm`, `std_dev_length_cm`, `min_length_cm`, `max_length_cm`
+      - `avg_k_factor` (Condition Factor)
+      - `uniformity_percentage` (based on Coefficient of Variation of weight)
+      - `calculated_sample_size` (number of fish used for K-factor and other specific calculations, based on data completeness).
+
+  - **Biological Laboratory Sampling**:
+    - The system shall support recording of biological laboratory samples via the `health_healthlabsample` model.
+    - Each `health_healthlabsample` record links to a `batch_batchcontainerassignment` and a `health_sampletype`.
+    - Key information tracked includes:
+      - `sample_date`: Date sample was physically taken.
+      - `date_sent_to_lab`: Date sample sent to the lab.
+      - `date_results_received`: Date lab results were received.
+      - `lab_reference_id`: External ID from the lab for tracking.
+      - `findings_summary`: Qualitative summary of results.
+      - `quantitative_results`: Structured JSON for detailed quantitative data (e.g., pathogen loads, cell counts).
+      - `attachment`: Ability to upload the lab report (e.g., PDF).
+      - `notes`: Additional comments by the veterinarian or staff.
+      - `recorded_by`: User who recorded the lab sample results.
+    - This allows for comprehensive tracking of diagnostic tests and external lab analyses, supplementing the on-site health monitoring.
+
+  - **Common Health Parameters** (applicable to both `HealthObservation` and `FishParameterScore` contexts):
+    - Gill Condition: Evaluates gill health.
     - Eye Condition: Evaluates eye clarity and damage.
     - Wounds: Measures skin lesions and severity.
     - Fin Condition: Assesses fin erosion or damage.
@@ -138,30 +167,43 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Appetite: Assesses feeding response.
     - Mucous Membrane Condition: Evaluates mucus layer on skin.
     - Color/Pigmentation: Monitors abnormal color changes.
-  - Health scores for these parameters shall be stored using the `health_healthobservation` model, linking a `health_journalentry` to a `health_healthparameter` with a score (1-5).
-  - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`, average health scores over time).
+
+  - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`, average health scores from `health_healthobservation` and `health_fishparameterscore`, and trends in calculated growth metrics from `HealthSamplingEvent`).
   - The system shall support predefined categories via `health_mortalityreason`, `health_vaccinationtype`, `health_sampletype`.
 - **Behavior**:
-  - Health records (`health_journalentry` and related tables) shall be timestamped (`created_at`, `updated_at`) and treated as immutable once finalized.
-  - Pictures and videos shall be uploaded with a maximum file size of 50MB enforced.
-  - Trends, including average health scores for each parameter, shall be visualized on a dashboard with filtering by batch (`batch_batch`), container (`infrastructure_container`), or time range.
-  - Entries are linked to the user who created them via `health_journalentry.created_by_id` (FK to `auth_user`).
-- **Justification**: Enables proactive health management through standardized, quantifiable assessments, supports regulatory compliance, and improves batch outcomes.
-- **User Story**: As a Veterinarian, I want to log a health observation (`health_journalentry`) with pictures, videos, and quantified health scores so that I can document conditions for a specific batch assignment (`batch_batchcontainerassignment`).
+  - Users can create, view, update, and delete `health_journalentry` records and their associated details (lice counts, mortality, treatments) via dedicated API endpoints.
+  - Users can create, view, update, and delete `HealthSamplingEvent` records and their associated `IndividualFishObservation` and `FishParameterScore` data via dedicated API endpoints.
+  - Calculation of aggregate metrics on `HealthSamplingEvent` occurs automatically upon saving or via a dedicated API action.
+  - Health data (both journal entries and sampling events) shall be filterable by batch, container, date range, and specific health parameters or metric thresholds.
+  - Pictures and videos attached to journal entries shall be uploaded with a maximum file size of 50MB enforced.
+  - Entries are linked to the user who created them (e.g., `health_journalentry.created_by_id`, `HealthSamplingEvent.created_by_id`).
+
+- **User Story (General Health Logging)**: As a Veterinarian, I want to log a health observation in the `health_journalentry` with pictures, videos, and quantified health scores (using `health_healthobservation`) for multiple parameters, so that I can document general conditions for a specific batch assignment.
   - **Acceptance Criteria**:
-    - The UI allows users with appropriate permissions to create a `health_journalentry` linked to a `batch_batchcontainerassignment`.
+    - The UI allows creating a `health_journalentry` linked to a `batch_batchcontainerassignment`.
     - Users can attach text, pictures, and videos.
-    - Uploaded media is linked to the journal entry and viewable in the UI.
-    - File uploads are validated for size (≤50MB) and allowed formats.
-    - The UI provides dropdowns to score health parameters (e.g., gill health, eye condition) on a 1-to-5 scale.
-    - Health scores are saved correctly using the `health_healthobservation` model.
-    - The entry is automatically linked to the logged-in user (`created_by_id`).
-- **User Story**: As a Manager, I want to view health trends for a batch (`batch_batch`) so that I can identify potential issues.
+    - UI provides dropdowns/inputs to score general health parameters for the batch (via `health_healthobservation`).
+
+- **User Story (Detailed Sampling & Growth Metrics)**: As a Veterinarian or Farm Manager, I want to record detailed observations for individual fish during a health check via a `HealthSamplingEvent`, including their weight and length, and see automatically calculated growth metrics like average weight, average length, K-factor, and uniformity for the sampled group, so I can accurately assess the batch's condition and growth performance.
   - **Acceptance Criteria**:
-    - The UI displays trends (e.g., mortality rate aggregated from `health_mortalityrecord`, avg lice counts from `health_licecount`, average health scores for each parameter) in a chart format.
+    - I can create a `HealthSamplingEvent` for a specific batch in a container.
+    - For this event, I can add multiple `IndividualFishObservation` records, inputting weight (g) and length (cm) for each fish, and optionally score specific parameters per fish using `health_fishparameterscore`.
+    - Upon saving the event or triggering a calculation, the system displays the `avg_weight_g`, `std_dev_weight_g`, `avg_length_cm`, `std_dev_length_cm`, `avg_k_factor`, and `uniformity_percentage` for the `HealthSamplingEvent`.
+    - The `calculated_sample_size` correctly reflects how many fish had sufficient data for these calculations.
+    - These calculated metrics are available via the API when retrieving a `HealthSamplingEvent`.
+
+- **User Story (Lab Sampling)**: As a Veterinarian or Farm Manager, I want to record lab samples (`health_healthlabsample`) for a batch, including the date sent to the lab and the lab's findings, so that I can track diagnostic results and integrate them into the batch's health record.
+  - **Acceptance Criteria**:
+    - I can create a `health_healthlabsample` record for a specific batch assignment.
+    - I can input the sample date, date sent to the lab, and date results were received.
+    - I can upload the lab report (e.g., PDF) and add notes.
+    - The system links the lab sample to the batch assignment and displays it in the batch's health record.
+
+- **User Story (Trend Analysis)**: As a Manager, I want to view health trends for a batch, including mortality rates, average lice counts, average general health scores, and growth metric trends (K-factor, average weight from `HealthSamplingEvent`), so that I can identify potential issues and track performance.
+  - **Acceptance Criteria**:
+    - The UI displays trends in chart format for the selected metrics.
     - Users can filter trends by batch, container, or date range.
-    - Alerts are generated for trends exceeding configurable thresholds (e.g., weekly mortality rate > 5%, avg gill health score > 3).
-    - Detailed health records (`health_journalentry`), including media and health scores, are accessible directly from the trend view.
+    - Alerts can be configured for trends exceeding defined thresholds.
 
 #### 3.1.5 Environmental Monitoring (`environmental` app)
 - **Purpose**: To monitor environmental conditions in real-time using TimescaleDB hypertables, ensuring optimal conditions for fish batches.

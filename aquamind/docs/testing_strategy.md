@@ -183,14 +183,24 @@ python manage.py test --tag=slow
 
 ## 8. Continuous Integration Setup
 
-AquaMind uses GitHub Actions for CI/CD with the following workflow:
+AquaMind uses GitHub Actions for CI/CD. The primary testing workflow (defined in `.github/workflows/django-tests.yml`) involves the following:
 
-1. **Testing**: Run test suite on every push and pull request
-2. **Linting**: Check code style with flake8
-3. **Security Scanning**: Scan dependencies for vulnerabilities
-4. **Deployment**: Deploy to staging/production after tests pass
+1.  **Testing Environment**: 
+    *   Tests are executed against a **PostgreSQL** database service (using a `timescale/timescaledb` Docker image).
+    *   The Django settings file `scripts/testing/test_settings.py` is used, which configures the connection to this PostgreSQL service.
+    *   Within these settings, `TIMESCALE_ENABLED = False` is typically set to run tests against a standard PostgreSQL setup without relying on active TimescaleDB-specific database features during most automated tests.
+2.  **Test Execution**: The test suite is run on every push and pull request to the `main` and `develop` branches.
+3.  **Linting**: Code style is checked using flake8.
+4.  **Security Scanning**: Dependencies are scanned for vulnerabilities (if configured).
+5.  **Deployment**: Code is deployed to staging or production environments after tests pass.
 
-See the workflows in the `.github/workflows` directory for detailed configuration.
+For detailed CI configuration, refer to the workflow files in the `.github/workflows` directory.
+
+**Note on Local Testing vs. CI**: While the CI pipeline uses PostgreSQL, faster local testing can be performed using SQLite. This can be achieved by:
+*   Using the `run_tests.sh` script (which utilizes `aquamind/test_settings.py` configured for a file-based SQLite database).
+*   Directly invoking `python manage.py test --settings=aquamind.settings_ci.py` (which uses `aquamind/settings_ci.py` configured for an in-memory SQLite database).
+
+It's important to ensure that code (especially migrations) is compatible with both PostgreSQL (for CI and production) and SQLite (for local testing flexibility).
 
 ## 9. Test Troubleshooting
 

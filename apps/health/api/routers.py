@@ -1,13 +1,13 @@
 from rest_framework.routers import DefaultRouter
 
-from apps.health.api.viewsets import (
+from .viewsets import (
     JournalEntryViewSet, MortalityReasonViewSet, MortalityRecordViewSet,
     LiceCountViewSet, VaccinationTypeViewSet, TreatmentViewSet,
     SampleTypeViewSet, HealthParameterViewSet,
-    # New viewsets for health sampling
     HealthSamplingEventViewSet,
     IndividualFishObservationViewSet,
-    FishParameterScoreViewSet
+    FishParameterScoreViewSet,
+    HealthLabSampleViewSet
 )
 
 router = DefaultRouter()
@@ -24,3 +24,4 @@ router.register(r'health-parameters', HealthParameterViewSet)
 router.register(r'health-sampling-events', HealthSamplingEventViewSet, basename='healthsamplingevent')
 router.register(r'individual-fish-observations', IndividualFishObservationViewSet, basename='individualfishobservation')
 router.register(r'fish-parameter-scores', FishParameterScoreViewSet, basename='fishparameterscore')
+router.register(r'health-lab-samples', HealthLabSampleViewSet, basename='healthlabsample')

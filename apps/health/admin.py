@@ -6,8 +6,11 @@ from .models import (
     HealthParameter,
     HealthSamplingEvent,
     IndividualFishObservation,
-    FishParameterScore
+    FishParameterScore,
+    HealthLabSample, BatchContainerAssignment # Added import
 )
+
+from django import forms
 
 @admin.register(JournalEntry)
 class JournalEntryAdmin(admin.ModelAdmin):
@@ -95,12 +98,43 @@ class FishParameterScoreInline(admin.TabularInline):
 
 @admin.register(HealthSamplingEvent)
 class HealthSamplingEventAdmin(admin.ModelAdmin):
-    list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'sampled_by', 'created_at')
+    list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'calculated_sample_size', 'avg_weight_g', 'avg_length_cm', 'avg_k_factor', 'sampled_by', 'created_at')
     list_filter = ('sampling_date', 'sampled_by', 'assignment__batch__batch_number', 'assignment__container__name')
     search_fields = ('notes', 'sampled_by__username', 'assignment__batch__batch_number', 'assignment__container__name')
     autocomplete_fields = ['assignment', 'sampled_by']
     inlines = [IndividualFishObservationInline]
     date_hierarchy = 'sampling_date'
+    readonly_fields = (
+        'created_at', 'updated_at', 
+        'avg_weight_g', 'avg_length_cm', 'std_dev_weight_g', 'std_dev_length_cm',
+        'min_weight_g', 'max_weight_g', 'min_length_cm', 'max_length_cm',
+        'avg_k_factor', 'calculated_sample_size'
+    )
+
+    fieldsets = (
+        (None, {
+            'fields': ('assignment', 'sampling_date', 'number_of_fish_sampled', 'sampled_by', 'notes')
+        }),
+        ('Calculated Growth Metrics', {
+            'fields': (
+                'calculated_sample_size', 'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
+                'avg_length_cm', 'std_dev_length_cm', 'min_length_cm', 'max_length_cm',
+                'avg_k_factor'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Audit', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
+    def save_model(self, request, obj, form, change):
+        """Override to trigger metric calculation after saving the event and its inlines."""
+        super().save_model(request, obj, form, change)  # Save the object and inlines first
+        # After saving, the obj (HealthSamplingEvent) has an ID and related observations are committed.
+        # Now, calculate and save the aggregate metrics.
+        obj.calculate_aggregate_metrics() # This method now saves the instance
 
 @admin.register(IndividualFishObservation)
 class IndividualFishObservationAdmin(admin.ModelAdmin):
@@ -121,3 +155,96 @@ class FishParameterScoreAdmin(admin.ModelAdmin):
     list_filter = ('parameter', 'score', 'individual_fish_observation__sampling_event__sampling_date')
     search_fields = ('individual_fish_observation__fish_identifier', 'parameter__name')
     autocomplete_fields = ['individual_fish_observation', 'parameter']
+
+class HealthLabSampleForm(forms.ModelForm):
+    class Meta:
+        model = HealthLabSample
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['batch_container_assignment'].widget = forms.Select()
+        self.fields['batch_container_assignment'].queryset = BatchContainerAssignment.objects.select_related('batch', 'container').all()
+        self.fields['batch_container_assignment'].label_from_instance = self.batch_container_assignment_label
+        self.fields['sample_type'].widget = forms.Select()
+        self.fields['sample_type'].queryset = SampleType.objects.all()
+
+    def batch_container_assignment_label(self, obj):
+        batch_number = obj.batch.batch_number if obj.batch else 'N/A'
+        container_name = obj.container.name if obj.container else 'N/A'
+        return f"Batch: {batch_number} - Container: {container_name}"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        sample_date = cleaned_data.get('sample_date')
+        date_sent_to_lab = cleaned_data.get('date_sent_to_lab')
+        date_results_received = cleaned_data.get('date_results_received')
+
+        if sample_date and date_sent_to_lab and sample_date > date_sent_to_lab:
+            self.add_error('sample_date', "Sample date cannot be after the date sent to lab.")
+        if date_sent_to_lab and date_results_received and date_results_received < date_sent_to_lab:
+            self.add_error('date_results_received', "Date results received cannot be before the date sent to lab.")
+
+        return cleaned_data
+
+@admin.register(HealthLabSample)
+class HealthLabSampleAdmin(admin.ModelAdmin):
+    list_display = (
+        'sample_date',
+        'batch_container_assignment_info',
+        'sample_type',
+        'lab_reference_id',
+        'date_results_received',
+        'recorded_by',
+        'created_at'
+    )
+    list_filter = ('sample_date', 'sample_type', 'date_results_received', 'recorded_by')
+    search_fields = (
+        'batch_container_assignment__batch__batch_number',
+        'batch_container_assignment__container__name',
+        'sample_type__name',
+        'lab_reference_id',
+        'findings_summary',
+        'notes'
+    )
+    readonly_fields = ('created_at', 'updated_at')  # recorded_by will be set in save_model
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'batch_container_assignment',
+                'sample_type',
+                'sample_date',
+            )
+        }),
+        ('Lab Details', {
+            'fields': (
+                'date_sent_to_lab',
+                'date_results_received',
+                'lab_reference_id',
+                'attachment'
+            )
+        }),
+        ('Results', {
+            'fields': ('findings_summary', 'quantitative_results', 'notes')
+        }),
+        ('Audit', {
+            'fields': ('recorded_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    form = HealthLabSampleForm
+
+    def batch_container_assignment_info(self, obj):
+        if obj.batch_container_assignment:
+            batch = obj.batch_container_assignment.batch
+            container = obj.batch_container_assignment.container
+            return f"Batch: {batch.batch_number if batch else 'N/A'} - Container: {container.name if container else 'N/A'}"
+        return "N/A"
+    batch_container_assignment_info.short_description = "Batch & Container"
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:  # if creating new object
+            obj.recorded_by = request.user
+        super().save_model(request, obj, form, change)

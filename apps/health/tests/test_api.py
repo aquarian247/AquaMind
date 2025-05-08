@@ -3,17 +3,20 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth import get_user_model
 import unittest
-import decimal
+import decimal # Renamed from 'decimal' to 'py_decimal' to avoid conflict if any model field is named 'decimal'
 from django.utils import timezone
-from datetime import date, datetime
+from datetime import date, datetime # Added datetime
 
 from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssignment
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
-    VaccinationType, Treatment, SampleType,
-    HealthParameter
+    VaccinationType, Treatment, SampleType, HealthParameter,
+    HealthSamplingEvent,  # Added
+    IndividualFishObservation, # Added
+    HealthLabSample # Add HealthLabSample to imports
 )
+from apps.health.api.serializers import HealthSamplingEventSerializer # Added for direct serializer tests if needed
 
 User = get_user_model()
 
@@ -123,13 +126,14 @@ class HealthAPITestCase(APITestCase):
 
         try:
             # Create BatchContainerAssignment for testing
-            self.assignment = BatchContainerAssignment.objects.create(
+            self.batch_container_assignment = BatchContainerAssignment.objects.create(
                 batch=self.batch,
                 container=self.container,
-                assignment_date='2023-01-15',
+                assignment_date='2023-01-01',  # Changed to be before sample date in test
                 population_count=self.batch.population_count, # Initial population
                 biomass_kg=self.batch.biomass_kg, # Initial biomass
-                lifecycle_stage=self.lifecycle_stage # Initial lifecycle stage
+                lifecycle_stage=self.lifecycle_stage, # Initial lifecycle stage
+                is_active=True
             )
             print("BatchContainerAssignment created successfully")
         except Exception as e:
@@ -155,6 +159,14 @@ class HealthAPITestCase(APITestCase):
             print("Health Parameters created successfully")
         except Exception as e:
             print(f"Error creating Health Parameters: {e}")
+            raise
+
+        try:
+            # Create a SampleType for testing lab samples
+            self.tissue_sample_type = SampleType.objects.create(name='Tissue Sample', description='A sample of fish tissue for analysis.')
+            print("SampleType created successfully")
+        except Exception as e:
+            print(f"Error creating SampleType: {e}")
             raise
 
         try:
@@ -377,64 +389,167 @@ class HealthAPITestCase(APITestCase):
         # If health_observations is present, it should be empty. If not present, that's also acceptable.
         self.assertNotIn('health_observations', response_no_obs.data, "'health_observations' should not be present or should be empty.")
 
-    # def test_journal_entry_create_with_observations(self):
-    #     """Test creating a journal entry with nested observations via API."""
-    #     url = self.get_api_url('health', 'journal-entries')
-    #     observations_input = [
-    #         {'parameter': self.gill_health_param.id, 'score': 3},
-    #         {'parameter': self.eye_condition_param.id, 'score': 2}
-    #     ]
-    #     data_with_obs = {
-    #         'batch': self.batch.id,
-    #         'container': self.container.id,
-    #         'category': 'observation',
-    #         'severity': 'low',
-    #         'description': 'Routine check with observations',
-    #         'health_observations_write': observations_input
-    #     }
-    #     response_with_obs = self.client.post(url, data_with_obs, format='json')
-    #     self.assertEqual(response_with_obs.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response_with_obs.data['category'], 'observation')
-    #     self.assertEqual(response_with_obs.data['description'], 'Routine check with observations')
-    #     self.assertEqual(len(response_with_obs.data['health_observations']), 2)
-    #     # Check that the correct observations were created by looking at parameter names
-    #     # Access parameter name via 'parameter_name' field from HealthObservationSerializer output
-    #     obs_params = {obs['parameter_name'] for obs in response_with_obs.data['health_observations']}
-    #     self.assertEqual(obs_params, {self.gill_health_param.name, self.eye_condition_param.name})
+    # --- Tests for HealthSamplingEvent API --- #
 
-    # def test_journal_entry_update_with_observations(self):
-    #     # Create an entry first
-    #     entry = JournalEntry.objects.create(
-    #         batch=self.batch, user=self.user, category='issue', description='Initial issue'
-    #     )
-    #     # Add initial observations
-    #     # HealthObservation.objects.create(journal_entry=entry, parameter=self.gill_health_param, score=1)
-    #     # self.assertEqual(entry.health_observations.count(), 1)
+    def test_create_health_sampling_event(self):
+        """Test creating a HealthSamplingEvent with nested IndividualFishObservations."""
+        url = self.get_api_url('health', 'health-sampling-events')
+        event_data = {
+            'assignment': self.batch_container_assignment.id,
+            'sampling_date': date.today().isoformat(),
+            'number_of_fish_sampled': 2,
+            'sampled_by': self.user.id,
+            'notes': 'API creation test',
+            'individual_fish_observations': [
+                {'fish_identifier': 1, 'weight_g': 100.5, 'length_cm': 10.2},
+                {'fish_identifier': 2, 'weight_g': 120.0, 'length_cm': 11.5}
+            ]
+        }
+        response = self.client.post(url, event_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(HealthSamplingEvent.objects.count(), 1)
+        self.assertEqual(IndividualFishObservation.objects.count(), 2)
+        event_id = response.data['id']
+        created_event = HealthSamplingEvent.objects.get(pk=event_id)
+        self.assertEqual(created_event.notes, 'API creation test')
+        self.assertEqual(created_event.individual_fish_observations.count(), 2)
+        # Aggregate fields should be None initially as calculate-aggregates is not auto-called on API create
+        self.assertIsNone(response.data.get('avg_weight_g'))
 
-    #     url = self.get_api_url('health', 'journal-entries', detail=True, pk=entry.pk)
-    #     # New observations to replace existing
-    #     new_observations = [
-    #         {'parameter': self.eye_condition_param.id, 'score': 4}
-    #     ]
-    #     update_data = {
-    #         'description': 'Updated issue, different obs',
-    #         'health_observations_write': new_observations
-    #     }
-    #     response = self.client.patch(url, update_data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data['description'], 'Updated issue, different obs')
-    #     self.assertEqual(len(response.data['health_observations']), 1)
-    #     self.assertEqual(response.data['health_observations'][0]['parameter_name'], self.eye_condition_param.name)
-    #     self.assertEqual(response.data['health_observations'][0]['score'], 4)
+    def test_calculate_aggregates_action(self):
+        """Test the calculate-aggregates action on HealthSamplingEventViewSet."""
+        event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date.today(),
+            sampled_by=self.user,
+            number_of_fish_sampled=2
+        )
+        IndividualFishObservation.objects.create(sampling_event=event, fish_identifier=1, weight_g=decimal.Decimal('100.0'), length_cm=decimal.Decimal('10.0'))
+        IndividualFishObservation.objects.create(sampling_event=event, fish_identifier=2, weight_g=decimal.Decimal('120.0'), length_cm=decimal.Decimal('12.0'))
 
-    #     # Verify DB state
-    #     entry.refresh_from_db()
-    #     self.assertEqual(entry.health_observations.count(), 1)
-    #     self.assertEqual(entry.health_observations.first().parameter.name, 'Eye Condition')
-    #     self.assertEqual(entry.health_observations.first().score, 4)
+        action_url = f'/api/v1/health/health-sampling-events/{event.pk}/calculate-aggregates/'
+        response = self.client.post(action_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check response data
+        self.assertIsNotNone(response.data.get('avg_weight_g'))
+        self.assertEqual(decimal.Decimal(response.data['avg_weight_g']), decimal.Decimal('110.0'))
+        self.assertEqual(decimal.Decimal(response.data['avg_length_cm']), decimal.Decimal('11.0'))
+        self.assertEqual(response.data['calculated_sample_size'], 2)
+
+        # Check database
+        event.refresh_from_db()
+        self.assertEqual(event.avg_weight_g, decimal.Decimal('110.0'))
+        self.assertEqual(event.avg_length_cm, decimal.Decimal('11.0'))
+        self.assertEqual(event.calculated_sample_size, 2)
+
+    def test_calculate_aggregates_action_unauthenticated(self):
+        """Test unauthenticated access to calculate-aggregates action."""
+        event = HealthSamplingEvent.objects.create(assignment=self.batch_container_assignment, sampling_date=date.today(), number_of_fish_sampled=0)
+        self.client.logout()
+        action_url = f'/api/v1/health/health-sampling-events/{event.pk}/calculate-aggregates/'
+        response = self.client.post(action_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_calculate_aggregates_action_not_found(self):
+        """Test calculate-aggregates action with a non-existent event ID."""
+        action_url = f'/api/v1/health/health-sampling-events/99999/calculate-aggregates/'
+        response = self.client.post(action_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_health_sampling_event_retrieve_shows_aggregates(self):
+        """Test that aggregate fields are present in single event retrieval after calculation."""
+        event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date.today(),
+            sampled_by=self.user,
+            number_of_fish_sampled=1
+        )
+        IndividualFishObservation.objects.create(sampling_event=event, fish_identifier=1, weight_g=decimal.Decimal('50.0'), length_cm=decimal.Decimal('5.0'))
+        event.calculate_aggregate_metrics() # Calculate and save metrics directly for this test setup
+
+        retrieve_url = self.get_api_url('health', 'health-sampling-events', detail=True, pk=event.pk)
+        response = self.client.get(retrieve_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('avg_weight_g', response.data)
+        self.assertEqual(decimal.Decimal(response.data['avg_weight_g']), decimal.Decimal('50.0'))
+        self.assertIn('calculated_sample_size', response.data)
+        self.assertEqual(response.data['calculated_sample_size'], 1)
+        # Check for all new aggregate fields
+        for field in HealthSamplingEventSerializer.Meta.read_only_fields:
+            if field not in ['id', 'sampled_by_details', 'assignment_details', 'individual_fish_observations']:
+                 self.assertIn(field, response.data)
+
+    def test_health_sampling_event_list_shows_aggregates(self):
+        """Test that aggregate fields are present in event list after calculation."""
+        event = HealthSamplingEvent.objects.create(
+            assignment=self.batch_container_assignment,
+            sampling_date=date.today(),
+            sampled_by=self.user,
+            number_of_fish_sampled=1
+        )
+        IndividualFishObservation.objects.create(sampling_event=event, fish_identifier=1, weight_g=decimal.Decimal('60.0'), length_cm=decimal.Decimal('6.0'))
+        event.calculate_aggregate_metrics() # Calculate and save metrics
+
+        list_url = self.get_api_url('health', 'health-sampling-events')
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(response.data['results']), 0)
+        event_data_from_list = response.data['results'][0] # Assuming it's the first/only one
+        self.assertIn('avg_weight_g', event_data_from_list)
+        self.assertEqual(decimal.Decimal(event_data_from_list['avg_weight_g']), decimal.Decimal('60.0'))
+        # Check for all new aggregate fields
+        for field in HealthSamplingEventSerializer.Meta.read_only_fields:
+            if field not in ['id', 'sampled_by_details', 'assignment_details', 'individual_fish_observations']:
+                self.assertIn(field, event_data_from_list)
 
     def test_unauthenticated_access(self):
         self.client.logout()
         url = self.get_api_url('health', 'journal-entries')
         response = self.client.get(url)
         self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_create_health_lab_sample(self):
+        """Test creating a new HealthLabSample via API."""
+        url = self.get_api_url('health', 'health-lab-samples')
+        sample_date_str = '2023-01-20' # Within batch and initial assignment
+        
+        payload = {
+            'batch_id': self.batch.id,
+            'container_id': self.container.id,
+            'sample_date': sample_date_str,
+            'sample_type': self.tissue_sample_type.id,
+            'date_sent_to_lab': '2023-01-21',
+            'lab_reference_id': 'LAB-REF-001',
+            'findings_summary': 'Initial tissue analysis.',
+            'notes': 'Handle with care.'
+        }
+
+        response = self.client.post(url, payload, format='json')
+
+        # Debugging: print response data if status is not 201
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Create HealthLabSample failed with status {response.status_code}:")
+            print(response.data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(HealthLabSample.objects.count(), 1)
+
+        created_sample = HealthLabSample.objects.first()
+        self.assertIsNotNone(created_sample)
+        self.assertEqual(created_sample.batch_container_assignment, self.batch_container_assignment)
+        self.assertEqual(str(created_sample.sample_date), sample_date_str)
+        self.assertEqual(created_sample.sample_type, self.tissue_sample_type)
+        self.assertEqual(created_sample.recorded_by, self.user)
+        self.assertEqual(created_sample.lab_reference_id, 'LAB-REF-001')
+        self.assertEqual(created_sample.findings_summary, 'Initial tissue analysis.')
+
+        # Check response data details
+        self.assertEqual(response.data['sample_date'], sample_date_str)
+        self.assertEqual(response.data['sample_type_name'], self.tissue_sample_type.name)
+        self.assertEqual(response.data['recorded_by_username'], self.user.username)
+        self.assertIsNotNone(response.data['batch_container_assignment_details'])
+        if response.data['batch_container_assignment_details']:
+            self.assertEqual(response.data['batch_container_assignment_details']['assignment_id'], self.batch_container_assignment.id)
+            self.assertEqual(response.data['batch_container_assignment_details']['batch_id'], self.batch.id)
+            self.assertEqual(response.data['batch_container_assignment_details']['container_id'], self.container.id)
