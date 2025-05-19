@@ -129,10 +129,11 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT)
   - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT) # Stage *within* this container
   - `population_count`: integer
-  - `avg_weight_g`: double precision # Average weight in grams
+  - `avg_weight_g`: decimal(10, 2) (nullable, blankable) # Average weight in grams per fish at the time of this specific assignment or update.
   - `biomass_kg`: double precision # Calculated: (population_count * avg_weight_g) / 1000
   - `assignment_date`: date
-  - `departure_date`: date (nullable)
+  - `departure_date`: date (nullable, blankable) # Date when this specific assignment ended (e.g., fish moved out or population became zero)
+  - `is_active`: boolean (default: True) # Whether this assignment is current/active
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`batch_batchcomposition`** # Tracks components if batches are mixed

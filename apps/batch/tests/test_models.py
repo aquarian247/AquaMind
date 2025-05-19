@@ -2,6 +2,7 @@ import decimal
 from django.test import TestCase
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 
 import statistics  # Added for statistical calculations
 
@@ -184,3 +185,118 @@ class GrowthSampleModelTest(TestCase):
         self.assertIsNotNone(sample.condition_factor)
         expected_k = (decimal.Decimal('50.0') / (decimal.Decimal('14.0')**3)) * 100
         self.assertAlmostEqual(sample.condition_factor, expected_k, places=2)
+
+
+class BatchContainerAssignmentModelTests(TestCase):
+    """Tests for the BatchContainerAssignment model."""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Set up non-modified objects used by all test methods."""
+        cls.species = Species.objects.create(name='Test Species BCA')
+        cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='BCA Test Stage', order=1)
+        cls.geography = Geography.objects.create(name="BCA Test Geography")
+        cls.station = FreshwaterStation.objects.create(
+            name="BCA Test Station", 
+            geography=cls.geography, 
+            station_type='FRESHWATER',
+            latitude=11.0,
+            longitude=11.0
+        )
+        cls.hall = Hall.objects.create(name="BCA Test Hall", freshwater_station=cls.station)
+        cls.container_type = ContainerType.objects.create(
+            name="BCA Test Tank Type", category='TANK', max_volume_m3=Decimal('150.0')
+        )
+        cls.container = Container.objects.create(
+            name="BCA Test Container", 
+            hall=cls.hall, 
+            container_type=cls.container_type,
+            volume_m3=Decimal('120.0'),
+            max_biomass_kg=Decimal('600.0')
+        )
+        cls.batch = Batch.objects.create(
+            batch_number='BCA001',
+            species=cls.species,
+            lifecycle_stage=cls.lifecycle_stage,
+            status='ACTIVE',
+            start_date=timezone.now().date(),
+            population_count=2000,
+            avg_weight_g=Decimal('100.0')
+        )
+
+    def test_biomass_kg_calculation(self):
+        """Test biomass_kg is calculated correctly when population_count and avg_weight_g are provided."""
+        assignment = BatchContainerAssignment(
+            batch=self.batch,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1000,
+            avg_weight_g=Decimal('50.5'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        assignment.save()
+        expected_biomass_kg = (Decimal(1000) * Decimal('50.5')) / Decimal(1000)
+        self.assertEqual(assignment.biomass_kg, expected_biomass_kg.quantize(Decimal('0.001')))
+
+    # Removed test_biomass_kg_population_count_none and test_biomass_kg_population_count_none_starts_none
+    # as population_count is non-nullable.
+
+    def test_biomass_kg_avg_weight_g_none_keeps_initial_value(self):
+        """Test biomass_kg is not changed if avg_weight_g is None and biomass_kg had an initial value."""
+        initial_biomass = Decimal('20.0')
+        assignment = BatchContainerAssignment(
+            batch=self.batch,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1000,  # population_count must be valid
+            avg_weight_g=None,
+            assignment_date=timezone.now().date(),
+            is_active=True,
+            biomass_kg=initial_biomass
+        )
+        assignment.save()
+        self.assertEqual(assignment.biomass_kg, initial_biomass)
+
+    def test_biomass_kg_avg_weight_g_none_starts_none_fails(self):
+        """Test saving fails if avg_weight_g is None and biomass_kg starts None (violates NOT NULL)."""
+        with self.assertRaises(IntegrityError):
+            assignment = BatchContainerAssignment(
+                batch=self.batch,
+                container=self.container,
+                lifecycle_stage=self.lifecycle_stage,
+                population_count=1000, # population_count must be valid
+                avg_weight_g=None,
+                assignment_date=timezone.now().date(),
+                is_active=True,
+                biomass_kg=None # This will cause IntegrityError as biomass_kg is NOT NULL
+            )
+            assignment.save()
+
+    def test_biomass_kg_population_count_zero(self):
+        """Test biomass_kg calculation when population_count is 0."""
+        assignment = BatchContainerAssignment(
+            batch=self.batch,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=0,
+            avg_weight_g=Decimal('50.0'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        assignment.save()
+        self.assertEqual(assignment.biomass_kg, Decimal('0.000'))
+
+    def test_biomass_kg_avg_weight_g_zero(self):
+        """Test biomass_kg calculation when avg_weight_g is 0."""
+        assignment = BatchContainerAssignment(
+            batch=self.batch,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1000,
+            avg_weight_g=Decimal('0.0'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+        assignment.save()
+        self.assertEqual(assignment.biomass_kg, Decimal('0.000'))

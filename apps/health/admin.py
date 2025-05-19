@@ -7,8 +7,9 @@ from .models import (
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore,
-    HealthLabSample, BatchContainerAssignment # Added import
+    HealthLabSample # BatchContainerAssignment will be imported separately
 )
+from apps.batch.models import BatchContainerAssignment # Correct import
 
 from django import forms
 
@@ -156,18 +157,35 @@ class FishParameterScoreAdmin(admin.ModelAdmin):
     search_fields = ('individual_fish_observation__fish_identifier', 'parameter__name')
     autocomplete_fields = ['individual_fish_observation', 'parameter']
 
+from django.db.models import Q
+
 class HealthLabSampleForm(forms.ModelForm):
     class Meta:
         model = HealthLabSample
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ('recorded_by',) # Exclude recorded_by as it's set by admin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['batch_container_assignment'].widget = forms.Select()
-        self.fields['batch_container_assignment'].queryset = BatchContainerAssignment.objects.select_related('batch', 'container').all()
         self.fields['batch_container_assignment'].label_from_instance = self.batch_container_assignment_label
         self.fields['sample_type'].widget = forms.Select()
         self.fields['sample_type'].queryset = SampleType.objects.all()
+
+        # Dynamically filter batch_container_assignment based on sample_date
+        # If instance and sample_date exist, filter initially
+        # Otherwise, JavaScript will handle dynamic updates on sample_date change
+        if self.instance and self.instance.pk and self.instance.sample_date:
+            sample_date = self.instance.sample_date
+            self.fields['batch_container_assignment'].queryset = BatchContainerAssignment.objects.filter(
+                Q(assignment_date__lte=sample_date) &
+                (Q(departure_date__gte=sample_date) | Q(departure_date__isnull=True))
+            ).select_related('batch', 'container').order_by('-assignment_date', 'batch__batch_number')
+        else:
+            # For new forms, or if sample_date is not yet set, show all assignments initially.
+            # The clean() method will validate the selection against the provided sample_date.
+            # JavaScript will handle the dynamic filtering in the UI based on sample_date changes.
+            self.fields['batch_container_assignment'].queryset = BatchContainerAssignment.objects.all().select_related('batch', 'container').order_by('-assignment_date', 'batch__batch_number')
 
     def batch_container_assignment_label(self, obj):
         batch_number = obj.batch.batch_number if obj.batch else 'N/A'
@@ -185,10 +203,28 @@ class HealthLabSampleForm(forms.ModelForm):
         if date_sent_to_lab and date_results_received and date_results_received < date_sent_to_lab:
             self.add_error('date_results_received', "Date results received cannot be before the date sent to lab.")
 
+        # Validate sample_date against batch_container_assignment active period
+        assignment = cleaned_data.get('batch_container_assignment')
+        if sample_date and assignment:
+            if sample_date < assignment.assignment_date:
+                self.add_error('sample_date', 
+                                 f"Sample date ({sample_date}) cannot be before the assignment date ({assignment.assignment_date}).")
+            if assignment.departure_date and sample_date > assignment.departure_date:
+                self.add_error('sample_date', 
+                                 f"Sample date ({sample_date}) cannot be after the assignment departure date ({assignment.departure_date}).")
+
         return cleaned_data
 
 @admin.register(HealthLabSample)
 class HealthLabSampleAdmin(admin.ModelAdmin):
+    form = HealthLabSampleForm
+
+    class Media:
+        js = (
+            'admin/js/vendor/jquery/jquery.min.js', # Django's jQuery
+            'health/js/health_lab_sample_admin.js',  # Path to app-specific static JS
+        )
+
     list_display = (
         'sample_date',
         'batch_container_assignment_info',
@@ -233,8 +269,6 @@ class HealthLabSampleAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-
-    form = HealthLabSampleForm
 
     def batch_container_assignment_info(self, obj):
         if obj.batch_container_assignment:

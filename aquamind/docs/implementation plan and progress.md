@@ -6,6 +6,32 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-05-19: HealthLabSampleForm Testing and Validation Refinement
+
+**Objective:** Finalize and validate unit tests for `HealthLabSampleForm`, ensuring correct filtering and validation logic for `sample_date` and `batch_container_assignment`.
+
+**Key Accomplishments:**
+
+1.  **`HealthLabSampleForm` Refinements:**
+    *   Excluded `recorded_by` from the form to align with typical admin auto-population behavior (model allows null).
+    *   Adjusted `__init__` to set `batch_container_assignment` queryset to `BatchContainerAssignment.objects.all()` for new forms, simplifying initial validation logic and allowing the `clean` method to handle specific date-based filtering.
+    *   Strengthened `clean()` method to validate `sample_date` against the `assignment_date` and `departure_date` of the chosen `batch_container_assignment`.
+
+2.  **Unit Test Enhancements (`HealthLabSampleFormTests`):**
+    *   Updated test data and assertions in `apps/health/tests/test_forms.py` to reflect form changes (e.g., removing `recorded_by`, checking errors on `sample_date`).
+    *   Ensured all tests for `HealthLabSampleForm` pass, covering scenarios for valid and invalid `sample_date` relative to `batch_container_assignment` active periods.
+
+3.  **Full Test Suite Validation:**
+    *   Ran the full project test suite (`manage.py test`). All 292 tests passed (4 skipped), confirming no regressions were introduced.
+
+**Issues Encountered & Resolutions:**
+*   Minor test adjustments were needed to align with the refined form logic, specifically ensuring error messages were checked on the correct fields.
+
+**Next Steps:**
+*   Update project documentation (`data_model.md`, `implementation plan and progress.md`).
+*   Address existing warnings (URL namespace, naive datetimes) in a separate effort.
+*   Commit changes and prepare for potential deployment or further feature development.
+
 ### 2025-05-09: Biological Laboratory Samples API (Session Focus)
 
 **Objective:** Develop and implement API endpoints for managing biological laboratory samples (`HealthLabSample`).
