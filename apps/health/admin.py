@@ -163,7 +163,7 @@ class HealthLabSampleForm(forms.ModelForm):
     class Meta:
         model = HealthLabSample
         # fields = '__all__'
-        exclude = ('recorded_by',) # Exclude recorded_by as it's set by admin
+        exclude = () # 'recorded_by' is handled by readonly_fields and save_model # Exclude recorded_by as it's set by admin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -243,7 +243,7 @@ class HealthLabSampleAdmin(admin.ModelAdmin):
         'findings_summary',
         'notes'
     )
-    readonly_fields = ('created_at', 'updated_at')  # recorded_by will be set in save_model
+    readonly_fields = ('recorded_by', 'created_at', 'updated_at') # recorded_by will be set in save_model
 
     fieldsets = (
         (None, {

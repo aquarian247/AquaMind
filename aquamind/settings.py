@@ -84,7 +84,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:*',  # Cover all 127.0.0.1 ports
     'https://localhost:*',
     'https://127.0.0.1:*',
-    'http://127.0.0.1:54341',  # Explicitly add the browser preview proxy port
+    'http://127.0.0.1:54341',
+    'http://127.0.0.1:52734',  # Added for the current browser preview proxy
 ]
 
 ROOT_URLCONF = "aquamind.urls"
