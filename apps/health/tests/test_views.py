@@ -55,12 +55,10 @@ class LoadBatchAssignmentsViewTests(TestCase):
         cls.batch1 = Batch.objects.create(
             batch_number='HVB001', species=cls.species, lifecycle_stage=cls.lifecycle_stage_fry,
             status='ACTIVE', start_date=date(2023, 1, 1),
-            population_count=5000, avg_weight_g=Decimal('10.0')
         )
         cls.batch2 = Batch.objects.create(
             batch_number='HVB002', species=cls.species, lifecycle_stage=cls.lifecycle_stage_smolt,
             status='ACTIVE', start_date=date(2023, 3, 1),
-            population_count=3000, avg_weight_g=Decimal('50.0')
         )
 
         # BatchContainerAssignments

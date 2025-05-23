@@ -76,8 +76,8 @@ class BatchViewSet(viewsets.ModelViewSet):
         'start_date', 
         'species__name', 
         'lifecycle_stage__name', 
-        'biomass_kg',
-        'population_count',
+        # 'biomass_kg', # Removed, consider annotation for ordering by calculated field
+        # 'population_count', # Removed, consider annotation for ordering by calculated field
         'created_at'
     ]
     ordering = ['-created_at']
@@ -112,7 +112,7 @@ class BatchViewSet(viewsets.ModelViewSet):
             'species': batch.species.name,
             'lifecycle_stage': batch.lifecycle_stage.name,
             'start_date': batch.start_date,
-            'current_avg_weight': batch.avg_weight_g,
+            'current_avg_weight': batch.calculated_avg_weight_g, # Updated to use calculated property
             'growth_metrics': [],
             'summary': {}
         }
@@ -350,7 +350,7 @@ class BatchViewSet(viewsets.ModelViewSet):
                 batch_growth = {
                     'batch_id': batch.id,
                     'batch_number': batch.batch_number,
-                    'current_avg_weight_g': float(batch.avg_weight_g),
+                    'current_avg_weight_g': float(batch.calculated_avg_weight_g),
                 }
                 
                 if first_sample and last_sample and first_sample != last_sample:
@@ -396,7 +396,7 @@ class BatchViewSet(viewsets.ModelViewSet):
                 
                 # Calculate mortality rate
                 if mortality_data['total_count']:
-                    initial_population = batch.population_count + mortality_data['total_count']
+                    initial_population = batch.calculated_population_count + mortality_data['total_count']
                     batch_mortality['mortality_rate'] = round(
                         (mortality_data['total_count'] / initial_population) * 100, 2
                     )
@@ -413,7 +413,7 @@ class BatchViewSet(viewsets.ModelViewSet):
             
             for batch in batches:
                 # Get container assignments
-                assignments = batch.container_assignments.filter(is_active=True)
+                assignments = batch.batch_assignments.filter(is_active=True)
                 
                 # Calculate total volume if container has volume data
                 total_volume = 0
@@ -427,13 +427,13 @@ class BatchViewSet(viewsets.ModelViewSet):
                 batch_biomass = {
                     'batch_id': batch.id,
                     'batch_number': batch.batch_number,
-                    'current_biomass_kg': float(batch.biomass_kg),
-                    'population_count': batch.population_count,
+                    'current_biomass_kg': float(batch.calculated_biomass_kg),
+                    'population_count': batch.calculated_population_count,
                 }
                 
                 # Add density if we have container volume
                 if containers_with_volume > 0:
-                    avg_density = batch.biomass_kg / total_volume
+                    avg_density = batch.calculated_biomass_kg / total_volume
                     batch_biomass['avg_density_kg_m3'] = round(float(avg_density), 2)
                 
                 biomass_metrics.append(batch_biomass)

@@ -127,8 +127,11 @@ class BatchViewSet(viewsets.ModelViewSet):
                         )
                         transfers.append(transfer)
             
+            # Store original population count
+            original_population_count = batch.population_count
+            
             # Update the original batch with remaining fish
-            remaining_count = batch.population_count - total_count
+            remaining_count = original_population_count - total_count
             batch.population_count = remaining_count
             batch.biomass_kg = (remaining_count * batch.avg_weight_g) / 1000
             batch.save()
@@ -136,7 +139,7 @@ class BatchViewSet(viewsets.ModelViewSet):
             # Update any active assignments for the original batch
             for assignment in BatchContainerAssignment.objects.filter(batch=batch, is_active=True):
                 # Proportionally reduce the count in each container
-                reduction_factor = remaining_count / batch.population_count
+                reduction_factor = remaining_count / original_population_count
                 assignment.population_count = int(assignment.population_count * reduction_factor)
                 assignment.biomass_kg = (assignment.population_count * batch.avg_weight_g) / 1000
                 assignment.save()

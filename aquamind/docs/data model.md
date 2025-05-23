@@ -114,73 +114,84 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`batch_batch`**
-  - `id`: bigint (PK, auto-increment)
-  - `batch_number`: varchar(50) (Unique)
-  - `species_id`: bigint (FK to `batch_species`, on_delete=PROTECT)
-  - `current_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT, nullable) # High-level indicator
-  - `start_date`: date
-  - `end_date`: date (nullable)
-  - `origin`: varchar(100) (nullable) # e.g., hatchery name
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  # Note: Key metrics like population count, biomass, and average weight are derived from associated `batch_batchcontainerassignment` records.
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `batch_number`: varchar (Unique, NOT NULL)
+  - `species_id`: bigint (FK to `batch_species`.`id`, on_delete=PROTECT, NOT NULL)
+  - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, NOT NULL)
+  - `status`: varchar (NOT NULL) # e.g., "ACTIVE", "INACTIVE", "PLANNED", "CLOSED"
+  - `batch_type`: varchar (NOT NULL) # e.g., "STANDARD", "EXPERIMENTAL"
+  - `start_date`: date (NOT NULL)
+  - `expected_end_date`: date (nullable)
+  - `actual_end_date`: date (nullable)
+  - `notes`: text (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
 - **`batch_batchcontainerassignment`**
-  - `id`: bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
-  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT)
-  - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT) # Stage *within* this container
-  - `population_count`: integer
-  - `avg_weight_g`: decimal(10, 2) (nullable, blankable) # Average weight in grams per fish at the time of this specific assignment or update.
-  - `biomass_kg`: double precision # Calculated: (population_count * avg_weight_g) / 1000
-  - `assignment_date`: date
-  - `departure_date`: date (nullable, blankable) # Date when this specific assignment ended (e.g., fish moved out or population became zero)
-  - `is_active`: boolean (default: True) # Whether this assignment is current/active
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, NOT NULL)
+  - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, NOT NULL)
+  - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, NOT NULL) # Stage *within* this container
+  - `population_count`: integer (NOT NULL)
+  - `avg_weight_g`: numeric (nullable) # Average weight in grams per fish
+  - `biomass_kg`: numeric (NOT NULL)
+  - `assignment_date`: date (NOT NULL)
+  - `departure_date`: date (nullable) # Date when this specific assignment ended
+  - `is_active`: boolean (default: True, NOT NULL) # Whether this assignment is current/active
+  - `notes`: text (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
 - **`batch_batchcomposition`** # Tracks components if batches are mixed
-  - `id`: bigint (PK, auto-increment)
-  - `mixed_batch_id`: bigint (FK to `batch_batch`, related_name='components', on_delete=CASCADE) # The resulting mixed batch
-  - `source_batch_id`: bigint (FK to `batch_batch`, related_name='mixed_in', on_delete=CASCADE) # The original batch component
-  - `percentage`: double precision # Percentage this source contributes
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`batch_batchtransfer`**
-  - `id`: bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
-  - `from_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT, nullable) # Null if initial placement
-  - `to_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT)
-  - `population_count`: integer
-  - `avg_weight_g`: double precision
-  - `transfer_date`: date
-  - `transfer_type`: varchar(50) # e.g., Split, Merge, Move
-  - `reason`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `mixed_batch_id`: bigint (FK to `batch_batch`.`id`, related_name='components', on_delete=CASCADE, NOT NULL) # The resulting mixed batch
+  - `source_batch_id`: bigint (FK to `batch_batch`.`id`, related_name='mixed_in', on_delete=CASCADE, NOT NULL) # The original batch component
+  - `percentage`: numeric (NOT NULL) # Percentage this source contributes
+  - `population_count`: integer (NOT NULL)
+  - `biomass_kg`: numeric (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
+- **`batch_batchtransfer`** # Records movements or merging/splitting of batch components
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `transfer_type`: varchar (NOT NULL) # e.g., "MOVE", "SPLIT", "MERGE", "DEATH_TRANSFER"
+  - `transfer_date`: date (NOT NULL)
+  - `source_batch_id`: bigint (FK to `batch_batch`.`id`, NOT NULL)
+  - `source_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, NOT NULL)
+  - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, nullable) # Original assignment if applicable
+  - `source_count`: integer (NOT NULL) # Population count from source before transfer
+  - `source_biomass_kg`: numeric (NOT NULL) # Biomass from source before transfer
+  - `transferred_count`: integer (NOT NULL) # Population count actually transferred
+  - `transferred_biomass_kg`: numeric (NOT NULL) # Biomass actually transferred
+  - `mortality_count`: integer (NOT NULL) # Mortalities during this transfer event
+  - `destination_batch_id`: bigint (FK to `batch_batch`.`id`, nullable) # Target batch if different (e.g., for MERGE)
+  - `destination_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, nullable) # Target stage if different
+  - `destination_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, nullable) # Resulting new assignment if applicable
+  - `is_emergency_mixing`: boolean (NOT NULL, default: False)
+  - `notes`: text (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
 - **`batch_mortalityevent`**
-  - `id`: bigint (PK, auto-increment)
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
-  - `event_date`: date
-  - `count`: integer
-  - `reason_id`: bigint (FK to `health_mortalityreason`, on_delete=PROTECT, nullable) # Link to health app
-  - `notes`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, NOT NULL) # Link to the batch experiencing mortality
+  - `event_date`: date (NOT NULL)
+  - `count`: integer (NOT NULL)
+  - `cause`: varchar(100) (NOT NULL) # e.g., Disease, Stress, Accident
+  - `description`: text (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
 - **`batch_growthsample`**
-    - `id`: bigint (PK, auto-increment)
-    - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE)
-    - `sample_date`: date
-    - `sample_size`: integer
-    - `avg_weight_g`: decimal(7, 2) (nullable) # Calculated average weight in grams
-    - `std_deviation_weight`: decimal(7, 2) (nullable) # Calculated standard deviation of weight
-    - `min_weight_g`: decimal(7, 2) (nullable) # Calculated minimum weight
-    - `max_weight_g`: decimal(7, 2) (nullable) # Calculated maximum weight
-    - `avg_length_cm`: decimal(5, 2) (nullable) # Calculated average length in cm
-    - `std_deviation_length`: decimal(5, 2) (nullable) # Calculated standard deviation of length
-    - `min_length_cm`: decimal(5, 2) (nullable) # Calculated minimum length
-    - `max_length_cm`: decimal(5, 2) (nullable) # Calculated maximum length
-    - `condition_factor`: decimal(5, 2) (nullable) # Calculated condition factor (K)
+    - `id`: bigint (PK, auto-increment, NOT NULL)
+    - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=CASCADE, NOT NULL)
+    - `sample_date`: date (NOT NULL)
+    - `sample_size`: integer (NOT NULL) # Number of individuals sampled
+    - `avg_weight_g`: numeric (NOT NULL)
+    - `avg_length_cm`: numeric (nullable)
+    - `std_deviation_weight`: numeric (nullable)
+    - `std_deviation_length`: numeric (nullable)
+    - `min_weight_g`: numeric (nullable)
+    - `max_weight_g`: numeric (nullable)
+    - `condition_factor`: numeric (nullable) # e.g., Fulton's K
     - `notes`: text (nullable)
-    - `created_at`: timestamptz
-    - `updated_at`: timestamptz
+    - `created_at`: timestamptz (NOT NULL)
+    - `updated_at`: timestamptz (NOT NULL)
 - **`batch_batchhistory`** (Likely handled by audit logging tools like django-auditlog, may not be a separate model)
 - **`batch_batchmedia`** (Potentially generic relation via ContentType or dedicated model)
 
@@ -198,223 +209,270 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 
 ### 3.3 Feed and Inventory Management (`inventory` app)
-**Purpose**: Manages feed resources and feeding events.
+**Purpose**: Manages feed resources, inventory, feeding events, and recommendations.
 
 #### Tables
 - **`inventory_feed`**
   - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `manufacturer`: varchar(100) (nullable)
-  - `feed_type`: varchar(50) # e.g., Pellet, Crumble
-  - `pellet_size_mm`: double precision (nullable)
-  - `nutritional_composition`: jsonb (nullable) # Store protein, fat, etc.
-  - `suitable_for_stages`: ManyToManyField to `batch_lifecyclestage` (creates `inventory_feed_suitable_for_stages` table)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `name`: varchar(100)
+  - `brand`: varchar(100)
+  - `size_category`: varchar(20) (Choices: 'MICRO', 'SMALL', 'MEDIUM', 'LARGE')
+  - `pellet_size_mm`: decimal(5,2) (nullable, help_text="Pellet size in millimeters")
+  - `protein_percentage`: decimal(5,2) (nullable, help_text="Protein content percentage", validators: MinValueValidator(0), MaxValueValidator(100))
+  - `fat_percentage`: decimal(5,2) (nullable, help_text="Fat content percentage", validators: MinValueValidator(0), MaxValueValidator(100))
+  - `carbohydrate_percentage`: decimal(5,2) (nullable, help_text="Carbohydrate content percentage", validators: MinValueValidator(0), MaxValueValidator(100))
+  - `description`: text (blank=True)
+  - `is_active`: boolean (default=True)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `verbose_name_plural = "Feed"`
 - **`inventory_feedpurchase`**
   - `id`: bigint (PK, auto-increment)
-  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
-  - `supplier`: varchar(100) (nullable)
+  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='purchases')
   - `purchase_date`: date
-  - `quantity_kg`: double precision
-  - `unit_cost`: decimal (max_digits=10, decimal_places=2)
-  - `total_cost`: decimal (max_digits=12, decimal_places=2)
-  - `lot_number`: varchar(100) (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `quantity_kg`: decimal(10,2) (validators: MinValueValidator(0.01), help_text="Amount of feed purchased in kilograms")
+  - `cost_per_kg`: decimal(10,2) (validators: MinValueValidator(0.01), help_text="Cost per kilogram")
+  - `supplier`: varchar(100)
+  - `batch_number`: varchar(100) (blank=True, help_text="Supplier's batch number")
+  - `expiry_date`: date (nullable, blank=True)
+  - `notes`: text (blank=True)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['-purchase_date']`
 - **`inventory_feedstock`**
   - `id`: bigint (PK, auto-increment)
-  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
-  - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`, on_delete=CASCADE)
-  - `quantity_kg`: double precision
-  - `last_updated`: timestamptz
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='stock_levels')
+  - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`.`id`, on_delete=CASCADE, related_name='feed_stocks')
+  - `current_quantity_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Current amount of feed in stock (kg)")
+  - `reorder_threshold_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Threshold for reordering (kg)")
+  - `last_updated`: timestamptz (auto_now=True)
+  - `notes`: text (blank=True)
+  - Meta: `unique_together = ['feed', 'feed_container']`
 - **`inventory_feedingevent`**
   - `id`: bigint (PK, auto-increment)
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
-  - `feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
-  - `quantity_kg`: double precision
-  - `event_time`: timestamptz
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, related_name='feeding_events')
+  - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='feeding_events', nullable, blank=True)
+  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known.")
+  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='applied_in_feedings')
+  - `user_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', help_text="User who recorded or performed the feeding.")
+  - `feeding_date`: date
+  - `feeding_time`: time (nullable, blank=True)
+  - `feed_quantity_kg`: decimal(8,3) (validators: MinValueValidator(0), help_text="Amount of feed provided in kg")
+  - `feed_cost_total`: decimal(10,2) (nullable, blank=True, help_text="Total cost of feed for this event, calculated if cost_per_kg is known.")
+  - `feed_cost_per_kg`: decimal(10,2) (nullable, blank=True, help_text="Cost per kg of feed at time of feeding, can be from FeedStock or manual.")
+  - `batch_biomass_kg`: decimal(10,2) (nullable, blank=True, help_text="Estimated batch biomass at time of feeding (kg)")
+  - `feeding_percentage_of_biomass`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Feeding rate as percentage of biomass")
+  - `water_temperature_c`: decimal(5,2) (nullable, blank=True, help_text="Water temperature at time of feeding (°C)")
+  - `dissolved_oxygen_mg_l`: decimal(5,2) (nullable, blank=True, help_text="Dissolved oxygen at time of feeding (mg/L)")
+  - `notes`: text (blank=True)
+  - `is_manual_entry`: boolean (default=True, help_text="Was this entry manually created or system-generated?")
+  - `source_recommendation_id`: bigint (FK to `inventory_feedrecommendation`.`id`, on_delete=SET_NULL, nullable, blank=True, help_text="Link to the feed recommendation that prompted this event, if any.")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['-feeding_date', '-feeding_time']`
 - **`inventory_batchfeedingsummary`**
   - `id`: bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE, unique=True) # One summary per batch
-  - `total_feed_kg`: double precision
-  - `start_date`: date
-  - `end_date`: date (nullable)
-  - `calculated_fcr`: double precision (nullable) # Feed Conversion Ratio
-  - `last_calculated`: timestamptz (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`inventory_feedrecommendation`** (NEW - based on recent features)
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, related_name='feeding_summaries')
+  - `period_start`: date
+  - `period_end`: date
+  - `total_feed_kg`: decimal(12,3) (validators: MinValueValidator(0), help_text="Total feed provided to the batch in this period (kg)")
+  - `average_biomass_kg`: decimal(12,2) (nullable, blank=True, validators: MinValueValidator(0), help_text="Average biomass of the batch during this period (kg)")
+  - `average_feeding_percentage`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Average daily feeding percentage of biomass")
+  - `feed_conversion_ratio`: decimal(8,3) (nullable, blank=True, help_text="Feed Conversion Ratio (FCR) for the period")
+  - `growth_kg`: decimal(10,2) (nullable, blank=True, help_text="Total growth of the batch during this period (kg)")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
+- **`inventory_feedrecommendation`**
   - `id`: bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE)
-  - `recommendation_date`: date
-  - `recommended_feed_id`: bigint (FK to `inventory_feed`, on_delete=PROTECT)
-  - `recommended_quantity_kg`: double precision
-  - `reasoning`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=CASCADE, related_name='feed_recommendations')
+  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='recommendations', help_text="Recommended feed type")
+  - `recommended_date`: date (help_text="Date for which this recommendation applies")
+  - `recommended_feed_kg`: decimal(10,3) (validators: MinValueValidator(0), help_text="Recommended feed amount in kilograms")
+  - `feeding_percentage`: decimal(5,2) (validators: MinValueValidator(0), MaxValueValidator(100), help_text="Recommended feeding as percentage of biomass")
+  - `feedings_per_day`: smallint (positive, default=2, help_text="Recommended number of feedings per day")
+  - `water_temperature_c`: decimal(5,2) (nullable, blank=True, help_text="Water temperature at time of recommendation (°C)")
+  - `dissolved_oxygen_mg_l`: decimal(5,2) (nullable, blank=True, help_text="Dissolved oxygen at time of recommendation (mg/L)")
+  - `recommendation_reason`: text (help_text="Explanation of factors that influenced this recommendation")
+  - `is_followed`: boolean (default=False, help_text="Whether this recommendation was followed")
+  - `expected_fcr`: decimal(5,2) (nullable, blank=True, help_text="Expected FCR if recommendation is followed")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['-recommended_date', '-created_at']`, `verbose_name_plural = "Feed recommendations"`, `unique_together = ['batch_container_assignment', 'recommended_date']`
 
-#### Relationships (Inferred `on_delete` where script failed)
-- `inventory_feed` ← `inventory_feedpurchase` (PROTECT)
-- `inventory_feed` ← `inventory_feedstock` (PROTECT)
-- `infrastructure_feedcontainer` ← `inventory_feedstock` (CASCADE)
-- `batch_batchcontainerassignment` ← `inventory_feedingevent` (CASCADE)
-- `inventory_feed` ← `inventory_feedingevent` (PROTECT)
-- `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE)
-- `batch_batch` ← `inventory_feedrecommendation` (CASCADE)
-- `inventory_feed` ← `inventory_feedrecommendation` (PROTECT)
-- `inventory_feed` ↔ `batch_lifecyclestage` (ManyToMany)
+#### Relationships
+- `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
+- `inventory_feed` ← `inventory_feedstock` (PROTECT, related_name='stock_levels')
+- `infrastructure_feedcontainer` ← `inventory_feedstock` (CASCADE, related_name='feed_stocks')
+- `batch_batch` ← `inventory_feedingevent` (PROTECT, related_name='feeding_events')
+- `infrastructure_container` ← `inventory_feedingevent` (PROTECT, related_name='feeding_events')
+- `batch_batchcontainerassignment` ← `inventory_feedingevent` (SET_NULL, related_name='explicit_feeding_events')
+- `inventory_feed` ← `inventory_feedingevent` (PROTECT, related_name='applied_in_feedings')
+- `users_customuser` ← `inventory_feedingevent` (PROTECT, related_name='feeding_entries')
+- `inventory_feedrecommendation` ← `inventory_feedingevent` (SET_NULL, related_name='feed_events_based_on_this') (Note: Model has `source_recommendation` on `FeedingEvent`)
+- `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE, related_name='feeding_summaries')
+- `batch_batchcontainerassignment` ← `inventory_feedrecommendation` (CASCADE, related_name='feed_recommendations')
+- `inventory_feed` ← `inventory_feedrecommendation` (PROTECT, related_name='recommendations')
 
 ### 3.4 Health Monitoring (`health` app)
-**Purpose**: Tracks health observations, treatments, and mortality.
+**Purpose**: Tracks health observations, treatments, mortality, sampling events, and lab results.
 
 #### Tables
-- **`health_mortalityreason`**
-  - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `description`: text (nullable)
-  - `category`: varchar(50) (nullable, e.g., Disease, Environment, Handling)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_vaccinationtype`**
-  - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `description`: text (nullable)
-  - `manufacturer`: varchar(100) (nullable)
-  - `target_diseases`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_sampletype`**
-  - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `description`: text (nullable)
-  - `unit`: varchar(50) (nullable) # e.g., cells/mL, mg/L
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+- **`health_journalentry`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='journal_entries')
+  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='journal_entries')
+  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='journal_entries')
+  - `entry_date`: timestamptz (default=timezone.now)
+  - `category`: varchar(20) (Choices: 'observation', 'issue', 'action', 'diagnosis', 'treatment', 'vaccination', 'sample')
+  - `severity`: varchar(10) (Choices: 'low', 'medium', 'high', default='low', nullable, blank=True)
+  - `description`: text
+  - `resolution_status`: boolean (default=False)
+  - `resolution_notes`: text (blank=True)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `verbose_name_plural = "Journal Entries"`, `ordering = ['-entry_date']`
 - **`health_healthparameter`**
-  - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `description_score_1`: text
-  - `description_score_2`: text
-  - `description_score_3`: text
-  - `description_score_4`: text
-  - `description_score_5`: text
-  - `is_active`: boolean
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique, help_text="Name of the health parameter (e.g., Gill Health).")
+  - `description_score_1`: text (help_text="Description for score 1 (Best/Excellent).")
+  - `description_score_2`: text (help_text="Description for score 2 (Good).")
+  - `description_score_3`: text (help_text="Description for score 3 (Fair/Moderate).")
+  - `description_score_4`: text (help_text="Description for score 4 (Poor/Severe).")
+  - `description_score_5`: text (help_text="Description for score 5 (Worst/Critical).", default="")
+  - `is_active`: boolean (default=True, help_text="Is this parameter currently in use?")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 - **`health_healthsamplingevent`**
-  - `id`: bigint (PK, auto-increment)
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE) # Link to specific assignment
-  - `sampling_date`: date # Date of the sampling event
-  - `number_of_fish_sampled`: integer # Total number of fish physically sampled in this event
-  - `sampled_by_id`: integer (FK to `users_customuser`, on_delete=SET_NULL, nullable) # User who performed the sampling
-  - `notes`: text (nullable)
-  - `avg_weight_g`: decimal(7, 2) (nullable) # Calculated average weight in grams
-  - `std_dev_weight_g`: decimal(7, 2) (nullable) # Calculated standard deviation of weight
-  - `min_weight_g`: decimal(7, 2) (nullable) # Calculated minimum weight
-  - `max_weight_g`: decimal(7, 2) (nullable) # Calculated maximum weight
-  - `avg_length_cm`: decimal(5, 2) (nullable) # Calculated average length in cm
-  - `std_dev_length_cm`: decimal(5, 2) (nullable) # Calculated standard deviation of length
-  - `min_length_cm`: decimal(5, 2) (nullable) # Calculated minimum length
-  - `max_length_cm`: decimal(5, 2) (nullable) # Calculated maximum length
-  - `avg_k_factor`: decimal(5, 2) (nullable) # Calculated average K-factor
-  - `uniformity_percentage`: decimal(5, 2) (nullable) # Calculated uniformity percentage
-  - `calculated_sample_size`: integer (nullable) # Number of fish with complete data for metric calculations
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_individualfishobservation`** (NEW - Detailed observation for a single fish within a sampling event)
-  - `id`: bigint (PK, auto-increment)
-  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE)
-  - `fish_identifier`: integer # Identifier for the fish within this sampling event (e.g., 1, 2, 3...)
-  - `length_cm`: decimal(5,2) (nullable)
-  - `weight_g`: decimal(7,2) (nullable)
-  - `condition_factor`: decimal(5,3) (nullable) # Calculated: (weight_g / (length_cm^3)) * 100
-  - `is_culled`: boolean (default=False)
-  - `notes`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_fishparameterscore`** (NEW - Specific health parameter score for an individual fish observation)
-  - `id`: bigint (PK, auto-increment)
-  - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`, on_delete=CASCADE)
-  - `parameter_id`: bigint (FK to `health_healthparameter`, on_delete=PROTECT)
-  - `score`: integer # Typically 1-5 based on HealthParameter descriptions
-  - `comment`: text (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_licecount`** # Potentially linked to HealthSamplingEvent
-  - `id`: bigint (PK, auto-increment)
-  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE
-  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # Alternative or additional context
-  - `lice_stage`: varchar(50) # e.g., Adult Female, Mobile, Chalimus
-  - `count`: integer
-  - `sample_size`: integer # Number of fish sampled for this count
-  - `avg_per_fish`: double precision # Calculated
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_mortalityrecord`** # Potentially linked to HealthSamplingEvent or BatchContainerAssignment directly
-  - `id`: bigint (PK, auto-increment)
-  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE - if mortality observed during sampling
-  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # More common for general mortality
-  - `record_date`: date # Date mortality was recorded
-  - `count`: integer
-  - `reason_id`: bigint (FK to `health_mortalityreason`, on_delete=PROTECT, nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_treatment`** # Potentially linked to HealthSamplingEvent or BatchContainerAssignment
-  - `id`: bigint (PK, auto-increment)
-  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`, on_delete=CASCADE, nullable) # REVISED LINKAGE - if treatment decision from sampling
-  # `journal_entry_id`: bigint (FK to `health_journalentry`, on_delete=CASCADE) # OLD LINKAGE
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=CASCADE, nullable) # More common for group treatments
-  - `treatment_type`: varchar(100) # e.g., Medication, Bath, Physical
-  - `product_name`: varchar(100) (nullable)
-  - `dosage`: varchar(50) (nullable)
-  - `application_method`: varchar(100) (nullable)
-  - `start_date`: date
-  - `end_date`: date (nullable)
-  - `duration_days`: integer (nullable)
-  - `withdrawal_period_days`: integer (nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
-- **`health_vaccinationrecord`** (Review: May be a type of Treatment or linked to HealthSamplingEvent)
-- **`health_samplerecord`** (Review: May be covered by HealthSamplingEvent and IndividualFishObservation or relate to lab samples)
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='health_sampling_events')
+  - `sampling_date`: date (default=timezone.now)
+  - `number_of_fish_sampled`: positive integer (help_text="Target or initially declared number of individual fish to be examined...")
+  - `avg_weight_g`: decimal(7,2) (nullable, blank=True, help_text="Calculated average weight...")
+  - `avg_length_cm`: decimal(5,2) (nullable, blank=True, help_text="Calculated average length...")
+  - `std_dev_weight_g`: decimal(7,2) (nullable, blank=True, help_text="Calculated standard deviation of weight...")
+  - `std_dev_length_cm`: decimal(5,2) (nullable, blank=True, help_text="Calculated standard deviation of length...")
+  - `min_weight_g`: decimal(7,2) (nullable, blank=True, help_text="Minimum weight recorded...")
+  - `max_weight_g`: decimal(7,2) (nullable, blank=True, help_text="Maximum weight recorded...")
+  - `min_length_cm`: decimal(5,2) (nullable, blank=True, help_text="Minimum length recorded...")
+  - `max_length_cm`: decimal(5,2) (nullable, blank=True, help_text="Maximum length recorded...")
+  - `avg_k_factor`: decimal(5,2) (nullable, blank=True, help_text="Calculated average K-factor...")
+  - `calculated_sample_size`: positive integer (nullable, blank=True, help_text="Actual number of fish with weight measurements...")
+  - `sampled_by_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='health_sampling_events_conducted')
+  - `notes`: text (blank=True, nullable)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['-sampling_date', '-created_at']`, `verbose_name = "Health Sampling Event"`
+- **`health_individualfishobservation`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='individual_fish_observations')
+  - `fish_identifier`: positive integer (help_text="Sequential identifier for the fish within this sampling event...")
+  - `length_cm`: decimal(5,2) (nullable, blank=True)
+  - `weight_g`: decimal(7,2) (nullable, blank=True)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = ('sampling_event', 'fish_identifier')`, `ordering = ['sampling_event', 'fish_identifier']`
+- **`health_fishparameterscore`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='parameter_scores')
+  - `parameter_id`: bigint (FK to `health_healthparameter`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='fish_scores')
+  - `score`: integer (validators: MinValueValidator(1), MaxValueValidator(5), help_text="Score from 1 (Best) to 5 (Worst)...")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = ('individual_fish_observation', 'parameter')`, `ordering = ['individual_fish_observation', 'parameter']`
+- **`health_mortalityreason`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
+  - Meta: `verbose_name_plural = "Mortality Reasons"`, `ordering = ['name']`
+- **`health_mortalityrecord`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='mortality_records')
+  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='mortality_records', nullable, blank=True)
+  - `event_date`: timestamptz (auto_now_add=True)
+  - `count`: positive integer
+  - `reason_id`: bigint (FK to `health_mortalityreason`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='mortality_records')
+  - `notes`: text (blank=True)
+  - Meta: `verbose_name_plural = "Mortality Records"`, `ordering = ['-event_date']`
+- **`health_licecount`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='lice_counts')
+  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='lice_counts', nullable, blank=True)
+  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='lice_counts')
+  - `count_date`: timestamptz (auto_now_add=True)
+  - `adult_female_count`: positive integer (default=0)
+  - `adult_male_count`: positive integer (default=0)
+  - `juvenile_count`: positive integer (default=0)
+  - `fish_sampled`: positive integer (default=1)
+  - `notes`: text (blank=True)
+  - Meta: `verbose_name_plural = "Lice Counts"`, `ordering = ['-count_date']`
+- **`health_vaccinationtype`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `manufacturer`: varchar(100) (blank=True)
+  - `dosage`: varchar(50) (blank=True)
+  - `description`: text (blank=True)
+  - Meta: `verbose_name_plural = "Vaccination Types"`, `ordering = ['name']`
+- **`health_treatment`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments')
+  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments', nullable, blank=True)
+  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments', nullable, blank=True)
+  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='treatments')
+  - `treatment_date`: timestamptz (auto_now_add=True)
+  - `treatment_type`: varchar(20) (Choices: 'medication', 'vaccination', 'delicing', 'other', default='medication')
+  - `vaccination_type_id`: bigint (FK to `health_vaccinationtype`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='treatments')
+  - `description`: text
+  - `dosage`: varchar(100) (blank=True)
+  - `duration_days`: positive integer (default=0)
+  - `withholding_period_days`: positive integer (default=0, help_text="Days before fish can be harvested...")
+  - `outcome`: text (blank=True)
+  - Meta: `verbose_name_plural = "Treatments"`, `ordering = ['-treatment_date']`
+- **`health_sampletype`**
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
+  - Meta: `verbose_name_plural = "Sample Types"`
 - **`health_healthlabsample`**
-  - `id`: bigint (PK, auto-increment)
-  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=PROTECT)
-  - `sample_type_id`: bigint (FK to `health_sampletype`, on_delete=PROTECT)
-  - `sample_date`: date
-  - `date_sent_to_lab`: date (nullable)
-  - `date_results_received`: date (nullable)
-  - `lab_reference_id`: varchar(100) (nullable)
-  - `findings_summary`: text (nullable)
-  - `quantitative_results`: jsonb (nullable)
-  - `attachment`: FileField (upload_to='health/lab_samples/%Y/%m/')
-  - `notes`: text (nullable)
-  - `recorded_by_id`: bigint (FK to `users_customuser`, on_delete=SET_NULL, nullable)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='lab_samples')
+  - `sample_type_id`: bigint (FK to `health_sampletype`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='lab_samples')
+  - `sample_date`: date (help_text="Date the sample was physically taken.")
+  - `date_sent_to_lab`: date (nullable, blank=True)
+  - `date_results_received`: date (nullable, blank=True)
+  - `lab_reference_id`: varchar(100) (nullable, blank=True)
+  - `findings_summary`: text (nullable, blank=True)
+  - `quantitative_results`: jsonb (nullable, blank=True, help_text="Structured quantitative results...")
+  - [attachment](cci:1://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:582:4-583:53): file (upload_to='health/lab_samples/%Y/%m/', nullable, blank=True)
+  - `notes`: text (nullable, blank=True)
+  - `recorded_by_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='recorded_lab_samples')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['-sample_date', '-created_at']`, `verbose_name = "Health Lab Sample"`
 
-#### Relationships (Inferred `on_delete` where script failed)
-- `batch_batchcontainerassignment` ← `health_healthsamplingevent` (CASCADE)
-- `users_customuser` ← `health_healthsamplingevent` (SET_NULL)
-- `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE)
-- `health_individualfishobservation` ← `health_fishparameterscore` (CASCADE)
-- `health_healthparameter` ← `health_fishparameterscore` (PROTECT)
-- `health_healthsamplingevent` ← `health_licecount` (CASCADE, if applicable)
-- `batch_batchcontainerassignment` ← `health_licecount` (CASCADE, if applicable)
-- `health_healthsamplingevent` ← `health_mortalityrecord` (CASCADE, if applicable)
-- `batch_batchcontainerassignment` ← `health_mortalityrecord` (CASCADE, if applicable)
-- `health_mortalityreason` ← `health_mortalityrecord` (PROTECT)
-- `health_healthsamplingevent` ← `health_treatment` (CASCADE, if applicable)
-- `batch_batchcontainerassignment` ← `health_treatment` (CASCADE, if applicable)
-- `batch_batchcontainerassignment` ← `health_healthlabsample` (PROTECT)
-- `health_sampletype` ← `health_healthlabsample` (PROTECT)
-- `users_customuser` ← `health_healthlabsample` (SET_NULL)
+#### Relationships
+- `batch_batch` ← `health_journalentry` (CASCADE, related_name='journal_entries')
+- `infrastructure_container` ← `health_journalentry` (SET_NULL, related_name='journal_entries')
+- `users_customuser` ← `health_journalentry` (PROTECT, related_name='journal_entries')
+- `batch_batchcontainerassignment` ← `health_healthsamplingevent` (CASCADE, related_name='health_sampling_events')
+- `users_customuser` ← `health_healthsamplingevent` (SET_NULL, related_name='health_sampling_events_conducted')
+- `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE, related_name='individual_fish_observations')
+- `health_individualfishobservation` ← `health_fishparameterscore` (CASCADE, related_name='parameter_scores')
+- `health_healthparameter` ← `health_fishparameterscore` (PROTECT, related_name='fish_scores')
+- `batch_batch` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
+- `infrastructure_container` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
+- `health_mortalityreason` ← `health_mortalityrecord` (SET_NULL, related_name='mortality_records')
+- `batch_batch` ← `health_licecount` (CASCADE, related_name='lice_counts')
+- `infrastructure_container` ← `health_licecount` (CASCADE, related_name='lice_counts')
+- `users_customuser` ← `health_licecount` (SET_NULL, related_name='lice_counts')
+- `batch_batch` ← `health_treatment` (CASCADE, related_name='treatments')
+- `infrastructure_container` ← `health_treatment` (CASCADE, related_name='treatments')
+- `batch_batchcontainerassignment` ← `health_treatment` (CASCADE, related_name='treatments')
+- `users_customuser` ← `health_treatment` (SET_NULL, related_name='treatments')
+- `health_vaccinationtype` ← `health_treatment` (SET_NULL, related_name='treatments')
+- `batch_batchcontainerassignment` ← `health_healthlabsample` (PROTECT, related_name='lab_samples')
+- `health_sampletype` ← `health_healthlabsample` (PROTECT, related_name='lab_samples')
+- `users_customuser` ← `health_healthlabsample` (SET_NULL, related_name='recorded_lab_samples')
 
 ### 3.5 Environmental Monitoring (`environmental` app)
 **Purpose**: Captures time-series data for environmental conditions.
@@ -427,54 +485,65 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `description`: text (nullable)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
-- **`environmental_environmentalreading`** (TimescaleDB Hypertable)
-  - `id`: bigint (PK) # Managed by TimescaleDB
-  - `sensor_id`: bigint (FK to `infrastructure_sensor`, on_delete=CASCADE)
-  - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=PROTECT) # Redundant? Sensor already linked. Check design.
-  - `value`: double precision
-  - `reading_time`: timestamptz (Hypertable partitioning key, Index)
-  - `created_at`: timestamptz
+- **`environmental_environmentalreading`** (TimescaleDB Hypertable, partitioned by `reading_time`)
+  # Primary Key for TimescaleDB hypertable is (reading_time, sensor_id)
+  - `id`: bigint (auto-increment, NOT NULL) # Standard Django ID, not the TimescaleDB PK
+  - `reading_time`: timestamptz (PK part 1, NOT NULL)
+  - `sensor_id`: bigint (FK to `infrastructure_sensor`.`id`, PK part 2, NOT NULL)
+  - `parameter_id`: bigint (FK to `environmental_environmentalparameter`.`id`, NOT NULL)
+  - `value`: numeric (NOT NULL)
+  - `container_id`: bigint (FK to `infrastructure_container`.`id`, NOT NULL)
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, nullable)
+  - `recorded_by_id`: integer (FK to `auth_user`.`id`, nullable, for manual entries)
+  - `is_manual`: boolean (NOT NULL)
+  - `notes`: text (NOT NULL)
+  - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz
-- **`environmental_weatherdata`** (TimescaleDB Hypertable)
-  - `id`: bigint (PK) # Managed by TimescaleDB
-  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
-  - `source`: varchar(50) # e.g., OpenWeatherMap, Sensor
-  - `temperature_c`: double precision (nullable)
-  - `humidity_percent`: double precision (nullable)
-  - `precipitation_mm`: double precision (nullable)
-  - `wind_speed_mps`: double precision (nullable)
-  - `wind_direction_deg`: double precision (nullable)
-  - `cloud_cover_percent`: double precision (nullable)
-  - `timestamp`: timestamptz (Hypertable partitioning key, Index)
-  - `created_at`: timestamptz
+- **`environmental_weatherdata`** (TimescaleDB Hypertable, partitioned by `timestamp`)
+  # Primary Key for TimescaleDB hypertable is (timestamp, area_id)
+  - `id`: bigint (auto-increment, NOT NULL) # Standard Django ID, not the TimescaleDB PK
+  - `timestamp`: timestamptz (PK part 1, NOT NULL)
+  - `area_id`: bigint (FK to `infrastructure_area`.`id`, PK part 2, on_delete=CASCADE, NOT NULL)
+  - `temperature`: numeric (nullable) # Temperature in Celsius
+  - `wind_speed`: numeric (nullable) # Wind speed in m/s
+  - `wind_direction`: integer (nullable) # Wind direction in degrees
+  - `precipitation`: numeric (nullable) # Precipitation in mm
+  - `wave_height`: numeric (nullable) # Wave height in meters
+  - `wave_period`: numeric (nullable) # Wave period in seconds
+  - `wave_direction`: integer (nullable) # Wave direction in degrees
+  - `cloud_cover`: integer (nullable) # Cloud cover in percentage
+  - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz
-- **`environmental_photoperioddata`** (NEW)
-    - `id`: bigint (PK, auto-increment)
-    - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
-    - `date`: date (Unique per area)
-    - `sunrise_time`: time
-    - `sunset_time`: time
-    - `daylight_hours`: double precision
-    - `created_at`: timestamptz
-    - `updated_at`: timestamptz
-- **`environmental_stagetransitionenvironmental`** (NEW - likely for planning/simulation)
-    - `id`: bigint (PK, auto-increment)
-    - `from_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=CASCADE)
-    - `to_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=CASCADE)
-    - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=CASCADE)
-    - `min_value`: double precision (nullable)
-    - `max_value`: double precision (nullable)
-    - `optimal_value`: double precision (nullable)
-    - `created_at`: timestamptz
-    - `updated_at`: timestamptz
+- **`environmental_photoperioddata`**
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `area_id`: bigint (FK to `infrastructure_area`.`id`, on_delete=CASCADE, NOT NULL)
+  - `date`: date (NOT NULL, Unique with `area_id`)
+  - `day_length_hours`: numeric (NOT NULL)
+  - `light_intensity`: numeric (nullable) # e.g., lux, PAR
+  - `is_interpolated`: boolean (NOT NULL, default: False) # If data was calculated/interpolated vs directly measured
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
+- **`environmental_stagetransitionenvironmental`** # Records environmental conditions during a batch transfer
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `batch_transfer_id`: bigint (FK to `batch_batchtransfer`.`id`, Unique, NOT NULL)
+  - `temperature`: numeric (nullable) # e.g., Celsius
+  - `oxygen`: numeric (nullable) # e.g., mg/L
+  - `salinity`: numeric (nullable) # e.g., ppt
+  - `ph`: numeric (nullable)
+  - `additional_parameters`: jsonb (nullable) # For other relevant parameters
+  - `notes`: text (NOT NULL, default: '')
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
 
-#### Relationships (Inferred `on_delete` where script failed)
-- `infrastructure_sensor` ← `environmental_environmentalreading` (CASCADE)
-- `environmental_environmentalparameter` ← `environmental_environmentalreading` (PROTECT)
-- `infrastructure_area` ← `environmental_weatherdata` (CASCADE)
-- `infrastructure_area` ← `environmental_photoperioddata` (CASCADE)
-- `batch_lifecyclestage` ← `environmental_stagetransitionenvironmental` (CASCADE, both FKs)
-- `environmental_environmentalparameter` ← `environmental_stagetransitionenvironmental` (CASCADE)
+#### Relationships (Model `on_delete` behavior shown)
+- `infrastructure_sensor` ← `environmental_environmentalreading` (`sensor_id`, CASCADE)
+- `environmental_environmentalparameter` ← `environmental_environmentalreading` (`parameter_id`, PROTECT)
+- `infrastructure_container` ← `environmental_environmentalreading` (`container_id`, CASCADE)
+- `batch_batch` ← `environmental_environmentalreading` (`batch_id`, SET_NULL)
+- `auth_user` ← `environmental_environmentalreading` (`recorded_by_id`, SET_NULL)
+- `infrastructure_area` ← `environmental_weatherdata` (`area_id`, CASCADE)
+- `infrastructure_area` ← `environmental_photoperioddata` (`area_id`, CASCADE)
+- `batch_batchtransfer` ← `environmental_stagetransitionenvironmental` (`batch_transfer_id`, CASCADE)
 
 ### 3.6 User Management (`auth` and `users` apps)
 **Purpose**: Manages user accounts and access control.

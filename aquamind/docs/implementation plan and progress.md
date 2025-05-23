@@ -6,6 +6,23 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-05-23: Batch Model Refinement and Test Restructuring
+
+**Key Accomplishments:**
+
+1.  **Batch Model Update (`Batch` fields):**
+    *   Refactored the `Batch` model in the `batch` app.
+    *   Replaced direct model fields `population_count`, `biomass_kg`, and `avg_weight_g` with dynamically calculated properties: `calculated_population_count`, `calculated_biomass_kg`, and `calculated_avg_weight_g`.
+    *   These calculated fields derive values from associated `BatchContainerAssignment` records, ensuring batch-level aggregations are always current and consistent.
+    *   Updated serializers, views, and tests project-wide to use these new calculated properties.
+
+2.  **Batch App Test Restructuring:**
+    *   Restructured tests in the `batch` app for improved maintainability.
+    *   Split large test files (e.g., `test_serializers.py`, `test_viewsets.py`) into smaller, focused files (e.g., `test_batch_serializer.py`, `test_assignment_viewset.py`).
+    *   This modularity enhances test clarity, debugging, and management.
+    *   Consolidated shared test setup utilities.
+
+
 ### 2025-05-19: HealthLabSampleForm Testing and Validation Refinement
 
 **Objective:** Finalize and validate unit tests for `HealthLabSampleForm`, ensuring correct filtering and validation logic for `sample_date` and `batch_container_assignment`.

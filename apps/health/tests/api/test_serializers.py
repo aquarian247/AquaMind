@@ -13,7 +13,8 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.test import APITestCase # To mock request context
 
 from apps.infrastructure.models import Area, Container, Geography, ContainerType
-from apps.batch.models import Species, Batch, BatchContainerAssignment, LifeCycleStage 
+from apps.batch.models import Batch, BatchContainerAssignment, Species, LifeCycleStage
+ 
 from apps.health.models import (
     HealthParameter, JournalEntry, 
     HealthSamplingEvent,
@@ -93,8 +94,6 @@ class JournalEntrySerializerTest(APITestCase):
             species=cls.species,
             start_date=datetime.date.today(),
             lifecycle_stage=cls.stage,
-            population_count=2000,
-            biomass_kg=Decimal('1000'),
         )
         cls.container = Container.objects.create(
             name='TestCage2_JE',
@@ -109,8 +108,8 @@ class JournalEntrySerializerTest(APITestCase):
             container=cls.container,
             lifecycle_stage=cls.stage,
             assignment_date=datetime.date.today() - datetime.timedelta(days=10),
-            population_count=cls.batch.population_count,
-            biomass_kg=cls.batch.biomass_kg
+            population_count=2000,
+            biomass_kg=Decimal('1000')
         )
         cls.health_parameter = HealthParameter.objects.create(name='Skin Condition JE')
 
@@ -146,7 +145,7 @@ class HealthSamplingEventSerializerTestCase(APITestCase):
         cls.user = User.objects.create_user(username='health_sample_user', password='password')
         cls.species = Species.objects.create(name='Test Species HS')
         cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage HS', order=1)
-        cls.batch = Batch.objects.create(batch_number='B003_HS', species=cls.species, lifecycle_stage=cls.lifecycle_stage, population_count=500, biomass_kg=Decimal('250'), start_date=timezone.now().date())
+        cls.batch = Batch.objects.create(batch_number='B003_HS', species=cls.species, lifecycle_stage=cls.lifecycle_stage, start_date=timezone.now().date())
         cls.container_type = ContainerType.objects.create(name='Test Tank HS', category='TANK', max_volume_m3=Decimal('100.0'))
         # Need a Hall or Area for the container
         cls.geography_hs = Geography.objects.create(name='Test Geo HS')
@@ -197,7 +196,7 @@ class IndividualFishObservationSerializerTestCase(APITestCase):
         cls.user = User.objects.create_user(username='fish_obs_user', password='password')
         cls.species = Species.objects.create(name='Test Species FO')
         cls.lifecycle_stage = LifeCycleStage.objects.create(species=cls.species, name='Test Stage FO', order=1)
-        cls.batch = Batch.objects.create(batch_number='B004_FO', species=cls.species, lifecycle_stage=cls.lifecycle_stage, population_count=100, biomass_kg=Decimal('50'), start_date=timezone.now().date())
+        cls.batch = Batch.objects.create(batch_number='B004_FO', species=cls.species, lifecycle_stage=cls.lifecycle_stage, start_date=timezone.now().date())
         cls.container_type = ContainerType.objects.create(name='Test Tank FO', category='TANK', max_volume_m3=Decimal('50.0'))
         # Create Geography and Area for the Container
         cls.geography_fo = Geography.objects.create(name='Test Geo FO')

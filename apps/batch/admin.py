@@ -39,18 +39,21 @@ class LifeCycleStageAdmin(admin.ModelAdmin):
 class BatchAdmin(admin.ModelAdmin):
     list_display = (
         'batch_number', 'species', 'lifecycle_stage', 'batch_type',
-        'population_count', 'avg_weight_g', 'biomass_kg', 'status', 'start_date'
+        'calculated_population_count', 'calculated_avg_weight_g', 'calculated_biomass_kg', 'status', 'start_date'
     )
     list_filter = ('species', 'lifecycle_stage', 'status', 'batch_type')
     search_fields = ('batch_number', 'notes')
     date_hierarchy = 'start_date'
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = (
+        'created_at', 'updated_at', 
+        'calculated_population_count', 'calculated_avg_weight_g', 'calculated_biomass_kg'
+    )
     fieldsets = (
         (None, {
             'fields': ('batch_number', 'species', 'lifecycle_stage', 'batch_type', 'status')
         }),
-        ('Population Details', {
-            'fields': ('population_count', 'biomass_kg', 'avg_weight_g')
+        ('Calculated Population Details', {
+            'fields': ('calculated_population_count', 'calculated_biomass_kg', 'calculated_avg_weight_g')
         }),
         ('Timeline', {
             'fields': ('start_date', 'expected_end_date', 'actual_end_date')
@@ -63,7 +66,7 @@ class BatchAdmin(admin.ModelAdmin):
 
 @admin.register(BatchContainerAssignment)
 class BatchContainerAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('batch', 'container', 'assignment_date', 'population_count', 'biomass_kg', 'lifecycle_stage')
+    list_display = ('batch', 'container', 'assignment_date', 'population_count', 'avg_weight_g', 'biomass_kg', 'lifecycle_stage')
     list_filter = ('assignment_date', 'lifecycle_stage', 'container__container_type__name')
     search_fields = ('batch__batch_number', 'container__name', 'notes')
     date_hierarchy = 'assignment_date'
@@ -73,7 +76,7 @@ class BatchContainerAssignmentAdmin(admin.ModelAdmin):
             'fields': ('batch', 'container', 'lifecycle_stage', 'assignment_date')
         }),
         ('Population Details', {
-            'fields': ('population_count', 'biomass_kg')
+            'fields': ('population_count', 'avg_weight_g', 'biomass_kg')
         }),
         ('Additional Information', {
             'fields': ('notes', 'created_at', 'updated_at')

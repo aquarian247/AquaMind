@@ -1,8 +1,10 @@
 from django.db import models, transaction
+from django.db.models import Sum, F
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from decimal import Decimal
 from apps.infrastructure.models import Container, Area, Hall
 import decimal
-from decimal import Decimal
 
 class Species(models.Model):
     """
@@ -128,11 +130,6 @@ class Batch(models.Model):
     lifecycle_stage = models.ForeignKey(LifeCycleStage, on_delete=models.PROTECT, related_name='batches')
     status = models.CharField(max_length=20, choices=BATCH_STATUS_CHOICES, default='ACTIVE')
     batch_type = models.CharField(max_length=20, choices=BATCH_TYPE_CHOICES, default='STANDARD')
-    # Total population count across all containers
-    population_count = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    # Total biomass across all containers
-    biomass_kg = models.DecimalField(max_digits=10, decimal_places=2)
-    avg_weight_g = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
     expected_end_date = models.DateField(null=True, blank=True)
     actual_end_date = models.DateField(null=True, blank=True)
@@ -147,18 +144,8 @@ class Batch(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrides the default save method.
-
-        Automatically calculates biomass_kg from population_count and avg_weight_g
-        if biomass_kg is not provided.
-        Automatically calculates avg_weight_g from biomass_kg and population_count
-        if avg_weight_g is not provided.
+        (Original calculation logic removed as these fields are now properties)
         """
-        # Calculate biomass from population count and average weight if not provided
-        if not self.biomass_kg and self.population_count and self.avg_weight_g:
-            self.biomass_kg = (self.population_count * self.avg_weight_g) / 1000
-        # Calculate average weight from biomass and population count if not provided
-        elif not self.avg_weight_g and self.biomass_kg and self.population_count:
-            self.avg_weight_g = (self.biomass_kg * 1000) / self.population_count
         super().save(*args, **kwargs)
         
     @property
@@ -181,6 +168,46 @@ class Batch(models.Model):
             return []
         return [comp.source_batch for comp in self.components.all()]
 
+    @property
+    def calculated_population_count(self):
+        """Calculates total population from active assignments."""
+        # Ensure we are summing from BatchContainerAssignment model
+        # Assuming 'container_assignments' is the related_name from Batch to BatchContainerAssignment
+        return self.batch_assignments.filter(is_active=True).aggregate(
+            total_pop=Sum('population_count')
+        )['total_pop'] or 0
+
+    @property
+    def calculated_avg_weight_g(self):
+        """Calculates the weighted average weight from active assignments."""
+        active_assignments = self.batch_assignments.filter(is_active=True, population_count__gt=0, avg_weight_g__isnull=False)
+        
+        # Calculate Sum(population_count * avg_weight_g)
+        total_weighted_sum_result = active_assignments.aggregate(
+            weighted_sum=Sum(F('population_count') * F('avg_weight_g'))
+        )
+        total_weighted_sum = total_weighted_sum_result['weighted_sum']
+        
+        # Calculate Sum(population_count)
+        total_population_result = active_assignments.aggregate(
+            total_pop=Sum('population_count')
+        )
+        total_population = total_population_result['total_pop']
+
+        if total_population and total_weighted_sum is not None and total_population > 0:
+            return Decimal(total_weighted_sum) / Decimal(total_population)
+        return Decimal('0.00')
+
+    @property
+    def calculated_biomass_kg(self):
+        """Calculates total biomass from calculated population and average weight."""
+        pop_count = self.calculated_population_count
+        avg_w = self.calculated_avg_weight_g
+        # Ensure avg_w is compared appropriately, it will be Decimal('0.00') if no assignments
+        if pop_count > 0 and avg_w > Decimal('0.00'):
+            return (Decimal(pop_count) * Decimal(avg_w)) / Decimal(1000)
+        return Decimal('0.00')
+
 
 class BatchContainerAssignment(models.Model):
     """
@@ -189,8 +216,8 @@ class BatchContainerAssignment(models.Model):
     multiple containers simultaneously. It also supports tracking of mixed populations.
     It explicitly tracks the lifecycle stage for the fish in this specific assignment.
     """
-    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='container_assignments')
-    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='batch_assignments')
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='batch_assignments')
+    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='container_assignments')
     lifecycle_stage = models.ForeignKey(LifeCycleStage, on_delete=models.PROTECT, related_name='container_assignments')
     population_count = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     avg_weight_g = models.DecimalField(
@@ -215,7 +242,7 @@ class BatchContainerAssignment(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['-assignment_date']
         constraints = [
@@ -235,8 +262,14 @@ class BatchContainerAssignment(models.Model):
 
         Calculates biomass_kg if population_count and avg_weight_g are provided.
         """
-        if self.population_count is not None and self.avg_weight_g is not None:
-            self.biomass_kg = (Decimal(self.population_count) * self.avg_weight_g) / Decimal(1000)
+        if self.population_count is not None and self.avg_weight_g is not None and self.avg_weight_g > Decimal('0'):
+            self.biomass_kg = (Decimal(str(self.population_count)) * Decimal(str(self.avg_weight_g))) / Decimal('1000')
+        else:
+            # Ensure biomass_kg is set, especially for new instances if avg_weight_g is not provided
+            # or if population is zero, to avoid NOT NULL constraint violations if the field isn't already set.
+            if not hasattr(self, 'biomass_kg') or self.biomass_kg is None:
+                 self.biomass_kg = Decimal('0.00')
+        
         super().save(*args, **kwargs)
 
 

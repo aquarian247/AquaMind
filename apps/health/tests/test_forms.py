@@ -35,9 +35,6 @@ class HealthLabSampleFormTests(TestCase):
         cls.batch1 = Batch.objects.create(
             batch_number='FORMB001', species=cls.species, lifecycle_stage=cls.lc_stage,
             start_date=date(2023, 1, 1),
-            population_count=1500, # Initial population for the batch
-            avg_weight_g=Decimal('5'), # Initial average weight for the batch
-            biomass_kg=Decimal('7.5') # Initial biomass for the batch (1500 * 5 / 1000)
         )
 
         # Assignment active from 2023-01-10 to 2023-01-31

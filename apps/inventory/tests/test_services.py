@@ -90,8 +90,6 @@ class FeedRecommendationServiceTest(TestCase):
             species=self.species,
             lifecycle_stage=self.stage_smolt,  # Renamed from current_lifecycle_stage
             start_date=today - datetime.timedelta(days=100),
-            population_count=1000,            # Renamed from initial_population
-            avg_weight_g=Decimal("1000.0")    # Added avg_weight_g
         )
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
@@ -390,8 +388,6 @@ class FeedRecommendationServiceTest(TestCase):
             species=self.species, 
             lifecycle_stage=self.stage_parr, # Corrected field
             start_date=today - datetime.timedelta(days=50), 
-            population_count=500,           # Corrected field
-            avg_weight_g=Decimal("50.0")    # Corrected field
         )
         assignment2 = BatchContainerAssignment.objects.create(
             batch=batch2,
@@ -409,8 +405,6 @@ class FeedRecommendationServiceTest(TestCase):
             species=self.species, 
             lifecycle_stage=self.stage_smolt, # Corrected field name
             start_date=today - datetime.timedelta(days=110),
-            population_count=100,           # Added population_count
-            avg_weight_g=Decimal("150.0")   # Added avg_weight_g
         )
         assignment_inactive = BatchContainerAssignment.objects.create(
             batch=batch3,
@@ -429,8 +423,6 @@ class FeedRecommendationServiceTest(TestCase):
             species=self.species, 
             lifecycle_stage=self.stage_smolt, # Corrected field name
             start_date=today - datetime.timedelta(days=120),
-            population_count=200,           # Added population_count
-            avg_weight_g=Decimal("90.0")    # Added avg_weight_g
         )
         assignment_other_container = BatchContainerAssignment.objects.create(
             batch=batch4,

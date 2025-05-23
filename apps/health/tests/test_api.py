@@ -1,4 +1,5 @@
 from django.urls import reverse
+from decimal import Decimal
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from django.contrib.auth import get_user_model
@@ -60,9 +61,6 @@ class HealthAPITestCase(APITestCase):
                 batch_number='B001',
                 species=self.species,
                 status='ACTIVE',
-                population_count=1000,
-                biomass_kg=500.00,
-                avg_weight_g=0.5,
                 start_date='2023-01-01',
                 notes='Test batch',
                 batch_type='STANDARD',
@@ -130,8 +128,8 @@ class HealthAPITestCase(APITestCase):
                 batch=self.batch,
                 container=self.container,
                 assignment_date='2023-01-01',  # Changed to be before sample date in test
-                population_count=self.batch.population_count, # Initial population
-                biomass_kg=self.batch.biomass_kg, # Initial biomass
+                population_count=1000, # Initial population
+                biomass_kg=Decimal('500.00'), # Initial biomass
                 lifecycle_stage=self.lifecycle_stage, # Initial lifecycle stage
                 is_active=True
             )

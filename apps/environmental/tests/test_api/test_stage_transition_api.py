@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.environmental.models import StageTransitionEnvironmental
-from apps.batch.models import BatchTransfer, Batch
+from apps.batch.models import BatchTransfer, Batch, BatchContainerAssignment
 
 
 class StageTransitionEnvironmentalAPITest(APITestCase):
@@ -76,15 +76,12 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             max_biomass_kg=Decimal('500.00')  # Add required max biomass field
         )
         
-        # Create a batch
+        # Create a batch without the removed fields
         self.batch = Batch.objects.create(
             batch_number="TEST-BATCH-001",
             species=self.species,
             lifecycle_stage=self.source_stage,
             batch_type="STANDARD",
-            population_count=1000,
-            biomass_kg=Decimal('100.00'),
-            avg_weight_g=Decimal('100.00'),
             start_date=timezone.now().date()
         )
         
@@ -244,9 +241,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             species=self.species,
             lifecycle_stage=self.source_stage,
             batch_type="STANDARD",
-            population_count=500,
-            biomass_kg=Decimal('50.00'),
-            avg_weight_g=Decimal('100.00'),
+
             start_date=timezone.now().date()
         )
         
@@ -353,9 +348,7 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
             species=self.species,
             lifecycle_stage=self.source_stage,
             batch_type="STANDARD",
-            population_count=800,
-            biomass_kg=Decimal('80.00'),
-            avg_weight_g=Decimal('100.00'),
+
             start_date=timezone.now().date()
         )
         
