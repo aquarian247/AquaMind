@@ -193,7 +193,7 @@ class BatchViewSetTest(APITestCase):
         # Define a fixed "today" for mocking to make date-based filters deterministic
         simulated_today = date(2025, 1, 1) # Uses 'date' from 'from datetime import date'
 
-        with patch('datetime.date.today') as mock_today: # Patch only the 'today' method
+        with patch('apps.batch.tests.api.test_batch_viewset.date.today') as mock_today: # Patch 'date.today' as imported in this module
             mock_today.return_value = simulated_today
             
             # Filter by species
