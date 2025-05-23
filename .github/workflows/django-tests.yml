@@ -10,23 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    services:
-      # PostgreSQL with TimescaleDB service
-      postgres:
-        image: timescale/timescaledb:latest-pg14
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_aquamind
-        ports:
-          - 5432:5432
-        # Provide health check for PostgreSQL service
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
     - uses: actions/checkout@v3
     
@@ -50,45 +33,22 @@ jobs:
     
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=scripts.testing.test_settings
-      env:
-        POSTGRES_DB: postgres
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_HOST: localhost
+        python manage.py migrate --settings=aquamind.settings_ci
     
-    - name: Prepare test database
-      run: |
-        # Drop the test database if it exists to avoid the interactive prompt
-        PGPASSWORD=postgres psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS test_aquamind;'
-      env:
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_HOST: localhost
-        
     - name: Run tests
       run: |
         # Only run tests for implemented features
         # As we complete more features from the implementation plan, we'll add their tests here
-        python manage.py test --settings=scripts.testing.test_settings --noinput
-      env:
-        POSTGRES_DB: postgres
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_HOST: localhost
+        python manage.py test --settings=aquamind.settings_ci --noinput
     
     - name: Generate test coverage report
       run: |
         pip install coverage
         # Only generate coverage for implemented features
-        coverage run --source='.' manage.py test --settings=scripts.testing.test_settings --noinput
+        coverage run --source='.' manage.py test --settings=aquamind.settings_ci --noinput
         # Increasing coverage requirement as we implement more features
         coverage report --fail-under=40
-      env:
-        POSTGRES_DB: postgres
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_HOST: localhost
+      # Environment variables for PostgreSQL removed as CI now uses SQLite
 
   deploy-staging:
     needs: test

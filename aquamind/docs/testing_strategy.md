@@ -186,9 +186,9 @@ python manage.py test --tag=slow
 AquaMind uses GitHub Actions for CI/CD. The primary testing workflow (defined in `.github/workflows/django-tests.yml`) involves the following:
 
 1.  **Testing Environment**: 
-    *   Tests are executed against a **PostgreSQL** database service (using a `timescale/timescaledb` Docker image).
-    *   The Django settings file `scripts/testing/test_settings.py` is used, which configures the connection to this PostgreSQL service.
-    *   Within these settings, `TIMESCALE_ENABLED = False` is typically set to run tests against a standard PostgreSQL setup without relying on active TimescaleDB-specific database features during most automated tests.
+    *   Tests are executed against an **in-memory SQLite** database.
+    *   The Django settings file `aquamind/settings_ci.py` is used, which configures this in-memory SQLite database and sets `TIMESCALE_ENABLED = False`.
+    *   This setup ensures fast and isolated tests within the CI environment.
 2.  **Test Execution**: The test suite is run on every push and pull request to the `main` and `develop` branches.
 3.  **Linting**: Code style is checked using flake8.
 4.  **Security Scanning**: Dependencies are scanned for vulnerabilities (if configured).
@@ -196,11 +196,12 @@ AquaMind uses GitHub Actions for CI/CD. The primary testing workflow (defined in
 
 For detailed CI configuration, refer to the workflow files in the `.github/workflows` directory.
 
-**Note on Local Testing vs. CI**: While the CI pipeline uses PostgreSQL, faster local testing can be performed using SQLite. This can be achieved by:
-*   Using the `run_tests.sh` script (which utilizes `aquamind/test_settings.py` configured for a file-based SQLite database).
-*   Directly invoking `python manage.py test --settings=aquamind.settings_ci.py` (which uses `aquamind/settings_ci.py` configured for an in-memory SQLite database).
+**Note on Local Testing vs. CI**: The CI pipeline now uses an **in-memory SQLite** database (via `aquamind/settings_ci.py`) for speed and simplicity. For local development and testing, you have several options:
+*   **To replicate the CI environment (in-memory SQLite):** `python manage.py test --settings=aquamind.settings_ci`
+*   **For a persistent file-based SQLite database:** Use `aquamind/test_settings.py` (if configured for this, e.g., via `run_tests.sh` if it points to these settings). Command: `python manage.py test --settings=aquamind.test_settings`
+*   **To test against your local PostgreSQL development database** (if configured in `aquamind/settings.py`): `python manage.py test`. This will typically create a test version of your PostgreSQL database (e.g., `test_aquamind_db`).
 
-It's important to ensure that code (especially migrations) is compatible with both PostgreSQL (for CI and production) and SQLite (for local testing flexibility).
+It's important to ensure that code (especially migrations) is compatible with both PostgreSQL (used for production and potentially local development) and SQLite (used for CI and flexible local testing).
 
 ## 9. Test Troubleshooting
 

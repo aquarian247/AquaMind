@@ -17,6 +17,7 @@ DATABASES = {
 # If TimescaleDBTestRunner specifically requires PostgreSQL, this might need further adjustment
 # For now, let's assume standard Django testing with SQLite is the goal for CI.
 # If the custom runner has specific logic for CI, it should respect these settings.
+TIMESCALE_ENABLED = False
 
 # Speed up tests by using a weaker password hasher in CI if appropriate
 # PASSWORD_HASHERS = [
