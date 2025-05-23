@@ -7,7 +7,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from decimal import Decimal
 from datetime import date, timedelta
+import datetime # Import the full module for aliasing
 from unittest.mock import patch
+
+OriginalDate = datetime.date  # Alias for the original datetime.date
 
 from apps.batch.models import Batch
 from apps.batch.tests.api.test_helpers import get_api_url
@@ -191,10 +194,15 @@ class BatchViewSetTest(APITestCase):
         )
         
         # Define a fixed "today" for mocking to make date-based filters deterministic
-        simulated_today = date(2025, 1, 1) # Uses 'date' from 'from datetime import date'
+        simulated_today = OriginalDate(2025, 1, 1) # Use OriginalDate to create the instance for clarity
 
-        with patch('apps.batch.tests.api.test_batch_viewset.date.today') as mock_today: # Patch 'date.today' as imported in this module
-            mock_today.return_value = simulated_today
+        # Patch the 'date' name in the current module's namespace.
+        # autospec=OriginalDate ensures the mock behaves like datetime.date for isinstance checks etc.
+        with patch('apps.batch.tests.api.test_batch_viewset.date', autospec=OriginalDate) as MockDateType:
+            MockDateType.today.return_value = simulated_today
+            # When date(Y, M, D) is called (which is now MockDateType(Y,M,D)), 
+            # it should return a real datetime.date instance.
+            MockDateType.side_effect = lambda *args, **kwargs: OriginalDate(*args, **kwargs)
             
             # Filter by species
             url = f"{get_batch_url('batches')}?species={self.species.id}"
