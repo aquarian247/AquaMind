@@ -190,10 +190,11 @@ class BatchViewSetTest(APITestCase):
             batch_number="BATCH002"
         )
         
-        # Mock the date for consistent testing
-        with patch('datetime.date') as mock_date:
-            mock_date.today.return_value = date(2025, 1, 1)
-            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+        # Define a fixed "today" for mocking to make date-based filters deterministic
+        simulated_today = date(2025, 1, 1) # Uses 'date' from 'from datetime import date'
+
+        with patch('datetime.date.today') as mock_today: # Patch only the 'today' method
+            mock_today.return_value = simulated_today
             
             # Filter by species
             url = f"{get_batch_url('batches')}?species={self.species.id}"
@@ -211,9 +212,10 @@ class BatchViewSetTest(APITestCase):
             self.assertEqual(len(response.data['results']), 2)  # Both batches are active
             
             # Filter by date range
-            start_date = (date.today() - timedelta(days=60)).isoformat()
-            end_date = (date.today() - timedelta(days=1)).isoformat()
-            url = f"{get_batch_url('batches')}?start_date_after={start_date}&start_date_before={end_date}"
+            # Uses the mocked date.today() (which returns simulated_today)
+            start_date_query_val = (date.today() - timedelta(days=60)).isoformat()
+            end_date_query_val = (date.today() - timedelta(days=1)).isoformat()
+            url = f"{get_batch_url('batches')}?start_date_after={start_date_query_val}&start_date_before={end_date_query_val}"
             response = self.client.get(url)
             
             # Print response for debugging
