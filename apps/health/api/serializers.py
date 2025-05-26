@@ -11,7 +11,8 @@ from ..models import (
     FishParameterScore,
     HealthLabSample # Added HealthLabSample import
 )
-from apps.batch.models import BatchContainerAssignment, Batch, Container
+from apps.batch.models import BatchContainerAssignment, Batch
+from apps.infrastructure.models import Container
 from django.utils import timezone # Ensure timezone is imported
 from django.db import models as db_models # For Q objects
 from apps.health.models import HealthLabSample, SampleType # Ensure SampleType is imported
