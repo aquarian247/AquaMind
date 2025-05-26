@@ -99,18 +99,17 @@ class FishParameterScoreInline(admin.TabularInline):
 
 @admin.register(HealthSamplingEvent)
 class HealthSamplingEventAdmin(admin.ModelAdmin):
-    list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'calculated_sample_size', 'avg_weight_g', 'avg_length_cm', 'avg_k_factor', 'sampled_by', 'created_at')
-    list_filter = ('sampling_date', 'sampled_by', 'assignment__batch__batch_number', 'assignment__container__name')
-    search_fields = ('notes', 'sampled_by__username', 'assignment__batch__batch_number', 'assignment__container__name')
+    list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'calculated_sample_size', 'avg_weight_g', 'avg_length_cm', 'avg_k_factor', 'sampled_by')
+    list_filter = ('sampling_date', 'assignment__batch', 'assignment__container')
+    search_fields = ('assignment__batch__batch_number', 'assignment__container__name', 'notes')
     autocomplete_fields = ['assignment', 'sampled_by']
     inlines = [IndividualFishObservationInline]
-    date_hierarchy = 'sampling_date'
     readonly_fields = (
-        'created_at', 'updated_at', 
-        'avg_weight_g', 'avg_length_cm', 'std_dev_weight_g', 'std_dev_length_cm',
+        'avg_weight_g', 'avg_length_cm', 
         'min_weight_g', 'max_weight_g', 'min_length_cm', 'max_length_cm',
         'avg_k_factor', 'calculated_sample_size'
     )
+    date_hierarchy = 'sampling_date'
 
     fieldsets = (
         (None, {
@@ -139,7 +138,7 @@ class HealthSamplingEventAdmin(admin.ModelAdmin):
 
 @admin.register(IndividualFishObservation)
 class IndividualFishObservationAdmin(admin.ModelAdmin):
-    list_display = ('sampling_event', 'fish_identifier', 'length_cm', 'weight_g', 'created_at')
+    list_display = ('sampling_event', 'fish_identifier', 'length_cm', 'weight_g')
     list_filter = (
         'sampling_event__sampling_date',
         'sampling_event__assignment__batch__batch_number',
@@ -152,7 +151,7 @@ class IndividualFishObservationAdmin(admin.ModelAdmin):
 
 @admin.register(FishParameterScore)
 class FishParameterScoreAdmin(admin.ModelAdmin):
-    list_display = ('individual_fish_observation', 'parameter', 'score', 'created_at')
+    list_display = ('individual_fish_observation', 'parameter', 'score')
     list_filter = ('parameter', 'score', 'individual_fish_observation__sampling_event__sampling_date')
     search_fields = ('individual_fish_observation__fish_identifier', 'parameter__name')
     autocomplete_fields = ['individual_fish_observation', 'parameter']

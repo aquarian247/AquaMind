@@ -223,7 +223,7 @@ class IndividualFishObservationSerializerTestCase(APITestCase):
         """Test creating a valid IndividualFishObservation."""
         valid_data = {
             'sampling_event': self.health_sampling_event.id, # Link to the sampling event
-            'fish_identifier': 1, # Changed to integer
+            'fish_identifier': '1', # Use string to match model's behavior
             'weight_g': Decimal('150.50'),
             'length_cm': Decimal('25.20'),
             'parameter_scores': [
@@ -236,7 +236,7 @@ class IndividualFishObservationSerializerTestCase(APITestCase):
         serializer = IndividualFishObservationSerializer(data=valid_data, context={'request': Mock(user=self.user), 'sampling_event': self.health_sampling_event})
         self.assertTrue(serializer.is_valid(), msg=serializer.errors)
         instance = serializer.save() 
-        self.assertEqual(instance.fish_identifier, 1) # Updated assertion
+        self.assertEqual(instance.fish_identifier, '1') # Updated assertion
         self.assertEqual(instance.parameter_scores.count(), 1)
 
 
