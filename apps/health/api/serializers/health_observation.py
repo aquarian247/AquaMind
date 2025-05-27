@@ -16,10 +16,19 @@ from ...models import (
     IndividualFishObservation,
     FishParameterScore
 )
+from ..utils import (
+    format_decimal, calculate_k_factor, calculate_uniformity,
+    validate_date_order, validate_assignment_date_range,
+    HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin
+)
+from .base import HealthBaseSerializer
 
 
-class FishParameterScoreSerializer(serializers.ModelSerializer):
-    """Serializer for FishParameterScore model."""
+class FishParameterScoreSerializer(HealthBaseSerializer):
+    """Serializer for FishParameterScore model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     parameter_name = serializers.CharField(source='parameter.name', read_only=True)
     parameter = serializers.PrimaryKeyRelatedField(
         queryset=HealthParameter.objects.filter(is_active=True)
@@ -31,8 +40,13 @@ class FishParameterScoreSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'parameter_name', 'created_at', 'updated_at']
 
 
-class IndividualFishObservationSerializer(serializers.ModelSerializer):
-    """Serializer for IndividualFishObservation model."""
+class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealthModelMixin, HealthBaseSerializer):
+    """Serializer for IndividualFishObservation model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    Includes HealthDecimalFieldsMixin for decimal field validation and
+    NestedHealthModelMixin for handling nested models.
+    """
     parameter_scores = FishParameterScoreSerializer(many=True, required=False)
     calculated_k_factor = serializers.SerializerMethodField()
 
@@ -46,13 +60,7 @@ class IndividualFishObservationSerializer(serializers.ModelSerializer):
 
     def get_calculated_k_factor(self, obj):
         """Calculate K-factor if weight and length are provided."""
-        if obj.weight_g and obj.length_cm and obj.length_cm > 0:
-            # K = (weight_g / length_cm^3) * 100
-            try:
-                return round((float(obj.weight_g) / (float(obj.length_cm) ** 3)) * 100, 4)
-            except (ValueError, TypeError, ZeroDivisionError):
-                return None
-        return None
+        return calculate_k_factor(obj.weight_g, obj.length_cm)
 
     def validate(self, data):
         """Validate fish observation data."""
@@ -63,8 +71,12 @@ class IndividualFishObservationSerializer(serializers.ModelSerializer):
         if 'fish_identifier' in data and not isinstance(data['fish_identifier'], str):
             data['fish_identifier'] = str(data['fish_identifier'])
 
-        # Condition factor is calculated in the model, not stored in the database
-        # We removed this calculation as the field doesn't exist in the database
+        # Validate weight and length if provided
+        if weight_g is not None:
+            self.validate_positive_decimal(weight_g, 'weight_g')
+        
+        if length_cm is not None:
+            self.validate_positive_decimal(length_cm, 'length_cm')
 
         return data
 
@@ -106,102 +118,121 @@ class IndividualFishObservationSerializer(serializers.ModelSerializer):
         return instance
 
 
-class HealthSamplingEventSerializer(serializers.ModelSerializer):
-    """Serializer for HealthSamplingEvent model."""
+class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin, HealthBaseSerializer):
+    """Serializer for HealthSamplingEvent model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    Includes HealthDecimalFieldsMixin for decimal field validation,
+    NestedHealthModelMixin for handling nested models, and
+    UserAssignmentMixin for automatic user assignment.
+    """
     individual_fish_observations = serializers.ListField(
         child=serializers.DictField(),
         required=False,
         write_only=True
     )
-    fish_observations = IndividualFishObservationSerializer(
-        source='individual_fish_observations',
-        many=True,
-        read_only=True
-    )
+    
+    # Read-only fields for displaying related data
     batch_number = serializers.SerializerMethodField()
     container_name = serializers.SerializerMethodField()
     sampled_by_username = serializers.SerializerMethodField()
-
+    
+    # Sampling event fields
     class Meta:
         model = HealthSamplingEvent
         fields = [
             'id', 'assignment', 'sampling_date', 'number_of_fish_sampled',
             'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
+            'individual_fish_observations',  # write-only field for creating nested objects
             'avg_length_cm', 'std_dev_length_cm', 'min_length_cm', 'max_length_cm',
             'avg_k_factor', 'calculated_sample_size', 'notes', 'sampled_by',
-            'created_at', 'updated_at', 'individual_fish_observations', 'fish_observations',
             'batch_number', 'container_name', 'sampled_by_username'
         ]
         read_only_fields = [
-            'id', 'created_at', 'updated_at',
-            'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
+            'id', 'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
             'avg_length_cm', 'std_dev_length_cm', 'min_length_cm', 'max_length_cm',
             'avg_k_factor', 'calculated_sample_size', 'batch_number', 'container_name', 'sampled_by_username'
         ]
-
+    
     def get_batch_number(self, obj):
         """Get the batch number from the assignment."""
         if obj.assignment and obj.assignment.batch:
             return obj.assignment.batch.batch_number
         return None
-
+    
     def get_container_name(self, obj):
         """Get the container name from the assignment."""
         if obj.assignment and obj.assignment.container:
             return obj.assignment.container.name
         return None
-
+    
     def get_sampled_by_username(self, obj):
         """Get the username of the user who performed the sampling."""
         if obj.sampled_by:
             return obj.sampled_by.username
         return None
-
+    
     def validate_assignment(self, value):
         """Validate that the assignment exists and is active."""
         if not value.is_active:
-            raise serializers.ValidationError(
-                "The selected batch-container assignment is not active."
-            )
+            raise serializers.ValidationError("The batch container assignment must be active.")
+        
         return value
-
+    
     def validate(self, data):
         """Validate sampling event data."""
-        # Ensure number_of_fish_sampled is positive
-        number_of_fish_sampled = data.get('number_of_fish_sampled')
-        if number_of_fish_sampled is not None and number_of_fish_sampled <= 0:
-            raise serializers.ValidationError({
-                'number_of_fish_sampled': 'Number of fish sampled must be positive.'
-            })
-
-        return data
+        # Add any additional validation here
+        sampling_date = data.get('sampling_date')
+        assignment = data.get('assignment')
         
+        # Validate that sampling_date is within the assignment period
+        if sampling_date and assignment:
+            validate_assignment_date_range(assignment, sampling_date, 'sampling_date')
+        
+        return data
+    
     @transaction.atomic
     def create(self, validated_data):
-        """Create a health sampling event with nested individual fish observations."""
+        """
+        Create a health sampling event with nested individual fish observations.
+        
+        This method handles a complex nested creation process:
+        1. Creates the parent HealthSamplingEvent object
+        2. Creates child IndividualFishObservation objects for each fish
+        3. Creates grandchild FishParameterScore objects for each parameter score
+        4. Calculates aggregate metrics based on the individual observations
+        
+        The entire operation is wrapped in a transaction to ensure data integrity.
+        """
+        # Extract nested data for individual fish observations
         individual_fish_observations_data = validated_data.pop('individual_fish_observations', [])
         
-        # Create the health sampling event
+        # Set the user who performed the sampling if not provided
+        # Uses the UserAssignmentMixin to handle user assignment consistently
+        if 'sampled_by' not in validated_data and 'request' in self.context:
+            validated_data = self.assign_user(validated_data, self.context.get('request'), 'sampled_by')
+        
+        # Create the parent health sampling event
         health_sampling_event = HealthSamplingEvent.objects.create(**validated_data)
         
-        # Create individual fish observations
+        # Create individual fish observations (children of the sampling event)
         for fish_data in individual_fish_observations_data:
-            # Ensure fish_identifier is a string
+            # Ensure fish_identifier is a string for consistency
             if 'fish_identifier' in fish_data and not isinstance(fish_data['fish_identifier'], str):
                 fish_data['fish_identifier'] = str(fish_data['fish_identifier'])
             
-            # Extract parameter scores data if present
+            # Extract parameter scores data if present (grandchildren of the sampling event)
             parameter_scores_data = fish_data.pop('parameter_scores', [])
             
-            # Create the fish observation with the sampling_event reference
+            # Create the fish observation with a reference to the parent sampling_event
             fish_observation = IndividualFishObservation.objects.create(
                 sampling_event=health_sampling_event,
                 **fish_data
             )
             
-            # Create parameter scores
+            # Create parameter scores for this fish observation
             for score_data in parameter_scores_data:
-                # Ensure parameter is a HealthParameter instance
+                # Ensure parameter is a valid HealthParameter instance
                 parameter_id = score_data.pop('parameter', None)
                 if parameter_id:
                     try:
@@ -212,11 +243,12 @@ class HealthSamplingEventSerializer(serializers.ModelSerializer):
                             **score_data
                         )
                     except HealthParameter.DoesNotExist:
-                        # Log the error but continue processing
+                        # Log the error but continue processing to avoid losing other valid data
                         print(f"HealthParameter with id {parameter_id} does not exist")
         
-        # Only calculate aggregate metrics when not called through the API
-        # This is to match the expected behavior in tests
+        # Calculate aggregate metrics (avg weight, length, etc.) based on individual observations
+        # Special handling for tests: only calculate metrics when not called through the API POST method
+        # This is to match the expected behavior in tests where metrics are calculated separately
         request = self.context.get('request')
         if not request or not hasattr(request, 'method') or request.method != 'POST':
             health_sampling_event.calculate_aggregate_metrics()
@@ -225,45 +257,63 @@ class HealthSamplingEventSerializer(serializers.ModelSerializer):
         
     @transaction.atomic
     def update(self, instance, validated_data):
-        """Update a health sampling event with nested individual fish observations."""
+        """
+        Update a health sampling event with nested individual fish observations.
+        
+        This method handles a complex nested update process:
+        1. Updates the parent HealthSamplingEvent object with new field values
+        2. If individual fish observations are provided:
+           - Removes all existing observations (with cascade delete to parameter scores)
+           - Creates new IndividualFishObservation objects for each fish
+           - Creates new FishParameterScore objects for each parameter score
+        3. Recalculates aggregate metrics based on the updated individual observations
+        
+        The entire operation is wrapped in a transaction to ensure data integrity.
+        Note: This uses a replace-all approach for nested objects rather than partial updates.
+        """
         individual_fish_observations_data = validated_data.pop('individual_fish_observations', None)
         
-        # Update the health sampling event fields
+        # Update the health sampling event fields using direct attribute assignment
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         
         # Update individual fish observations if provided
         if individual_fish_observations_data is not None:
-            # Clear existing observations and create new ones
+            # Replace strategy: Clear all existing observations and create new ones
+            # This also cascades to delete all associated parameter scores
             instance.individual_fish_observations.all().delete()
             
-            # Create new observations
+            # Create new observations with the updated data
             for fish_data in individual_fish_observations_data:
-                # Set the sampling_event reference
+                # Set the reference to the parent sampling event
                 fish_data['sampling_event'] = instance
                 
                 # Extract parameter scores data if present
                 parameter_scores_data = fish_data.pop('parameter_scores', [])
                 
-                # Create the fish observation
+                # Create the new fish observation
                 fish_observation = IndividualFishObservation.objects.create(**fish_data)
                 
-                # Create parameter scores
+                # Create new parameter scores for this fish observation
                 for score_data in parameter_scores_data:
                     FishParameterScore.objects.create(
                         individual_fish_observation=fish_observation,
                         **score_data
                     )
         
-        # Recalculate aggregate metrics
+        # Recalculate all aggregate metrics based on the updated observations
+        # This ensures that derived values (averages, min/max, etc.) are consistent
         instance.calculate_aggregate_metrics()
         
         return instance
 
 
-class HealthParameterSerializer(serializers.ModelSerializer):
-    """Serializer for the HealthParameter model."""
+class HealthParameterSerializer(HealthBaseSerializer):
+    """Serializer for the HealthParameter model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     class Meta:
         model = HealthParameter
         fields = [

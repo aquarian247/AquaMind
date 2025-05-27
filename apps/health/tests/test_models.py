@@ -11,13 +11,14 @@ from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssi
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
-    VaccinationType, Treatment, SampleType,
+    Treatment, SampleType,
     HealthParameter,
     # New health models
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore,
-    HealthLabSample # Added HealthLabSample
+    HealthLabSample, # Added HealthLabSample
+    VaccinationType # Moved from treatment to vaccination module
 )
 
 User = get_user_model()

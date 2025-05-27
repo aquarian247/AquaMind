@@ -8,17 +8,24 @@ MortalityReason, MortalityRecord, and LiceCount.
 from rest_framework import serializers
 
 from ...models import MortalityReason, MortalityRecord, LiceCount
+from .base import HealthBaseSerializer
 
 
-class MortalityReasonSerializer(serializers.ModelSerializer):
-    """Serializer for the MortalityReason model."""
+class MortalityReasonSerializer(HealthBaseSerializer):
+    """Serializer for the MortalityReason model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     class Meta:
         model = MortalityReason
         fields = ['id', 'name', 'description']
 
 
-class MortalityRecordSerializer(serializers.ModelSerializer):
-    """Serializer for the MortalityRecord model."""
+class MortalityRecordSerializer(HealthBaseSerializer):
+    """Serializer for the MortalityRecord model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     class Meta:
         model = MortalityRecord
         fields = [
@@ -28,8 +35,11 @@ class MortalityRecordSerializer(serializers.ModelSerializer):
         read_only_fields = ['event_date']  # Event date is auto-set
 
 
-class LiceCountSerializer(serializers.ModelSerializer):
-    """Serializer for the LiceCount model."""
+class LiceCountSerializer(HealthBaseSerializer):
+    """Serializer for the LiceCount model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     average_per_fish = serializers.FloatField(read_only=True)
 
     class Meta:

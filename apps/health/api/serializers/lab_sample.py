@@ -11,21 +11,33 @@ from django.db.models import Q
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
 from ...models import SampleType, HealthLabSample
+from ..utils import (
+    format_decimal, validate_date_order,
+    HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin
+)
+from .base import HealthBaseSerializer
 
 
-class SampleTypeSerializer(serializers.ModelSerializer):
-    """Serializer for the SampleType model."""
+class SampleTypeSerializer(HealthBaseSerializer):
+    """Serializer for the SampleType model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     class Meta:
         model = SampleType
         fields = ['id', 'name', 'description']
 
 
-class HealthLabSampleSerializer(serializers.ModelSerializer):
+class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, HealthBaseSerializer):
     """
     Serializer for the HealthLabSample model.
     
     Handles creating lab samples with historical batch-container assignment lookup
     based on the sample date.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    Includes HealthDecimalFieldsMixin for decimal field validation and
+    UserAssignmentMixin for automatic user assignment.
     """
     # Fields for assignment lookup
     batch_id = serializers.IntegerField(write_only=True)
@@ -102,6 +114,8 @@ class HealthLabSampleSerializer(serializers.ModelSerializer):
         batch_id_input = data.get('batch_id')
         container_id_input = data.get('container_id')
         sample_date = data.get('sample_date')
+        date_sent_to_lab = data.get('date_sent_to_lab')
+        date_results_received = data.get('date_results_received')
 
         # Ensure all required fields for lookup are present
         if not all([batch_id_input, container_id_input, sample_date]):
@@ -109,6 +123,13 @@ class HealthLabSampleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "batch_id, container_id, and sample_date are required to create a lab sample."
             )
+
+        # Validate date order if dates are provided
+        if sample_date and date_sent_to_lab:
+            validate_date_order(sample_date, date_sent_to_lab, 'sample_date', 'date_sent_to_lab')
+        
+        if date_sent_to_lab and date_results_received:
+            validate_date_order(date_sent_to_lab, date_results_received, 'date_sent_to_lab', 'date_results_received')
 
         try:
             batch = Batch.objects.get(id=batch_id_input)
@@ -171,8 +192,7 @@ class HealthLabSampleSerializer(serializers.ModelSerializer):
         validated_data['batch_container_assignment_id'] = resolved_assignment_id
         
         # Set recorded_by to the current authenticated user, if available
-        request = self.context.get('request')
-        if request and hasattr(request, 'user') and request.user.is_authenticated:
-            validated_data['recorded_by'] = request.user
+        if 'recorded_by' not in validated_data and 'request' in self.context:
+            validated_data = self.assign_user(validated_data, self.context.get('request'), 'recorded_by')
         
         return HealthLabSample.objects.create(**validated_data)

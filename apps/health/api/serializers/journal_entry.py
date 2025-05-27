@@ -10,10 +10,14 @@ from django.db import transaction
 from apps.batch.models import Batch
 from apps.infrastructure.models import Container
 from ...models import JournalEntry
+from .base import HealthBaseSerializer
 
 
-class JournalEntrySerializer(serializers.ModelSerializer):
-    """Serializer for JournalEntry model."""
+class JournalEntrySerializer(HealthBaseSerializer):
+    """Serializer for JournalEntry model.
+    
+    Uses HealthBaseSerializer for consistent error handling and field management.
+    """
     batch = serializers.PrimaryKeyRelatedField(queryset=Batch.objects.all())
     container = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(), required=False, allow_null=True

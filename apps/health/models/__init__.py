@@ -9,5 +9,6 @@ from .health_observation import (
     HealthParameter, HealthSamplingEvent, IndividualFishObservation, FishParameterScore
 )
 from .lab_sample import HealthLabSample, SampleType
-from .treatment import Treatment, VaccinationType
+from .treatment import Treatment
+from .vaccination import VaccinationType
 from .mortality import MortalityReason, MortalityRecord, LiceCount

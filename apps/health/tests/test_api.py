@@ -12,10 +12,11 @@ from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssi
 from apps.infrastructure.models import Container, ContainerType, Hall, FreshwaterStation, Geography
 from apps.health.models import (
     JournalEntry, MortalityReason, MortalityRecord, LiceCount,
-    VaccinationType, Treatment, SampleType, HealthParameter,
+    Treatment, SampleType, HealthParameter,
     HealthSamplingEvent,  # Added
     IndividualFishObservation, # Added
-    HealthLabSample # Add HealthLabSample to imports
+    HealthLabSample, # Add HealthLabSample to imports
+    VaccinationType # Moved from treatment to vaccination module
 )
 from apps.health.api.serializers import HealthSamplingEventSerializer # Added for direct serializer tests if needed
 

@@ -1,16 +1,12 @@
 """
-Health app API serializers - COMPATIBILITY LAYER.
+Script to fix the health app serializers.py file
+"""
 
-IMPORTANT: This module is a compatibility layer that imports and re-exports 
-all serializers from the modular structure. It exists only to maintain backward 
-compatibility with existing code.
+content = '''"""
+Health app API serializers.
 
-For new code, please import directly from the modular structure:
-    from apps.health.api.serializers.health_observation import HealthParameterSerializer
-    from apps.health.api.serializers.mortality import MortalityRecordSerializer
-    etc.
-
-This file may be removed in a future update once all imports have been migrated.
+This module imports and re-exports all serializers from the modular structure
+to maintain backward compatibility.
 """
 
 # Import all serializers from the modular structure
@@ -20,8 +16,7 @@ from .serializers.health_observation import (
     IndividualFishObservationSerializer, FishParameterScoreSerializer
 )
 from .serializers.lab_sample import HealthLabSampleSerializer, SampleTypeSerializer
-from .serializers.treatment import TreatmentSerializer
-from .serializers.vaccination import VaccinationTypeSerializer
+from .serializers.treatment import TreatmentSerializer, VaccinationTypeSerializer
 from .serializers.mortality import MortalityReasonSerializer, MortalityRecordSerializer, LiceCountSerializer
 
 # Re-export all serializers to maintain backward compatibility
@@ -39,3 +34,10 @@ __all__ = [
     'MortalityRecordSerializer',
     'LiceCountSerializer',
 ]
+'''
+
+# Write the content to the serializers.py file
+with open('apps/health/api/serializers.py', 'w') as f:
+    f.write(content)
+
+print("Fixed serializers.py file successfully!")

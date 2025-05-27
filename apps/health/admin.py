@@ -2,12 +2,13 @@ from django.contrib import admin
 
 from .models import (
     JournalEntry, MortalityReason, LiceCount, MortalityRecord, Treatment,
-    VaccinationType, SampleType,
+    SampleType,
     HealthParameter,
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore,
-    HealthLabSample # BatchContainerAssignment will be imported separately
+    HealthLabSample, # BatchContainerAssignment will be imported separately
+    VaccinationType
 )
 from apps.batch.models import BatchContainerAssignment # Correct import
 

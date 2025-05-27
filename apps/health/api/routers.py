@@ -1,13 +1,28 @@
 from rest_framework.routers import DefaultRouter
 
+# Import viewsets from the new modular structure
 from .viewsets import (
-    JournalEntryViewSet, MortalityReasonViewSet, MortalityRecordViewSet,
-    LiceCountViewSet, VaccinationTypeViewSet, TreatmentViewSet,
-    SampleTypeViewSet, HealthParameterViewSet,
+    # Health observation viewsets
+    HealthParameterViewSet,
     HealthSamplingEventViewSet,
     IndividualFishObservationViewSet,
     FishParameterScoreViewSet,
-    HealthLabSampleViewSet
+    
+    # Journal entry viewsets
+    JournalEntryViewSet,
+    
+    # Lab sample viewsets
+    SampleTypeViewSet,
+    HealthLabSampleViewSet,
+    
+    # Mortality viewsets
+    MortalityReasonViewSet,
+    MortalityRecordViewSet,
+    LiceCountViewSet,
+    
+    # Treatment viewsets
+    VaccinationTypeViewSet,
+    TreatmentViewSet
 )
 
 router = DefaultRouter()

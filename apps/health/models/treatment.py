@@ -1,7 +1,7 @@
 """
 Treatment models for health monitoring.
 
-This module defines models related to treatments and vaccinations.
+This module defines models related to treatments.
 """
 
 from django.db import models
@@ -11,22 +11,9 @@ from datetime import timedelta
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
+from .vaccination import VaccinationType
 
 User = get_user_model()
-
-
-class VaccinationType(models.Model):
-    """Model for defining types of vaccinations."""
-    name = models.CharField(max_length=100, unique=True)
-    manufacturer = models.CharField(max_length=100, blank=True)
-    dosage = models.CharField(max_length=100, blank=True)
-    description = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name_plural = "Vaccination Types"
-
-    def __str__(self):
-        return self.name
 
 
 class Treatment(models.Model):
