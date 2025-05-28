@@ -12,6 +12,17 @@ Apply this rule in the following scenarios:
 5. When debugging validation errors related to model constraints
 
 ## Procedure
+
+### Primary Method: PostgreSQL MCP Tool
+The PostgreSQL MCP tool should be used as the primary method for database inspection. This tool provides a direct and interactive way to query the database and inspect its structure.
+
+1. Use the PostgreSQL MCP tool to run SQL queries directly:
+   ```sql
+   SELECT * FROM information_schema.tables WHERE table_schema = 'public';
+   ```
+
+### Alternative Methods (if PostgreSQL MCP tool is not sufficient)
+
 1. Use the `inspect_db_schema.py` script in the project root to examine the full database schema:
    ```bash
    python inspect_db_schema.py

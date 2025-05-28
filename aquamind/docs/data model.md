@@ -24,36 +24,45 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **`infrastructure_geography`**
   - `id`: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_area`**
   - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
+  - `name`: varchar(100)
   - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
-  - `latitude`: double precision (nullable)
-  - `longitude`: double precision (nullable)
-  - `max_biomass`: double precision (nullable)
+  - `latitude`: numeric(9,6) (validators: -90 to 90)
+  - `longitude`: numeric(9,6) (validators: -180 to 180)
+  - `max_biomass`: numeric
+  - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_freshwaterstation`**
   - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE)
-  - `location_description`: text (nullable)
-  - `latitude`: double precision (nullable)
-  - `longitude`: double precision (nullable)
+  - `name`: varchar(100)
+  - `station_type`: varchar(20)
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
+  - `latitude`: numeric(9,6) (nullable)
+  - `longitude`: numeric(9,6) (nullable)
+  - `description`: text (blank=True)
+  - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_hall`**
   - `id`: bigint (PK, auto-increment)
   - `name`: varchar(100)
-  - `station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=CASCADE)
+  - `freshwater_station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=CASCADE)
+  - `description`: text (blank=True)
+  - `area_sqm`: numeric (nullable)
+  - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_containertype`**
   - `id`: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique)
-  - `description`: text (nullable)
+  - `name`: varchar(100)
+  - `category`: varchar(20) (choices: 'TANK', 'PEN', 'TRAY', 'OTHER')
+  - `max_volume_m3`: numeric(10,2)
+  - `description`: text (blank=True)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_container`**
@@ -61,26 +70,33 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `name`: varchar(100)
   - `container_type_id`: bigint (FK to `infrastructure_containertype`, on_delete=PROTECT)
   - `hall_id`: bigint (FK to `infrastructure_hall`, on_delete=CASCADE, nullable)
-  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable) # Added based on schema possibility
-  - `capacity_kg`: double precision (nullable)
-  - `capacity_m3`: double precision (nullable) # Added based on schema possibility
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable)
+  - `volume_m3`: numeric(10,2)
+  - `max_biomass_kg`: numeric(10,2)
+  - `active`: boolean
+  - `feed_recommendations_enabled`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_sensor`**
   - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `sensor_type`: varchar(20)
   - `container_id`: bigint (FK to `infrastructure_container`, on_delete=CASCADE)
-  - `sensor_id_external`: varchar(100) (Unique) # Sensor identifier in external system (e.g., WonderWare)
-  - `parameter_id`: bigint (FK to `environmental_environmentalparameter`, on_delete=PROTECT) # Link to parameter type
-  - `status`: varchar(50)
-  - `last_reading_time`: timestamptz (nullable)
+  - `serial_number`: varchar(100)
+  - `manufacturer`: varchar(100)
+  - `installation_date`: date (nullable)
+  - `last_calibration_date`: date (nullable)
+  - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_feedcontainer`**
   - `id`: bigint (PK, auto-increment)
   - `name`: varchar(100)
-  - `station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=CASCADE, nullable) # Nullable if linked to Area
-  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable) # Nullable if linked to Station
-  - `capacity_kg`: double precision
+  - `container_type`: varchar(20)
+  - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable)
+  - `hall_id`: bigint (FK to `infrastructure_hall`, on_delete=CASCADE, nullable)
+  - `capacity_kg`: numeric(10,2)
+  - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 
