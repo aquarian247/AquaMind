@@ -43,7 +43,19 @@ class TreatmentSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin,
         """Validate treatment data.
 
         Uses validation functions from validation.py for consistent validation
-        across the application.
+        across the application. Ensures that 'vaccination_type' is provided if
+        'treatment_type' is 'vaccination', and not provided otherwise.
+        Validates 'treatment_date' and 'withholding_period_days' using
+        `validate_treatment_dates`. Ensures 'duration_days' is a positive integer.
+
+        Args:
+            data (dict): The data to validate.
+
+        Returns:
+            dict: The validated data.
+
+        Raises:
+            serializers.ValidationError: If any validation checks fail.
         """
         treatment_type = data.get('treatment_type')
         vaccination_type = data.get('vaccination_type')

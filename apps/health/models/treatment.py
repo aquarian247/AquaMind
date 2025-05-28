@@ -86,11 +86,17 @@ class Treatment(models.Model):
         verbose_name_plural = "Treatments"
 
     def __str__(self):
+        """Return a string representation of the treatment."""
         return f"{self.get_treatment_type_display()} on {self.treatment_date.strftime('%Y-%m-%d')}"
 
     @property
     def withholding_end_date(self):
-        """Calculate the end date of the withholding period."""
+        """Calculate the end date of the withholding period.
+
+        Returns:
+            datetime.date or None: The end date of the withholding period, 
+                                     or None if no withholding period is set.
+        """
         if self.withholding_period_days > 0:
             return self.treatment_date.date() + timedelta(days=self.withholding_period_days)
         return None

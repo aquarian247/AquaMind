@@ -6,7 +6,6 @@ SampleType and HealthLabSample.
 """
 
 from rest_framework import viewsets, permissions
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from apps.health.models import SampleType, HealthLabSample

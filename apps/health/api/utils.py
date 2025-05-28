@@ -7,7 +7,6 @@ date validation, and health score calculations.
 """
 
 from decimal import Decimal, ROUND_HALF_UP
-from datetime import date
 from rest_framework import serializers
 
 

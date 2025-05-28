@@ -107,6 +107,7 @@ class ReadWriteFieldsMixin:
             function: A getter method for the field
         """
         def getter(obj):
+            """Retrieve and format the related object's ID and string representation."""
             # Get the related object through the foreign key
             related_obj = getattr(obj, base_name, None)
             

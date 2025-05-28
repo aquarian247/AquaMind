@@ -1,10 +1,8 @@
-import json
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.utils import timezone
 from decimal import Decimal
 
 from apps.batch.models import (

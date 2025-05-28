@@ -66,6 +66,7 @@ class JournalEntry(models.Model):
         ordering = ['-entry_date']
 
     def __str__(self):
+        """Return a string representation of the journal entry."""
         return (
             f"{self.get_category_display()} - "
             f"{self.entry_date.strftime('%Y-%m-%d')}"

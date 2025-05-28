@@ -49,6 +49,7 @@ class HealthParameter(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        """Return a string representation of the health parameter."""
         return self.name
 
 
@@ -153,6 +154,12 @@ class HealthSamplingEvent(models.Model):
         verbose_name_plural = "Health Sampling Events"
 
     def __str__(self):
+        """
+        Return a user-friendly string representation of the health sampling event.
+
+        Returns:
+            str: A string representing the health sample, including assignment details and sampling date.
+        """
         return f"Health Sample - {self.assignment} - {self.sampling_date}"
 
     def calculate_aggregate_metrics(self):
@@ -298,6 +305,7 @@ class IndividualFishObservation(models.Model):
         verbose_name_plural = "Individual Fish Observations"
 
     def __str__(self):
+        """Return a string representation of the individual fish observation."""
         return f"Fish #{self.fish_identifier} (Event: {self.sampling_event.id})"
 
 
@@ -328,4 +336,5 @@ class FishParameterScore(models.Model):
         verbose_name_plural = "Fish Parameter Scores"
 
     def __str__(self):
+        """Return a string representation of the fish parameter score."""
         return f"{self.individual_fish_observation} - {self.parameter.name}: {self.score}"

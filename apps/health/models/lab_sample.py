@@ -23,6 +23,7 @@ class SampleType(models.Model):
         verbose_name_plural = "Sample Types"
 
     def __str__(self):
+        """Return a string representation of the sample type."""
         return self.name
 
 
@@ -91,15 +92,21 @@ class HealthLabSample(models.Model):
         verbose_name_plural = "Health Lab Samples"
 
     def __str__(self):
+        """Return a string representation of the health lab sample."""
         identifier = self.lab_reference_id if self.lab_reference_id else str(self.pk)
         if self.batch_container_assignment and \
            self.batch_container_assignment.batch and \
            self.batch_container_assignment.container:
-            return (f"Sample {identifier} for Batch {self.batch_container_assignment.batch.batch_number} "
-                    f"in Container {self.batch_container_assignment.container.name} on {self.sample_date}")
+            return (
+                f"Sample {identifier} for Batch "
+                f"{self.batch_container_assignment.batch.batch_number} "
+                f"in Container {self.batch_container_assignment.container.name} "
+                f"on {self.sample_date}"
+            )
         return f"Sample {identifier} on {self.sample_date} (assignment details missing)"
 
     def clean(self):
+        """Validate the HealthLabSample instance data."""
         super().clean()
         if self.sample_date and self.date_sent_to_lab and self.sample_date > self.date_sent_to_lab:
             raise ValidationError({'sample_date': "Sample date cannot be after the date sent to lab."})
@@ -109,6 +116,15 @@ class HealthLabSample(models.Model):
             )
 
     def get_attachment_upload_path(instance, filename):
-        """Generate file path for new attachments."""
+        """
+        Generate file path for new attachments.
+
+        Args:
+            instance: The HealthLabSample instance.
+            filename: The original filename of the attachment.
+
+        Returns:
+            str: The generated file path.
+        """
         # This method is not currently used but kept for future reference
         return f'health/lab_samples/{instance.sample_date.year}/{instance.sample_date.month}/{filename}'

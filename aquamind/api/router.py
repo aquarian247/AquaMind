@@ -58,6 +58,6 @@ urlpatterns = [
     path('environmental/', include((environmental_router.urls, 'environmental'))),
     path('batch/', include((batch_router.urls, 'batch'))),
     path('inventory/', include((inventory_router.urls, 'inventory'))),
-    path('health/', include((health_router.urls, 'health'))),
+    path('health/', include((health_router.urls, 'health-api'))),
     path('users/', include('apps.users.urls')),
 ]

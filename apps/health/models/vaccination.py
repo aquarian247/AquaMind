@@ -19,4 +19,5 @@ class VaccinationType(models.Model):
         ordering = ['name']
 
     def __str__(self):
+        """Return a string representation of the vaccination type."""
         return self.name

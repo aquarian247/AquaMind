@@ -4,33 +4,6 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from apps.batch.models import BatchContainerAssignment
 
-# Import viewsets from the new modular structure
-from .api.viewsets import (
-    # Health observation viewsets
-    HealthParameterViewSet,
-    HealthSamplingEventViewSet,
-    IndividualFishObservationViewSet,
-    FishParameterScoreViewSet,
-    
-    # Journal entry viewsets
-    JournalEntryViewSet,
-    
-    # Lab sample viewsets
-    SampleTypeViewSet,
-    HealthLabSampleViewSet,
-    
-    # Mortality viewsets
-    MortalityReasonViewSet,
-    MortalityRecordViewSet,
-    LiceCountViewSet,
-    
-    # Treatment viewsets
-    VaccinationTypeViewSet,
-    TreatmentViewSet
-)
-
-# Note: HealthLabSampleViewSet is now imported from .api.viewsets
-
 
 @login_required
 def load_batch_assignments(request):

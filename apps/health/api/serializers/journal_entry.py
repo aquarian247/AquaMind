@@ -5,7 +5,6 @@ This module defines serializers for the JournalEntry model.
 """
 
 from rest_framework import serializers
-from django.db import transaction
 
 from apps.batch.models import Batch
 from apps.infrastructure.models import Container
@@ -33,9 +32,15 @@ class JournalEntrySerializer(HealthBaseSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at', 'user')
 
     def create(self, validated_data):
-        """
-        Create a new journal entry.
-        User is set from the request.
+        """Create a new journal entry.
+
+        The 'user' field is automatically set from the request context.
+
+        Args:
+            validated_data (dict): The validated data for creating the entry.
+
+        Returns:
+            JournalEntry: The created journal entry instance.
         """
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
@@ -43,9 +48,16 @@ class JournalEntrySerializer(HealthBaseSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        """
-        Update a journal entry.
-        User is not updated.
+        """Update an existing journal entry.
+
+        The 'user' field cannot be updated through this method.
+
+        Args:
+            instance (JournalEntry): The journal entry instance to update.
+            validated_data (dict): The validated data for updating the entry.
+
+        Returns:
+            JournalEntry: The updated journal entry instance.
         """
         # Remove user from validated_data if present to prevent changing it
         validated_data.pop('user', None)

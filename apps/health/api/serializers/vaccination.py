@@ -4,7 +4,6 @@ Vaccination serializers for health monitoring.
 This module defines serializers for vaccination models.
 """
 
-from rest_framework import serializers
 
 from ...models import VaccinationType
 from .base import HealthBaseSerializer

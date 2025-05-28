@@ -6,14 +6,13 @@ SampleType and HealthLabSample.
 """
 
 from rest_framework import serializers
-from django.db.models import Q
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
 from ...models import SampleType, HealthLabSample
 from ..utils import (
-    format_decimal, validate_date_order,
-    HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin
+    validate_date_order,
+    HealthDecimalFieldsMixin, UserAssignmentMixin
 )
 from .base import HealthBaseSerializer
 
@@ -68,31 +67,66 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         ]
 
     def get_batch_number(self, obj):
-        """Get the batch number from the assignment."""
+        """Get the batch number from the assignment.
+
+        Args:
+            obj (HealthLabSample): The lab sample instance.
+
+        Returns:
+            str or None: The batch number, or None if not available.
+        """
         if obj.batch_container_assignment and obj.batch_container_assignment.batch:
             return obj.batch_container_assignment.batch.batch_number
         return None
 
     def get_container_name(self, obj):
-        """Get the container name from the assignment."""
+        """Get the container name from the assignment.
+
+        Args:
+            obj (HealthLabSample): The lab sample instance.
+
+        Returns:
+            str or None: The container name, or None if not available.
+        """
         if obj.batch_container_assignment and obj.batch_container_assignment.container:
             return obj.batch_container_assignment.container.name
         return None
 
     def get_sample_type_name(self, obj):
-        """Get the sample type name."""
+        """Get the sample type name.
+
+        Args:
+            obj (HealthLabSample): The lab sample instance.
+
+        Returns:
+            str or None: The sample type name, or None if not available.
+        """
         if obj.sample_type:
             return obj.sample_type.name
         return None
 
     def get_recorded_by_username(self, obj):
-        """Get the username of the user who recorded the sample."""
+        """Get the username of the user who recorded the sample.
+
+        Args:
+            obj (HealthLabSample): The lab sample instance.
+
+        Returns:
+            str or None: The username, or None if not available.
+        """
         if obj.recorded_by:
             return obj.recorded_by.username
         return None
         
     def get_batch_container_assignment_details(self, obj):
-        """Get details of the batch container assignment."""
+        """Get details of the batch container assignment.
+
+        Args:
+            obj (HealthLabSample): The lab sample instance.
+
+        Returns:
+            dict or None: A dictionary with assignment details, or None.
+        """
         if obj.batch_container_assignment:
             return {
                 'assignment_id': obj.batch_container_assignment.id,
@@ -104,12 +138,24 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         return None
 
     def validate(self, data):
-        """
-        Validate the lab sample data and resolve the historical batch-container assignment.
-        
-        This method finds the appropriate BatchContainerAssignment that was active
-        on the sample_date, which is crucial for historical accuracy when lab results
-        might come back weeks after sampling.
+        """Validate lab sample data and resolve historical assignment.
+
+        This method finds the BatchContainerAssignment active on the sample_date,
+        ensuring historical accuracy for lab results received later. It also
+        validates date orders and checks if the sample_date is within the
+        batch's lifecycle.
+
+        Args:
+            data (dict): The data to validate, including batch_id, container_id,
+                         and sample_date.
+
+        Returns:
+            dict: The validated data, with 'resolved_assignment_id' added.
+
+        Raises:
+            serializers.ValidationError: If lookup fields are missing, entities
+                                         are not found, dates are invalid, or no
+                                         active assignment is found.
         """
         batch_id_input = data.get('batch_id')
         container_id_input = data.get('container_id')
@@ -179,10 +225,17 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         return data
 
     def create(self, validated_data):
-        """
-        Create a new HealthLabSample instance.
-        - batch_container_assignment is set based on resolved_assignment_id.
-        - recorded_by is set to the authenticated user.
+        """Create a new HealthLabSample instance.
+
+        The 'batch_container_assignment' is set using the 'resolved_assignment_id'
+        determined during validation. The 'recorded_by' user is set from the
+        request context.
+
+        Args:
+            validated_data (dict): The validated data for creating the sample.
+
+        Returns:
+            HealthLabSample: The created lab sample instance.
         """
         resolved_assignment_id = validated_data.pop('resolved_assignment_id')
         # Remove temporary fields used for lookup from validated_data before creating HealthLabSample

@@ -24,6 +24,7 @@ class MortalityReason(models.Model):
         ordering = ['name']
 
     def __str__(self):
+        """Return a string representation of the mortality reason."""
         return self.name
 
 
@@ -57,6 +58,7 @@ class MortalityRecord(models.Model):
         verbose_name_plural = "Mortality Records"
 
     def __str__(self):
+        """Return a string representation of the mortality record."""
         return f"Mortality of {self.count} on {self.event_date.strftime('%Y-%m-%d')}"
 
 
@@ -99,12 +101,17 @@ class LiceCount(models.Model):
         verbose_name_plural = "Lice Counts"
 
     def __str__(self):
+        """Return a string representation of the lice count."""
         total_count = self.adult_female_count + self.adult_male_count + self.juvenile_count
         return f"Lice Count: {total_count} on {self.count_date.strftime('%Y-%m-%d')}"
 
     @property
     def average_per_fish(self):
-        """Calculate the average number of lice per fish."""
+        """Calculate the average number of lice per fish.
+
+        Returns:
+            float: The average number of lice per fish, or 0 if no fish were sampled.
+        """
         if self.fish_sampled > 0:
             total_lice = self.adult_female_count + self.adult_male_count + self.juvenile_count
             return total_lice / self.fish_sampled

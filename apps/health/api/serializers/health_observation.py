@@ -7,9 +7,7 @@ HealthParameter, HealthSamplingEvent, IndividualFishObservation, and FishParamet
 
 from rest_framework import serializers
 from django.db import transaction
-from decimal import Decimal
 
-from apps.batch.models import BatchContainerAssignment
 from ...models import (
     HealthParameter,
     HealthSamplingEvent,
@@ -17,8 +15,7 @@ from ...models import (
     FishParameterScore
 )
 from ..utils import (
-    format_decimal, calculate_k_factor, calculate_uniformity,
-    validate_date_order, validate_assignment_date_range,
+    calculate_k_factor, validate_assignment_date_range,
     HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin
 )
 from .base import HealthBaseSerializer
@@ -59,11 +56,28 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
         read_only_fields = ['id', 'calculated_k_factor']
 
     def get_calculated_k_factor(self, obj):
-        """Calculate K-factor if weight and length are provided."""
+        """Calculate K-factor if weight and length are provided.
+
+        Args:
+            obj: The IndividualFishObservation instance.
+
+        Returns:
+            Decimal or None: The calculated K-factor, or None if data is insufficient.
+        """
         return calculate_k_factor(obj.weight_g, obj.length_cm)
 
     def validate(self, data):
-        """Validate fish observation data."""
+        """Validate fish observation data.
+
+        Ensures fish_identifier is a string and validates positive decimal values
+        for weight_g and length_cm if provided.
+
+        Args:
+            data (dict): The data to validate.
+
+        Returns:
+            dict: The validated data.
+        """
         weight_g = data.get('weight_g')
         length_cm = data.get('length_cm')
         
@@ -82,7 +96,14 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
 
     @transaction.atomic
     def create(self, validated_data):
-        """Create a new fish observation with nested parameter scores."""
+        """Create a new fish observation with nested parameter scores.
+
+        Args:
+            validated_data (dict): The data for creating the observation.
+
+        Returns:
+            IndividualFishObservation: The created instance.
+        """
         parameter_scores_data = validated_data.pop('parameter_scores', [])
         fish_observation = IndividualFishObservation.objects.create(**validated_data)
 
@@ -97,7 +118,17 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        """Update a fish observation with nested parameter scores."""
+        """Update a fish observation with nested parameter scores.
+
+        This method uses a replace-all strategy for nested parameter_scores.
+
+        Args:
+            instance (IndividualFishObservation): The instance to update.
+            validated_data (dict): The data for updating the instance.
+
+        Returns:
+            IndividualFishObservation: The updated instance.
+        """
         parameter_scores_data = validated_data.pop('parameter_scores', None)
         
         # Update fish observation fields
@@ -155,32 +186,73 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
         ]
     
     def get_batch_number(self, obj):
-        """Get the batch number from the assignment."""
+        """Get the batch number from the assignment.
+
+        Args:
+            obj: The HealthSamplingEvent instance.
+
+        Returns:
+            str or None: The batch number, or None if not available.
+        """
         if obj.assignment and obj.assignment.batch:
             return obj.assignment.batch.batch_number
         return None
     
     def get_container_name(self, obj):
-        """Get the container name from the assignment."""
+        """Get the container name from the assignment.
+
+        Args:
+            obj: The HealthSamplingEvent instance.
+
+        Returns:
+            str or None: The container name, or None if not available.
+        """
         if obj.assignment and obj.assignment.container:
             return obj.assignment.container.name
         return None
     
     def get_sampled_by_username(self, obj):
-        """Get the username of the user who performed the sampling."""
+        """Get the username of the user who performed the sampling.
+
+        Args:
+            obj: The HealthSamplingEvent instance.
+
+        Returns:
+            str or None: The username, or None if not available.
+        """
         if obj.sampled_by:
             return obj.sampled_by.username
         return None
     
     def validate_assignment(self, value):
-        """Validate that the assignment exists and is active."""
+        """Validate that the assignment exists and is active.
+
+        Args:
+            value (BatchContainerAssignment): The assignment instance.
+
+        Returns:
+            BatchContainerAssignment: The validated assignment instance.
+
+        Raises:
+            serializers.ValidationError: If the assignment is not found or inactive.
+        """
         if not value.is_active:
             raise serializers.ValidationError("The batch container assignment must be active.")
         
         return value
     
     def validate(self, data):
-        """Validate sampling event data."""
+        """Validate sampling event data.
+
+        Ensures that the sampling_date is within the assignment's date range
+        and that number_of_fish_sampled is positive.
+
+        Args:
+            data (dict): The data to validate.
+
+        Returns:
+            dict: The validated data.
+        """
         # Add any additional validation here
         sampling_date = data.get('sampling_date')
         assignment = data.get('assignment')
@@ -193,16 +265,21 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
     
     @transaction.atomic
     def create(self, validated_data):
-        """
-        Create a health sampling event with nested individual fish observations.
-        
+        """Create a health sampling event with nested individual fish observations.
+
         This method handles a complex nested creation process:
-        1. Creates the parent HealthSamplingEvent object
-        2. Creates child IndividualFishObservation objects for each fish
-        3. Creates grandchild FishParameterScore objects for each parameter score
-        4. Calculates aggregate metrics based on the individual observations
-        
+        1. Creates the parent HealthSamplingEvent object.
+        2. Creates IndividualFishObservation objects for each fish.
+        3. Creates FishParameterScore objects for each parameter score.
+        4. Calculates aggregate metrics based on the individual observations.
+
         The entire operation is wrapped in a transaction to ensure data integrity.
+
+        Args:
+            validated_data (dict): The data for creating the event.
+
+        Returns:
+            HealthSamplingEvent: The created instance.
         """
         # Extract nested data for individual fish observations
         individual_fish_observations_data = validated_data.pop('individual_fish_observations', [])
@@ -257,19 +334,25 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
         
     @transaction.atomic
     def update(self, instance, validated_data):
-        """
-        Update a health sampling event with nested individual fish observations.
-        
+        """Update a health sampling event with nested fish observations.
+
         This method handles a complex nested update process:
-        1. Updates the parent HealthSamplingEvent object with new field values
+        1. Updates the parent HealthSamplingEvent object with new field values.
         2. If individual fish observations are provided:
-           - Removes all existing observations (with cascade delete to parameter scores)
-           - Creates new IndividualFishObservation objects for each fish
-           - Creates new FishParameterScore objects for each parameter score
-        3. Recalculates aggregate metrics based on the updated individual observations
-        
+           - Removes all existing observations (with cascade delete to parameter scores).
+           - Creates new IndividualFishObservation objects for each fish.
+           - Creates new FishParameterScore objects for each parameter score.
+        3. Recalculates aggregate metrics based on the updated individual observations.
+
         The entire operation is wrapped in a transaction to ensure data integrity.
-        Note: This uses a replace-all approach for nested objects rather than partial updates.
+        Note: This uses a replace-all approach for nested objects.
+
+        Args:
+            instance (HealthSamplingEvent): The instance to update.
+            validated_data (dict): The data for updating the instance.
+
+        Returns:
+            HealthSamplingEvent: The updated instance.
         """
         individual_fish_observations_data = validated_data.pop('individual_fish_observations', None)
         
