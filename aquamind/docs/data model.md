@@ -74,7 +74,6 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `volume_m3`: numeric(10,2)
   - `max_biomass_kg`: numeric(10,2)
   - `active`: boolean
-  - `feed_recommendations_enabled`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 - **`infrastructure_sensor`**
@@ -261,7 +260,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`.`id`, on_delete=CASCADE, related_name='feed_stocks')
   - `current_quantity_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Current amount of feed in stock (kg)")
   - `reorder_threshold_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Threshold for reordering (kg)")
-  - `last_updated`: timestamptz (auto_now=True)
+  - `updated_at`: timestamptz (auto_now=True)
   - `notes`: text (blank=True)
   - Meta: `unique_together = ['feed', 'feed_container']`
 - **`inventory_feedingevent`**
@@ -605,21 +604,118 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
 
+#### 3.7 Broodstock Management (broodstock app)
+
+The Broodstock Management app requires a data model that supports container tracking, fish management, breeding operations, environmental monitoring, egg production (internal and external), and batch traceability. This model ensures flexible traceability from broodstock to batch for internal eggs and from third-party suppliers to batch for external eggs, with implementation complexity comparable to Scenario Planning.
+
+**Core Entities and Attributes**
+
+- **BroodstockContainer**  
+  - `container_id` (PK): Unique identifier  
+  - `location`: Physical location (e.g., site, section) (string)  
+  - `capacity`: Max fish capacity (integer)  
+  - `status`: Current state (e.g., active, under maintenance) (string)  
+  - `maintenance_schedule`: JSON field for task dates and details (e.g., [{"task": "cleaning", "date": "2025-06-15"}])  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **BroodstockFish**  
+  - `fish_id` (PK): Unique identifier  
+  - `container_id` (FK): Link to `BroodstockContainer`  
+  - `traits`: JSON field for basic traits (e.g., {"growth_rate": "high"})  
+  - `health_status`: Current health (e.g., healthy, monitored) (string)  
+  - `movement_history`: JSON field for move logs (e.g., [{"date": "2025-06-01", "to_container": "C123"}])  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **BreedingPlan**  
+  - `plan_id` (PK): Unique identifier  
+  - `name`: Plan name (string)  
+  - `trait_priorities`: JSON field for prioritized traits (e.g., {"growth": 0.5, "disease_resistance": 0.3})  
+  - `start_date`, `end_date`: Plan duration (datetime)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **BreedingPair**  
+  - `pair_id` (PK): Unique identifier  
+  - `plan_id` (FK): Link to `BreedingPlan`  
+  - `male_fish_id` (FK): Link to `BroodstockFish`  
+  - `female_fish_id` (FK): Link to `BroodstockFish`  
+  - `pairing_date`: Date of pairing (datetime)  
+  - `progeny_count`: Number of offspring (integer, nullable)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **EggProduction**  
+  - `egg_production_id` (PK): Unique identifier  
+  - `pair_id` (FK): Link to `BreedingPair` (nullable for external eggs)  
+  - `egg_batch_id`: Unique identifier for the egg batch (string)  
+  - `egg_count`: Number of eggs produced or acquired (integer)  
+  - `production_date`: Date of production or acquisition (datetime)  
+  - `destination_station_id` (FK): Link to `infrastructure_freshwaterstation` (nullable)  
+  - `source_type`: Source of eggs (e.g., "internal", "external") (string)  
+  - `supplier_details`: JSON field for external supplier data (e.g., {"name": "SupplierX", "batch_number": "EX123"}) (nullable)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **BatchParentage**  
+  - `batch_id` (PK, FK): Link to `batch_batch`  
+  - `egg_batch_id` (PK): Link to `EggProduction.egg_batch_id`  
+  - `assignment_date`: Date eggs were assigned to the batch (datetime)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **EnvironmentalReading**  
+  - `reading_id` (PK): Unique identifier  
+  - `container_id` (FK): Link to `BroodstockContainer`  
+  - `timestamp`: Reading time (datetime)  
+  - `parameter_type`: Type (e.g., temperature, photoperiod) (string)  
+  - `value`: Measured value (float)  
+  - `source`: Sensor or manual entry ID (string)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **EnvironmentalSchedule**  
+  - `schedule_id` (PK): Unique identifier  
+  - `container_id` (FK): Link to `BroodstockContainer`  
+  - `name`: Schedule name (string)  
+  - `parameters`: JSON field for settings (e.g., {"photoperiod": "16h_light"})  
+  - `start_time`, `end_time`: Schedule duration (datetime)  
+  - `created_at`, `updated_at`: Timestamps  
+
+- **Scenario**  
+  - `scenario_id` (PK): Unique identifier (reuses `scenario` table from Scenario Planning)  
+  - `name`: Scenario name (string)  
+  - `description`: Scenario details (text)  
+  - `parameters`: JSON field for broodstock-specific settings (e.g., {"egg_output": 10000, "source": "external"})  
+  - `start_date`, `end_date`: Scenario timeframe (datetime)  
+  - `created_by`: User ID (FK to `auth_user`)  
+  - `created_at`, `updated_at`: Timestamps  
+
+**Relationships**  
+- **BroodstockContainer** to **BroodstockFish**: One-to-many (one container holds many fish).  
+- **BroodstockContainer** to **EnvironmentalReading**: One-to-many (many readings per container).  
+- **BroodstockContainer** to **EnvironmentalSchedule**: One-to-many (multiple schedules over time).  
+- **BreedingPlan** to **BreedingPair**: One-to-many (one plan includes many pairs).  
+- **BreedingPair** to **BroodstockFish**: Many-to-two (each pair links one male and one female).  
+- **BreedingPair** to **EggProduction**: One-to-many (one pair produces multiple egg batches, nullable for external eggs).  
+- **EggProduction** to **BatchParentage**: One-to-many (one egg batch links to multiple batches if split).  
+- **BatchParentage** to **batch_batch**: Many-to-one (multiple egg batches may contribute to one batch).  
+- **Scenario** to **BroodstockContainer**: Many-to-many (via junction table `ScenarioContainer`).  
+
+**Additional Considerations**  
+- Use TimescaleDB for `EnvironmentalReading` to handle time-series data efficiently, consistent with Health Monitoring.  
+- Index `container_id`, `fish_id`, `egg_batch_id`, and `batch_id` for fast lineage queries across large datasets.  
+- Reuse the `scenario` table from Scenario Planning, extending it with broodstock-specific parameters (e.g., internal vs. external egg sourcing).  
+- Ensure JSON fields (`traits`, `parameters`, `supplier_details`) are structured for easy querying and scalability.  
+- Implement constraints (e.g., unique `egg_batch_id`, nullable `pair_id` for external eggs) to support flexible traceability.  
+- Use `django-auditlog` to track changes to `EggProduction` and `BatchParentage` for immutable lineage records.  
+- Allow `EggProduction.source_type` to differentiate internal and external eggs, with `supplier_details` mandatory for external sources.
+
 ## 4. Planned Data Model Domains (Not Yet Implemented)
 
-### 4.1 Broodstock Management
-**Purpose**: Manage genetic lines and breeding programs.
-**Tables**: `broodstock`, `genetic_trait`, `batch_genetic_profile`, `breeding_program`, `breeding_pair`, `genetic_scenario`, `trait_tradeoff`, `snp_panel`, `breeding_value`, `photoperiod_regime`, `temperature_regime`. (Details omitted for brevity - refer to PRD/previous draft).
-
-### 4.2 Operational Planning
+### 4.1 Operational Planning
 **Purpose**: Provide operational recommendations.
 **Tables**: `batch_operational_plan`, `planning_recommendation`. (Details omitted).
 
-### 4.3 Scenario Planning
+### 4.2 Scenario Planning
 **Purpose**: Simulate hypothetical scenarios.
 **Tables**: `batch_scenario`, `scenario_model`. (Details omitted).
 
-### 4.4 Analytics
+### 4.3 Analytics
 **Purpose**: Support AI/ML predictions.
 **Tables**: `analytics_model`, `prediction`. (Details omitted).
 

@@ -1,27 +1,24 @@
 """
 ViewSets for the inventory app API.
 
-These ViewSets provide the CRUD operations for feed and inventory-related models.
+This file is maintained for backward compatibility and will be removed in a future update.
+Please use the new module structure in viewsets/ instead.
 """
-from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F, Q
-from django.utils import timezone
 
-from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary, FeedRecommendation
-from apps.inventory.services.feed_recommendation_service import FeedRecommendationService
-from apps.inventory.serializers import (
-    FeedSerializer,
-    FeedPurchaseSerializer,
-    FeedStockSerializer,
-    FeedingEventSerializer,
-    BatchFeedingSummarySerializer,
-    BatchFeedingSummaryGenerateSerializer,
-    FeedRecommendationSerializer,
-    FeedRecommendationGenerateSerializer
-)
+# Re-export all viewsets from the new module structure
+from apps.inventory.api.viewsets.feed import FeedViewSet
+from apps.inventory.api.viewsets.purchase import FeedPurchaseViewSet
+from apps.inventory.api.viewsets.stock import FeedStockViewSet
+from apps.inventory.api.viewsets.feeding import FeedingEventViewSet
+from apps.inventory.api.viewsets.summary import BatchFeedingSummaryViewSet
+
+__all__ = [
+    'FeedViewSet',
+    'FeedPurchaseViewSet',
+    'FeedStockViewSet',
+    'FeedingEventViewSet',
+    'BatchFeedingSummaryViewSet',
+]
 
 
 class FeedViewSet(viewsets.ModelViewSet):
@@ -129,130 +126,4 @@ class BatchFeedingSummaryViewSet(viewsets.ReadOnlyModelViewSet):
 
         summaries = self.get_queryset().filter(batch_id=batch_id)
         serializer = self.get_serializer(summaries, many=True)
-        return Response(serializer.data)
-
-
-class FeedRecommendationViewSet(viewsets.ModelViewSet):
-    """ViewSet for FeedRecommendation model."""
-    queryset = FeedRecommendation.objects.all()
-    serializer_class = FeedRecommendationSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch_container_assignment', 'batch_container_assignment__batch', 
-                      'batch_container_assignment__container', 'is_followed', 'recommended_date']
-    search_fields = ['recommendation_reason']
-    ordering_fields = ['recommended_date', 'created_at', 'recommended_feed_kg', 'expected_fcr']
-    ordering = ['-recommended_date', '-created_at']
-
-    @action(detail=False, methods=['get'])
-    def by_container(self, request):
-        """Get feed recommendations for a specific container."""
-        container_id = request.query_params.get('container_id')
-        if not container_id:
-            return Response(
-                {"error": "container_id parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        recommendations = self.get_queryset().filter(
-            batch_container_assignment__container_id=container_id
-        )
-        serializer = self.get_serializer(recommendations, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def by_batch(self, request):
-        """Get feed recommendations for a specific batch."""
-        batch_id = request.query_params.get('batch_id')
-        if not batch_id:
-            return Response(
-                {"error": "batch_id parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        recommendations = self.get_queryset().filter(
-            batch_container_assignment__batch_id=batch_id
-        )
-        serializer = self.get_serializer(recommendations, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def today(self, request):
-        """Get feed recommendations for today."""
-        today = timezone.now().date()
-        recommendations = self.get_queryset().filter(recommended_date=today)
-        serializer = self.get_serializer(recommendations, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['post'])
-    def generate(self, request):
-        """Generate feed recommendations for a container or batch."""
-        serializer = FeedRecommendationGenerateSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            try:
-                data = serializer.validated_data
-                service = FeedRecommendationService()
-                results = []
-                
-                # Generate recommendations based on the request
-                if 'container' in data:
-                    # Generate for a specific container
-                    container = data['container']
-                    date = data['date']
-                    
-                    # Find active batch container assignments for this container
-                    from apps.batch.models import BatchContainerAssignment
-                    assignments = BatchContainerAssignment.objects.filter(
-                        container=container,
-                        active=True
-                    )
-                    
-                    for assignment in assignments:
-                        recommendation = service.create_recommendation(assignment, date)
-                        if recommendation:
-                            results.append(recommendation)
-                            
-                elif 'batch' in data:
-                    # Generate for all containers with this batch
-                    batch = data['batch']
-                    date = data['date']
-                    
-                    # Find active batch container assignments for this batch
-                    from apps.batch.models import BatchContainerAssignment
-                    assignments = BatchContainerAssignment.objects.filter(
-                        batch=batch,
-                        active=True,
-                        container__feed_recommendations_enabled=True
-                    )
-                    
-                    for assignment in assignments:
-                        recommendation = service.create_recommendation(assignment, date)
-                        if recommendation:
-                            results.append(recommendation)
-                
-                if not results:
-                    return Response(
-                        {"message": "No recommendations could be generated. Check if containers have feed_recommendations_enabled=True and valid assignments."},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-                    
-                result_serializer = FeedRecommendationSerializer(results, many=True)
-                return Response(result_serializer.data)
-                
-            except Exception as e:
-                return Response(
-                    {"error": str(e)},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(detail=True, methods=['post'])
-    def mark_followed(self, request, pk=None):
-        """Mark a recommendation as followed."""
-        recommendation = self.get_object()
-        recommendation.is_followed = True
-        recommendation.save()
-        
-        serializer = self.get_serializer(recommendation)
         return Response(serializer.data)

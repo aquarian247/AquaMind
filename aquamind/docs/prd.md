@@ -100,21 +100,12 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 - **Purpose**: To manage feed resources (`inventory_feed`) and ensure optimal feeding practices for batches.
 - **Functionality**:
   - The system shall manage feed types (`inventory_feed`), purchases (`inventory_feedpurchase`), stock levels (`inventory_feedstock` linked to `infrastructure_feedcontainer`), and feeding events (`inventory_feedingevent`).
-  - The system shall generate feed recommendations using `inventory_feedrecommendation` based on batch lifecycle stage (`batch_batchcontainerassignment.lifecycle_stage_id`), fish weight (`batch_batchcontainerassignment.avg_weight_g`), and environmental conditions (`environmental_environmentalreading` data).
   - The system shall track feed stock levels (`inventory_feedstock.quantity_kg`) and alert users to low inventory.
   - The system shall log feeding events (`inventory_feedingevent`) linked to specific batch assignments (`inventory_feedingevent.assignment_id`).
-  - Feed type suitability for stages is managed via the `inventory_feed_suitable_for_stages` ManyToMany relationship table.
 - **Behavior**:
-  - Feed recommendations (`inventory_feedrecommendation`) shall update dynamically based on changes in the linked batch assignment or relevant environmental data.
   - Low-stock alerts shall trigger when `inventory_feedstock.quantity_kg` falls below a configurable threshold (e.g., percentage of `infrastructure_feedcontainer.capacity_kg`).
-  - Feeding events shall be validated to ensure compatibility with the batch's current stage (via `assignment.lifecycle_stage_id`) and suitable feed types (`inventory_feed_suitable_for_stages`).
+  - Feeding events shall be validated to ensure compatibility with the batch's current stage (via `assignment.lifecycle_stage_id`).
 - **Justification**: Optimizes feed usage, reduces waste, and supports healthy batch growth.
-- **User Story**: As a Farm Operator, I want to receive feed recommendations (`inventory_feedrecommendation`) for a specific batch container assignment (`batch_batchcontainerassignment`) so that I can ensure optimal growth.
-  - **Acceptance Criteria**:
-    - The UI displays relevant `inventory_feedrecommendation` records linked to the assignment, with details (`recommended_feed_id`, `recommended_quantity_kg`, `reasoning`).
-    - Recommendations are demonstrably based on the assignment's `lifecycle_stage_id`, `avg_weight_g`, and relevant environmental data.
-    - Users can log an `inventory_feedingevent` directly from the recommendation.
-    - Recommendations are updated based on configured frequency (e.g., daily) or significant data changes.
 - **User Story**: As a Logistics Manager, I want to track feed stock levels (`inventory_feedstock`) so that I can plan purchases (`inventory_feedpurchase`).
   - **Acceptance Criteria**:
     - The UI displays current `inventory_feedstock.quantity_kg` per `infrastructure_feedcontainer` with visual indicators for low stock.
@@ -277,21 +268,149 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Filters allow users to further refine view by subsidiary if applicable within their permissions.
     - Users can export the current dashboard view as a PDF or image.
 
-#### 3.1.8 Broodstock Management (Initial Foundation)
-- **Purpose**: To manage broodstock populations for genetic improvement and breeding optimization (Note: Full features are planned for Phase 2/3).
-- **Functionality (Phase 1 - Basic Tracking)**:
-  - The system shall track broodstock populations using the existing `batch_batch` model, possibly identified by a specific `batch_species` or naming convention.
-  - Basic tracking of lineage might be handled through notes fields or careful batch naming conventions initially.
-  - Environmental condition tracking utilizes existing `environmental` app features applied to containers housing broodstock batches.
-  - *(Advanced features like `genetic_trait`, `batch_genetic_profile`, `breeding_program`, `breeding_pair`, and SNP integration are planned for later phases and require new model implementation).*
-- **Behavior (Phase 1)**:
-  - Broodstock batches are managed using the standard batch workflow regarding container assignment (`batch_batchcontainerassignment`) and basic health/environmental monitoring.
-- **Justification**: Establishes foundational tracking within the existing framework before dedicated broodstock models are built.
-- **User Story**: As a Broodstock Operator, I want to assign a batch designated as broodstock (`batch_batch`) to a specific container (`infrastructure_container`) and monitor its environmental conditions (`environmental_environmentalreading`).
-  - **Acceptance Criteria**:
-    - Users can create/assign batches clearly identified as broodstock (e.g., via species link or name).
-    - Standard environmental monitoring is available for containers housing these broodstock batches.
-    - Standard health events (`health_journalentry`) can be logged against assignments for these broodstock batches.
+#### 3.1.8 Broodstock Management (broodstock app)
+
+**Purpose**  
+The Broodstock Management feature in AquaMind supports the foundational stage of salmon farming by enabling broodstock managers and farm operators to oversee broodstock infrastructure, track fish populations, manage breeding operations, monitor environmental conditions, and ensure traceability from broodstock to batch where applicable. It accommodates both internally produced eggs from broodstock and externally purchased eggs from third parties, providing flexible lineage tracking to support operational efficiency and quality control. This module is designed to be as user-friendly and implementable as the Scenario Planning features, focusing on essential capabilities without advanced predictive modeling.
+
+**Functionality**  
+The Broodstock Management feature includes the following key components:
+
+- **Broodstock Container Management**  
+  - **Description:** Track and manage containers housing broodstock fish, including their status and maintenance needs.  
+  - **Specifications:**  
+    - Maintain an inventory of thousands of containers with details like ID, location, and capacity.  
+    - Monitor real-time environmental parameters (e.g., temperature, photoperiod) via integrated sensors.  
+    - Schedule and log maintenance tasks (e.g., cleaning, repairs).  
+    - Provide a dashboard for quick container status overview.  
+  - **Data Requirements:** Container ID, location, capacity, status, sensor data, maintenance logs.
+
+- **Fish Population Tracking**  
+  - **Description:** Monitor individual fish and groups within containers, with optional lineage tracking for breeding fish.  
+  - **Specifications:**  
+    - Record fish data (e.g., ID, container assignment, basic traits like growth rate).  
+    - Track fish movements between containers and update population counts.  
+    - Link broodstock fish to breeding events for internal traceability, where applicable.  
+    - Display population summaries per container (e.g., total fish, health status).  
+  - **Data Requirements:** Fish ID, container ID, traits, health status, movement history, optional parentage links.
+
+- **Breeding Operations and Egg Production**  
+  - **Description:** Support internal egg production and breeding management with traceability to progeny batches.  
+  - **Specifications:**  
+    - Create breeding plans with prioritized traits (e.g., growth, disease resistance).  
+    - Assign breeding pairs manually or via basic trait-based suggestions.  
+    - Record egg production events with unique egg batch IDs for internal eggs.  
+    - Link internally produced egg batches to progeny batches in freshwater stations.  
+    - Log breeding and egg production events with timestamps and user details.  
+  - **Data Requirements:** Breeding plan ID, trait priorities, pair assignments, egg batch ID, progeny records.
+
+- **External Egg Acquisition**  
+  - **Description:** Manage eggs purchased from third-party suppliers, ensuring traceability without internal broodstock links.  
+  - **Specifications:**  
+    - Record external egg batches with supplier details (e.g., supplier name, batch number).  
+    - Create batches from external eggs without requiring a breeding event.  
+    - Store provenance data (e.g., supplier certification, egg count) for traceability.  
+    - Link external egg batches to `batch_batch` records in freshwater stations.  
+  - **Data Requirements:** External egg batch ID, supplier details, egg count, provenance data, batch ID.
+
+- **Environmental Monitoring**  
+  - **Description:** Monitor and adjust environmental conditions to support broodstock health and egg production.  
+  - **Specifications:**  
+    - Track key parameters (e.g., temperature, photoperiod, water quality) in real time.  
+    - Set simple environmental schedules (e.g., day/night cycles) per container.  
+    - Generate alerts for parameter deviations beyond thresholds.  
+    - Log manual adjustments or automated changes.  
+  - **Data Requirements:** Container ID, parameter readings, schedules, alert logs.
+
+- **Operational Planning with Scenarios**  
+  - **Description:** Plan broodstock and egg production operations using scenario-based tools, integrating with Scenario Planning features.  
+  - **Specifications:**  
+    - Create scenarios for broodstock production (e.g., breeding schedules, egg output, internal vs. external sourcing).  
+    - Compare scenarios based on outcomes like egg batch yields or resource use.  
+    - Reuse Scenario Planning’s logic for scenario creation and comparison.  
+    - Coordinate with freshwater stations for egg-to-batch handoffs, including external eggs.  
+  - **Data Requirements:** Scenario ID, parameters, outcomes, linked containers or egg batches.
+
+- **Traceability and Lineage Management**  
+  - **Description:** Ensure flexible traceability from broodstock to batch for internal eggs and from external sources to batch for purchased eggs.  
+  - **Specifications:**  
+    - Link internal breeding pairs to egg batches and progeny batches where applicable.  
+    - Record external egg batches with supplier details for traceability.  
+    - Provide lineage reports showing batch origins (internal broodstock or external supplier).  
+    - Maintain audit trails for all breeding, egg acquisition, and batch creation events.  
+  - **Data Requirements:** Egg batch ID, batch ID, parentage (internal) or source (external), audit logs.
+
+- **Mobile Access**  
+  - **Description:** Provide mobile apps for on-the-go monitoring and task management.  
+  - **Specifications:**  
+    - View container status, environmental data, and lineage details (internal or external) on mobile devices.  
+    - Log breeding tasks, egg production, egg acquisitions, and fish movements.  
+    - Receive and acknowledge alerts remotely.  
+    - Support offline mode with data sync when online.  
+  - **Data Requirements:** User actions, data entries, alert responses.
+
+- **Reporting**  
+  - **Description:** Generate straightforward reports for operational and lineage insights.  
+  - **Specifications:**  
+    - Produce reports on population stats, breeding outcomes, egg production (internal/external), and batch lineage.  
+    - Offer prebuilt templates (e.g., broodstock-to-batch traceability, external egg sourcing report).  
+    - Allow export to PDF or CSV for sharing.  
+    - Display basic trends (e.g., egg output over time, internal vs. external sourcing).  
+  - **Data Requirements:** Report type, generated data, export logs.
+
+**Behavior**  
+- *Container Operations:* Containers update status automatically based on sensor data or manual inputs, with maintenance reminders issued as scheduled.  
+- *Fish Tracking:* Population counts adjust dynamically, with optional lineage tracing for broodstock fish involved in breeding.  
+- *Breeding and Eggs:* Internal pair assignments trigger egg production records, linked to progeny batches; external eggs are logged with supplier details.  
+- *Environmental Monitoring:* Parameter deviations trigger immediate alerts, with schedules applied consistently.  
+- *Traceability:* Internal egg-to-batch links are immutable; external eggs are traced to supplier records, with lineage queries returning complete origins.  
+- *Scenarios:* Scenarios support both internal and external egg sourcing, using Scenario Planning’s comparison tools.  
+- *Mobile:* Offline data entries (e.g., external egg logging) sync seamlessly, preserving audit trails.
+
+**Justification**  
+Broodstock management is critical for salmon farming, influencing production quality and efficiency. This feature provides practical tools for managing containers, fish, breeding, and egg sourcing (internal and external), ensuring flexible traceability to support operational and regulatory needs. Integration with Scenario Planning enhances planning capabilities, while the intuitive design aligns with AquaMind’s goals of optimizing salmon farming without overwhelming users or developers.
+
+**User Stories and Acceptance Criteria**
+
+- *User Story 1: Managing Containers*  
+  **As a Broodstock Manager, I want to track container status and schedule maintenance to keep broodstock in optimal conditions.**  
+  - **Acceptance Criteria:**  
+    - View a list of containers with current status and environmental data.  
+    - Schedule maintenance tasks and receive due-date notifications.  
+    - Log completed maintenance with timestamps and notes.  
+    - Dashboard shows at-a-glance container health.
+
+- *User Story 2: Tracking Fish and Lineage*  
+  **As a Farm Operator, I want to monitor fish populations and trace their lineage for internal breeding, while logging external eggs separately.**  
+  - **Acceptance Criteria:**  
+    - Search fish by ID or container and view basic details and optional parentage.  
+    - Record fish movements and see updated population counts.  
+    - View lineage for internal eggs or supplier details for external eggs.  
+    - Summary shows total fish, health status, and egg source per container.
+
+- *User Story 3: Managing Breeding and Egg Production*  
+  **As a Broodstock Manager, I want to plan breeding operations and link internal eggs to batches, while recording external eggs independently.**  
+  - **Acceptance Criteria:**  
+    - Define breeding plans with prioritized traits for internal eggs.  
+    - Assign pairs manually or accept trait-based suggestions.  
+    - Record internal egg production with unique egg batch IDs, linked to batches.  
+    - Log external egg batches with supplier details, creating batches without breeding links.  
+    - All egg production logs are saved and searchable.
+
+- *User Story 4: Tracing Batch Origins*  
+  **As an Aquaculture Manager, I want to trace a batch to its broodstock parents or external supplier to verify its origin.**  
+  - **Acceptance Criteria:**  
+    - Select a batch and view its origin (internal: broodstock pair; external: supplier details).  
+    - Lineage report includes parent fish IDs and breeding date (internal) or supplier data (external).  
+    - Audit logs show all related events (e.g., egg production, acquisition, batch creation).  
+    - Export lineage report as PDF or CSV.
+
+**Additional Considerations**  
+- *Scalability:* Handle thousands of containers, fish, and egg batches (internal/external) with efficient queries and indexing.  
+- *Usability:* Simplify interfaces for non-expert users, clearly distinguishing internal and external egg workflows.  
+- *Integration:* Reuse Scenario Planning’s scenario logic for broodstock and egg sourcing planning.  
+- *Reliability:* Ensure mobile sync, sensor updates, and lineage links are robust and auditable.  
+- *Traceability:* Support flexible lineage tracking for both internal and external eggs, with immutable audit trails.
 
 ### 3.2 Phase 2: Operational Planning and Compliance
 
@@ -391,24 +510,149 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 ### 3.3 Phase 3: AI Enablement
 
 #### 3.3.1 Scenario Planning and Simulation
-- **Purpose**: To enable predictive modeling for operational and strategic planning.
-- **Functionality**:
-  - The system shall allow users to create hypothetical scenarios for batch growth, resource usage, and environmental impact.
-  - The system shall use growth modeling to predict outcomes (e.g., time to harvest, biomass) under different conditions.
-  - The system shall provide risk analysis (e.g., disease outbreaks, environmental anomalies).
-  - The system shall support scenario comparison with side-by-side visualizations.
-  - Scenarios shall include parameters like temperature, feed type, and stocking density.
-- **Behavior**:
-  - Predictions shall be based on historical data and growth models.
-  - Risks shall be quantified with probability scores (e.g., “30% chance of disease outbreak”).
-  - Scenarios shall be saved and shareable with other users.
-- **Justification**: Supports proactive planning, mitigates risks, and optimizes outcomes.
-- **User Story**: As a Manager, I want to simulate batch growth under different conditions so that I can plan for contingencies.
-  - **Acceptance Criteria**:
-    - The UI allows users to create scenarios with adjustable parameters.
-    - The system predicts outcomes (e.g., growth rate, harvest date) and displays results.
-    - Risks (e.g., disease likelihood) are highlighted with mitigation suggestions.
-    - Users can compare multiple scenarios in a single view.
+
+**Purpose**  
+The Scenario Planning and Simulation feature in AquaMind enables aquaculture managers, production planners, and farm operators to create, manage, and analyze hypothetical scenarios for salmon farming operations. By leveraging configurable biological models—namely the Thermal Growth Coefficient (TGC) model, Feed Conversion Ratio (FCR) model, and mortality model—this feature projects key metrics such as fish growth (average weight), population (number of fish), biomass, feed consumption, and optimal harvest times. This functionality supports data-driven decision-making for critical operations including stocking, feeding schedules, resource allocation, and harvest planning, aligning with AquaMind’s goal of optimizing operational efficiency, sustainability, and profitability in salmon farming.
+
+**Functionality**  
+The Scenario Planning and Simulation feature comprises several interconnected components designed to provide flexibility and precision in planning:
+
+- **Model Management**  
+  - *TGC Models:*  
+    - **Description:** Thermal Growth Coefficient (TGC) models calculate daily growth increments based on temperature and time, critical for projecting salmon weight gain across lifecycle stages.  
+    - **Specifications:**  
+      - Supports creation of multiple TGC models tailored to specific locations and release periods (e.g., "Faroe Islands, January Release," "Scotland Location X, April Release").  
+      - Accommodates up to one temperature change per day, though typically updated weekly based on historical or projected environmental data.  
+      - Variations account for regional differences:  
+        - **Faroe Islands:** Stable sea temperatures due to the Gulf Stream, resulting in simpler, less variable TGC models.  
+        - **Scotland:** Diverse locations with fluctuating temperatures, requiring distinct models per site and release timing (e.g., summer vs. winter transfers to sea).  
+      - Users can define new TGC models or select from a library, specifying temperature profiles and growth coefficients.  
+    - **Data Requirements:** Each model requires a location identifier, release period, and a temperature profile (daily or weekly values).  
+  - *FCR Models:*  
+    - **Description:** Feed Conversion Ratio (FCR) models estimate feed efficiency by defining the ratio of feed consumed to weight gained per lifecycle stage.  
+    - **Specifications:**  
+      - FCR values are assigned to each salmon lifecycle stage, for example:  
+        - **Egg/Alevin:** No FCR (feeding from yolk sac).  
+        - **Fry:** FCR 1.0 (90-100 days in freshwater).  
+        - **Parr:** FCR 1.1 (90-100 days in freshwater).  
+        - **Smolt:** FCR 1.0 (90-100 days in freshwater).  
+        - **Post-Smolt:** FCR 1.1 (transition to sea).  
+        - **Adult:** FCR 1.2 (~400 days in open sea rings).  
+      - Users can customize FCR values per stage or use predefined defaults.  
+    - **Data Requirements:** Stage-specific FCR values and stage duration in days.  
+  - *Mortality Models:*  
+    - **Description:** Mortality models estimate population decline over time using percentage-based rates.  
+    - **Specifications:**  
+      - Supports daily or weekly mortality rates (e.g., 0.1% per day or 0.7% per week).  
+      - Rates can remain constant or vary by lifecycle stage or environmental conditions.  
+      - Users can define custom rates or select from historical averages.  
+    - **Data Requirements:** Mortality rate (percentage), frequency (daily/weekly), and optional stage-specific adjustments.  
+
+- **Scenario Creation**  
+  - **Description:** Users create scenarios by combining TGC, FCR, and mortality models with initial conditions to simulate salmon farming outcomes.  
+  - **Specifications:**  
+    - *Inputs:*  
+      - Selection of TGC, FCR, and mortality models from the model library.  
+      - Initial conditions: start date, duration (in days), initial fish count, initial average weight (grams).  
+      - Optional linkage to existing batches via `batch_batch` for real-data initialization.  
+    - *Types:*  
+      - **Hypothetical Scenarios:** Based on user-defined initial conditions.  
+      - **Batch-Based Scenarios:** Initialized with current data from an existing batch.  
+    - *Features:*  
+      - Ability to duplicate scenarios for comparative analysis.  
+      - Option to adjust parameters mid-simulation (e.g., change FCR model at a specific date).  
+
+- **Projection Calculations**  
+  - **Description:** The system calculates projections based on the selected models and initial conditions.  
+  - **Specifications:**  
+    - *Growth Projection:*  
+      - Daily weight increase calculated using the TGC model:  
+        `Daily Growth = TGC * (Temperature)^n * (Current Weight)^m`  
+        (where `n` and `m` are model-specific exponents, typically provided in the TGC model definition).  
+      - Aggregated to weekly/monthly averages for display.  
+    - *Population Projection:*  
+      - Daily or weekly population decrease:  
+        `New Population = Current Population * (1 - Mortality Rate)`  
+        Applied per time step based on model frequency.  
+    - *Biomass Projection:*  
+      - `Biomass (kg) = Population * Average Weight / 1000`.  
+    - *Feed Consumption:*  
+      - `Daily Feed (kg) = Daily Growth * FCR * Population / 1000`.  
+      - Accumulated over the scenario duration.  
+    - *Harvest Timing:*  
+      - Identifies dates when average weight reaches user-defined target weights (e.g., 4.5 kg).  
+      - Considers biomass constraints and harvest plant capacities (if linked to operational data).  
+
+- **Visualization and Analysis**  
+  - **Description:** Provides intuitive displays and tools to interpret scenario outcomes.  
+  - **Specifications:**  
+    - *Charts:*  
+      - Line graphs for average weight, population, biomass, and feed consumption over time.  
+      - Configurable time scales (daily, weekly, monthly).  
+    - *Comparison:*  
+      - Side-by-side visualization of multiple scenarios (e.g., standard vs. increased feeding).  
+      - Highlight differences in harvest timing and biomass.  
+    - *Export:*  
+      - Data exportable in CSV format (columns: Date, Weight, Population, Biomass, Feed).  
+      - Chart snapshots in PNG/PDF.  
+
+**Behavior**  
+- *Model Application:*  
+  - TGC models apply daily growth increments using the specified temperature profile, defaulting to the last known value if no update is provided.  
+  - FCR models transition automatically as fish progress through lifecycle stages, determined by days since scenario start.  
+  - Mortality rates adjust population continuously, with daily or weekly recalculation based on model settings.  
+- *Dynamic Updates:*  
+  - Projections recalculate instantly upon changes to models, initial conditions, or mid-scenario parameter adjustments.  
+  - Users receive warnings if data inconsistencies arise (e.g., negative population).  
+- *Integration:*  
+  - Links to `batch_batch` and `infrastructure_container` for real-time data initialization.  
+  - Optionally incorporates environmental data (e.g., temperature from `environmental_environmentalreading`) if available; otherwise, uses user-input projections.  
+
+**Justification**  
+Scenario planning is a cornerstone of salmon farming management, enabling proactive optimization of harvest schedules, feed usage, and resource allocation. By integrating configurable TGC, FCR, and mortality models, AquaMind provides precise, location-specific projections that reflect real-world variability (e.g., stable Faroe Islands vs. fluctuating Scotland conditions). This feature reduces operational risks, enhances feed efficiency, and ensures compliance with biomass limits, directly supporting AquaMind’s objectives of operational excellence and sustainable aquaculture.
+
+**User Stories and Acceptance Criteria**
+
+- *User Story 1: Creating a Location-Specific Growth Scenario*  
+  **As a Production Planner at Bakkafrost, I want to simulate the growth of a smolt batch released in April at a Scotland site, so I can determine the optimal harvest time and feed requirements.**  
+  - **Acceptance Criteria:**  
+    - The user can select a TGC model for "Scotland Location X, April Release" with weekly temperature updates.  
+    - The user assigns an FCR model with stage-specific values (Smolt: 1.0, Post-Smolt: 1.1, Adult: 1.2).  
+    - The user sets a weekly mortality rate of 0.5%.  
+    - The user inputs: start date (e.g., April 1, 2024), initial count (100,000 fish), initial weight (50g), duration (600 days).  
+    - The system generates projections for:  
+      - Average weight reaching 4.5 kg around day 550.  
+      - Population decreasing to ~92,000 fish by harvest.  
+      - Biomass peaking at ~414 tons.  
+      - Total feed consumption of ~450 tons.  
+    - A chart displays weight and biomass trends, with a harvest date marker at 4.5 kg.  
+
+- *User Story 2: Comparing Feeding Strategies*  
+  **As a Farm Manager, I want to compare two scenarios for a Faroe Islands batch—one with standard feeding and one with a higher FCR—to assess impacts on growth and harvest timing.**  
+  - **Acceptance Criteria:**  
+    - The user creates Scenario A with a TGC model for "Faroe Islands, January Release," FCR (Adult: 1.2), and 0.3% weekly mortality.  
+    - The user duplicates it as Scenario B, adjusting Adult FCR to 1.3.  
+    - Both scenarios start with 50,000 fish at 100g on January 1, 2024, for 500 days.  
+    - The system displays side-by-side charts showing:  
+      - Scenario A: Harvest at 4.5 kg on day 480, feed use ~200 tons.  
+      - Scenario B: Harvest at 4.5 kg on day 490, feed use ~215 tons.  
+    - The user exports both datasets in CSV for stakeholder review.  
+
+- *User Story 3: Batch-Based Planning*  
+  **As an Aquaculture Manager, I want to project the future state of an existing batch using its current data, so I can plan resource needs accurately.**  
+  - **Acceptance Criteria:**  
+    - The user selects an existing batch from `batch_batch` (e.g., 75,000 fish, 1.5 kg average weight, Smolt stage).  
+    - The user applies a TGC model for the batch’s location, the default FCR model, and a 0.2% daily mortality rate.  
+    - The system projects from the current date forward 300 days, showing:  
+      - Transition to Post-Smolt and Adult stages with corresponding FCR shifts.  
+      - Biomass reaching 300 tons by day 250.  
+    - The projection aligns with real-time batch data at the starting point.  
+
+**Additional Considerations**  
+- *Scalability:* The system must handle hundreds of scenarios and models without performance degradation, caching frequent calculations.  
+- *Usability:* Model selection and scenario setup should feature dropdowns and wizards to minimize errors. The system should allow users to create and manage models and scenarios in a user-friendly manner. This could entail importing Excel files , based on TGC, FCR and mortality templates, or using a wizard to create models and scenarios.  
+- *Extensibility:* Allow future integration of additional models (e.g., oxygen levels) via a modular framework.  
+- *Validation:* Input validation ensures realistic values (e.g., non-negative fish counts, plausible FCR ranges).
 
 #### 3.3.2 Predictive Health Management
 - **Purpose**: To proactively manage batch health using AI-driven insights.

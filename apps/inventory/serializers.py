@@ -1,10 +1,17 @@
-from rest_framework import serializers
-from django.db import transaction
-from django.utils import timezone
+# This file is maintained for backward compatibility and will be removed in a future update.
+# Please use the new module structure in api/serializers/ instead.
 
-from .models import Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary, FeedRecommendation
-from apps.batch.models import Batch, BatchContainerAssignment
-from apps.infrastructure.models import Container, FeedContainer
+# Re-export all serializers from the new module structure
+from apps.inventory.api.serializers import (
+    FeedSerializer,
+    FeedPurchaseSerializer,
+    FeedStockSerializer,
+    FeedingEventSerializer,
+    BatchFeedingSummarySerializer,
+    BatchFeedingSummaryGenerateSerializer,
+    FeedRecommendationSerializer,
+    FeedRecommendationGenerateSerializer
+)
 
 
 class FeedSerializer(serializers.ModelSerializer):
