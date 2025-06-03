@@ -46,7 +46,7 @@ class Command(BaseCommand):
             target_date = timezone.now().date()
 
         container_id = options.get('container')
-        
+
         self.stdout.write(
             self.style.WARNING(f"Generating feed recommendations for {target_date}")
         )
@@ -71,39 +71,39 @@ class Command(BaseCommand):
                     self.style.ERROR(f"Container with ID {container_id} not found")
                 )
                 return
-                
+
             # Generate for a specific container
             assignments = BatchContainerAssignment.objects.filter(
                 container_id=container_id,
                 active=True
             )
-            
+
             if not assignments.exists():
                 self.stdout.write(
                     self.style.ERROR(f"No active batch assignments found for container ID {container_id}")
                 )
                 return
-                
+
             self.stdout.write(
                 self.style.WARNING(f"Generating recommendations for container ID {container_id}")
             )
-            
+
             recommendations = FeedRecommendationService.create_recommendations_for_container(
-                container_id, 
+                container_id,
                 target_date
             )
-            
+
             self.stdout.write(
                 self.style.SUCCESS(f"Generated {len(recommendations)} recommendations for container {container_id}")
             )
         else:
             # Generate for all active assignments that have recommendations enabled
             count = FeedRecommendationService.generate_all_recommendations(target_date)
-            
+
             self.stdout.write(
                 self.style.SUCCESS(f"Generated {count} recommendations for enabled containers with active assignments")
             )
-            
+
             # Count how many containers have recommendations disabled
             from apps.infrastructure.models import Container
             disabled_count = Container.objects.filter(feed_recommendations_enabled=False).count()
@@ -111,10 +111,10 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING(f"{disabled_count} containers have feed recommendations disabled")
                 )
-            
+
         # Print summary of recommendations
         recommendations = FeedRecommendation.objects.filter(recommended_date=target_date)
-        
+
         if recommendations.exists():
             self.stdout.write(self.style.WARNING("\nRecommendation summary:"))
             for rec in recommendations:

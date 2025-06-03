@@ -13,13 +13,20 @@ from apps.inventory.api.serializers.feeding import FeedingEventSerializer
 class FeedingEventViewSet(viewsets.ModelViewSet):
     """
     ViewSet for FeedingEvent model.
-    
-    Provides CRUD operations for feeding events with additional filtering capabilities.
+
+    Provides CRUD operations for feeding events with additional filtering
+    capabilities.
     """
     queryset = FeedingEvent.objects.all()
     serializer_class = FeedingEventSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch', 'feed', 'feeding_date', 'container', 'method']
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+    filterset_fields = [
+        'batch', 'feed', 'feeding_date', 'container', 'method'
+    ]
     search_fields = ['notes']
     ordering_fields = ['feeding_date', 'feeding_time', 'amount_kg']
     ordering = ['-feeding_date', '-feeding_time']

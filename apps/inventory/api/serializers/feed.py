@@ -1,7 +1,6 @@
 """
 Feed serializer for the inventory app.
 """
-from rest_framework import serializers
 
 from apps.inventory.models import Feed
 from apps.inventory.api.serializers.base import InventoryBaseSerializer
@@ -10,7 +9,7 @@ from apps.inventory.api.serializers.base import InventoryBaseSerializer
 class FeedSerializer(InventoryBaseSerializer):
     """
     Serializer for the Feed model.
-    
+
     Provides CRUD operations for feed types used in aquaculture operations.
     """
     class Meta:

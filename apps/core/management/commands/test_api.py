@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from apps.infrastructure.models import Container
-from apps.inventory.models import FeedRecommendation
+# FeedRecommendation has been deprecated and removed
 from django.utils import timezone
 import json
 
@@ -89,19 +89,7 @@ class Command(BaseCommand):
         self.stdout.write(f'Total containers: {total_containers}')
         self.stdout.write(f'Containers with feed recommendations enabled: {enabled_containers}')
         
-        # Check for existing feed recommendations
-        recs = FeedRecommendation.objects.all()
-        rec_count = recs.count()
+        # FeedRecommendation has been deprecated and removed
+        self.stdout.write(self.style.WARNING('Feed recommendations feature has been deprecated and removed'))
         
-        self.stdout.write(f'Total feed recommendations: {rec_count}')
-        
-        if rec_count > 0:
-            recent_rec = recs.order_by('-recommended_date').first()
-            self.stdout.write(f'Most recent recommendation date: {recent_rec.recommended_date}')
-            
-            # Display sample recommendation details
-            self.stdout.write('\nSample recommendation:')
-            self.stdout.write(f'  Container: {recent_rec.batch_container_assignment.container.name}')
-            self.stdout.write(f'  Feed: {recent_rec.feed.name}')
-            self.stdout.write(f'  Amount: {recent_rec.recommended_feed_kg} kg')
-            self.stdout.write(f'  Is followed: {recent_rec.is_followed}')
+        # Sample recommendation details removed as FeedRecommendation has been deprecated

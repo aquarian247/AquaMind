@@ -7,20 +7,28 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.inventory.models import BatchFeedingSummary
-from apps.inventory.api.serializers.summary import BatchFeedingSummarySerializer, BatchFeedingSummaryGenerateSerializer
+from apps.inventory.api.serializers.summary import (
+    BatchFeedingSummarySerializer, BatchFeedingSummaryGenerateSerializer
+)
 
 
 class BatchFeedingSummaryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for BatchFeedingSummary model.
-    
-    Provides read operations for batch feeding summaries with generation capabilities.
+
+    Provides read operations for batch feeding summaries with generation
+    capabilities.
     """
     queryset = BatchFeedingSummary.objects.all()
     serializer_class = BatchFeedingSummarySerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend, 
+        filters.OrderingFilter
+    ]
     filterset_fields = ['batch', 'period_start', 'period_end']
-    ordering_fields = ['period_start', 'period_end', 'total_feed_kg', 'feed_conversion_ratio']
+    ordering_fields = [
+        'period_start', 'period_end', 'total_feed_kg', 'feed_conversion_ratio'
+    ]
     ordering = ['batch', '-period_end']
 
     @action(detail=False, methods=['post'])

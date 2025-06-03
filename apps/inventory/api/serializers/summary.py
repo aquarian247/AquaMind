@@ -4,14 +4,20 @@ Batch feeding summary serializer for the inventory app.
 from rest_framework import serializers
 
 from apps.inventory.models import BatchFeedingSummary
-from apps.inventory.api.serializers.base import BatchRelatedSerializer, TimestampedModelSerializer
-from apps.inventory.api.serializers.validation import validate_date_range, validate_batch_and_date_range
+from apps.inventory.api.serializers.base import (
+    BatchRelatedSerializer, TimestampedModelSerializer
+)
+from apps.inventory.api.serializers.validation import (
+    validate_date_range, validate_batch_and_date_range
+)
 
 
-class BatchFeedingSummarySerializer(BatchRelatedSerializer, TimestampedModelSerializer):
+class BatchFeedingSummarySerializer(
+    BatchRelatedSerializer, TimestampedModelSerializer
+):
     """
     Serializer for the BatchFeedingSummary model.
-    
+
     Provides read operations for batch feeding summaries.
     """
     # batch_name is already provided by BatchRelatedSerializer
@@ -21,7 +27,8 @@ class BatchFeedingSummarySerializer(BatchRelatedSerializer, TimestampedModelSeri
         fields = [
             'id', 'batch', 'batch_name', 'period_start', 'period_end',
             'total_feed_kg', 'average_biomass_kg', 'average_feeding_percentage',
-            'feed_conversion_ratio', 'growth_kg', 'created_at', 'updated_at'
+            'feed_conversion_ratio', 'growth_kg', 'created_at', 
+            'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
@@ -30,10 +37,10 @@ class BatchFeedingSummarySerializer(BatchRelatedSerializer, TimestampedModelSeri
         Validate that the period_start is before the period_end.
         """
         data = super().validate(data)
-        
+
         if 'period_start' in data and 'period_end' in data:
             validate_date_range(data['period_start'], data['period_end'])
-            
+
         return data
 
 
@@ -50,8 +57,10 @@ class BatchFeedingSummaryGenerateSerializer(serializers.Serializer):
         Validate that the batch exists and dates are valid.
         """
         # Use the extracted validation function
-        data['batch'], data['start_date'], data['end_date'] = validate_batch_and_date_range(
-            data['batch_id'], data['start_date'], data['end_date']
+        data['batch'], data['start_date'], data['end_date'] = (
+            validate_batch_and_date_range(
+                data['batch_id'], data['start_date'], data['end_date']
+            )
         )
         return data
 
@@ -64,8 +73,12 @@ class BatchFeedingSummaryGenerateSerializer(serializers.Serializer):
         end_date = validated_data['end_date']
 
         # Generate the summary
-        summary = BatchFeedingSummary.generate_for_batch(batch, start_date, end_date)
+        summary = BatchFeedingSummary.generate_for_batch(
+            batch, start_date, end_date
+        )
         if not summary:
-            raise serializers.ValidationError("No feeding events found in this period")
+            raise serializers.ValidationError(
+                "No feeding events found in this period"
+            )
 
         return summary

@@ -12,7 +12,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
 from datetime import timedelta
-from rest_framework.test import APIClient, force_authenticate
+from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -20,7 +20,7 @@ User = get_user_model()
 from apps.batch.models import Batch, BatchContainerAssignment, LifeCycleStage, Species
 from apps.infrastructure.models import Container, ContainerType, Area, Geography, FeedContainer
 from apps.inventory.models import (
-    Feed, FeedPurchase, FeedStock, FeedingEvent, 
+    Feed, FeedPurchase, FeedStock, FeedingEvent,
     BatchFeedingSummary
 )
 
@@ -34,7 +34,7 @@ def get_api_url(app_name, endpoint, detail=False, **kwargs):
 
 class ModelBackwardCompatibilityTest(TestCase):
     """Tests to ensure model behavior remains consistent after refactoring."""
-    
+
     def setUp(self):
         """Set up test data."""
         # Create geography and area
@@ -46,7 +46,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             longitude=0,
             max_biomass=Decimal("1000.0")
         )
-        
+
         # Create container type and container
         self.container_type = ContainerType.objects.create(
             name="Test Container Type",
@@ -60,7 +60,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             volume_m3=Decimal("100.0"),
             max_biomass_kg=Decimal("1000.0")
         )
-        
+
         # Create species, lifecycle stage, and batch
         self.species = Species.objects.create(
             name="Test Species",
@@ -77,7 +77,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             lifecycle_stage=self.lifecycle_stage,
             start_date=timezone.now().date() - timedelta(days=30)
         )
-        
+
         # Create batch container assignment
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
@@ -87,7 +87,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             population_count=500,
             biomass_kg=Decimal("200.0")
         )
-        
+
         # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
@@ -99,18 +99,18 @@ class ModelBackwardCompatibilityTest(TestCase):
             description="Test description",
             is_active=True
         )
-        
+
         # Create feed container
         self.feed_container = FeedContainer.objects.create(
             name="Test Feed Container",
             area=self.area,
             capacity_kg=Decimal("500.0")
         )
-    
+
     def test_feed_model_fields(self):
         """Test that the Feed model maintains all expected fields."""
         feed = Feed.objects.get(id=self.feed.id)
-        
+
         # Check all fields exist and have correct values
         self.assertEqual(feed.name, "Test Feed")
         self.assertEqual(feed.brand, "Test Brand")
@@ -120,11 +120,11 @@ class ModelBackwardCompatibilityTest(TestCase):
         self.assertEqual(feed.carbohydrate_percentage, Decimal("25.0"))
         self.assertEqual(feed.description, "Test description")
         self.assertTrue(feed.is_active)
-        
+
         # Check timestamp fields
         self.assertIsNotNone(feed.created_at)
         self.assertIsNotNone(feed.updated_at)
-    
+
     def test_feed_purchase_model_relationships(self):
         """Test that FeedPurchase maintains correct relationships."""
         # Create a feed purchase
@@ -137,15 +137,15 @@ class ModelBackwardCompatibilityTest(TestCase):
             batch_number="LOT123",
             expiry_date=timezone.now().date() + timedelta(days=90)
         )
-        
+
         # Test relationship with Feed
         self.assertEqual(purchase.feed, self.feed)
-        
+
         # Test that the feed can access its purchases
         # First refresh the feed to ensure it has the latest related objects
         self.feed.refresh_from_db()
         self.assertIn(purchase, FeedPurchase.objects.filter(feed=self.feed))
-    
+
     def test_feed_stock_model_relationships(self):
         """Test that FeedStock maintains correct relationships."""
         # Create a feed stock
@@ -155,13 +155,13 @@ class ModelBackwardCompatibilityTest(TestCase):
             current_quantity_kg=Decimal("100.0"),
             reorder_threshold_kg=Decimal("20.0")
         )
-        
+
         # Test relationships
         self.assertEqual(stock.feed, self.feed)
         self.assertEqual(stock.feed_container, self.feed_container)
         self.assertIn(stock, self.feed.stock_levels.all())
         self.assertIn(stock, self.feed_container.feed_stocks.all())
-    
+
     def test_feeding_event_model_relationships(self):
         """Test that FeedingEvent maintains correct relationships."""
         # Create a feed stock
@@ -171,7 +171,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             current_quantity_kg=Decimal("100.0"),
             reorder_threshold_kg=Decimal("20.0")
         )
-        
+
         # Create a feeding event
         event = FeedingEvent.objects.create(
             batch=self.batch,
@@ -185,14 +185,14 @@ class ModelBackwardCompatibilityTest(TestCase):
             batch_biomass_kg=Decimal("200.0"),
             method="MANUAL"
         )
-        
+
         # Test relationships
         self.assertEqual(event.batch, self.batch)
         self.assertEqual(event.batch_assignment, self.assignment)
         self.assertEqual(event.container, self.container)
         self.assertEqual(event.feed, self.feed)
         self.assertEqual(event.feed_stock, stock)
-        
+
         # Test relationships with batch and container
         self.assertEqual(event.batch, self.batch)
         self.assertEqual(event.container, self.container)
@@ -200,7 +200,7 @@ class ModelBackwardCompatibilityTest(TestCase):
         self.assertIn(event, self.container.feeding_events.all())
         self.assertIn(event, self.feed.feeding_events.all())
         self.assertIn(event, stock.feeding_events.all())
-    
+
     def test_feed_stock_quantity_update(self):
         """Test that feed stock quantity is updated correctly after feeding events."""
         # Create a feed stock
@@ -210,7 +210,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             current_quantity_kg=Decimal("100.0"),
             reorder_threshold_kg=Decimal("20.0")
         )
-        
+
         # Create a feeding event
         FeedingEvent.objects.create(
             batch=self.batch,
@@ -224,13 +224,13 @@ class ModelBackwardCompatibilityTest(TestCase):
             batch_biomass_kg=Decimal("200.0"),
             method="MANUAL"
         )
-        
+
         # Refresh the stock from the database
         stock.refresh_from_db()
-        
+
         # Check that the quantity was reduced
         self.assertEqual(stock.current_quantity_kg, Decimal("95.0"))  # 100.0 - 5.0
-    
+
     def test_batch_feeding_summary_calculation(self):
         """Test that BatchFeedingSummary calculates totals correctly."""
         # Create a feed stock
@@ -240,10 +240,10 @@ class ModelBackwardCompatibilityTest(TestCase):
             current_quantity_kg=Decimal("100.0"),
             reorder_threshold_kg=Decimal("20.0")
         )
-        
+
         # Create feeding events
         today = timezone.now().date()
-        
+
         # Event 1
         FeedingEvent.objects.create(
             batch=self.batch,
@@ -257,7 +257,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             batch_biomass_kg=Decimal("200.0"),
             method="MANUAL"
         )
-        
+
         # Event 2
         FeedingEvent.objects.create(
             batch=self.batch,
@@ -271,7 +271,7 @@ class ModelBackwardCompatibilityTest(TestCase):
             batch_biomass_kg=Decimal("200.0"),
             method="MANUAL"
         )
-        
+
         # Create a summary
         summary = BatchFeedingSummary.objects.create(
             batch=self.batch,
@@ -279,20 +279,20 @@ class ModelBackwardCompatibilityTest(TestCase):
             period_end=today,
             total_feed_kg=Decimal("5.0")
         )
-        
+
         # Check that the summary has the correct totals
         self.assertEqual(summary.total_feed_kg, Decimal("5.0"))  # 3.0 + 2.0
 
 
 class SerializerBackwardCompatibilityTest(TestCase):
     """Tests to ensure serializer behavior remains consistent after refactoring."""
-    
+
     def setUp(self):
         """Set up test data."""
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.force_authenticate(user=self.user)
-        
+
         # Create geography and area
         self.geography = Geography.objects.create(name="Test Geography")
         self.area = Area.objects.create(
@@ -302,7 +302,7 @@ class SerializerBackwardCompatibilityTest(TestCase):
             longitude=0,
             max_biomass=Decimal("1000.0")
         )
-        
+
         # Create container type and container
         self.container_type = ContainerType.objects.create(
             name="Test Container Type",
@@ -316,7 +316,7 @@ class SerializerBackwardCompatibilityTest(TestCase):
             volume_m3=Decimal("100.0"),
             max_biomass_kg=Decimal("1000.0")
         )
-        
+
         # Create species, lifecycle stage, and batch
         self.species = Species.objects.create(
             name="Test Species",
@@ -333,7 +333,7 @@ class SerializerBackwardCompatibilityTest(TestCase):
             lifecycle_stage=self.lifecycle_stage,
             start_date=timezone.now().date() - timedelta(days=30)
         )
-        
+
         # Create batch container assignment
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
@@ -343,22 +343,22 @@ class SerializerBackwardCompatibilityTest(TestCase):
             population_count=500,
             biomass_kg=Decimal("200.0")
         )
-        
+
         # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
             brand="Test Brand",
             size_category="MEDIUM"
         )
-    
+
     def test_feed_serializer_field_representation(self):
         """Test that FeedSerializer maintains the same field representation."""
         url = get_api_url('inventory', 'feeds', detail=True, pk=self.feed.id)
         response = self.client.get(url)
-        
+
         # Check status code
         self.assertEqual(response.status_code, 200)
-        
+
         # Check that all expected fields are present
         expected_fields = [
             'id', 'name', 'brand', 'size_category', 'protein_percentage',
@@ -367,11 +367,11 @@ class SerializerBackwardCompatibilityTest(TestCase):
         ]
         for field in expected_fields:
             self.assertIn(field, response.data)
-    
+
     def test_feed_purchase_serializer_validation(self):
         """Test that FeedPurchaseSerializer maintains the same validation logic."""
         url = get_api_url('inventory', 'feed-purchases')
-        
+
         # Test with invalid data (expiry_date before purchase_date)
         invalid_data = {
             'feed': self.feed.id,
@@ -382,17 +382,17 @@ class SerializerBackwardCompatibilityTest(TestCase):
             'supplier': 'Test Supplier'
         }
         response = self.client.post(url, invalid_data, format='json')
-        
+
         # Check that validation fails
         self.assertEqual(response.status_code, 400)
         # The validation error might be about dates or other fields, so check for either
         validation_error_text = str(response.data)
         self.assertTrue(
-            'Start date must be before end date' in validation_error_text or 
+            'Start date must be before end date' in validation_error_text or
             'expiry_date' in validation_error_text,
             f"Expected date validation error, got: {validation_error_text}"
         )
-        
+
         # Test with valid data
         valid_data = {
             'feed': self.feed.id,
@@ -403,21 +403,21 @@ class SerializerBackwardCompatibilityTest(TestCase):
             'supplier': 'Test Supplier'
         }
         response = self.client.post(url, valid_data, format='json')
-        
+
         # Check that validation passes
         self.assertEqual(response.status_code, 201)
-    
+
     def test_feeding_event_serializer_validation(self):
         """Test that FeedingEventSerializer validation works correctly."""
         url = get_api_url('inventory', 'feeding-events')
-        
+
         # Create a feed container for testing
         feed_container = FeedContainer.objects.create(
             name="Test Feed Container",
             area=self.area,
             capacity_kg=100.0
         )
-        
+
         # Create a feed stock for testing
         feed_stock = FeedStock.objects.create(
             feed=self.feed,
@@ -425,7 +425,7 @@ class SerializerBackwardCompatibilityTest(TestCase):
             current_quantity_kg=50.0,
             reorder_threshold_kg=10.0
         )
-        
+
         # Create another batch for testing
         other_batch = Batch.objects.create(
             batch_number="OTHER-TEST-001",
@@ -433,7 +433,7 @@ class SerializerBackwardCompatibilityTest(TestCase):
             lifecycle_stage=self.lifecycle_stage,
             start_date=timezone.now().date() - timedelta(days=15)
         )
-        
+
         # Test with missing required fields to ensure basic validation works
         missing_fields_data = {
             'feeding_date': timezone.now().date().isoformat(),
@@ -442,18 +442,18 @@ class SerializerBackwardCompatibilityTest(TestCase):
             'method': 'MANUAL'
         }
         response = self.client.post(url, missing_fields_data, format='json')
-        
+
         # Check that validation fails for missing required fields
         self.assertEqual(response.status_code, 400)
         validation_error_text = str(response.data)
         # Check that we get validation errors about missing required fields
         self.assertTrue(
-            'batch' in validation_error_text or 
-            'container' in validation_error_text or 
+            'batch' in validation_error_text or
+            'container' in validation_error_text or
             'feed' in validation_error_text,
             f"Expected validation errors for missing required fields, got: {validation_error_text}"
         )
-        
+
         # Test with valid data
         valid_data = {
             'batch': self.batch.id,  # Same batch
@@ -469,27 +469,27 @@ class SerializerBackwardCompatibilityTest(TestCase):
             'notes': 'Test feeding event'
         }
         response = self.client.post(url, valid_data, format='json')
-        
+
         # Check that validation passes
         self.assertEqual(response.status_code, 201)
 
 
 class ViewSetBackwardCompatibilityTest(TestCase):
     """Tests to ensure viewset behavior remains consistent after refactoring."""
-    
+
     def setUp(self):
         """Set up test data."""
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.force_authenticate(user=self.user)
-        
+
         # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
             brand="Test Brand",
             size_category="MEDIUM"
         )
-    
+
     def test_feed_viewset_filtering(self):
         """Test that FeedViewSet maintains the same filtering capabilities."""
         # Create feeds with different properties for filtering tests
@@ -505,55 +505,55 @@ class ViewSetBackwardCompatibilityTest(TestCase):
             size_category="MEDIUM",
             is_active=False
         )
-        
+
         url = get_api_url('inventory', 'feeds')
-        
+
         # Test filtering by is_active=True
         response = self.client.get(f"{url}?is_active=true")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-        
+
         # Find active feeds
         active_feeds = [item for item in data if item['is_active'] is True]
         self.assertGreaterEqual(len(active_feeds), 1, "Should find at least one active feed")
-        
+
         # Test filtering by is_active=False
         response = self.client.get(f"{url}?is_active=false")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-            
+
         # Find inactive feeds
         inactive_feeds = [item for item in data if item['is_active'] is False]
         self.assertGreaterEqual(len(inactive_feeds), 1, "Should find at least one inactive feed")
-        
+
         # Verify the inactive feed is in the response
         inactive_feed = next((item for item in data if item['name'] == "Inactive Feed"), None)
         self.assertIsNotNone(inactive_feed, "Inactive Feed not found in response")
-        
+
         # Test filtering by brand
         response = self.client.get(f"{url}?brand=Test%20Brand")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-            
+
         # Find feeds with the test brand
         test_brand_feeds = [item for item in data if item['brand'] == "Test Brand"]
         self.assertGreaterEqual(len(test_brand_feeds), 2, "Should find at least two feeds with Test Brand")
-    
+
     def test_feed_viewset_searching(self):
         """Test that FeedViewSet maintains the same searching capabilities."""
         # Create feeds with different properties for search tests
@@ -563,47 +563,47 @@ class ViewSetBackwardCompatibilityTest(TestCase):
             description="This is a special feed for testing search",
             size_category="SMALL"
         )
-        
+
         url = get_api_url('inventory', 'feeds')
-        
+
         # Test searching by name
         response = self.client.get(f"{url}?search=Searchable")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-            
+
         # Find the searchable feed by name
         searchable_feed = next((item for item in data if item['name'] == "Searchable Feed"), None)
         self.assertIsNotNone(searchable_feed, "Searchable Feed not found when searching by name")
-        
+
         # Test searching by brand
         response = self.client.get(f"{url}?search=Unique")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-            
+
         # Find the feed with unique brand
         unique_brand_feed = next((item for item in data if item['brand'] == "Unique Brand"), None)
         self.assertIsNotNone(unique_brand_feed, "Feed with 'Unique Brand' not found when searching by brand")
-        
+
         # Test searching by description
         response = self.client.get(f"{url}?search=special")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-            
+
         # Find the feed with the special description
         special_desc_feed = next((item for item in data if "special" in item['description'].lower()), None)
         self.assertIsNotNone(special_desc_feed, "Feed with 'special' in description not found when searching by description")
@@ -621,19 +621,19 @@ class ViewSetBackwardCompatibilityTest(TestCase):
             brand="Brand A",
             size_category="LARGE"
         )
-        
+
         url = get_api_url('inventory', 'feeds')
-        
+
         # Test ordering by name ascending
         response = self.client.get(f"{url}?ordering=name")
         self.assertEqual(response.status_code, 200)
-        
+
         # Get the actual data, handling both paginated and non-paginated responses
         data = response.data
         if isinstance(data, dict) and 'results' in data:
             # Paginated response
             data = data['results']
-        
+
         # Find feeds by name in the response
         a_feed = None
         z_feed = None
@@ -642,11 +642,11 @@ class ViewSetBackwardCompatibilityTest(TestCase):
                 a_feed = item
             elif item['name'] == "Z Feed":
                 z_feed = item
-        
+
         # Verify both feeds are found and A Feed comes before Z Feed
         self.assertIsNotNone(a_feed, "A Feed not found in response")
         self.assertIsNotNone(z_feed, "Z Feed not found in response")
-        
+
         # Find the indices to verify ordering
         a_index = next((i for i, item in enumerate(data) if item['name'] == "A Feed"), None)
         z_index = next((i for i, item in enumerate(data) if item['name'] == "Z Feed"), None)

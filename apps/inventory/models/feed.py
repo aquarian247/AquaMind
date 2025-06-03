@@ -2,9 +2,10 @@
 Feed model for the inventory app.
 """
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 
-from apps.inventory.utils import TimestampedModelMixin, ActiveModelMixin, DecimalFieldMixin
+from apps.inventory.utils import (
+    TimestampedModelMixin, ActiveModelMixin, DecimalFieldMixin
+)
 
 
 class Feed(TimestampedModelMixin, ActiveModelMixin, models.Model):
@@ -18,14 +19,14 @@ class Feed(TimestampedModelMixin, ActiveModelMixin, models.Model):
         ('MEDIUM', 'Medium'),
         ('LARGE', 'Large'),
     ]
-    
+
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
     size_category = models.CharField(max_length=20, choices=FEED_SIZE_CHOICES)
     pellet_size_mm = models.DecimalField(
-        max_digits=5, 
-        decimal_places=2, 
-        null=True, 
+        max_digits=5,
+        decimal_places=2,
+        null=True,
         blank=True,
         help_text="Pellet size in millimeters"
     )
@@ -45,9 +46,11 @@ class Feed(TimestampedModelMixin, ActiveModelMixin, models.Model):
         help_text="Carbohydrate content percentage"
     )
     description = models.TextField(blank=True)
-    
+
     class Meta:
         verbose_name_plural = "Feed"
-    
+
     def __str__(self):
-        return f"{self.brand} - {self.name} ({self.get_size_category_display()})"
+        return (
+            f"{self.brand} - {self.name} ({self.get_size_category_display()})"
+        )

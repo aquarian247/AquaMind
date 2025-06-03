@@ -1,23 +1,17 @@
 from decimal import Decimal
 from django.test import TestCase
-from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
-from decimal import Decimal
 from rest_framework import status
-from rest_framework.test import APIClient, force_authenticate
+from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
-from django.db import models
 from unittest import mock
 
 User = get_user_model()
 
 from apps.batch.models import Batch, BatchContainerAssignment, LifeCycleStage, Species
 from apps.infrastructure.models import Container, ContainerType, Area, Geography, FeedContainer
-from apps.inventory.models import (
-    Feed, FeedPurchase, FeedStock, FeedingEvent, 
-    BatchFeedingSummary
-)
+from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent
 
 
 # We'll use patching instead of a test-specific model
@@ -34,7 +28,7 @@ def get_api_url(app_name, endpoint, detail=False, **kwargs):
 
 class FeedViewSetTest(TestCase):
     """Tests for the FeedViewSet."""
-    
+
     def setUp(self):
         """Set up test data."""
         self.client = APIClient()
@@ -53,12 +47,12 @@ class FeedViewSetTest(TestCase):
         self.feed = Feed.objects.create(**self.feed_data)
         self.url = get_api_url('inventory', 'feeds')
         self.detail_url = get_api_url('inventory', 'feeds', detail=True, pk=self.feed.id)
-    
+
     def test_list_feeds(self):
         """Test that feeds can be listed."""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Check if response is paginated
         if 'results' in response.data:
             # Paginated response
@@ -76,13 +70,13 @@ class FeedViewSetTest(TestCase):
                 if feed['id'] == self.feed.id:
                     self.assertEqual(feed['name'], self.feed_data['name'])
                     break
-    
+
     def test_retrieve_feed(self):
         """Test that a feed can be retrieved."""
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], self.feed_data['name'])
-    
+
     def test_create_feed(self):
         """Test that a feed can be created."""
         new_feed_data = {
@@ -99,7 +93,7 @@ class FeedViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Feed.objects.count(), 2)
         self.assertEqual(response.data['name'], new_feed_data['name'])
-    
+
     def test_update_feed(self):
         """Test that a feed can be updated."""
         updated_data = {
@@ -116,7 +110,7 @@ class FeedViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.feed.refresh_from_db()
         self.assertEqual(self.feed.name, updated_data['name'])
-    
+
     def test_delete_feed(self):
         """Test that a feed can be deleted."""
         response = self.client.delete(self.detail_url)
@@ -126,7 +120,7 @@ class FeedViewSetTest(TestCase):
 
 class FeedPurchaseViewSetTest(TestCase):
     """Tests for the FeedPurchaseViewSet."""
-    
+
     def setUp(self):
         """Set up test data."""
         self.client = APIClient()
@@ -150,12 +144,12 @@ class FeedPurchaseViewSetTest(TestCase):
         self.purchase = FeedPurchase.objects.create(**self.purchase_data)
         self.url = get_api_url('inventory', 'feed-purchases')
         self.detail_url = get_api_url('inventory', 'feed-purchases', detail=True, pk=self.purchase.id)
-    
+
     def test_list_purchases(self):
         """Test that feed purchases can be listed."""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Check if response is paginated
         if 'results' in response.data:
             # Paginated response
@@ -163,13 +157,13 @@ class FeedPurchaseViewSetTest(TestCase):
         else:
             # Non-paginated response
             self.assertIn(self.purchase.id, [purchase['id'] for purchase in response.data])
-    
+
     def test_retrieve_purchase(self):
         """Test that a feed purchase can be retrieved."""
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['supplier'], self.purchase_data['supplier'])
-    
+
     def test_create_purchase(self):
         """Test that a feed purchase can be created."""
         new_purchase_data = {
@@ -190,7 +184,7 @@ class FeedPurchaseViewSetTest(TestCase):
 
 class FeedingEventViewSetTest(TestCase):
     """Tests for the FeedingEventViewSet."""
-    
+
     @mock.patch('apps.inventory.models.stock.FeedStock.save')
     @mock.patch('apps.inventory.models.stock.FeedStock.full_clean')
     def setUp(self, mock_full_clean, mock_save):
@@ -198,7 +192,7 @@ class FeedingEventViewSetTest(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.force_authenticate(user=self.user)
-        
+
         # Create geography and area
         self.geography = Geography.objects.create(name="Test Geography")
         self.area = Area.objects.create(
@@ -208,7 +202,7 @@ class FeedingEventViewSetTest(TestCase):
             longitude=0,
             max_biomass=Decimal("1000.0")
         )
-        
+
         # Create container type and container
         self.container_type = ContainerType.objects.create(
             name="Test Container Type",
@@ -222,7 +216,7 @@ class FeedingEventViewSetTest(TestCase):
             volume_m3=Decimal("100.0"),
             max_biomass_kg=Decimal("1000.0")
         )
-        
+
         # Create species, lifecycle stage, and batch
         self.species = Species.objects.create(
             name="Test Species",
@@ -239,7 +233,7 @@ class FeedingEventViewSetTest(TestCase):
             lifecycle_stage=self.lifecycle_stage,
             start_date=timezone.now().date() - timedelta(days=30)
         )
-        
+
         # Create batch container assignment
         self.assignment = BatchContainerAssignment.objects.create(
             batch=self.batch,
@@ -249,7 +243,7 @@ class FeedingEventViewSetTest(TestCase):
             population_count=500,
             biomass_kg=Decimal("200.0")
         )
-        
+
         # Create feed and feed stock
         self.feed = Feed.objects.create(
             name="Test Feed",
@@ -271,7 +265,7 @@ class FeedingEventViewSetTest(TestCase):
             reorder_threshold_kg=Decimal("20.0")
         )
         # Don't call save() as it would try to insert into the database
-        
+
         # Create feeding event using a mock to avoid database issues
         with mock.patch('apps.inventory.models.FeedingEvent.objects.create') as mock_create:
             mock_create.return_value = FeedingEvent(
@@ -289,10 +283,10 @@ class FeedingEventViewSetTest(TestCase):
                 notes="Test feeding event"
             )
             self.feeding_event = FeedingEvent.objects.create()
-        
+
         self.url = get_api_url('inventory', 'feeding-events')
         self.detail_url = get_api_url('inventory', 'feeding-events', detail=True, pk=self.feeding_event.id)
-    
+
     def test_list_feeding_events(self):
         """Test that feeding events can be listed."""
         # Create a mock response with the expected data
@@ -313,30 +307,30 @@ class FeedingEventViewSetTest(TestCase):
             'method': self.feeding_event.method,
             'notes': self.feeding_event.notes
         }]
-        
+
         # Replace the client.get method with a mock
         original_get = self.client.get
-        
+
         def mock_get(*args, **kwargs):
             response = mock.MagicMock()
             response.status_code = status.HTTP_200_OK
             response.data = mock_data
             return response
-        
+
         try:
             # Replace the client.get method with our mock
             self.client.get = mock_get
-            
+
             # Make the request
             response = self.client.get(self.url)
-            
+
             # Assertions
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data), 1)
         finally:
             # Restore the original client.get method
             self.client.get = original_get
-    
+
     @mock.patch('apps.inventory.models.FeedingEvent.objects.get')
     @mock.patch('apps.inventory.api.viewsets.FeedingEventViewSet.get_serializer')
     @mock.patch('rest_framework.generics.get_object_or_404')
@@ -345,7 +339,7 @@ class FeedingEventViewSetTest(TestCase):
         # Setup mocks
         mock_get.return_value = self.feeding_event
         mock_get_object.return_value = self.feeding_event
-        
+
         # Mock the serializer
         mock_serializer = mock.MagicMock()
         mock_serializer.data = {
@@ -366,14 +360,14 @@ class FeedingEventViewSetTest(TestCase):
             'notes': self.feeding_event.notes
         }
         mock_get_serializer.return_value = mock_serializer
-        
+
         # Make the request
         response = self.client.get(self.detail_url)
-        
+
         # Assertions
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['method'], self.feeding_event.method)
-    
+
     @mock.patch('apps.inventory.api.serializers.validation.validate_feed_stock_quantity')
     @mock.patch('apps.inventory.models.FeedingEvent.objects.create')
     @mock.patch('rest_framework.response.Response')
@@ -382,7 +376,7 @@ class FeedingEventViewSetTest(TestCase):
         """Test that a feeding event can be created."""
         # Setup mocks
         mock_validate.return_value = None  # No validation error
-        
+
         # Create a mock response object for the created FeedingEvent
         new_feeding_event = FeedingEvent(
             id=2,
@@ -399,7 +393,7 @@ class FeedingEventViewSetTest(TestCase):
             notes="New feeding event"
         )
         mock_create.return_value = new_feeding_event
-        
+
         # Test data
         new_feeding_data = {
             'batch_id': self.batch.id,
@@ -414,7 +408,7 @@ class FeedingEventViewSetTest(TestCase):
             'method': 'AUTOMATIC',
             'notes': 'New feeding event'
         }
-        
+
         # Mock the serializer
         mock_serializer = mock.MagicMock()
         mock_serializer.is_valid.return_value = True
@@ -438,16 +432,16 @@ class FeedingEventViewSetTest(TestCase):
         }
         mock_serializer.save.return_value = new_feeding_event
         mock_get_serializer.return_value = mock_serializer
-        
+
         # Mock the Response class to control the response.data
         mock_response_instance = mock.MagicMock()
         mock_response_instance.status_code = status.HTTP_201_CREATED
         mock_response_instance.data = mock_serializer.data
         mock_response.return_value = mock_response_instance
-        
+
         # Make the request
         response = self.client.post(self.url, new_feeding_data, format='json')
-        
+
         # Assertions
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['method'], new_feeding_data['method'])
