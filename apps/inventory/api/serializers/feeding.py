@@ -1,6 +1,8 @@
 """
 Feeding event serializer for the inventory app.
 """
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 from django.db import transaction
 
@@ -23,6 +25,21 @@ class FeedingEventSerializer(
     """
     recorded_by_username = serializers.StringRelatedField(
         source='recorded_by', read_only=True
+    )
+
+    amount_kg = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Amount of feed given in kilograms"
+    )
+    batch_biomass_kg = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Estimated batch biomass at the time of feeding in kilograms"
     )
 
     class Meta:

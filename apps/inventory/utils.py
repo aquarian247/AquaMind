@@ -119,7 +119,7 @@ class DecimalFieldMixin:
         return models.DecimalField(
             max_digits=max_digits,
             decimal_places=decimal_places,
-            validators=[MinValueValidator(0), MaxValueValidator(100)],
+            validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))],
             **kwargs
         )
 
@@ -130,6 +130,6 @@ class DecimalFieldMixin:
         return models.DecimalField(
             max_digits=max_digits,
             decimal_places=decimal_places,
-            validators=[MinValueValidator(min_value)],
+            validators=[MinValueValidator(Decimal(str(min_value)))],
             **kwargs
         )

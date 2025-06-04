@@ -1,3 +1,0 @@
-This document is not for the agent to read. It is only for the human :) 
-- Remember to check if the postgresql windows service is running, if having issues with the database.
-- Don't forget audit trail tables. 

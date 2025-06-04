@@ -476,4 +476,4 @@ class DecimalFieldMixinTest(TestCase):
         self.assertEqual(field.decimal_places, 4)
         self.assertTrue(field.null)
         # Check that the validator has the correct min_value
-        self.assertEqual(field.validators[0].limit_value, 0.1)
+        self.assertEqual(field.validators[0].limit_value, Decimal('0.1'))

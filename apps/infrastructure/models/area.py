@@ -6,6 +6,7 @@ for farming operations.
 """
 
 from django.db import models
+from decimal import Decimal
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from apps.infrastructure.models.geography import Geography
@@ -20,13 +21,13 @@ class Area(models.Model):
     latitude = models.DecimalField(
         max_digits=9, 
         decimal_places=6,
-        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        validators=[MinValueValidator(Decimal('-90')), MaxValueValidator(Decimal('90'))],
         help_text="Latitude (automatically set when location is selected on map)"
     )
     longitude = models.DecimalField(
         max_digits=9, 
         decimal_places=6,
-        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        validators=[MinValueValidator(Decimal('-180')), MaxValueValidator(Decimal('180'))],
         help_text="Longitude (automatically set when location is selected on map)"
     )
     max_biomass = models.DecimalField(

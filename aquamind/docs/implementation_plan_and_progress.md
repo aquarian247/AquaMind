@@ -6,6 +6,22 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-06-04: Infrastructure App API Refinements and Bug Fixes
+
+**Objective:** Refine API documentation and resolve validator issues in the Infrastructure app serializers to ensure test stability before proceeding with further API documentation enhancements.
+
+**Key Accomplishments:**
+
+*   **Validator Fixes in Serializers:**
+    *   Corrected `MinValueValidator` import and usage in `HallSerializer`, `ContainerTypeSerializer`, `ContainerSerializer`, and `FeedContainerSerializer`. The validator was previously incorrectly referenced from `rest_framework.serializers` and is now correctly imported from `django.core.validators`.
+    *   Resolved an `IntegrityError` encountered during `GeographyAPITest` by adding `UniqueValidator(queryset=Geography.objects.all())` to the `name` field in `GeographySerializer`. This ensures that duplicate name submissions are handled at the serializer level with a `400 Bad Request`, rather than causing a database error.
+*   **Test Suite Stability:**
+    *   Successfully ran all tests for the `apps.infrastructure` module, confirming that the applied fixes resolved previous `AttributeError` and `IntegrityError` issues.
+    *   The full project test suite (354 tests) also passed, indicating overall system stability.
+
+**Outcome:** The Infrastructure app serializers are now more robust, and the test suite is stable. This allows for confident continuation of API documentation work and further development on the Infrastructure app.
+
+
 ### 2025-06-02: Inventory App Refactoring and Feature Updates
 
 **Objective:** Improve code quality and maintainability of the Inventory app through structured refactoring phases, following the same approach used for the Health, Batch, and Infrastructure apps.

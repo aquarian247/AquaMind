@@ -78,14 +78,17 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 # CSRF settings
-# Use wildcards to cover all possible ports for local development and browser previews
+# Django doesn't support wildcards in CSRF_TRUSTED_ORIGINS, so we need to add specific origins
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:*',  # Cover all localhost ports
-    'http://127.0.0.1:*',  # Cover all 127.0.0.1 ports
-    'https://localhost:*',
-    'https://127.0.0.1:*',
-    'http://127.0.0.1:54341',
-    'http://127.0.0.1:52734',  # Added for the current browser preview proxy
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://localhost:8000',
+    'https://127.0.0.1:8000',
+    'http://127.0.0.1:54341', # Previous proxy port
+    'http://127.0.0.1:52734', # Previous proxy port
+    'http://127.0.0.1:50186', # Previous proxy port
+    'http://127.0.0.1:60263', # From the second declaration
+    'http://127.0.0.1:49799', # Current browser_preview proxy port
 ]
 
 ROOT_URLCONF = "aquamind.urls"
@@ -161,7 +164,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # CSRF Protection
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:60263']
+# CSRF_TRUSTED_ORIGINS is defined earlier in this file.
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

@@ -24,6 +24,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
         class Meta:
             model = Batch
             fields = ['id', 'batch_number', 'status']
+            ref_name = 'AssignmentNestedBatch'
 
     class NestedContainerSerializer(serializers.ModelSerializer):
         """Minimal serializer for nested Container representation."""

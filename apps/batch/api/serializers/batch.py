@@ -12,18 +12,28 @@ from apps.batch.api.serializers.base import BatchBaseSerializer
 
 
 class BatchSerializer(BatchBaseSerializer):
-    """Serializer for the Batch model."""
+    """Serializer for the Batch model.
 
-    species_name = serializers.CharField(source='species.name', read_only=True)
-    calculated_population_count = serializers.IntegerField(read_only=True)
-    calculated_biomass_kg = serializers.SerializerMethodField()
-    calculated_avg_weight_g = serializers.SerializerMethodField()
-    current_lifecycle_stage = serializers.SerializerMethodField()
-    days_in_production = serializers.SerializerMethodField()
-    active_containers = serializers.SerializerMethodField()
+    Handles the representation of Batch instances, including their core attributes,
+    related model information (species name), and dynamically calculated metrics
+    such as population count, biomass, average weight, current lifecycle stage,
+    days in production, and active containers.
+    """
+
+    species_name = serializers.CharField(source='species.name', read_only=True, help_text="Name of the species associated with this batch (read-only).")
+    calculated_population_count = serializers.IntegerField(read_only=True, help_text="Total current population count for this batch, calculated from active assignments (read-only).")
+    calculated_biomass_kg = serializers.SerializerMethodField(help_text="Total current biomass in kilograms for this batch, calculated from active assignments and formatted to two decimal places (read-only).")
+    calculated_avg_weight_g = serializers.SerializerMethodField(help_text="Current average weight in grams for individuals in this batch, calculated from active assignments and formatted to two decimal places (read-only).")
+    current_lifecycle_stage = serializers.SerializerMethodField(help_text="The current lifecycle stage of the batch (ID, name, order), determined by the latest active assignment (read-only).")
+    days_in_production = serializers.SerializerMethodField(help_text="Number of days the batch has been in production since its start date (read-only).")
+    active_containers = serializers.SerializerMethodField(help_text="List of IDs of containers currently actively holding this batch (read-only).")
 
     class Meta:
         model = Batch
+        help_text = (
+            "Represents a group of aquatic organisms managed together, tracking their "
+            "growth, location, and status over time. Includes core attributes and calculated metrics."
+        )
         fields = (
             'id',
             'batch_number',
@@ -55,6 +65,19 @@ class BatchSerializer(BatchBaseSerializer):
             'days_in_production',
             'active_containers',
         )
+        extra_kwargs = {
+            'id': {'help_text': "Unique read-only identifier for the batch record."},
+            'batch_number': {'help_text': "User-defined unique identifier or code for the batch (e.g., BATCH2023-001)."},
+            'species': {'help_text': "Foreign key ID of the species for this batch. Must be an existing Species ID."},
+            'lifecycle_stage': {'help_text': "Foreign key ID of the initial or primary lifecycle stage for this batch. Must be an existing LifeCycleStage ID appropriate for the selected species."},
+            'status': {'help_text': "Current status of the batch. Refer to model choices (e.g., 'Planned', 'Active', 'Harvested')."},
+            'batch_type': {'help_text': "Type or category of the batch. Refer to model choices (e.g., 'Production', 'Experimental')."},
+            'start_date': {'help_text': "Date when the batch officially started or was created (YYYY-MM-DD)."},
+            'expected_end_date': {'help_text': "Anticipated end date for the batch (e.g., for harvest or transfer) (YYYY-MM-DD). Defaults to 30 days after start_date if not provided."},
+            'notes': {'help_text': "Any general notes or comments about the batch (optional)."},
+            'created_at': {'help_text': "Timestamp of when the batch record was created (read-only)."},
+            'updated_at': {'help_text': "Timestamp of the last update to the batch record (read-only)."}
+        }
 
     def get_current_lifecycle_stage(self, obj):
         """Get the current lifecycle stage based on active assignments."""

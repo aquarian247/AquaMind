@@ -21,6 +21,7 @@ class BatchCompositionSerializer(
         class Meta:
             model = Batch
             fields = ['id', 'batch_number', 'status']
+            ref_name = 'CompositionNestedBatch'
 
     mixed_batch = NestedBatchSerializer(read_only=True)
     mixed_batch_id = serializers.PrimaryKeyRelatedField(
@@ -33,6 +34,8 @@ class BatchCompositionSerializer(
     percentage = serializers.DecimalField(
         max_digits=5,
         decimal_places=2,
+        min_value=Decimal('0'),
+        max_value=Decimal('100'),
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))]
     )
 

@@ -2,6 +2,7 @@
 Feeding event model for the inventory app.
 """
 from django.db import models
+from decimal import Decimal
 from django.core.validators import MinValueValidator
 
 from apps.batch.models import Batch, BatchContainerAssignment
@@ -67,7 +68,7 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
     batch_biomass_kg = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)],
+        validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Estimated batch biomass at time of feeding (kg)"
     )
     feeding_percentage = models.DecimalField(

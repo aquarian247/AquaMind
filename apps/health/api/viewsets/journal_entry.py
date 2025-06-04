@@ -32,7 +32,7 @@ class JournalEntryViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
         'batch__id': ['exact'],
         'container__id': ['exact'],
         'entry_date': ['exact', 'gte', 'lte'],
-        'entry_type': ['exact'],
+        'category': ['exact'],
         'user__id': ['exact']
     }
     search_fields = ['title', 'content']

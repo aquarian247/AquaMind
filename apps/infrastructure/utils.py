@@ -4,6 +4,7 @@ Utility functions and mixins for the infrastructure app.
 This module contains reusable components for models and serializers.
 """
 
+from decimal import Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -47,8 +48,8 @@ class LocationMixin(models.Model):
         max_digits=9,
         decimal_places=6,
         validators=[
-            models.validators.MinValueValidator(-90),
-            models.validators.MaxValueValidator(90)
+            models.validators.MinValueValidator(Decimal('-90')),
+            models.validators.MaxValueValidator(Decimal('90'))
         ],
         help_text="Latitude (set when location is selected on map)"
     )
@@ -56,8 +57,8 @@ class LocationMixin(models.Model):
         max_digits=9,
         decimal_places=6,
         validators=[
-            models.validators.MinValueValidator(-180),
-            models.validators.MaxValueValidator(180)
+            models.validators.MinValueValidator(Decimal('-180')),
+            models.validators.MaxValueValidator(Decimal('180'))
         ],
         help_text="Longitude (set when location is selected on map)"
     )

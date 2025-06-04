@@ -4,6 +4,8 @@ Serializers for the environmental app.
 These serializers convert Django models to JSON and vice versa for the REST API.
 Includes special handling for TimescaleDB hypertable models.
 """
+from decimal import Decimal
+from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 from apps.environmental.models import (
     EnvironmentalParameter,
@@ -17,6 +19,11 @@ from apps.environmental.models import (
 class EnvironmentalParameterSerializer(serializers.ModelSerializer):
     """Serializer for the EnvironmentalParameter model."""
     
+    min_value = serializers.DecimalField(max_digits=10, decimal_places=4, required=False, allow_null=True)
+    max_value = serializers.DecimalField(max_digits=10, decimal_places=4, required=False, allow_null=True)
+    optimal_min = serializers.DecimalField(max_digits=10, decimal_places=4, required=False, allow_null=True)
+    optimal_max = serializers.DecimalField(max_digits=10, decimal_places=4, required=False, allow_null=True)
+
     class Meta:
         model = EnvironmentalParameter
         fields = '__all__'
@@ -100,6 +107,15 @@ class PhotoperiodDataSerializer(serializers.ModelSerializer):
     
     area_name = serializers.StringRelatedField(source='area', read_only=True)
     
+    day_length_hours = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        min_value=Decimal('0'),
+        max_value=Decimal('24'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('24'))],
+        help_text="Day length in hours (0-24)"
+    )
+
     class Meta:
         model = PhotoperiodData
         fields = '__all__'

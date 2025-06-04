@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
@@ -93,7 +94,7 @@ class PhotoperiodData(models.Model):
     day_length_hours = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        validators=[MinValueValidator(0), MaxValueValidator(24)],
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('24'))],
         help_text="Day length in hours (0-24)"
     )
     light_intensity = models.DecimalField(
