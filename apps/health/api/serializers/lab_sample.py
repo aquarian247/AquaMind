@@ -22,6 +22,13 @@ class SampleTypeSerializer(HealthBaseSerializer):
     
     Uses HealthBaseSerializer for consistent error handling and field management.
     """
+    name = serializers.CharField(
+        help_text="Name of the sample type (e.g., 'Gill Swab', 'Blood Sample')."
+    )
+    description = serializers.CharField(
+        help_text="Detailed description of the sample type, including collection methods and purpose."
+    )
+    
     class Meta:
         model = SampleType
         fields = ['id', 'name', 'description']
@@ -37,17 +44,76 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
     Uses HealthBaseSerializer for consistent error handling and field management.
     Includes HealthDecimalFieldsMixin for decimal field validation and
     UserAssignmentMixin for automatic user assignment.
+    
+    This serializer handles the complex logic of finding the correct historical
+    batch-container assignment based on the sample date, which is crucial for
+    accurate record-keeping when lab results may arrive weeks after sampling.
     """
     # Fields for assignment lookup
-    batch_id = serializers.IntegerField(write_only=True)
-    container_id = serializers.IntegerField(write_only=True)
+    batch_id = serializers.IntegerField(
+        write_only=True,
+        help_text="ID of the batch from which the sample was taken. Used to find the historical assignment."
+    )
+    container_id = serializers.IntegerField(
+        write_only=True,
+        help_text="ID of the container from which the sample was taken. Used to find the historical assignment."
+    )
     
     # Read-only fields for nested data display
-    batch_number = serializers.SerializerMethodField()
-    container_name = serializers.SerializerMethodField()
-    sample_type_name = serializers.SerializerMethodField()
-    recorded_by_username = serializers.SerializerMethodField()
-    batch_container_assignment_details = serializers.SerializerMethodField()
+    batch_number = serializers.SerializerMethodField(
+        help_text="Batch number from the associated batch-container assignment."
+    )
+    container_name = serializers.SerializerMethodField(
+        help_text="Container name from the associated batch-container assignment."
+    )
+    sample_type_name = serializers.SerializerMethodField(
+        help_text="Name of the sample type."
+    )
+    recorded_by_username = serializers.SerializerMethodField(
+        help_text="Username of the person who recorded this sample."
+    )
+    batch_container_assignment_details = serializers.SerializerMethodField(
+        help_text="Detailed information about the batch-container assignment at the time of sampling."
+    )
+    
+    # Additional fields with help_text
+    sample_type = serializers.PrimaryKeyRelatedField(
+        queryset=SampleType.objects.all(),
+        help_text="Type of sample collected (references SampleType model)."
+    )
+    sample_date = serializers.DateField(
+        help_text="Date when the sample was collected. Used to find the historical batch-container assignment."
+    )
+    date_sent_to_lab = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text="Date when the sample was sent to the laboratory for analysis."
+    )
+    date_results_received = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text="Date when the results were received from the laboratory."
+    )
+    lab_reference_id = serializers.CharField(
+        required=False,
+        allow_null=True,
+        help_text="Reference ID assigned by the laboratory for tracking purposes."
+    )
+    findings_summary = serializers.CharField(
+        required=False,
+        allow_null=True,
+        help_text="Summary of the laboratory findings and results."
+    )
+    quantitative_results = serializers.JSONField(
+        required=False,
+        allow_null=True,
+        help_text="Structured JSON data containing quantitative test results."
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_null=True,
+        help_text="Additional notes about the sample or results."
+    )
 
     class Meta:
         model = HealthLabSample

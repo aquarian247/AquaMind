@@ -2,7 +2,7 @@
 
 ## Overview
 
-AquaMind uses a containerized development environment to ensure consistent development experience across different machines. The environment consists of:
+AquaMind can be set up to use a containerized development environment to ensure consistent development experience across different machines. The environment consists of:
 
 1. **Development Container**: A Python 3.11 container with Node.js for frontend development
 2. **TimescaleDB Container**: A PostgreSQL database with TimescaleDB extension for time-series data

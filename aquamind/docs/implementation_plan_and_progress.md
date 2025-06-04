@@ -6,6 +6,33 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-06-04: Environmental and Health App API Improvements
+
+**Objective:** Enhance API documentation and fix field name mismatches in serializers to ensure proper functionality and test reliability.
+
+**Key Accomplishments:**
+
+1. **Serializer Field Name Fixes:**
+   * Fixed field name mismatch in `EnvironmentalReadingSerializer` by changing `time` to `reading_time` to match the model field
+   * Fixed field name mismatch in `WeatherDataSerializer` by changing `time` to `timestamp` to match the model field
+   * Added missing `sensor` field definition with appropriate `help_text` in `EnvironmentalReadingSerializer`
+
+2. **Enhanced API Documentation:**
+   * Improved serializer documentation with comprehensive `help_text` for all fields in both Health and Environmental apps
+   * Ensured consistent documentation standards across serializers for better client integration
+
+3. **Test Architecture Restructuring:**
+   * Discovered that the Environmental app did not follow the project's standard testing pattern
+   * Refactored test structure to match other apps (like batch app):
+     * Created proper directory structure (`api/` and `models/`)
+     * Moved test files to appropriate locations
+     * Created proper `__init__.py` files with imports for test discovery
+   * Improved test discovery significantly:
+     * Environmental app tests increased from 42 to 78 tests
+     * Full test suite increased from 354 to 390 tests
+
+**Outcome:** The Environmental and Health app serializers are now more robust with proper field names and improved documentation. The restructured test architecture ensures better test discovery and coverage, preventing similar issues from going undetected in the future.
+
 ### 2025-06-04: Infrastructure App API Refinements and Bug Fixes
 
 **Objective:** Refine API documentation and resolve validator issues in the Infrastructure app serializers to ensure test stability before proceeding with further API documentation enhancements.

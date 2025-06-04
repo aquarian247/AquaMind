@@ -1,0 +1,592 @@
+{
+  "info": {
+    "name": "AquaMind API",
+    "description": "API collection for AquaMind project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"username\": \"{{username}}\",\n\t\"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/token/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "token",
+                ""
+              ]
+            },
+            "description": "Get JWT token for authentication"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Environmental",
+      "item": [
+        {
+          "name": "List Environmental Parameters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/parameters/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "parameters",
+                ""
+              ]
+            },
+            "description": "Get all environmental parameters"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Environmental Parameter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"Dissolved Oxygen\",\n\t\"unit\": \"mg/L\",\n\t\"description\": \"Amount of oxygen dissolved in water\",\n\t\"min_value\": 5.0,\n\t\"max_value\": 15.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/parameters/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "parameters",
+                ""
+              ]
+            },
+            "description": "Create a new environmental parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "List Environmental Readings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/readings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "readings",
+                ""
+              ]
+            },
+            "description": "Get all environmental readings"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Environmental Reading",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"parameter\": 1,\n\t\"reading_time\": \"2025-06-04T10:00:00Z\",\n\t\"value\": 7.5,\n\t\"sensor\": 1,\n\t\"container\": 1,\n\t\"notes\": \"Regular reading\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/readings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "readings",
+                ""
+              ]
+            },
+            "description": "Create a new environmental reading"
+          },
+          "response": []
+        },
+        {
+          "name": "List Weather Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/weather/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "weather",
+                ""
+              ]
+            },
+            "description": "Get all weather data"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Weather Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"timestamp\": \"2025-06-04T10:00:00Z\",\n\t\"temperature\": 25.5,\n\t\"humidity\": 65.0,\n\t\"pressure\": 1013.2,\n\t\"wind_speed\": 5.2,\n\t\"wind_direction\": \"NE\",\n\t\"precipitation\": 0.0,\n\t\"cloud_cover\": 25.0,\n\t\"weather_station\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/environmental/weather/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "environmental",
+                "weather",
+                ""
+              ]
+            },
+            "description": "Create a new weather data entry"
+          },
+          "response": []
+        }
+      ],
+      "description": "Environmental endpoints"
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "List Lab Samples",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/lab-samples/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                "lab-samples",
+                ""
+              ]
+            },
+            "description": "Get all lab samples"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lab Sample",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"batch\": 1,\n\t\"sample_date\": \"2025-06-04T10:00:00Z\",\n\t\"sample_type\": \"Water\",\n\t\"lab_id\": \"LAB-2025-001\",\n\t\"results\": {\n\t\t\"ph\": 7.2,\n\t\t\"ammonia\": 0.05,\n\t\t\"nitrite\": 0.01,\n\t\t\"nitrate\": 5.0\n\t},\n\t\"notes\": \"Regular water quality test\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/lab-samples/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                "lab-samples",
+                ""
+              ]
+            },
+            "description": "Create a new lab sample"
+          },
+          "response": []
+        },
+        {
+          "name": "List Health Assessments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/assessments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                "assessments",
+                ""
+              ]
+            },
+            "description": "Get all health assessments"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Health Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"batch\": 1,\n\t\"assessment_date\": \"2025-06-04T10:00:00Z\",\n\t\"assessor\": \"John Doe\",\n\t\"health_score\": 8,\n\t\"observations\": \"Fish appear healthy with good coloration\",\n\t\"recommendations\": \"Continue current feeding regimen\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/assessments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                "assessments",
+                ""
+              ]
+            },
+            "description": "Create a new health assessment"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health endpoints"
+    },
+    {
+      "name": "Infrastructure",
+      "item": [
+        {
+          "name": "List Containers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/infrastructure/containers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "infrastructure",
+                "containers",
+                ""
+              ]
+            },
+            "description": "Get all containers"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Container",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"Tank A1\",\n\t\"container_type\": 1,\n\t\"hall\": 1,\n\t\"is_active\": true,\n\t\"installation_date\": \"2025-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/infrastructure/containers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "infrastructure",
+                "containers",
+                ""
+              ]
+            },
+            "description": "Create a new container"
+          },
+          "response": []
+        }
+      ],
+      "description": "Infrastructure endpoints"
+    },
+    {
+      "name": "Batch",
+      "item": [
+        {
+          "name": "List Batches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/batch/batches/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch",
+                "batches",
+                ""
+              ]
+            },
+            "description": "Get all batches"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"Batch 2025-001\",\n\t\"species\": 1,\n\t\"start_date\": \"2025-06-01\",\n\t\"initial_count\": 1000,\n\t\"initial_biomass_kg\": 50.0,\n\t\"current_count\": 1000,\n\t\"current_biomass_kg\": 50.0,\n\t\"container\": 1,\n\t\"stage\": 1,\n\t\"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/batch/batches/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch",
+                "batches",
+                ""
+              ]
+            },
+            "description": "Create a new batch"
+          },
+          "response": []
+        }
+      ],
+      "description": "Batch endpoints"
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List Feed Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/feed-types/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "feed-types",
+                ""
+              ]
+            },
+            "description": "Get all feed types"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Feeding Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"batch\": 1,\n\t\"feed_type\": 1,\n\t\"quantity_kg\": 2.5,\n\t\"feeding_time\": \"2025-06-04T08:00:00Z\",\n\t\"feeder\": \"Jane Smith\",\n\t\"notes\": \"Morning feeding\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/feeding-events/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "feeding-events",
+                ""
+              ]
+            },
+            "description": "Create a new feeding event"
+          },
+          "response": []
+        }
+      ],
+      "description": "Inventory endpoints"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

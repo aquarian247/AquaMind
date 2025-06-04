@@ -26,9 +26,17 @@ class FishParameterScoreSerializer(HealthBaseSerializer):
     
     Uses HealthBaseSerializer for consistent error handling and field management.
     """
-    parameter_name = serializers.CharField(source='parameter.name', read_only=True)
+    parameter_name = serializers.CharField(
+        source='parameter.name', 
+        read_only=True,
+        help_text="Name of the health parameter being scored."
+    )
     parameter = serializers.PrimaryKeyRelatedField(
-        queryset=HealthParameter.objects.filter(is_active=True)
+        queryset=HealthParameter.objects.filter(is_active=True),
+        help_text="ID of the health parameter being scored. Must reference an active parameter."
+    )
+    score = serializers.IntegerField(
+        help_text="Score value (typically 1-5) representing the health assessment for this parameter."
     )
 
     class Meta:
@@ -44,8 +52,31 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
     Includes HealthDecimalFieldsMixin for decimal field validation and
     NestedHealthModelMixin for handling nested models.
     """
-    parameter_scores = FishParameterScoreSerializer(many=True, required=False)
-    calculated_k_factor = serializers.SerializerMethodField()
+    parameter_scores = FishParameterScoreSerializer(
+        many=True, 
+        required=False,
+        help_text="List of parameter scores for this fish observation."
+    )
+    calculated_k_factor = serializers.SerializerMethodField(
+        help_text="Calculated K-factor (condition factor) based on weight and length measurements."
+    )
+    sampling_event = serializers.PrimaryKeyRelatedField(
+        queryset=HealthSamplingEvent.objects.all(),
+        help_text="The sampling event this fish observation belongs to."
+    )
+    fish_identifier = serializers.CharField(
+        help_text="Unique identifier for the individual fish within this sampling event."
+    )
+    weight_g = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        help_text="Weight of the fish in grams."
+    )
+    length_cm = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        help_text="Length of the fish in centimeters."
+    )
 
     class Meta:
         model = IndividualFishObservation
@@ -156,6 +187,9 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
     Includes HealthDecimalFieldsMixin for decimal field validation,
     NestedHealthModelMixin for handling nested models, and
     UserAssignmentMixin for automatic user assignment.
+    
+    This serializer handles complex nested data structures for fish health sampling events,
+    including individual fish observations and their parameter scores.
     """
     individual_fish_observations = serializers.ListField(
         child=serializers.DictField(),
@@ -397,6 +431,29 @@ class HealthParameterSerializer(HealthBaseSerializer):
     
     Uses HealthBaseSerializer for consistent error handling and field management.
     """
+    name = serializers.CharField(
+        help_text="Name of the health parameter (e.g., 'Gill Condition', 'Fin Condition')."
+    )
+    description_score_1 = serializers.CharField(
+        help_text="Description of what score 1 represents for this parameter."
+    )
+    description_score_2 = serializers.CharField(
+        help_text="Description of what score 2 represents for this parameter."
+    )
+    description_score_3 = serializers.CharField(
+        help_text="Description of what score 3 represents for this parameter."
+    )
+    description_score_4 = serializers.CharField(
+        help_text="Description of what score 4 represents for this parameter."
+    )
+    description_score_5 = serializers.CharField(
+        help_text="Description of what score 5 represents for this parameter."
+    )
+    is_active = serializers.BooleanField(
+        default=True,
+        help_text="Whether this parameter is currently active and available for scoring."
+    )
+    
     class Meta:
         model = HealthParameter
         fields = [

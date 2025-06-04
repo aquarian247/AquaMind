@@ -4,13 +4,15 @@ Treatment serializers for health monitoring.
 This module defines serializers for treatment models.
 """
 
+from django.core.validators import MinValueValidator
+from django.utils import timezone
 from rest_framework import serializers
 
-from ...models import Treatment
-from ..utils import (
-    HealthDecimalFieldsMixin, UserAssignmentMixin
-)
-from .base import HealthBaseSerializer
+from apps.batch.models import Batch, BatchContainerAssignment
+from apps.health.api.serializers.base import HealthBaseSerializer
+from apps.health.api.utils import HealthDecimalFieldsMixin, UserAssignmentMixin
+from apps.health.models import Treatment, VaccinationType
+from apps.infrastructure.models import Container
 from ..validation import validate_treatment_dates
 
 
@@ -21,10 +23,70 @@ class TreatmentSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin,
     Uses HealthBaseSerializer for consistent error handling and field management.
     Includes HealthDecimalFieldsMixin for decimal field validation and UserAssignmentMixin
     for automatic user assignment.
+    
+    This serializer handles treatment records for fish health management, including
+    medications, vaccinations, and other therapeutic interventions.
     """
-    withholding_end_date = serializers.DateField(read_only=True)
-    treatment_date = serializers.DateTimeField(read_only=True)
-
+    withholding_end_date = serializers.DateField(
+        read_only=True,
+        help_text="Calculated end date of the withholding period based on treatment date and withholding period days."
+    )
+    treatment_date = serializers.DateTimeField(
+        read_only=True,
+        help_text="Date and time when the treatment was administered (auto-set)."
+    )
+    
+    # Additional fields with help_text
+    batch = serializers.PrimaryKeyRelatedField(
+        queryset=Batch.objects.all(),
+        help_text="The batch that received the treatment."
+    )
+    container = serializers.PrimaryKeyRelatedField(
+        queryset=Container.objects.all(),
+        help_text="The container where the treatment was administered."
+    )
+    batch_assignment = serializers.PrimaryKeyRelatedField(
+        queryset=BatchContainerAssignment.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Optional specific batch-container assignment for this treatment."
+    )
+    treatment_type = serializers.ChoiceField(
+        choices=Treatment.TREATMENT_TYPES,
+        help_text="Type of treatment administered (e.g., 'medication', 'vaccination')."
+    )
+    vaccination_type = serializers.PrimaryKeyRelatedField(
+        queryset=VaccinationType.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Specific vaccination type if treatment_type is 'vaccination'."
+    )
+    description = serializers.CharField(
+        help_text="Detailed description of the treatment administered."
+    )
+    dosage = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Dosage amount of the treatment (with units specified in description)."
+    )
+    duration_days = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        help_text="Duration of the treatment in days.",
+        validators=[MinValueValidator(0)]
+    )
+    withholding_period_days = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        help_text="Number of days fish must be withheld from harvest after treatment.",
+        validators=[MinValueValidator(0)]
+    )
+    outcome = serializers.CharField(
+        required=False,
+        allow_null=True,
+        help_text="Outcome or result of the treatment."
+    )
+    
     # We need to explicitly define the field to override the default DateField
     # that would be created for treatment_date based on the model
 
