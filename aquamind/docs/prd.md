@@ -271,146 +271,161 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 #### 3.1.8 Broodstock Management (broodstock app)
 
 **Purpose**  
-The Broodstock Management feature in AquaMind supports the foundational stage of salmon farming by enabling broodstock managers and farm operators to oversee broodstock infrastructure, track fish populations, manage breeding operations, monitor environmental conditions, and ensure traceability from broodstock to batch where applicable. It accommodates both internally produced eggs from broodstock and externally purchased eggs from third parties, providing flexible lineage tracking to support operational efficiency and quality control. This module is designed to be as user-friendly and implementable as the Scenario Planning features, focusing on essential capabilities without advanced predictive modeling.
+The Broodstock Management module in AquaMind is a core component of the salmon farming lifecycle, enabling broodstock managers and farm operators to oversee broodstock populations, manage breeding operations, track egg production and acquisition, and ensure comprehensive traceability. It supports both internally produced eggs from broodstock and externally sourced eggs from third-party suppliers, providing flexible lineage tracking critical for quality control, operational planning, and regulatory compliance. Designed with the same usability and implementability as Scenario Planning, this feature focuses on practical, essential capabilities without advanced predictive analytics, ensuring broodstock management aligns with AquaMind’s goal of optimizing salmon farming processes.
 
 **Functionality**  
-The Broodstock Management feature includes the following key components:
+This section details the comprehensive capabilities of the Broodstock Management module, structured into key functional areas:
 
 - **Broodstock Container Management**  
-  - **Description:** Track and manage containers housing broodstock fish, including their status and maintenance needs.  
+  - **Description:** Manage containers housing broodstock fish using the existing `infrastructure_container` model, designated with a `containertype` of "broodstock" selected from `infrastructure_containertype`.  
   - **Specifications:**  
-    - Maintain an inventory of thousands of containers with details like ID, location, and capacity.  
-    - Monitor real-time environmental parameters (e.g., temperature, photoperiod) via integrated sensors.  
-    - Schedule and log maintenance tasks (e.g., cleaning, repairs).  
-    - Provide a dashboard for quick container status overview.  
-  - **Data Requirements:** Container ID, location, capacity, status, sensor data, maintenance logs.
+    - Maintain a detailed inventory of broodstock containers, capturing unique IDs, physical locations (e.g., site, building, room), capacities (fish or biomass limits), and statuses (e.g., "active", "under maintenance", "quarantine").  
+    - Schedule and log maintenance tasks such as cleaning, repairs, or equipment checks via the `MaintenanceTask` model, with fields for task type, scheduled and completed dates, and notes.  
+    - Integrate real-time environmental monitoring (e.g., temperature, dissolved oxygen, photoperiod) through the `environmental` app, linking to `infrastructure_container` via `container_id`.  
+    - Provide a dashboard displaying container statuses, upcoming maintenance tasks, and environmental alerts, with filters for location and type.  
+    - Support mobile access for viewing container details and logging maintenance tasks on-site.  
+  - **Data Requirements:** Container ID, location (site, building, room), capacity (numeric), status (enum), maintenance task details (type, dates, notes), environmental sensor data (parameter, value, timestamp).
 
 - **Fish Population Tracking**  
-  - **Description:** Monitor individual fish and groups within containers, with optional lineage tracking for breeding fish.  
+  - **Description:** Track individual broodstock fish and population aggregates within containers using `BroodstockFish` and `FishMovement` models, ensuring accurate counts and lineage data.  
   - **Specifications:**  
-    - Record fish data (e.g., ID, container assignment, basic traits like growth rate).  
-    - Track fish movements between containers and update population counts.  
-    - Link broodstock fish to breeding events for internal traceability, where applicable.  
-    - Display population summaries per container (e.g., total fish, health status).  
-  - **Data Requirements:** Fish ID, container ID, traits, health status, movement history, optional parentage links.
+    - Record individual fish details including unique IDs, current container assignments, basic traits (e.g., growth rate, size), and health statuses (via integration with the `health` app).  
+    - Log fish movements between containers using `FishMovement`, capturing source and destination containers, movement dates, and responsible users, with automatic population updates.  
+    - Maintain population summaries per container, showing total fish counts, average health status, and movement history.  
+    - Link fish to breeding events for internal egg traceability, ensuring parentage data is preserved.  
+    - Enable mobile entry of fish movements and health observations, with offline sync capability.  
+  - **Data Requirements:** Fish ID, container ID (FK), traits (JSON), health status (enum), movement history (from/to container IDs, date, user), population aggregates (count, status).
 
-- **Breeding Operations and Egg Production**  
-  - **Description:** Support internal egg production and breeding management with traceability to progeny batches.  
+- **Breeding Operations**  
+  - **Description:** Facilitate breeding planning and execution, prioritizing traits and assigning pairs to optimize egg production, tracked via `BreedingPlan`, `BreedingTraitPriority`, and `BreedingPair`.  
   - **Specifications:**  
-    - Create breeding plans with prioritized traits (e.g., growth, disease resistance).  
-    - Assign breeding pairs manually or via basic trait-based suggestions.  
-    - Record egg production events with unique egg batch IDs for internal eggs.  
-    - Link internally produced egg batches to progeny batches in freshwater stations.  
-    - Log breeding and egg production events with timestamps and user details.  
-  - **Data Requirements:** Breeding plan ID, trait priorities, pair assignments, egg batch ID, progeny records.
+    - Define breeding plans with start/end dates and objectives (e.g., egg yield, trait enhancement) using `BreedingPlan`.  
+    - Set trait priorities (e.g., growth rate, disease resistance) with weights in `BreedingTraitPriority`, guiding pair selection.  
+    - Assign breeding pairs manually or via basic trait-matching suggestions in `BreedingPair`, linking male and female `BroodstockFish` IDs with pairing dates and expected progeny counts.  
+    - Log breeding events with timestamps and user details, integrating with egg production records.  
+    - Provide a breeding dashboard showing active plans, pair statuses, and trait priority summaries.  
+  - **Data Requirements:** Plan ID, name, dates, trait priorities (name, weight), pair details (male/female fish IDs, date, progeny count), event logs (timestamp, user).
 
-- **External Egg Acquisition**  
-  - **Description:** Manage eggs purchased from third-party suppliers, ensuring traceability without internal broodstock links.  
+- **Egg Production and Acquisition**  
+  - **Description:** Manage egg production from internal broodstock and acquisition from external suppliers, ensuring traceability with `EggProduction`, `EggSupplier`, and `ExternalEggBatch`.  
   - **Specifications:**  
-    - Record external egg batches with supplier details (e.g., supplier name, batch number).  
-    - Create batches from external eggs without requiring a breeding event.  
-    - Store provenance data (e.g., supplier certification, egg count) for traceability.  
-    - Link external egg batches to `batch_batch` records in freshwater stations.  
-  - **Data Requirements:** External egg batch ID, supplier details, egg count, provenance data, batch ID.
+    - Record internal egg production events linked to `BreedingPair`, generating unique `egg_batch_id`s in `EggProduction`, with egg counts, production dates, and destination stations.  
+    - Log external egg batches via `ExternalEggBatch`, capturing supplier details from `EggSupplier` (e.g., name, certifications), batch numbers, and provenance data (e.g., source farm, transport conditions).  
+    - Assign eggs (internal or external) to freshwater batches via `BatchParentage`, linking `egg_batch_id` to `batch_batch`.  
+    - Support mobile logging of egg production and acquisition, with validation for egg counts and supplier data.  
+    - Display egg batch summaries, distinguishing internal vs. external sources, with links to lineage details.  
+  - **Data Requirements:** Egg batch ID, pair ID (nullable), egg count, production/acquisition date, supplier ID, batch number, provenance data, batch ID (FK).
 
-- **Environmental Monitoring**  
-  - **Description:** Monitor and adjust environmental conditions to support broodstock health and egg production.  
+- **Environmental Monitoring and Control**  
+  - **Description:** Monitor and adjust broodstock container conditions using the `environmental` app, ensuring optimal health and productivity.  
   - **Specifications:**  
-    - Track key parameters (e.g., temperature, photoperiod, water quality) in real time.  
-    - Set simple environmental schedules (e.g., day/night cycles) per container.  
-    - Generate alerts for parameter deviations beyond thresholds.  
-    - Log manual adjustments or automated changes.  
-  - **Data Requirements:** Container ID, parameter readings, schedules, alert logs.
+    - Capture real-time environmental data (e.g., temperature, pH, photoperiod) via `environmental_environmentalreading`, linked to `infrastructure_container`.  
+    - Define and apply environmental schedules (e.g., light cycles) per container using `environmental_photoperioddata`, with start/end times and parameter targets.  
+    - Generate alerts for parameter deviations (e.g., temperature > 25°C), viewable on dashboards and mobile devices.  
+    - Log manual or automated adjustments (e.g., heater activation) with timestamps and user/system details.  
+    - Provide historical environmental trends per container for analysis.  
+  - **Data Requirements:** Container ID, parameter type, reading value, timestamp, schedule details (start/end, target), alert logs (condition, timestamp), adjustment logs.
 
 - **Operational Planning with Scenarios**  
-  - **Description:** Plan broodstock and egg production operations using scenario-based tools, integrating with Scenario Planning features.  
+  - **Description:** Leverage Scenario Planning tools to plan broodstock operations, integrating internal and external egg sourcing strategies.  
   - **Specifications:**  
-    - Create scenarios for broodstock production (e.g., breeding schedules, egg output, internal vs. external sourcing).  
-    - Compare scenarios based on outcomes like egg batch yields or resource use.  
-    - Reuse Scenario Planning’s logic for scenario creation and comparison.  
-    - Coordinate with freshwater stations for egg-to-batch handoffs, including external eggs.  
-  - **Data Requirements:** Scenario ID, parameters, outcomes, linked containers or egg batches.
+    - Create broodstock scenarios in the `scenario` model, specifying parameters like breeding schedules, egg production targets, or external sourcing ratios.  
+    - Compare scenarios based on outcomes (e.g., egg yield, cost, resource use), reusing Scenario Planning’s comparison logic.  
+    - Link scenarios to specific containers or egg batches for execution tracking.  
+    - Coordinate with freshwater stations for egg handoffs, ensuring batch creation aligns with scenario plans.  
+    - Support mobile scenario review and basic edits (e.g., adjusting timelines).  
+  - **Data Requirements:** Scenario ID, name, parameters (JSON), outcomes (yield, cost), linked containers/egg batches, station handoff details.
 
 - **Traceability and Lineage Management**  
-  - **Description:** Ensure flexible traceability from broodstock to batch for internal eggs and from external sources to batch for purchased eggs.  
+  - **Description:** Ensure end-to-end traceability from broodstock to batch for internal eggs and from supplier to batch for external eggs, with audit trails.  
   - **Specifications:**  
-    - Link internal breeding pairs to egg batches and progeny batches where applicable.  
-    - Record external egg batches with supplier details for traceability.  
-    - Provide lineage reports showing batch origins (internal broodstock or external supplier).  
-    - Maintain audit trails for all breeding, egg acquisition, and batch creation events.  
-  - **Data Requirements:** Egg batch ID, batch ID, parentage (internal) or source (external), audit logs.
+    - Link internal egg batches (`EggProduction`) to breeding pairs and progeny batches (`BatchParentage`), preserving parent fish IDs and breeding dates.  
+    - Record external egg batches (`ExternalEggBatch`) with supplier provenance, linking to `batch_batch` without broodstock data.  
+    - Generate lineage reports showing batch origins (e.g., "Batch B123 from Pair P456" or "Batch B124 from Supplier S789").  
+    - Maintain immutable audit trails for breeding, egg production/acquisition, and batch creation using `django-auditlog`.  
+    - Provide mobile access to lineage queries and report exports.  
+  - **Data Requirements:** Egg batch ID, pair ID (nullable), batch ID, parentage/supplier details, audit logs (event, timestamp, user).
 
 - **Mobile Access**  
-  - **Description:** Provide mobile apps for on-the-go monitoring and task management.  
+  - **Description:** Enable on-site management via mobile apps, supporting real-time data entry and monitoring.  
   - **Specifications:**  
-    - View container status, environmental data, and lineage details (internal or external) on mobile devices.  
-    - Log breeding tasks, egg production, egg acquisitions, and fish movements.  
-    - Receive and acknowledge alerts remotely.  
-    - Support offline mode with data sync when online.  
-  - **Data Requirements:** User actions, data entries, alert responses.
+    - View container statuses, environmental readings, fish details, and lineage data (internal/external) on mobile devices.  
+    - Log maintenance tasks, fish movements, breeding events, egg production/acquisition, and environmental adjustments offline, syncing when online.  
+    - Receive and acknowledge environmental alerts remotely, with push notifications.  
+    - Ensure offline mode preserves data integrity and audit trails.  
+  - **Data Requirements:** User actions (task logs, movements), data entries (fish, eggs), alert responses (timestamp, user), sync logs.
 
 - **Reporting**  
-  - **Description:** Generate straightforward reports for operational and lineage insights.  
+  - **Description:** Deliver detailed reports for operational insights and traceability, with export options.  
   - **Specifications:**  
-    - Produce reports on population stats, breeding outcomes, egg production (internal/external), and batch lineage.  
-    - Offer prebuilt templates (e.g., broodstock-to-batch traceability, external egg sourcing report).  
-    - Allow export to PDF or CSV for sharing.  
-    - Display basic trends (e.g., egg output over time, internal vs. external sourcing).  
-  - **Data Requirements:** Report type, generated data, export logs.
+    - Generate reports on container usage, fish populations, breeding outcomes, egg production (internal/external), and batch lineage.  
+    - Offer prebuilt templates (e.g., "Broodstock-to-Batch Traceability", "External Egg Sourcing Summary").  
+    - Support PDF/CSV exports for sharing with stakeholders or regulators.  
+    - Display trends (e.g., egg output by month, internal vs. external sourcing ratios) with basic visualizations.  
+    - Allow report generation from mobile devices, with export queued for sync.  
+  - **Data Requirements:** Report type, parameters (e.g., date range), generated data (counts, lineage), export logs (format, timestamp).
 
 **Behavior**  
-- *Container Operations:* Containers update status automatically based on sensor data or manual inputs, with maintenance reminders issued as scheduled.  
-- *Fish Tracking:* Population counts adjust dynamically, with optional lineage tracing for broodstock fish involved in breeding.  
-- *Breeding and Eggs:* Internal pair assignments trigger egg production records, linked to progeny batches; external eggs are logged with supplier details.  
-- *Environmental Monitoring:* Parameter deviations trigger immediate alerts, with schedules applied consistently.  
-- *Traceability:* Internal egg-to-batch links are immutable; external eggs are traced to supplier records, with lineage queries returning complete origins.  
-- *Scenarios:* Scenarios support both internal and external egg sourcing, using Scenario Planning’s comparison tools.  
-- *Mobile:* Offline data entries (e.g., external egg logging) sync seamlessly, preserving audit trails.
+- *Container Management:* Status updates occur in real time based on sensor inputs or manual entries; maintenance tasks trigger notifications when due, updating container status upon completion.  
+- *Fish Tracking:* Population counts adjust instantly with `FishMovement` entries; health status changes (via `health` app) reflect in summaries; lineage links remain immutable for internal eggs.  
+- *Breeding Operations:* Pair assignments in `BreedingPair` lock fish availability, triggering `EggProduction` records upon egg collection, with automatic batch linkage.  
+- *Egg Acquisition:* External egg entries in `ExternalEggBatch` bypass breeding data, directly creating batches via `BatchParentage`.  
+- *Environmental Monitoring:* Parameter deviations trigger immediate alerts; schedules apply consistently, with logs capturing all changes.  
+- *Traceability:* Lineage queries return complete origins (internal: broodstock pair; external: supplier), with audit trails ensuring data integrity.  
+- *Scenarios:* Plans integrate broodstock and egg sourcing options, updating dynamically with operational data.  
+- *Mobile:* Offline entries sync seamlessly, preserving timestamps and user attribution for traceability.
 
 **Justification**  
-Broodstock management is critical for salmon farming, influencing production quality and efficiency. This feature provides practical tools for managing containers, fish, breeding, and egg sourcing (internal and external), ensuring flexible traceability to support operational and regulatory needs. Integration with Scenario Planning enhances planning capabilities, while the intuitive design aligns with AquaMind’s goals of optimizing salmon farming without overwhelming users or developers.
+Broodstock management underpins salmon farming success, directly impacting egg quality and production efficiency. This module provides robust tools for container management, fish tracking, breeding, and egg sourcing, with flexible traceability addressing both internal and external workflows. Integration with Scenario Planning enhances strategic decision-making, while mobile access and detailed reporting ensure operational agility and compliance, aligning with AquaMind’s mission to streamline salmon farming without unnecessary complexity.
 
 **User Stories and Acceptance Criteria**
 
-- *User Story 1: Managing Containers*  
-  **As a Broodstock Manager, I want to track container status and schedule maintenance to keep broodstock in optimal conditions.**  
+- *User Story 1: Managing Broodstock Containers*  
+  **As a Broodstock Manager, I want to monitor and maintain broodstock containers to ensure optimal conditions for fish health and breeding.**  
   - **Acceptance Criteria:**  
-    - View a list of containers with current status and environmental data.  
-    - Schedule maintenance tasks and receive due-date notifications.  
-    - Log completed maintenance with timestamps and notes.  
-    - Dashboard shows at-a-glance container health.
+    - View a list of containers filtered by location/status, showing ID, capacity, and real-time environmental data.  
+    - Schedule a maintenance task (e.g., "clean tank") with a due date and receive a notification when due.  
+    - Log task completion on mobile, updating container status to "active".  
+    - Dashboard highlights overdue tasks and environmental alerts (e.g., "Temperature > 25°C").
 
-- *User Story 2: Tracking Fish and Lineage*  
-  **As a Farm Operator, I want to monitor fish populations and trace their lineage for internal breeding, while logging external eggs separately.**  
+- *User Story 2: Tracking Fish Populations*  
+  **As a Farm Operator, I want to track fish movements and health to maintain accurate population data and support breeding decisions.**  
   - **Acceptance Criteria:**  
-    - Search fish by ID or container and view basic details and optional parentage.  
-    - Record fish movements and see updated population counts.  
-    - View lineage for internal eggs or supplier details for external eggs.  
-    - Summary shows total fish, health status, and egg source per container.
+    - Enter a fish movement (e.g., Fish F123 from Container C1 to C2) on mobile, updating population counts instantly.  
+    - View a container’s fish list with IDs, traits, and health statuses from the `health` app.  
+    - Search a fish by ID and see its movement history and current location.  
+    - Summary shows total fish, average health, and recent movements per container.
 
-- *User Story 3: Managing Breeding and Egg Production*  
-  **As a Broodstock Manager, I want to plan breeding operations and link internal eggs to batches, while recording external eggs independently.**  
+- *User Story 3: Planning and Executing Breeding*  
+  **As a Broodstock Manager, I want to plan breeding operations and assign pairs based on trait priorities to optimize egg production.**  
   - **Acceptance Criteria:**  
-    - Define breeding plans with prioritized traits for internal eggs.  
-    - Assign pairs manually or accept trait-based suggestions.  
-    - Record internal egg production with unique egg batch IDs, linked to batches.  
-    - Log external egg batches with supplier details, creating batches without breeding links.  
-    - All egg production logs are saved and searchable.
+    - Create a breeding plan with start/end dates and trait priorities (e.g., "growth rate: 0.7").  
+    - Assign a male and female fish as a pair, manually or via trait suggestions, locking their availability.  
+    - Log a breeding event with 10,000 eggs produced, generating an `egg_batch_id` linked to the pair.  
+    - Dashboard shows active plans, pair statuses, and expected egg yields.
 
-- *User Story 4: Tracing Batch Origins*  
-  **As an Aquaculture Manager, I want to trace a batch to its broodstock parents or external supplier to verify its origin.**  
+- *User Story 4: Managing Egg Sources*  
+  **As an Aquaculture Manager, I want to record internal egg production and external egg purchases to track all batch origins.**  
   - **Acceptance Criteria:**  
-    - Select a batch and view its origin (internal: broodstock pair; external: supplier details).  
-    - Lineage report includes parent fish IDs and breeding date (internal) or supplier data (external).  
-    - Audit logs show all related events (e.g., egg production, acquisition, batch creation).  
-    - Export lineage report as PDF or CSV.
+    - Record an internal egg batch (e.g., 10,000 eggs from Pair P456) with production date and destination station.  
+    - Log an external egg batch (e.g., 15,000 eggs from Supplier S789) with supplier details and certifications.  
+    - Assign eggs to a batch (e.g., B123), linking via `BatchParentage` with immutable records.  
+    - View egg batch summaries distinguishing internal vs. external sources.
+
+- *User Story 5: Ensuring Traceability*  
+  **As a Quality Control Officer, I want to trace a batch to its broodstock or supplier to verify its provenance for audits.**  
+  - **Acceptance Criteria:**  
+    - Select Batch B123 and view its origin (e.g., "Pair P456, bred 2023-10-01" or "Supplier S789, acquired 2023-10-02").  
+    - Generate a lineage report showing parent fish IDs (internal) or supplier provenance (external).  
+    - Audit trail lists all events (e.g., breeding, acquisition, batch creation) with timestamps/users.  
+    - Export the report as PDF from mobile or desktop.
 
 **Additional Considerations**  
-- *Scalability:* Handle thousands of containers, fish, and egg batches (internal/external) with efficient queries and indexing.  
-- *Usability:* Simplify interfaces for non-expert users, clearly distinguishing internal and external egg workflows.  
-- *Integration:* Reuse Scenario Planning’s scenario logic for broodstock and egg sourcing planning.  
-- *Reliability:* Ensure mobile sync, sensor updates, and lineage links are robust and auditable.  
-- *Traceability:* Support flexible lineage tracking for both internal and external eggs, with immutable audit trails.
+- *Scalability:* Support thousands of containers, fish, and egg batches with optimized queries and indexing on `container_id`, `fish_id`, and `egg_batch_id`.  
+- *Usability:* Design intuitive interfaces, clearly separating internal and external egg workflows, with tooltips for new users.  
+- *Integration:* Reuse `environmental` for monitoring, `health` for fish status, and Scenario Planning for operational strategies.  
+- *Reliability:* Ensure mobile sync preserves data integrity; sensor failures trigger fallback manual entry with logs.  
+- *Traceability:* Guarantee immutable lineage links and audit trails, meeting regulatory standards for both egg sources.
 
 ### 3.2 Phase 2: Operational Planning and Compliance
 

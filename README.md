@@ -22,7 +22,7 @@ AquaMind is built using modern technologies for reliability, scalability, and ma
 - **Backend**: Django 4.2.11 (Python 3.11)
 - **Database**: PostgreSQL with TimescaleDB extension for efficient time-series data management
 - **API**: Django REST Framework for robust API development
-- **Frontend**: Vue.js 3 for responsive and interactive user interfaces
+- **Frontend**: TBD
 - **Authentication**: Django's authentication system with role-based access control
 - **Testing**: Django's testing framework for comprehensive test coverage
 
@@ -89,7 +89,6 @@ docker-compose exec web python manage.py createsuperuser
 5. **Access the application**
 
 - Django backend: http://localhost:8000
-- Vue.js frontend: http://localhost:5173
 
 For more details on the Docker environment, see [Docker Development Environment](docs/docker_environment.md).
 

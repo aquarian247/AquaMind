@@ -48,7 +48,7 @@
 - When in doubt run the database inspection script to check the database schema
 
 ## Frontend
-- Use Vue.js 3 for the frontend unless a specific feature requires another framework (e.g., React for complex state management).
+- TBD
 
 ## Quality & Safety
 - Write unit tests for all new functions and classes using Django’s testing framework.

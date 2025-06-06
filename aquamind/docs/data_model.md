@@ -606,104 +606,169 @@ This document defines the data model for AquaMind, an aquaculture management sys
 
 #### 3.7 Broodstock Management (broodstock app)
 
-The Broodstock Management app requires a data model that supports container tracking, fish management, breeding operations, environmental monitoring, egg production (internal and external), and batch traceability. This model ensures flexible traceability from broodstock to batch for internal eggs and from third-party suppliers to batch for external eggs, with implementation complexity comparable to Scenario Planning.
+The Broodstock Management app’s data model supports comprehensive management of broodstock containers, fish populations, breeding operations, egg production/acquisition, environmental monitoring, and batch traceability. It reuses existing models like `infrastructure_container`, introduces normalized tables for better integrity and querying, and integrates with apps like `environmental` and `health`. The design ensures flexible traceability for internal eggs (broodstock to batch) and external eggs (supplier to batch), matching the implementation complexity of Scenario Planning. It also supports end-to-end traceability to harvest events, leveraging existing batch models and audit logging for regulatory compliance.
 
 **Core Entities and Attributes**
 
-- **BroodstockContainer**  
-  - `container_id` (PK): Unique identifier  
-  - `location`: Physical location (e.g., site, section) (string)  
-  - `capacity`: Max fish capacity (integer)  
-  - `status`: Current state (e.g., active, under maintenance) (string)  
-  - `maintenance_schedule`: JSON field for task dates and details (e.g., [{"task": "cleaning", "date": "2025-06-15"}])  
-  - `created_at`, `updated_at`: Timestamps  
+- **infrastructure_container** (Reused for Broodstock Containers)  
+  - `container_id` (PK): Unique identifier.  
+  - `location` (CharField, max_length=100): Physical location (e.g., "Site A, Building 2, Room 5").  
+  - `capacity` (IntegerField): Maximum fish capacity (e.g., 500).  
+  - `containertype_id` (FK): Link to `infrastructure_containertype` (e.g., "broodstock").  
+  - `status` (CharField, max_length=20, choices=[("active", "Active"), ("maintenance", "Under Maintenance"), ("quarantine", "Quarantine"), ("inactive", "Inactive")]): Container status.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **BroodstockFish**  
-  - `fish_id` (PK): Unique identifier  
-  - `container_id` (FK): Link to `BroodstockContainer`  
-  - `traits`: JSON field for basic traits (e.g., {"growth_rate": "high"})  
-  - `health_status`: Current health (e.g., healthy, monitored) (string)  
-  - `movement_history`: JSON field for move logs (e.g., [{"date": "2025-06-01", "to_container": "C123"}])  
-  - `created_at`, `updated_at`: Timestamps  
+- **MaintenanceTask** (New Table for Container Maintenance)  
+  - `task_id` (PK): Unique identifier.  
+  - `container_id` (FK): Link to `infrastructure_container`.  
+  - `task_type` (CharField, max_length=50, choices=[("cleaning", "Cleaning"), ("repair", "Repair"), ("inspection", "Inspection"), ("upgrade", "Equipment Upgrade")]): Type of task.  
+  - `scheduled_date` (DateTimeField): Planned execution date.  
+  - `completed_date` (DateTimeField, nullable): Actual completion date.  
+  - `notes` (TextField, nullable): Additional details (e.g., "Replaced filter").  
+  - `created_by` (FK): Link to `auth_user`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **BreedingPlan**  
-  - `plan_id` (PK): Unique identifier  
-  - `name`: Plan name (string)  
-  - `trait_priorities`: JSON field for prioritized traits (e.g., {"growth": 0.5, "disease_resistance": 0.3})  
-  - `start_date`, `end_date`: Plan duration (datetime)  
-  - `created_at`, `updated_at`: Timestamps  
+- **BroodstockFish** (New Table for Individual Fish)  
+  - `fish_id` (PK): Unique identifier.  
+  - `container_id` (FK): Link to `infrastructure_container` (where `containertype="broodstock"`).  
+  - `traits` (JSONField, nullable, default={}): Basic traits (e.g., {"growth_rate": "high", "size": "large"}).  
+  - `health_status` (CharField, max_length=20, choices=[("healthy", "Healthy"), ("monitored", "Monitored"), ("sick", "Sick"), ("deceased", "Deceased")]): Current health, synced with `health_journalentry`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **BreedingPair**  
-  - `pair_id` (PK): Unique identifier  
-  - `plan_id` (FK): Link to `BreedingPlan`  
-  - `male_fish_id` (FK): Link to `BroodstockFish`  
-  - `female_fish_id` (FK): Link to `BroodstockFish`  
-  - `pairing_date`: Date of pairing (datetime)  
-  - `progeny_count`: Number of offspring (integer, nullable)  
-  - `created_at`, `updated_at`: Timestamps  
+- **FishMovement** (New Table for Tracking Movements)  
+  - `movement_id` (PK): Unique identifier.  
+  - `fish_id` (FK): Link to `BroodstockFish`.  
+  - `from_container_id` (FK): Link to `infrastructure_container`.  
+  - `to_container_id` (FK): Link to `infrastructure_container`.  
+  - `movement_date` (DateTimeField): Date of movement.  
+  - `moved_by` (FK): Link to `auth_user`.  
+  - `notes` (TextField, nullable): Details (e.g., "Moved for breeding").  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **EggProduction**  
-  - `egg_production_id` (PK): Unique identifier  
-  - `pair_id` (FK): Link to `BreedingPair` (nullable for external eggs)  
-  - `egg_batch_id`: Unique identifier for the egg batch (string)  
-  - `egg_count`: Number of eggs produced or acquired (integer)  
-  - `production_date`: Date of production or acquisition (datetime)  
-  - `destination_station_id` (FK): Link to `infrastructure_freshwaterstation` (nullable)  
-  - `source_type`: Source of eggs (e.g., "internal", "external") (string)  
-  - `supplier_details`: JSON field for external supplier data (e.g., {"name": "SupplierX", "batch_number": "EX123"}) (nullable)  
-  - `created_at`, `updated_at`: Timestamps  
+- **BreedingPlan** (New Table for Breeding Strategies)  
+  - `plan_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=100): Plan name (e.g., "Winter 2023 Breeding").  
+  - `start_date` (DateTimeField): Plan start date.  
+  - `end_date` (DateTimeField): Plan end date.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **BatchParentage**  
-  - `batch_id` (PK, FK): Link to `batch_batch`  
-  - `egg_batch_id` (PK): Link to `EggProduction.egg_batch_id`  
-  - `assignment_date`: Date eggs were assigned to the batch (datetime)  
-  - `created_at`, `updated_at`: Timestamps  
+- **BreedingTraitPriority** (New Table for Trait Prioritization)  
+  - `priority_id` (PK): Unique identifier.  
+  - `plan_id` (FK): Link to `BreedingPlan`.  
+  - `trait_name` (CharField, max_length=50, choices=[("growth_rate", "Growth Rate"), ("disease_resistance", "Disease Resistance"), ("size", "Size"), ("fertility", "Fertility")]): Trait identifier.  
+  - `priority_weight` (FloatField, min_value=0, max_value=1): Weight (e.g., 0.7).  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **EnvironmentalReading**  
-  - `reading_id` (PK): Unique identifier  
-  - `container_id` (FK): Link to `BroodstockContainer`  
-  - `timestamp`: Reading time (datetime)  
-  - `parameter_type`: Type (e.g., temperature, photoperiod) (string)  
-  - `value`: Measured value (float)  
-  - `source`: Sensor or manual entry ID (string)  
-  - `created_at`, `updated_at`: Timestamps  
+- **BreedingPair** (New Table for Pair Assignments)  
+  - `pair_id` (PK): Unique identifier.  
+  - `plan_id` (FK): Link to `BreedingPlan`.  
+  - `male_fish_id` (FK): Link to `BroodstockFish`.  
+  - `female_fish_id` (FK): Link to `BroodstockFish`.  
+  - `pairing_date` (DateTimeField): Date of pairing.  
+  - `progeny_count` (IntegerField, nullable): Number of offspring produced.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **EnvironmentalSchedule**  
-  - `schedule_id` (PK): Unique identifier  
-  - `container_id` (FK): Link to `BroodstockContainer`  
-  - `name`: Schedule name (string)  
-  - `parameters`: JSON field for settings (e.g., {"photoperiod": "16h_light"})  
-  - `start_time`, `end_time`: Schedule duration (datetime)  
-  - `created_at`, `updated_at`: Timestamps  
+- **EggProduction** (New Table for Egg Tracking)  
+  - `egg_production_id` (PK): Unique identifier.  
+  - `pair_id` (FK, nullable): Link to `BreedingPair` (null for external eggs).  
+  - `egg_batch_id` (CharField, max_length=50, unique): Unique egg batch identifier (e.g., "EB20231001").  
+  - `egg_count` (IntegerField, min_value=0): Number of eggs (e.g., 10,000).  
+  - `production_date` (DateTimeField): Date produced or acquired.  
+  - `destination_station_id` (FK, nullable): Link to `infrastructure_freshwaterstation`.  
+  - `source_type` (CharField, max_length=20, choices=[("internal", "Internal"), ("external", "External")]): Egg source.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
 
-- **Scenario**  
-  - `scenario_id` (PK): Unique identifier (reuses `scenario` table from Scenario Planning)  
-  - `name`: Scenario name (string)  
-  - `description`: Scenario details (text)  
-  - `parameters`: JSON field for broodstock-specific settings (e.g., {"egg_output": 10000, "source": "external"})  
-  - `start_date`, `end_date`: Scenario timeframe (datetime)  
-  - `created_by`: User ID (FK to `auth_user`)  
-  - `created_at`, `updated_at`: Timestamps  
+- **EggSupplier** (New Table for External Suppliers)  
+  - `supplier_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=100): Supplier name (e.g., "NorthSea Eggs").  
+  - `contact_details` (TextField): Contact info (e.g., phone, email).  
+  - `certifications` (TextField, nullable): Certifications (e.g., "ISO 9001").  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **ExternalEggBatch** (New Table for External Eggs)  
+  - `external_batch_id` (PK): Unique identifier.  
+  - `egg_production_id` (FK): Link to `EggProduction` (where `source_type="external"`).  
+  - `supplier_id` (FK): Link to `EggSupplier`.  
+  - `batch_number` (CharField, max_length=50): Supplier’s batch ID (e.g., "S789-2023").  
+  - `provenance_data` (TextField, nullable): Details (e.g., "Sourced from Farm X").  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **BatchParentage** (New Table for Egg-to-Batch Links)  
+  - `batch_id` (FK, PK): Link to `batch_batch`.  
+  - `egg_production_id` (FK, PK): Link to `EggProduction`.  
+  - `assignment_date` (DateTimeField): Date eggs assigned to batch.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **EnvironmentalReading** (Reused from `environmental` App)  
+  - `reading_id` (PK): Unique identifier.  
+  - `container_id` (FK): Link to `infrastructure_container`.  
+  - `parameter_type` (CharField, max_length=50): Type (e.g., "temperature").  
+  - `value` (FloatField): Measured value (e.g., 22.5).  
+  - `timestamp` (DateTimeField): Reading time.  
+  - `source` (CharField, max_length=50): Sensor or manual entry ID.  
+  - `recorded_by` (FK, nullable): Link to `auth_user`.  
+  - `created_at`, `updated_at` (DateTimeField): Timestamps.
+
+- **EnvironmentalSchedule** (Reused/Extended from `environmental`)  
+  - `schedule_id` (PK): Unique identifier.  
+  - `container_id` (FK): Link to `infrastructure_container`.  
+  - `name` (CharField, max_length=100): Schedule name (e.g., "Summer Photoperiod").  
+  - `parameter_type` (CharField, max_length=50, choices=[("temperature", "Temperature"), ("photoperiod", "Photoperiod"), ("pH", "pH")]): Parameter.  
+  - `start_time`, `end_time` (DateTimeField): Schedule duration.  
+  - `target_value` (FloatField): Target (e.g., 12 hours light).  
+  - `created_at`, `updated_at` (DateTimeField): Timestamps.
+
+- **Scenario** (Reused from Scenario Planning)  
+  - `scenario_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=100): Scenario name.  
+  - `description` (TextField, nullable): Scenario details.  
+  - `parameters` (JSONField): Broodstock-specific params (e.g., {"egg_target": 10000, "source": "external"}).  
+  - `start_date`, `end_date` (DateTimeField): Scenario timeframe.  
+  - `created_by` (FK): Link to `auth_user`.  
+  - `created_at`, `updated_at` (DateTimeField): Timestamps.
 
 **Relationships**  
-- **BroodstockContainer** to **BroodstockFish**: One-to-many (one container holds many fish).  
-- **BroodstockContainer** to **EnvironmentalReading**: One-to-many (many readings per container).  
-- **BroodstockContainer** to **EnvironmentalSchedule**: One-to-many (multiple schedules over time).  
+- **infrastructure_container** to **BroodstockFish**: One-to-many (one container holds many fish).  
+- **infrastructure_container** to **MaintenanceTask**: One-to-many (one container has many tasks).  
+- **infrastructure_container** to **EnvironmentalReading**: One-to-many (one container has many readings).  
+- **infrastructure_container** to **EnvironmentalSchedule**: One-to-many (one container has many schedules).  
+- **BreedingPlan** to **BreedingTraitPriority**: One-to-many (one plan has many priorities).  
 - **BreedingPlan** to **BreedingPair**: One-to-many (one plan includes many pairs).  
 - **BreedingPair** to **BroodstockFish**: Many-to-two (each pair links one male and one female).  
-- **BreedingPair** to **EggProduction**: One-to-many (one pair produces multiple egg batches, nullable for external eggs).  
-- **EggProduction** to **BatchParentage**: One-to-many (one egg batch links to multiple batches if split).  
-- **BatchParentage** to **batch_batch**: Many-to-one (multiple egg batches may contribute to one batch).  
-- **Scenario** to **BroodstockContainer**: Many-to-many (via junction table `ScenarioContainer`).  
+- **BreedingPair** to **EggProduction**: One-to-many (one pair produces multiple egg batches).  
+- **EggProduction** to **BatchParentage**: One-to-many (one egg batch may link to multiple batches if split).  
+- **EggProduction** to **ExternalEggBatch**: One-to-one (one external egg record per acquisition).  
+- **EggSupplier** to **ExternalEggBatch**: One-to-many (one supplier provides many batches).  
+- **BatchParentage** to **batch_batch**: Many-to-one (multiple egg batches may contribute to one batch).
+
+**Constraints**  
+- Unique constraint on `egg_batch_id` in `EggProduction`.  
+- Foreign key constraints enforce referential integrity (e.g., `container_id`, `fish_id`, `egg_production_id`).  
+- `source_type` in `EggProduction` restricted to "internal" or "external" via choices.  
+- `pair_id` in `EggProduction` nullable for external eggs; non-null for internal eggs.  
+- `progeny_count` in `BreedingPair` nullable until eggs are produced.  
+- `destination_station_id` in `EggProduction` nullable if eggs are stored before assignment.  
 
 **Additional Considerations**  
-- Use TimescaleDB for `EnvironmentalReading` to handle time-series data efficiently, consistent with Health Monitoring.  
-- Index `container_id`, `fish_id`, `egg_batch_id`, and `batch_id` for fast lineage queries across large datasets.  
-- Reuse the `scenario` table from Scenario Planning, extending it with broodstock-specific parameters (e.g., internal vs. external egg sourcing).  
-- Ensure JSON fields (`traits`, `parameters`, `supplier_details`) are structured for easy querying and scalability.  
-- Implement constraints (e.g., unique `egg_batch_id`, nullable `pair_id` for external eggs) to support flexible traceability.  
-- Use `django-auditlog` to track changes to `EggProduction` and `BatchParentage` for immutable lineage records.  
-- Allow `EggProduction.source_type` to differentiate internal and external eggs, with `supplier_details` mandatory for external sources.
+- **Harvest Traceability**: Leverage existing `batch_batch` and related models (e.g., `batch_batchtransfer`, `batch_mortalityevent`) to track batches to harvest. If explicit harvest events are needed, consider a `HarvestEvent` model (e.g., `harvest_id`, `batch_id`, `harvest_date`, `yield_kg`) to extend traceability to processed fish, but this can be deferred unless required by regulations.  
+- **Health Integration**: Sync `BroodstockFish.health_status` with `health_journalentry` via a foreign key or API call, ensuring health events (e.g., treatments) are recorded consistently.  
+- **Scalability**: Support 10,000+ fish and egg batches with indexes on `container_id`, `fish_id`, `egg_batch_id`, and `batch_id`. Use table partitioning for `EnvironmentalReading` if data volume exceeds 10M rows.  
+- **Auditing**: Apply `django-auditlog` to `EggProduction`, `BatchParentage`, `BreedingPair`, `FishMovement`, and `MaintenanceTask` to ensure immutable lineage and operational records.  
+- **Validation**: Enforce field constraints (e.g., `egg_count >= 0`, `priority_weight` between 0-1) via model validation. Ensure `containertype="broodstock"` for `BroodstockFish` container assignments.  
+- **TimescaleDB**: Utilize TimescaleDB hypertables for `EnvironmentalReading` to optimize time-series queries, with partitioning by `timestamp`.  
+- **JSON Fields**: Keep `traits` and `parameters` minimal, with structured formats (e.g., key-value pairs) and partial indexes for frequent queries.  
+- **Mobile Sync**: Ensure offline data entries (e.g., movements, egg logs) include temporary IDs, resolving conflicts during sync with server-side validation.
 
 ## 4. Planned Data Model Domains (Not Yet Implemented)
 
