@@ -266,22 +266,19 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **`inventory_feedingevent`**
   - `id`: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, related_name='feeding_events')
-  - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='feeding_events', nullable, blank=True)
-  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known.")
+  - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='feeding_events')
+  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known.")
   - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='applied_in_feedings')
-  - `user_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', help_text="User who recorded or performed the feeding.")
+  - `feed_stock_id`: bigint (FK to `inventory_feedstock`.`id`, on_delete=SET_NULL, nullable, blank=True)
+  - `recorded_by_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', nullable, blank=True, help_text="User who recorded or performed the feeding.")
   - `feeding_date`: date
-  - `feeding_time`: time (nullable, blank=True)
-  - `feed_quantity_kg`: decimal(8,3) (validators: MinValueValidator(0), help_text="Amount of feed provided in kg")
-  - `feed_cost_total`: decimal(10,2) (nullable, blank=True, help_text="Total cost of feed for this event, calculated if cost_per_kg is known.")
-  - `feed_cost_per_kg`: decimal(10,2) (nullable, blank=True, help_text="Cost per kg of feed at time of feeding, can be from FeedStock or manual.")
-  - `batch_biomass_kg`: decimal(10,2) (nullable, blank=True, help_text="Estimated batch biomass at time of feeding (kg)")
-  - `feeding_percentage_of_biomass`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Feeding rate as percentage of biomass")
-  - `water_temperature_c`: decimal(5,2) (nullable, blank=True, help_text="Water temperature at time of feeding (°C)")
-  - `dissolved_oxygen_mg_l`: decimal(5,2) (nullable, blank=True, help_text="Dissolved oxygen at time of feeding (mg/L)")
-  - `notes`: text (blank=True)
-  - `is_manual_entry`: boolean (default=True, help_text="Was this entry manually created or system-generated?")
-  - `source_recommendation_id`: bigint (FK to `inventory_feedrecommendation`.`id`, on_delete=SET_NULL, nullable, blank=True, help_text="Link to the feed recommendation that prompted this event, if any.")
+  - `feeding_time`: time
+  - `amount_kg`: decimal(8,3) (validators: MinValueValidator(0), help_text="Amount of feed provided in kg")
+  - `batch_biomass_kg`: decimal(10,2) (help_text="Estimated batch biomass at time of feeding (kg)")
+  - `feeding_percentage`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Feeding rate as percentage of biomass")
+  - `feed_conversion_ratio`: decimal(8,3) (nullable, blank=True, help_text="Feed Conversion Ratio (FCR) for this feeding event")
+  - `method`: varchar(20) (choices available for feeding method)
+  - `notes`: text
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['-feeding_date', '-feeding_time']`
@@ -298,22 +295,6 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
-- **`inventory_feedrecommendation`**
-  - `id`: bigint (PK, auto-increment)
-  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=CASCADE, related_name='feed_recommendations')
-  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='recommendations', help_text="Recommended feed type")
-  - `recommended_date`: date (help_text="Date for which this recommendation applies")
-  - `recommended_feed_kg`: decimal(10,3) (validators: MinValueValidator(0), help_text="Recommended feed amount in kilograms")
-  - `feeding_percentage`: decimal(5,2) (validators: MinValueValidator(0), MaxValueValidator(100), help_text="Recommended feeding as percentage of biomass")
-  - `feedings_per_day`: smallint (positive, default=2, help_text="Recommended number of feedings per day")
-  - `water_temperature_c`: decimal(5,2) (nullable, blank=True, help_text="Water temperature at time of recommendation (°C)")
-  - `dissolved_oxygen_mg_l`: decimal(5,2) (nullable, blank=True, help_text="Dissolved oxygen at time of recommendation (mg/L)")
-  - `recommendation_reason`: text (help_text="Explanation of factors that influenced this recommendation")
-  - `is_followed`: boolean (default=False, help_text="Whether this recommendation was followed")
-  - `expected_fcr`: decimal(5,2) (nullable, blank=True, help_text="Expected FCR if recommendation is followed")
-  - `created_at`: timestamptz (auto_now_add=True)
-  - `updated_at`: timestamptz (auto_now=True)
-  - Meta: `ordering = ['-recommended_date', '-created_at']`, `verbose_name_plural = "Feed recommendations"`, `unique_together = ['batch_container_assignment', 'recommended_date']`
 
 #### Relationships
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
@@ -324,10 +305,8 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `batch_batchcontainerassignment` ← `inventory_feedingevent` (SET_NULL, related_name='explicit_feeding_events')
 - `inventory_feed` ← `inventory_feedingevent` (PROTECT, related_name='applied_in_feedings')
 - `users_customuser` ← `inventory_feedingevent` (PROTECT, related_name='feeding_entries')
-- `inventory_feedrecommendation` ← `inventory_feedingevent` (SET_NULL, related_name='feed_events_based_on_this') (Note: Model has `source_recommendation` on `FeedingEvent`)
+- `inventory_feedstock` ← `inventory_feedingevent` (SET_NULL)
 - `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE, related_name='feeding_summaries')
-- `batch_batchcontainerassignment` ← `inventory_feedrecommendation` (CASCADE, related_name='feed_recommendations')
-- `inventory_feed` ← `inventory_feedrecommendation` (PROTECT, related_name='recommendations')
 
 ### 3.4 Health Monitoring (`health` app)
 **Purpose**: Tracks health observations, treatments, mortality, sampling events, and lab results.
