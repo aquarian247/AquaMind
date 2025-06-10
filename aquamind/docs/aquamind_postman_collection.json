@@ -1,8 +1,9 @@
 {
   "info": {
     "name": "AquaMind API",
-    "description": "API collection for AquaMind project",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "description": "API collection for AquaMind project - Updated with FIFO Feed Inventory System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
   },
   "item": [
     {
@@ -502,91 +503,650 @@
       "name": "Inventory",
       "item": [
         {
-          "name": "List Feed Types",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/inventory/feed-types/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "inventory",
-                "feed-types",
-                ""
-              ]
+          "name": "Feed Management",
+          "item": [
+            {
+              "name": "List Feed Types",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feeds/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feeds",
+                    ""
+                  ]
+                },
+                "description": "Get all feed types"
+              },
+              "response": []
             },
-            "description": "Get all feed types"
-          },
-          "response": []
+            {
+              "name": "Create Feed Type",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"Premium Salmon Feed\",\n\t\"brand\": \"AquaFeed Pro\",\n\t\"description\": \"High-quality feed for salmon growth phase\",\n\t\"protein_percentage\": 45.0,\n\t\"fat_percentage\": 22.0,\n\t\"carbohydrate_percentage\": 20.0,\n\t\"ash_percentage\": 8.0,\n\t\"moisture_percentage\": 5.0,\n\t\"pellet_size_mm\": 6.0,\n\t\"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feeds/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feeds",
+                    ""
+                  ]
+                },
+                "description": "Create a new feed type"
+              },
+              "response": []
+            }
+          ],
+          "description": "Feed type management"
         },
         {
-          "name": "Create Feeding Event",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+          "name": "Feed Purchases",
+          "item": [
+            {
+              "name": "List Feed Purchases",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-purchases/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-purchases",
+                    ""
+                  ]
+                },
+                "description": "Get all feed purchases for FIFO tracking"
               },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"batch\": 1,\n\t\"feed_type\": 1,\n\t\"quantity_kg\": 2.5,\n\t\"feeding_time\": \"2025-06-04T08:00:00Z\",\n\t\"feeder\": \"Jane Smith\",\n\t\"notes\": \"Morning feeding\"\n}"
+              "response": []
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/inventory/feeding-events/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "inventory",
-                "feeding-events",
-                ""
-              ]
+            {
+              "name": "Create Feed Purchase",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"feed\": 1,\n\t\"supplier\": \"AquaFeed Suppliers Ltd\",\n\t\"batch_number\": \"AF-2025-001\",\n\t\"quantity_kg\": 1000.0,\n\t\"cost_per_kg\": 2.50,\n\t\"purchase_date\": \"2025-06-01\",\n\t\"expiry_date\": \"2026-06-01\",\n\t\"notes\": \"Premium feed batch for Q2 2025\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-purchases/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-purchases",
+                    ""
+                  ]
+                },
+                "description": "Create a new feed purchase batch for FIFO tracking"
+              },
+              "response": []
             },
-            "description": "Create a new feeding event"
-          },
-          "response": []
+            {
+              "name": "Get Feed Purchase Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-purchases/{{purchase_id}}/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-purchases",
+                    "{{purchase_id}}",
+                    ""
+                  ]
+                },
+                "description": "Get details of a specific feed purchase"
+              },
+              "response": []
+            }
+          ],
+          "description": "Feed purchase management for FIFO tracking"
+        },
+        {
+          "name": "FIFO Container Stock",
+          "item": [
+            {
+              "name": "List Container Stock",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-container-stock/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-container-stock",
+                    ""
+                  ]
+                },
+                "description": "Get all feed container stock entries for FIFO tracking"
+              },
+              "response": []
+            },
+            {
+              "name": "Add Feed to Container (FIFO)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"feed_container\": 1,\n\t\"feed_purchase\": 1,\n\t\"quantity_kg\": 500.0,\n\t\"entry_date\": \"2025-06-10T10:00:00Z\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-container-stock/add_to_container/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-container-stock",
+                    "add_to_container",
+                    ""
+                  ]
+                },
+                "description": "Add feed from a purchase batch to a container using FIFO service"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Container Stock in FIFO Order",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-container-stock/fifo_order/?container_id=1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-container-stock",
+                    "fifo_order",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "container_id",
+                      "value": "1",
+                      "description": "ID of the container to get FIFO order for"
+                    }
+                  ]
+                },
+                "description": "Get feed container stock in FIFO order (oldest first)"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Container Stock Entry",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"feed_container\": 1,\n\t\"feed_purchase\": 1,\n\t\"quantity_kg\": 250.0,\n\t\"entry_date\": \"2025-06-10T14:30:00Z\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-container-stock/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-container-stock",
+                    ""
+                  ]
+                },
+                "description": "Create a new feed container stock entry"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Container Stock Entry",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"quantity_kg\": 200.0\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-container-stock/{{stock_id}}/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-container-stock",
+                    "{{stock_id}}",
+                    ""
+                  ]
+                },
+                "description": "Update a feed container stock entry"
+              },
+              "response": []
+            }
+          ],
+          "description": "FIFO feed container stock management"
+        },
+        {
+          "name": "Feeding Events",
+          "item": [
+            {
+              "name": "List Feeding Events",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feeding-events/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feeding-events",
+                    ""
+                  ]
+                },
+                "description": "Get all feeding events with calculated feed costs"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Feeding Event (with FIFO Cost Calculation)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"batch\": 1,\n\t\"container\": 1,\n\t\"feed\": 1,\n\t\"feeding_date\": \"2025-06-10\",\n\t\"feeding_time\": \"08:00:00\",\n\t\"amount_kg\": 25.5,\n\t\"batch_biomass_kg\": 1200.0,\n\t\"method\": \"MANUAL\",\n\t\"notes\": \"Morning feeding - FIFO cost will be auto-calculated\",\n\t\"recorded_by\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feeding-events/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feeding-events",
+                    ""
+                  ]
+                },
+                "description": "Create a new feeding event - feed_cost will be calculated using FIFO methodology"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Feeding Event with Cost Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feeding-events/{{feeding_event_id}}/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feeding-events",
+                    "{{feeding_event_id}}",
+                    ""
+                  ]
+                },
+                "description": "Get details of a specific feeding event including calculated feed cost"
+              },
+              "response": []
+            }
+          ],
+          "description": "Feeding events with FIFO cost calculation"
+        },
+        {
+          "name": "Batch Feeding Summaries",
+          "item": [
+            {
+              "name": "List Batch Feeding Summaries",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/batch-feeding-summaries/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "batch-feeding-summaries",
+                    ""
+                  ]
+                },
+                "description": "Get all batch feeding summaries with FCR calculations"
+              },
+              "response": []
+            },
+            {
+              "name": "Generate Batch Feeding Summary",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"batch\": 1,\n\t\"period_start\": \"2025-06-01\",\n\t\"period_end\": \"2025-06-30\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/batch-feeding-summaries/generate/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "batch-feeding-summaries",
+                    "generate",
+                    ""
+                  ]
+                },
+                "description": "Generate a feeding summary for a batch with FCR calculation"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Batch Summary with FCR",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/batch-feeding-summaries/{{summary_id}}/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "batch-feeding-summaries",
+                    "{{summary_id}}",
+                    ""
+                  ]
+                },
+                "description": "Get details of a specific batch feeding summary including FCR"
+              },
+              "response": []
+            }
+          ],
+          "description": "Batch feeding summaries with FCR calculations"
+        },
+        {
+          "name": "Feed Stock (Legacy)",
+          "item": [
+            {
+              "name": "List Feed Stocks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-stocks/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-stocks",
+                    ""
+                  ]
+                },
+                "description": "Get all feed stocks (legacy - use FIFO container stock for new implementations)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Low Stock Alerts",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/inventory/feed-stocks/low_stock/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "inventory",
+                    "feed-stocks",
+                    "low_stock",
+                    ""
+                  ]
+                },
+                "description": "Get feed stocks below reorder threshold"
+              },
+              "response": []
+            }
+          ],
+          "description": "Legacy feed stock management (use FIFO container stock for new implementations)"
         }
       ],
-      "description": "Inventory endpoints"
+      "description": "Inventory management with FIFO feed tracking and FCR calculations"
     }
   ],
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:8000",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL for the AquaMind API"
     },
     {
       "key": "username",
       "value": "admin",
-      "type": "string"
+      "type": "string",
+      "description": "Username for authentication"
     },
     {
       "key": "password",
       "value": "password",
-      "type": "string"
+      "type": "string",
+      "description": "Password for authentication"
     },
     {
       "key": "token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "JWT token obtained from authentication"
+    },
+    {
+      "key": "purchase_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample feed purchase ID"
+    },
+    {
+      "key": "stock_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample container stock ID"
+    },
+    {
+      "key": "feeding_event_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample feeding event ID"
+    },
+    {
+      "key": "summary_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample batch feeding summary ID"
     }
   ]
 }
