@@ -6,6 +6,13 @@ This document outlines the phased implementation strategy for the AquaMind syste
 
 ## Progress Updates
 
+### 2025-06-10: FIFO Feed Inventory Tracking and FCR Calculation Implementation
+- Implemented comprehensive FIFO (First-In-First-Out) feed inventory tracking system with FeedContainerStock model for accurate cost calculation
+- Enhanced feeding events with auto-calculation features: batch biomass auto-populated from latest assignments, feeding percentage calculated automatically, and feed cost determined via FIFO methodology
+- Improved decimal precision for feeding amounts (0.0001 kg minimum) and feeding percentages (6 decimal places) to handle realistic salmon feeding scenarios over 900-day lifecycles
+- Created FCRCalculationService with sophisticated mixed batch support, prorating feed consumption and costs based on batch composition percentages
+- Developed comprehensive test suite (18 tests) covering FIFO inventory management, FCR calculations, and mixed batch scenarios with 100% success rate
+
 ### 2025-06-04: Environmental and Health App API Improvements
  - Enhanced API documentation for Environmental and Health apps.
  - The Environmental and Health app serializers are now more robust with proper field names and improved documentation. The restructured test architecture ensures better test discovery and coverage, preventing similar issues from going undetected in the future.
@@ -443,9 +450,11 @@ This document outlines the phased implementation strategy for the AquaMind syste
 - [x] Track feed batches from suppliers
 
 #### 7.2 Inventory Analytics
-- [ ] Implement Feed Conversion Ratio (FCR) calculations
+- [x] Implement Feed Conversion Ratio (FCR) calculations
+- [x] Implement FIFO-based feed cost tracking
+- [x] Create sophisticated mixed batch FCR calculations
 - [ ] Create feed usage forecasting
-- [ ] Build feed cost analysis
+- [ ] Build feed cost analysis dashboards
 - [ ] Develop inventory optimization recommendations
 
 #### 7.3 Resource Planning

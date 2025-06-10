@@ -62,7 +62,9 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
     feeding_date = models.DateField()
     feeding_time = models.TimeField()
     amount_kg = DecimalFieldMixin.positive_decimal_field(
-        min_value=0.01,
+        max_digits=10,
+        decimal_places=4,
+        min_value=0.0001,
         help_text="Amount of feed used in kilograms"
     )
     batch_biomass_kg = models.DecimalField(
@@ -72,18 +74,16 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
         help_text="Estimated batch biomass at time of feeding (kg)"
     )
     feeding_percentage = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
+        max_digits=8,
+        decimal_places=6,
         null=True,
         blank=True,
-        help_text="Feed amount as percentage of biomass"
+        help_text="Feed amount as percentage of biomass (auto-calculated)"
     )
-    feed_conversion_ratio = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
+    feed_cost = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
-        help_text="Estimated FCR for this feeding event"
+        help_text="Calculated cost of feed used in this feeding event"
     )
     method = models.CharField(
         max_length=20,

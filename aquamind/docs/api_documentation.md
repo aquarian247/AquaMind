@@ -433,13 +433,81 @@ All API endpoints require authentication using JWT tokens. To authenticate:
 **Fields:**
 - `id`: Integer (read-only) - Unique identifier
 - `batch`: Integer - Foreign key to Batch
-- `feed_type`: Integer - Foreign key to Feed Type
-- `quantity_kg`: Float - Quantity in kg
-- `feeding_time`: DateTime - Time of feeding
-- `feeder`: String - Person who performed the feeding
+- `batch_assignment`: Integer - Foreign key to Batch Container Assignment (optional)
+- `container`: Integer - Foreign key to Container
+- `feed`: Integer - Foreign key to Feed
+- `feed_stock`: Integer - Foreign key to Feed Stock (optional)
+- `feeding_date`: Date - Date of feeding
+- `feeding_time`: Time - Time of feeding
+- `amount_kg`: Decimal(10,4) - Amount of feed in kg (supports 0.0001 precision)
+- `batch_biomass_kg`: Decimal(10,2) - Batch biomass at feeding time (auto-populated)
+- `feeding_percentage`: Decimal(8,6) - Feed as percentage of biomass (auto-calculated)
+- `feed_cost`: Decimal(10,2) - Cost of feed consumed (auto-calculated via FIFO)
+- `method`: String - Feeding method (MANUAL, AUTOMATIC, BROADCAST)
 - `notes`: String - Additional notes
+- `recorded_by`: Integer - Foreign key to User
 - `created_at`: DateTime (read-only) - Creation timestamp
 - `updated_at`: DateTime (read-only) - Last update timestamp
+
+**Auto-Calculation Features:**
+- **Batch Biomass**: Automatically populated from the latest active batch assignment when not provided
+- **Feeding Percentage**: Automatically calculated as `(amount_kg / batch_biomass_kg) * 100`
+- **Feed Cost**: Automatically calculated using FIFO inventory service when feed_stock is provided
+- **High Precision**: Supports feeding amounts as small as 0.0001 kg for realistic salmon feeding scenarios
+
+**Example Request (POST):**
+```json
+{
+  "batch": 1,
+  "feed": 2,
+  "amount_kg": "0.0033",
+  "feeding_date": "2025-06-10",
+  "feeding_time": "08:00:00",
+  "method": "MANUAL"
+}
+```
+
+**Example Response:**
+```json
+{
+  "id": 123,
+  "batch": 1,
+  "batch_name": "BATCH001",
+  "container": 5,
+  "feed": 2,
+  "feed_name": "Premium Salmon Feed",
+  "amount_kg": "0.0033",
+  "batch_biomass_kg": "1000.00",
+  "feeding_percentage": "0.000330",
+  "feed_cost": "0.0165",
+  "method": "MANUAL",
+  "feeding_date": "2025-06-10",
+  "feeding_time": "08:00:00",
+  "created_at": "2025-06-10T08:05:00Z",
+  "updated_at": "2025-06-10T08:05:00Z"
+}
+```
+
+#### Feed Container Stock (FIFO Tracking)
+
+**Endpoint:** `/api/v1/inventory/feed-container-stocks/`
+
+**Methods:** GET, POST, PUT, PATCH, DELETE
+
+**Fields:**
+- `id`: Integer (read-only) - Unique identifier
+- `feed_container`: Integer - Foreign key to Feed Container
+- `feed_purchase`: Integer - Foreign key to Feed Purchase
+- `quantity_kg`: Decimal(10,3) - Quantity in kg
+- `cost_per_kg`: Decimal(10,2) - Cost per kg from purchase
+- `purchase_date`: Date - Date of purchase
+- `created_at`: DateTime (read-only) - Creation timestamp
+- `updated_at`: DateTime (read-only) - Last update timestamp
+
+**FIFO Features:**
+- Tracks feed inventory using First-In-First-Out methodology
+- Automatically calculates feed costs based on oldest stock first
+- Supports mixed feed batches with different costs in same container
 
 ## Error Handling
 

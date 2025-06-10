@@ -12,6 +12,10 @@ from .summary import (
     BatchFeedingSummarySerializer,
     BatchFeedingSummaryGenerateSerializer
 )
+from .container_stock import (
+    FeedContainerStockSerializer,
+    FeedContainerStockCreateSerializer
+)
 
 __all__ = [
     'FeedSerializer',
@@ -20,4 +24,6 @@ __all__ = [
     'FeedingEventSerializer',
     'BatchFeedingSummarySerializer',
     'BatchFeedingSummaryGenerateSerializer',
+    'FeedContainerStockSerializer',
+    'FeedContainerStockCreateSerializer',
 ]

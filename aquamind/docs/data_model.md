@@ -273,15 +273,25 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `recorded_by_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', nullable, blank=True, help_text="User who recorded or performed the feeding.")
   - `feeding_date`: date
   - `feeding_time`: time
-  - `amount_kg`: decimal(8,3) (validators: MinValueValidator(0), help_text="Amount of feed provided in kg")
+  - `amount_kg`: decimal(10,4) (validators: MinValueValidator(0.0001), help_text="Amount of feed used in kilograms")
   - `batch_biomass_kg`: decimal(10,2) (help_text="Estimated batch biomass at time of feeding (kg)")
-  - `feeding_percentage`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Feeding rate as percentage of biomass")
-  - `feed_conversion_ratio`: decimal(8,3) (nullable, blank=True, help_text="Feed Conversion Ratio (FCR) for this feeding event")
+  - `feeding_percentage`: decimal(8,6) (nullable, blank=True, help_text="Feed amount as percentage of biomass (auto-calculated)")
+  - `feed_cost`: decimal(10,2) (nullable, blank=True, help_text="Calculated cost of feed used in this feeding event")
   - `method`: varchar(20) (choices available for feeding method)
   - `notes`: text
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['-feeding_date', '-feeding_time']`
+- **`inventory_feedcontainerstock`** (FIFO Inventory Tracking)
+  - `id`: bigint (PK, auto-increment)
+  - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`.`id`, on_delete=CASCADE, related_name='container_stocks')
+  - `feed_purchase_id`: bigint (FK to `inventory_feedpurchase`.`id`, on_delete=CASCADE, related_name='container_stocks')
+  - `quantity_kg`: decimal(10,3) (validators: MinValueValidator(0), help_text="Quantity of feed from this purchase in the container (kg)")
+  - `cost_per_kg`: decimal(10,2) (help_text="Cost per kg from the original purchase")
+  - `purchase_date`: date (help_text="Date of the original purchase for FIFO ordering")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['feed_container', 'purchase_date', 'created_at']`, `unique_together = ['feed_container', 'feed_purchase']`
 - **`inventory_batchfeedingsummary`**
   - `id`: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, related_name='feeding_summaries')
@@ -292,6 +302,9 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `average_feeding_percentage`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Average daily feeding percentage of biomass")
   - `feed_conversion_ratio`: decimal(8,3) (nullable, blank=True, help_text="Feed Conversion Ratio (FCR) for the period")
   - `growth_kg`: decimal(10,2) (nullable, blank=True, help_text="Total growth of the batch during this period (kg)")
+  - `total_feed_consumed_kg`: decimal(12,3) (nullable, blank=True, help_text="Total feed consumed by the batch during this period (kg)")
+  - `total_biomass_gain_kg`: decimal(10,2) (nullable, blank=True, help_text="Total biomass gain during this period (kg)")
+  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
@@ -300,6 +313,8 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
 - `inventory_feed` ← `inventory_feedstock` (PROTECT, related_name='stock_levels')
 - `infrastructure_feedcontainer` ← `inventory_feedstock` (CASCADE, related_name='feed_stocks')
+- `infrastructure_feedcontainer` ← `inventory_feedcontainerstock` (CASCADE, related_name='container_stocks')
+- `inventory_feedpurchase` ← `inventory_feedcontainerstock` (CASCADE, related_name='container_stocks')
 - `batch_batch` ← `inventory_feedingevent` (PROTECT, related_name='feeding_events')
 - `infrastructure_container` ← `inventory_feedingevent` (PROTECT, related_name='feeding_events')
 - `batch_batchcontainerassignment` ← `inventory_feedingevent` (SET_NULL, related_name='explicit_feeding_events')
