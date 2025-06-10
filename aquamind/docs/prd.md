@@ -97,21 +97,99 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - An alert is generated if the K-factor falls below a configurable threshold (e.g., K < 0.8).
 
 #### 3.1.3 Feed and Inventory Management (`inventory` app)
-- **Purpose**: To manage feed resources (`inventory_feed`) and ensure optimal feeding practices for batches.
+- **Purpose**: To comprehensively manage feed resources, optimize feeding practices, ensure accurate cost tracking, and support data-driven feeding decisions for optimal batch growth and operational efficiency.
 - **Functionality**:
-  - The system shall manage feed types (`inventory_feed`), purchases (`inventory_feedpurchase`), stock levels (`inventory_feedstock` linked to `infrastructure_feedcontainer`), and feeding events (`inventory_feedingevent`).
-  - The system shall track feed stock levels (`inventory_feedstock.quantity_kg`) and alert users to low inventory.
-  - The system shall log feeding events (`inventory_feedingevent`) linked to specific batch assignments (`inventory_feedingevent.assignment_id`).
+  - **Feed Type Management**:
+    - The system shall manage comprehensive feed specifications via `inventory_feed`, including nutritional composition (protein, fat, carbohydrate, ash, moisture percentages), pellet size, brand information, and lifecycle stage suitability.
+    - Feed types shall be categorized by size category, brand, and active status for efficient selection and filtering.
+    - The system shall support feed recommendations based on batch lifecycle stage, size, and nutritional requirements.
+
+  - **Feed Procurement and Purchase Management**:
+    - The system shall track feed purchases via `inventory_feedpurchase`, capturing supplier information, batch numbers, quantities, costs per kilogram, purchase dates, and expiry dates for comprehensive procurement tracking.
+    - Purchase records shall include quality certifications, delivery details, and storage requirements to ensure feed quality and traceability.
+    - The system shall support purchase planning based on consumption forecasts, stock levels, and batch feeding schedules.
+
+  - **FIFO Inventory Tracking and Cost Management**:
+    - The system shall implement First-In-First-Out (FIFO) inventory methodology via `inventory_feedcontainerstock`, tracking individual feed batches within containers by purchase date and entry date to ensure oldest feed is consumed first.
+    - Each container stock entry shall link to specific feed purchases (`inventory_feedpurchase`) maintaining cost per kilogram, batch numbers, and expiry dates for precise cost tracking and quality control.
+    - The system shall provide FIFO-specific operations including:
+      - Adding feed batches to containers while maintaining chronological order
+      - Retrieving container stock in FIFO order (oldest first)
+      - Automatic cost calculation during feed consumption using oldest available batches
+    - Feed cost calculations shall be automatically applied to feeding events (`inventory_feedingevent.feed_cost`) using FIFO methodology, ensuring accurate cost attribution without manual intervention.
+
+  - **Feed Stock Management and Monitoring**:
+    - The system shall maintain real-time stock levels via `inventory_feedstock` linked to `infrastructure_feedcontainer`, tracking current quantities, reorder thresholds, and last updated timestamps.
+    - Stock levels shall be automatically updated based on feed additions (purchases) and consumption (feeding events), maintaining accuracy across all containers.
+    - The system shall generate low-stock alerts when quantities fall below configurable thresholds (percentage of container capacity or absolute values), enabling proactive procurement planning.
+    - Historical stock level trends shall be available for analysis, supporting consumption pattern identification and inventory optimization.
+
+  - **Feeding Event Management and Optimization**:
+    - The system shall log detailed feeding events via `inventory_feedingevent`, capturing batch assignments, feed types, quantities, feeding methods (manual, automatic, broadcast), batch biomass at feeding time, and calculated feeding percentages.
+    - Feeding events shall be validated for compatibility with batch lifecycle stages, ensuring appropriate feed types and quantities are used for each growth phase.
+    - The system shall calculate feeding percentages automatically based on feed amount and batch biomass, supporting feeding optimization and growth monitoring.
+    - Feeding schedules and recommendations shall be generated based on batch needs, environmental conditions, and feed availability.
+
+  - **Feed Conversion Ratio (FCR) Calculation and Analysis**:
+    - The system shall calculate Feed Conversion Ratios at the batch level via enhanced `inventory_batchfeedingsummary` records, tracking total feed consumed, biomass gain, and calculated FCR over specified periods.
+    - FCR calculations shall support both standard batches (single batch in container) and mixed batches (multiple batches sharing containers), providing accurate performance metrics regardless of container configuration.
+    - The system shall generate feeding summaries automatically or on-demand, aggregating feeding events, calculating total consumption, biomass changes, and FCR for performance analysis.
+    - FCR trends and comparisons shall be available across batches, time periods, and feed types, supporting feeding strategy optimization and performance benchmarking.
+
+  - **Feed Quality and Compliance Tracking**:
+    - The system shall track feed quality parameters including expiry dates, storage conditions, and quality certifications linked to purchase batches.
+    - Alerts shall be generated for approaching expiry dates, ensuring feed quality and reducing waste through timely consumption.
+    - The system shall support compliance reporting for feed usage, costs, and quality metrics required by regulatory bodies.
+
+  - **Inventory Analytics and Reporting**:
+    - The system shall provide comprehensive inventory analytics including consumption patterns, cost trends, FCR performance, and stock optimization recommendations.
+    - Reports shall be generated for feed usage by batch, container, time period, and feed type, supporting operational analysis and cost management.
+    - The system shall support export capabilities for inventory data, feeding summaries, and cost reports in multiple formats (PDF, CSV, Excel).
+
 - **Behavior**:
-  - Low-stock alerts shall trigger when `inventory_feedstock.quantity_kg` falls below a configurable threshold (e.g., percentage of `infrastructure_feedcontainer.capacity_kg`).
-  - Feeding events shall be validated to ensure compatibility with the batch's current stage (via `assignment.lifecycle_stage_id`).
-- **Justification**: Optimizes feed usage, reduces waste, and supports healthy batch growth.
-- **User Story**: As a Logistics Manager, I want to track feed stock levels (`inventory_feedstock`) so that I can plan purchases (`inventory_feedpurchase`).
+  - FIFO inventory operations shall maintain strict chronological order, automatically consuming oldest feed batches first and calculating costs based on original purchase prices.
+  - Feed cost calculations shall occur automatically during feeding event creation, eliminating manual cost entry and ensuring accuracy.
+  - Low-stock alerts shall trigger based on configurable thresholds, considering both absolute quantities and consumption rates for proactive inventory management.
+  - Feeding events shall be validated in real-time for batch compatibility, feed availability, and quantity constraints.
+  - FCR calculations shall update automatically when feeding events or batch weight measurements are recorded, providing current performance metrics.
+  - Stock levels shall be updated immediately upon feed additions or consumption, maintaining real-time accuracy across all containers.
+
+- **Justification**: Comprehensive feed management optimizes operational efficiency, reduces costs through accurate tracking and FIFO methodology, ensures feed quality and compliance, supports data-driven feeding decisions through FCR analysis, and provides complete traceability from purchase to consumption for regulatory compliance and cost control.
+
+- **User Story (Feed Type Management)**: As a Feed Manager, I want to manage feed specifications and recommendations so that I can ensure optimal nutrition for different batch stages.
   - **Acceptance Criteria**:
-    - The UI displays current `inventory_feedstock.quantity_kg` per `infrastructure_feedcontainer` with visual indicators for low stock.
-    - Alerts are sent when stock falls below a defined threshold.
-    - Logging `inventory_feedpurchase` records correctly updates associated `inventory_feedstock` levels (likely via signals or scheduled tasks).
-    - Historical stock levels are available in a time-series chart.
+    - The UI allows creating and editing feed types with complete nutritional profiles, pellet sizes, and stage suitability.
+    - Feed recommendations are provided based on batch lifecycle stage and size requirements.
+    - Feed types can be filtered by brand, size category, and active status for efficient selection.
+    - Nutritional composition is displayed clearly for feeding decision support.
+
+- **User Story (FIFO Inventory Tracking)**: As a Logistics Manager, I want to track feed inventory using FIFO methodology so that I can ensure oldest feed is used first and maintain accurate cost tracking.
+  - **Acceptance Criteria**:
+    - The system displays container stock in FIFO order (oldest batches first) with purchase dates and costs.
+    - Adding feed to containers maintains chronological order and links to original purchase records.
+    - Feeding events automatically calculate costs using FIFO methodology without manual intervention.
+    - Container stock summaries show total quantities, values, and batch composition for each container.
+
+- **User Story (Feed Cost Management)**: As a Farm Manager, I want automatic feed cost calculation during feeding events so that I can track actual feeding costs without manual calculations.
+  - **Acceptance Criteria**:
+    - Creating feeding events automatically calculates and stores feed costs based on FIFO consumption.
+    - Cost calculations consider mixed feed batches with different purchase prices in the same container.
+    - Feeding event details show cost breakdown by feed batch consumed.
+    - Cost reports aggregate feeding costs by batch, time period, and feed type for analysis.
+
+- **User Story (FCR Analysis)**: As a Production Manager, I want to monitor Feed Conversion Ratios for my batches so that I can optimize feeding strategies and assess batch performance.
+  - **Acceptance Criteria**:
+    - The system calculates FCR automatically for specified time periods, considering total feed consumed and biomass gain.
+    - FCR calculations support both single and mixed batch scenarios in shared containers.
+    - FCR trends are visualized over time with comparisons across batches and feed types.
+    - Feeding summaries can be generated on-demand or automatically for performance reporting.
+
+- **User Story (Stock Management)**: As a Logistics Manager, I want to monitor feed stock levels and receive alerts so that I can plan purchases and prevent stockouts.
+  - **Acceptance Criteria**:
+    - The UI displays current stock levels per container with visual indicators for low stock conditions.
+    - Alerts are generated when stock falls below configurable thresholds, considering consumption rates.
+    - Historical stock trends are available for consumption pattern analysis and procurement planning.
+    - Stock updates occur automatically based on feed additions and consumption events.
 
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
 - **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations, general health logging, and quantified health/growth metrics.
