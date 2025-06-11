@@ -34,19 +34,12 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
         blank=True,
         help_text="Average feeding percentage during the period"
     )
-    feed_conversion_ratio = DecimalFieldMixin.positive_decimal_field(
-        max_digits=5,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Feed Conversion Ratio for the period"
-    )
     growth_kg = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
         help_text="Growth during the period (kg)"
     )
-    # New FIFO and FCR fields
+    # FIFO and FCR fields
     total_feed_consumed_kg = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
@@ -137,9 +130,8 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
                 'total_feed_kg': total_feed,
                 'average_biomass_kg': avg_biomass,
                 'average_feeding_percentage': avg_feeding_pct,
-                'feed_conversion_ratio': fcr,
                 'growth_kg': growth,
-                # Initialize new fields with same values for backward compatibility
+                # Use the more precise fcr field
                 'total_feed_consumed_kg': total_feed,
                 'total_biomass_gain_kg': growth,
                 'fcr': fcr

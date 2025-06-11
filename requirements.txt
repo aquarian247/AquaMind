@@ -28,3 +28,4 @@ pytest-django==4.7.0
 flake8==7.0.0
 black==24.1.1
 # Frontend (Vue.js will be installed separately)
+django-simple-history==3.8.0

@@ -31,33 +31,38 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 
-INSTALLED_APPS = [
-    # Django default apps
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    
-    # Third-party apps
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "corsheaders",
-    "drf_yasg",
-    
-    # AquaMind apps (Ensure this list is accurate)
-    "apps.infrastructure",
-    "apps.batch",
-    "apps.broodstock",
-    "apps.core", 
-    "apps.environmental",
-    "apps.health",
-    "apps.inventory",
-    "apps.operational",
-    "apps.scenario",
-    "apps.users",
+DJANGO_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
 ]
+
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'drf_yasg',
+    'simple_history',
+]
+
+LOCAL_APPS = [
+    'apps.users',
+    'apps.infrastructure',
+    'apps.environmental',
+    'apps.batch',
+    'apps.inventory',
+    'apps.health',
+    # 'apps.core',  # Temporarily disabled
+    'apps.broodstock',
+    'apps.scenario',
+    'apps.operational',
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -69,6 +74,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 
@@ -139,9 +145,8 @@ DATABASES = {
 # }
 
 
-# Test runner
-# Custom test runner to handle TimescaleDB-specific requirements
-TEST_RUNNER = 'apps.core.test_runner.TimescaleDBTestRunner'
+# Test runner configuration
+# TEST_RUNNER = 'apps.core.test_runner.TimescaleDBTestRunner'  # Temporarily disabled
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -219,7 +224,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_ROTATION': False,  # Changed to False since blacklist app is not installed
     'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
@@ -259,9 +264,6 @@ SWAGGER_SETTINGS = {
 }
 
 # Using Django's default User model with extended profiles
-
-# Django Rest Framework Token Authentication
-INSTALLED_APPS += ['rest_framework.authtoken']
 
 # Media files settings for user profile pictures
 MEDIA_URL = '/media/'

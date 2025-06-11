@@ -15,7 +15,7 @@ from apps.inventory.models import (
 from apps.infrastructure.models import FeedContainer, ContainerType, Hall, Geography, FreshwaterStation
 from apps.batch.models import Batch, Species, LifeCycleStage
 from apps.inventory.services import FIFOInventoryService
-from apps.core.exceptions import InsufficientStockError
+from apps.inventory.services.fifo_service import InsufficientStockError
 
 
 class FIFOInventoryServiceTest(TestCase):

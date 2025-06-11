@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from apps.inventory.models import (
     Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
 )
@@ -33,7 +34,7 @@ class FeedPurchaseAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeedStock)
-class FeedStockAdmin(admin.ModelAdmin):
+class FeedStockAdmin(SimpleHistoryAdmin):
     list_display = [
         'feed', 'feed_container', 
         'current_quantity_kg', 'reorder_threshold_kg', 'updated_at'
@@ -63,7 +64,7 @@ class FeedingEventAdmin(admin.ModelAdmin):
 class BatchFeedingSummaryAdmin(admin.ModelAdmin):
     list_display = [
         'batch', 'period_start', 'period_end', 'total_feed_kg',
-        'feed_conversion_ratio', 'average_feeding_percentage'
+        'fcr', 'average_feeding_percentage'
     ]
     list_filter = [
         'batch', 'period_start', 'period_end'

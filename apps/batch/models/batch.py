@@ -6,6 +6,7 @@ The Batch model represents fish batches that are tracked through their lifecycle
 from django.db import models
 from decimal import Decimal
 from django.db.models import Sum, F
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models.species import Species, LifeCycleStage
 from apps.infrastructure.models import Container
@@ -40,6 +41,9 @@ class Batch(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # History tracking
+    history = HistoricalRecords()
     
     def __str__(self):
         batch_type_str = " (Mixed)" if self.batch_type == "MIXED" else ""

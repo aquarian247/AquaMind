@@ -4,6 +4,8 @@
 
 This document provides comprehensive documentation for the AquaMind API. It covers all endpoints, request/response formats, and authentication requirements.
 
+**Note**: Advanced audit analytics endpoints (previously in Core app) have been removed. Basic audit trail functionality is available through django-simple-history integration in the Django admin interface.
+
 ## Mock Generation Information
 
 ```json

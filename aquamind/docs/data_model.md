@@ -11,13 +11,43 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **Database**: PostgreSQL with TimescaleDB extension.
 - **Schema**: All tables reside in the `public` schema.
 - **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`).
+- **Audit Trails**: Comprehensive change tracking implemented via django-simple-history for critical models (`batch_batch`, `infrastructure_container`, `inventory_feedstock`), providing regulatory compliance and operational transparency.
 - **Implementation Status**:
   - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`).
   - **Planned Apps/Domains**: Broodstock Management enhancements, Operational Planning, Scenario Planning, Advanced Analytics.
+  - **Removed Components**: Advanced audit analytics functionality (Core app) was removed to prioritize system stability and core operational features.
 
-## 3. Implemented Data Model Domains
+## 3. Audit Trail Implementation
 
-### 3.1 Infrastructure Management (`infrastructure` app)
+### 3.1 Django Simple History Integration
+AquaMind implements comprehensive audit trails using django-simple-history to track changes to critical models for regulatory compliance and operational transparency.
+
+#### Tracked Models
+- **`batch_batch`**: Complete change history for batch lifecycle management
+- **`infrastructure_container`**: Container modifications and status changes
+- **`inventory_feedstock`**: Feed inventory level changes and stock movements
+
+#### Historical Tables
+- **`batch_historicalbatch`**: Stores historical versions of batch records
+- **`infrastructure_historicalcontainer`**: Stores historical versions of container records  
+- **`inventory_historicalfeedstock`**: Stores historical versions of feed stock records
+
+#### Features
+- **Automatic Tracking**: All changes to tracked models are automatically recorded
+- **User Attribution**: Changes are linked to the user who made them
+- **Timestamp Tracking**: Precise timestamps for all modifications
+- **Admin Integration**: Historical records viewable through Django admin interface
+- **API Access**: Historical data accessible via Django admin and can be extended to API endpoints
+
+#### Benefits
+- **Regulatory Compliance**: Complete audit trail for regulatory reporting
+- **Operational Transparency**: Full visibility into system changes
+- **Data Recovery**: Ability to view and potentially restore previous states
+- **Change Analysis**: Track patterns and trends in operational changes
+
+## 4. Implemented Data Model Domains
+
+### 4.1 Infrastructure Management (`infrastructure` app)
 **Purpose**: Manages physical assets and locations.
 
 #### Tables
@@ -111,7 +141,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `infrastructure_area` ← `infrastructure_feedcontainer` (CASCADE) # If applicable
 - `environmental_environmentalparameter` ← `infrastructure_sensor` (PROTECT)
 
-### 3.2 Batch Management (`batch` app)
+### 4.2 Batch Management (`batch` app)
 **Purpose**: Tracks fish batches through their lifecycle.
 
 #### Tables
@@ -223,7 +253,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `health_mortalityreason` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 
-### 3.3 Feed and Inventory Management (`inventory` app)
+### 4.3 Feed and Inventory Management (`inventory` app)
 **Purpose**: Manages feed resources, inventory, feeding events, and recommendations.
 
 #### Tables
@@ -300,14 +330,14 @@ This document defines the data model for AquaMind, an aquaculture management sys
   - `total_feed_kg`: decimal(12,3) (validators: MinValueValidator(0), help_text="Total feed provided to the batch in this period (kg)")
   - `average_biomass_kg`: decimal(12,2) (nullable, blank=True, validators: MinValueValidator(0), help_text="Average biomass of the batch during this period (kg)")
   - `average_feeding_percentage`: decimal(5,2) (nullable, blank=True, validators: MinValueValidator(0), MaxValueValidator(100), help_text="Average daily feeding percentage of biomass")
-  - `feed_conversion_ratio`: decimal(8,3) (nullable, blank=True, help_text="Feed Conversion Ratio (FCR) for the period")
   - `growth_kg`: decimal(10,2) (nullable, blank=True, help_text="Total growth of the batch during this period (kg)")
   - `total_feed_consumed_kg`: decimal(12,3) (nullable, blank=True, help_text="Total feed consumed by the batch during this period (kg)")
   - `total_biomass_gain_kg`: decimal(10,2) (nullable, blank=True, help_text="Total biomass gain during this period (kg)")
-  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)")
+  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg) - standardized field with high precision")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
+  - **Note**: Duplicate `feed_conversion_ratio` field was removed to maintain data integrity and use the more precise `fcr` field.
 
 #### Relationships
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
@@ -323,7 +353,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `inventory_feedstock` ← `inventory_feedingevent` (SET_NULL)
 - `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE, related_name='feeding_summaries')
 
-### 3.4 Health Monitoring (`health` app)
+### 4.4 Health Monitoring (`health` app)
 **Purpose**: Tracks health observations, treatments, mortality, sampling events, and lab results.
 
 #### Tables
@@ -483,7 +513,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `health_sampletype` ← `health_healthlabsample` (PROTECT, related_name='lab_samples')
 - `users_customuser` ← `health_healthlabsample` (SET_NULL, related_name='recorded_lab_samples')
 
-### 3.5 Environmental Monitoring (`environmental` app)
+### 4.5 Environmental Monitoring (`environmental` app)
 **Purpose**: Captures time-series data for environmental conditions.
 
 #### Tables
@@ -554,7 +584,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `infrastructure_area` ← `environmental_photoperioddata` (`area_id`, CASCADE)
 - `batch_batchtransfer` ← `environmental_stagetransitionenvironmental` (`batch_transfer_id`, CASCADE)
 
-### 3.6 User Management (`auth` and `users` apps)
+### 4.6 User Management (`auth` and `users` apps)
 **Purpose**: Manages user accounts and access control.
 
 #### Tables
@@ -598,7 +628,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
 
-#### 3.7 Broodstock Management (broodstock app)
+#### 4.7 Broodstock Management (broodstock app)
 
 The Broodstock Management app’s data model supports comprehensive management of broodstock containers, fish populations, breeding operations, egg production/acquisition, environmental monitoring, and batch traceability. It reuses existing models like `infrastructure_container`, introduces normalized tables for better integrity and querying, and integrates with apps like `environmental` and `health`. The design ensures flexible traceability for internal eggs (broodstock to batch) and external eggs (supplier to batch), matching the implementation complexity of Scenario Planning. It also supports end-to-end traceability to harvest events, leveraging existing batch models and audit logging for regulatory compliance.
 
@@ -764,27 +794,27 @@ The Broodstock Management app’s data model supports comprehensive management o
 - **JSON Fields**: Keep `traits` and `parameters` minimal, with structured formats (e.g., key-value pairs) and partial indexes for frequent queries.  
 - **Mobile Sync**: Ensure offline data entries (e.g., movements, egg logs) include temporary IDs, resolving conflicts during sync with server-side validation.
 
-## 4. Planned Data Model Domains (Not Yet Implemented)
+## 5. Planned Data Model Domains (Not Yet Implemented)
 
-### 4.1 Operational Planning
+### 5.1 Operational Planning
 **Purpose**: Provide operational recommendations.
 **Tables**: `batch_operational_plan`, `planning_recommendation`. (Details omitted).
 
-### 4.2 Scenario Planning
+### 5.2 Scenario Planning
 **Purpose**: Simulate hypothetical scenarios.
 **Tables**: `batch_scenario`, `scenario_model`. (Details omitted).
 
-### 4.3 Analytics
+### 5.3 Analytics
 **Purpose**: Support AI/ML predictions.
 **Tables**: `analytics_model`, `prediction`. (Details omitted).
 
-## 5. Data Governance
+## 6. Data Governance
 
 - **Audit Trails**: Standard `created_at`, `updated_at` fields exist. Consider integrating `django-auditlog` for comprehensive tracking.
 - **Validation**: ORM-level validation exists. Database constraints (Foreign Keys, Uniqueness) are enforced. `on_delete` behavior specified where known/inferred.
 - **Partitioning and Indexing**: TimescaleDB hypertables are partitioned. Relevant indexes exist on Foreign Keys and timestamp columns.
 
-## 6. Appendix: Developer Notes
+## 7. Appendix: Developer Notes
 
 - **TimescaleDB Setup**: Ensure `timescaledb` extension is enabled. Use Django migrations (potentially with `RunSQL`) or manual commands (`SELECT create_hypertable(...)`) to manage hypertables.
 - **Calculated Fields**: Fields like `batch_batchcontainerassignment.biomass_kg` are calculated in the application logic (e.g., model `save()` method or serializers), not stored directly unless denormalized.

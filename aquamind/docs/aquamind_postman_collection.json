@@ -1095,9 +1095,9 @@
           ],
           "description": "Legacy feed stock management (use FIFO container stock for new implementations)"
         }
-      ],
-      "description": "Inventory management with FIFO feed tracking and FCR calculations"
-    }
+              ],
+        "description": "Inventory management with FIFO feed tracking and FCR calculations"
+      }
   ],
   "variable": [
     {
@@ -1147,6 +1147,36 @@
       "value": "1",
       "type": "string",
       "description": "Sample batch feeding summary ID"
+    },
+    {
+      "key": "user_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample user ID for audit logs"
+    },
+    {
+      "key": "batch_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample batch ID for analytics"
+    },
+    {
+      "key": "species_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample species ID for correlations"
+    },
+    {
+      "key": "snapshot_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample batch performance snapshot ID"
+    },
+    {
+      "key": "correlation_id",
+      "value": "1",
+      "type": "string",
+      "description": "Sample environmental correlation ID"
     }
   ]
 }

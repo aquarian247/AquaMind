@@ -12,8 +12,10 @@ from apps.inventory.models import (
     FeedContainerStock, FeedingEvent, FeedPurchase
 )
 from apps.infrastructure.models import FeedContainer
-from apps.core.exceptions import InsufficientStockError
 
+class InsufficientStockError(ValueError):
+    """Exception raised when there's insufficient stock for an operation."""
+    pass
 
 class FIFOInventoryService:
     """Service for managing FIFO feed inventory operations."""

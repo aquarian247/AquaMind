@@ -2,6 +2,7 @@
 Feed stock model for the inventory app.
 """
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from .feed import Feed
 from apps.infrastructure.models import FeedContainer
@@ -29,6 +30,9 @@ class FeedStock(UpdatedModelMixin, models.Model):
         help_text="Threshold for reordering (kg)"
     )
     notes = models.TextField(blank=True)
+    
+    # History tracking
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ['feed', 'feed_container']

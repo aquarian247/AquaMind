@@ -16,7 +16,7 @@ from apps.inventory.models import (
 from apps.infrastructure.models import Container, ContainerType, Hall, Geography, FreshwaterStation
 from apps.batch.models import Batch, Species, LifeCycleStage, BatchComposition, BatchContainerAssignment
 from apps.inventory.services import FCRCalculationService
-from apps.core.exceptions import FCRCalculationError
+from apps.inventory.services.fcr_service import FCRCalculationError
 
 
 class FCRCalculationServiceTest(TestCase):
@@ -378,7 +378,7 @@ class FCRCalculationServiceTest(TestCase):
         
         # FCR = 220 / 150 = 1.4667 (rounded to 4 decimal places)
         expected_fcr = Decimal("220.0") / Decimal("150.0")
-        self.assertAlmostEqual(summary.feed_conversion_ratio, expected_fcr, places=4)
+        self.assertAlmostEqual(summary.fcr, expected_fcr, places=4)
     
     def test_update_batch_feeding_summary_existing(self):
         """Test updating an existing batch feeding summary."""
@@ -392,7 +392,7 @@ class FCRCalculationServiceTest(TestCase):
             period_end=period_end,
             total_feed_kg=Decimal("100.0"),
             total_biomass_gain_kg=Decimal("80.0"),
-            feed_conversion_ratio=Decimal("1.25")
+            fcr=Decimal("1.25")
         )
         
         # Update with new values

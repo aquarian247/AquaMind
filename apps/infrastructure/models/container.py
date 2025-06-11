@@ -7,6 +7,7 @@ such as tanks, pens, or trays.
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models.container_type import ContainerType
 from apps.infrastructure.models.hall import Hall
@@ -47,6 +48,9 @@ class Container(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # History tracking
+    history = HistoricalRecords()
     
     class Meta:
         constraints = [

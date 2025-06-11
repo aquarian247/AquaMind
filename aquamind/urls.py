@@ -17,13 +17,15 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
-from apps.core.views import CSRFTokenView
+# from apps.core.views import CSRFTokenView  # Temporarily disabled
 
 # Swagger/OpenAPI documentation setup
 schema_view = get_schema_view(
@@ -59,6 +61,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/token/', CustomObtainAuthToken.as_view(), name='api-token-auth'),
     
-    # CSRF token endpoint
-    path('api/csrf/', CSRFTokenView.as_view(), name='csrf-token'),
+    # Authentication endpoints
+    path("api/auth/token/", CustomObtainAuthToken.as_view(), name="api_token_auth"),
+    path("api/auth/jwt/", TokenObtainPairView.as_view(), name="jwt_obtain_pair"),
+    path("api/auth/jwt/refresh/", TokenRefreshView.as_view(), name="jwt_refresh"),
+    # path("api/auth/csrf/", CSRFTokenView.as_view(), name="csrf_token"),  # Temporarily disabled
 ]

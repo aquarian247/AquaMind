@@ -8,14 +8,18 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from apps.core.views import health_check
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 
+# Core functionality imports
+# from apps.core.views import health_check  # Temporarily disabled
+
+# App-specific routers
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
 from apps.batch.api.routers import router as batch_router
 from apps.inventory.api.routers import router as inventory_router
 from apps.health.api.routers import router as health_router
+# from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
 # Create a schema view for API documentation
@@ -33,7 +37,7 @@ schema_view = get_schema_view(
 )
 
 # Configure API URL patterns
-router = routers.DefaultRouter()
+router = DefaultRouter()
 
 # Include routers from all apps
 router.registry.extend(batch_router.registry)
@@ -51,7 +55,7 @@ urlpatterns = [
     path('auth/', include('apps.users.api.urls')),
     
     # Health check endpoint
-    path('health-check/', health_check, name='health-check'),
+    # path('health/', health_check, name='health_check'),  # Temporarily disabled
     
     # API endpoints for each app
     path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),

@@ -1,13 +1,14 @@
 from django.contrib import admin
 from django import forms
 from django.utils.html import format_html
+from simple_history.admin import SimpleHistoryAdmin
 
-from apps.core.utils.admin_formatters import (
-    format_coordinates, 
-    format_area, 
-    format_volume, 
-    format_weight
-)
+# from apps.core.utils.admin_formatters import (
+#     format_coordinates, 
+#     format_area, 
+#     format_volume, 
+#     format_weight
+# )
 
 from .models import (
     Geography, 
@@ -147,15 +148,15 @@ class ContainerTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Container)
-class ContainerAdmin(admin.ModelAdmin):
+class ContainerAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'container_type', 'get_location', 'volume_m3_display', 'max_biomass_kg_display', 'active')
     
     def volume_m3_display(self, obj):
-        return format_volume(obj.volume_m3)
+        return f"{obj.volume_m3:.2f}" if obj.volume_m3 else "-"
     volume_m3_display.short_description = format_html("Volume (m<sup>3</sup>)")
     
     def max_biomass_kg_display(self, obj):
-        return format_weight(obj.max_biomass_kg)
+        return f"{obj.max_biomass_kg:.2f}" if obj.max_biomass_kg else "-"
     max_biomass_kg_display.short_description = "Max Biomass (kg)"
     list_filter = ('container_type', 'active')
     search_fields = ('name',)

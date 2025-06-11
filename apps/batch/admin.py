@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     Batch,
     BatchContainerAssignment,
@@ -52,7 +53,7 @@ class LifeCycleStageAdmin(admin.ModelAdmin):
 
 
 @admin.register(Batch)
-class BatchAdmin(admin.ModelAdmin):
+class BatchAdmin(SimpleHistoryAdmin):
     """Admin interface for the Batch model."""
     list_display = (
         'batch_number',

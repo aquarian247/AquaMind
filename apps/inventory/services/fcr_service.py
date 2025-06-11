@@ -12,8 +12,10 @@ from datetime import date
 
 from apps.batch.models import Batch, BatchComposition
 from apps.inventory.models import FeedingEvent, BatchFeedingSummary
-from apps.core.exceptions import FCRCalculationError
 
+class FCRCalculationError(ValueError):
+    """Exception raised when FCR calculation fails."""
+    pass
 
 class FCRCalculationService:
     """Service for calculating Feed Conversion Ratios at batch level."""
@@ -211,7 +213,6 @@ class FCRCalculationService:
                 # Keep existing total_feed_kg for backward compatibility
                 'total_feed_kg': total_feed_consumed,
                 'growth_kg': biomass_gain_kg,
-                'feed_conversion_ratio': fcr
             }
         )
         

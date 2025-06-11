@@ -3,20 +3,23 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
-AquaMind is an aquaculture management system designed to optimize operations for Bakkafrost, a leading aquaculture company operating in the Faroe Islands and Scotland. The system shall provide a unified platform to manage core operational data including infrastructure (`infrastructure_*` models), fish batches (`batch_*` models), environmental conditions (`environmental_*` models), health and inventory (`health_*`, `inventory_*` models), manage broodstock for genetic improvement, and enable data-driven decision-making across subsidiaries (Broodstock, Freshwater, Farming, Logistics). AquaMind shall ensure regulatory compliance, enhance operational efficiency, and support sustainability through advanced analytics, scenario planning, and AI-driven insights.
+AquaMind is an aquaculture management system designed to optimize operations for Bakkafrost, a leading aquaculture company operating in the Faroe Islands and Scotland. The system shall provide a unified platform to manage core operational data including infrastructure (`infrastructure_*` models), fish batches (`batch_*` models), environmental conditions (`environmental_*` models), health and inventory (`health_*`, `inventory_*` models), manage broodstock for genetic improvement, and enable data-driven decision-making across subsidiaries (Broodstock, Freshwater, Farming, Logistics). AquaMind shall ensure regulatory compliance through comprehensive audit trails, enhance operational efficiency, and support sustainability through advanced analytics, scenario planning, and future AI-driven insights.
 
 ### 1.2 Scope
-This PRD defines the functional and non-functional requirements for AquaMind, covering core operations, broodstock management, operational planning, regulatory compliance, and future AI-driven capabilities. It outlines a phased approach to development, aligning with business goals, user needs, and the `implementation plan and progress.md`. The system shall integrate with external systems (e.g., WonderWare for sensor data, OpenWeatherMap for weather data), comply with regulatory standards in the Faroe Islands and Scotland, and accurately reflect the implemented schema defined in `docs/data model.md`.
+This PRD defines the functional and non-functional requirements for AquaMind, covering core operations, broodstock management, operational planning, regulatory compliance, and audit trail capabilities. It outlines a phased approach to development, aligning with business goals, user needs, and the `implementation plan and progress.md`. The system shall integrate with external systems (e.g., WonderWare for sensor data, OpenWeatherMap for weather data), comply with regulatory standards in the Faroe Islands and Scotland, and accurately reflect the implemented schema defined in `docs/data model.md`.
+
+**Note on Audit Capabilities**: The system implements comprehensive audit trails through django-simple-history for regulatory compliance, providing complete change tracking for critical models (Batch, Container, FeedStock). Advanced audit analytics functionality was removed during development to prioritize system stability and core operational features.
 
 ### 1.3 Business Drivers
 - **Operational Efficiency**: Streamline batch lifecycle management (`batch_batch`, `batch_batchcontainerassignment`), resource allocation (`infrastructure_container`), and inventory tracking (`inventory_feedstock`) across subsidiaries.
-- **Regulatory Compliance**: Ensure adherence to environmental, health, and financial regulations in multiple jurisdictions.
+- **Regulatory Compliance**: Ensure adherence to environmental, health, and financial regulations through comprehensive audit trails and change tracking in multiple jurisdictions.
+- **Data Accuracy**: Maintain precise feed conversion ratio (FCR) calculations using standardized `fcr` field with decimal(5,3) precision for accurate performance tracking.
 - **Genetic Improvement**: Support broodstock management and breeding programs to enhance fish quality, disease resistance, and growth rates (Planned Phase 2/3).
 - **Sustainability**: Monitor environmental impact (`environmental_environmentalreading`) and optimize resource usage (`inventory_feedingevent`) to promote sustainable aquaculture practices.
-- **Competitive Advantage**: Leverage AI and predictive analytics to improve decision-making and operational outcomes (Planned Phase 3).
+- **Competitive Advantage**: Leverage data analytics and scenario planning to improve decision-making and operational outcomes.
 
 ### 1.4 Organizational Structure
-AquaMind shall support Bakkafrost’s organizational structure:
+AquaMind shall support Bakkafrost's organizational structure:
 - **Geographies**: Faroe Islands and Scotland (Managed via `infrastructure_geography`).
 - **Subsidiaries**: Broodstock, Freshwater, Farming, Logistics (Managed via `users_userprofile.subsidiary` and potentially linked models).
 - **Horizontals**: Finance, Compliance (Supported via reporting and data access).
@@ -68,7 +71,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall calculate derived metrics like `biomass_kg` (within `BatchContainerAssignment.save()` or serializers: `population_count * avg_weight_g / 1000`).
   - The system shall log batch transfers between containers using `batch_batchtransfer`, recording `from_container_id`, `to_container_id`, `population_count`, `transfer_type`, etc.
   - The system shall track growth via `batch_growthsample` records (linked to `batch_batchcontainerassignment`). Mortality is tracked via `batch_mortalityevent`.
-  - The system shall calculate Fulton’s Condition Factor (K-factor) for each growth sample using the formula \(K = 100 \times \frac{W}{L^3}\), where \(W\) is the average weight in grams (`batch_growthsample.avg_weight_g`) and \(L\) is the average length in centimeters (`batch_growthsample.avg_length_cm`) for that specific sample.
+  - The system shall calculate Fulton's Condition Factor (K-factor) for each growth sample using the formula \(K = 100 \times \frac{W}{L^3}\), where \(W\) is the average weight in grams (`batch_growthsample.avg_weight_g`) and \(L\) is the average length in centimeters (`batch_growthsample.avg_length_cm`) for that specific sample.
   - The K-factor shall be stored in the existing `condition_factor` field on the `batch_growthsample` model.
   - The `batch_growthsample.avg_length_cm` and `batch_growthsample.std_deviation_length` fields shall be calculated from a list of individual fish lengths provided by the user during the sampling process.
   - The system shall simulate, for testing purposes, a full lifecycle (approx. 850-900 days) with stage-appropriate container transitions, involving creation of new `BatchContainerAssignment` records upon stage changes or transfers (Ref: `simulate_full_lifecycle.py` script).
@@ -131,10 +134,11 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Feeding schedules and recommendations shall be generated based on batch needs, environmental conditions, and feed availability.
 
   - **Feed Conversion Ratio (FCR) Calculation and Analysis**:
-    - The system shall calculate Feed Conversion Ratios at the batch level via enhanced `inventory_batchfeedingsummary` records, tracking total feed consumed, biomass gain, and calculated FCR over specified periods.
+    - The system shall calculate Feed Conversion Ratios at the batch level via enhanced `inventory_batchfeedingsummary` records using the standardized `fcr` field with decimal(5,3) precision for accurate performance tracking.
     - FCR calculations shall support both standard batches (single batch in container) and mixed batches (multiple batches sharing containers), providing accurate performance metrics regardless of container configuration.
     - The system shall generate feeding summaries automatically or on-demand, aggregating feeding events, calculating total consumption, biomass changes, and FCR for performance analysis.
     - FCR trends and comparisons shall be available across batches, time periods, and feed types, supporting feeding strategy optimization and performance benchmarking.
+    - **Data Accuracy**: The system maintains data integrity by using a single, precise FCR field, eliminating duplicate field issues and ensuring consistent calculations across all feeding summaries.
 
   - **Feed Quality and Compliance Tracking**:
     - The system shall track feed quality parameters including expiry dates, storage conditions, and quality certifications linked to purchase batches.
@@ -322,9 +326,9 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Attempts to access restricted data result in appropriate HTTP error responses (e.g., 403 Forbidden).
 - **User Story**: As a Manager, I want to access data for my subsidiary only so that I can focus on my operations.
   - **Acceptance Criteria**:
-    - The UI components (lists, dashboards) automatically display data filtered by the logged-in user’s `users_userprofile.subsidiary`.
+    - The UI components (lists, dashboards) automatically display data filtered by the logged-in user's `users_userprofile.subsidiary`.
     - API requests are filtered server-side based on the authenticated user's profile.
-    - Attempts to manually access other subsidiaries’ data via API are denied.
+    - Attempts to manually access other subsidiaries' data via API are denied.
     - Dashboards are pre-filtered or offer filters constrained by the user's profile.
 
 #### 3.1.7 Operational Dashboards
@@ -349,7 +353,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 #### 3.1.8 Broodstock Management (broodstock app)
 
 **Purpose**  
-The Broodstock Management module in AquaMind is a core component of the salmon farming lifecycle, enabling broodstock managers and farm operators to oversee broodstock populations, manage breeding operations, track egg production and acquisition, and ensure comprehensive traceability. It supports both internally produced eggs from broodstock and externally sourced eggs from third-party suppliers, providing flexible lineage tracking critical for quality control, operational planning, and regulatory compliance. Designed with the same usability and implementability as Scenario Planning, this feature focuses on practical, essential capabilities without advanced predictive analytics, ensuring broodstock management aligns with AquaMind’s goal of optimizing salmon farming processes.
+The Broodstock Management module in AquaMind is a core component of the salmon farming lifecycle, enabling broodstock managers and farm operators to oversee broodstock populations, manage breeding operations, track egg production and acquisition, and ensure comprehensive traceability. It supports both internally produced eggs from broodstock and externally sourced eggs from third-party suppliers, providing flexible lineage tracking critical for quality control, operational planning, and regulatory compliance. Designed with the same usability and implementability as Scenario Planning, this feature focuses on practical, essential capabilities without advanced predictive analytics, ensuring broodstock management aligns with AquaMind's goal of optimizing salmon farming processes.
 
 **Functionality**  
 This section details the comprehensive capabilities of the Broodstock Management module, structured into key functional areas:
@@ -408,7 +412,7 @@ This section details the comprehensive capabilities of the Broodstock Management
   - **Description:** Leverage Scenario Planning tools to plan broodstock operations, integrating internal and external egg sourcing strategies.  
   - **Specifications:**  
     - Create broodstock scenarios in the `scenario` model, specifying parameters like breeding schedules, egg production targets, or external sourcing ratios.  
-    - Compare scenarios based on outcomes (e.g., egg yield, cost, resource use), reusing Scenario Planning’s comparison logic.  
+    - Compare scenarios based on outcomes (e.g., egg yield, cost, resource use), reusing Scenario Planning's comparison logic.  
     - Link scenarios to specific containers or egg batches for execution tracking.  
     - Coordinate with freshwater stations for egg handoffs, ensuring batch creation aligns with scenario plans.  
     - Support mobile scenario review and basic edits (e.g., adjusting timelines).  
@@ -454,7 +458,7 @@ This section details the comprehensive capabilities of the Broodstock Management
 - *Mobile:* Offline entries sync seamlessly, preserving timestamps and user attribution for traceability.
 
 **Justification**  
-Broodstock management underpins salmon farming success, directly impacting egg quality and production efficiency. This module provides robust tools for container management, fish tracking, breeding, and egg sourcing, with flexible traceability addressing both internal and external workflows. Integration with Scenario Planning enhances strategic decision-making, while mobile access and detailed reporting ensure operational agility and compliance, aligning with AquaMind’s mission to streamline salmon farming without unnecessary complexity.
+Broodstock management underpins salmon farming success, directly impacting egg quality and production efficiency. This module provides robust tools for container management, fish tracking, breeding, and egg sourcing, with flexible traceability addressing both internal and external workflows. Integration with Scenario Planning enhances strategic decision-making, while mobile access and detailed reporting ensure operational agility and compliance, aligning with AquaMind's mission to streamline salmon farming without unnecessary complexity.
 
 **User Stories and Acceptance Criteria**
 
@@ -470,7 +474,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
   **As a Farm Operator, I want to track fish movements and health to maintain accurate population data and support breeding decisions.**  
   - **Acceptance Criteria:**  
     - Enter a fish movement (e.g., Fish F123 from Container C1 to C2) on mobile, updating population counts instantly.  
-    - View a container’s fish list with IDs, traits, and health statuses from the `health` app.  
+    - View a container's fish list with IDs, traits, and health statuses from the `health` app.  
     - Search a fish by ID and see its movement history and current location.  
     - Summary shows total fish, average health, and recent movements per container.
 
@@ -529,13 +533,13 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 - **User Story**: As a Farm Operator, I want to receive recommendations for batch transfers so that I can optimize container usage.
   - **Acceptance Criteria**:
     - The system suggests transfers based on lifecycle stage, container capacity, and environmental data.
-    - Recommendations include rationale (e.g., “Container at 90% capacity”).
+    - Recommendations include rationale (e.g., "Container at 90% capacity").
     - Users can accept, reject, or modify the recommendation.
     - Accepted transfers are logged and executed with user confirmation.
 - **User Story**: As a Manager, I want to view a planning dashboard so that I can identify operational bottlenecks.
   - **Acceptance Criteria**:
     - The dashboard displays resource usage (e.g., container occupancy, staff allocation).
-    - Predictive insights highlight potential issues (e.g., “Container X at risk of overcrowding”).
+    - Predictive insights highlight potential issues (e.g., "Container X at risk of overcrowding").
     - Visualizations include charts for utilization trends over time.
     - Users can drill down into specific assets or batches for details.
 
@@ -566,7 +570,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
     - Audit trails for environmental data changes are included in the report.
 - **User Story**: As a Compliance Officer, I want to receive alerts for regulatory violations so that I can take corrective action.
   - **Acceptance Criteria**:
-    - Alerts are generated for violations (e.g., “Temperature exceeded safe limit”).
+    - Alerts are generated for violations (e.g., "Temperature exceeded safe limit").
     - Alerts include details (e.g., container, timestamp, reading value).
     - Users can view a history of violations and actions taken.
     - Corrective actions (e.g., adjust environmental controls) are logged.
@@ -605,7 +609,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 #### 3.3.1 Scenario Planning and Simulation
 
 **Purpose**  
-The Scenario Planning and Simulation feature in AquaMind enables aquaculture managers, production planners, and farm operators to create, manage, and analyze hypothetical scenarios for salmon farming operations. By leveraging configurable biological models—namely the Thermal Growth Coefficient (TGC) model, Feed Conversion Ratio (FCR) model, and mortality model—this feature projects key metrics such as fish growth (average weight), population (number of fish), biomass, feed consumption, and optimal harvest times. This functionality supports data-driven decision-making for critical operations including stocking, feeding schedules, resource allocation, and harvest planning, aligning with AquaMind’s goal of optimizing operational efficiency, sustainability, and profitability in salmon farming.
+The Scenario Planning and Simulation feature in AquaMind enables aquaculture managers, production planners, and farm operators to create, manage, and analyze hypothetical scenarios for salmon farming operations. By leveraging configurable biological models—namely the Thermal Growth Coefficient (TGC) model, Feed Conversion Ratio (FCR) model, and mortality model—this feature projects key metrics such as fish growth (average weight), population (number of fish), biomass, feed consumption, and optimal harvest times. This functionality supports data-driven decision-making for critical operations including stocking, feeding schedules, resource allocation, and harvest planning, aligning with AquaMind's goal of optimizing operational efficiency, sustainability, and profitability in salmon farming.
 
 **Functionality**  
 The Scenario Planning and Simulation feature comprises several interconnected components designed to provide flexibility and precision in planning:
@@ -702,7 +706,7 @@ The Scenario Planning and Simulation feature comprises several interconnected co
   - Optionally incorporates environmental data (e.g., temperature from `environmental_environmentalreading`) if available; otherwise, uses user-input projections.  
 
 **Justification**  
-Scenario planning is a cornerstone of salmon farming management, enabling proactive optimization of harvest schedules, feed usage, and resource allocation. By integrating configurable TGC, FCR, and mortality models, AquaMind provides precise, location-specific projections that reflect real-world variability (e.g., stable Faroe Islands vs. fluctuating Scotland conditions). This feature reduces operational risks, enhances feed efficiency, and ensures compliance with biomass limits, directly supporting AquaMind’s objectives of operational excellence and sustainable aquaculture.
+Scenario planning is a cornerstone of salmon farming management, enabling proactive optimization of harvest schedules, feed usage, and resource allocation. By integrating configurable TGC, FCR, and mortality models, AquaMind provides precise, location-specific projections that reflect real-world variability (e.g., stable Faroe Islands vs. fluctuating Scotland conditions). This feature reduces operational risks, enhances feed efficiency, and ensures compliance with biomass limits, directly supporting AquaMind's objectives of operational excellence and sustainable aquaculture.
 
 **User Stories and Acceptance Criteria**
 
@@ -735,7 +739,7 @@ Scenario planning is a cornerstone of salmon farming management, enabling proact
   **As an Aquaculture Manager, I want to project the future state of an existing batch using its current data, so I can plan resource needs accurately.**  
   - **Acceptance Criteria:**  
     - The user selects an existing batch from `batch_batch` (e.g., 75,000 fish, 1.5 kg average weight, Smolt stage).  
-    - The user applies a TGC model for the batch’s location, the default FCR model, and a 0.2% daily mortality rate.  
+    - The user applies a TGC model for the batch's location, the default FCR model, and a 0.2% daily mortality rate.  
     - The system projects from the current date forward 300 days, showing:  
       - Transition to Post-Smolt and Adult stages with corresponding FCR shifts.  
       - Biomass reaching 300 tons by day 250.  
@@ -752,7 +756,7 @@ Scenario planning is a cornerstone of salmon farming management, enabling proact
 - **Functionality**:
   - The system shall predict health risks (e.g., disease outbreaks, lice infestations) using environmental data, health records, and batch history.
   - The system shall recommend preventive actions (e.g., treatments, environmental adjustments).
-  - The system shall provide confidence scores for predictions (e.g., “80% confidence in lice risk”).
+  - The system shall provide confidence scores for predictions (e.g., "80% confidence in lice risk").
   - The system shall log prediction accuracy for continuous improvement.
 - **Behavior**:
   - Predictions shall be updated daily or on-demand.
@@ -761,7 +765,7 @@ Scenario planning is a cornerstone of salmon farming management, enabling proact
 - **Justification**: Reduces health risks, improves batch survival rates, and supports regulatory compliance.
 - **User Story**: As a Farm Operator, I want to receive alerts for potential health risks so that I can take preventive action.
   - **Acceptance Criteria**:
-    - Alerts are generated for predicted risks (e.g., “High lice risk detected”).
+    - Alerts are generated for predicted risks (e.g., "High lice risk detected").
     - Alerts include confidence scores and recommended actions.
     - Users can view the data (e.g., environmental trends) that triggered the alert.
     - Actions taken in response to alerts are logged.

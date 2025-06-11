@@ -339,7 +339,7 @@ class HealthModelsTestCase(TestCase):
         self.assertEqual(retrieved_event.individual_fish_observations.count(), 1)
         
         retrieved_fish_obs = retrieved_event.individual_fish_observations.first()
-        self.assertEqual(retrieved_fish_obs.fish_identifier, 1)
+        self.assertEqual(retrieved_fish_obs.fish_identifier, '1')
         self.assertEqual(retrieved_fish_obs.parameter_scores.count(), 1)
         
         retrieved_score = retrieved_fish_obs.parameter_scores.first()

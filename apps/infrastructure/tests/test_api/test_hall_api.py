@@ -8,7 +8,11 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.core.test_utils import get_response_items
+def get_response_items(response):
+    """Simple replacement for core test utils function."""
+    if hasattr(response.data, 'get') and 'results' in response.data:
+        return response.data['results']
+    return response.data
 
 from apps.infrastructure.models import Geography, FreshwaterStation, Hall
 
