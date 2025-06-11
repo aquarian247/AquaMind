@@ -10,6 +10,31 @@ from simple_history.admin import SimpleHistoryAdmin
 #     format_weight
 # )
 
+# Define formatting functions locally since Core app was removed
+def format_coordinates(value):
+    """Format coordinates with proper decimal places."""
+    if value is None:
+        return "-"
+    return f"{value:.6f}°"
+
+def format_area(value):
+    """Format area in square meters."""
+    if value is None:
+        return "-"
+    return f"{value:,.2f}"
+
+def format_volume(value):
+    """Format volume in cubic meters."""
+    if value is None:
+        return "-"
+    return f"{value:,.2f}"
+
+def format_weight(value):
+    """Format weight in kilograms."""
+    if value is None:
+        return "-"
+    return f"{value:,.2f}"
+
 from .models import (
     Geography, 
     Area, 

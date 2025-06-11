@@ -1,0 +1,31 @@
+[flake8]
+exclude = 
+    .venv,
+    venv,
+    .git,
+    __pycache__,
+    *.pyc,
+    *.pyo,
+    .eggs,
+    *.egg,
+    build,
+    dist,
+    migrations,
+    .tox,
+    .coverage,
+    .cache,
+    node_modules,
+    staticfiles,
+    media
+
+max-line-length = 127
+max-complexity = 10
+
+# E9: Python syntax errors or undefined names
+# F63: Incorrect use of operators
+# F7: Syntax errors  
+# F82: Undefined names
+select = E9,F63,F7,F82
+
+# For the full linting (second pass in CI)
+# We can add more codes later as needed 
