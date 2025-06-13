@@ -268,3 +268,8 @@ SWAGGER_SETTINGS = {
 # Media files settings for user profile pictures
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Broodstock defaults
+BROODSTOCK_DEFAULTS = {
+    'AVG_FISH_WEIGHT_KG': 10.0,
+}

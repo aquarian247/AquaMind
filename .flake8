@@ -18,8 +18,9 @@ exclude =
     staticfiles,
     media
 
-max-line-length = 127
+max-line-length = 120
 max-complexity = 10
+extend-ignore = E203, W503
 
 # E9: Python syntax errors or undefined names
 # F63: Incorrect use of operators
