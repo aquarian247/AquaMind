@@ -645,12 +645,47 @@ The Scenario Planning and Simulation feature comprises several interconnected co
       - Users can define custom rates or select from historical averages.  
     - **Data Requirements:** Mortality rate (percentage), frequency (daily/weekly), and optional stage-specific adjustments.  
 
+- **Multi-Method Data Entry System**  
+  - **Description:** To manage large datasets (up to 900+ daily values for temperature, mortality, and FCR), the system provides multiple intuitive data entry methods that minimize manual input while offering maximum flexibility.  
+  - **Specifications:**  
+    - *CSV Upload for Bulk Data:*  
+      - Users can upload CSV files containing daily values with drag-and-drop or browse functionality.  
+      - Downloadable CSV templates ensure correct formatting (e.g., columns: Date, Value).  
+      - Upload validation with preview modal for data confirmation before import.  
+      - Bulk processing reduces 900+ manual entries to a single upload operation.  
+    - *Date Range-Based Input:*  
+      - Users specify values for custom date ranges instead of daily entries.  
+      - Form interface with Start Date, End Date, and Value fields.  
+      - "Add Range" functionality allows stacking multiple periods (e.g., Jan 1–Mar 31: 10°C; Apr 1–Jun 30: 12°C).  
+      - "Copy to Next Range" option for quick value adjustments.  
+    - *Predefined Profiles and Templates:*  
+      - Library of common profiles (e.g., "Northern Europe Summer Temperature," "Standard Salmon Mortality").  
+      - Template selection dropdown with customization options.  
+      - System templates for standard scenarios and user-created custom templates.  
+      - Template versioning and sharing across users/geographies.  
+    - *Visual Data Editor:*  
+      - Interactive line charts for graphical data adjustment.  
+      - Click-and-drag functionality to modify individual points or draw trends.  
+      - Zoom and pan controls for precise editing across long timelines.  
+      - Real-time chart updates with immediate visual feedback.  
+    - *Formula-Based Input:*  
+      - Pattern generation using mathematical formulas (e.g., linear increase, step changes).  
+      - Dropdown selection of preset patterns (Constant, Linear Increase, Seasonal Variation).  
+      - Parameter input fields based on selected pattern (Start Value, End Value, Duration).  
+      - Automatic data generation eliminating repetitive manual entry.  
+    - *Real-Time Feedback and Preview:*  
+      - Live preview charts/tables updating as users modify data.  
+      - Summary statistics display (average temperature, total mortality).  
+      - Data validation with immediate error highlighting.  
+      - Export preview functionality before final model creation.  
+
 - **Scenario Creation**  
   - **Description:** Users create scenarios by combining TGC, FCR, and mortality models with initial conditions to simulate salmon farming outcomes.  
   - **Specifications:**  
     - *Inputs:*  
       - Selection of TGC, FCR, and mortality models from the model library.  
-      - Initial conditions: start date, duration (in days), initial fish count, initial average weight (grams).  
+      - Initial conditions: start date, duration (in days), initial fish count, genotype and supplier (can come from own Broodstock or external supplier).
+      - NB! At the outset it is not necessary to define start weight
       - Optional linkage to existing batches via `batch_batch` for real-data initialization.  
     - *Types:*  
       - **Hypothetical Scenarios:** Based on user-defined initial conditions.  
@@ -659,6 +694,49 @@ The Scenario Planning and Simulation feature comprises several interconnected co
       - Ability to duplicate scenarios for comparative analysis.  
       - Option to adjust parameters mid-simulation (e.g., change FCR model at a specific date).  
 
+- **Configurable Biological Parameters**  
+  - **Description:** The system provides flexible, admin-configurable biological parameters to accommodate different operational strategies and research findings.  
+  - **Architecture:**  
+    ```mermaid
+    graph TD
+        A[Biological Constraints System] --> B[BiologicalConstraints]
+        B --> C[StageConstraint]
+        
+        B --> D["Bakkafrost Standard<br/>300g+ smolt target"]
+        B --> E["Conservative<br/>Traditional limits"]
+        
+        C --> F[Weight Ranges]
+        C --> G[Temperature Ranges]
+        C --> H[Freshwater Limits]
+        
+        I[TGC Model] --> J[TGCModelStage]
+        K[FCR Model] --> L[FCRModelStage]
+        L --> M[FCRModelStageOverride]
+        N[Mortality Model] --> O[MortalityModelStage]
+        
+        P[Scenario] --> B
+        P --> I
+        P --> K
+        P --> N
+        
+        style D fill:#90EE90
+        style E fill:#FFE4B5
+        style P fill:#87CEEB
+    ```
+  - **Specifications:**  
+    - *Biological Constraint Sets:*  
+      - Named sets of biological rules (e.g., "Bakkafrost Standard", "Conservative", "Experimental").  
+      - Stage-specific weight ranges, temperature ranges, and freshwater limits.  
+      - Permission-based management (only scenario admin users can modify).  
+    - *Stage-Specific Overrides:*  
+      - TGC values and exponents can vary by lifecycle stage.  
+      - FCR values can have weight-based variations within stages.  
+      - Mortality rates can be customized per stage.  
+    - *Flexibility:*  
+      - No hardcoded limits - all parameters database-configurable.  
+      - Support for company-specific targets (e.g., Bakkafrost's 300g+ smolt).  
+      - Easy adjustment based on latest research findings.  
+
 - **Projection Calculations**  
   - **Description:** The system calculates projections based on the selected models and initial conditions.  
   - **Specifications:**  
@@ -666,15 +744,18 @@ The Scenario Planning and Simulation feature comprises several interconnected co
       - Daily weight increase calculated using the TGC model:  
         `Daily Growth = TGC * (Temperature)^n * (Current Weight)^m`  
         (where `n` and `m` are model-specific exponents, typically provided in the TGC model definition).  
+      - Stage-specific TGC values applied when configured.  
       - Aggregated to weekly/monthly averages for display.  
     - *Population Projection:*  
       - Daily or weekly population decrease:  
         `New Population = Current Population * (1 - Mortality Rate)`  
         Applied per time step based on model frequency.  
+      - Stage-specific mortality rates used when available.  
     - *Biomass Projection:*  
       - `Biomass (kg) = Population * Average Weight / 1000`.  
     - *Feed Consumption:*  
       - `Daily Feed (kg) = Daily Growth * FCR * Population / 1000`.  
+      - Stage and weight-specific FCR values applied.  
       - Accumulated over the scenario duration.  
     - *Harvest Timing:*  
       - Identifies dates when average weight reaches user-defined target weights (e.g., 4.5 kg).  
@@ -696,8 +777,8 @@ The Scenario Planning and Simulation feature comprises several interconnected co
 **Behavior**  
 - *Model Application:*  
   - TGC models apply daily growth increments using the specified temperature profile, defaulting to the last known value if no update is provided.  
-  - FCR models transition automatically as fish progress through lifecycle stages, determined by days since scenario start.  
   - Mortality rates adjust population continuously, with daily or weekly recalculation based on model settings.  
+  - FCR models transition automatically as fish progress through lifecycle stages, determined by days since scenario start. They rely on the registered growth (TGC) and mortality of the day in order to calculate the feed usage for the same day
 - *Dynamic Updates:*  
   - Projections recalculate instantly upon changes to models, initial conditions, or mid-scenario parameter adjustments.  
   - Users receive warnings if data inconsistencies arise (e.g., negative population).  
@@ -746,10 +827,12 @@ Scenario planning is a cornerstone of salmon farming management, enabling proact
     - The projection aligns with real-time batch data at the starting point.  
 
 **Additional Considerations**  
-- *Scalability:* The system must handle hundreds of scenarios and models without performance degradation, caching frequent calculations.  
-- *Usability:* Model selection and scenario setup should feature dropdowns and wizards to minimize errors. The system should allow users to create and manage models and scenarios in a user-friendly manner. This could entail importing Excel files , based on TGC, FCR and mortality templates, or using a wizard to create models and scenarios.  
-- *Extensibility:* Allow future integration of additional models (e.g., oxygen levels) via a modular framework.  
-- *Validation:* Input validation ensures realistic values (e.g., non-negative fish counts, plausible FCR ranges).
+- *Scalability:* The system must handle hundreds of scenarios and models without performance degradation, caching frequent calculations and supporting bulk data operations.  
+- *Usability:* Multi-method data entry system reduces complexity from 900+ manual inputs to manageable operations through CSV uploads, templates, and automated pattern generation. Model selection features guided wizards with validation and preview capabilities.  
+- *Data Entry Efficiency:* Template library and formula-based generation enable rapid model creation, while visual editors provide intuitive adjustment capabilities for fine-tuning.  
+- *User Experience:* Real-time feedback, preview functionality, and multiple input methods accommodate different user preferences and skill levels.  
+- *Extensibility:* Modular data entry framework allows future integration of additional models (e.g., oxygen levels) and input methods.  
+- *Validation:* Comprehensive input validation across all entry methods ensures realistic values, with immediate feedback and error prevention.
 
 #### 3.3.2 Predictive Health Management
 - **Purpose**: To proactively manage batch health using AI-driven insights.

@@ -20,6 +20,7 @@ from apps.batch.api.routers import router as batch_router
 from apps.inventory.api.routers import router as inventory_router
 from apps.health.api.routers import router as health_router
 from apps.broodstock.api.routers import router as broodstock_router
+from apps.scenario.api.routers import router as scenario_router
 # from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
@@ -47,6 +48,7 @@ router.registry.extend(infrastructure_router.registry)
 router.registry.extend(inventory_router.registry)
 router.registry.extend(health_router.registry)
 router.registry.extend(broodstock_router.registry)
+router.registry.extend(scenario_router.registry)
 
 urlpatterns = [
     # API documentation endpoints
@@ -66,5 +68,6 @@ urlpatterns = [
     path('inventory/', include((inventory_router.urls, 'inventory'))),
     path('health/', include((health_router.urls, 'health-api'))),
     path('broodstock/', include((broodstock_router.urls, 'broodstock'))),
+    path('scenario/', include((scenario_router.urls, 'scenario'))),
     path('users/', include('apps.users.urls')),
 ]
