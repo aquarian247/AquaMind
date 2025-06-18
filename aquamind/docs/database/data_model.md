@@ -794,6 +794,139 @@ The Broodstock Management app’s data model supports comprehensive management o
 - **JSON Fields**: Keep `traits` and `parameters` minimal, with structured formats (e.g., key-value pairs) and partial indexes for frequent queries.  
 - **Mobile Sync**: Ensure offline data entries (e.g., movements, egg logs) include temporary IDs, resolving conflicts during sync with server-side validation.
 
+#### 4.8 Scenario Planning (scenario app)
+
+The Scenario Planning app’s data model enables aquaculture managers to create, manage, and analyze hypothetical scenarios for salmon farming operations, projecting key metrics like fish growth, population, biomass, and feed consumption. It reuses existing models like `batch_lifecyclestage`, introduces normalized tables for integrity and querying, and integrates with apps like `batch` for real-time data initialization. The design ensures scalability for large projection datasets, supports audit logging for traceability, and matches the implementation complexity of Broodstock Management.
+
+**Core Entities and Attributes**
+
+- **TemperatureProfile** (New Table for Temperature Profiles)  
+  - `profile_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=255): Descriptive name (e.g., "Faroe Islands Winter").  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **TemperatureReading** (New Table for Temperature Data)  
+  - `reading_id` (PK): Unique identifier.  
+  - `profile_id` (FK): Link to `TemperatureProfile`.  
+  - `reading_date` (DateField): Date of the reading.  
+  - `temperature` (FloatField): Value in degrees Celsius (e.g., 12.5).  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **TGCModel** (New Table for TGC Models)  
+  - `model_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=255): Model name (e.g., "Scotland April TGC").  
+  - `location` (CharField, max_length=255): Location (e.g., "Scotland Site 1").  
+  - `release_period` (CharField, max_length=255): Release timing (e.g., "April").  
+  - `tgc_value` (FloatField): TGC coefficient (e.g., 0.025).  
+  - `exponent_n` (FloatField): Temperature exponent (e.g., 0.33).  
+  - `exponent_m` (FloatField): Weight exponent (e.g., 0.66).  
+  - `profile_id` (FK): Link to `TemperatureProfile`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **FCRModel** (New Table for FCR Models)  
+  - `model_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=255): Model name (e.g., "Standard FCR").  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **FCRModelStage** (New Table for FCR per Stage)  
+  - `model_id` (FK, PK): Link to `FCRModel`.  
+  - `stage_id` (FK, PK): Link to `batch_lifecyclestage`.  
+  - `fcr_value` (FloatField, min_value=0): FCR for the stage (e.g., 1.2).  
+  - `duration_days` (IntegerField, min_value=1): Stage duration in days (e.g., 90).  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **MortalityModel** (New Table for Mortality Models)  
+  - `model_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=255): Model name (e.g., "Low Mortality").  
+  - `frequency` (CharField, max_length=10, choices=[("daily", "Daily"), ("weekly", "Weekly")]): Rate application frequency.  
+  - `rate` (FloatField, min_value=0, max_value=100): Mortality rate percentage (e.g., 0.1).  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **Scenario** (New Table for Scenario Configurations)  
+  - `scenario_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=255): Scenario name (e.g., "Scotland April Sim").  
+  - `start_date` (DateField): Simulation start date.  
+  - `duration_days` (IntegerField, min_value=1): Total simulation days (e.g., 900).  
+  - `initial_count` (IntegerField, min_value=1): Initial fish count (e.g., 10000).  
+  - `genotype` (CharField, max_length=255): Fish genotype (e.g., "SalmoBreed").  
+  - `supplier` (CharField, max_length=255): Fish supplier (e.g., "AquaGen").  
+  - `initial_weight` (FloatField, nullable, min_value=0): Initial weight in grams (e.g., 50).  
+  - `tgc_model_id` (FK): Link to `TGCModel`.  
+  - `fcr_model_id` (FK): Link to `FCRModel`.  
+  - `mortality_model_id` (FK): Link to `MortalityModel`.  
+  - `batch_id` (FK, nullable): Link to `batch_batch` for real-data initialization.  
+  - `created_by` (FK): Link to `auth_user`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **ScenarioModelChange** (New Table for Model Changes)  
+  - `change_id` (PK): Unique identifier.  
+  - `scenario_id` (FK): Link to `Scenario`.  
+  - `change_day` (IntegerField, min_value=0): Day of change (e.g., 180).  
+  - `new_tgc_model_id` (FK, nullable): Link to new `TGCModel`.  
+  - `new_fcr_model_id` (FK, nullable): Link to new `FCRModel`.  
+  - `new_mortality_model_id` (FK, nullable): Link to new `MortalityModel`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **ScenarioProjection** (New Table for Daily Projections)  
+  - `projection_id` (PK): Unique identifier.  
+  - `scenario_id` (FK): Link to `Scenario`.  
+  - `projection_date` (DateField): Projection date.  
+  - `day_number` (IntegerField, min_value=0): Day offset from start (e.g., 45).  
+  - `average_weight` (FloatField, min_value=0): Fish weight in grams (e.g., 250.5).  
+  - `population` (FloatField, min_value=0): Fish count (e.g., 9950.3).  
+  - `biomass` (FloatField, min_value=0): Biomass in kilograms (e.g., 2491.2).  
+  - `daily_feed` (FloatField, min_value=0): Daily feed in kilograms (e.g., 30.5).  
+  - `cumulative_feed` (FloatField, min_value=0): Total feed in kilograms (e.g., 1200.7).  
+  - `temperature` (FloatField): Temperature in Celsius (e.g., 12.8).  
+  - `current_stage_id` (FK): Link to `batch_lifecyclestage`.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+- **batch_lifecyclestage** (Reused for Lifecycle Stages)  
+  - `stage_id` (PK): Unique identifier.  
+  - `name` (CharField, max_length=100): Stage name (e.g., "Smolt").  
+  - `description` (TextField, nullable): Stage details.  
+  - `created_at` (DateTimeField): Creation timestamp.  
+  - `updated_at` (DateTimeField): Last update timestamp.
+
+**Relationships**  
+- **TemperatureProfile** to **TemperatureReading**: One-to-many (one profile has many readings).  
+- **TemperatureProfile** to **TGCModel**: One-to-many (one profile used by many models).  
+- **TGCModel** to **Scenario**: One-to-many (one model used in many scenarios).  
+- **FCRModel** to **FCRModelStage**: One-to-many (one model defines many stages).  
+- **FCRModel** to **Scenario**: One-to-many (one model used in many scenarios).  
+- **MortalityModel** to **Scenario**: One-to-many (one model used in many scenarios).  
+- **Scenario** to **ScenarioModelChange**: One-to-many (one scenario has many changes).  
+- **Scenario** to **ScenarioProjection**: One-to-many (one scenario generates many projections).  
+- **batch_lifecyclestage** to **FCRModelStage**: One-to-many (one stage used in many FCR models).  
+- **batch_lifecyclestage** to **ScenarioProjection**: One-to-many (one stage applies to many projection days).  
+- **batch_batch** to **Scenario**: One-to-many (one batch initializes many scenarios).
+
+**Constraints**  
+- Unique constraint on `name` in `TemperatureProfile`, `TGCModel`, `FCRModel`, and `MortalityModel`.  
+- Foreign key constraints enforce referential integrity (e.g., `profile_id`, `model_id`, `scenario_id`).  
+- `frequency` in `MortalityModel` restricted to "daily" or "weekly" via choices.  
+- `rate` in `MortalityModel` between 0 and 100.  
+- `change_day` in `ScenarioModelChange` nullable or between 0 and `Scenario.duration_days - 1`.  
+- `initial_count` and `duration_days` in `Scenario` must be positive.  
+
+**Additional Considerations**  
+- **Scalability**: Handle large datasets in `ScenarioProjection` (e.g., 900+ rows per scenario) with indexes on `scenario_id` and `projection_date`. Use TimescaleDB hypertables for `ScenarioProjection`, partitioned by `projection_date`, if data exceeds 1M rows.  
+- **Auditing**: Apply `django-auditlog` to `Scenario`, `ScenarioModelChange`, `TGCModel`, `FCRModel`, and `MortalityModel` for traceability and compliance.  
+- **Validation**: Enforce constraints via model validation (e.g., `fcr_value > 0`, `initial_weight >= 0` or null, `rate` between 0-100).  
+- **Integration**: Link `batch_id` in `Scenario` to `batch_batch` for real-time data; optionally sync `TemperatureReading` with `environmental_reading`.  
+- **TimescaleDB**: Optimize `ScenarioProjection` with hypertables for time-series efficiency.  
+- **JSON Fields**: Avoid JSON fields to maintain normalization; all data is structured.  
+- **Mobile Sync**: Support offline scenario creation with temporary IDs, resolving conflicts during server sync.
+
 ## 5. Planned Data Model Domains (Not Yet Implemented)
 
 ### 5.1 Operational Planning
