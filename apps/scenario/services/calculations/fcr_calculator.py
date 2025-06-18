@@ -36,8 +36,8 @@ class FCRCalculator:
         self.stage_duration_map = {}
         
         for stage_fcr in self.model.stages.select_related('stage'):
-            self.stage_fcr_map[stage_fcr.stage.stage_id] = float(stage_fcr.fcr_value)
-            self.stage_duration_map[stage_fcr.stage.stage_id] = stage_fcr.duration_days
+            self.stage_fcr_map[stage_fcr.stage.id] = float(stage_fcr.fcr_value)
+            self.stage_duration_map[stage_fcr.stage.id] = stage_fcr.duration_days
     
     def get_fcr_for_stage(
         self,
@@ -54,21 +54,23 @@ class FCRCalculator:
         Returns:
             FCR value for the stage
         """
-        # First try to find stage-specific FCR
-        try:
-            fcr_stage = self.model.stages.get(stage__name=stage)
-            base_fcr = fcr_stage.fcr_value
-            
+        # First try to find stage-specific FCR from map
+        fcr_value = self.stage_fcr_map.get(stage.id)
+        if fcr_value is not None:
             # Check for weight-based overrides within the stage
-            if weight_g and hasattr(fcr_stage, 'overrides'):
-                for override in fcr_stage.overrides.all().order_by('min_weight_g'):
-                    if override.min_weight_g <= weight_g <= override.max_weight_g:
-                        return float(override.fcr_value)
+            try:
+                fcr_stage = self.model.stages.get(stage=stage)
+                if weight_g and hasattr(fcr_stage, 'overrides'):
+                    for override in fcr_stage.overrides.all().order_by('min_weight_g'):
+                        if override.min_weight_g <= weight_g <= override.max_weight_g:
+                            return float(override.fcr_value)
+            except:
+                pass
             
-            return base_fcr
-        except:
-            # No stage-specific FCR found, use default
-            return 1.2  # Default FCR if not specified
+            return fcr_value
+        
+        # No stage-specific FCR found, use default
+        return 1.2  # Default FCR if not specified
     
     def calculate_daily_feed_with_fcr(
         self,
@@ -290,7 +292,7 @@ class FCRCalculator:
         days = math.log(weight_ratio) / math.log(1 + daily_growth_rate)
         
         # Check against stage duration if defined
-        stage_duration = self.stage_duration_map.get(stage.stage_id)
+        stage_duration = self.stage_duration_map.get(stage.id)
         if stage_duration:
             # Return minimum of calculated and defined duration
             return min(int(math.ceil(days)), stage_duration)

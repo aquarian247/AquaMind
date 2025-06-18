@@ -325,7 +325,7 @@ class FCRModelViewSet(viewsets.ModelViewSet):
     def stage_summary(self, request, pk=None):
         """Get summary of stages for an FCR model."""
         fcr_model = self.get_object()
-        stages = fcr_model.stages.select_related('stage').order_by('stage__typical_min_weight_g')
+        stages = fcr_model.stages.select_related('stage').order_by('stage__expected_weight_min_g')
         
         summary = {
             'model_name': fcr_model.name,
@@ -828,10 +828,7 @@ class DataEntryViewSet(viewsets.ViewSet):
         service = BulkDataImportService()
         
         try:
-            template_content = service.generate_csv_template(
-                data_type, 
-                include_sample_data=include_sample
-            )
+            template_content = service.generate_csv_template(data_type)
             
             response = HttpResponse(template_content, content_type='text/csv')
             response['Content-Disposition'] = f'attachment; filename="{data_type}_template.csv"'

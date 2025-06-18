@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from apps.batch.models import LifeCycleStage, Batch, Species
-from apps.infrastructure.models import Location, Area, Container, ContainerType
+from apps.infrastructure.models import Geography, Area, Container, ContainerType
 from ..models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
     FCRModelStage, MortalityModel, Scenario, ScenarioProjection,
@@ -83,7 +83,7 @@ class BaseScenarioAPITestCase(TestCase):
             FCRModelStage.objects.create(
                 model=self.fcr_model,
                 stage=stage,
-                fcr_value=1.0 + (stage.typical_min_weight_g or 0) / 1000,
+                fcr_value=1.0 + (float(stage.expected_weight_min_g or 0)) / 1000,
                 duration_days=60
             )
         
@@ -133,13 +133,21 @@ class BaseScenarioAPITestCase(TestCase):
             ('harvest', 'Harvest', 1000.0, 10000.0)
         ]
         
-        for name, display, min_weight, max_weight in stages:
+        # Create a species first
+        from apps.batch.models import Species
+        species = Species.objects.create(
+            name='Atlantic Salmon',
+            scientific_name='Salmo salar'
+        )
+        
+        for i, (name, display, min_weight, max_weight) in enumerate(stages):
             LifeCycleStage.objects.create(
                 name=name,
-                display_name=display,
-                typical_min_weight_g=min_weight,
-                typical_max_weight_g=max_weight,
-                is_active=True
+                species=species,
+                order=i + 1,
+                description=display,
+                expected_weight_min_g=min_weight,
+                expected_weight_max_g=max_weight
             )
     
     def get_api_url(self, viewname, **kwargs):
@@ -224,7 +232,7 @@ class TGCModelAPITests(BaseScenarioAPITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'Duplicated TGC Model')
-        self.assertEqual(response.data['tgc_value'], str(self.tgc_model.tgc_value))
+        self.assertEqual(float(response.data['tgc_value']), self.tgc_model.tgc_value)
         
         # Test duplicate name error
         response = self.client.post(url, data, format='json')
@@ -387,6 +395,9 @@ class ScenarioAPITests(BaseScenarioAPITestCase):
             'start_date': date.today().isoformat(),
             'duration_days': 600,
             'initial_count': 10000,
+            'initial_weight': 50.0,
+            'genotype': 'Test',
+            'supplier': 'Test',
             'tgc_model': self.tgc_model.model_id,
             'fcr_model': self.fcr_model.model_id,
             'mortality_model': self.mortality_model.model_id
@@ -478,6 +489,9 @@ class ScenarioAPITests(BaseScenarioAPITestCase):
             start_date=date.today(),
             duration_days=600,
             initial_count=10000,
+            initial_weight=50.0,
+            genotype='Test',
+            supplier='Test',
             tgc_model=self.tgc_model,
             fcr_model=self.fcr_model,
             mortality_model=self.mortality_model,
@@ -501,7 +515,8 @@ class ScenarioAPITests(BaseScenarioAPITestCase):
         # Cannot run projection on other user's scenario
         url = f"{self.get_api_url('scenarios')}{scenario.scenario_id}/run_projection/"
         response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # Should get 404 since the scenario is not visible to this user
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class BiologicalConstraintsAPITests(BaseScenarioAPITestCase):
@@ -700,6 +715,7 @@ class SummaryStatsAPITests(BaseScenarioAPITestCase):
                 start_date=date.today() - timedelta(days=i),
                 duration_days=600 + i * 100,
                 initial_count=10000,
+                initial_weight=50.0,
                 genotype='Test',
                 supplier='Test',
                 tgc_model=self.tgc_model,

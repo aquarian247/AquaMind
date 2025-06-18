@@ -360,7 +360,7 @@ class Scenario(models.Model):
                 })
         else:
             # Fallback to basic validation if no constraints set
-            if self.initial_weight < 0.1:
+            if self.initial_weight is not None and self.initial_weight < 0.1:
                 raise ValidationError({
                     'initial_weight': 'Initial weight too low. Minimum is 0.1g (egg stage).'
                 })
