@@ -50,6 +50,23 @@ jobs:
         coverage report --fail-under=40
       # Environment variables for PostgreSQL removed as CI now uses SQLite
 
+    # ------------------------------------------------------------------
+    # Cross-repo API Contract Synchronisation
+    # ------------------------------------------------------------------
+    - name: Generate OpenAPI spec
+      run: |
+        # drf-spectacular generates unified OpenAPI 3.1 schema
+        python manage.py spectacular --file api/openapi.yaml
+
+    - name: Upload OpenAPI spec artifact (api-spec)
+      # This artifact is consumed by the front-end workflow that regenerates
+      # the TypeScript client, ensuring both repos stay in sync.
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-spec
+        path: api/openapi.yaml
+        if-no-files-found: error
+
   deploy-staging:
     needs: test
     if: github.ref == 'refs/heads/develop'
