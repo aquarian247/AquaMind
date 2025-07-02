@@ -45,6 +45,8 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'corsheaders',
+    # OpenAPI 3.1 schema generation (migration target)
+    'drf_spectacular',
     'drf_yasg',
     'simple_history',
 ]
@@ -215,7 +217,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    # Use drf-spectacular for OpenAPI 3.1 generation
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # JWT settings
@@ -261,6 +264,15 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         }
     }
+}
+
+# drf-spectacular settings (single source of truth for AquaMind API)
+SPECTACULAR_SETTINGS = {
+    "TITLE": "AquaMind API",
+    "DESCRIPTION": "Unified OpenAPI 3.1 specification for the AquaMind backend.",
+    "VERSION": "v1",
+    # Do not serve the schema by default; a dedicated URL is configured in urls.py
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # Using Django's default User model with extended profiles
