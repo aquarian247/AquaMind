@@ -58,6 +58,41 @@ jobs:
         # drf-spectacular generates unified OpenAPI 3.1 schema
         python manage.py spectacular --file api/openapi.yaml
 
+    # ------------------------------------------------------------------
+    # Contract validation – ensure implementation matches the OpenAPI spec
+    # ------------------------------------------------------------------
+    - name: Validate API contract with Schemathesis
+      run: |
+        # Start Django dev server in background
+        python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &
+        SERVER_PID=$!
+
+        # Wait for server to be ready (max 60 s)
+        ATTEMPTS=0
+        until curl -s http://127.0.0.1:8000/ > /dev/null; do
+          ATTEMPTS=$((ATTEMPTS+1))
+          if [ $ATTEMPTS -gt 30 ]; then
+            echo "Server did not start in time"; kill $SERVER_PID; exit 1
+          fi
+          echo "⏳ Waiting for server to start…"
+          sleep 2
+        done
+        echo "✅ Django server is up – running Schemathesis"
+
+        # Install schemathesis (already in requirements but ensure CLI present)
+        pip install --quiet schemathesis
+
+        # Run contract checks
+        schemathesis run \
+          --base-url=http://127.0.0.1:8000 \
+          --checks all \
+          api/openapi.yaml
+        STATUS=$?
+
+        echo "⏹  Stopping Django server"
+        kill $SERVER_PID
+        exit $STATUS
+
     - name: Upload OpenAPI spec artifact (api-spec)
       # This artifact is consumed by the front-end workflow that regenerates
       # the TypeScript client, ensuring both repos stay in sync.

@@ -30,5 +30,7 @@ pytest==7.4.4
 pytest-django==4.7.0
 flake8==7.0.0
 black==24.1.1
+# Contract testing (validates backend responses against OpenAPI spec)
+schemathesis==3.27.6
 # Frontend (Vue.js will be installed separately)
 django-simple-history==3.8.0
