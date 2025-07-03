@@ -16,6 +16,9 @@ pandas==2.2.0
 numpy==1.26.3
 # API documentation
 drf-yasg==1.21.7
+# OpenAPI 3.1 generation & UI (migration target)
+drf-spectacular==0.27.1
+drf-spectacular-sidecar==2024.5.1
 # JWT Authentication
 djangorestframework-simplejwt==5.3.1
 Pillow==10.1.0  # For ImageField support
@@ -27,5 +30,7 @@ pytest==7.4.4
 pytest-django==4.7.0
 flake8==7.0.0
 black==24.1.1
+# Contract testing (validates backend responses against OpenAPI spec)
+schemathesis==3.39.16
 # Frontend (Vue.js will be installed separately)
 django-simple-history==3.8.0

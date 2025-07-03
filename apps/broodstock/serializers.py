@@ -316,4 +316,5 @@ class EggProductionDetailSerializer(EggProductionSerializer):
     batch_assignments = BatchParentageSerializer(many=True, read_only=True)
     
     class Meta(EggProductionSerializer.Meta):
-        fields = EggProductionSerializer.Meta.fields
+        # Extend parent fields with nested batch assignments
+        fields = EggProductionSerializer.Meta.fields + ['batch_assignments']
