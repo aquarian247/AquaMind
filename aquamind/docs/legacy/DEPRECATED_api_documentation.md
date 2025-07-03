@@ -1,3 +1,10 @@
+> **⚠️ Deprecated — superseded by Swagger / OpenAPI UI**
+>
+> This Markdown document is no longer maintained.  
+> For the latest and authoritative API reference please visit:
+> - **Swagger UI**: `/api/schema/swagger-ui/`  
+> - **ReDoc**: `/api/schema/redoc/`
+
 # AquaMind API Documentation
 
 ## Overview
