@@ -20,10 +20,19 @@ import os
 import sys
 import django
 from django.conf import settings
+from pathlib import Path
 
 
 def setup_django():
     """Set up Django environment."""
+    # ------------------------------------------------------------------
+    # Ensure the project root is on PYTHONPATH so `import aquamind` works
+    # scripts/ci/create_test_token.py -> ../../  == project root
+    # ------------------------------------------------------------------
+    project_root = Path(__file__).resolve().parents[2]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
     # Allow settings module to be specified as argument
     settings_module = 'aquamind.settings_ci'
     for arg in sys.argv[1:]:
