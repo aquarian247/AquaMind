@@ -67,9 +67,22 @@ jobs:
         # Prepare database for the live dev-server that Schemathesis will hit
         # (The earlier migration step ran against a *different* SQLite file /
         # in-memory DB used by the test runner. We need to migrate the runtime
-        # DB as well to avoid “no such table: auth_user” errors.)
+        # DB as well to avoid "no such table: auth_user" errors.)
         # ------------------------------------------------------------------
-        python manage.py migrate --settings=aquamind.settings_ci --noinput
+        # Capture migration output to extract the CI auth token
+        MIGRATION_OUTPUT=$(python manage.py migrate --settings=aquamind.settings_ci --noinput)
+        
+        # Extract the token from migration output using grep
+        TOKEN=$(echo "$MIGRATION_OUTPUT" | grep "CI_AUTH_TOKEN:" | cut -d':' -f2)
+        
+        if [ -z "$TOKEN" ]; then
+          echo "❌ Failed to extract auth token from migration output"
+          echo "$MIGRATION_OUTPUT"
+          exit 1
+        fi
+        
+        echo "::add-mask::$TOKEN"
+        echo "✅ CI auth token extracted from migration"
 
         # Start Django dev server in background
         python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &
@@ -89,17 +102,6 @@ jobs:
 
         # Install schemathesis (already in requirements but ensure CLI present)
         pip install --quiet schemathesis
-
-        # ---------------------------------------------------------------
-        # 🔐  Create a CI test user & obtain an auth token
-        # ---------------------------------------------------------------
-        echo "🔐  Creating CI auth token"
-
-        # Use dedicated helper script that calls the running API to create / fetch
-        # the token via HTTP, avoiding separate in-memory DB issues.
-        TOKEN=$(python scripts/ci/create_test_token.py --server-url=http://127.0.0.1:8000)
-        echo "::add-mask::$TOKEN"
-        echo "✅  CI auth token retrieved"
 
         # Run contract checks
         schemathesis run \

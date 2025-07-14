@@ -34,9 +34,14 @@ def create_ci_test_user(apps, schema_editor):
     
     # Create auth token for the user
     Token = apps.get_model('authtoken', 'Token')
-    Token.objects.create(user=user)
+    token, _ = Token.objects.get_or_create(user=user)
     
-    print("✅ Created CI test user 'schemathesis_ci' with auth token")
+    # ------------------------------------------------------------------
+    # Expose the token so the CI helper script can read it from stdout.
+    # Use a simple, grep-friendly prefix that is unlikely to appear
+    # elsewhere in the migration output.
+    # ------------------------------------------------------------------
+    print(f"CI_AUTH_TOKEN:{token.key}")
 
 
 def remove_ci_test_user(apps, schema_editor):
