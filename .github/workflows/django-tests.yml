@@ -95,8 +95,9 @@ jobs:
         # ---------------------------------------------------------------
         echo "🔐  Creating CI auth token"
 
-        # Use dedicated helper (added under scripts/ci) to create / fetch token
-        TOKEN=$(python scripts/ci/create_test_token.py --settings=aquamind.settings_ci)
+        # Use dedicated helper script that calls the running API to create / fetch
+        # the token via HTTP, avoiding separate in-memory DB issues.
+        TOKEN=$(python scripts/ci/create_test_token.py --server-url=http://127.0.0.1:8000)
         echo "::add-mask::$TOKEN"
         echo "✅  CI auth token retrieved"
 

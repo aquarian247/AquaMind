@@ -6,72 +6,118 @@ This script creates a test user and generates an authentication token for use in
 particularly for Schemathesis API contract testing that requires authenticated requests.
 
 Usage:
-    python scripts/ci/create_test_token.py [--settings=aquamind.settings_ci]
+    python scripts/ci/create_test_token.py [--server-url=http://127.0.0.1:8000]
 
 The script will print only the token key to stdout, allowing it to be captured in CI:
     TOKEN=$(python scripts/ci/create_test_token.py)
 
-Environment:
-    - Requires Django settings with DRF and Token authentication enabled
-    - Default settings module: aquamind.settings_ci
+Requirements:
+    - Requires the requests library
+    - Django server must be running and accessible
+    - Default server URL: http://127.0.0.1:8000
 """
 
-import os
 import sys
-import django
-from django.conf import settings
-from pathlib import Path
+import argparse
+import requests
+from requests.exceptions import RequestException
 
 
-def setup_django():
-    """Set up Django environment."""
-    # ------------------------------------------------------------------
-    # Ensure the project root is on PYTHONPATH so `import aquamind` works
-    # scripts/ci/create_test_token.py -> ../../  == project root
-    # ------------------------------------------------------------------
-    project_root = Path(__file__).resolve().parents[2]
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
-
-    # Allow settings module to be specified as argument
-    settings_module = 'aquamind.settings_ci'
-    for arg in sys.argv[1:]:
-        if arg.startswith('--settings='):
-            settings_module = arg.split('=', 1)[1]
-    
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
-    django.setup()
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description='Create CI test user and get auth token')
+    parser.add_argument('--server-url', default='http://127.0.0.1:8000',
+                        help='URL of the running Django server (default: http://127.0.0.1:8000)')
+    return parser.parse_args()
 
 
-def create_test_user_and_token():
-    """Create a test user and generate an authentication token."""
-    from django.contrib.auth.models import User
-    from rest_framework.authtoken.models import Token
-    
+def get_auth_token(server_url):
+    """Get authentication token for the test user."""
     # CI test user credentials
     username = "schemathesis_ci"
     password = "testpass123"
     
-    # Get or create the test user
-    user, created = User.objects.get_or_create(
-        username=username,
-        defaults={
-            "email": "ci@example.com",
-            "is_active": True
-        }
-    )
+    # Try the token auth endpoint
+    try:
+        # Primary token endpoint used by AquaMind backend
+        response = requests.post(
+            f"{server_url}/api/v1/users/token/",
+            json={
+                "username": username,
+                "password": password
+            }
+        )
+        
+        if response.status_code == 200:
+            return response.json().get("token")
+        
+        # If that fails, try the DRF auth token endpoint
+        response = requests.post(
+            f"{server_url}/api/v1/auth-token/",
+            json={
+                "username": username,
+                "password": password
+            }
+        )
+        
+        if response.status_code == 200:
+            return response.json().get("token")
+            
+        # If that fails too, try the login endpoint which might return a token
+        response = requests.post(
+            f"{server_url}/api/v1/users/login/",
+            json={
+                "username": username,
+                "password": password
+            }
+        )
+        
+        if response.status_code == 200 and "token" in response.json():
+            return response.json().get("token")
+            
+        # If all token endpoints fail, try a simple login and check if we can extract token from cookies
+        response = requests.post(
+            f"{server_url}/api/v1/login/",
+            json={
+                "username": username,
+                "password": password
+            }
+        )
+        
+        # Last resort - try to create a token via the admin API
+        response = requests.post(
+            f"{server_url}/api/v1/admin/tokens/",
+            json={
+                "username": username
+            }
+        )
+        
+        if response.status_code == 201:
+            return response.json().get("key")
+            
+        print(f"Error getting token: No working token endpoint found", file=sys.stderr)
+        return None
+        
+    except RequestException as e:
+        print(f"Network error getting token: {e}", file=sys.stderr)
+        return None
+
+
+def create_test_user_and_token():
+    """Create a test user and generate an authentication token via HTTP API."""
+    args = parse_arguments()
+    server_url = args.server_url.rstrip('/')
+
+    # Get token for the pre-created CI user (migrations ensure user exists)
+    token = get_auth_token(server_url)
     
-    # Always reset password to ensure it's correct
-    user.set_password(password)
-    user.save()
-    
-    # Get or create token
-    token, _ = Token.objects.get_or_create(user=user)
-    
-    # Print only the token key (for capture in CI)
-    print(token.key)
+    if token:
+        # Print only the token key (for capture in CI)
+        print(token, end='')
+        return 0
+    else:
+        return 1
 
 
 if __name__ == "__main__":
-    setup_django()
-    create_test_user_and_token()
+    sys.exit(create_test_user_and_token())

@@ -9,7 +9,10 @@ from .settings import *  # noqa
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',  # Use in-memory SQLite database for tests
+        # Use a persistent SQLite file so that both the migration step and the
+        # subsequently-started dev-server share the same schema & data.
+        # BASE_DIR comes from the base settings we just imported.
+        'NAME': BASE_DIR / 'ci.sqlite3',
     }
 }
 
