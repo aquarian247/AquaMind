@@ -73,6 +73,11 @@ jobs:
         python manage.py migrate --settings=aquamind.settings_ci --noinput
 
         # Obtain / create the CI auth token using a dedicated management command.
+        # First run with --debug so any issues are printed to stderr for diagnosis
+        # (ignore its exit status so the workflow continues to the actual token capture)
+        python manage.py get_ci_token --settings=aquamind.settings_ci --debug || true
+
+        # Now run normally and capture the token value for subsequent authenticated requests
         TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci)
 
         if [ -z "$TOKEN" ]; then
