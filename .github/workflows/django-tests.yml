@@ -86,21 +86,28 @@ jobs:
         # 🔐  Create a CI test user & obtain an auth token
         # ---------------------------------------------------------------
         echo "🔐  Creating CI auth token"
-        TOKEN=$(python manage.py shell --settings=aquamind.settings_ci - <<'PY'
+
+        # Write a small helper to a temporary file (avoids YAML-breaking heredocs)
+        cat <<'PY' > /tmp/gen_token.py
+import os, django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aquamind.settings_ci")
+django.setup()
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 username = "schemathesis_ci"
 password = "testpass123"
 
-user, _ = User.objects.get_or_create(username=username, defaults={"email": "ci@example.com"})
+user, _ = User.objects.get_or_create(username=username,
+                                     defaults={"email": "ci@example.com"})
 user.set_password(password)
 user.save()
 
 token, _ = Token.objects.get_or_create(user=user)
 print(token.key)
 PY
-        )
+
+        TOKEN=$(python /tmp/gen_token.py)
         echo "::add-mask::$TOKEN"
         echo "✅  CI auth token retrieved"
 
