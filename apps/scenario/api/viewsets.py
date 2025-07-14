@@ -756,6 +756,9 @@ class DataEntryViewSet(viewsets.ViewSet):
     Provides endpoints for various data entry methods.
     """
     permission_classes = [IsAuthenticated]
+    # Base serializer so drf-spectacular can infer request / response schema.
+    # Individual @action methods still override validation logic as needed.
+    serializer_class = CSVUploadSerializer
     
     @action(detail=False, methods=['post'])
     def validate_csv(self, request):

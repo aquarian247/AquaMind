@@ -1,5 +1,5 @@
 from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
@@ -7,16 +7,32 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from django.conf import settings
 from django.contrib.auth.models import User
+from drf_spectacular.utils import extend_schema
 
-class CustomObtainAuthToken(APIView):
+# Local serializers for request / response documentation
+from .serializers import AuthTokenSerializer, AuthTokenResponseSerializer
+
+# --------------------------------------------------------------------------- #
+# Authentication Views                                                       #
+# --------------------------------------------------------------------------- #
+
+@extend_schema(
+    request=AuthTokenSerializer,
+    responses={200: AuthTokenResponseSerializer},
+    tags=["auth"],
+)
+class CustomObtainAuthToken(GenericAPIView):
     """
     Custom view for obtaining auth tokens that also returns user info
     """
     permission_classes = [AllowAny]
+    serializer_class = AuthTokenSerializer
     
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data["username"]
+        password = serializer.validated_data["password"]
         
         if not username or not password:
             return Response({'error': 'Please provide both username and password'}, 
@@ -39,6 +55,12 @@ class CustomObtainAuthToken(APIView):
         })
 
 
+@extend_schema(
+    responses={200: AuthTokenResponseSerializer},
+    description="Development-only endpoint that returns an auth token without "
+                "credentials. **Disabled in production.**",
+    tags=["auth"],
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def dev_auth(request):

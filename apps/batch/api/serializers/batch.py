@@ -9,6 +9,7 @@ from rest_framework import serializers
 from apps.batch.models import Batch
 from apps.batch.api.serializers.utils import format_decimal, validate_date_order
 from apps.batch.api.serializers.base import BatchBaseSerializer
+from drf_spectacular.utils import extend_schema_field
 
 
 class BatchSerializer(BatchBaseSerializer):
@@ -79,8 +80,13 @@ class BatchSerializer(BatchBaseSerializer):
             'updated_at': {'help_text': "Timestamp of the last update to the batch record (read-only)."}
         }
 
+    # Dict with keys: id(int), name(str), order(int) or ``None`` when unavailable
+    @extend_schema_field(serializers.JSONField(allow_null=True))
     def get_current_lifecycle_stage(self, obj):
         """Get the current lifecycle stage based on active assignments."""
+        # Returned dict contains id(int), name(str), order(int)
+        # Using JSONField for flexible but typed representation
+        # (alternative would be DictField with explicit children but JSONField is simpler here)
         latest_assignment = obj.batch_assignments.filter(
             is_active=True).order_by('-assignment_date').first()
         if latest_assignment and latest_assignment.lifecycle_stage:
@@ -91,12 +97,14 @@ class BatchSerializer(BatchBaseSerializer):
             }
         return None
 
+    @extend_schema_field(serializers.IntegerField())
     def get_days_in_production(self, obj):
         """Calculate the number of days since the batch started."""
         if obj.start_date:
             return (date.today() - obj.start_date).days
         return 0
 
+    @extend_schema_field(serializers.ListField(child=serializers.IntegerField()))
     def get_active_containers(self, obj):
         """Get a list of active container IDs for this batch."""
         active_assignments = obj.batch_assignments.filter(is_active=True)
@@ -105,10 +113,12 @@ class BatchSerializer(BatchBaseSerializer):
             for assignment in active_assignments if assignment.container
         ]
 
+    @extend_schema_field(serializers.FloatField())
     def get_calculated_biomass_kg(self, obj):
         """Get the calculated biomass in kilograms, formatted."""
         return format_decimal(obj.calculated_biomass_kg)
 
+    @extend_schema_field(serializers.FloatField())
     def get_calculated_avg_weight_g(self, obj):
         """Get the calculated average weight in grams, formatted."""
         return format_decimal(obj.calculated_avg_weight_g)

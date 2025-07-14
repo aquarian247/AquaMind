@@ -82,10 +82,33 @@ jobs:
         # Install schemathesis (already in requirements but ensure CLI present)
         pip install --quiet schemathesis
 
+        # ---------------------------------------------------------------
+        # 🔐  Create a CI test user & obtain an auth token
+        # ---------------------------------------------------------------
+        echo "🔐  Creating CI auth token"
+        TOKEN=$(python manage.py shell --settings=aquamind.settings_ci - <<'PY'
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
+username = "schemathesis_ci"
+password = "testpass123"
+
+user, _ = User.objects.get_or_create(username=username, defaults={"email": "ci@example.com"})
+user.set_password(password)
+user.save()
+
+token, _ = Token.objects.get_or_create(user=user)
+print(token.key)
+PY
+        )
+        echo "::add-mask::$TOKEN"
+        echo "✅  CI auth token retrieved"
+
         # Run contract checks
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
+          --header "Authorization: Token $TOKEN" \
           api/openapi.yaml
         STATUS=$?
 

@@ -1,36 +1,39 @@
-# Factory.ai Workspace – AquaMind Setup Guide  
-*Version 1.0 – July 2025*
+# Factory.ai Workspace Setup – “AquaMind”
 
-This document walks you through creating a **Factory.ai** workspace that links the AquaMind backend & frontend repositories, enables automatic API-spec synchronisation, and configures Code- & Review-Droids.
-
----
-
-## 1 Prerequisites
-
-| Item | Notes |
-|------|-------|
-| GitHub repos | `github.com/aquarian247/AquaMind` (backend)  &  `github.com/aquarian247/AquaMind-Frontend` (frontend) |
-| PAT secret | Fine-grained PAT scoped to **AquaMind-Frontend**, stored in backend repo as `FRONTEND_REPO_PAT` (already done). |
-| Branches | `feature/api-contract-unification` pushed on both repos. |
-| CI | GitHub Actions files merged (backend → OpenAPI generation & Schemathesis, frontend → type-check & build). |
+This guide walks you through creating the Factory.ai workspace required by **Section&nbsp;5** of the *API Contract Unification Plan*.  
+The workspace knits the backend (`AquaMind`) and frontend (`AquaMind-Frontend`) repositories together, automating OpenAPI generation and client regeneration.
 
 ---
 
-## 2 Workspace JSON Configuration (Section 5)
+## 1 Prerequisites
 
-Copy-paste this into the **“Create Workspace → Advanced → JSON”** panel:
+| Tool | Version | Notes |
+|------|---------|-------|
+| Factory Bridge | ≥ 0.19 | Installed & running locally |
+| Git | any recent | Repos must be cloned locally *(or use Factory’s “clone” dialog)* |
+| Python | 3.11.x | Matches backend requirements |
+| Node JS | ≥ 18 LTS | Matches frontend requirements |
+| Bash / PowerShell | | For `scripts/regenerate_api.(sh|ps1)` |
+
+Make sure you can run both projects individually before integrating them in Factory.
+
+---
+
+## 2 Workspace JSON Configuration
+
+Copy the JSON block below; you will paste it into the Factory workspace editor in Step 3.
 
 ```jsonc
 {
   "workspace": "AquaMind",
   "repositories": [
-    { "url": "github.com/aquarian247/AquaMind",          "mount": "/backend"  },
-    { "url": "github.com/aquarian247/AquaMind-Frontend", "mount": "/frontend" }
+    { "url": "github.com/aquarian247/AquaMind",           "mount": "/backend"  },
+    { "url": "github.com/aquarian247/AquaMind-Frontend",  "mount": "/frontend" }
   ],
   "watch": {
     "/backend/api/openapi.yaml": {
       "on_change": "run-script",
-      "script": "/frontend/scripts/regenerate_api.sh"
+      "script": "/frontend/scripts/regenerate_api.sh --frontend --validate"
     }
   },
   "droids": {
@@ -40,87 +43,87 @@ Copy-paste this into the **“Create Workspace → Advanced → JSON”** panel:
 }
 ```
 
-### What it does  
-
-| Key | Purpose |
-|-----|---------|
-| `repositories` | Mounts both repos into one workspace (`/backend`, `/frontend`). |
-| `watch` | Whenever **openapi.yaml** changes in the backend, Factory runs `scripts/regenerate_api.sh` inside the frontend mount (equivalent to `npm run generate:api`). |
-| `droids.code` | Allows Code-Droid to automate follow-up fixes. |
-| `droids.review.rules` | Review-Droid will auto-assign PRs labelled `spec-sync`. Our cross-repo workflow already applies this label. |
+Key points  
+• The **watch rule** fires whenever the generated `openapi.yaml` changes, running the Bash script that (a) validates the spec and (b) regenerates the TS client in the frontend repo.  
+• If you are on Windows, change the `script` path to `.ps1` **or** keep Bash via WSL/Git Bash.  
+• Labels under `droids.review.rules` route PRs with `spec-sync` to Review-Droid automatically.
 
 ---
 
-## 3 Step-by-Step Setup in Factory.ai
+## 3 Step-by-Step Setup
 
-1. **Create Workspace**  
-   • Click **“New Workspace”** → choose **Multi-Repo**  
-   • Paste the JSON config above → **Create**.
+### 3.1 Create the Workspace
 
-2. **Confirm Repo Mounts**  
-   In the left sidebar you should see  
-   - `/backend/...` (Django project)  
-   - `/frontend/...` (React project)
+1. Open Factory → *Workspaces* → **New Workspace**.  
+2. Name it **AquaMind**.  
+3. Select **Manual JSON** mode (or *Advanced* tab).  
+4. Paste the JSON configuration above, **editing paths if your folder layout differs**.  
+5. Click **Create**.
 
-3. **Add `scripts/regenerate_api.sh`**  
-   Inside **/frontend/scripts/** create:
+### 3.2 Mount Local Repositories
 
+Factory will prompt you to choose local folders for each `mount` path:
+
+| Mount Path | Local Folder (example) |
+|------------|------------------------|
+| `/backend` | `C:\Users\YOU\Projects\AquaMind` |
+| `/frontend`| `C:\Users\YOU\Projects\AquaMind-Frontend` |
+
+Verify that `manage.py` lives in `/backend` and `package.json` in `/frontend`.
+
+### 3.3 Configure Environment
+
+Inside the workspace settings:
+
+1. Set **Python interpreter** for `/backend` to Python 3.11.  
+2. Add a **virtual environment** or point to an existing one with all backend deps installed (`pip install -r requirements.txt`).  
+3. For `/frontend` enable **Node runtime** and run `npm install` once (Terminal tab).  
+4. Optional: add workspace-level *Env Vars* (`DJANGO_SETTINGS_MODULE=aquamind.settings`) if you switch settings frequently.
+
+### 3.4 Verify Watch Rule
+
+1. In `/backend`, run  
    ```bash
-   #!/usr/bin/env bash
-   set -e
-   echo "🌀 Regenerating TypeScript client from OpenAPI spec..."
-   npm ci
-   npm run generate:api
-   echo "✅ Client regenerated"
+   python manage.py spectacular --file api/openapi.yaml
+   ```  
+2. Save a tiny change to any serializer and regenerate the schema again – you should see Factory’s **Task Runner** trigger `/frontend/scripts/regenerate_api.sh`.  
+3. Inspect the Task output panel; you should see:  
+   ```
+   ✓ OpenAPI spec generated successfully
+   ✓ OpenAPI spec validation passed
+   ✓ Frontend TypeScript client generated successfully
    ```
 
-   Make it executable (`chmod +x`).
-
-4. **Run Initial Sync**  
-   In Factory terminal:
-
-   ```
-   cd /backend && python manage.py spectacular --file api/openapi.yaml
-   # Factory detects change → runs regenerate script in /frontend
-   ```
-
-5. **Commit & Push**  
-   Factory will show unstaged changes in `/frontend/src/api/generated`.  
-   Commit them, push, open the auto-created **spec-sync** PR.
+If nothing fires, double-check the watch path spelling (`/backend/api/openapi.yaml`) relative to the workspace root.
 
 ---
 
-## 4 Validating the Automation Chain
+## 4 Daily Workflow Tips
 
-1. **Backend Change**  
-   Add a trivial docstring change to a view → commit & push.  
-   CI regenerates `openapi.yaml`, uploads **api-spec** artifact.
-
-2. **Front-end Workflow**  
-   `sync-openapi-to-frontend.yml` dispatches; `regenerate-api-client.yml` opens PR with updated client.  
-
-3. **CI Gates**  
-   - Backend: Schemathesis job must pass.  
-   - Frontend: `frontend-ci.yml` type-check & build must pass.  
-   - Review-Droid surfaces both PRs; merge when green.
+| Action | How it Works in Factory |
+|--------|------------------------|
+| Edit serializers/models | On save → run `spectacular` manually or via VCS hook<br>→ watch rule regenerates client |
+| Run backend tests | Open `/backend` terminal → `pytest` or `python manage.py test` |
+| Run frontend dev server | `/frontend` terminal → `npm run dev` (Vite) |
+| Commit spec-sync changes | After the script runs, `git status` in `/frontend` shows updated `src/api/generated/…` – commit with message prefix `chore: regenerate API client` and label `spec-sync` |
 
 ---
 
-## 5 Troubleshooting
+## 5 Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-|---------|--------------|-----|
-| `api-spec` artifact missing | Backend workflow failed | Check Schemathesis errors / serializer issues. |
-| Frontend PR not created | `FRONTEND_REPO_PAT` scope wrong | Ensure PAT has **Contents & Metadata (Read)** and **Actions (Write)**. |
-| Type errors in generated client | Missing type hints in serializers | Add `@extend_schema_field` or annotate return types (see _openapi_issues_to_fix.md_). |
-| Drift detected on `src/api/generated` | Someone edited generated code manually | Re-run `npm run generate:api` and recommit. |
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Watch script not executed | Wrong path or script not executable | Ensure correct mount paths and run `chmod +x regenerate_api.sh` |
+| “Command not found: openapi” | Code-gen package missing | `npm i -D openapi-typescript-codegen` inside frontend |
+| Token 401s in Schemathesis | CI user/token missing | Verify `.github/workflows/django-tests.yml` snippet committed |
 
 ---
 
-## 6 Next Steps
+## 6 Next Actions
 
-1. **Fix remaining serializer errors & warnings** – see `docs/progress/openapi_issues_to_fix.md`.  
-2. **Enable nightly Cypress smoke tests** (optional).  
-3. **Invite team members** to the workspace; set default task templates.
+1. Commit this `FACTORY_WORKSPACE_SETUP.md` to `/backend/docs/`.  
+2. Push all CI fixes and verify green pipelines.  
+3. In Factory, hit **Run Tests** (or GitHub UI) to ensure the watch rule & droids behave as expected.  
+4. Merge `feature/api-contract-unification` → **develop** once all checks pass.
 
-Workspace setup is now complete – happy coding!
+Happy coding – your unified API contract is now fully automated! 🚀
