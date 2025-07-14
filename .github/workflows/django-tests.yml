@@ -69,20 +69,19 @@ jobs:
         # in-memory DB used by the test runner. We need to migrate the runtime
         # DB as well to avoid "no such table: auth_user" errors.)
         # ------------------------------------------------------------------
-        # Capture migration output to extract the CI auth token
-        MIGRATION_OUTPUT=$(python manage.py migrate --settings=aquamind.settings_ci --noinput)
-        
-        # Extract the token from migration output using grep
-        TOKEN=$(echo "$MIGRATION_OUTPUT" | grep "CI_AUTH_TOKEN:" | cut -d':' -f2)
-        
+        # Apply migrations (no need to capture output)
+        python manage.py migrate --settings=aquamind.settings_ci --noinput
+
+        # Obtain / create the CI auth token using a dedicated management command.
+        TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci)
+
         if [ -z "$TOKEN" ]; then
-          echo "❌ Failed to extract auth token from migration output"
-          echo "$MIGRATION_OUTPUT"
+          echo "❌ Failed to obtain CI auth token"
           exit 1
         fi
-        
+
         echo "::add-mask::$TOKEN"
-        echo "✅ CI auth token extracted from migration"
+        echo "✅ CI auth token ready"
 
         # Start Django dev server in background
         python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &

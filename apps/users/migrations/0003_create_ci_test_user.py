@@ -15,24 +15,31 @@ def create_ci_test_user(apps, schema_editor):
     # Get the user model - we need to use the historical version from apps
     User = apps.get_model('auth', 'User')
     
-    # Check if the user already exists
-    if User.objects.filter(username='schemathesis_ci').exists():
-        return
-        
-    # Create the CI test user
-    user = User.objects.create(
-        username='schemathesis_ci',
-        email='ci@example.com',
-        is_active=True,
-    )
-    
-    # Set password - note: set_password is not available in migrations
-    # We need to use the make_password function
+    # ------------------------------------------------------------------
+    # Get or create the CI user **and** its token.
+    # - If the user already exists (migrations applied earlier) we still
+    #   need to fetch / create the token so that it can be printed below.
+    # - If the user is newly-created we must set a deterministic password
+    #   because `User.set_password` isn’t available in migrations.
+    # ------------------------------------------------------------------
     from django.contrib.auth.hashers import make_password
-    user.password = make_password('testpass123')
-    user.save()
-    
-    # Create auth token for the user
+
+    user, created = User.objects.get_or_create(
+        username='schemathesis_ci',
+        defaults={
+            'email': 'ci@example.com',
+            'is_active': True,
+            'password': make_password('testpass123'),
+        },
+    )
+
+    # Ensure password is consistent even if the user already existed
+    if not created:
+        user.password = make_password('testpass123')
+        user.is_active = True  # make sure it wasn't disabled
+        user.save(update_fields=['password', 'is_active'])
+
+    # Create (or fetch) auth token for the user
     Token = apps.get_model('authtoken', 'Token')
     token, _ = Token.objects.get_or_create(user=user)
     
