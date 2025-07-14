@@ -8,6 +8,18 @@
 
 ---
 
+## 🔎 Status Snapshot  *(2025-07-03)*
+| Section | Status | Key Notes |
+|---------|--------|-----------|
+| **3.1  – Backend: Generate OpenAPI** | ✅ Complete | Spec file committed (`api/openapi.yaml`) |
+| **3.2  – Frontend: Generate TS client** | ✅ Complete | `src/api/generated/` created & scripts added |
+| **3.3  – Cross-repo automation** | ✅ Complete | Workflows in place, label `spec-sync` configured |
+| **3.4  – Contract validation** | ⚠️ **Partial** | CI running; Schemathesis fails (401s), TS compile fails in `inventory.tsx` |
+| **3.5  – Deprecate legacy docs** | ✅ Complete | Old Postman & markdown moved to `docs/legacy/` |
+| **4    – Testing Matrix** | ⚠️ **Partial** | OpenAPI generation passes; contract tests & frontend type-check red |
+| **5    – Factory.ai workspace** | ⏳ **Pending** | JSON config drafted; workspace & script still to be created |
+
+
 ## 1 Objectives & Success Criteria
 | # | Objective | Success Criteria |
 |---|-----------|-----------------|
