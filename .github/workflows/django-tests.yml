@@ -117,7 +117,6 @@ jobs:
           --hypothesis-max-examples=10 \
           --hypothesis-suppress-health-check=filter_too_much,data_too_large \
           --hypothesis-derandomize \
-          --generation-max-time=300 \
           --header "Authorization: Token $TOKEN" \
           api/openapi.yaml
         STATUS=$?
