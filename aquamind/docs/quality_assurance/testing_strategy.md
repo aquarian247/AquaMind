@@ -211,7 +211,62 @@ It's important to ensure that code (especially migrations) is compatible with bo
 - **Invalid Test Assertions**: Check expected vs actual values
 - **Transaction Rollback Issues**: Use TransactionTestCase when needed
 
-## 10. Future Testing Strategy
+## 10. Platform-Specific Considerations
+
+### 10.1 Windows / Unicode Output
+Command-line output containing Unicode symbols (✓, ⚠, etc.) can break Windows CI runners or local
+PowerShell sessions which default to `cp1252` encoding.   
+**Guideline:**  
+* Use plain ASCII in `print()` / `logging` calls inside migrations and management commands.  
+* If you _must_ keep emojis, wrap them in a helper that quietly downgrades to ASCII when
+`PYTHONIOENCODING` is not UTF-8.
+
+```python
+def safe_print(msg: str):
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        print(msg.encode("ascii", "ignore").decode(), flush=True)
+```
+
+### 10.2 Database Matrix
+
+| Environment | Settings file                      | DB Engine | TimescaleDB | Purpose |
+|-------------|------------------------------------|-----------|-------------|---------|
+| **CI (GitHub)** | `aquamind/settings_ci.py`          | SQLite    | Disabled    | Fast unit + contract tests |
+| **Local – CI replica** | `aquamind/settings_ci.py` | SQLite    | Disabled    | Reproduce CI failures |
+| **Local – standard dev** | `aquamind/settings.py`  | PostgreSQL| Enabled 🔸 | Day-to-day coding |
+| **Local – test SQLite**  | `aquamind/test_settings.py` | SQLite | Disabled | Quick local runs |
+| **Manual Timescale tests** | `aquamind/timescaledb_test_settings.py` | PostgreSQL + TSDB | Enabled | Feature verification |
+
+🔸 TimescaleDB extension may be disabled via `TIMESCALE_ENABLED=False`.
+
+### 10.3 Recommended Environment Variables
+
+```bash
+# Force UTF-8 output in GitHub Actions (avoids UnicodeEncodeError)
+export PYTHONIOENCODING=utf-8
+
+# Enable TimescaleDB operations **only** when desired
+export USE_TIMESCALEDB_TESTING=true
+```
+
+### 10.4 CI Auth-Token Debug Tips
+
+1. Capture token length to detect empty output:
+   ```bash
+   TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci)
+   echo "TOKEN length=${#TOKEN}"
+   ```
+2. Add `--debug` flag for verbose stack-trace from the management command:
+   ```bash
+   python manage.py get_ci_token --settings=aquamind.settings_ci --debug
+   ```
+3. Flush stdout explicitly in the command: `print(token.key, flush=True)`.
+
+---
+
+## 11. Future Testing Strategy
 
 As the project evolves:
 
@@ -219,7 +274,7 @@ As the project evolves:
 - Add performance profiling to TimescaleDB hypertable tests
 - Set up integration tests with external APIs
 
-## 11. Testing Resources
+## 12. Testing Resources
 
 - [Django Testing Documentation](https://docs.djangoproject.com/en/4.2/topics/testing/)
 - [TimescaleDB Testing Best Practices](https://docs.timescale.com/latest/tutorials/best-practices/)
