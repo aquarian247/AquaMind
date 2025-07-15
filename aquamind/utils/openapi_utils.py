@@ -18,7 +18,14 @@ SQLITE_MIN_INT = -9223372036854775808  # -2^63
 logger = logging.getLogger(__name__)
 
 
-def clamp_integer_schema_bounds(schema: Dict[str, Any]) -> Dict[str, Any]:
+def clamp_integer_schema_bounds(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
     """
     Post-processing hook for drf-spectacular that clamps integer fields to SQLite's safe range.
     
@@ -26,8 +33,12 @@ def clamp_integer_schema_bounds(schema: Dict[str, Any]) -> Dict[str, Any]:
     SPECTACULAR_SETTINGS to ensure that all integer fields in the schema have bounds
     that are compatible with SQLite's INTEGER storage limitations.
     
+    This signature follows drf-spectacular's post-processing hook contract
+    (``hook(result=..., generator=..., request=..., public=...)``). Only the
+    ``result`` parameter is used – the others are accepted for compatibility.
+
     Args:
-        schema: The OpenAPI schema dictionary to modify
+        result: The OpenAPI schema dictionary to modify
         
     Returns:
         The modified schema with integer bounds clamped to SQLite's safe range
@@ -42,6 +53,10 @@ def clamp_integer_schema_bounds(schema: Dict[str, Any]) -> Dict[str, Any]:
     """
     logger.info("Applying SQLite integer bounds to OpenAPI schema")
     
+    # spectacular passes the schema in ``result`` – keep original name for
+    # clarity in the rest of the function.
+    schema = result
+
     # Process components schemas
     if 'components' in schema and 'schemas' in schema['components']:
         _process_schema_objects(schema['components']['schemas'])
