@@ -12,7 +12,7 @@
 | **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🔴 GitHub CI ✖ | All 482 tests pass locally on PostgreSQL. GitHub CI fails during Schemathesis step – token capture still empty. | `2ac520a` |
 |                          | OpenAPI generation        | 🟢 Pass | `api/openapi.yaml` produced and uploaded. | |
 |                          | Schemathesis contract     | 🔴 Fail | 401 auth error (no token). | |
-| **AquaMind-Frontend**    | TypeScript compile        | 🟢 Local ✔ &nbsp; 🟡 CI (pending) | ~70+ errors resolved; latest push building. | `d9de259` |
+| **AquaMind-Frontend**    | TypeScript compile        | 🟢 Local ✔ &nbsp; 🟢 CI ✔ | Build green after mock-API refactor (`storage.ts` removal). | `fdf7198` |
 |                          | Generated client drift    | 🟢 Clean | No diff after latest `npm run generate:api`. | |
 
 Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failure
@@ -29,6 +29,7 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
    • Unicode removal in migrations (Windows/CI safe).  
    • Conditional TimescaleDB helpers.  
    • CI user + token management command.
+6. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).
 
 ---
 
@@ -38,7 +39,6 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 |---|------|-------------|-------|
 | B-1 | Backend CI | `get_ci_token` prints nothing in GitHub runner → Schemathesis auth header empty → 401s. | Backend |
 | B-2 | Backend CI | Need echoed token length / debug to verify capture; may require `echo "::set-output"` style. | Backend |
-| F-1 | Frontend CI | Confirm that latest TypeScript fixes push build to **green**; monitor for any residual `results`/null checks. | Frontend |
 | X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
 
 ---
@@ -60,8 +60,13 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 3. Re-run Schemathesis locally with SQLite to reproduce CI.
 
 ### Frontend
-1. Push any remaining type fixes; ensure `npm run tsc` passes in CI.  
-2. Run `npm run generate:api -- --clean` post-backend spec update.
+1. **Delete legacy files**  
+   ```bash
+   git rm server/storage.ts server/routes.ts
+   ```  
+   and push branch update.  
+2. Ensure `npm run tsc` & `npm run build` remain green after deletion.  
+3. Run `npm run generate:api -- --clean` whenever backend spec updates.
 
 ### Documentation
 1. Add section **“Unicode-safe logging for Windows runners”** to  
