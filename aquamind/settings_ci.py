@@ -26,3 +26,61 @@ TIMESCALE_ENABLED = False
 # PASSWORD_HASHERS = [
 #     'django.contrib.auth.hashers.MD5PasswordHasher',
 # ]
+
+# ---------------------------------------------------------------------------
+# SQLite-specific compatibility tweaks
+# ---------------------------------------------------------------------------
+# ❶  Why?  SQLite stores INTEGER values as signed 64-bit numbers.  When
+#     Schemathesis (or other property-based tools) generate arbitrarily large
+#     integers, inserts can fail with:
+#         OverflowError: Python int too large to convert to SQLite INTEGER
+# ❷  Mitigation.  We clamp integer ranges in the generated OpenAPI schema
+#     so that Schemathesis & client generators know the true bounds.
+#     This is done via a small post-processing hook registered in
+#     `aquamind.utils.openapi_utils.clamp_integer_schema_bounds`.
+# ❸  The settings below enable drf-spectacular & REST framework to use that
+#     hook during schema generation in CI.
+
+# Minimal DRF settings override for CI
+# ------------------------------------------------------------------
+# Extend the REST_FRAMEWORK config defined in the base ``settings`` rather
+# than blindly overwriting it.  This keeps global defaults (renderers,
+# authentication classes, etc.) intact while ensuring the OpenAPI AutoSchema
+# hook executes during CI.
+# ------------------------------------------------------------------
+try:
+    BASE_REST_FRAMEWORK = REST_FRAMEWORK  # comes from ``from .settings import *``
+except NameError:  # pragma: no cover – unlikely, but keep it safe
+    BASE_REST_FRAMEWORK = {}
+
+# Shallow-copy & override only what we need
+REST_FRAMEWORK = {
+    **BASE_REST_FRAMEWORK,
+    # Ensure drf-spectacular’s AutoSchema is active so our post-processing hook runs
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# drf-spectacular settings specific to the CI / SQLite environment
+# ------------------------------------------------------------------
+# Likewise, extend the project-wide SPECTACULAR_SETTINGS, only tweaking the
+# keys that are important for CI / SQLite compatibility.
+# ------------------------------------------------------------------
+try:
+    BASE_SPECTACULAR_SETTINGS = SPECTACULAR_SETTINGS  # noqa: F401
+except NameError:  # pragma: no cover
+    BASE_SPECTACULAR_SETTINGS = {}
+
+_ci_spec_settings = dict(BASE_SPECTACULAR_SETTINGS)  # shallow copy
+
+# 1) Keep output deterministic for easier diffing in CI logs
+_ci_spec_settings['SORT_OPERATIONS'] = False
+
+# 2) Append (or add) our post-processing hook that clamps integer ranges
+hook_path = 'aquamind.utils.openapi_utils.clamp_integer_schema_bounds'
+_ci_hooks = _ci_spec_settings.get('POSTPROCESSING_HOOKS', [])
+if hook_path not in _ci_hooks:
+    _ci_hooks.append(hook_path)
+_ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
+
+# Final CI-specific spectacular config
+SPECTACULAR_SETTINGS = _ci_spec_settings
