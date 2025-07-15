@@ -41,7 +41,13 @@ def create_ci_test_user(apps, schema_editor):
 
     # Create (or fetch) auth token for the user
     Token = apps.get_model('authtoken', 'Token')
-    token, _ = Token.objects.get_or_create(user=user)
+    token, created = Token.objects.get_or_create(user=user)
+    
+    # Ensure token has a valid key
+    if created and not token.key:
+        # This shouldn't happen with DRF's Token model, but let's be safe
+        token.delete()
+        token = Token.objects.create(user=user)
     
     # ------------------------------------------------------------------
     # Expose the token so the CI helper script can read it from stdout.

@@ -79,6 +79,9 @@ jobs:
 
         # Now run normally and capture the token value for subsequent authenticated requests
         TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci)
+        
+        # Debug: Print token length
+        echo "TOKEN length = ${#TOKEN}"
 
         if [ -z "$TOKEN" ]; then
           echo "❌ Failed to obtain CI auth token"

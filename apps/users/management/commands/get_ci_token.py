@@ -1,69 +1,59 @@
-#!/usr/bin/env python
-"""
-CI Test Token Generator Management Command
-
-This Django management command creates a test user and generates an authentication token
-for use in CI environments, particularly for Schemathesis API contract testing
-that requires authenticated requests.
-
-Usage:
-    python manage.py get_ci_token [--settings=aquamind.settings_ci]
-
-The command will print only the token key to stdout, allowing it to be captured in CI:
-    TOKEN=$(python manage.py get_ci_token)
-"""
-
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 import sys
-import traceback
 
 
 class Command(BaseCommand):
-    help = "Creates or gets a test user and returns its authentication token for CI testing"
+    help = 'Gets or creates CI test user token'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--debug",
-            action="store_true",
-            help="Print diagnostic information to stderr if something goes wrong.",
+            '--debug',
+            action='store_true',
+            help='Enable debug output to stderr'
         )
 
     def handle(self, *args, **options):
-        debug: bool = options.get("debug", False)
+        debug = options.get('debug', False)
 
         try:
-            # CI test user credentials
-            username = "schemathesis_ci"
-            password = "testpass123"
-
-            # Get or create the test user
-            user, _ = User.objects.get_or_create(
-                username=username,
+            # Get or create user (matches the migration)
+            user, created = User.objects.get_or_create(
+                username='schemathesis_ci',
                 defaults={
-                    "email": "ci@example.com",
-                    "is_active": True,
-                },
+                    'email': 'ci@example.com',
+                    'is_active': True,
+                }
             )
 
-            # Always reset password to ensure it's correct
-            user.set_password(password)
+            if debug:
+                self.stderr.write(f'User exists: {not created}')
+                self.stderr.write(f'User id: {user.id}')
+
+            # Reset password to ensure consistency
+            user.set_password('testpass123')
+            user.is_active = True
             user.save()
 
             # Get or create token
-            token, _ = Token.objects.get_or_create(user=user)
+            token, token_created = Token.objects.get_or_create(user=user)
 
-            # Print only the token key (for capture in CI)
-            self.stdout.write(token.key, ending="")
-            # Return normally so outer shells can capture stdout without the
-            # process terminating prematurely via sys.exit().
-            return
-
-        except Exception as exc:  # pylint: disable=broad-except
             if debug:
-                traceback.print_exc(file=sys.stderr)
-            else:
-                self.stderr.write(f"Error generating CI auth token: {exc}")
-            # Ensure non-zero exit status so CI fails clearly
-            sys.exit(1)
+                self.stderr.write(f'Token created: {token_created}')
+                self.stderr.write(f'Token key: {token.key}')
+
+            # Print token using print() for better CI compatibility
+            # This ensures the output is properly captured in bash
+            print(token.key, flush=True)
+            
+            # Also flush stdout to ensure output is captured
+            sys.stdout.flush()
+
+        except Exception as e:
+            if debug:
+                self.stderr.write(f'Error: {e}')
+                import traceback
+                traceback.print_exc(file=self.stderr)
+            # Re-raise the exception to signal failure
+            raise
