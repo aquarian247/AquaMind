@@ -56,7 +56,7 @@ jobs:
     - name: Generate OpenAPI spec
       run: |
         # drf-spectacular generates unified OpenAPI 3.1 schema
-        python manage.py spectacular --file api/openapi.yaml
+        python manage.py spectacular --file api/openapi.yaml --settings=aquamind.settings_ci
 
     # ------------------------------------------------------------------
     # Contract validation – ensure implementation matches the OpenAPI spec
