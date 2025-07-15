@@ -903,7 +903,9 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
     serializer_class = MortalityEventSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['batch', 'event_date', 'cause']
-    search_fields = ['batch__batch_number', 'notes']
+    # Use the correct model field name "description" instead of the
+    # non-existent "notes" to avoid FieldError during search filtering
+    search_fields = ['batch__batch_number', 'description']
     ordering_fields = ['event_date', 'batch__batch_number', 'count', 'created_at']
     ordering = ['-event_date']
 

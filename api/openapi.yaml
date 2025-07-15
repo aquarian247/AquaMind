@@ -63,7 +63,19 @@ paths:
       operationId: api_auth_token_create
       description: Custom view for obtaining auth tokens that also returns user info
       tags:
-      - api
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -71,7 +83,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+          description: ''
   /api/token/:
     post:
       operationId: api_token_create
@@ -129,14 +145,10 @@ paths:
   /api/v1/auth/dev-auth/:
     get:
       operationId: api_v1_auth_dev_auth_retrieve
-      description: |-
-        Development-only endpoint to get a valid auth token automatically.
-        This endpoint is disabled in production environments.
-
-        Returns:
-            Response: A response containing a valid token and user information
+      description: Development-only endpoint that returns an auth token without credentials.
+        **Disabled in production.**
       tags:
-      - api
+      - auth
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -144,13 +156,29 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+          description: ''
   /api/v1/auth/token/:
     post:
       operationId: api_v1_auth_token_create
       description: Custom view for obtaining auth tokens that also returns user info
       tags:
-      - api
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -158,7 +186,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+          description: ''
   /api/v1/batch/batch-compositions/:
     get:
       operationId: api_v1_batch_batch_compositions_list
@@ -12562,7 +12594,11 @@ paths:
       - tokenAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSVUpload'
+          description: ''
   /api/v1/scenario/data-entry/import_status/:
     get:
       operationId: api_v1_scenario_data_entry_import_status_retrieve
@@ -12575,7 +12611,11 @@ paths:
       - tokenAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSVUpload'
+          description: ''
   /api/v1/scenario/data-entry/validate_csv/:
     post:
       operationId: api_v1_scenario_data_entry_validate_csv_create
@@ -12585,13 +12625,29 @@ paths:
         Returns preview data and any validation errors/warnings.
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CSVUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CSVUpload'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CSVUpload'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSVUpload'
+          description: ''
   /api/v1/scenario/fcr-models/:
     get:
       operationId: api_v1_scenario_fcr_models_list
@@ -14483,6 +14539,45 @@ components:
       required:
       - batch_number
       - id
+    AuthToken:
+      type: object
+      description: |-
+        Serializer for username and password authentication.
+        Used by CustomObtainAuthToken and dev_auth views.
+      properties:
+        username:
+          type: string
+          description: Username for authentication
+        password:
+          type: string
+          writeOnly: true
+          description: Password for authentication
+      required:
+      - password
+      - username
+    AuthTokenResponse:
+      type: object
+      description: |-
+        Serializer for token response data.
+        Defines the structure of the response from authentication endpoints.
+      properties:
+        token:
+          type: string
+          description: Authentication token for API access
+        user_id:
+          type: integer
+          description: User ID associated with the token
+        username:
+          type: string
+          description: Username of the authenticated user
+        email:
+          type: string
+          description: Email of the authenticated user
+      required:
+      - email
+      - token
+      - user_id
+      - username
     Batch:
       type: object
       description: |-
@@ -14561,28 +14656,32 @@ components:
           description: Total current population count for this batch, calculated from
             active assignments (read-only).
         calculated_biomass_kg:
-          type: string
+          type: number
+          format: double
           readOnly: true
           description: Total current biomass in kilograms for this batch, calculated
             from active assignments and formatted to two decimal places (read-only).
         calculated_avg_weight_g:
-          type: string
+          type: number
+          format: double
           readOnly: true
           description: Current average weight in grams for individuals in this batch,
             calculated from active assignments and formatted to two decimal places
             (read-only).
         current_lifecycle_stage:
-          type: string
+          nullable: true
           readOnly: true
           description: The current lifecycle stage of the batch (ID, name, order),
             determined by the latest active assignment (read-only).
         days_in_production:
-          type: string
+          type: integer
           readOnly: true
           description: Number of days the batch has been in production since its start
             date (read-only).
         active_containers:
-          type: string
+          type: array
+          items:
+            type: integer
           readOnly: true
           description: List of IDs of containers currently actively holding this batch
             (read-only).
@@ -15219,6 +15318,25 @@ components:
       - id
       - movement_count
       - updated_at
+    CSVUpload:
+      type: object
+      description: Enhanced serializer for CSV file upload.
+      properties:
+        file:
+          type: string
+          format: uri
+        data_type:
+          $ref: '#/components/schemas/DataTypeEnum'
+        profile_name:
+          type: string
+          maxLength: 255
+        validate_only:
+          type: boolean
+          default: false
+      required:
+      - data_type
+      - file
+      - profile_name
     CategoryEnum:
       enum:
       - TANK
@@ -15420,6 +15538,16 @@ components:
       required:
       - password
       - username
+    DataTypeEnum:
+      enum:
+      - temperature
+      - fcr
+      - mortality
+      type: string
+      description: |-
+        * `temperature` - temperature
+        * `fcr` - fcr
+        * `mortality` - mortality
     DateFormatPreferenceEnum:
       enum:
       - DMY
@@ -18943,28 +19071,32 @@ components:
           description: Total current population count for this batch, calculated from
             active assignments (read-only).
         calculated_biomass_kg:
-          type: string
+          type: number
+          format: double
           readOnly: true
           description: Total current biomass in kilograms for this batch, calculated
             from active assignments and formatted to two decimal places (read-only).
         calculated_avg_weight_g:
-          type: string
+          type: number
+          format: double
           readOnly: true
           description: Current average weight in grams for individuals in this batch,
             calculated from active assignments and formatted to two decimal places
             (read-only).
         current_lifecycle_stage:
-          type: string
+          nullable: true
           readOnly: true
           description: The current lifecycle stage of the batch (ID, name, order),
             determined by the latest active assignment (read-only).
         days_in_production:
-          type: string
+          type: integer
           readOnly: true
           description: Number of days the batch has been in production since its start
             date (read-only).
         active_containers:
-          type: string
+          type: array
+          items:
+            type: integer
           readOnly: true
           description: List of IDs of containers currently actively holding this batch
             (read-only).
