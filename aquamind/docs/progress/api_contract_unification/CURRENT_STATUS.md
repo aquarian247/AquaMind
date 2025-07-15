@@ -11,7 +11,7 @@
 |------|----------------|--------|-------|-------------|
 | **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🔴 GitHub CI ✖ | All 482 tests pass locally on PostgreSQL. GitHub CI fails during Schemathesis step – token capture still empty. | `2ac520a` |
 |                          | OpenAPI generation        | 🟢 Pass | `api/openapi.yaml` produced and uploaded. | |
-|                          | Schemathesis contract     | 🔴 Fail | 401 auth error (no token). | |
+|                          | Schemathesis contract     | 🔴 Fail | 401 / auth-enforcement mismatch; field-error crashes resolved. | |
 | **AquaMind-Frontend**    | TypeScript compile        | 🟢 Local ✔ &nbsp; 🟢 CI ✔ | Build green after mock-API refactor (`storage.ts` removal). | `fdf7198` |
 |                          | Generated client drift    | 🟢 Clean | No diff after latest `npm run generate:api`. | |
 
@@ -30,6 +30,9 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
    • Conditional TimescaleDB helpers.  
    • CI user + token management command.
 6. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).
+7. **Field-resolution bugs eliminated** – Fixed incorrect `search_fields` in  
+   • `MortalityEventViewSet` (`notes` → `description`)  
+   • `JournalEntryViewSet` (`title`,`content` → `description`)
 
 ---
 
@@ -37,8 +40,8 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 
 | # | Area | Description | Owner |
 |---|------|-------------|-------|
-| B-1 | Backend CI | `get_ci_token` prints nothing in GitHub runner → Schemathesis auth header empty → 401s. | Backend |
-| B-2 | Backend CI | Need echoed token length / debug to verify capture; may require `echo "::set-output"` style. | Backend |
+| A-1 | Backend CI | **Authentication enforcement mismatch** – schema requires auth but many endpoints allow anonymous requests; Schemathesis flags “auth declared but not enforced”. | Backend |
+| A-2 | Backend CI | Fine-tune pagination behaviour vs spec (`page=0`, huge page numbers) – decide if spec or code needs changes. | Backend |
 | X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
 
 ---
@@ -46,33 +49,19 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 ## 4  Immediate Next Actions
 
 ### Backend
-1. **Hard-verify token output**  
-   ```bash
-   TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci)
-   echo "TOKEN-LEN=${#TOKEN}"
-   ```  
-   Fail step early if length == 0.
-
-2. If stdout still blank:
-   - Use `print(token.key, flush=True)` in command.
-   - Fallback: `python - <<'PY' ...` inline to bypass management command.
-
-3. Re-run Schemathesis locally with SQLite to reproduce CI.
+1. Confirm CI token now **non-empty** (length 40).  
+2. Investigate auth-enforcement: ensure every viewset inherits correct `permission_classes` or middleware; update schema if anonymous access is intended.  
+3. Re-run Schemathesis locally (SQLite) to reproduce remaining auth / pagination failures.  
+4. Once auth issues fixed, bump Hypothesis examples back to default (remove `--hypothesis-max-examples=10`).
 
 ### Frontend
-1. **Delete legacy files**  
-   ```bash
-   git rm server/storage.ts server/routes.ts
-   ```  
-   and push branch update.  
-2. Ensure `npm run tsc` & `npm run build` remain green after deletion.  
-3. Run `npm run generate:api -- --clean` whenever backend spec updates.
+No immediate work – monitor backend spec changes. Regenerate client only after schema stabilises.
 
 ### Documentation
 1. Add section **“Unicode-safe logging for Windows runners”** to  
    `docs/quality_assurance/testing_strategy.md`.  
-2. Consider new sub-folder `docs/progress/api_contract_unification/` (created)  
-   – host status log & troubleshooting diary.
+2. Document auth-enforcement troubleshooting checklist in  
+   `docs/quality_assurance/api_security.md`.
 
 ---
 
