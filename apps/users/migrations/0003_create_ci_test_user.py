@@ -43,8 +43,9 @@ def create_ci_test_user(apps, schema_editor):
     Token = apps.get_model('authtoken', 'Token')
     token, created = Token.objects.get_or_create(user=user)
     
-    # Ensure token has a valid key
-    if created and not token.key:
+    # Ensure token has a valid key – handle both freshly-created and
+    # pre-existing (but empty) token rows
+    if not token.key:
         # This shouldn't happen with DRF's Token model, but let's be safe
         token.delete()
         token = Token.objects.create(user=user)

@@ -43,6 +43,18 @@ class Command(BaseCommand):
                 self.stderr.write(f'Token created: {token_created}')
                 self.stderr.write(f'Token key: {token.key}')
 
+            # ------------------------------------------------------------------
+            # Some edge cases (observed on CI) resulted in a Token row with an
+            # *empty* key string. That breaks authentication because DRF expects
+            # a 40-char key. Guard against that by recreating the token when
+            # its key is falsy or empty.
+            # ------------------------------------------------------------------
+            if not token.key:
+                if debug:
+                    self.stderr.write('Empty token key detected – recreating token')
+                token.delete()
+                token = Token.objects.create(user=user)
+
             # Print token using print() for better CI compatibility
             # This ensures the output is properly captured in bash
             print(token.key, flush=True)
