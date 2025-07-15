@@ -56,8 +56,9 @@ class Command(BaseCommand):
 
             # Print only the token key (for capture in CI)
             self.stdout.write(token.key, ending="")
-            # Explicit success exit code
-            sys.exit(0)
+            # Return normally so outer shells can capture stdout without the
+            # process terminating prematurely via sys.exit().
+            return
 
         except Exception as exc:  # pylint: disable=broad-except
             if debug:
