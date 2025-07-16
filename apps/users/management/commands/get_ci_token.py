@@ -24,6 +24,11 @@ class Command(BaseCommand):
                 defaults={
                     'email': 'ci@example.com',
                     'is_active': True,
+                    # Give the CI account blanket permissions so that
+                    # Schemathesis can hit *any* endpoint without running
+                    # into object-level permission checks.
+                    'is_staff': True,
+                    'is_superuser': True,
                 }
             )
 
@@ -34,6 +39,9 @@ class Command(BaseCommand):
             # Reset password to ensure consistency
             user.set_password('testpass123')
             user.is_active = True
+            # Ensure the flag fields are set even if the user pre-existed
+            user.is_staff = True
+            user.is_superuser = True
             user.save()
 
             # Get or create token
