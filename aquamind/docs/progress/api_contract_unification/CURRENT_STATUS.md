@@ -9,9 +9,9 @@
 
 | Repo | Pipeline Stage | Status | Notes | Last Commit |
 |------|----------------|--------|-------|-------------|
-| **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🟢 GitHub CI ✔ | All 482 tests pass on both PostgreSQL (local) & SQLite (CI). | `2ac520a` |
+| **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🟢 GitHub CI ✔ | All 482 tests pass on both PostgreSQL (local) & SQLite (CI). | `1aec9c8` |
 |                          | OpenAPI generation        | 🟢 Pass | `api/openapi.yaml` produced and uploaded. | |
-|                          | Schemathesis contract     | 🟢 Local ✔ &nbsp; 🟡 CI ⏳ | Local run passes with auth header + pagination fixes. CI verification pending next run. | |
+|                          | Schemathesis contract     | 🔴 Fail | CI red – *ignored_auth* & status-code failures remain. | |
 | **AquaMind-Frontend**    | TypeScript compile        | 🟢 Local ✔ &nbsp; 🟢 CI ✔ | Build green after mock-API refactor (`storage.ts` removal). | `fdf7198` |
 |                          | Generated client drift    | 🟢 Clean | No diff after latest `npm run generate:api`. | |
 
@@ -32,14 +32,12 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 6. **Global security enforced** – Added `SECURITY: [{"tokenAuth": []}]` to drf-spectacular settings + schema post-processing hook to de-duplicate entries.  
 7. **Robust pagination** – Introduced `ValidatedPageNumberPagination` (min page = 1, graceful out-of-range handling) and wired as DRF default.  
 8. **SQLite-safe schema** – Integer bounds clamped & duplicate `security` arrays cleaned in CI OpenAPI generation.  
-9. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).
+9. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).  
 10. **Field-resolution bugs eliminated** – Fixed incorrect `search_fields` in  
-   • `MortalityEventViewSet` (`notes` → `description`)  
-   • `JournalEntryViewSet` (`title`,`content` → `description`)
-11. **Frontend API integration simplified** – Decision approved to drop `client/src/lib/django-api.ts` wrapper.  
-    • `client/src/lib/api.ts` will call the generated **`ApiService`** directly for all endpoints.  
-    • Environment-based configuration lives in `client/src/lib/config.ts`.  
-    • Architectural decision documented at `aquamind/docs/integration/frontend_api_integration.md`.  
+    • `MortalityEventViewSet` (`notes` → `description`)  
+    • `JournalEntryViewSet` (`title`,`content` → `description`)
+11. **Frontend API integration simplified** – Decision approved to drop `client/src/lib/django-api.ts` wrapper and call generated **`ApiService`** directly.
+12. **Protected-endpoint anonymity removed** – Enhanced `cleanup_duplicate_security` hook to strip `{}` (anonymous access) from every operation except the two auth endpoints, regenerated & committed (`1aec9c8`).
 
 ---
 
@@ -47,8 +45,7 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 
 | # | Area | Description | Owner |
 |---|------|-------------|-------|
-| B-1 | Backend CI | **Schemathesis still gated in CI** – needs fresh run with new token & auth header to confirm green. | Backend |
-| X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
+| B-1 | Backend CI | **Schemathesis failing** – *ignored_auth* & status-code‐conformance errors persist despite security cleanup. Needs deeper header-injection audit & schema tweaks for auth endpoints. | Backend |
 | X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
 
 ---
@@ -56,14 +53,16 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 ## 4  Immediate Next Actions
 
 ### Backend
-1. Trigger CI to validate Schemathesis green with new global security + pagination fixes.  
-2. Remove temporary `--hypothesis-max-examples=10` flag once CI is consistently green.  
+1. Investigate why Schemathesis still reports *ignored_auth*; capture headers received by DRF in failing requests.  
+2. Add `400` response to auth endpoints or mark as negative-test-ignored.  
+3. Regenerate schema after router rename cleanup (`/infrastructure/*` → `/batch/*`).  
+4. Remove temporary `--hypothesis-max-examples=10` once CI is green.
 
 ### Frontend
-Implement API integration simplification:  
+Complete API integration simplification:  
 • Remove `client/src/lib/django-api.ts`.  
 • Update `client/src/lib/api.ts` to use generated `ApiService` directly.  
-• Ensure `client/src/lib/config.ts` correctly wires environment variables.
+• Ensure environment configuration in `client/src/lib/config.ts`.
 
 ### Documentation
 1. Add section **“Unicode-safe logging for Windows runners”** to  
@@ -85,8 +84,8 @@ Implement API integration simplification:
 
 ## 6  Useful Links
 
-- Backend workflow run: https://github.com/aquarian247/AquaMind/actions
-- Frontend workflow run: https://github.com/aquarian247/AquaMind-Frontend/actions
+- Backend workflow runs: https://github.com/aquarian247/AquaMind/actions
+- Frontend workflow runs: https://github.com/aquarian247/AquaMind-Frontend/actions
 - OpenAPI spec preview (Swagger/ReDoc): `http://localhost:8000/api/schema/docs/`
 - Test strategy docs:  
   - `docs/quality_assurance/testing_strategy.md`  

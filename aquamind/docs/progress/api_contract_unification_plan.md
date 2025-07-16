@@ -41,6 +41,7 @@
 | 5 | Replace legacy docs (Postman & hand-written tables) with **auto-published Swagger/ReDoc** | `/api/schema/docs/` served in dev & staging; old docs marked *deprecated* |
 
 | 2025-07-15 | Code-Droid | Updated snapshot, documented Unicode fix, added Known Issues section |
+| 2025-07-17 | Code-Droid | Front-end aligned with new authentication, build & type-check green; KI-4 closed |
 ---
 
 ## 2 Prerequisites & Dependencies
