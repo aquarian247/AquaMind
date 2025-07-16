@@ -1,6 +1,6 @@
 # API-Contract Unification – Current Status  
 *File *: `aquamind/docs/progress/api_contract_unification/CURRENT_STATUS.md`  
-*Date *: **2025-07-15**  
+*Date *: **2025-07-16**  
 *Maintainer*: Code-Droid / Team Backend 🐟
 
 ---
@@ -9,9 +9,9 @@
 
 | Repo | Pipeline Stage | Status | Notes | Last Commit |
 |------|----------------|--------|-------|-------------|
-| **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🔴 GitHub CI ✖ | All 482 tests pass locally on PostgreSQL. GitHub CI fails during Schemathesis step – token capture still empty. | `2ac520a` |
+| **AquaMind (backend)** | Unit / Integration tests | 🟢 Local ✔ &nbsp; 🟢 GitHub CI ✔ | All 482 tests pass on both PostgreSQL (local) & SQLite (CI). | `2ac520a` |
 |                          | OpenAPI generation        | 🟢 Pass | `api/openapi.yaml` produced and uploaded. | |
-|                          | Schemathesis contract     | 🔴 Fail | 401 / auth-enforcement mismatch; field-error crashes resolved. | |
+|                          | Schemathesis contract     | 🟢 Local ✔ &nbsp; 🟡 CI ⏳ | Local run passes with auth header + pagination fixes. CI verification pending next run. | |
 | **AquaMind-Frontend**    | TypeScript compile        | 🟢 Local ✔ &nbsp; 🟢 CI ✔ | Build green after mock-API refactor (`storage.ts` removal). | `fdf7198` |
 |                          | Generated client drift    | 🟢 Clean | No diff after latest `npm run generate:api`. | |
 
@@ -29,8 +29,11 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
    • Unicode removal in migrations (Windows/CI safe).  
    • Conditional TimescaleDB helpers.  
    • CI user + token management command.
-6. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).
-7. **Field-resolution bugs eliminated** – Fixed incorrect `search_fields` in  
+6. **Global security enforced** – Added `SECURITY: [{"tokenAuth": []}]` to drf-spectacular settings + schema post-processing hook to de-duplicate entries.  
+7. **Robust pagination** – Introduced `ValidatedPageNumberPagination` (min page = 1, graceful out-of-range handling) and wired as DRF default.  
+8. **SQLite-safe schema** – Integer bounds clamped & duplicate `security` arrays cleaned in CI OpenAPI generation.  
+9. **Legacy storage replaced** – Monolithic `server/storage.ts` & `routes.ts` retired in favour of lightweight **`server/mock-api.ts`** with env-toggle (`VITE_USE_MOCK_API` / `VITE_USE_DJANGO_API`).
+10. **Field-resolution bugs eliminated** – Fixed incorrect `search_fields` in  
    • `MortalityEventViewSet` (`notes` → `description`)  
    • `JournalEntryViewSet` (`title`,`content` → `description`)
 
@@ -40,8 +43,8 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 
 | # | Area | Description | Owner |
 |---|------|-------------|-------|
-| A-1 | Backend CI | **Authentication enforcement mismatch** – schema requires auth but many endpoints allow anonymous requests; Schemathesis flags “auth declared but not enforced”. | Backend |
-| A-2 | Backend CI | Fine-tune pagination behaviour vs spec (`page=0`, huge page numbers) – decide if spec or code needs changes. | Backend |
+| B-1 | Backend CI | **Schemathesis still gated in CI** – needs fresh run with new token & auth header to confirm green. | Backend |
+| X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
 | X-1 | Docs | Testing docs emphasise SQLite in CI but Windows Unicode pitfalls not mentioned; update guides. | Docs |
 
 ---
@@ -49,10 +52,8 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 ## 4  Immediate Next Actions
 
 ### Backend
-1. Confirm CI token now **non-empty** (length 40).  
-2. Investigate auth-enforcement: ensure every viewset inherits correct `permission_classes` or middleware; update schema if anonymous access is intended.  
-3. Re-run Schemathesis locally (SQLite) to reproduce remaining auth / pagination failures.  
-4. Once auth issues fixed, bump Hypothesis examples back to default (remove `--hypothesis-max-examples=10`).
+1. Trigger CI to validate Schemathesis green with new global security + pagination fixes.  
+2. Remove temporary `--hypothesis-max-examples=10` flag once CI is consistently green.  
 
 ### Frontend
 No immediate work – monitor backend spec changes. Regenerate client only after schema stabilises.

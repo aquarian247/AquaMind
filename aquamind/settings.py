@@ -210,7 +210,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # Use custom paginator that validates page numbers (page >= 1) and returns
+    # 400 on invalid values while gracefully handling out-of-range pages.
+    'DEFAULT_PAGINATION_CLASS': 'aquamind.utils.pagination.ValidatedPageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -273,6 +275,15 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "v1",
     # Do not serve the schema by default; a dedicated URL is configured in urls.py
     "SERVE_INCLUDE_SCHEMA": False,
+    # Apply tokenAuth (DRF TokenAuthentication) as a global requirement so that
+    # every operation in the generated OpenAPI spec explicitly requires
+    # authentication.  This ensures contract-test tools like Schemathesis send
+    # the correct header by default and highlights any endpoint that is
+    # intentionally anonymous (which would need an explicit override).
+    #
+    # The ``tokenAuth`` scheme is automatically defined by drf-spectacular from
+    # the presence of ``TokenAuthentication`` in DEFAULT_AUTHENTICATION_CLASSES.
+    "SECURITY": [{"tokenAuth": []}],
 }
 
 # Using Django's default User model with extended profiles
