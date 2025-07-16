@@ -43,7 +43,11 @@ schema_view = get_schema_view(
         license=openapi.License(name="Commercial License"),
     ),
     public=True,
-    permission_classes=(permissions.AllowAny,),
+    # Documentation endpoints should respect the same authentication guard as
+    # the rest of the API.  Requiring authentication here prevents accidental
+    # exposure of schema details in non-development environments and keeps
+    # contract-test tooling consistent.
+    permission_classes=(permissions.IsAuthenticated,),
 )
 
 urlpatterns = [
