@@ -130,6 +130,14 @@ def cleanup_duplicate_security(
 
     schema = result  # alias for clarity
 
+    # Endpoints that legitimately allow anonymous access.  Keep the "{}"
+    # placeholder for these so that contract-testing tools know anonymous
+    # requests are valid here.
+    EXEMPT_ANON_PATHS = {
+        "/api/v1/auth/token/",
+        "/api/v1/auth/dev-auth/",
+    }
+
     def _deduplicate(security_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Return a list with duplicates removed (order preserved)."""
         seen: List[Dict[str, Any]] = []
@@ -143,7 +151,9 @@ def cleanup_duplicate_security(
         schema["security"] = _deduplicate(schema["security"])
 
     # Deduplicate per-operation security requirements
-    for path_item in schema.get("paths", {}).values():
+    # Iterate with both *path* and *path_item* so we can reference the path
+    # later when deciding whether to strip anonymous access.
+    for path, path_item in schema.get("paths", {}).items():
         for method, operation in path_item.items():
             if method in {
                 "get",
@@ -157,6 +167,15 @@ def cleanup_duplicate_security(
             }:
                 if "security" in operation and isinstance(operation["security"], list):
                     operation["security"] = _deduplicate(operation["security"])
+
+                    # -----------------------------------------------------------------
+                    # Strip anonymous access ("{}") except for explicitly whitelisted
+                    # endpoints such as the authentication views.
+                    # -----------------------------------------------------------------
+                    if path not in EXEMPT_ANON_PATHS:
+                        operation["security"] = [
+                            entry for entry in operation["security"] if entry
+                        ]
 
     return schema
 
