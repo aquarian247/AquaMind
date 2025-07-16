@@ -68,6 +68,43 @@ def clamp_integer_schema_bounds(
     return schema
 
 
+def ensure_global_security(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """
+    Post-processing hook that guarantees the presence of a *global* ``security``
+    requirement in the generated OpenAPI spec.
+
+    Some tooling (including Schemathesis) relies on a top-level ``security``
+    block to decide which authentication headers to send by default.  While
+    drf-spectacular infers `components.securitySchemes` from DRF
+    authentication classes, it will emit the top-level list only if *every*
+    view explicitly declares a requirement — an easily missed detail that
+    results in anonymous requests during contract testing.
+
+    This hook ensures that the schema always contains::
+
+        security:
+          - tokenAuth: []
+
+    If a different or more specific set of schemes is already present, the hook
+    leaves it untouched.
+    """
+    schema = result  # alias
+
+    # Add the global security block only if it is missing or empty
+    if not schema.get("security"):
+        logger.info("Adding global tokenAuth security requirement to OpenAPI schema")
+        schema["security"] = [{"tokenAuth": []}]
+
+    return schema
+
+
 def cleanup_duplicate_security(
     result: Dict[str, Any],
     *,

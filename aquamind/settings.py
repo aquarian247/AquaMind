@@ -284,6 +284,24 @@ SPECTACULAR_SETTINGS = {
     # The ``tokenAuth`` scheme is automatically defined by drf-spectacular from
     # the presence of ``TokenAuthentication`` in DEFAULT_AUTHENTICATION_CLASSES.
     "SECURITY": [{"tokenAuth": []}],
+
+    # ------------------------------------------------------------------
+    # Post-processing hooks
+    # ------------------------------------------------------------------
+    # 1.  ensure_global_security
+    #     Guarantees a top-level ``security`` block is present even when
+    #     drf-spectacular omits it (e.g., if any view forgets to declare
+    #     authentication).  This keeps tools like Schemathesis from sending
+    #     anonymous requests by default.
+    #
+    # 2.  cleanup_duplicate_security
+    #     Removes duplicate entries that drf-spectacular may generate inside
+    #     operation-level ``security`` lists, avoiding noise for contract
+    #     testing & client code generation.
+    "POSTPROCESSING_HOOKS": [
+        "aquamind.utils.openapi_utils.ensure_global_security",
+        "aquamind.utils.openapi_utils.cleanup_duplicate_security",
+    ],
 }
 
 # Using Django's default User model with extended profiles
