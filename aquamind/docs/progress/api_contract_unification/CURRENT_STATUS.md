@@ -36,6 +36,10 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 10. **Field-resolution bugs eliminated** – Fixed incorrect `search_fields` in  
    • `MortalityEventViewSet` (`notes` → `description`)  
    • `JournalEntryViewSet` (`title`,`content` → `description`)
+11. **Frontend API integration simplified** – Decision approved to drop `client/src/lib/django-api.ts` wrapper.  
+    • `client/src/lib/api.ts` will call the generated **`ApiService`** directly for all endpoints.  
+    • Environment-based configuration lives in `client/src/lib/config.ts`.  
+    • Architectural decision documented at `aquamind/docs/integration/frontend_api_integration.md`.  
 
 ---
 
@@ -56,7 +60,10 @@ Legend: 🟢 Pass 🟡 Pending 🔴 Fail ✔ Local success ✖ CI failur
 2. Remove temporary `--hypothesis-max-examples=10` flag once CI is consistently green.  
 
 ### Frontend
-No immediate work – monitor backend spec changes. Regenerate client only after schema stabilises.
+Implement API integration simplification:  
+• Remove `client/src/lib/django-api.ts`.  
+• Update `client/src/lib/api.ts` to use generated `ApiService` directly.  
+• Ensure `client/src/lib/config.ts` correctly wires environment variables.
 
 ### Documentation
 1. Add section **“Unicode-safe logging for Windows runners”** to  
