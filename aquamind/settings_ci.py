@@ -56,7 +56,7 @@ except NameError:  # pragma: no cover – unlikely, but keep it safe
 # Shallow-copy & override only what we need
 REST_FRAMEWORK = {
     **BASE_REST_FRAMEWORK,
-    # Ensure drf-spectacular’s AutoSchema is active so our post-processing hook runs
+    # Ensure drf-spectacular's AutoSchema is active so our post-processing hook runs
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
@@ -105,16 +105,15 @@ dup_hook_path = 'aquamind.utils.openapi_utils.cleanup_duplicate_security'
 if dup_hook_path not in _ci_hooks:
     _ci_hooks.append(dup_hook_path)
 
-# 5) Append hook that prunes *deprecated* or otherwise obsolete paths
+# 5) [REMOVED] Infrastructure endpoints have been restored
 #    ---------------------------------------------------------------
-#    Phase-4 of the API-contract-unification plan removes noisy 404s
-#    from Schemathesis runs that originate from stale endpoints
-#    (e.g. legacy infrastructure routes).  The hook below strips these
-#    paths from the generated OpenAPI schema to keep the contract
-#    aligned with the live router.
-prune_hook_path = 'aquamind.utils.openapi_utils.prune_legacy_paths'
-if prune_hook_path not in _ci_hooks:
-    _ci_hooks.append(prune_hook_path)
+#    The prune_legacy_paths hook was temporarily used during Phase-4
+#    to strip infrastructure paths from the schema. Now that the router
+#    duplication issue is resolved, we've restored these endpoints and
+#    no longer need to prune them from the schema.
+# prune_hook_path = 'aquamind.utils.openapi_utils.prune_legacy_paths'
+# if prune_hook_path not in _ci_hooks:
+#     _ci_hooks.append(prune_hook_path)
 
 # 6) Append hook that documents *400 validation errors* for write ops
 #    ---------------------------------------------------------------

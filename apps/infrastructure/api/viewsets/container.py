@@ -11,6 +11,9 @@ from drf_yasg import openapi
 
 from apps.infrastructure.models.container import Container
 from apps.infrastructure.api.serializers.container import ContainerSerializer
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class ContainerViewSet(viewsets.ModelViewSet):
@@ -40,6 +43,9 @@ class ContainerViewSet(viewsets.ModelViewSet):
     - `container_type__name`
     - `created_at`
     """
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Container.objects.all()
     serializer_class = ContainerSerializer
