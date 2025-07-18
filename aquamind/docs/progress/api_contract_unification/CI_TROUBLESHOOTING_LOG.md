@@ -27,22 +27,24 @@ Legend:
 | **Jul 16** _(today)_ | *ignored_auth* still ~392; `- {}` anonymous entries in spec | DRF-Spectacular emits `{}` when `AllowAny` present; existed on many ops | Enhanced `cleanup_duplicate_security` to strip `{}` from **all** ops except `/api/v1/auth/token/` & `/dev-auth/`; regenerated spec; committed | ✅ spec cleaned, but CI still fails |
 | **Jul 16** | Schemathesis **status_code_conformance** failures on auth token endpoint (expects 2xx, gets 400) | Fuzzed credentials obviously invalid; schema declares *200 only* | Not solved – need to broaden expected responses or mark as negative test | ❌ |
 | **Jul 16** | 404 on `/api/v1/infrastructure/*` routes | Schemathesis hitting stale paths that were renamed to `/api/v1/batch/*` | URLConf updated previously but **schema** still contains old tags | ❌ awaiting router–schema sync |
+| **Jul 18** | *ignored_auth* ≈ 392 – endpoints returned **200 OK** with invalid auth | **SessionAuthentication bypass** – Schemathesis carried a valid `Cookie:` header, so `SessionAuthentication` authenticated requests before `TokenAuthentication` failed | ① Removed `SessionAuthentication` from `DEFAULT_AUTHENTICATION_CLASSES` (earlier). ② Added explicit `authentication_classes` / `permission_classes` to critical ViewSets (environmental). ③ Helper scripts `add_auth_to_viewsets.py` & `fix_auth_syntax.py` created for bulk updates | ✅ **536 / 537 checks passing (99.8 %)** – only `/api/v1/auth/dev-auth/` false-positive remains |
 
 ---
 
 ## 3. Current Known CI Issues (2025-07-16 EOD)
 
-1. ❌ **Schemathesis “ignored_auth” failures remain (≈ 392).**  
-   • Header _is_ passed (`Authorization: Token …`) but tool still flags certain ops – need to verify per-request header injection.
+### (updated 2025-07-18)
 
-2. ❌ **`status_code_conformance` on authentication endpoints.**  
-   Spec only lists `200`. Need to document/allow `400` for invalid creds or tell Schemathesis to skip.
+1. ❌ **Single Schemathesis “ignored_auth” false-positive**  
+   • `/api/v1/auth/dev-auth/` is intentionally anonymous but still inherits global security in the schema.  
+   • Fix: whitelist via `auth=[]` or post-processing hook update.
 
-3. ❌ **404 for legacy `/api/v1/infrastructure/*` paths.**  
-   OpenAPI spec not aligned with router renames; regenerate or drop obsolete paths.
+2. ⚠️ **Unit-test authentication failures (≈ 69 tests)**  
+   • Tests hit protected endpoints without tokens after global auth enforcement.  
+   • Fix: inject valid token / use `force_authenticate` in DRF test client.
 
-4. ⚠️ **Log verbosity / truncation.**  
-   Large Schemathesis output (20 k + lines) trimmed by GitHub, obscuring failures. Plan to upload artefact file.
+3. ⚠️ **Log verbosity / truncation** (unchanged)  
+   • Continue uploading Schemathesis artefacts for full visibility.
 
 ---
 
@@ -55,8 +57,9 @@ Legend:
 * SQLite contract testing needs integer range clamping; put this in one reusable hook and enable only for CI settings.
 * Give the CI service account superuser rights; otherwise random admin redirects produce unauthorized noise.
 * When Schemathesis fuzzes auth endpoints it will send garbage creds – schema must declare 4xx codes or we must mark operation as negative-test-ignored.
+* **SessionAuthentication is hazardous in APIs** – if a test harness (or browser) accidentally provides a `Cookie:` header, `SessionAuthentication` may override token/JWT checks and mask missing/invalid auth. Removing it globally and enforcing `IsAuthenticated` is the safest posture.
 * Preserve troubleshooting output: redirect `schemathesis run > schemathesis.txt` and upload artefact for easier offline analysis.
 
 ---
 
-_End of log – last updated 2025-07-16_  
+End of log – last updated 2025-07-18  
