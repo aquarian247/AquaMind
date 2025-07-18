@@ -110,7 +110,7 @@ jobs:
         # Install schemathesis (already in requirements but ensure CLI present)
         pip install --quiet schemathesis
 
-        # Run contract checks
+        # Run contract checks and capture the full output for later inspection
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
@@ -118,12 +118,20 @@ jobs:
           --hypothesis-suppress-health-check=filter_too_much,data_too_large \
           --hypothesis-derandomize \
           --header "Authorization: Token $TOKEN" \
-          api/openapi.yaml
+          api/openapi.yaml \
+          > schemathesis-output.txt 2>&1
         STATUS=$?
 
         echo "⏹  Stopping Django server"
         kill $SERVER_PID
         exit $STATUS
+
+    - name: Upload Schemathesis output artifact (contract-test-log)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: schemathesis-output
+        path: schemathesis-output.txt
 
     - name: Upload OpenAPI spec artifact (api-spec)
       # This artifact is consumed by the front-end workflow that regenerates

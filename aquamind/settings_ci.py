@@ -109,3 +109,23 @@ _ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
 
 # Final CI-specific spectacular config
 SPECTACULAR_SETTINGS = _ci_spec_settings
+
+# ------------------------------------------------------------------
+# TEMPORARY: Phase-1 debugging middleware for auth-header inspection
+# ------------------------------------------------------------------
+try:
+    BASE_MIDDLEWARE = MIDDLEWARE  # Imported from base settings
+except NameError:  # pragma: no cover – should not happen but stay safe
+    BASE_MIDDLEWARE = []
+
+# Only append if it's not already in the stack to avoid duplicates when this
+# file is re-evaluated (e.g. in Django's autoreload).
+_debug_mw = 'aquamind.middleware.AuthHeaderDebugMiddleware'
+if _debug_mw not in BASE_MIDDLEWARE:
+    MIDDLEWARE = [*BASE_MIDDLEWARE, _debug_mw]
+else:
+    MIDDLEWARE = BASE_MIDDLEWARE
+
+# Persist debug logs to a file so CI can expose them as an artifact if needed.
+# (The GitHub workflow can upload this file for inspection.)
+AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
