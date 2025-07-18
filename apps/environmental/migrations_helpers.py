@@ -70,13 +70,13 @@ def run_timescale_sql(schema_editor, sql, params=None, description="TimescaleDB 
     if is_timescaledb_available():
         try:
             schema_editor.execute(sql, params)
-            print(f"✓ Successfully executed: {description}")
+            print(f"[OK] Successfully executed: {description}")
             return True
         except Exception as e:
-            print(f"⚠ TimescaleDB operation failed ({description}): {e}")
+            print(f"[WARNING] TimescaleDB operation failed ({description}): {e}")
             return False
     else:
-        print(f"ℹ Skipping TimescaleDB operation: {description}")
+        print(f"[INFO] Skipping TimescaleDB operation: {description}")
         return False
 
 

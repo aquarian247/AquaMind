@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.batch.models import (
     Species,
@@ -43,6 +46,9 @@ class SpeciesViewSet(viewsets.ModelViewSet):
     and scientific name, searching across name, scientific name, and description,
     and ordering by name, scientific name, or creation date.
     """
+    # Explicitly enforce token/JWT auth and disallow SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Species.objects.all()
     serializer_class = SpeciesSerializer
@@ -89,6 +95,8 @@ class LifeCycleStageViewSet(viewsets.ModelViewSet):
     Supports searching across name, description, and species name.
     Ordering can be done by species name, order, name, or creation date.
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = LifeCycleStage.objects.all()
     serializer_class = LifeCycleStageSerializer
@@ -155,6 +163,8 @@ class BatchViewSet(viewsets.ModelViewSet):
     - `lifecycle_stage__name`
     - `created_at` (default: descending)
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Batch.objects.all()
     serializer_class = BatchSerializer
@@ -766,6 +776,8 @@ class BatchTransferViewSet(viewsets.ModelViewSet):
     - `transfer_type`
     - `created_at`
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = BatchTransfer.objects.all()
     serializer_class = BatchTransferSerializer
@@ -898,12 +910,16 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
     - `count` (number of mortalities)
     - `created_at`
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = MortalityEvent.objects.all()
     serializer_class = MortalityEventSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['batch', 'event_date', 'cause']
-    search_fields = ['batch__batch_number', 'notes']
+    # Use the correct model field name "description" instead of the
+    # non-existent "notes" to avoid FieldError during search filtering
+    search_fields = ['batch__batch_number', 'description']
     ordering_fields = ['event_date', 'batch__batch_number', 'count', 'created_at']
     ordering = ['-event_date']
 
@@ -1018,6 +1034,8 @@ class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
     - `population_count`
     - `biomass_kg`
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = BatchContainerAssignment.objects.all()
     serializer_class = BatchContainerAssignmentSerializer
@@ -1140,6 +1158,8 @@ class BatchCompositionViewSet(viewsets.ModelViewSet):
     - `population_count`
     - `biomass_kg`
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = BatchComposition.objects.all()
     serializer_class = BatchCompositionSerializer
@@ -1261,6 +1281,8 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
     - `avg_weight_g`: Average weight in grams.
     - `created_at`
     """
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = GrowthSample.objects.all()
     serializer_class = GrowthSampleSerializer

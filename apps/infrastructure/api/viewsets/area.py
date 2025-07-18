@@ -11,6 +11,9 @@ from drf_yasg import openapi
 
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.api.serializers.area import AreaSerializer
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class AreaViewSet(viewsets.ModelViewSet):
@@ -35,6 +38,9 @@ class AreaViewSet(viewsets.ModelViewSet):
     - `geography__name`
     - `created_at`
     """
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Area.objects.all()
     serializer_class = AreaSerializer

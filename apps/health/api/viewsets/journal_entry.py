@@ -35,4 +35,5 @@ class JournalEntryViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
         'category': ['exact'],
         'user__id': ['exact']
     }
-    search_fields = ['title', 'content']
+    # Use the correct model field(s) that exist on JournalEntry.
+    search_fields = ['description']

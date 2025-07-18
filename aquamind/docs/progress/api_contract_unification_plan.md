@@ -8,15 +8,40 @@
 
 ---
 
+## 🔎 Status Snapshot  *(2025-07-15)*
+| Section | Status | Key Notes |
+|---------|--------|-----------|
+| **3.1  – Backend: Generate OpenAPI** | ✅ Complete | Spec file committed (`api/openapi.yaml`) |
+| **3.2  – Frontend: Generate TS client** | ✅ Complete | `src/api/generated/` created & scripts added |
+| **3.3  – Cross-repo automation** | ✅ Complete | Workflows in place, label `spec-sync` configured |
+| **3.4  – Contract validation** | ⚠️ **Partial** | Schemathesis CI fails (401 − token capture); local run pending |
+| **3.5  – Deprecate legacy docs** | ✅ Complete | Old Postman & markdown moved to `docs/legacy/` |
+| **4    – Testing Matrix** | ⚠️ **Partial** | Backend unit tests green locally & in CI; contract + TypeScript compile still flaky |
+| **5    – Factory.ai workspace** | ⏳ **Pending** | JSON config drafted; workspace script still to be created |
+
+
 ## 1 Objectives & Success Criteria
 | # | Objective | Success Criteria |
 |---|-----------|-----------------|
 | 1 | Establish a **single source of truth** for the REST API using *OpenAPI 3.1* generated from Django | `openapi.yaml` committed & versioned in backend repo root (`/api/openapi.yaml`) |
-| 2 | Provide **type-safe client code** for React app | `src/api/generated/**/*` generated via CI; no unchecked `any` |
+## 7 Known Issues & Resolutions
+
+| ID | Area | Symptom | Resolution / Mitigation | Status |
+|----|------|---------|-------------------------|--------|
+| KI-1 | Backend CI | Unicode characters (✓ ⚠ ℹ) in migrations crash Windows/SQLite CI | Replaced with ASCII `[OK] / [WARNING] / [INFO]` and added `PYTHONIOENCODING=utf-8` note | **Resolved** |
+| KI-2 | Backend CI | `get_ci_token` prints nothing → Schemathesis 401 | Added `flush=True`, removed `sys.exit(0)`, workflow now echoes token length | **Open** |
+| KI-3 | Testing Docs | Confusion between local PostgreSQL vs CI SQLite | Expanded §10 in *testing_strategy.md* with DB matrix & env-vars | **Resolved** |
+| KI-4 | Frontend | Repeated TypeScript `results`/null errors | Introduced generics (`Paginated<T>`), added missing interfaces | **Mostly Resolved** (monitor) |
+
+---
+
+## 8 Revision History
 | 3 | Fully **automate cross-repo sync** using Factory.ai & GitHub Actions | On merge of backend PR that changes spec → frontend PR with regenerated code opens automatically |
 | 4 | Introduce **contract validation** in CI | Schemathesis job passes; contract-drift check blocks merge if types out-of-date |
 | 5 | Replace legacy docs (Postman & hand-written tables) with **auto-published Swagger/ReDoc** | `/api/schema/docs/` served in dev & staging; old docs marked *deprecated* |
 
+| 2025-07-15 | Code-Droid | Updated snapshot, documented Unicode fix, added Known Issues section |
+| 2025-07-17 | Code-Droid | Front-end aligned with new authentication, build & type-check green; KI-4 closed |
 ---
 
 ## 2 Prerequisites & Dependencies

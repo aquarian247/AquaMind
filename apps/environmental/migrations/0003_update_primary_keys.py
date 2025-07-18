@@ -29,9 +29,9 @@ def update_primary_keys_if_postgres(apps, schema_editor):
                 PRIMARY KEY (id, reading_time);
             """
         )
-        print("✓ Successfully updated EnvironmentalReading primary key")
+        print("[OK] Successfully updated EnvironmentalReading primary key")
     except Exception as e:
-        print(f"⚠ Error updating EnvironmentalReading primary key: {e}")
+        print(f"[WARNING] Error updating EnvironmentalReading primary key: {e}")
     
     # Update WeatherData primary key
     try:
@@ -47,9 +47,9 @@ def update_primary_keys_if_postgres(apps, schema_editor):
                 PRIMARY KEY (id, timestamp);
             """
         )
-        print("✓ Successfully updated WeatherData primary key")
+        print("[OK] Successfully updated WeatherData primary key")
     except Exception as e:
-        print(f"⚠ Error updating WeatherData primary key: {e}")
+        print(f"[WARNING] Error updating WeatherData primary key: {e}")
 
 
 def revert_primary_keys_if_postgres(apps, schema_editor):
@@ -76,7 +76,7 @@ def revert_primary_keys_if_postgres(apps, schema_editor):
             """
         )
     except Exception as e:
-        print(f"⚠ Error reverting EnvironmentalReading primary key: {e}")
+        print(f"[WARNING] Error reverting EnvironmentalReading primary key: {e}")
     
     # Revert WeatherData primary key
     try:
@@ -93,7 +93,7 @@ def revert_primary_keys_if_postgres(apps, schema_editor):
             """
         )
     except Exception as e:
-        print(f"⚠ Error reverting WeatherData primary key: {e}")
+        print(f"[WARNING] Error reverting WeatherData primary key: {e}")
 
 
 class Migration(migrations.Migration):

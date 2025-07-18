@@ -26,7 +26,7 @@ def run_if_postgresql(apps, schema_editor):
         timescaledb_available = False
     
     if not timescaledb_available:
-        print("⚠ Skipping PK update: TimescaleDB not available or disabled")
+        print("[WARNING] Skipping PK update: TimescaleDB not available or disabled")
         return
     
     # SQL to drop the default primary key constraint if it exists
@@ -64,14 +64,14 @@ def run_if_postgresql(apps, schema_editor):
     with connection.cursor() as cursor:
         # 1. Drop default PK if it exists
         cursor.execute(drop_pk_sql.format(table_name='environmental_environmentalreading'))
-        print("✅ Dropped default PK constraint for environmental_environmentalreading (if it existed)")
+        print("[OK] Dropped default PK constraint for environmental_environmentalreading (if it existed)")
         
         # 2. Set composite PK
         cursor.execute(set_pk_sql.format(
             table_name='environmental_environmentalreading', 
             pk_columns='reading_time, sensor_id'
         ))
-        print("✅ Set composite primary key for environmental_environmentalreading")
+        print("[OK] Set composite primary key for environmental_environmentalreading")
         
         # 3. Create hypertable
         cursor.execute(create_hypertable_sql.format(
@@ -81,20 +81,20 @@ def run_if_postgresql(apps, schema_editor):
             num_partitions=16,
             chunk_interval='7 days'
         ))
-        print("✅ Created hypertable for environmental_environmentalreading")
+        print("[OK] Created hypertable for environmental_environmentalreading")
     
     # Process environmental_weatherdata table
     with connection.cursor() as cursor:
         # 1. Drop default PK if it exists
         cursor.execute(drop_pk_sql.format(table_name='environmental_weatherdata'))
-        print("✅ Dropped default PK constraint for environmental_weatherdata (if it existed)")
+        print("[OK] Dropped default PK constraint for environmental_weatherdata (if it existed)")
         
         # 2. Set composite PK
         cursor.execute(set_pk_sql.format(
             table_name='environmental_weatherdata', 
             pk_columns='timestamp, area_id'
         ))
-        print("✅ Set composite primary key for environmental_weatherdata")
+        print("[OK] Set composite primary key for environmental_weatherdata")
         
         # 3. Create hypertable
         cursor.execute(create_hypertable_sql.format(
@@ -104,7 +104,7 @@ def run_if_postgresql(apps, schema_editor):
             num_partitions=16,
             chunk_interval='1 month'
         ))
-        print("✅ Created hypertable for environmental_weatherdata")
+        print("[OK] Created hypertable for environmental_weatherdata")
 
 
 class Migration(migrations.Migration):

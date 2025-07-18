@@ -45,6 +45,8 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'corsheaders',
+    # OpenAPI 3.1 schema generation (migration target)
+    'drf_spectacular',
     'drf_yasg',
     'simple_history',
 ]
@@ -200,22 +202,32 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework settings
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        # NOTE:
+        # ------------------------------------------------------------------
+        # SessionAuthentication is removed for API endpoints to ensure that
+        # contract-testing tools (e.g., Schemathesis) cannot fall back to a
+        # valid Django session cookie when an invalid / missing token is sent.
+        # This prevents false-positive “ignored_auth” failures where requests
+        # accidentally succeed with HTTP 200 instead of the expected 401/403.
+    ],
+    # Enforce authentication on all endpoints by default
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # Use custom paginator that validates page numbers (page >= 1) and returns
+    # 400 on invalid values while gracefully handling out-of-range pages.
+    'DEFAULT_PAGINATION_CLASS': 'aquamind.utils.pagination.ValidatedPageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    # Use drf-spectacular for OpenAPI 3.1 generation
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # JWT settings
@@ -261,6 +273,42 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         }
     }
+}
+
+# drf-spectacular settings (single source of truth for AquaMind API)
+SPECTACULAR_SETTINGS = {
+    "TITLE": "AquaMind API",
+    "DESCRIPTION": "Unified OpenAPI 3.1 specification for the AquaMind backend.",
+    "VERSION": "v1",
+    # Do not serve the schema by default; a dedicated URL is configured in urls.py
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Apply tokenAuth (DRF TokenAuthentication) as a global requirement so that
+    # every operation in the generated OpenAPI spec explicitly requires
+    # authentication.  This ensures contract-test tools like Schemathesis send
+    # the correct header by default and highlights any endpoint that is
+    # intentionally anonymous (which would need an explicit override).
+    #
+    # The ``tokenAuth`` scheme is automatically defined by drf-spectacular from
+    # the presence of ``TokenAuthentication`` in DEFAULT_AUTHENTICATION_CLASSES.
+    "SECURITY": [{"tokenAuth": []}],
+
+    # ------------------------------------------------------------------
+    # Post-processing hooks
+    # ------------------------------------------------------------------
+    # 1.  ensure_global_security
+    #     Guarantees a top-level ``security`` block is present even when
+    #     drf-spectacular omits it (e.g., if any view forgets to declare
+    #     authentication).  This keeps tools like Schemathesis from sending
+    #     anonymous requests by default.
+    #
+    # 2.  cleanup_duplicate_security
+    #     Removes duplicate entries that drf-spectacular may generate inside
+    #     operation-level ``security`` lists, avoiding noise for contract
+    #     testing & client code generation.
+    "POSTPROCESSING_HOOKS": [
+        "aquamind.utils.openapi_utils.ensure_global_security",
+        "aquamind.utils.openapi_utils.cleanup_duplicate_security",
+    ],
 }
 
 # Using Django's default User model with extended profiles

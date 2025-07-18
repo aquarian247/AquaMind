@@ -11,6 +11,9 @@ from drf_yasg import openapi
 
 from apps.infrastructure.models.geography import Geography
 from apps.infrastructure.api.serializers.geography import GeographySerializer
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class GeographyViewSet(viewsets.ModelViewSet):
@@ -34,6 +37,9 @@ class GeographyViewSet(viewsets.ModelViewSet):
     - `name` (default)
     - `created_at`
     """
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Geography.objects.all()
     serializer_class = GeographySerializer

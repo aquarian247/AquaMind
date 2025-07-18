@@ -16,7 +16,7 @@ def update_primary_keys(apps, schema_editor):
     """
     # Skip if not PostgreSQL or TimescaleDB is not available
     if not is_timescaledb_available():
-        print("⚠ Skipping PK update: TimescaleDB not available or disabled")
+        print("[WARNING] Skipping PK update: TimescaleDB not available or disabled")
         return
         
     # Environmental Reading PK update
@@ -27,9 +27,9 @@ def update_primary_keys(apps, schema_editor):
         schema_editor.execute(
             "ALTER TABLE environmental_environmentalreading ADD CONSTRAINT environmental_environmentalreading_pkey PRIMARY KEY (id, reading_time)"
         )
-        print("✓ Updated EnvironmentalReading primary key")
+        print("[OK] Updated EnvironmentalReading primary key")
     except Exception as e:
-        print(f"⚠ Error updating EnvironmentalReading PK: {e}")
+        print(f"[WARNING] Error updating EnvironmentalReading PK: {e}")
         
     # Weather Data PK update
     try:
@@ -39,9 +39,9 @@ def update_primary_keys(apps, schema_editor):
         schema_editor.execute(
             "ALTER TABLE environmental_weatherdata ADD CONSTRAINT environmental_weatherdata_pkey PRIMARY KEY (id, timestamp)"
         )
-        print("✓ Updated WeatherData primary key")
+        print("[OK] Updated WeatherData primary key")
     except Exception as e:
-        print(f"⚠ Error updating WeatherData PK: {e}")
+        print(f"[WARNING] Error updating WeatherData PK: {e}")
 
 
 # Custom operations for TimescaleDB
@@ -49,7 +49,7 @@ def create_environmentalreading_hypertable(apps, schema_editor):
     """Create TimescaleDB hypertable for environmental readings"""
     # Skip if TimescaleDB is not available
     if not is_timescaledb_available():
-        print("⚠ Skipping TimescaleDB operation: Create hypertable for environmental_environmentalreading on reading_time")
+        print("[WARNING] Skipping TimescaleDB operation: Create hypertable for environmental_environmentalreading on reading_time")
         return
         
     create_hypertable(
@@ -68,7 +68,7 @@ def create_weatherdata_hypertable(apps, schema_editor):
     """Create TimescaleDB hypertable for weather data"""
     # Skip if TimescaleDB is not available
     if not is_timescaledb_available():
-        print("ℹ Skipping TimescaleDB operation: Create hypertable for environmental_weatherdata on timestamp")
+        print("[INFO] Skipping TimescaleDB operation: Create hypertable for environmental_weatherdata on timestamp")
         return
         
     create_hypertable(

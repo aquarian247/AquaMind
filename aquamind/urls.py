@@ -26,6 +26,12 @@ from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
 # from apps.core.views import CSRFTokenView  # Temporarily disabled
+# drf-spectacular (OpenAPI 3.1) views – target replacement for drf-yasg
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
 
 # Swagger/OpenAPI documentation setup
 schema_view = get_schema_view(
@@ -37,7 +43,11 @@ schema_view = get_schema_view(
         license=openapi.License(name="Commercial License"),
     ),
     public=True,
-    permission_classes=(permissions.AllowAny,),
+    # Documentation endpoints should respect the same authentication guard as
+    # the rest of the API.  Requiring authentication here prevents accidental
+    # exposure of schema details in non-development environments and keeps
+    # contract-test tooling consistent.
+    permission_classes=(permissions.IsAuthenticated,),
 )
 
 urlpatterns = [
@@ -45,6 +55,19 @@ urlpatterns = [
     path("health/", include(('apps.health.urls', 'health'), namespace='health')), # Include health app URLs
     
     # API documentation
+    # --- drf-spectacular (new, OpenAPI 3.1 single source of truth) ---
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="spectacular-swagger-ui",
+    ),
+    path(
+        "api/schema/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="spectacular-redoc",
+    ),
+    # --- legacy drf-yasg endpoints (to be deprecated once migration completes) ---
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     

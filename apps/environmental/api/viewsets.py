@@ -1,10 +1,13 @@
-"""
+﻿"""
 ViewSets for the environmental app API.
 
 These ViewSets provide the CRUD operations for environmental models,
 with special handling for TimescaleDB hypertables.
 """
 from rest_framework import viewsets, filters
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -32,6 +35,10 @@ from apps.environmental.api.serializers import (
 class EnvironmentalParameterViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing EnvironmentalParameter instances."""
     
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     queryset = EnvironmentalParameter.objects.all()
     serializer_class = EnvironmentalParameterSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -47,6 +54,10 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     
     Includes special filtering and aggregation methods for time-series data.
     """
+    
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = EnvironmentalReading.objects.all()
     serializer_class = EnvironmentalReadingSerializer
@@ -169,6 +180,10 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
 class PhotoperiodDataViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing PhotoperiodData instances."""
     
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     queryset = PhotoperiodData.objects.all()
     serializer_class = PhotoperiodDataSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -202,6 +217,10 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     
     Includes special filtering and aggregation methods for time-series data.
     """
+    
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = WeatherData.objects.all()
     serializer_class = WeatherDataSerializer
@@ -252,6 +271,10 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
 
 class StageTransitionEnvironmentalViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing StageTransitionEnvironmental instances."""
+    
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = StageTransitionEnvironmental.objects.all()
     serializer_class = StageTransitionEnvironmentalSerializer
