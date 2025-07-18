@@ -108,6 +108,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEnvironmentalParameterList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_parameters_create
       description: ViewSet for viewing and editing EnvironmentalParameter instances.
@@ -136,6 +138,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/environmental/parameters/{id}/:
     put:
       operationId: api_v1_environmental_parameters_update
@@ -174,6 +178,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_parameters_partial_update
       description: ViewSet for viewing and editing EnvironmentalParameter instances.
@@ -210,6 +216,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_environmental_parameters_retrieve
       description: ViewSet for viewing and editing EnvironmentalParameter instances.
@@ -325,6 +333,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEnvironmentalReadingList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_readings_create
       description: |-
@@ -356,6 +366,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalReading'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/environmental/readings/recent/:
     get:
       operationId: api_v1_environmental_readings_recent_retrieve
@@ -431,6 +443,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalReading'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_readings_partial_update
       description: |-
@@ -470,6 +484,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvironmentalReading'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_environmental_readings_retrieve
       description: |-
@@ -575,6 +591,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPhotoperiodDataList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_photoperiod_create
       description: ViewSet for viewing and editing PhotoperiodData instances.
@@ -603,6 +621,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PhotoperiodData'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/environmental/photoperiod/{id}/:
     put:
       operationId: api_v1_environmental_photoperiod_update
@@ -641,6 +661,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PhotoperiodData'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_photoperiod_partial_update
       description: ViewSet for viewing and editing PhotoperiodData instances.
@@ -677,6 +699,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PhotoperiodData'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_environmental_photoperiod_retrieve
       description: ViewSet for viewing and editing PhotoperiodData instances.
@@ -770,6 +794,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWeatherDataList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_weather_create
       description: |-
@@ -801,6 +827,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/WeatherData'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/environmental/weather/recent/:
     get:
       operationId: api_v1_environmental_weather_recent_retrieve
@@ -859,6 +887,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/WeatherData'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_weather_partial_update
       description: |-
@@ -898,6 +928,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/WeatherData'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_environmental_weather_retrieve
       description: |-
@@ -994,6 +1026,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedStageTransitionEnvironmentalList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_stage_transitions_create
       description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
@@ -1022,6 +1056,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/StageTransitionEnvironmental'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/environmental/stage-transitions/{id}/:
     put:
       operationId: api_v1_environmental_stage_transitions_update
@@ -1060,6 +1096,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/StageTransitionEnvironmental'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_stage_transitions_partial_update
       description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
@@ -1096,6 +1134,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/StageTransitionEnvironmental'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_environmental_stage_transitions_retrieve
       description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
@@ -1193,6 +1233,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSpeciesList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_species_create
       description: |-
@@ -1226,6 +1268,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Species'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/species/{id}/:
     put:
       operationId: api_v1_batch_species_update
@@ -1269,6 +1313,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Species'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_species_partial_update
       description: |-
@@ -1310,6 +1356,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Species'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_species_retrieve
       description: |-
@@ -1426,6 +1474,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedLifeCycleStageList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_lifecycle_stages_create
       description: |-
@@ -1460,6 +1510,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LifeCycleStage'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/lifecycle-stages/{id}/:
     put:
       operationId: api_v1_batch_lifecycle_stages_update
@@ -1504,6 +1556,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LifeCycleStage'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_lifecycle_stages_partial_update
       description: |-
@@ -1546,6 +1600,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LifeCycleStage'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_lifecycle_stages_retrieve
       description: |-
@@ -1687,6 +1743,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_batches_create
       description: |-
@@ -1719,6 +1777,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Batch'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/batches/compare/:
     get:
       operationId: api_v1_batch_batches_compare_retrieve
@@ -1808,6 +1868,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Batch'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_batches_partial_update
       description: |-
@@ -1870,6 +1932,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Batch'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_batches_retrieve
       description: |-
@@ -2122,6 +2186,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchContainerAssignmentList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_container_assignments_create
       description: |-
@@ -2175,6 +2241,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignment'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/container-assignments/{id}/:
     put:
       operationId: api_v1_batch_container_assignments_update
@@ -2238,6 +2306,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignment'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_container_assignments_partial_update
       description: |-
@@ -2299,6 +2369,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignment'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_container_assignments_retrieve
       description: |-
@@ -2466,6 +2538,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchCompositionList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_batch_compositions_create
       description: |-
@@ -2515,6 +2589,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchComposition'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/batch-compositions/{id}/:
     put:
       operationId: api_v1_batch_batch_compositions_update
@@ -2574,6 +2650,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchComposition'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_batch_compositions_partial_update
       description: |-
@@ -2631,6 +2709,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchComposition'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_batch_compositions_retrieve
       description: |-
@@ -2835,6 +2915,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchTransferList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_transfers_create
       description: |-
@@ -2888,6 +2970,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchTransfer'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/transfers/{id}/:
     put:
       operationId: api_v1_batch_transfers_update
@@ -2951,6 +3035,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchTransfer'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_transfers_partial_update
       description: |-
@@ -3012,6 +3098,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchTransfer'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_transfers_retrieve
       description: |-
@@ -3196,6 +3284,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMortalityEventList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_mortality_events_create
       description: |-
@@ -3244,6 +3334,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/mortality-events/{id}/:
     put:
       operationId: api_v1_batch_mortality_events_update
@@ -3302,6 +3394,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_mortality_events_partial_update
       description: |-
@@ -3358,6 +3452,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_mortality_events_retrieve
       description: |-
@@ -3513,6 +3609,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedGrowthSampleList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_batch_growth_samples_create
       description: |-
@@ -3561,6 +3659,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GrowthSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/growth-samples/{id}/:
     put:
       operationId: api_v1_batch_growth_samples_update
@@ -3619,6 +3719,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GrowthSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_batch_growth_samples_partial_update
       description: |-
@@ -3675,6 +3777,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/GrowthSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_batch_growth_samples_retrieve
       description: |-
@@ -3810,6 +3914,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_inventory_feeds_create
       description: |-
@@ -3841,6 +3947,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Feed'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feeds/{id}/:
     put:
       operationId: api_v1_inventory_feeds_update
@@ -3882,6 +3990,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Feed'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_inventory_feeds_partial_update
       description: |-
@@ -3921,6 +4031,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Feed'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_inventory_feeds_retrieve
       description: |-
@@ -4029,6 +4141,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedPurchaseList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_inventory_feed_purchases_create
       description: |-
@@ -4060,6 +4174,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedPurchase'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feed-purchases/{id}/:
     put:
       operationId: api_v1_inventory_feed_purchases_update
@@ -4101,6 +4217,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedPurchase'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_inventory_feed_purchases_partial_update
       description: |-
@@ -4140,6 +4258,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedPurchase'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_inventory_feed_purchases_retrieve
       description: |-
@@ -4239,6 +4359,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedStockList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_inventory_feed_stocks_create
       description: |-
@@ -4270,6 +4392,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feed-stocks/low_stock/:
     get:
       operationId: api_v1_inventory_feed_stocks_low_stock_retrieve
@@ -4328,6 +4452,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_inventory_feed_stocks_partial_update
       description: |-
@@ -4367,6 +4493,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_inventory_feed_stocks_retrieve
       description: |-
@@ -4497,6 +4625,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedingEventList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_inventory_feeding_events_create
       description: |-
@@ -4529,6 +4659,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feeding-events/by_batch/:
     get:
       operationId: api_v1_inventory_feeding_events_by_batch_retrieve
@@ -4588,6 +4720,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_inventory_feeding_events_partial_update
       description: |-
@@ -4628,6 +4762,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_inventory_feeding_events_retrieve
       description: |-
@@ -4734,6 +4870,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchFeedingSummaryList'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/batch-feeding-summaries/by_batch/:
     get:
       operationId: api_v1_inventory_batch_feeding_summaries_by_batch_retrieve
@@ -4780,6 +4918,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchFeedingSummary'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/batch-feeding-summaries/{id}/:
     get:
       operationId: api_v1_inventory_batch_feeding_summaries_retrieve
@@ -4891,6 +5031,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedContainerStockList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_inventory_feed_container_stock_create
       description: |-
@@ -4923,6 +5065,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedContainerStockCreate'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feed-container-stock/add_to_container/:
     post:
       operationId: api_v1_inventory_feed_container_stock_add_to_container_create
@@ -4960,6 +5104,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedContainerStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feed-container-stock/by_container/:
     get:
       operationId: api_v1_inventory_feed_container_stock_by_container_retrieve
@@ -5044,6 +5190,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedContainerStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_inventory_feed_container_stock_partial_update
       description: |-
@@ -5084,6 +5232,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedContainerStock'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_inventory_feed_container_stock_retrieve
       description: |-
@@ -5228,6 +5378,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedJournalEntryList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_journal_entries_create
       description: |-
@@ -5260,6 +5412,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/journal-entries/{id}/:
     put:
       operationId: api_v1_health_journal_entries_update
@@ -5302,6 +5456,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_journal_entries_partial_update
       description: |-
@@ -5342,6 +5498,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/JournalEntry'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_journal_entries_retrieve
       description: |-
@@ -5439,6 +5597,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMortalityReasonList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_mortality_reasons_create
       description: |-
@@ -5470,6 +5630,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityReason'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/mortality-reasons/{id}/:
     put:
       operationId: api_v1_health_mortality_reasons_update
@@ -5511,6 +5673,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityReason'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_mortality_reasons_partial_update
       description: |-
@@ -5550,6 +5714,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityReason'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_mortality_reasons_retrieve
       description: |-
@@ -5662,6 +5828,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMortalityRecordList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_mortality_records_create
       description: |-
@@ -5694,6 +5862,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityRecord'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/mortality-records/{id}/:
     put:
       operationId: api_v1_health_mortality_records_update
@@ -5736,6 +5906,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityRecord'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_mortality_records_partial_update
       description: |-
@@ -5776,6 +5948,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityRecord'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_mortality_records_retrieve
       description: |-
@@ -5887,6 +6061,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedLiceCountList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_lice_counts_create
       description: |-
@@ -5919,6 +6095,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LiceCount'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/lice-counts/{id}/:
     put:
       operationId: api_v1_health_lice_counts_update
@@ -5961,6 +6139,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LiceCount'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_lice_counts_partial_update
       description: |-
@@ -6001,6 +6181,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/LiceCount'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_lice_counts_retrieve
       description: |-
@@ -6106,6 +6288,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVaccinationTypeList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_vaccination_types_create
       description: |-
@@ -6137,6 +6321,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VaccinationType'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/vaccination-types/{id}/:
     put:
       operationId: api_v1_health_vaccination_types_update
@@ -6178,6 +6364,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VaccinationType'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_vaccination_types_partial_update
       description: |-
@@ -6217,6 +6405,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/VaccinationType'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_vaccination_types_retrieve
       description: |-
@@ -6406,6 +6596,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTreatmentList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_treatments_create
       description: |-
@@ -6438,6 +6630,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Treatment'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/treatments/{id}/:
     put:
       operationId: api_v1_health_treatments_update
@@ -6480,6 +6674,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Treatment'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_treatments_partial_update
       description: |-
@@ -6520,6 +6716,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Treatment'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_treatments_retrieve
       description: |-
@@ -6617,6 +6815,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSampleTypeList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_sample_types_create
       description: |-
@@ -6648,6 +6848,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SampleType'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/sample-types/{id}/:
     put:
       operationId: api_v1_health_sample_types_update
@@ -6689,6 +6891,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SampleType'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_sample_types_partial_update
       description: |-
@@ -6728,6 +6932,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SampleType'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_sample_types_retrieve
       description: |-
@@ -6827,6 +7033,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedHealthParameterList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_health_parameters_create
       description: |-
@@ -6858,6 +7066,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/health-parameters/{id}/:
     put:
       operationId: api_v1_health_health_parameters_update
@@ -6899,6 +7109,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_health_parameters_partial_update
       description: |-
@@ -6938,6 +7150,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthParameter'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_health_parameters_retrieve
       description: |-
@@ -7060,6 +7274,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedHealthSamplingEventList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_health_sampling_events_create
       description: |-
@@ -7093,6 +7309,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthSamplingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/health-sampling-events/{id}/:
     put:
       operationId: api_v1_health_health_sampling_events_update
@@ -7136,6 +7354,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthSamplingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_health_sampling_events_partial_update
       description: |-
@@ -7177,6 +7397,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthSamplingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_health_sampling_events_retrieve
       description: |-
@@ -7279,6 +7501,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthSamplingEvent'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/individual-fish-observations/:
     get:
       operationId: api_v1_health_individual_fish_observations_list
@@ -7328,6 +7552,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIndividualFishObservationList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_individual_fish_observations_create
       description: |-
@@ -7359,6 +7585,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/IndividualFishObservation'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/individual-fish-observations/{id}/:
     put:
       operationId: api_v1_health_individual_fish_observations_update
@@ -7400,6 +7628,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/IndividualFishObservation'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_individual_fish_observations_partial_update
       description: |-
@@ -7439,6 +7669,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/IndividualFishObservation'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_individual_fish_observations_retrieve
       description: |-
@@ -7556,6 +7788,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFishParameterScoreList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_fish_parameter_scores_create
       description: |-
@@ -7587,6 +7821,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishParameterScore'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/fish-parameter-scores/{id}/:
     put:
       operationId: api_v1_health_fish_parameter_scores_update
@@ -7628,6 +7864,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishParameterScore'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_fish_parameter_scores_partial_update
       description: |-
@@ -7667,6 +7905,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishParameterScore'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_fish_parameter_scores_retrieve
       description: |-
@@ -7802,6 +8042,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedHealthLabSampleList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_health_health_lab_samples_create
       description: |-
@@ -7834,6 +8076,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthLabSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/health/health-lab-samples/{id}/:
     put:
       operationId: api_v1_health_health_lab_samples_update
@@ -7876,6 +8120,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthLabSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_health_health_lab_samples_partial_update
       description: |-
@@ -7916,6 +8162,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthLabSample'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_health_health_lab_samples_retrieve
       description: |-
@@ -8036,6 +8284,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMaintenanceTaskList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_maintenance_tasks_create
       description: ViewSet for maintenance tasks.
@@ -8064,6 +8314,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MaintenanceTask'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/maintenance-tasks/overdue/:
     get:
       operationId: api_v1_broodstock_maintenance_tasks_overdue_retrieve
@@ -8119,6 +8371,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MaintenanceTask'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_maintenance_tasks_partial_update
       description: ViewSet for maintenance tasks.
@@ -8155,6 +8409,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MaintenanceTask'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_maintenance_tasks_retrieve
       description: ViewSet for maintenance tasks.
@@ -8239,6 +8495,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MaintenanceTask'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/fish/:
     get:
       operationId: api_v1_broodstock_fish_list
@@ -8300,6 +8558,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBroodstockFishList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_fish_create
       description: ViewSet for broodstock fish.
@@ -8328,6 +8588,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BroodstockFish'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/fish/by_container/:
     get:
       operationId: api_v1_broodstock_fish_by_container_retrieve
@@ -8400,6 +8662,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BroodstockFish'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_fish_partial_update
       description: ViewSet for broodstock fish.
@@ -8436,6 +8700,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BroodstockFish'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_fish_retrieve
       description: ViewSet for broodstock fish.
@@ -8543,6 +8809,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFishMovementList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_fish_movements_create
       description: ViewSet for fish movements.
@@ -8571,6 +8839,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishMovement'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/fish-movements/bulk_transfer/:
     post:
       operationId: api_v1_broodstock_fish_movements_bulk_transfer_create
@@ -8600,6 +8870,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishMovement'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/fish-movements/{id}/:
     put:
       operationId: api_v1_broodstock_fish_movements_update
@@ -8638,6 +8910,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishMovement'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_fish_movements_partial_update
       description: ViewSet for fish movements.
@@ -8674,6 +8948,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FishMovement'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_fish_movements_retrieve
       description: ViewSet for fish movements.
@@ -8768,6 +9044,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBreedingPlanList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_breeding_plans_create
       description: ViewSet for breeding plans.
@@ -8796,6 +9074,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPlan'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/breeding-plans/active/:
     get:
       operationId: api_v1_broodstock_breeding_plans_active_retrieve
@@ -8851,6 +9131,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPlan'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_breeding_plans_partial_update
       description: ViewSet for breeding plans.
@@ -8887,6 +9169,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPlan'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_breeding_plans_retrieve
       description: ViewSet for breeding plans.
@@ -8988,6 +9272,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBreedingTraitPriorityList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_trait_priorities_create
       description: ViewSet for breeding trait priorities.
@@ -9016,6 +9302,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingTraitPriority'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/trait-priorities/{id}/:
     put:
       operationId: api_v1_broodstock_trait_priorities_update
@@ -9054,6 +9342,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingTraitPriority'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_trait_priorities_partial_update
       description: ViewSet for breeding trait priorities.
@@ -9090,6 +9380,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingTraitPriority'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_trait_priorities_retrieve
       description: ViewSet for breeding trait priorities.
@@ -9197,6 +9489,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBreedingPairList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_breeding_pairs_create
       description: ViewSet for breeding pairs.
@@ -9225,6 +9519,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/breeding-pairs/{id}/:
     put:
       operationId: api_v1_broodstock_breeding_pairs_update
@@ -9263,6 +9559,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_breeding_pairs_partial_update
       description: ViewSet for breeding pairs.
@@ -9299,6 +9597,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_breeding_pairs_retrieve
       description: ViewSet for breeding pairs.
@@ -9383,6 +9683,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BreedingPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/egg-suppliers/:
     get:
       operationId: api_v1_broodstock_egg_suppliers_list
@@ -9421,6 +9723,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEggSupplierList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_egg_suppliers_create
       description: ViewSet for egg suppliers.
@@ -9449,6 +9753,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggSupplier'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/egg-suppliers/{id}/:
     put:
       operationId: api_v1_broodstock_egg_suppliers_update
@@ -9487,6 +9793,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggSupplier'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_egg_suppliers_partial_update
       description: ViewSet for egg suppliers.
@@ -9523,6 +9831,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggSupplier'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_egg_suppliers_retrieve
       description: ViewSet for egg suppliers.
@@ -9637,6 +9947,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedEggProductionList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_egg_productions_create
       description: ViewSet for egg production.
@@ -9665,6 +9977,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggProduction'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/egg-productions/acquire_external/:
     post:
       operationId: api_v1_broodstock_egg_productions_acquire_external_create
@@ -9694,6 +10008,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggProduction'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/egg-productions/produce_internal/:
     post:
       operationId: api_v1_broodstock_egg_productions_produce_internal_create
@@ -9723,6 +10039,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggProduction'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/egg-productions/{id}/:
     put:
       operationId: api_v1_broodstock_egg_productions_update
@@ -9761,6 +10079,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggProduction'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_egg_productions_partial_update
       description: ViewSet for egg production.
@@ -9797,6 +10117,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EggProduction'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_egg_productions_retrieve
       description: ViewSet for egg production.
@@ -9893,6 +10215,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedExternalEggBatchList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_external_egg_batches_create
       description: ViewSet for external egg batches.
@@ -9921,6 +10245,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExternalEggBatch'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/external-egg-batches/{id}/:
     put:
       operationId: api_v1_broodstock_external_egg_batches_update
@@ -9959,6 +10285,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExternalEggBatch'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_external_egg_batches_partial_update
       description: ViewSet for external egg batches.
@@ -9995,6 +10323,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExternalEggBatch'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_external_egg_batches_retrieve
       description: ViewSet for external egg batches.
@@ -10090,6 +10420,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchParentageList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_batch_parentages_create
       description: ViewSet for batch parentage.
@@ -10118,6 +10450,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchParentage'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/batch-parentages/lineage/:
     get:
       operationId: api_v1_broodstock_batch_parentages_lineage_retrieve
@@ -10173,6 +10507,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchParentage'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_batch_parentages_partial_update
       description: ViewSet for batch parentage.
@@ -10209,6 +10545,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchParentage'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_broodstock_batch_parentages_retrieve
       description: ViewSet for batch parentage.
@@ -10293,6 +10631,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTemperatureProfileList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_temperature_profiles_create
       description: ViewSet for temperature profiles.
@@ -10321,6 +10661,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemperatureProfile'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/temperature-profiles/bulk_date_ranges/:
     post:
       operationId: api_v1_scenario_temperature_profiles_bulk_date_ranges_create
@@ -10363,6 +10705,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemperatureProfile'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/temperature-profiles/download_template/:
     get:
       operationId: api_v1_scenario_temperature_profiles_download_template_retrieve
@@ -10412,6 +10756,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemperatureProfile'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/temperature-profiles/{profile_id}/:
     put:
       operationId: api_v1_scenario_temperature_profiles_update
@@ -10450,6 +10796,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemperatureProfile'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_temperature_profiles_partial_update
       description: ViewSet for temperature profiles.
@@ -10486,6 +10834,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemperatureProfile'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_temperature_profiles_retrieve
       description: ViewSet for temperature profiles.
@@ -10604,6 +10954,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedTGCModelList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_tgc_models_create
       description: Enhanced ViewSet for TGC models.
@@ -10632,6 +10984,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TGCModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/tgc-models/templates/:
     get:
       operationId: api_v1_scenario_tgc_models_templates_retrieve
@@ -10687,6 +11041,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TGCModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_tgc_models_partial_update
       description: Enhanced ViewSet for TGC models.
@@ -10723,6 +11079,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TGCModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_tgc_models_retrieve
       description: Enhanced ViewSet for TGC models.
@@ -10807,6 +11165,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TGCModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/fcr-models/:
     get:
       operationId: api_v1_scenario_fcr_models_list
@@ -10845,6 +11205,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFCRModelList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_fcr_models_create
       description: Enhanced ViewSet for FCR models.
@@ -10873,6 +11235,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FCRModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/fcr-models/templates/:
     get:
       operationId: api_v1_scenario_fcr_models_templates_retrieve
@@ -10928,6 +11292,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FCRModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_fcr_models_partial_update
       description: Enhanced ViewSet for FCR models.
@@ -10964,6 +11330,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FCRModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_fcr_models_retrieve
       description: Enhanced ViewSet for FCR models.
@@ -11087,6 +11455,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMortalityModelList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_mortality_models_create
       description: Enhanced ViewSet for mortality models.
@@ -11115,6 +11485,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/mortality-models/templates/:
     get:
       operationId: api_v1_scenario_mortality_models_templates_retrieve
@@ -11170,6 +11542,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_mortality_models_partial_update
       description: Enhanced ViewSet for mortality models.
@@ -11206,6 +11580,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityModel'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_mortality_models_retrieve
       description: Enhanced ViewSet for mortality models.
@@ -11288,6 +11664,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBiologicalConstraintsList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_biological_constraints_create
       description: ViewSet for biological constraints.
@@ -11316,6 +11694,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BiologicalConstraints'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/biological-constraints/active/:
     get:
       operationId: api_v1_scenario_biological_constraints_active_retrieve
@@ -11372,6 +11752,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BiologicalConstraints'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_biological_constraints_partial_update
       description: ViewSet for biological constraints.
@@ -11409,6 +11791,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BiologicalConstraints'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_biological_constraints_retrieve
       description: ViewSet for biological constraints.
@@ -11510,6 +11894,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedScenarioList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_scenarios_create
       description: Enhanced ViewSet for scenarios.
@@ -11538,6 +11924,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/compare/:
     post:
       operationId: api_v1_scenario_scenarios_compare_create
@@ -11574,6 +11962,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/from_batch/:
     post:
       operationId: api_v1_scenario_scenarios_from_batch_create
@@ -11612,6 +12002,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/summary_stats/:
     get:
       operationId: api_v1_scenario_scenarios_summary_stats_retrieve
@@ -11667,6 +12059,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_scenarios_partial_update
       description: Enhanced ViewSet for scenarios.
@@ -11703,6 +12097,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_scenario_scenarios_retrieve
       description: Enhanced ViewSet for scenarios.
@@ -11821,6 +12217,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/{scenario_id}/export_projections/:
     get:
       operationId: api_v1_scenario_scenarios_export_projections_retrieve
@@ -11914,6 +12312,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/:
     post:
       operationId: api_v1_scenario_scenarios_sensitivity_analysis_create
@@ -11959,6 +12359,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Scenario'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/data-entry/csv_template/:
     get:
       operationId: api_v1_scenario_data_entry_csv_template_retrieve
@@ -12030,6 +12432,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CSVUpload'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/auth/token/:
     post:
       operationId: api_v1_users_auth_token_create
@@ -12061,6 +12465,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CustomTokenObtainPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/auth/token/refresh/:
     post:
       operationId: api_v1_users_auth_token_refresh_create
@@ -12090,6 +12496,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/auth/profile/:
     get:
       operationId: api_v1_users_auth_profile_retrieve
@@ -12140,6 +12548,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserProfileUpdate'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_users_auth_profile_partial_update
       description: |-
@@ -12170,6 +12580,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserProfileUpdate'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/users/:
     get:
       operationId: api_v1_users_users_list
@@ -12211,6 +12623,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedUserList'
           description: ''
+        '400':
+          description: Bad request (validation error)
     post:
       operationId: api_v1_users_users_create
       description: |-
@@ -12242,6 +12656,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserCreate'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/users/change_password/:
     put:
       operationId: api_v1_users_users_change_password_update
@@ -12277,6 +12693,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/users/me/:
     get:
       operationId: api_v1_users_users_me_retrieve
@@ -12339,6 +12757,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+        '400':
+          description: Bad request (validation error)
     patch:
       operationId: api_v1_users_users_partial_update
       description: |-
@@ -12378,6 +12798,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: ''
+        '400':
+          description: Bad request (validation error)
     get:
       operationId: api_v1_users_users_retrieve
       description: |-
@@ -12459,6 +12881,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenObtainPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/token/refresh/:
     post:
       operationId: api_token_refresh_create
@@ -12488,6 +12912,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/auth/token/:
     post:
       operationId: api_auth_token_create
@@ -12560,6 +12986,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenObtainPair'
           description: ''
+        '400':
+          description: Bad request (validation error)
   /api/auth/jwt/refresh/:
     post:
       operationId: api_auth_jwt_refresh_create
@@ -12589,6 +13017,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
+        '400':
+          description: Bad request (validation error)
 components:
   schemas:
     AssignmentNestedBatch:

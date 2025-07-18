@@ -123,7 +123,7 @@ def cleanup_duplicate_security(
     normalises each ``security`` list so that every distinct scheme appears only
     once while preserving the original order.
 
-    The signature follows drf-spectacular’s post-processing contract.
+    The signature follows drf-spectacular's post-processing contract.
     Only the ``result`` (the full schema) is mutated.
     """
     logger.info("De-duplicating security requirements in OpenAPI schema")
@@ -222,6 +222,68 @@ def prune_legacy_paths(
         logger.info("Pruned legacy infrastructure paths from OpenAPI schema: %s",
                     removed_paths)
 
+    return schema
+
+def add_validation_error_responses(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """
+    *Minimal* post-processing hook that documents **400 Validation errors**
+    where they are most likely to occur, without over-broadening the spec.
+    
+    Strategy
+    --------
+    1. Add a ``400`` response to every **POST / PUT / PATCH** operation
+       (payload validation errors are always possible here).
+    2. Add a ``400`` response to **GET** operations that expose a ``page``
+       query parameter (pagination rejects ``page=0`` & non-ints).
+    
+    That’s it – no 401 / 422 / 500 handling here.  Keep it small; expand only
+    if the test suite shows clear gaps.
+    """
+    logger.info("Adding minimal 400-validation responses to OpenAPI schema")
+    
+    schema = result  # alias for clarity
+    
+    error_400_schema = {
+        "description": "Bad request (validation error)"
+    }
+    
+    # Process all paths and operations
+    for path, path_item in schema.get("paths", {}).items():
+        for method, operation in path_item.items():
+            if method not in {
+                "get", "post", "put", "delete", "patch", "head", "options", "trace"
+            }:
+                continue
+                
+            # Get or initialize the responses object
+            if "responses" not in operation:
+                operation["responses"] = {}
+            responses = operation["responses"]
+            
+            # ------------------------------------------------------------------
+            # (1) Always for write-methods
+            # (2) GET + explicit `page` parameter
+            # ------------------------------------------------------------------
+            if method in {"post", "put", "patch"}:
+                needs_400 = True
+            elif method == "get":
+                needs_400 = any(
+                    isinstance(p, dict) and p.get("name") == "page"
+                    for p in operation.get("parameters", [])
+                )
+            else:
+                needs_400 = False
+
+            if needs_400 and "400" not in responses:
+                responses["400"] = error_400_schema
+    
     return schema
 
 def _process_schema_objects(schemas: Dict[str, Any]) -> None:

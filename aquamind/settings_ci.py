@@ -116,6 +116,16 @@ prune_hook_path = 'aquamind.utils.openapi_utils.prune_legacy_paths'
 if prune_hook_path not in _ci_hooks:
     _ci_hooks.append(prune_hook_path)
 
+# 6) Append hook that documents *400 validation errors* for write ops
+#    ---------------------------------------------------------------
+#    A minimal, surgical hook that injects a ``400`` response only for
+#    POST / PUT / PATCH requests and GETs that include a ``page`` query
+#    parameter – avoiding an over-broad schema while satisfying
+#    Schemathesis' status-code-conformance check.
+val_hook_path = 'aquamind.utils.openapi_utils.add_validation_error_responses'
+if val_hook_path not in _ci_hooks:
+    _ci_hooks.append(val_hook_path)
+
 _ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
 
 # Final CI-specific spectacular config
