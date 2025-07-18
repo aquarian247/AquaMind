@@ -14,7 +14,6 @@ from rest_framework.routers import DefaultRouter
 # from apps.core.views import health_check  # Temporarily disabled
 
 # App-specific routers
-from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.environmental.api.routers import router as environmental_router
 from apps.batch.api.routers import router as batch_router
 from apps.inventory.api.routers import router as inventory_router
@@ -44,7 +43,6 @@ router = DefaultRouter()
 # Include routers from all apps
 router.registry.extend(batch_router.registry)
 router.registry.extend(environmental_router.registry)
-router.registry.extend(infrastructure_router.registry)
 router.registry.extend(inventory_router.registry)
 router.registry.extend(health_router.registry)
 router.registry.extend(broodstock_router.registry)
@@ -62,7 +60,15 @@ urlpatterns = [
     # path('health/', health_check, name='health_check'),  # Temporarily disabled
     
     # API endpoints for each app
-    path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
+    # ------------------------------------------------------------------
+    # NOTE:
+    # Legacy *infrastructure* endpoints have been deprecated and migrated
+    # to the new batch-centric design as part of **Phase 4 – API Contract
+    # Unification**.  The dedicated router & URL include have therefore
+    # been removed to prevent stale `/api/v1/infrastructure/*` paths from
+    # leaking into the generated OpenAPI schema (and subsequently causing
+    # Schemathesis 404 noise).
+    # ------------------------------------------------------------------
     path('environmental/', include((environmental_router.urls, 'environmental'))),
     path('batch/', include((batch_router.urls, 'batch'))),
     path('inventory/', include((inventory_router.urls, 'inventory'))),

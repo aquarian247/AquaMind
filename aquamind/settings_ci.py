@@ -105,6 +105,17 @@ dup_hook_path = 'aquamind.utils.openapi_utils.cleanup_duplicate_security'
 if dup_hook_path not in _ci_hooks:
     _ci_hooks.append(dup_hook_path)
 
+# 5) Append hook that prunes *deprecated* or otherwise obsolete paths
+#    ---------------------------------------------------------------
+#    Phase-4 of the API-contract-unification plan removes noisy 404s
+#    from Schemathesis runs that originate from stale endpoints
+#    (e.g. legacy infrastructure routes).  The hook below strips these
+#    paths from the generated OpenAPI schema to keep the contract
+#    aligned with the live router.
+prune_hook_path = 'aquamind.utils.openapi_utils.prune_legacy_paths'
+if prune_hook_path not in _ci_hooks:
+    _ci_hooks.append(prune_hook_path)
+
 _ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
 
 # Final CI-specific spectacular config

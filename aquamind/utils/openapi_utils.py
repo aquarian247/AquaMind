@@ -179,6 +179,51 @@ def cleanup_duplicate_security(
 
     return schema
 
+def prune_legacy_paths(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """
+    Post-processing hook that **removes every path** beginning with
+    ``/api/v1/infrastructure/`` from the generated OpenAPI schema.
+
+    Why remove the whole prefix?
+    ----------------------------
+    During **Phase 4 – API Contract Unification** the *infrastructure* API
+    surface was migrated to the new batch-centric design.  The underlying
+    Django routers have been deleted, yet drf-spectacular still discovers the
+    (now-stale) viewsets via historical imports, leading to hundreds of `404`
+    failures in Schemathesis runs.
+
+    Stripping the entire prefix at schema-generation time guarantees the
+    contract reflects only live endpoints without needing to micro-manage an
+    ever-growing allow/deny list.
+    """
+
+    schema = result  # alias for clarity
+
+    paths_dict = schema.get("paths", {})
+    if not paths_dict:  # Nothing to do
+        return schema
+
+    removed_paths: list[str] = []
+
+    # Cast to list to avoid 'dictionary changed size during iteration'
+    for path in list(paths_dict.keys()):
+        if path.startswith("/api/v1/infrastructure/"):
+            removed_paths.append(path)
+            paths_dict.pop(path, None)
+
+    if removed_paths:
+        logger.info("Pruned legacy infrastructure paths from OpenAPI schema: %s",
+                    removed_paths)
+
+    return schema
+
 def _process_schema_objects(schemas: Dict[str, Any]) -> None:
     """
     Recursively process schema objects to clamp integer bounds.
