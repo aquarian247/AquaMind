@@ -165,17 +165,26 @@ def cleanup_duplicate_security(
                 "options",
                 "trace",
             }:
+                # ---------------------------------------------------------------------
+                # (A) Operation *already* declares security requirements
+                # ---------------------------------------------------------------------
                 if "security" in operation and isinstance(operation["security"], list):
                     operation["security"] = _deduplicate(operation["security"])
 
-                    # -----------------------------------------------------------------
-                    # Strip anonymous access ("{}") except for explicitly whitelisted
-                    # endpoints such as the authentication views.
-                    # -----------------------------------------------------------------
+                    # Strip the anonymous `{}` marker except for whitelisted endpoints
                     if path not in EXEMPT_ANON_PATHS:
                         operation["security"] = [
                             entry for entry in operation["security"] if entry
                         ]
+
+                # ---------------------------------------------------------------------
+                # (B) Operation declares *no* security field at all
+                #     → For endpoints that should allow anonymous access, inject it.
+                # ---------------------------------------------------------------------
+                elif path in EXEMPT_ANON_PATHS:
+                    # Explicitly mark as anonymous so contract-testing tools
+                    # recognise that authentication is optional here.
+                    operation["security"] = [{}]
 
     return schema
 
