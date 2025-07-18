@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.conf import settings
 from django.contrib.auth.models import User
 from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
 
 # Local serializers for request / response documentation
 from .serializers import AuthTokenSerializer, AuthTokenResponseSerializer
@@ -18,7 +19,11 @@ from .serializers import AuthTokenSerializer, AuthTokenResponseSerializer
 
 @extend_schema(
     request=AuthTokenSerializer,
-    responses={200: AuthTokenResponseSerializer},
+    responses={
+        200: AuthTokenResponseSerializer,
+        400: OpenApiTypes.OBJECT,  # {"error": "...", ...}
+        401: OpenApiTypes.OBJECT,  # {"error": "...", ...}
+    },
     tags=["auth"],
 )
 class CustomObtainAuthToken(GenericAPIView):
@@ -60,6 +65,7 @@ class CustomObtainAuthToken(GenericAPIView):
     description="Development-only endpoint that returns an auth token without "
                 "credentials. **Disabled in production.**",
     tags=["auth"],
+    auth=[],  # Explicitly mark as anonymous in the OpenAPI spec
 )
 @api_view(['GET'])
 @permission_classes([AllowAny])
