@@ -11,6 +11,9 @@ from drf_yasg import openapi
 
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.api.serializers.hall import HallSerializer
+from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class HallViewSet(viewsets.ModelViewSet):
@@ -37,6 +40,9 @@ class HallViewSet(viewsets.ModelViewSet):
     - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
     - `created_at`
     """
+    # Explicitly override authentication to prevent SessionAuthentication fallback
+    authentication_classes = [TokenAuthentication, JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     queryset = Hall.objects.all()
     serializer_class = HallSerializer
