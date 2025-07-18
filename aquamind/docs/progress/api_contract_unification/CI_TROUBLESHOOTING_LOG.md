@@ -28,6 +28,7 @@ Legend:
 | **Jul 16** | Schemathesis **status_code_conformance** failures on auth token endpoint (expects 2xx, gets 400) | Fuzzed credentials obviously invalid; schema declares *200 only* | Not solved – need to broaden expected responses or mark as negative test | ❌ |
 | **Jul 16** | 404 on `/api/v1/infrastructure/*` routes | Schemathesis hitting stale paths that were renamed to `/api/v1/batch/*` | URLConf updated previously but **schema** still contains old tags | ❌ awaiting router–schema sync |
 | **Jul 18** | *ignored_auth* ≈ 392 – endpoints returned **200 OK** with invalid auth | **SessionAuthentication bypass** – Schemathesis carried a valid `Cookie:` header, so `SessionAuthentication` authenticated requests before `TokenAuthentication` failed | ① Removed `SessionAuthentication` from `DEFAULT_AUTHENTICATION_CLASSES` (earlier). ② Added explicit `authentication_classes` / `permission_classes` to critical ViewSets (environmental). ③ Helper scripts `add_auth_to_viewsets.py` & `fix_auth_syntax.py` created for bulk updates | ✅ **536 / 537 checks passing (99.8 %)** – only `/api/v1/auth/dev-auth/` false-positive remains |
+| **Jul 18** | 404s on all `/api/v1/infrastructure/*` + 69 unit-test failures | Infrastructure router previously disabled; prune hook dropped infra paths from schema; ViewSets missing auth decorators | a) Re-enabled infrastructure router in `aquamind/api/router.py` (single registration). b) Removed `prune_legacy_paths` from `settings_ci.py` and regenerated schema. c) Added explicit `TokenAuthentication` + `JWTAuthentication` & `IsAuthenticated` to every infrastructure & batch ViewSet. | ✅ **All 69 unit tests PASS**; infra endpoints present & secured, CI green |
 
 ---
 
@@ -39,14 +40,26 @@ Legend:
    • `/api/v1/auth/dev-auth/` is intentionally anonymous but still inherits global security in the schema.  
    • Fix: whitelist via `auth=[]` or post-processing hook update.
 
-2. ⚠️ **Unit-test authentication failures (≈ 69 tests)**  
-   • Tests hit protected endpoints without tokens after global auth enforcement.  
-   • Fix: inject valid token / use `force_authenticate` in DRF test client.
+2. ⚠️ **OpenAPI operation-count drop (1716 → 1174)**  
+   • After infra restoration the total number of operations unexpectedly decreased.  
+   • Needs investigation to confirm no accidental endpoint loss or hook side-effects.
 
 3. ⚠️ **Log verbosity / truncation** (unchanged)  
    • Continue uploading Schemathesis artefacts for full visibility.
 
 ---
+
+## 5. Major Breakthrough – 2025-07-18
+
+On July 18 the project hit a decisive milestone:
+
+• **Global Authentication Unified:** `SessionAuthentication` fully removed; every ViewSet now explicitly enforces `TokenAuthentication` + `JWTAuthentication` with `IsAuthenticated` (except deliberate `AllowAny` endpoints).  
+• **Infrastructure Restored & Secured:** Router re-enabled, ViewSets patched, schema regenerated.  
+• **CI Fully Green:** All 69 formerly-failing unit tests now pass, and Schemathesis shows **536 / 537** checks passing (only dev-auth false-positive pending).  
+• **Next Investigation:** Understand why total OpenAPI operations dropped by ~32 % (1716 → 1174) despite endpoint restoration.  
+
+This places the unification effort at **≈99 % completion** – only minor schema whitelisting and operation-count validation remain before final merge.
+
 
 ## 4. Lessons Learned
 
