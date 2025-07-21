@@ -3,6 +3,14 @@
 
 ---
 
+## 🔄 Current Status  
+
+* **StageTransitionEnvironmental 500s fixed** – search fields now reference `source_batch` / `destination_batch`; endpoint returns 200 / 400 as expected.  
+* **Pagination validation verified** – negative page numbers (`?page=-1`) correctly return **400 Bad Request** via `ValidatedPageNumberPagination`.  
+* **Fix pushed to PR branch** – CI pipeline should now run green with 100 % Schemathesis pass-rate.  
+
+---
+
 ## 1. Operation Count Investigation  
 
 | Snapshot | Date | Notes |
@@ -48,6 +56,7 @@
 2. **Contract Tests** – Schemathesis run must report **3695 / 3695 checks passed** (100 %).  
 3. **Operation-Count Gate** – `analyze_api_operations.py` exits with status 0 (difference ≤ 50 ops from expected).  
 4. **Schema Diff Gate** – Workflow fails if regenerated spec differs from committed `api/openapi.yaml`.  
+   *Regenerate schema with* `python manage.py spectacular --settings=aquamind.settings_ci > api/openapi.yaml` *to ensure identical output locally & in CI.*  
 5. **Artefacts** – Upload `schemathesis-output.txt` + `junit.xml` for PR visibility.  
 6. **Coverage** – Lines touched by PR must maintain ≥ 95 % coverage in affected apps.  
 
