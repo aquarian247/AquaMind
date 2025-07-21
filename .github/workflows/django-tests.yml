@@ -111,6 +111,12 @@ jobs:
         pip install --quiet schemathesis
 
         # Run contract checks and capture the full output for later inspection
+        # ------------------------------------------------------------------
+        # Ensure Schemathesis loads our runtime hooks (implements
+        # `fix_dev_auth_response`, `fix_action_response_types`, etc.).
+        # ------------------------------------------------------------------
+        export SCHEMATHESIS_HOOKS="aquamind/utils/schemathesis_hooks.py"
+
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
