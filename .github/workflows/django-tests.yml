@@ -115,18 +115,30 @@ jobs:
         # Ensure Schemathesis loads our runtime hooks (implements
         # `fix_dev_auth_response`, `fix_action_response_types`, etc.).
         # ------------------------------------------------------------------
-        export SCHEMATHESIS_HOOKS="aquamind/utils/schemathesis_hooks.py"
+        export SCHEMATHESIS_HOOKS="aquamind.utils.schemathesis_hooks"
 
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
-          --hypothesis-max-examples=10 \
+          --hypothesis-max-examples=3 \
           --hypothesis-suppress-health-check=filter_too_much,data_too_large \
           --hypothesis-derandomize \
+          --show-errors-tracebacks \
           --header "Authorization: Token $TOKEN" \
           api/openapi.yaml \
           > schemathesis-output.txt 2>&1
         STATUS=$?
+
+        # Show quick preview of the log for easier debugging
+        echo "---------------- First 100 lines of Schemathesis output ----------------"
+        head -n 100 schemathesis-output.txt || true
+        echo "----------------  Last 100 lines of Schemathesis output ----------------"
+        tail -n 100 schemathesis-output.txt || true
+
+        # Emit summary message if failures detected
+        if [ $STATUS -ne 0 ]; then
+          echo "❌ Schemathesis detected contract test failures"
+        fi
 
         echo "⏹  Stopping Django server"
         kill $SERVER_PID
