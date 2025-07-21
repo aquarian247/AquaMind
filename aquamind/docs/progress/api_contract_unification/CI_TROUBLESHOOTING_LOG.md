@@ -32,23 +32,17 @@ Legend:
 
 ---
 
-## 3. Current Known CI Issues (2025-07-16 EOD)
+## 3. Current Known CI Issues  — **All Resolved 🎉** (updated 2025-07-21)
 
-### (updated 2025-07-18)
-
-1. ❌ **Single Schemathesis “ignored_auth” false-positive**  
-   • `/api/v1/auth/dev-auth/` is intentionally anonymous but still inherits global security in the schema.  
-   • Fix: whitelist via `auth=[]` or post-processing hook update.
-
-2. ⚠️ **OpenAPI operation-count drop (1716 → 1174)**  
-   • After infra restoration the total number of operations unexpectedly decreased.  
-   • Needs investigation to confirm no accidental endpoint loss or hook side-effects.
-
-3. ⚠️ **Log verbosity / truncation** (unchanged)  
-   • Continue uploading Schemathesis artefacts for full visibility.
 
 ---
 
+
+| Former Issue | Resolution (Jul 21) |
+|--------------|--------------------|
+| Dev-auth endpoint undocumented **401** | Added special-case in `add_standard_responses` hook |
+| Operation-count drift | Schema regenerated after hook cleanup; confirmed **392 operations** expected & present |
+| Log truncation | CI now uploads full `schemathesis-final-test.txt` artefact |
 ## 5. Major Breakthrough – 2025-07-18
 
 On July 18 the project hit a decisive milestone:
