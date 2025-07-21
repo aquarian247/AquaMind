@@ -4,7 +4,14 @@
 
 This document outlines the standards and best practices for documenting APIs within the AquaMind project. Consistent and comprehensive API documentation is crucial for developers consuming the API, whether they are internal team members or external integrators.
 
-Our primary tool for generating API documentation is `drf-yasg`, which creates OpenAPI (Swagger) specifications from Django REST Framework (DRF) views, viewsets, serializers, and their docstrings. Adhering to these standards will ensure the generated documentation is accurate, informative, and user-friendly.
+Our primary tool for generating API documentation is **`drf-spectacular`**, which produces modern **OpenAPI 3.1** specifications from Django REST Framework (DRF) components.  
+`drf-spectacular` was chosen because it:
+
+* Automatically detects most query parameters from `filter_backends`, `filterset_fields`, ordering, pagination, etc., reducing manual boiler-plate.
+* Provides first-class OpenAPI 3.1 support and better defaults out-of-the-box.
+* Allows incremental customisation via the `@extend_schema` decorator when additional detail is needed.
+
+Adhering to the standards below will ensure the generated documentation is accurate, informative, and user-friendly.
 
 ## 2. General Principles
 
@@ -16,7 +23,7 @@ Our primary tool for generating API documentation is `drf-yasg`, which creates O
 
 ## 3. Docstring Standards
 
-Docstrings are the primary source of information for `drf-yasg`. Well-written docstrings are essential.
+Docstrings are the primary source of information for **`drf-spectacular`**. Well-written docstrings are therefore essential.
 
 ### 3.1. ViewSets and APIViews
 
@@ -47,17 +54,16 @@ This docstring should detail:
 -   Potential error response status codes and their meanings.
 
 ```python
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 class BatchViewSet(viewsets.ModelViewSet):
     # ...
-    @swagger_auto_schema(
-        operation_summary="List all batches",
-        operation_description="Retrieves a paginated list of all aquaculture batches. Supports filtering by species and status.",
-        manual_parameters=[
-            openapi.Parameter('species_id', openapi.IN_QUERY, description="Filter by species ID", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('status', openapi.IN_QUERY, description="Filter by batch status (e.g., 'active', 'harvested')", type=openapi.TYPE_STRING)
+    @extend_schema(
+        summary="List all batches",
+        description="Retrieves a paginated list of all aquaculture batches. Supports filtering by species and status.",
+        parameters=[
+            OpenApiParameter(name='species_id', type=int, location=OpenApiParameter.QUERY, description="Filter by species ID"),
+            OpenApiParameter(name='status', type=str, location=OpenApiParameter.QUERY, description="Filter by batch status (e.g., 'active', 'harvested')")
         ],
         responses={
             200: BatchSerializer(many=True),
@@ -75,9 +81,9 @@ class BatchViewSet(viewsets.ModelViewSet):
         # ... implementation ...
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create a new batch",
-        request_body=BatchCreateSerializer,
+    @extend_schema(
+        summary="Create a new batch",
+        request=BatchCreateSerializer,
         responses={
             201: BatchSerializer(),
             400: "Invalid input data"
@@ -92,8 +98,8 @@ class BatchViewSet(viewsets.ModelViewSet):
         # ... implementation ...
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve a specific batch",
+    @extend_schema(
+        summary="Retrieve a specific batch",
         responses={
             200: BatchSerializer(),
             404: "Batch not found"
@@ -137,30 +143,32 @@ class BatchSerializer(serializers.ModelSerializer):
         help_text = "Detailed representation of an aquaculture batch."
 ```
 
-## 4. Using `drf-yasg` Features
+## 4. Using `drf-spectacular` Features
 
-### 4.1. `@swagger_auto_schema` Decorator
+### 4.1. `@extend_schema` Decorator
 
-For fine-grained control over the generated documentation for a specific view or action, use the `@swagger_auto_schema` decorator. This allows you to:
--   Set `operation_summary` and `operation_description`.
--   Manually define request parameters using `openapi.Parameter` in `manual_parameters`.
--   Specify the `request_body` serializer or schema.
--   Define `responses` with status codes and their corresponding serializers or descriptions.
--   Tag operations using `tags=['Your Tag']`.
+Most of the time `drf-spectacular` will infer parameters automatically.  
+When extra control is needed, use the `@extend_schema` decorator. It allows you to:
 
-### 4.2. `openapi.Parameter`
+* Set `summary` and `description`.
+* Manually define request or query parameters via `OpenApiParameter`.
+* Specify the `request` serializer or schema.
+* Define `responses` with status codes and their corresponding serializers or descriptions.
+* Tag operations using `tags=['Your Tag']`.
+
+### 4.2. `OpenApiParameter`
 
 When `drf-yasg` cannot automatically infer query or path parameters (e.g., for complex filtering not handled by `django-filter`), define them manually:
 
 ```python
-from drf_yasg import openapi
+from drf_spectacular.utils import OpenApiParameter
 
-manual_parameters=[
-    openapi.Parameter(
-        'custom_filter',
-        openapi.IN_QUERY,
+parameters=[
+    OpenApiParameter(
+        name='custom_filter',
+        location=OpenApiParameter.QUERY,
         description="A custom filter parameter for specific logic.",
-        type=openapi.TYPE_STRING,
+        type=str,
         required=False
     )
 ]
@@ -177,14 +185,14 @@ Clearly document all possible HTTP response codes for each endpoint.
     -   `404 Not Found`: If the requested resource does not exist.
 -   **5xx (Server Errors)**: General server error.
 
-Example using `@swagger_auto_schema`:
+Example using `@extend_schema`:
 ```python
-    @swagger_auto_schema(
+    @extend_schema(
         responses={
             200: SuccessResponseSerializer(),
-            401: openapi.Response("Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("You do not have permission to perform this action."),
-            404: openapi.Response("The requested resource was not found.")
+            401: "Authentication credentials were not provided or were invalid.",
+            403: "You do not have permission to perform this action.",
+            404: "The requested resource was not found."
         }
     )
     def get(self, request):
@@ -193,7 +201,7 @@ Example using `@swagger_auto_schema`:
 
 ## 5. Markdown in Docstrings
 
-`drf-yasg` supports Markdown in docstrings. Use it to format descriptions, add lists, or emphasize important points.
+`drf-spectacular` supports Markdown in docstrings. Use it to format descriptions, add lists, or emphasize important points.
 
 ## 6. Review and Maintenance
 
@@ -204,6 +212,6 @@ Example using `@swagger_auto_schema`:
 
 ## 7. Sharing Documentation
 
--   The primary way to access API documentation is via the `/swagger/` and `/redoc/` endpoints provided by `drf-yasg`.
+-   The primary way to access API documentation is via the `/api/schema/swagger-ui/` (Swagger UI) and `/api/schema/redoc/` (ReDoc) endpoints exposed by **`drf-spectacular`**.
 -   The raw OpenAPI schema (e.g., `openapi.yaml` or `swagger.json`) can be downloaded from these UIs.
 -   Consider committing the schema file to the repository (e.g., in `docs/api/openapi.yaml`) for versioning and easy sharing. GitHub can render these files.
