@@ -170,6 +170,17 @@ def add_standard_responses(
                 _ensure_response(responses, "401", "Unauthorized")
                 _ensure_response(responses, "403", "Forbidden")
 
+            # ------------------------------------------------------------------
+            # SPECIAL-CASE: `/api/v1/auth/dev-auth/`
+            # ------------------------------------------------------------------
+            # This development endpoint is *intentionally* anonymous (`{}` in the
+            # security array) but it can still return **401** when presented with
+            # a *malformed* or expired token in the `Authorization` header that
+            # Schemathesis fuzzes.  Ensure the 401 is documented so
+            # status-code-conformance does not fail.
+            if path == "/api/v1/auth/dev-auth/":
+                _ensure_response(responses, "401", "Unauthorized")
+
             # --- 500 for all operations ----------------------------------------
             _ensure_response(responses, "500", "Internal Server Error")
 
