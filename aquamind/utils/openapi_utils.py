@@ -105,6 +105,84 @@ def ensure_global_security(
     return schema
 
 
+# --------------------------------------------------------------------------- #
+#                    ***  NEW POST-PROCESSING HOOK  ***                       #
+# --------------------------------------------------------------------------- #
+def add_standard_responses(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """
+    Post-processing hook that guarantees *baseline* response objects are present
+    for every operation in the schema.
+
+    Adds, **if not already documented**:
+        • 404 – for any path that contains a templated segment (``{id}``,
+          ``{pk}``, ``{model_id}``, …).
+        • 401, 403 – when the operation declares a non-anonymous ``security``
+          requirement.
+        • 500 – for all operations (unexpected server errors should always be
+          accounted for).
+
+    Only minimal ``description`` stubs are inserted; project-specific schemas
+    can be supplied later via `components.responses` if desired.
+    """
+    logger.info("Ensuring standard 401/403/404/500 responses are present")
+
+    schema = result  # alias for clarity
+
+    added_counts = {"401": 0, "403": 0, "404": 0, "500": 0}
+
+    def _ensure_response(responses: Dict[str, Any], status: str, description: str) -> None:
+        if status not in responses:
+            responses[status] = {"description": description}
+            added_counts[status] += 1
+
+    for path, path_item in schema.get("paths", {}).items():
+        for method, operation in path_item.items():
+            if method not in {
+                "get",
+                "post",
+                "put",
+                "delete",
+                "patch",
+                "head",
+                "options",
+                "trace",
+            }:
+                continue
+
+            # Ensure responses container exists
+            responses: Dict[str, Any] = operation.setdefault("responses", {})
+
+            # --- 404 for detail/templated paths ---------------------------------
+            if "{" in path and "}" in path:
+                _ensure_response(responses, "404", "Not Found")
+
+            # --- 401 / 403 for secured endpoints -------------------------------
+            sec = operation.get("security", [])  # may be list or missing
+            is_anonymous_allowed = any(not entry for entry in sec)  # contains {}
+            if sec and not is_anonymous_allowed:
+                _ensure_response(responses, "401", "Unauthorized")
+                _ensure_response(responses, "403", "Forbidden")
+
+            # --- 500 for all operations ----------------------------------------
+            _ensure_response(responses, "500", "Internal Server Error")
+
+    logger.info(
+        "add_standard_responses added 401=%d, 403=%d, 404=%d, 500=%d entries",
+        added_counts["401"],
+        added_counts["403"],
+        added_counts["404"],
+        added_counts["500"],
+    )
+    return schema
+
+
 def cleanup_duplicate_security(
     result: Dict[str, Any],
     *,

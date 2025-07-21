@@ -125,6 +125,17 @@ val_hook_path = 'aquamind.utils.openapi_utils.add_validation_error_responses'
 if val_hook_path not in _ci_hooks:
     _ci_hooks.append(val_hook_path)
 
+# 7) Append hook that inserts **standard 401 / 403 / 404 / 500 responses**
+#    ---------------------------------------------------------------
+#    This keeps Schemathesis from flagging “undocumented status code”
+#    failures whenever the implementation legitimately returns a 404 for a
+#    non-existent object or a 401 / 403 for failed authentication.
+#    The hook injects minimal stubs (description-only) so we don’t need to
+#    hand-annotate every single operation.
+std_hook_path = 'aquamind.utils.openapi_utils.add_standard_responses'
+if std_hook_path not in _ci_hooks:
+    _ci_hooks.append(std_hook_path)
+
 _ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
 
 # Final CI-specific spectacular config

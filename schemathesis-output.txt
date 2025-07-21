@@ -1,0 +1,5815 @@
+======================= Schemathesis test session starts =======================
+Schema location: file:///home/runner/work/AquaMind/AquaMind/api/openapi.yaml
+Base URL: http://127.0.0.1:8000
+Specification version: Open API 3.0.3
+Workers: 1
+Collected API operations: 392
+Collected API links: 0
+API probing: ...API probing: SUCCESS
+Schema analysis: ...Schema analysis: SKIP
+
+POST /api/v1/auth/token/ .                                                [  0%]
+GET /api/v1/auth/dev-auth/ .                                              [  0%]
+GET /api/v1/environmental/parameters/ .                                   [  0%]
+POST /api/v1/environmental/parameters/ .                                  [  1%]
+PUT /api/v1/environmental/parameters/{id}/ F                              [  1%]
+GET /api/v1/environmental/parameters/{id}/ F                              [  1%]
+PATCH /api/v1/environmental/parameters/{id}/ F                            [  1%]
+DELETE /api/v1/environmental/parameters/{id}/ F                           [  2%]
+GET /api/v1/environmental/readings/ .                                     [  2%]
+POST /api/v1/environmental/readings/ .                                    [  2%]
+GET /api/v1/environmental/readings/recent/ F                              [  2%]
+GET /api/v1/environmental/readings/stats/ F                               [  3%]
+PUT /api/v1/environmental/readings/{id}/ F                                [  3%]
+GET /api/v1/environmental/readings/{id}/ F                                [  3%]
+PATCH /api/v1/environmental/readings/{id}/ F                              [  3%]
+DELETE /api/v1/environmental/readings/{id}/ F                             [  4%]
+GET /api/v1/environmental/photoperiod/ .                                  [  4%]
+POST /api/v1/environmental/photoperiod/ .                                 [  4%]
+PUT /api/v1/environmental/photoperiod/{id}/ F                             [  4%]
+GET /api/v1/environmental/photoperiod/{id}/ F                             [  5%]
+PATCH /api/v1/environmental/photoperiod/{id}/ F                           [  5%]
+DELETE /api/v1/environmental/photoperiod/{id}/ F                          [  5%]
+GET /api/v1/environmental/weather/ .                                      [  5%]
+POST /api/v1/environmental/weather/ .                                     [  6%]
+GET /api/v1/environmental/weather/recent/ F                               [  6%]
+PUT /api/v1/environmental/weather/{id}/ F                                 [  6%]
+GET /api/v1/environmental/weather/{id}/ F                                 [  6%]
+PATCH /api/v1/environmental/weather/{id}/ F                               [  7%]
+DELETE /api/v1/environmental/weather/{id}/ F                              [  7%]
+GET /api/v1/environmental/stage-transitions/ F                            [  7%]
+POST /api/v1/environmental/stage-transitions/ .                           [  7%]
+PUT /api/v1/environmental/stage-transitions/{id}/ F                       [  8%]
+GET /api/v1/environmental/stage-transitions/{id}/ F                       [  8%]
+PATCH /api/v1/environmental/stage-transitions/{id}/ F                     [  8%]
+DELETE /api/v1/environmental/stage-transitions/{id}/ F                    [  8%]
+GET /api/v1/batch/species/ .                                              [  9%]
+POST /api/v1/batch/species/ .                                             [  9%]
+PUT /api/v1/batch/species/{id}/ F                                         [  9%]
+GET /api/v1/batch/species/{id}/ F                                         [  9%]
+PATCH /api/v1/batch/species/{id}/ F                                       [ 10%]
+DELETE /api/v1/batch/species/{id}/ F                                      [ 10%]
+GET /api/v1/batch/lifecycle-stages/ .                                     [ 10%]
+POST /api/v1/batch/lifecycle-stages/ .                                    [ 10%]
+PUT /api/v1/batch/lifecycle-stages/{id}/ F                                [ 11%]
+GET /api/v1/batch/lifecycle-stages/{id}/ F                                [ 11%]
+PATCH /api/v1/batch/lifecycle-stages/{id}/ F                              [ 11%]
+DELETE /api/v1/batch/lifecycle-stages/{id}/ F                             [ 11%]
+GET /api/v1/batch/batches/ .                                              [ 12%]
+POST /api/v1/batch/batches/ .                                             [ 12%]
+GET /api/v1/batch/batches/compare/ F                                      [ 12%]
+PUT /api/v1/batch/batches/{id}/ F                                         [ 13%]
+GET /api/v1/batch/batches/{id}/ F                                         [ 13%]
+PATCH /api/v1/batch/batches/{id}/ F                                       [ 13%]
+DELETE /api/v1/batch/batches/{id}/ F                                      [ 13%]
+GET /api/v1/batch/batches/{id}/growth_analysis/ F                         [ 14%]
+GET /api/v1/batch/batches/{id}/performance_metrics/ F                     [ 14%]
+GET /api/v1/batch/container-assignments/ .                                [ 14%]
+POST /api/v1/batch/container-assignments/ .                               [ 14%]
+PUT /api/v1/batch/container-assignments/{id}/ F                           [ 15%]
+GET /api/v1/batch/container-assignments/{id}/ F                           [ 15%]
+PATCH /api/v1/batch/container-assignments/{id}/ F                         [ 15%]
+DELETE /api/v1/batch/container-assignments/{id}/ F                        [ 15%]
+GET /api/v1/batch/batch-compositions/ .                                   [ 16%]
+POST /api/v1/batch/batch-compositions/ .                                  [ 16%]
+PUT /api/v1/batch/batch-compositions/{id}/ F                              [ 16%]
+GET /api/v1/batch/batch-compositions/{id}/ F                              [ 16%]
+PATCH /api/v1/batch/batch-compositions/{id}/ F                            [ 17%]
+DELETE /api/v1/batch/batch-compositions/{id}/ F                           [ 17%]
+GET /api/v1/batch/transfers/ .                                            [ 17%]
+POST /api/v1/batch/transfers/ .                                           [ 17%]
+PUT /api/v1/batch/transfers/{id}/ F                                       [ 18%]
+GET /api/v1/batch/transfers/{id}/ F                                       [ 18%]
+PATCH /api/v1/batch/transfers/{id}/ F                                     [ 18%]
+DELETE /api/v1/batch/transfers/{id}/ F                                    [ 18%]
+GET /api/v1/batch/mortality-events/ .                                     [ 19%]
+POST /api/v1/batch/mortality-events/ .                                    [ 19%]
+PUT /api/v1/batch/mortality-events/{id}/ F                                [ 19%]
+GET /api/v1/batch/mortality-events/{id}/ F                                [ 19%]
+PATCH /api/v1/batch/mortality-events/{id}/ F                              [ 20%]
+DELETE /api/v1/batch/mortality-events/{id}/ F                             [ 20%]
+GET /api/v1/batch/growth-samples/ .                                       [ 20%]
+POST /api/v1/batch/growth-samples/ F                                      [ 20%]
+PUT /api/v1/batch/growth-samples/{id}/ F                                  [ 21%]
+GET /api/v1/batch/growth-samples/{id}/ F                                  [ 21%]
+PATCH /api/v1/batch/growth-samples/{id}/ F                                [ 21%]
+DELETE /api/v1/batch/growth-samples/{id}/ F                               [ 21%]
+GET /api/v1/inventory/feeds/ .                                            [ 22%]
+POST /api/v1/inventory/feeds/ .                                           [ 22%]
+PUT /api/v1/inventory/feeds/{id}/ F                                       [ 22%]
+GET /api/v1/inventory/feeds/{id}/ F                                       [ 22%]
+PATCH /api/v1/inventory/feeds/{id}/ F                                     [ 23%]
+DELETE /api/v1/inventory/feeds/{id}/ F                                    [ 23%]
+GET /api/v1/inventory/feed-purchases/ .                                   [ 23%]
+POST /api/v1/inventory/feed-purchases/ .                                  [ 23%]
+PUT /api/v1/inventory/feed-purchases/{id}/ F                              [ 24%]
+GET /api/v1/inventory/feed-purchases/{id}/ F                              [ 24%]
+PATCH /api/v1/inventory/feed-purchases/{id}/ F                            [ 24%]
+DELETE /api/v1/inventory/feed-purchases/{id}/ F                           [ 25%]
+GET /api/v1/inventory/feed-stocks/ F                                      [ 25%]
+POST /api/v1/inventory/feed-stocks/ .                                     [ 25%]
+GET /api/v1/inventory/feed-stocks/low_stock/ F                            [ 25%]
+PUT /api/v1/inventory/feed-stocks/{id}/ F                                 [ 26%]
+GET /api/v1/inventory/feed-stocks/{id}/ F                                 [ 26%]
+PATCH /api/v1/inventory/feed-stocks/{id}/ F                               [ 26%]
+DELETE /api/v1/inventory/feed-stocks/{id}/ F                              [ 26%]
+GET /api/v1/inventory/feeding-events/ .                                   [ 27%]
+POST /api/v1/inventory/feeding-events/ .                                  [ 27%]
+GET /api/v1/inventory/feeding-events/by_batch/ F                          [ 27%]
+PUT /api/v1/inventory/feeding-events/{id}/ F                              [ 27%]
+GET /api/v1/inventory/feeding-events/{id}/ F                              [ 28%]
+PATCH /api/v1/inventory/feeding-events/{id}/ F                            [ 28%]
+DELETE /api/v1/inventory/feeding-events/{id}/ F                           [ 28%]
+GET /api/v1/inventory/batch-feeding-summaries/ .                          [ 28%]
+GET /api/v1/inventory/batch-feeding-summaries/by_batch/ F                 [ 29%]
+POST /api/v1/inventory/batch-feeding-summaries/generate/ .                [ 29%]
+GET /api/v1/inventory/batch-feeding-summaries/{id}/ F                     [ 29%]
+GET /api/v1/inventory/feed-container-stock/ .                             [ 29%]
+POST /api/v1/inventory/feed-container-stock/ .                            [ 30%]
+POST /api/v1/inventory/feed-container-stock/add_to_container/ .           [ 30%]
+GET /api/v1/inventory/feed-container-stock/by_container/ F                [ 30%]
+GET /api/v1/inventory/feed-container-stock/fifo_order/ F                  [ 30%]
+PUT /api/v1/inventory/feed-container-stock/{id}/ F                        [ 31%]
+GET /api/v1/inventory/feed-container-stock/{id}/ F                        [ 31%]
+PATCH /api/v1/inventory/feed-container-stock/{id}/ F                      [ 31%]
+DELETE /api/v1/inventory/feed-container-stock/{id}/ F                     [ 31%]
+GET /api/v1/health/journal-entries/ F                                     [ 32%]
+POST /api/v1/health/journal-entries/ .                                    [ 32%]
+PUT /api/v1/health/journal-entries/{id}/ F                                [ 32%]
+GET /api/v1/health/journal-entries/{id}/ F                                [ 32%]
+PATCH /api/v1/health/journal-entries/{id}/ F                              [ 33%]
+DELETE /api/v1/health/journal-entries/{id}/ F                             [ 33%]
+GET /api/v1/health/mortality-reasons/ .                                   [ 33%]
+POST /api/v1/health/mortality-reasons/ .                                  [ 33%]
+PUT /api/v1/health/mortality-reasons/{id}/ F                              [ 34%]
+GET /api/v1/health/mortality-reasons/{id}/ F                              [ 34%]
+PATCH /api/v1/health/mortality-reasons/{id}/ F                            [ 34%]
+DELETE /api/v1/health/mortality-reasons/{id}/ F                           [ 34%]
+GET /api/v1/health/mortality-records/ .                                   [ 35%]
+POST /api/v1/health/mortality-records/ .                                  [ 35%]
+PUT /api/v1/health/mortality-records/{id}/ F                              [ 35%]
+GET /api/v1/health/mortality-records/{id}/ F                              [ 35%]
+PATCH /api/v1/health/mortality-records/{id}/ F                            [ 36%]
+DELETE /api/v1/health/mortality-records/{id}/ F                           [ 36%]
+GET /api/v1/health/lice-counts/ F                                         [ 36%]
+POST /api/v1/health/lice-counts/ .                                        [ 36%]
+PUT /api/v1/health/lice-counts/{id}/ F                                    [ 37%]
+GET /api/v1/health/lice-counts/{id}/ F                                    [ 37%]
+PATCH /api/v1/health/lice-counts/{id}/ F                                  [ 37%]
+DELETE /api/v1/health/lice-counts/{id}/ F                                 [ 38%]
+GET /api/v1/health/vaccination-types/ .                                   [ 38%]
+POST /api/v1/health/vaccination-types/ .                                  [ 38%]
+PUT /api/v1/health/vaccination-types/{id}/ F                              [ 38%]
+GET /api/v1/health/vaccination-types/{id}/ F                              [ 39%]
+PATCH /api/v1/health/vaccination-types/{id}/ F                            [ 39%]
+DELETE /api/v1/health/vaccination-types/{id}/ F                           [ 39%]
+GET /api/v1/health/treatments/ .                                          [ 39%]
+POST /api/v1/health/treatments/ .                                         [ 40%]
+PUT /api/v1/health/treatments/{id}/ F                                     [ 40%]
+GET /api/v1/health/treatments/{id}/ F                                     [ 40%]
+PATCH /api/v1/health/treatments/{id}/ F                                   [ 40%]
+DELETE /api/v1/health/treatments/{id}/ F                                  [ 41%]
+GET /api/v1/health/sample-types/ F                                        [ 41%]
+POST /api/v1/health/sample-types/ .                                       [ 41%]
+PUT /api/v1/health/sample-types/{id}/ F                                   [ 41%]
+GET /api/v1/health/sample-types/{id}/ F                                   [ 42%]
+PATCH /api/v1/health/sample-types/{id}/ F                                 [ 42%]
+DELETE /api/v1/health/sample-types/{id}/ F                                [ 42%]
+GET /api/v1/health/health-parameters/ F                                   [ 42%]
+POST /api/v1/health/health-parameters/ .                                  [ 43%]
+PUT /api/v1/health/health-parameters/{id}/ F                              [ 43%]
+GET /api/v1/health/health-parameters/{id}/ F                              [ 43%]
+PATCH /api/v1/health/health-parameters/{id}/ F                            [ 43%]
+DELETE /api/v1/health/health-parameters/{id}/ F                           [ 44%]
+GET /api/v1/health/health-sampling-events/ .                              [ 44%]
+POST /api/v1/health/health-sampling-events/ .                             [ 44%]
+PUT /api/v1/health/health-sampling-events/{id}/ F                         [ 44%]
+GET /api/v1/health/health-sampling-events/{id}/ F                         [ 45%]
+PATCH /api/v1/health/health-sampling-events/{id}/ F                       [ 45%]
+DELETE /api/v1/health/health-sampling-events/{id}/ F                      [ 45%]
+POST /api/v1/health/health-sampling-events/{id}/calculate-aggregat[...] F [ 45%]
+GET /api/v1/health/individual-fish-observations/ .                        [ 46%]
+POST /api/v1/health/individual-fish-observations/ .                       [ 46%]
+PUT /api/v1/health/individual-fish-observations/{id}/ F                   [ 46%]
+GET /api/v1/health/individual-fish-observations/{id}/ F                   [ 46%]
+PATCH /api/v1/health/individual-fish-observations/{id}/ F                 [ 47%]
+DELETE /api/v1/health/individual-fish-observations/{id}/ F                [ 47%]
+GET /api/v1/health/fish-parameter-scores/ .                               [ 47%]
+POST /api/v1/health/fish-parameter-scores/ .                              [ 47%]
+PUT /api/v1/health/fish-parameter-scores/{id}/ F                          [ 48%]
+GET /api/v1/health/fish-parameter-scores/{id}/ F                          [ 48%]
+PATCH /api/v1/health/fish-parameter-scores/{id}/ F                        [ 48%]
+DELETE /api/v1/health/fish-parameter-scores/{id}/ F                       [ 48%]
+GET /api/v1/health/health-lab-samples/ .                                  [ 49%]
+POST /api/v1/health/health-lab-samples/ .                                 [ 49%]
+PUT /api/v1/health/health-lab-samples/{id}/ F                             [ 49%]
+GET /api/v1/health/health-lab-samples/{id}/ F                             [ 50%]
+PATCH /api/v1/health/health-lab-samples/{id}/ F                           [ 50%]
+DELETE /api/v1/health/health-lab-samples/{id}/ F                          [ 50%]
+GET /api/v1/broodstock/maintenance-tasks/ F                               [ 50%]
+POST /api/v1/broodstock/maintenance-tasks/ .                              [ 51%]
+GET /api/v1/broodstock/maintenance-tasks/overdue/ F                       [ 51%]
+PUT /api/v1/broodstock/maintenance-tasks/{id}/ F                          [ 51%]
+GET /api/v1/broodstock/maintenance-tasks/{id}/ F                          [ 51%]
+PATCH /api/v1/broodstock/maintenance-tasks/{id}/ F                        [ 52%]
+DELETE /api/v1/broodstock/maintenance-tasks/{id}/ F                       [ 52%]
+POST /api/v1/broodstock/maintenance-tasks/{id}/complete/ F                [ 52%]
+GET /api/v1/broodstock/fish/ .                                            [ 52%]
+POST /api/v1/broodstock/fish/ .                                           [ 53%]
+GET /api/v1/broodstock/fish/by_container/ F                               [ 53%]
+GET /api/v1/broodstock/fish/healthy/ F                                    [ 53%]
+PUT /api/v1/broodstock/fish/{id}/ F                                       [ 53%]
+GET /api/v1/broodstock/fish/{id}/ F                                       [ 54%]
+PATCH /api/v1/broodstock/fish/{id}/ F                                     [ 54%]
+DELETE /api/v1/broodstock/fish/{id}/ F                                    [ 54%]
+GET /api/v1/broodstock/fish-movements/ .                                  [ 54%]
+POST /api/v1/broodstock/fish-movements/ .                                 [ 55%]
+POST /api/v1/broodstock/fish-movements/bulk_transfer/ .                   [ 55%]
+PUT /api/v1/broodstock/fish-movements/{id}/ F                             [ 55%]
+GET /api/v1/broodstock/fish-movements/{id}/ F                             [ 55%]
+PATCH /api/v1/broodstock/fish-movements/{id}/ F                           [ 56%]
+DELETE /api/v1/broodstock/fish-movements/{id}/ F                          [ 56%]
+GET /api/v1/broodstock/breeding-plans/ .                                  [ 56%]
+POST /api/v1/broodstock/breeding-plans/ .                                 [ 56%]
+GET /api/v1/broodstock/breeding-plans/active/ F                           [ 57%]
+PUT /api/v1/broodstock/breeding-plans/{id}/ F                             [ 57%]
+GET /api/v1/broodstock/breeding-plans/{id}/ F                             [ 57%]
+PATCH /api/v1/broodstock/breeding-plans/{id}/ F                           [ 57%]
+DELETE /api/v1/broodstock/breeding-plans/{id}/ F                          [ 58%]
+GET /api/v1/broodstock/trait-priorities/ F                                [ 58%]
+POST /api/v1/broodstock/trait-priorities/ .                               [ 58%]
+PUT /api/v1/broodstock/trait-priorities/{id}/ F                           [ 58%]
+GET /api/v1/broodstock/trait-priorities/{id}/ F                           [ 59%]
+PATCH /api/v1/broodstock/trait-priorities/{id}/ F                         [ 59%]
+DELETE /api/v1/broodstock/trait-priorities/{id}/ F                        [ 59%]
+GET /api/v1/broodstock/breeding-pairs/ .                                  [ 59%]
+POST /api/v1/broodstock/breeding-pairs/ .                                 [ 60%]
+PUT /api/v1/broodstock/breeding-pairs/{id}/ F                             [ 60%]
+GET /api/v1/broodstock/breeding-pairs/{id}/ F                             [ 60%]
+PATCH /api/v1/broodstock/breeding-pairs/{id}/ F                           [ 60%]
+DELETE /api/v1/broodstock/breeding-pairs/{id}/ F                          [ 61%]
+POST /api/v1/broodstock/breeding-pairs/{id}/record_progeny/ F             [ 61%]
+GET /api/v1/broodstock/egg-suppliers/ F                                   [ 61%]
+POST /api/v1/broodstock/egg-suppliers/ .                                  [ 61%]
+PUT /api/v1/broodstock/egg-suppliers/{id}/ F                              [ 62%]
+GET /api/v1/broodstock/egg-suppliers/{id}/ F                              [ 62%]
+PATCH /api/v1/broodstock/egg-suppliers/{id}/ F                            [ 62%]
+DELETE /api/v1/broodstock/egg-suppliers/{id}/ F                           [ 63%]
+GET /api/v1/broodstock/egg-productions/ .                                 [ 63%]
+POST /api/v1/broodstock/egg-productions/ F                                [ 63%]
+POST /api/v1/broodstock/egg-productions/acquire_external/ .               [ 63%]
+POST /api/v1/broodstock/egg-productions/produce_internal/ .               [ 64%]
+PUT /api/v1/broodstock/egg-productions/{id}/ F                            [ 64%]
+GET /api/v1/broodstock/egg-productions/{id}/ F                            [ 64%]
+PATCH /api/v1/broodstock/egg-productions/{id}/ F                          [ 64%]
+DELETE /api/v1/broodstock/egg-productions/{id}/ F                         [ 65%]
+GET /api/v1/broodstock/external-egg-batches/ .                            [ 65%]
+POST /api/v1/broodstock/external-egg-batches/ .                           [ 65%]
+PUT /api/v1/broodstock/external-egg-batches/{id}/ F                       [ 65%]
+GET /api/v1/broodstock/external-egg-batches/{id}/ F                       [ 66%]
+PATCH /api/v1/broodstock/external-egg-batches/{id}/ F                     [ 66%]
+DELETE /api/v1/broodstock/external-egg-batches/{id}/ F                    [ 66%]
+GET /api/v1/broodstock/batch-parentages/ .                                [ 66%]
+POST /api/v1/broodstock/batch-parentages/ .                               [ 67%]
+GET /api/v1/broodstock/batch-parentages/lineage/ F                        [ 67%]
+PUT /api/v1/broodstock/batch-parentages/{id}/ F                           [ 67%]
+GET /api/v1/broodstock/batch-parentages/{id}/ F                           [ 67%]
+PATCH /api/v1/broodstock/batch-parentages/{id}/ F                         [ 68%]
+DELETE /api/v1/broodstock/batch-parentages/{id}/ F                        [ 68%]
+GET /api/v1/infrastructure/geographies/ .                                 [ 68%]
+POST /api/v1/infrastructure/geographies/ .                                [ 68%]
+PUT /api/v1/infrastructure/geographies/{id}/ F                            [ 69%]
+GET /api/v1/infrastructure/geographies/{id}/ F                            [ 69%]
+PATCH /api/v1/infrastructure/geographies/{id}/ F                          [ 69%]
+DELETE /api/v1/infrastructure/geographies/{id}/ F                         [ 69%]
+GET /api/v1/infrastructure/areas/ .                                       [ 70%]
+POST /api/v1/infrastructure/areas/ .                                      [ 70%]
+PUT /api/v1/infrastructure/areas/{id}/ F                                  [ 70%]
+GET /api/v1/infrastructure/areas/{id}/ F                                  [ 70%]
+PATCH /api/v1/infrastructure/areas/{id}/ F                                [ 71%]
+DELETE /api/v1/infrastructure/areas/{id}/ F                               [ 71%]
+GET /api/v1/infrastructure/freshwater-stations/ .                         [ 71%]
+POST /api/v1/infrastructure/freshwater-stations/ .                        [ 71%]
+PUT /api/v1/infrastructure/freshwater-stations/{id}/ F                    [ 72%]
+GET /api/v1/infrastructure/freshwater-stations/{id}/ F                    [ 72%]
+PATCH /api/v1/infrastructure/freshwater-stations/{id}/ F                  [ 72%]
+DELETE /api/v1/infrastructure/freshwater-stations/{id}/ F                 [ 72%]
+GET /api/v1/infrastructure/halls/ .                                       [ 73%]
+POST /api/v1/infrastructure/halls/ .                                      [ 73%]
+PUT /api/v1/infrastructure/halls/{id}/ F                                  [ 73%]
+GET /api/v1/infrastructure/halls/{id}/ F                                  [ 73%]
+PATCH /api/v1/infrastructure/halls/{id}/ F                                [ 74%]
+DELETE /api/v1/infrastructure/halls/{id}/ F                               [ 74%]
+GET /api/v1/infrastructure/container-types/ F                             [ 74%]
+POST /api/v1/infrastructure/container-types/ .                            [ 75%]
+PUT /api/v1/infrastructure/container-types/{id}/ F                        [ 75%]
+GET /api/v1/infrastructure/container-types/{id}/ F                        [ 75%]
+PATCH /api/v1/infrastructure/container-types/{id}/ F                      [ 75%]
+DELETE /api/v1/infrastructure/container-types/{id}/ F                     [ 76%]
+GET /api/v1/infrastructure/containers/ F                                  [ 76%]
+POST /api/v1/infrastructure/containers/ .                                 [ 76%]
+PUT /api/v1/infrastructure/containers/{id}/ F                             [ 76%]
+GET /api/v1/infrastructure/containers/{id}/ F                             [ 77%]
+PATCH /api/v1/infrastructure/containers/{id}/ F                           [ 77%]
+DELETE /api/v1/infrastructure/containers/{id}/ F                          [ 77%]
+GET /api/v1/infrastructure/sensors/ .                                     [ 77%]
+POST /api/v1/infrastructure/sensors/ .                                    [ 78%]
+PUT /api/v1/infrastructure/sensors/{id}/ F                                [ 78%]
+GET /api/v1/infrastructure/sensors/{id}/ F                                [ 78%]
+PATCH /api/v1/infrastructure/sensors/{id}/ F                              [ 78%]
+DELETE /api/v1/infrastructure/sensors/{id}/ F                             [ 79%]
+GET /api/v1/infrastructure/feed-containers/ .                             [ 79%]
+POST /api/v1/infrastructure/feed-containers/ .                            [ 79%]
+PUT /api/v1/infrastructure/feed-containers/{id}/ F                        [ 79%]
+GET /api/v1/infrastructure/feed-containers/{id}/ F                        [ 80%]
+PATCH /api/v1/infrastructure/feed-containers/{id}/ F                      [ 80%]
+DELETE /api/v1/infrastructure/feed-containers/{id}/ F                     [ 80%]
+GET /api/v1/scenario/temperature-profiles/ F                              [ 80%]
+POST /api/v1/scenario/temperature-profiles/ F                             [ 81%]
+POST /api/v1/scenario/temperature-profiles/bulk_date_ranges/ .            [ 81%]
+GET /api/v1/scenario/temperature-profiles/download_template/ F            [ 81%]
+POST /api/v1/scenario/temperature-profiles/upload_csv/ .                  [ 81%]
+PUT /api/v1/scenario/temperature-profiles/{profile_id}/ F                 [ 82%]
+GET /api/v1/scenario/temperature-profiles/{profile_id}/ F                 [ 82%]
+PATCH /api/v1/scenario/temperature-profiles/{profile_id}/ F               [ 82%]
+DELETE /api/v1/scenario/temperature-profiles/{profile_id}/ F              [ 82%]
+GET /api/v1/scenario/temperature-profiles/{profile_id}/statistics/ F      [ 83%]
+GET /api/v1/scenario/tgc-models/ .                                        [ 83%]
+POST /api/v1/scenario/tgc-models/ .                                       [ 83%]
+GET /api/v1/scenario/tgc-models/templates/ F                              [ 83%]
+PUT /api/v1/scenario/tgc-models/{model_id}/ F                             [ 84%]
+GET /api/v1/scenario/tgc-models/{model_id}/ F                             [ 84%]
+PATCH /api/v1/scenario/tgc-models/{model_id}/ F                           [ 84%]
+DELETE /api/v1/scenario/tgc-models/{model_id}/ F                          [ 84%]
+POST /api/v1/scenario/tgc-models/{model_id}/duplicate/ F                  [ 85%]
+GET /api/v1/scenario/fcr-models/ .                                        [ 85%]
+POST /api/v1/scenario/fcr-models/ F                                       [ 85%]
+GET /api/v1/scenario/fcr-models/templates/ F                              [ 85%]
+PUT /api/v1/scenario/fcr-models/{model_id}/ F                             [ 86%]
+GET /api/v1/scenario/fcr-models/{model_id}/ F                             [ 86%]
+PATCH /api/v1/scenario/fcr-models/{model_id}/ F                           [ 86%]
+DELETE /api/v1/scenario/fcr-models/{model_id}/ F                          [ 86%]
+GET /api/v1/scenario/fcr-models/{model_id}/stage_summary/ F               [ 87%]
+GET /api/v1/scenario/mortality-models/ F                                  [ 87%]
+POST /api/v1/scenario/mortality-models/ F                                 [ 87%]
+GET /api/v1/scenario/mortality-models/templates/ F                        [ 88%]
+PUT /api/v1/scenario/mortality-models/{model_id}/ F                       [ 88%]
+GET /api/v1/scenario/mortality-models/{model_id}/ F                       [ 88%]
+PATCH /api/v1/scenario/mortality-models/{model_id}/ F                     [ 88%]
+DELETE /api/v1/scenario/mortality-models/{model_id}/ F                    [ 89%]
+GET /api/v1/scenario/biological-constraints/ .                            [ 89%]
+POST /api/v1/scenario/biological-constraints/ F                           [ 89%]
+GET /api/v1/scenario/biological-constraints/active/ F                     [ 89%]
+PUT /api/v1/scenario/biological-constraints/{id}/ F                       [ 90%]
+GET /api/v1/scenario/biological-constraints/{id}/ F                       [ 90%]
+PATCH /api/v1/scenario/biological-constraints/{id}/ F                     [ 90%]
+DELETE /api/v1/scenario/biological-constraints/{id}/ F                    [ 90%]
+GET /api/v1/scenario/scenarios/ .                                         [ 91%]
+POST /api/v1/scenario/scenarios/ .                                        [ 91%]
+POST /api/v1/scenario/scenarios/compare/ .                                [ 91%]
+POST /api/v1/scenario/scenarios/from_batch/ .                             [ 91%]
+GET /api/v1/scenario/scenarios/summary_stats/ F                           [ 92%]
+PUT /api/v1/scenario/scenarios/{scenario_id}/ F                           [ 92%]
+GET /api/v1/scenario/scenarios/{scenario_id}/ F                           [ 92%]
+PATCH /api/v1/scenario/scenarios/{scenario_id}/ F                         [ 92%]
+DELETE /api/v1/scenario/scenarios/{scenario_id}/ F                        [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/chart_data/ F                [ 93%]
+POST /api/v1/scenario/scenarios/{scenario_id}/duplicate/ F                [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/export_projections/ F        [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/projections/ F               [ 94%]
+POST /api/v1/scenario/scenarios/{scenario_id}/run_projection/ F           [ 94%]
+POST /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis[...] F [ 94%]
+GET /api/v1/scenario/data-entry/csv_template/ F                           [ 94%]
+GET /api/v1/scenario/data-entry/import_status/ F                          [ 95%]
+POST /api/v1/scenario/data-entry/validate_csv/ .                          [ 95%]
+POST /api/v1/users/auth/token/ F                                          [ 95%]
+POST /api/v1/users/auth/token/refresh/ F                                  [ 95%]
+GET /api/v1/users/auth/profile/ F                                         [ 96%]
+PUT /api/v1/users/auth/profile/ F                                         [ 96%]
+PATCH /api/v1/users/auth/profile/ F                                       [ 96%]
+GET /api/v1/users/users/ F                                                [ 96%]
+POST /api/v1/users/users/ F                                               [ 97%]
+PUT /api/v1/users/users/change_password/ .                                [ 97%]
+GET /api/v1/users/users/me/ F                                             [ 97%]
+PUT /api/v1/users/users/{id}/ F                                           [ 97%]
+GET /api/v1/users/users/{id}/ F                                           [ 98%]
+PATCH /api/v1/users/users/{id}/ F                                         [ 98%]
+DELETE /api/v1/users/users/{id}/ F                                        [ 98%]
+POST /api/token/ F                                                        [ 98%]
+POST /api/token/refresh/ F                                                [ 99%]
+POST /api/auth/token/ .                                                   [ 99%]
+POST /api/auth/jwt/ F                                                     [ 99%]
+POST /api/auth/jwt/refresh/ F                                             [100%]
+
+=================================== FAILURES ===================================
+__________________ PUT /api/v1/environmental/parameters/{id}/ __________________
+1. Test Case ID: 70OUtK
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": "", "unit": ""}' http://127.0.0.1:8000/api/v1/environmental/parameters/0/
+
+__________________ GET /api/v1/environmental/parameters/{id}/ __________________
+1. Test Case ID: qs8Pft
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/parameters/0/
+
+_________________ PATCH /api/v1/environmental/parameters/{id}/ _________________
+1. Test Case ID: 1lgMnq
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/environmental/parameters/0/
+
+________________ DELETE /api/v1/environmental/parameters/{id}/ _________________
+1. Test Case ID: WbPm3y
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/parameters/0/
+
+__________________ GET /api/v1/environmental/readings/recent/ __________________
+1. Test Case ID: KjNOr1
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for the EnvironmentalReading model.\n\nHandles...
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "parameter_name": {
+                    "type": "string",
+                    "readOnly": true,
+                    "description": "Name of the environmental parameter being measured."
+                },
+                "container_name": {
+                    "type": "string",
+                    "readOnly": true,
+                    "description": "Name of the container where the reading was taken."
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/readings/recent/
+
+__________________ GET /api/v1/environmental/readings/stats/ ___________________
+1. Test Case ID: LXPIkI
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for the EnvironmentalReading model.\n\nHandles...
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "parameter_name": {
+                    "type": "string",
+                    "readOnly": true,
+                    "description": "Name of the environmental parameter being measured."
+                },
+                "container_name": {
+                    "type": "string",
+                    "readOnly": true,
+                    "description": "Name of the container where the reading was taken."
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/readings/stats/
+
+___________________ PUT /api/v1/environmental/readings/{id}/ ___________________
+1. Test Case ID: TTEWs9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalReading matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container": 0, "parameter": 0, "reading_time": "2000-01-01T00:00:00Z", "value": ""}' http://127.0.0.1:8000/api/v1/environmental/readings/0/
+
+___________________ GET /api/v1/environmental/readings/{id}/ ___________________
+1. Test Case ID: gZj2gm
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalReading matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/readings/0/
+
+__________________ PATCH /api/v1/environmental/readings/{id}/ __________________
+1. Test Case ID: MnOBM9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalReading matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/readings/0/
+
+_________________ DELETE /api/v1/environmental/readings/{id}/ __________________
+1. Test Case ID: OJ05TP
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No EnvironmentalReading matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/readings/0/
+
+_________________ PUT /api/v1/environmental/photoperiod/{id}/ __________________
+1. Test Case ID: 504kG8
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No PhotoperiodData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"area": 0, "date": "2000-01-01", "day_length_hours": ""}' http://127.0.0.1:8000/api/v1/environmental/photoperiod/0/
+
+_________________ GET /api/v1/environmental/photoperiod/{id}/ __________________
+1. Test Case ID: P6ywHI
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No PhotoperiodData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/photoperiod/0/
+
+________________ PATCH /api/v1/environmental/photoperiod/{id}/ _________________
+1. Test Case ID: Qz6tDr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No PhotoperiodData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/photoperiod/0/
+
+________________ DELETE /api/v1/environmental/photoperiod/{id}/ ________________
+1. Test Case ID: C7p7WN
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No PhotoperiodData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/photoperiod/0/
+
+__________________ GET /api/v1/environmental/weather/recent/ ___________________
+1. Test Case ID: miKILJ
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for the WeatherData model.\n\nHandles Timescal...
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "area_name": {
+                    "type": "string",
+                    "readOnly": true,
+                    "description": "Name of the area where this weather data was reco...
+                },
+                "area": {
+                    "type": "integer",
+                    "description": "The area where this weather data was recorded.",
+                    "maximum": 9223372036854775807,
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/weather/recent/
+
+___________________ PUT /api/v1/environmental/weather/{id}/ ____________________
+1. Test Case ID: VFgkLd
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No WeatherData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"area": 0, "timestamp": "2000-01-01T00:00:00Z"}' http://127.0.0.1:8000/api/v1/environmental/weather/0/
+
+___________________ GET /api/v1/environmental/weather/{id}/ ____________________
+1. Test Case ID: 3fG7Zt
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No WeatherData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/weather/0/
+
+__________________ PATCH /api/v1/environmental/weather/{id}/ ___________________
+1. Test Case ID: Wf0EUs
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No WeatherData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/weather/0/
+
+__________________ DELETE /api/v1/environmental/weather/{id}/ __________________
+1. Test Case ID: 1KyIVp
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No WeatherData matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/weather/0/
+
+_________________ GET /api/v1/environmental/stage-transitions/ _________________
+1. Test Case ID: pXQBS4
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 200, 400
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>FieldError
+              at /api/v1/environmental/stage-transitions/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; } // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/environmental/stage-transitions/?search=0'
+
+______________ PUT /api/v1/environmental/stage-transitions/{id}/ _______________
+1. Test Case ID: vUp2X1
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No StageTransitionEnvironmental matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch_transfer": 0}' http://127.0.0.1:8000/api/v1/environmental/stage-transitions/0/
+
+______________ GET /api/v1/environmental/stage-transitions/{id}/ _______________
+1. Test Case ID: CDHz5D
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No StageTransitionEnvironmental matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/stage-transitions/0/
+
+_____________ PATCH /api/v1/environmental/stage-transitions/{id}/ ______________
+1. Test Case ID: lYVtBu
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No StageTransitionEnvironmental matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/stage-transitions/0/
+
+_____________ DELETE /api/v1/environmental/stage-transitions/{id}/ _____________
+1. Test Case ID: KI9zQy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No StageTransitionEnvironmental matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/environmental/stage-transitions/0/
+
+_______________________ PUT /api/v1/batch/species/{id}/ ________________________
+1. Test Case ID: aaojOy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Species matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": "", "scientific_name": ""}' http://127.0.0.1:8000/api/v1/batch/species/0/
+
+_______________________ GET /api/v1/batch/species/{id}/ ________________________
+1. Test Case ID: uoOJSP
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Species matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/species/0/
+
+______________________ PATCH /api/v1/batch/species/{id}/ _______________________
+1. Test Case ID: Jgr2ZG
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Species matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/species/0/
+
+______________________ DELETE /api/v1/batch/species/{id}/ ______________________
+1. Test Case ID: vyy1HT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Species matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/species/0/
+
+___________________ PUT /api/v1/batch/lifecycle-stages/{id}/ ___________________
+1. Test Case ID: AJ17oH
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No LifeCycleStage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": "", "order": 0, "species": 0}' http://127.0.0.1:8000/api/v1/batch/lifecycle-stages/0/
+
+___________________ GET /api/v1/batch/lifecycle-stages/{id}/ ___________________
+1. Test Case ID: xdaBI9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No LifeCycleStage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/lifecycle-stages/0/
+
+__________________ PATCH /api/v1/batch/lifecycle-stages/{id}/ __________________
+1. Test Case ID: HWbtad
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No LifeCycleStage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/lifecycle-stages/0/
+
+_________________ DELETE /api/v1/batch/lifecycle-stages/{id}/ __________________
+1. Test Case ID: LOFC8S
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No LifeCycleStage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/lifecycle-stages/0/
+
+______________________ GET /api/v1/batch/batches/compare/ ______________________
+1. Test Case ID: Q5Kbbh
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"detail":"batch_ids parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/compare/
+
+_______________________ PUT /api/v1/batch/batches/{id}/ ________________________
+1. Test Case ID: FzqTjn
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch_number": "", "lifecycle_stage": 0, "species": 0, "start_date": "2000-01-01"}' http://127.0.0.1:8000/api/v1/batch/batches/0/
+
+_______________________ GET /api/v1/batch/batches/{id}/ ________________________
+1. Test Case ID: B549hH
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/0/
+
+______________________ PATCH /api/v1/batch/batches/{id}/ _______________________
+1. Test Case ID: 9Kv1i2
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/0/
+
+______________________ DELETE /api/v1/batch/batches/{id}/ ______________________
+1. Test Case ID: sk3YrD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/0/
+
+_______________ GET /api/v1/batch/batches/{id}/growth_analysis/ ________________
+1. Test Case ID: mPaQTe
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/0/growth_analysis/
+
+_____________ GET /api/v1/batch/batches/{id}/performance_metrics/ ______________
+1. Test Case ID: iQiMgy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Batch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/0/performance_metrics/
+
+________________ PUT /api/v1/batch/container-assignments/{id}/ _________________
+1. Test Case ID: ggm604
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchContainerAssignment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch_id": 0, "container_id": 0}' http://127.0.0.1:8000/api/v1/batch/container-assignments/0/
+
+________________ GET /api/v1/batch/container-assignments/{id}/ _________________
+1. Test Case ID: SngC3M
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BatchContainerAssignment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/container-assignments/0/
+
+_______________ PATCH /api/v1/batch/container-assignments/{id}/ ________________
+1. Test Case ID: Pr3Jys
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchContainerAssignment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/batch/container-assignments/0/
+
+_______________ DELETE /api/v1/batch/container-assignments/{id}/ _______________
+1. Test Case ID: knIp2B
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BatchContainerAssignment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/container-assignments/0/
+
+__________________ PUT /api/v1/batch/batch-compositions/{id}/ __________________
+1. Test Case ID: y0PCAp
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchComposition matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"biomass_kg": "", "mixed_batch_id": 0, "percentage": "", "population_count": 0, "source_batch_id": 0}' http://127.0.0.1:8000/api/v1/batch/batch-compositions/0/
+
+__________________ GET /api/v1/batch/batch-compositions/{id}/ __________________
+1. Test Case ID: Otojph
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BatchComposition matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batch-compositions/0/
+
+_________________ PATCH /api/v1/batch/batch-compositions/{id}/ _________________
+1. Test Case ID: jFR1Sr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchComposition matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batch-compositions/0/
+
+________________ DELETE /api/v1/batch/batch-compositions/{id}/ _________________
+1. Test Case ID: xucJxI
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BatchComposition matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batch-compositions/0/
+
+______________________ PUT /api/v1/batch/transfers/{id}/ _______________________
+1. Test Case ID: WLk6bj
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchTransfer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"source_batch": 0, "source_biomass_kg": "", "source_count": 0, "source_lifecycle_stage": 0, "transfer_date": "2000-01-01", "transfer_type": "MERGE", "transferred_biomass_kg": "", "transferred_count": 0}' http://127.0.0.1:8000/api/v1/batch/transfers/0/
+
+______________________ GET /api/v1/batch/transfers/{id}/ _______________________
+1. Test Case ID: Dv72AE
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BatchTransfer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/transfers/0/
+
+_____________________ PATCH /api/v1/batch/transfers/{id}/ ______________________
+1. Test Case ID: u7ZwFq
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchTransfer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/transfers/0/
+
+_____________________ DELETE /api/v1/batch/transfers/{id}/ _____________________
+1. Test Case ID: w5QDO2
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BatchTransfer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/transfers/0/
+
+___________________ PUT /api/v1/batch/mortality-events/{id}/ ___________________
+1. Test Case ID: Cal6XB
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch": 0, "biomass_kg": "", "count": 0, "event_date": "2000-01-01"}' http://127.0.0.1:8000/api/v1/batch/mortality-events/0/
+
+___________________ GET /api/v1/batch/mortality-events/{id}/ ___________________
+1. Test Case ID: LruMSP
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No MortalityEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/mortality-events/0/
+
+__________________ PATCH /api/v1/batch/mortality-events/{id}/ __________________
+1. Test Case ID: VSOgml
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/mortality-events/0/
+
+_________________ DELETE /api/v1/batch/mortality-events/{id}/ __________________
+1. Test Case ID: 6zh6V2
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No MortalityEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/mortality-events/0/
+
+______________________ POST /api/v1/batch/growth-samples/ ______________________
+1. Test Case ID: FtHGws
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 201, 400
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>TypeError
+              at /api/v1/batch/growth-samples/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { ma // Output truncated...`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"sample_size": 0}' http://127.0.0.1:8000/api/v1/batch/growth-samples/
+
+____________________ PUT /api/v1/batch/growth-samples/{id}/ ____________________
+1. Test Case ID: GVT7DK
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No GrowthSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"sample_size": 0}' http://127.0.0.1:8000/api/v1/batch/growth-samples/0/
+
+____________________ GET /api/v1/batch/growth-samples/{id}/ ____________________
+1. Test Case ID: lWnzkJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No GrowthSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/growth-samples/0/
+
+___________________ PATCH /api/v1/batch/growth-samples/{id}/ ___________________
+1. Test Case ID: 6JLYqa
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No GrowthSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/growth-samples/0/
+
+__________________ DELETE /api/v1/batch/growth-samples/{id}/ ___________________
+1. Test Case ID: BkyABR
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No GrowthSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/growth-samples/0/
+
+______________________ PUT /api/v1/inventory/feeds/{id}/ _______________________
+1. Test Case ID: 5xyMmN
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Feed matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"brand": "", "name": "", "size_category": "LARGE"}' http://127.0.0.1:8000/api/v1/inventory/feeds/0/
+
+______________________ GET /api/v1/inventory/feeds/{id}/ _______________________
+1. Test Case ID: coCHGy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Feed matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeds/0/
+
+_____________________ PATCH /api/v1/inventory/feeds/{id}/ ______________________
+1. Test Case ID: 78l5ra
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Feed matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeds/0/
+
+_____________________ DELETE /api/v1/inventory/feeds/{id}/ _____________________
+1. Test Case ID: YEpBd4
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Feed matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeds/0/
+
+__________________ PUT /api/v1/inventory/feed-purchases/{id}/ __________________
+1. Test Case ID: dUbnsD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedPurchase matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"cost_per_kg": "", "feed": 0, "purchase_date": "2000-01-01", "quantity_kg": "", "supplier": ""}' http://127.0.0.1:8000/api/v1/inventory/feed-purchases/0/
+
+__________________ GET /api/v1/inventory/feed-purchases/{id}/ __________________
+1. Test Case ID: 4q5FAr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FeedPurchase matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-purchases/0/
+
+_________________ PATCH /api/v1/inventory/feed-purchases/{id}/ _________________
+1. Test Case ID: YFdhUG
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedPurchase matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-purchases/0/
+
+________________ DELETE /api/v1/inventory/feed-purchases/{id}/ _________________
+1. Test Case ID: 1FVsn6
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FeedPurchase matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-purchases/0/
+
+______________________ GET /api/v1/inventory/feed-stocks/ ______________________
+1. Test Case ID: cTY4gV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/inventory/feed-stocks/?page=2'
+
+_________________ GET /api/v1/inventory/feed-stocks/low_stock/ _________________
+1. Test Case ID: KVdmaV
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for the FeedStock model.\n\nProvides CRUD oper...
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "feed": {
+                    "type": "integer",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "feed_name": {
+                    "type": "string",
+                    "readOnly": true
+                },
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-stocks/low_stock/
+
+___________________ PUT /api/v1/inventory/feed-stocks/{id}/ ____________________
+1. Test Case ID: QFJe2P
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"current_quantity_kg": "", "feed": 0, "feed_container": 0, "reorder_threshold_kg": ""}' http://127.0.0.1:8000/api/v1/inventory/feed-stocks/0/
+
+___________________ GET /api/v1/inventory/feed-stocks/{id}/ ____________________
+1. Test Case ID: EgE6jP
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FeedStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-stocks/0/
+
+__________________ PATCH /api/v1/inventory/feed-stocks/{id}/ ___________________
+1. Test Case ID: 6weyGa
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/inventory/feed-stocks/0/
+
+__________________ DELETE /api/v1/inventory/feed-stocks/{id}/ __________________
+1. Test Case ID: UtZZCb
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FeedStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-stocks/0/
+
+________________ GET /api/v1/inventory/feeding-events/by_batch/ ________________
+1. Test Case ID: sbNGAW
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeding-events/by_batch/
+
+__________________ PUT /api/v1/inventory/feeding-events/{id}/ __________________
+1. Test Case ID: QcnRoj
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"amount_kg": "", "batch": 0, "container": 0, "feed": 0, "feeding_date": "2000-01-01", "feeding_time": "00:00:00Z"}' http://127.0.0.1:8000/api/v1/inventory/feeding-events/0/
+
+__________________ GET /api/v1/inventory/feeding-events/{id}/ __________________
+1. Test Case ID: wANgag
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FeedingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeding-events/0/
+
+_________________ PATCH /api/v1/inventory/feeding-events/{id}/ _________________
+1. Test Case ID: sW00uo
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeding-events/0/
+
+________________ DELETE /api/v1/inventory/feeding-events/{id}/ _________________
+1. Test Case ID: JVwWBT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FeedingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeding-events/0/
+
+___________ GET /api/v1/inventory/batch-feeding-summaries/by_batch/ ____________
+1. Test Case ID: R22nki
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/batch-feeding-summaries/by_batch/
+
+_____________ GET /api/v1/inventory/batch-feeding-summaries/{id}/ ______________
+1. Test Case ID: a3Uy0H
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BatchFeedingSummary matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/batch-feeding-summaries/0/
+
+___________ GET /api/v1/inventory/feed-container-stock/by_container/ ___________
+1. Test Case ID: 9GvLCj
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for FeedContainerStock model.\n\nHandles FIFO ...
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "feed_container": {
+                    "type": "integer",
+                    "description": "Feed container where this batch is stored",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "feed_container_name": {
+                    "type": "string",
+                    "readOnly": true,
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/by_container/
+
+____________ GET /api/v1/inventory/feed-container-stock/fifo_order/ ____________
+1. Test Case ID: P2miRu
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"error":"container_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/fifo_order/
+
+_______________ PUT /api/v1/inventory/feed-container-stock/{id}/ _______________
+1. Test Case ID: gj1JbD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainerStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"entry_date": "2000-01-01T00:00:00Z", "feed_container": 0, "feed_purchase": 0, "quantity_kg": ""}' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/0/
+
+_______________ GET /api/v1/inventory/feed-container-stock/{id}/ _______________
+1. Test Case ID: 9vTF5f
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainerStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/0/
+
+______________ PATCH /api/v1/inventory/feed-container-stock/{id}/ ______________
+1. Test Case ID: 0e66z5
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainerStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/0/
+
+_____________ DELETE /api/v1/inventory/feed-container-stock/{id}/ ______________
+1. Test Case ID: G75jjf
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainerStock matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/0/
+
+_____________________ GET /api/v1/health/journal-entries/ ______________________
+1. Test Case ID: OO1RPG
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/health/journal-entries/?page=2'
+
+___________________ PUT /api/v1/health/journal-entries/{id}/ ___________________
+1. Test Case ID: KuuYtt
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No JournalEntry matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch": 0, "category": "", "description": ""}' http://127.0.0.1:8000/api/v1/health/journal-entries/0/
+
+___________________ GET /api/v1/health/journal-entries/{id}/ ___________________
+1. Test Case ID: xngKSY
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No JournalEntry matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/journal-entries/0/
+
+__________________ PATCH /api/v1/health/journal-entries/{id}/ __________________
+1. Test Case ID: sPLq0y
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No JournalEntry matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/journal-entries/0/
+
+_________________ DELETE /api/v1/health/journal-entries/{id}/ __________________
+1. Test Case ID: HO7HoN
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No JournalEntry matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/journal-entries/0/
+
+__________________ PUT /api/v1/health/mortality-reasons/{id}/ __________________
+1. Test Case ID: s9y0o1
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityReason matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"description": "", "name": ""}' http://127.0.0.1:8000/api/v1/health/mortality-reasons/0/
+
+__________________ GET /api/v1/health/mortality-reasons/{id}/ __________________
+1. Test Case ID: CG6DXw
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No MortalityReason matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-reasons/0/
+
+_________________ PATCH /api/v1/health/mortality-reasons/{id}/ _________________
+1. Test Case ID: MtRedV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityReason matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-reasons/0/
+
+________________ DELETE /api/v1/health/mortality-reasons/{id}/ _________________
+1. Test Case ID: hta3sb
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No MortalityReason matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-reasons/0/
+
+__________________ PUT /api/v1/health/mortality-records/{id}/ __________________
+1. Test Case ID: R4LOtz
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityRecord matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch": 0, "container": 0, "count": 1, "reason": 0}' http://127.0.0.1:8000/api/v1/health/mortality-records/0/
+
+__________________ GET /api/v1/health/mortality-records/{id}/ __________________
+1. Test Case ID: GQnqJY
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No MortalityRecord matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-records/0/
+
+_________________ PATCH /api/v1/health/mortality-records/{id}/ _________________
+1. Test Case ID: YV1PrR
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityRecord matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-records/0/
+
+________________ DELETE /api/v1/health/mortality-records/{id}/ _________________
+1. Test Case ID: rnFis2
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No MortalityRecord matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/mortality-records/0/
+
+_______________________ GET /api/v1/health/lice-counts/ ________________________
+1. Test Case ID: VNX6ZL
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/health/lice-counts/?page=2'
+
+_____________________ PUT /api/v1/health/lice-counts/{id}/ _____________________
+1. Test Case ID: L3cAFi
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No LiceCount matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"adult_female_count": 0, "adult_male_count": 0, "batch": 0, "container": 0, "fish_sampled": 1, "juvenile_count": 0}' http://127.0.0.1:8000/api/v1/health/lice-counts/0/
+
+_____________________ GET /api/v1/health/lice-counts/{id}/ _____________________
+1. Test Case ID: UFAM9h
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No LiceCount matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/lice-counts/0/
+
+____________________ PATCH /api/v1/health/lice-counts/{id}/ ____________________
+1. Test Case ID: 6tZV1P
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No LiceCount matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/lice-counts/0/
+
+___________________ DELETE /api/v1/health/lice-counts/{id}/ ____________________
+1. Test Case ID: 87Cuf7
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No LiceCount matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/lice-counts/0/
+
+__________________ PUT /api/v1/health/vaccination-types/{id}/ __________________
+1. Test Case ID: 76XvDv
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No VaccinationType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"description": "", "manufacturer": "", "name": ""}' http://127.0.0.1:8000/api/v1/health/vaccination-types/0/
+
+__________________ GET /api/v1/health/vaccination-types/{id}/ __________________
+1. Test Case ID: AvcHkf
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No VaccinationType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/vaccination-types/0/
+
+_________________ PATCH /api/v1/health/vaccination-types/{id}/ _________________
+1. Test Case ID: rHcgDJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No VaccinationType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/vaccination-types/0/
+
+________________ DELETE /api/v1/health/vaccination-types/{id}/ _________________
+1. Test Case ID: dybL5d
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No VaccinationType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/vaccination-types/0/
+
+_____________________ PUT /api/v1/health/treatments/{id}/ ______________________
+1. Test Case ID: eK0qLo
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Treatment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch": 0, "container": 0, "description": "", "treatment_type": "other"}' http://127.0.0.1:8000/api/v1/health/treatments/0/
+
+_____________________ GET /api/v1/health/treatments/{id}/ ______________________
+1. Test Case ID: eCz76v
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Treatment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/treatments/0/
+
+____________________ PATCH /api/v1/health/treatments/{id}/ _____________________
+1. Test Case ID: 96ZF9u
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Treatment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/treatments/0/
+
+____________________ DELETE /api/v1/health/treatments/{id}/ ____________________
+1. Test Case ID: VjhiBq
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Treatment matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/treatments/0/
+
+_______________________ GET /api/v1/health/sample-types/ _______________________
+1. Test Case ID: 5emnLy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/health/sample-types/?page=2'
+
+____________________ PUT /api/v1/health/sample-types/{id}/ _____________________
+1. Test Case ID: 9llYzY
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No SampleType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"description": "", "name": ""}' http://127.0.0.1:8000/api/v1/health/sample-types/0/
+
+____________________ GET /api/v1/health/sample-types/{id}/ _____________________
+1. Test Case ID: Svg2h7
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No SampleType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/sample-types/0/
+
+___________________ PATCH /api/v1/health/sample-types/{id}/ ____________________
+1. Test Case ID: LdLphB
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No SampleType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/sample-types/0/
+
+___________________ DELETE /api/v1/health/sample-types/{id}/ ___________________
+1. Test Case ID: La17YV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No SampleType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/sample-types/0/
+
+____________________ GET /api/v1/health/health-parameters/ _____________________
+1. Test Case ID: vLD8VJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/health/health-parameters/?page=2'
+
+__________________ PUT /api/v1/health/health-parameters/{id}/ __________________
+1. Test Case ID: Sc2Svx
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"description_score_1": "", "description_score_2": "", "description_score_3": "", "description_score_4": "", "description_score_5": "", "name": ""}' http://127.0.0.1:8000/api/v1/health/health-parameters/0/
+
+__________________ GET /api/v1/health/health-parameters/{id}/ __________________
+1. Test Case ID: YuFrnM
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No HealthParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-parameters/0/
+
+_________________ PATCH /api/v1/health/health-parameters/{id}/ _________________
+1. Test Case ID: JFdlJj
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-parameters/0/
+
+________________ DELETE /api/v1/health/health-parameters/{id}/ _________________
+1. Test Case ID: GdLGVY
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No HealthParameter matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-parameters/0/
+
+_______________ PUT /api/v1/health/health-sampling-events/{id}/ ________________
+1. Test Case ID: 4ZjiiL
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthSamplingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"assignment": 0, "number_of_fish_sampled": 0}' http://127.0.0.1:8000/api/v1/health/health-sampling-events/0/
+
+_______________ GET /api/v1/health/health-sampling-events/{id}/ ________________
+1. Test Case ID: e33yyM
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No HealthSamplingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-sampling-events/0/
+
+______________ PATCH /api/v1/health/health-sampling-events/{id}/ _______________
+1. Test Case ID: 4ah3c6
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthSamplingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/health/health-sampling-events/0/
+
+______________ DELETE /api/v1/health/health-sampling-events/{id}/ ______________
+1. Test Case ID: sLdkpM
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No HealthSamplingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-sampling-events/0/
+
+____ POST /api/v1/health/health-sampling-events/{id}/calculate-aggregates/ _____
+1. Test Case ID: O3fMhJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthSamplingEvent matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"assignment": 0, "number_of_fish_sampled": 0}' http://127.0.0.1:8000/api/v1/health/health-sampling-events/0/calculate-aggregates/
+
+____________ PUT /api/v1/health/individual-fish-observations/{id}/ _____________
+1. Test Case ID: K6OG6x
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No IndividualFishObservation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"fish_identifier": "", "length_cm": "", "sampling_event": 0, "weight_g": ""}' http://127.0.0.1:8000/api/v1/health/individual-fish-observations/0/
+
+____________ GET /api/v1/health/individual-fish-observations/{id}/ _____________
+1. Test Case ID: t5cC9v
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No IndividualFishObservation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/individual-fish-observations/0/
+
+___________ PATCH /api/v1/health/individual-fish-observations/{id}/ ____________
+1. Test Case ID: dYY6T8
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No IndividualFishObservation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/individual-fish-observations/0/
+
+___________ DELETE /api/v1/health/individual-fish-observations/{id}/ ___________
+1. Test Case ID: vmL1yF
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No IndividualFishObservation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/individual-fish-observations/0/
+
+________________ PUT /api/v1/health/fish-parameter-scores/{id}/ ________________
+1. Test Case ID: kTf74E
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FishParameterScore matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"parameter": 0, "score": 0}' http://127.0.0.1:8000/api/v1/health/fish-parameter-scores/0/
+
+________________ GET /api/v1/health/fish-parameter-scores/{id}/ ________________
+1. Test Case ID: h9xM8G
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FishParameterScore matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/fish-parameter-scores/0/
+
+_______________ PATCH /api/v1/health/fish-parameter-scores/{id}/ _______________
+1. Test Case ID: p7odka
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FishParameterScore matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/fish-parameter-scores/0/
+
+______________ DELETE /api/v1/health/fish-parameter-scores/{id}/ _______________
+1. Test Case ID: NKSqbd
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FishParameterScore matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/fish-parameter-scores/0/
+
+_________________ PUT /api/v1/health/health-lab-samples/{id}/ __________________
+1. Test Case ID: 1X7ZCz
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthLabSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=19d00cb7aa60cca9e63aa0f6baea1f8f' -d '--fd21cd14762d382a09dac070ddbf1419
+Content-Disposition: form-data; name="batch_id"
+
+0
+--fd21cd14762d382a09dac070ddbf1419
+Content-Disposition: form-data; name="container_id"
+
+0
+--fd21cd14762d382a09dac070ddbf1419
+Content-Disposition: form-data; name="sample_date"
+
+2000-01-01
+--fd21cd14762d382a09dac070ddbf1419
+Content-Disposition: form-data; name="sample_type"
+
+0
+--fd21cd14762d382a09dac070ddbf1419--
+' http://127.0.0.1:8000/api/v1/health/health-lab-samples/0/
+
+_________________ GET /api/v1/health/health-lab-samples/{id}/ __________________
+1. Test Case ID: VRcb26
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No HealthLabSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-lab-samples/0/
+
+________________ PATCH /api/v1/health/health-lab-samples/{id}/ _________________
+1. Test Case ID: q3whmP
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No HealthLabSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-lab-samples/0/
+
+________________ DELETE /api/v1/health/health-lab-samples/{id}/ ________________
+1. Test Case ID: nS68lU
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No HealthLabSample matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/health/health-lab-samples/0/
+
+__________________ GET /api/v1/broodstock/maintenance-tasks/ ___________________
+1. Test Case ID: Lq9A6E
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/?page=2'
+
+______________ GET /api/v1/broodstock/maintenance-tasks/overdue/ _______________
+1. Test Case ID: zJs0ct
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for maintenance tasks.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container": {
+                    "type": "integer",
+                    "description": "Container requiring maintenance",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container_name": {
+                    "type": "string",
+                    "readOnly": true
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/overdue/
+
+________________ PUT /api/v1/broodstock/maintenance-tasks/{id}/ ________________
+1. Test Case ID: ScDdbR
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MaintenanceTask matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container": 0, "scheduled_date": "2000-01-01T00:00:00Z", "task_type": "repair"}' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/0/
+
+________________ GET /api/v1/broodstock/maintenance-tasks/{id}/ ________________
+1. Test Case ID: XSJiw4
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No MaintenanceTask matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/0/
+
+_______________ PATCH /api/v1/broodstock/maintenance-tasks/{id}/ _______________
+1. Test Case ID: RK01us
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MaintenanceTask matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/0/
+
+______________ DELETE /api/v1/broodstock/maintenance-tasks/{id}/ _______________
+1. Test Case ID: tF2NvJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No MaintenanceTask matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/0/
+
+___________ POST /api/v1/broodstock/maintenance-tasks/{id}/complete/ ___________
+1. Test Case ID: nPs8vG
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MaintenanceTask matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container": 0, "scheduled_date": "2000-01-01T00:00:00Z", "task_type": "repair"}' http://127.0.0.1:8000/api/v1/broodstock/maintenance-tasks/0/complete/
+
+__________________ GET /api/v1/broodstock/fish/by_container/ ___________________
+1. Test Case ID: KTKogd
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"error":"container_id parameter is required."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/by_container/
+
+_____________________ GET /api/v1/broodstock/fish/healthy/ _____________________
+1. Test Case ID: dwFvLC
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for broodstock fish.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container": {
+                    "type": "integer",
+                    "description": "Current container housing the fish",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container_name": {
+                    "type": "string",
+                    "readOnly": true
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/healthy/
+
+______________________ PUT /api/v1/broodstock/fish/{id}/ _______________________
+1. Test Case ID: R1YyWj
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BroodstockFish matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container": 0}' http://127.0.0.1:8000/api/v1/broodstock/fish/0/
+
+______________________ GET /api/v1/broodstock/fish/{id}/ _______________________
+1. Test Case ID: nwgSlV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BroodstockFish matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/0/
+
+_____________________ PATCH /api/v1/broodstock/fish/{id}/ ______________________
+1. Test Case ID: VaaINQ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BroodstockFish matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/0/
+
+_____________________ DELETE /api/v1/broodstock/fish/{id}/ _____________________
+1. Test Case ID: lK3ZZu
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BroodstockFish matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/0/
+
+_________________ PUT /api/v1/broodstock/fish-movements/{id}/ __________________
+1. Test Case ID: ATXNvd
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FishMovement matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"fish": 0, "from_container": 0, "to_container": 0}' http://127.0.0.1:8000/api/v1/broodstock/fish-movements/0/
+
+_________________ GET /api/v1/broodstock/fish-movements/{id}/ __________________
+1. Test Case ID: NVx99g
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FishMovement matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish-movements/0/
+
+________________ PATCH /api/v1/broodstock/fish-movements/{id}/ _________________
+1. Test Case ID: p0056H
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FishMovement matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish-movements/0/
+
+________________ DELETE /api/v1/broodstock/fish-movements/{id}/ ________________
+1. Test Case ID: McYVNu
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FishMovement matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish-movements/0/
+
+________________ GET /api/v1/broodstock/breeding-plans/active/ _________________
+1. Test Case ID: QokXZ7
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for breeding plans.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Plan name (e.g., 'Winter 2023 Breeding')",
+                    "maxLength": 100
+                },
+                "start_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Plan start date"
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/active/
+
+_________________ PUT /api/v1/broodstock/breeding-plans/{id}/ __________________
+1. Test Case ID: ewhU8Q
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPlan matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"end_date": "2000-01-01T00:00:00Z", "name": "", "start_date": "2000-01-01T00:00:00Z"}' http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/0/
+
+_________________ GET /api/v1/broodstock/breeding-plans/{id}/ __________________
+1. Test Case ID: oCOt0z
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPlan matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/0/
+
+________________ PATCH /api/v1/broodstock/breeding-plans/{id}/ _________________
+1. Test Case ID: Lzmohr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPlan matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/0/
+
+________________ DELETE /api/v1/broodstock/breeding-plans/{id}/ ________________
+1. Test Case ID: 98tLOT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPlan matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/0/
+
+___________________ GET /api/v1/broodstock/trait-priorities/ ___________________
+1. Test Case ID: HqgDId
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/broodstock/trait-priorities/?page=2'
+
+________________ PUT /api/v1/broodstock/trait-priorities/{id}/ _________________
+1. Test Case ID: eFoLYE
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingTraitPriority matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"plan": 0, "priority_weight": 0.0, "trait_name": "size"}' http://127.0.0.1:8000/api/v1/broodstock/trait-priorities/0/
+
+________________ GET /api/v1/broodstock/trait-priorities/{id}/ _________________
+1. Test Case ID: z6jJUt
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BreedingTraitPriority matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/trait-priorities/0/
+
+_______________ PATCH /api/v1/broodstock/trait-priorities/{id}/ ________________
+1. Test Case ID: 4pkjoW
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingTraitPriority matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/trait-priorities/0/
+
+_______________ DELETE /api/v1/broodstock/trait-priorities/{id}/ _______________
+1. Test Case ID: 8cgZ4O
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BreedingTraitPriority matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/trait-priorities/0/
+
+_________________ PUT /api/v1/broodstock/breeding-pairs/{id}/ __________________
+1. Test Case ID: DgWw77
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPair matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"female_fish": 0, "male_fish": 0, "plan": 0}' http://127.0.0.1:8000/api/v1/broodstock/breeding-pairs/0/
+
+_________________ GET /api/v1/broodstock/breeding-pairs/{id}/ __________________
+1. Test Case ID: xsDpwi
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPair matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-pairs/0/
+
+________________ PATCH /api/v1/broodstock/breeding-pairs/{id}/ _________________
+1. Test Case ID: pMm2aO
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPair matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-pairs/0/
+
+________________ DELETE /api/v1/broodstock/breeding-pairs/{id}/ ________________
+1. Test Case ID: 2tc9yh
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPair matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/breeding-pairs/0/
+
+_________ POST /api/v1/broodstock/breeding-pairs/{id}/record_progeny/ __________
+1. Test Case ID: 4VxsXD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BreedingPair matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"female_fish": 0, "male_fish": 0, "plan": 0}' http://127.0.0.1:8000/api/v1/broodstock/breeding-pairs/0/record_progeny/
+
+____________________ GET /api/v1/broodstock/egg-suppliers/ _____________________
+1. Test Case ID: k3LMJm
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/broodstock/egg-suppliers/?page=2'
+
+__________________ PUT /api/v1/broodstock/egg-suppliers/{id}/ __________________
+1. Test Case ID: 4T5RPT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EggSupplier matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"contact_details": "", "name": ""}' http://127.0.0.1:8000/api/v1/broodstock/egg-suppliers/0/
+
+__________________ GET /api/v1/broodstock/egg-suppliers/{id}/ __________________
+1. Test Case ID: PL3exZ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No EggSupplier matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-suppliers/0/
+
+_________________ PATCH /api/v1/broodstock/egg-suppliers/{id}/ _________________
+1. Test Case ID: MZU8wt
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EggSupplier matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-suppliers/0/
+
+________________ DELETE /api/v1/broodstock/egg-suppliers/{id}/ _________________
+1. Test Case ID: ncmAkh
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No EggSupplier matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-suppliers/0/
+
+___________________ POST /api/v1/broodstock/egg-productions/ ___________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: 4oWvrt
+
+- Response violates schema
+
+    None is not of type 'object'
+
+    Schema at /properties/external_batch/allOf/0:
+
+        {
+            "type": "object",
+            "description": "Serializer for external egg batches.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "egg_production": {
+                    "type": "integer",
+                    "description": "Link to egg production record",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "supplier": {
+                    "type": "integer",
+                    "maximum": 9223372036854775807,
+            // Output truncated...
+        }
+
+    Value:
+
+        null
+
+[201] Created:
+
+    `{"id":1,"pair":null,"pair_display":"<method-wrapper '__str__' of NoneType object at 0x7f1a994468c0>","egg_batch_id":"󪳔\u0018","egg_count":217,"production_date":"2025-07-18T22:51:53.355624Z","destination_station":null,"source_type":"external","external_batch":null,"batch_assignment_count":0,"created_at":"2025-07-18T22:51:53.355774Z","updated_at":"2025-07-18T22:51:53.355783Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=d5485d8f6d22897847b30adbd42af92c' -d '--3672be01deb8a0394df0dced137b56c2
+Content-Disposition: form-data; name="egg_batch_id"
+
+󪳔
+--3672be01deb8a0394df0dced137b56c2
+Content-Disposition: form-data; name="egg_count"
+
+217
+--3672be01deb8a0394df0dced137b56c2
+Content-Disposition: form-data; name="source_type"
+
+external
+--3672be01deb8a0394df0dced137b56c2--
+' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/
+
+_________________ PUT /api/v1/broodstock/egg-productions/{id}/ _________________
+1. Test Case ID: giRJzs
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EggProduction matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"egg_batch_id": "", "egg_count": 0, "source_type": "external"}' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/0/
+
+_________________ GET /api/v1/broodstock/egg-productions/{id}/ _________________
+1. Test Case ID: NuXJkl
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No EggProduction matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/0/
+
+________________ PATCH /api/v1/broodstock/egg-productions/{id}/ ________________
+1. Test Case ID: aoq9PT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No EggProduction matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/0/
+
+_______________ DELETE /api/v1/broodstock/egg-productions/{id}/ ________________
+1. Test Case ID: NvJiTG
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No EggProduction matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/0/
+
+______________ PUT /api/v1/broodstock/external-egg-batches/{id}/ _______________
+1. Test Case ID: n235tT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No ExternalEggBatch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch_number": "", "egg_production": 0, "supplier": 0}' http://127.0.0.1:8000/api/v1/broodstock/external-egg-batches/0/
+
+______________ GET /api/v1/broodstock/external-egg-batches/{id}/ _______________
+1. Test Case ID: yOY2U8
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No ExternalEggBatch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/external-egg-batches/0/
+
+_____________ PATCH /api/v1/broodstock/external-egg-batches/{id}/ ______________
+1. Test Case ID: N10bhK
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No ExternalEggBatch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/external-egg-batches/0/
+
+_____________ DELETE /api/v1/broodstock/external-egg-batches/{id}/ _____________
+1. Test Case ID: Z6f4GM
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No ExternalEggBatch matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/external-egg-batches/0/
+
+_______________ GET /api/v1/broodstock/batch-parentages/lineage/ _______________
+1. Test Case ID: gYSw1C
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/lineage/
+
+________________ PUT /api/v1/broodstock/batch-parentages/{id}/ _________________
+1. Test Case ID: a7aaqZ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchParentage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"batch": 0, "egg_production": 0}' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/0/
+
+________________ GET /api/v1/broodstock/batch-parentages/{id}/ _________________
+1. Test Case ID: 9rVfWg
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BatchParentage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/0/
+
+_______________ PATCH /api/v1/broodstock/batch-parentages/{id}/ ________________
+1. Test Case ID: rSKvP9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BatchParentage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/0/
+
+_______________ DELETE /api/v1/broodstock/batch-parentages/{id}/ _______________
+1. Test Case ID: X8sdKn
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BatchParentage matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/0/
+
+_________________ PUT /api/v1/infrastructure/geographies/{id}/ _________________
+1. Test Case ID: CwPDNX
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Geography matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": ""}' http://127.0.0.1:8000/api/v1/infrastructure/geographies/0/
+
+_________________ GET /api/v1/infrastructure/geographies/{id}/ _________________
+1. Test Case ID: q36DLF
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Geography matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/geographies/0/
+
+________________ PATCH /api/v1/infrastructure/geographies/{id}/ ________________
+1. Test Case ID: X10jXe
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Geography matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/geographies/0/
+
+_______________ DELETE /api/v1/infrastructure/geographies/{id}/ ________________
+1. Test Case ID: yGKLWD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Geography matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/geographies/0/
+
+____________________ PUT /api/v1/infrastructure/areas/{id}/ ____________________
+1. Test Case ID: gZxy3T
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Area matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"geography": 0, "latitude": "", "longitude": "", "max_biomass": "", "name": ""}' http://127.0.0.1:8000/api/v1/infrastructure/areas/0/
+
+____________________ GET /api/v1/infrastructure/areas/{id}/ ____________________
+1. Test Case ID: OUwYpf
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Area matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/areas/0/
+
+___________________ PATCH /api/v1/infrastructure/areas/{id}/ ___________________
+1. Test Case ID: sFMNSB
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Area matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/areas/0/
+
+__________________ DELETE /api/v1/infrastructure/areas/{id}/ ___________________
+1. Test Case ID: FWK3vH
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Area matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/areas/0/
+
+_____________ PUT /api/v1/infrastructure/freshwater-stations/{id}/ _____________
+1. Test Case ID: sbqNtV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FreshwaterStation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"geography": 0, "latitude": "", "longitude": "", "name": "", "station_type": "BROODSTOCK"}' http://127.0.0.1:8000/api/v1/infrastructure/freshwater-stations/0/
+
+_____________ GET /api/v1/infrastructure/freshwater-stations/{id}/ _____________
+1. Test Case ID: zUEU63
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FreshwaterStation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/freshwater-stations/0/
+
+____________ PATCH /api/v1/infrastructure/freshwater-stations/{id}/ ____________
+1. Test Case ID: RjAfGD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FreshwaterStation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/freshwater-stations/0/
+
+___________ DELETE /api/v1/infrastructure/freshwater-stations/{id}/ ____________
+1. Test Case ID: OXuQo7
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FreshwaterStation matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/freshwater-stations/0/
+
+____________________ PUT /api/v1/infrastructure/halls/{id}/ ____________________
+1. Test Case ID: g5BUiI
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Hall matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"freshwater_station": 0, "name": ""}' http://127.0.0.1:8000/api/v1/infrastructure/halls/0/
+
+____________________ GET /api/v1/infrastructure/halls/{id}/ ____________________
+1. Test Case ID: 1W2VR6
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Hall matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/halls/0/
+
+___________________ PATCH /api/v1/infrastructure/halls/{id}/ ___________________
+1. Test Case ID: HCWAPD
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Hall matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/halls/0/
+
+__________________ DELETE /api/v1/infrastructure/halls/{id}/ ___________________
+1. Test Case ID: M7W3vo
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Hall matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/halls/0/
+
+_________________ GET /api/v1/infrastructure/container-types/ __________________
+1. Test Case ID: NFpN0p
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/infrastructure/container-types/?page=2'
+
+_______________ PUT /api/v1/infrastructure/container-types/{id}/ _______________
+1. Test Case ID: H30i7c
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No ContainerType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"category": "PEN", "max_volume_m3": "", "name": ""}' http://127.0.0.1:8000/api/v1/infrastructure/container-types/0/
+
+_______________ GET /api/v1/infrastructure/container-types/{id}/ _______________
+1. Test Case ID: dXwUrJ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No ContainerType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/container-types/0/
+
+______________ PATCH /api/v1/infrastructure/container-types/{id}/ ______________
+1. Test Case ID: ly6lOO
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No ContainerType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/container-types/0/
+
+_____________ DELETE /api/v1/infrastructure/container-types/{id}/ ______________
+1. Test Case ID: UVaa1Q
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No ContainerType matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/container-types/0/
+
+____________________ GET /api/v1/infrastructure/containers/ ____________________
+1. Test Case ID: 9Kn8ZB
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/infrastructure/containers/?page=2'
+
+_________________ PUT /api/v1/infrastructure/containers/{id}/ __________________
+1. Test Case ID: TiZDMp
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Container matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container_type": 0, "max_biomass_kg": "", "name": "", "volume_m3": ""}' http://127.0.0.1:8000/api/v1/infrastructure/containers/0/
+
+_________________ GET /api/v1/infrastructure/containers/{id}/ __________________
+1. Test Case ID: HxFdUc
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Container matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/containers/0/
+
+________________ PATCH /api/v1/infrastructure/containers/{id}/ _________________
+1. Test Case ID: RBurf5
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Container matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/containers/0/
+
+________________ DELETE /api/v1/infrastructure/containers/{id}/ ________________
+1. Test Case ID: WlP6V1
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Container matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/containers/0/
+
+___________________ PUT /api/v1/infrastructure/sensors/{id}/ ___________________
+1. Test Case ID: Ba5Im6
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Sensor matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"container": 0, "name": "", "sensor_type": "PH"}' http://127.0.0.1:8000/api/v1/infrastructure/sensors/0/
+
+___________________ GET /api/v1/infrastructure/sensors/{id}/ ___________________
+1. Test Case ID: MsbCqC
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Sensor matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/sensors/0/
+
+__________________ PATCH /api/v1/infrastructure/sensors/{id}/ __________________
+1. Test Case ID: my0yhT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Sensor matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/sensors/0/
+
+_________________ DELETE /api/v1/infrastructure/sensors/{id}/ __________________
+1. Test Case ID: rKhOUa
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Sensor matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/sensors/0/
+
+_______________ PUT /api/v1/infrastructure/feed-containers/{id}/ _______________
+1. Test Case ID: YVlN4m
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"capacity_kg": "", "container_type": "SILO", "name": ""}' http://127.0.0.1:8000/api/v1/infrastructure/feed-containers/0/
+
+_______________ GET /api/v1/infrastructure/feed-containers/{id}/ _______________
+1. Test Case ID: cz3y72
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/feed-containers/0/
+
+______________ PATCH /api/v1/infrastructure/feed-containers/{id}/ ______________
+1. Test Case ID: nbbPKy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/feed-containers/0/
+
+_____________ DELETE /api/v1/infrastructure/feed-containers/{id}/ ______________
+1. Test Case ID: yLak7V
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FeedContainer matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/infrastructure/feed-containers/0/
+
+__________________ GET /api/v1/scenario/temperature-profiles/ __________________
+1. Test Case ID: A3Y96X
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/?page=2'
+
+_________________ POST /api/v1/scenario/temperature-profiles/ __________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: 44KCWl
+
+- Response violates schema
+
+    'reading_count' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for temperature profiles with nested readings.",
+            "properties": {
+                "profile_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Descriptive name (e.g., 'Faroe Islands Winter')",
+                    "maxLength": 255
+                },
+                "readings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/TemperatureReading"
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "profile_id": 3,
+            "name": "\u00e8",
+            "readings": [],
+            "date_range": null,
+            "temperature_summary": null,
+            "created_at": "2025-07-18T22:52:41.986027Z",
+            "updated_at": "2025-07-18T22:52:41.986043Z"
+        }
+
+[201] Created:
+
+    `{"profile_id":3,"name":"è","readings":[],"date_range":null,"temperature_summary":null,"created_at":"2025-07-18T22:52:41.986027Z","updated_at":"2025-07-18T22:52:41.986043Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'name=%C3%A8&%F1%84%BF%B6%C3%AB%C2%89%03=8%01%F1%AD%92%94&%5C%E5%86%82%C2%B5%C3%87j%C3%8A%C2%A2q%047%C2%93%C2%A5%C2%93y%5C%23%C2%A4%C3%82%C3%A8%F1%AE%92%90%F2%AA%89%A1%C3%A5%26=False&%5C%E5%86%82%C2%B5%C3%87j%C3%8A%C2%A2q%047%C2%93%C2%A5%C2%93y%5C%23%C2%A4%C3%82%C3%A8%F1%AE%92%90%F2%AA%89%A1%C3%A5%26=%7B%27%27%3A+%7B%27%C3%B2%C3%AF%C2%B1%27%3A+%5B%5D%2C+%27%C3%AE%27%3A+%27%2A%C2%AF%60%27%2C+%27%5Cx93%27%3A+%5BNone%2C+-7.15945823718857e%2B148%2C+4.714131135139561e%2B16%5D%7D%2C+%27__main__%27%3A+%7B%270X%5Cx1e%5Cx99%27%3A+None%2C+%27%5CU00047900%E1%AB%8B%27%3A+1%2C+%27%5Cx9e%5CU0006a224%C3%A1F%5CU0003bf14%C3%AEL%27%3A+5.274636798155774e%2B16%7D%7D&%5C%E5%86%82%C2%B5%C3%87j%C3%8A%C2%A2q%047%C2%93%C2%A5%C2%93y%5C%23%C2%A4%C3%82%C3%A8%F1%AE%92%90%F2%AA%89%A1%C3%A5%26=%5B%5B%5D%2C+%27%27%2C+%7B%7D%5D&%C3%A4%F3%85%9C%A9%F1%95%8A%95=1.7976931348623157e%2B308&%C3%A4%F3%85%9C%A9%F1%95%8A%95=False&%C2%A2%C3%A1J%3B=%C2%B8&%C2%A1%C2%9D=%29%C2%B1%F3%98%97%9F%C2%B36yZ%C3%A53%F2%AE%B4%98&%F2%8A%8B%88%0F%5C%C2%81=%C3%AD&=%F1%A1%B9%9C' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/
+
+_________ GET /api/v1/scenario/temperature-profiles/download_template/ _________
+1. Test Case ID: eWLsp8
+
+- Undocumented Content-Type
+
+    Received: text/csv
+    Documented: application/json
+
+[200] OK:
+
+    `date,temperature
+    2024-01-01,8.5
+    2024-01-02,8.7
+    2024-01-03,8.6`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/download_template/
+
+___________ PUT /api/v1/scenario/temperature-profiles/{profile_id}/ ____________
+1. Test Case ID: CFVPN8
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No TemperatureProfile matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": ""}' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/0/
+
+___________ GET /api/v1/scenario/temperature-profiles/{profile_id}/ ____________
+1. Test Case ID: fq89JX
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No TemperatureProfile matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/0/
+
+__________ PATCH /api/v1/scenario/temperature-profiles/{profile_id}/ ___________
+1. Test Case ID: D0FsxU
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No TemperatureProfile matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/0/
+
+__________ DELETE /api/v1/scenario/temperature-profiles/{profile_id}/ __________
+1. Test Case ID: eyarlL
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No TemperatureProfile matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/0/
+
+______ GET /api/v1/scenario/temperature-profiles/{profile_id}/statistics/ ______
+1. Test Case ID: HQubRO
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No TemperatureProfile matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/0/statistics/
+
+__________________ GET /api/v1/scenario/tgc-models/templates/ __________________
+1. Test Case ID: UZwXlM
+
+- Response violates schema
+
+    [{'name': 'Standard Scottish TGC', 'location': 'Scotland', 'release_period': 'Spring', 'tgc_value': 0.025, 'exponent_n': 0.33, 'exponent_m': 0.66, 'description': 'Standard TGC model for Scottish waters with spring release'}, {'name': 'Norwegian Winter TGC', 'location': 'Norway', 'release_period': 'Winter', 'tgc_value': 0.022, 'exponent_n': 0.35, 'exponent_m': 0.65, 'description': 'Optimized for Norwegian fjords with winter release'}, {'name': 'Faroe Islands TGC', 'location': 'Faroe Islands', 'release_period': 'Year-round', 'tgc_value': 0.024, 'exponent_n': 0.33, 'exponent_m': 0.66, 'description': 'Adapted for Faroe Islands conditions'}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for TGC models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Scotland April TGC')",
+                    "maxLength": 255
+                },
+                "location": {
+                    "type": "string",
+                    "description": "Location (e.g., 'Scotland Site 1')",
+                    "maxLength": 255
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Standard Scottish TGC",
+                "location": "Scotland",
+                "release_period": "Spring",
+                "tgc_value": 0.025,
+                "exponent_n": 0.33,
+                "exponent_m": 0.66,
+                "description": "Standard TGC model for Scottish waters with spring re...
+            },
+            {
+                "name": "Norwegian Winter TGC",
+                "location": "Norway",
+                "release_period": "Winter",
+                "tgc_value": 0.022,
+                "exponent_n": 0.35,
+                "exponent_m": 0.65,
+                "description": "Optimized for Norwegian fjords with winter release"
+            },
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Standard Scottish TGC","location":"Scotland","release_period":"Spring","tgc_value":0.025,"exponent_n":0.33,"exponent_m":0.66,"description":"Standard TGC model for Scottish waters with spring release"},{"name":"Norwegian Winter TGC","location":"Norway","release_period":"Winter","tgc_value":0.022,"exponent_n":0.35,"exponent_m":0.65,"description":"Optimized for Norwegian fjords with winter release"},{"name":"Faroe Islands TGC","location":"Faroe Islands","release_period":"Year-round","tgc_value":0.024 // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/tgc-models/templates/
+
+_________________ PUT /api/v1/scenario/tgc-models/{model_id}/ __________________
+1. Test Case ID: yIPSmo
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No TGCModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"location": "", "name": "", "profile": 0, "release_period": "", "tgc_value": 0.0}' http://127.0.0.1:8000/api/v1/scenario/tgc-models/0/
+
+_________________ GET /api/v1/scenario/tgc-models/{model_id}/ __________________
+1. Test Case ID: p8I3Sr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No TGCModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/tgc-models/0/
+
+________________ PATCH /api/v1/scenario/tgc-models/{model_id}/ _________________
+1. Test Case ID: fKkFGw
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No TGCModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/tgc-models/0/
+
+________________ DELETE /api/v1/scenario/tgc-models/{model_id}/ ________________
+1. Test Case ID: VKhHSz
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No TGCModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/tgc-models/0/
+
+____________ POST /api/v1/scenario/tgc-models/{model_id}/duplicate/ ____________
+1. Test Case ID: Hk9wIV
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No TGCModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"location": "", "name": "", "profile": 0, "release_period": "", "tgc_value": 0.0}' http://127.0.0.1:8000/api/v1/scenario/tgc-models/0/duplicate/
+
+______________________ POST /api/v1/scenario/fcr-models/ _______________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: JVtxmW
+
+- Response violates schema
+
+    0 is not of type 'string'
+
+    Schema at /properties/total_duration:
+
+        {
+            "type": "string",
+            "readOnly": true
+        }
+
+    Value:
+
+        0
+
+[201] Created:
+
+    `{"model_id":3,"name":".5󆌔\u0011ê𩃸򤖻Ã·򤋺ñ󢨊~򴘀񖬃􈰯񃅗","stages":[],"total_duration":0,"stage_coverage":{"covered":[],"missing":[],"coverage_percent":0},"created_at":"2025-07-18T22:52:52.039464Z","updated_at":"2025-07-18T22:52:52.039480Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'name=.5%F3%86%8C%94%11%C2%96%C3%AA%F0%A9%83%B8%F2%A4%96%BB%C3%83%C2%B7%F2%A4%8B%BA%C3%B1%F3%A2%A8%8A~%F2%B4%98%80%F1%96%AC%83%F4%88%B0%AF%F1%83%85%97' http://127.0.0.1:8000/api/v1/scenario/fcr-models/
+
+__________________ GET /api/v1/scenario/fcr-models/templates/ __________________
+1. Test Case ID: orWxmT
+
+- Response violates schema
+
+    [{'name': 'Standard FCR Model', 'description': 'Standard FCR progression across lifecycle stages', 'stages': [{'stage': 'Fry', 'fcr': 0.8, 'duration': 60}, {'stage': 'Parr', 'fcr': 0.9, 'duration': 90}, {'stage': 'Smolt', 'fcr': 1.0, 'duration': 60}, {'stage': 'Post-Smolt', 'fcr': 1.1, 'duration': 120}, {'stage': 'Harvest', 'fcr': 1.2, 'duration': 365}]}, {'name': 'Optimized FCR Model', 'description': 'Optimized FCR for high-performance feeds', 'stages': [{'stage': 'Fry', 'fcr': 0.7, 'duration': 60}, {'stage': 'Parr', 'fcr': 0.8, 'duration': 90}, {'stage': 'Smolt', 'fcr': 0.9, 'duration': 60}, {'stage': 'Post-Smolt', 'fcr': 1.0, 'duration': 120}, {'stage': 'Harvest', 'fcr': 1.1, 'duration': 365}]}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for FCR models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Standard FCR')",
+                    "maxLength": 255
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/FCRModelStage"
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Standard FCR Model",
+                "description": "Standard FCR progression across lifecycle stages",
+                "stages": [
+                    {
+                        "stage": "Fry",
+                        "fcr": 0.8,
+                        "duration": 60
+                    },
+                    {
+                        "stage": "Parr",
+                        "fcr": 0.9,
+                        "duration": 90
+                    },
+                    {
+                        "stage": "Smolt",
+                        "fcr": 1.0,
+                        "duration": 60
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Standard FCR Model","description":"Standard FCR progression across lifecycle stages","stages":[{"stage":"Fry","fcr":0.8,"duration":60},{"stage":"Parr","fcr":0.9,"duration":90},{"stage":"Smolt","fcr":1.0,"duration":60},{"stage":"Post-Smolt","fcr":1.1,"duration":120},{"stage":"Harvest","fcr":1.2,"duration":365}]},{"name":"Optimized FCR Model","description":"Optimized FCR for high-performance feeds","stages":[{"stage":"Fry","fcr":0.7,"duration":60},{"stage":"Parr","fcr":0.8,"duration":90},{"stage":"S // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/templates/
+
+_________________ PUT /api/v1/scenario/fcr-models/{model_id}/ __________________
+1. Test Case ID: qaBXYQ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FCRModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": ""}' http://127.0.0.1:8000/api/v1/scenario/fcr-models/0/
+
+_________________ GET /api/v1/scenario/fcr-models/{model_id}/ __________________
+1. Test Case ID: zO3O5B
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FCRModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/0/
+
+________________ PATCH /api/v1/scenario/fcr-models/{model_id}/ _________________
+1. Test Case ID: dDenO8
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No FCRModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/0/
+
+________________ DELETE /api/v1/scenario/fcr-models/{model_id}/ ________________
+1. Test Case ID: Gqtg3s
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No FCRModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/0/
+
+__________ GET /api/v1/scenario/fcr-models/{model_id}/stage_summary/ ___________
+1. Test Case ID: bTmEkR
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No FCRModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/0/stage_summary/
+
+____________________ GET /api/v1/scenario/mortality-models/ ____________________
+1. Test Case ID: M9yAUy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/scenario/mortality-models/?page=2'
+
+___________________ POST /api/v1/scenario/mortality-models/ ____________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: 0dmEpq
+
+- Response violates schema
+
+    0.0 is not of type 'string'
+
+    Schema at /properties/effective_annual_rate:
+
+        {
+            "type": "string",
+            "readOnly": true
+        }
+
+    Value:
+
+        0.0
+
+[201] Created:
+
+    `{"model_id":1,"name":"¯Øì+\u00020󓫔\u001a«^Ì𕮁$â򰎷!>Ú","frequency":"weekly","rate":1.7323759300797163e-81,"stage_overrides":[],"effective_annual_rate":0.0,"created_at":"2025-07-18T22:52:57.544187Z","updated_at":"2025-07-18T22:52:57.544206Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'frequency=weekly&name=%C2%AF%C3%98%C3%AC%2B%020%F3%93%AB%94%1A%C2%AB%5E%C3%8C%C2%89%F0%95%AE%81%24%C3%A2%F2%B0%8E%B7%21%3E%C3%9A&rate=1.7323759300797163e-81&%C2%84%C3%98n%C2%AE=%C3%8B%C2%BA%F1%B9%BC%A2%C3%BA%C3%A2%C2%85%C3%83S%C3%834NA%3D%C2%A3%C2%9D%F1%A0%AD%8A%C2%8B%C2%86&%C2%84%C3%98n%C2%AE=%F3%9A%BE%B4%3F%C3%BD%2C%13%C3%AC&=X&=%C3%AA%08%C3%B8%C2%BA%F2%AF%9D%98h%7B%F2%BE%9F%9E&=%14%C2%B5%60k%23%C3%9F%C3%9D%F3%87%AF%967Y%C3%BD&%C3%90%2F%03g%0D%C2%88%F3%81%81%A0%C2%AF%C3%80%C2%80%24%21=%C3%80%C3%A5%C3%8E%1B%C3%B1%C3%B4%C2%93u%C2%8E%C3%B9%F2%99%87%88%C3%88%C3%8C%C2%80R&%F1%80%87%87B=%C3%8A%C2%98%F0%96%BB%AC%F3%9E%B5%8E%7B%C2%9Aq%C2%92&o%F0%A3%89%9Cci%07%F0%9B%8E%84%3C=&%C2%BF%C3%BD%3D%C2%9F=%7DK&%C2%BF%C3%BD%3D%C2%9F=%F1%93%85%8C%C3%B5%21%0F%C2%BC&%C3%8E%C3%8B%2C=6%C3%B0%0E' http://127.0.0.1:8000/api/v1/scenario/mortality-models/
+
+_______________ GET /api/v1/scenario/mortality-models/templates/ _______________
+1. Test Case ID: ZTBMQR
+
+- Response violates schema
+
+    [{'name': 'Low Mortality', 'frequency': 'daily', 'rate': 0.02, 'description': 'Low mortality rate for optimal conditions'}, {'name': 'Standard Mortality', 'frequency': 'daily', 'rate': 0.05, 'description': 'Industry standard mortality rate'}, {'name': 'High Mortality', 'frequency': 'daily', 'rate': 0.1, 'description': 'Higher mortality for challenging conditions'}, {'name': 'Weekly Standard', 'frequency': 'weekly', 'rate': 0.35, 'description': 'Standard weekly mortality rate'}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for mortality models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Low Mortality')",
+                    "maxLength": 255
+                },
+                "frequency": {
+                    "enum": [
+                        "daily",
+                        "weekly"
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Low Mortality",
+                "frequency": "daily",
+                "rate": 0.02,
+                "description": "Low mortality rate for optimal conditions"
+            },
+            {
+                "name": "Standard Mortality",
+                "frequency": "daily",
+                "rate": 0.05,
+                "description": "Industry standard mortality rate"
+            },
+            {
+                "name": "High Mortality",
+                "frequency": "daily",
+                "rate": 0.1,
+                "description": "Higher mortality for challenging conditions"
+            },
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Low Mortality","frequency":"daily","rate":0.02,"description":"Low mortality rate for optimal conditions"},{"name":"Standard Mortality","frequency":"daily","rate":0.05,"description":"Industry standard mortality rate"},{"name":"High Mortality","frequency":"daily","rate":0.1,"description":"Higher mortality for challenging conditions"},{"name":"Weekly Standard","frequency":"weekly","rate":0.35,"description":"Standard weekly mortality rate"}]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/mortality-models/templates/
+
+______________ PUT /api/v1/scenario/mortality-models/{model_id}/ _______________
+1. Test Case ID: TAohZN
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"frequency": "daily", "name": "", "rate": 0.0}' http://127.0.0.1:8000/api/v1/scenario/mortality-models/0/
+
+______________ GET /api/v1/scenario/mortality-models/{model_id}/ _______________
+1. Test Case ID: TetBKZ
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No MortalityModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/mortality-models/0/
+
+_____________ PATCH /api/v1/scenario/mortality-models/{model_id}/ ______________
+1. Test Case ID: r4ENDL
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No MortalityModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/mortality-models/0/
+
+_____________ DELETE /api/v1/scenario/mortality-models/{model_id}/ _____________
+1. Test Case ID: KZOiV9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No MortalityModel matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/mortality-models/0/
+
+________________ POST /api/v1/scenario/biological-constraints/ _________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: PsEBZu
+
+- Response violates schema
+
+    [] is not of type 'string'
+
+    Schema at /properties/stage_constraints:
+
+        {
+            "type": "string",
+            "readOnly": true
+        }
+
+    Value:
+
+        []
+
+[201] Created:
+
+    `{"id":2,"name":"¦Ê","description":"","is_active":false,"stage_constraints":[],"created_at":"2025-07-18T22:53:01.793101Z","updated_at":"2025-07-18T22:53:01.793118Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": "\u0089\u00a6\u00ca", "\u00cf\u00c7": [{"999999999999999999999999999999": -5.05009827492699e+264, "": {"\u00f1\u0002\udb8b\udf53?": false}, "\u00b7zt\u00a2\u00a8\u00d0": [1.2257408497440736e+16, null]}], "is_active": false, "67": [{"\ud9da\udd94?\u00d9": "", "8b\u0015\u008b\u0082Bq\u0095\u00b463t\t0g": [null, [null, "\ud876\udfdb\u0092\udb51\udc1b\udbe3\udf7a\u00d5<"]], "\u00b7\u00ad\u00d9\u00a2\u0092 \u0096": {"\u00bbX\u00b5*\udb19\ude8c\u009fx": false}}]}' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/
+
+_____________ GET /api/v1/scenario/biological-constraints/active/ ______________
+1. Test Case ID: nQKVe7
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for biological constraint sets.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Name for this constraint set (e.g., 'Bakkafrost S...
+                    "maxLength": 100
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Description of this constraint set"
+                },
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/active/
+
+______________ PUT /api/v1/scenario/biological-constraints/{id}/ _______________
+1. Test Case ID: PxnoLy
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BiologicalConstraints matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"name": ""}' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/0/
+
+______________ GET /api/v1/scenario/biological-constraints/{id}/ _______________
+1. Test Case ID: nTD5Qq
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No BiologicalConstraints matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/0/
+
+_____________ PATCH /api/v1/scenario/biological-constraints/{id}/ ______________
+1. Test Case ID: BtLt0B
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No BiologicalConstraints matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/0/
+
+_____________ DELETE /api/v1/scenario/biological-constraints/{id}/ _____________
+1. Test Case ID: xAQWPH
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No BiologicalConstraints matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/0/
+
+________________ GET /api/v1/scenario/scenarios/summary_stats/ _________________
+1. Test Case ID: wNHor1
+
+- Response violates schema
+
+    'biological_constraints_info' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for scenarios with comprehensive vali...
+            "properties": {
+                "scenario_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Scenario name (e.g., 'Scotland April Sim')",
+                    "maxLength": 255
+                },
+                "start_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Simulation start date"
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "total_scenarios": 0,
+            "scenarios_with_projections": 0,
+            "average_duration": null,
+            "location_distribution": [],
+            "recent_scenarios": []
+        }
+
+[200] OK:
+
+    `{"total_scenarios":0,"scenarios_with_projections":0,"average_duration":null,"location_distribution":[],"recent_scenarios":[]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/summary_stats/
+
+________________ PUT /api/v1/scenario/scenarios/{scenario_id}/ _________________
+1. Test Case ID: AVGSbo
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"duration_days": 1, "fcr_model": 0, "genotype": "", "initial_count": 1, "mortality_model": 0, "name": "", "start_date": "2000-01-01", "supplier": "", "tgc_model": 0}' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/
+
+________________ GET /api/v1/scenario/scenarios/{scenario_id}/ _________________
+1. Test Case ID: 46pN62
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/
+
+_______________ PATCH /api/v1/scenario/scenarios/{scenario_id}/ ________________
+1. Test Case ID: yUNNsr
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/
+
+_______________ DELETE /api/v1/scenario/scenarios/{scenario_id}/ _______________
+1. Test Case ID: JYxSJT
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/
+
+___________ GET /api/v1/scenario/scenarios/{scenario_id}/chart_data/ ___________
+1. Test Case ID: 2L3fQl
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/chart_data/
+
+___________ POST /api/v1/scenario/scenarios/{scenario_id}/duplicate/ ___________
+1. Test Case ID: 3W5Jho
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"duration_days": 1, "fcr_model": 0, "genotype": "", "initial_count": 1, "mortality_model": 0, "name": "", "start_date": "2000-01-01", "supplier": "", "tgc_model": 0}' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/duplicate/
+
+_______ GET /api/v1/scenario/scenarios/{scenario_id}/export_projections/ _______
+1. Test Case ID: QipXKv
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/export_projections/
+
+__________ GET /api/v1/scenario/scenarios/{scenario_id}/projections/ ___________
+1. Test Case ID: Bcxicc
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/projections/
+
+________ POST /api/v1/scenario/scenarios/{scenario_id}/run_projection/ _________
+1. Test Case ID: Ht5uq9
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"duration_days": 1, "fcr_model": 0, "genotype": "", "initial_count": 1, "mortality_model": 0, "name": "", "start_date": "2000-01-01", "supplier": "", "tgc_model": 0}' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/run_projection/
+
+_____ POST /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/ ______
+1. Test Case ID: Oqm1N6
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No Scenario matches the given query."}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"duration_days": 1, "fcr_model": 0, "genotype": "", "initial_count": 1, "mortality_model": 0, "name": "", "start_date": "2000-01-01", "supplier": "", "tgc_model": 0}' http://127.0.0.1:8000/api/v1/scenario/scenarios/0/sensitivity_analysis/
+
+________________ GET /api/v1/scenario/data-entry/csv_template/ _________________
+1. Test Case ID: 7FyXXh
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200
+
+[400] Bad Request:
+
+    `{"data_type":["This field is required."]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/data-entry/csv_template/
+
+________________ GET /api/v1/scenario/data-entry/import_status/ ________________
+1. Test Case ID: r3kDay
+
+- Response violates schema
+
+    'data_type' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for CSV file upload.",
+            "properties": {
+                "file": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "data_type": {
+                    "enum": [
+                        "temperature",
+                        "fcr",
+                        "mortality"
+                    ],
+                    "type": "string",
+                    "description": "* `temperature` - temperature\n* `fcr` - fcr\n* `...
+                    "x-spec-enum-id": "e9b9c3b99b8ec926"
+                },
+                "profile_name": {
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "message": "Import status tracking not yet implemented",
+            "recent_imports": []
+        }
+
+[200] OK:
+
+    `{"message":"Import status tracking not yet implemented","recent_imports":[]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/data-entry/import_status/
+
+________________________ POST /api/v1/users/auth/token/ ________________________
+1. Test Case ID: prlZah
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"No active account found with the given credentials"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"password": "0", "username": "0"}' http://127.0.0.1:8000/api/v1/users/auth/token/
+
+____________________ POST /api/v1/users/auth/token/refresh/ ____________________
+1. Test Case ID: eqVdSD
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"Token is invalid or expired","code":"token_not_valid"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"refresh": "0"}' http://127.0.0.1:8000/api/v1/users/auth/token/refresh/
+
+_______________________ GET /api/v1/users/auth/profile/ ________________________
+1. Test Case ID: 17jIUG
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 200
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+_______________________ PUT /api/v1/users/auth/profile/ ________________________
+1. Test Case ID: O51Q0K
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 200, 400
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+______________________ PATCH /api/v1/users/auth/profile/ _______________________
+1. Test Case ID: 6hZpAN
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 200, 400
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+___________________________ GET /api/v1/users/users/ ___________________________
+1. Test Case ID: BjxhkL
+
+- Response violates schema
+
+    None is not one of ['BS', 'FW', 'FM', 'LG', 'ALL']
+
+    Schema at /properties/results/items/properties/subsidiary:
+
+        {
+            "enum": [
+                "BS",
+                "FW",
+                "FM",
+                "LG",
+                "ALL"
+            ],
+            "type": "string",
+            "description": "* `BS` - Broodstock\n* `FW` - Freshwater\n* `FM` - Farmin...
+            "x-spec-enum-id": "4e135cac36bd030a"
+        }
+
+    Value:
+
+        null
+
+[200] OK:
+
+    `{"count":2,"next":null,"previous":null,"results":[{"id":2,"username":"devuser","email":"dev@example.com","full_name":"","phone":null,"geography":"ALL","subsidiary":"ALL","role":"VIEW","is_active":true,"profile":{"profile_picture":null,"job_title":null,"department":null,"language_preference":"en","date_format_preference":"DMY","created_at":"2025-07-18T22:49:04.396758Z","updated_at":"2025-07-18T22:49:04.584061Z"},"date_joined":"2025-07-18T22:49:04.395861Z"},{"id":1,"username":"schemathesis_ci","email":"ci@exa // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/
+
+__________________________ POST /api/v1/users/users/ ___________________________
+1. Test Case ID: Rz2hFJ
+
+- Server error
+
+- Undocumented HTTP status code
+
+    Received: 500
+    Documented: 201, 400
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>ValueError
+              at /api/v1/users/users/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { margin-bot // Output truncated...`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'email=0%40A.COM&password=%F0%A4%98%97-%F2%9F%85%B8sx%F2%99%99%9B%F0%AC%90%9E%40%08%C2%AA%C3%9C%C3%A3%1A%C3%B2&username=00000&full_name=&geography=FO' http://127.0.0.1:8000/api/v1/users/users/
+
+2. Test Case ID: uwbUkq
+
+- Response violates schema
+
+    None is not of type 'string'
+
+    Schema at /properties/phone:
+
+        {
+            "type": "string"
+        }
+
+    Value:
+
+        null
+
+[201] Created:
+
+    `{"id":13,"username":"000000","email":"0@A.COM","full_name":"","phone":null,"geography":"ALL","subsidiary":"ALL","role":"VIEW","is_active":false,"profile":{"profile_picture":null,"job_title":null,"department":null,"language_preference":"en","date_format_preference":"DMY","created_at":"2025-07-18T22:53:26.527542Z","updated_at":"2025-07-18T22:53:26.716298Z"},"date_joined":"2025-07-18T22:53:26.526252Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'email=0%40A.COM&password=%F0%A4%98%97-%F2%9F%85%B8sx%F2%99%99%9B%F0%AC%90%9E%40%08%C2%AA%C3%9C%C3%A3%1A%C3%B2&username=000000' http://127.0.0.1:8000/api/v1/users/users/
+
+_________________________ GET /api/v1/users/users/me/ __________________________
+1. Test Case ID: G3v1Jr
+
+- Response violates schema
+
+    None is not one of ['BS', 'FW', 'FM', 'LG', 'ALL']
+
+    Schema at /properties/subsidiary:
+
+        {
+            "enum": [
+                "BS",
+                "FW",
+                "FM",
+                "LG",
+                "ALL"
+            ],
+            "type": "string",
+            "description": "* `BS` - Broodstock\n* `FW` - Freshwater\n* `FM` - Farmin...
+            "x-spec-enum-id": "4e135cac36bd030a"
+        }
+
+    Value:
+
+        null
+
+[200] OK:
+
+    `{"id":1,"username":"schemathesis_ci","email":"ci@example.com","full_name":null,"phone":null,"geography":null,"subsidiary":null,"role":null,"is_active":true,"profile":null,"date_joined":"2025-07-18T22:46:08.061041Z"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/me/
+
+________________________ PUT /api/v1/users/users/{id}/ _________________________
+1. Test Case ID: bDl8F5
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No User matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"email": "0@A.COM", "username": "0"}' http://127.0.0.1:8000/api/v1/users/users/0/
+
+________________________ GET /api/v1/users/users/{id}/ _________________________
+1. Test Case ID: hH9nH5
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200
+
+[404] Not Found:
+
+    `{"detail":"No User matches the given query."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/0/
+
+_______________________ PATCH /api/v1/users/users/{id}/ ________________________
+1. Test Case ID: aImyTn
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400
+
+[404] Not Found:
+
+    `{"detail":"No User matches the given query."}`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/0/
+
+_______________________ DELETE /api/v1/users/users/{id}/ _______________________
+1. Test Case ID: c9VOop
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 204
+
+[404] Not Found:
+
+    `{"detail":"No User matches the given query."}`
+
+Reproduce with: 
+
+    curl -X DELETE -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/0/
+
+_______________________________ POST /api/token/ _______________________________
+1. Test Case ID: 15eUWi
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"No active account found with the given credentials"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"password": "0", "username": "0"}' http://127.0.0.1:8000/api/token/
+
+___________________________ POST /api/token/refresh/ ___________________________
+1. Test Case ID: qrhdTs
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"Token is invalid or expired","code":"token_not_valid"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"refresh": "0"}' http://127.0.0.1:8000/api/token/refresh/
+
+_____________________________ POST /api/auth/jwt/ ______________________________
+1. Test Case ID: Ez3Bfg
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"No active account found with the given credentials"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"password": "0", "username": "0"}' http://127.0.0.1:8000/api/auth/jwt/
+
+_________________________ POST /api/auth/jwt/refresh/ __________________________
+1. Test Case ID: zC2unq
+
+- Undocumented HTTP status code
+
+    Received: 401
+    Documented: 200, 400
+
+[401] Unauthorized:
+
+    `{"detail":"Token is invalid or expired","code":"token_not_valid"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"refresh": "0"}' http://127.0.0.1:8000/api/auth/jwt/refresh/
+
+=================================== SUMMARY ====================================
+
+Performed checks:
+    not_a_server_error                              4803 / 4864 passed          FAILED 
+    status_code_conformance                         1793 / 4864 passed          FAILED 
+    content_type_conformance                        4862 / 4864 passed          FAILED 
+    response_headers_conformance                    4864 / 4864 passed          PASSED 
+    response_schema_conformance                     4809 / 4864 passed          FAILED 
+    negative_data_rejection                         4864 / 4864 passed          PASSED 
+    ignored_auth                                    4864 / 4864 passed          PASSED 
+
+WARNINGS:
+  - `POST /api/v1/auth/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/readings/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/photoperiod/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/weather/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/stage-transitions/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/lifecycle-stages/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/batches/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/container-assignments/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/batch-compositions/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/transfers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/mortality-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-purchases/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-stocks/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feeding-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/batch-feeding-summaries/generate/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-container-stock/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-container-stock/add_to_container/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/journal-entries/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/mortality-records/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/lice-counts/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/treatments/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/health-sampling-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/individual-fish-observations/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/fish-parameter-scores/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/health-lab-samples/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/maintenance-tasks/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish-movements/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish-movements/bulk_transfer/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/trait-priorities/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/breeding-pairs/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/egg-productions/acquire_external/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/egg-productions/produce_internal/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/external-egg-batches/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/batch-parentages/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/areas/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/freshwater-stations/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/halls/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/containers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/sensors/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/feed-containers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/temperature-profiles/bulk_date_ranges/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/temperature-profiles/upload_csv/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/tgc-models/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/compare/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/from_batch/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/data-entry/validate_csv/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/users/users/change_password/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/auth/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+
+Note: Use the 'X-Schemathesis-TestCaseId' header to correlate test case ids from failure messages with server logs for debugging.
+
+====================== 104 passed, 288 failed in 297.35s =======================
