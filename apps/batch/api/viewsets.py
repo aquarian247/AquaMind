@@ -10,8 +10,7 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -37,7 +36,6 @@ from apps.batch.api.serializers import (
     GrowthSampleSerializer
 )
 
-
 class SpeciesViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing aquaculture Species.
@@ -58,33 +56,11 @@ class SpeciesViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'scientific_name', 'created_at']
     ordering = ['name']
 
-    @swagger_auto_schema(
-        operation_summary="List Species",
-        operation_description="Retrieves a list of all aquaculture species. Supports filtering, searching, and ordering.",
-        responses={
-            200: SpeciesSerializer(many=True),
-            400: openapi.Response("Bad Request - Invalid query parameters."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Species",
-        operation_description="Creates a new aquaculture species.",
-        request_body=SpeciesSerializer,
-        responses={
-            201: SpeciesSerializer,
-            400: openapi.Response("Bad Request - Invalid input data."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
-
 
 class LifeCycleStageViewSet(viewsets.ModelViewSet):
     """
@@ -106,33 +82,11 @@ class LifeCycleStageViewSet(viewsets.ModelViewSet):
     ordering_fields = ['species__name', 'order', 'name', 'created_at']
     ordering = ['species__name', 'order']
 
-    @swagger_auto_schema(
-        operation_summary="List Life Cycle Stages",
-        operation_description="Retrieves a list of all life cycle stages for species. Supports filtering, searching, and ordering.",
-        responses={
-            200: LifeCycleStageSerializer(many=True),
-            400: openapi.Response("Bad Request - Invalid query parameters."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Life Cycle Stage",
-        operation_description="Creates a new life cycle stage for a species.",
-        request_body=LifeCycleStageSerializer,
-        responses={
-            201: LifeCycleStageSerializer,
-            400: openapi.Response("Bad Request - Invalid input data."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
-
 
 class BatchViewSet(viewsets.ModelViewSet):
     """
@@ -188,16 +142,6 @@ class BatchViewSet(viewsets.ModelViewSet):
     ]
     ordering = ['-created_at']
 
-    @swagger_auto_schema(
-        operation_summary="List Batches",
-        operation_description="Retrieves a list of all batches, with support for filtering, searching, and ordering.",
-        responses={
-            200: BatchSerializer(many=True),
-            400: openapi.Response("Bad Request - Invalid query parameters"),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         """
         Retrieve a list of batches.
@@ -208,17 +152,6 @@ class BatchViewSet(viewsets.ModelViewSet):
         """
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Batch",
-        operation_description="Creates a new batch instance.",
-        request_body=BatchSerializer,
-        responses={
-            201: BatchSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided"),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         """
         Create a new batch.
@@ -228,93 +161,18 @@ class BatchViewSet(viewsets.ModelViewSet):
         """
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Batch",
-        operation_description="Retrieves a specific batch instance by its ID.",
-        responses={
-            200: BatchSerializer(),
-            404: openapi.Response("Not Found - Batch with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Batch",
-        operation_description="Updates an existing batch instance fully.",
-        request_body=BatchSerializer,
-        responses={
-            200: BatchSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Batch with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Batch",
-        operation_description="Partially updates an existing batch instance. Only include fields to be updated.",
-        request_body=BatchSerializer,
-        responses={
-            200: BatchSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Batch with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Batch",
-        operation_description="Deletes a specific batch instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Batch deleted successfully."),
-            404: openapi.Response("Not Found - Batch with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
     
-    @swagger_auto_schema(
-        operation_summary="Batch Growth Analysis",
-        operation_description=(
-            "Calculates and returns growth analysis metrics for a specific batch over time. "
-            "Metrics include growth rate, weight gain trends, Specific Growth Rate (SGR), "
-            "and potentially Thermal Growth Coefficient (TGC) if temperature data is available. "
-            "Requires growth samples to be recorded for the batch."
-        ),
-        responses={
-            200: openapi.Response(
-                description="Successful growth analysis. The response includes detailed metrics per sample and a summary.",
-                examples={
-                    "application/json": {
-                        "batch_number": "BATCH001",
-                        "species": "Atlantic Salmon",
-                        "lifecycle_stage": "Smolt",
-                        "start_date": "2023-01-01",
-                        "current_avg_weight": 150.5,
-                        "growth_metrics": [
-                            {"date": "2023-01-15", "avg_weight_g": 55.0, "sgr_percent_day": 1.5},
-                            {"date": "2023-01-30", "avg_weight_g": 75.0, "sgr_percent_day": 1.2}
-                        ],
-                        "summary": {"total_days_analyzed": 30, "overall_sgr_percent_day": 1.35}
-                    }
-                }
-            ),
-            404: openapi.Response("Not Found - Batch or associated growth samples not found."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     @action(detail=True, methods=['get'])
     def growth_analysis(self, request, pk=None):
         """
@@ -409,30 +267,6 @@ class BatchViewSet(viewsets.ModelViewSet):
         
         return Response(result)
     
-    @swagger_auto_schema(
-        operation_summary="Batch Performance Metrics",
-        operation_description=(
-            "Calculates and returns key performance indicators (KPIs) for a specific batch. "
-            "This includes mortality rates, a summary of the current batch status (population, biomass), "
-            "and potentially growth efficiency and density metrics if underlying data is available."
-        ),
-        responses={
-            200: openapi.Response(
-                description="Successful performance metrics retrieval.",
-                examples={
-                    "application/json": {
-                        "batch_id": 1,
-                        "batch_number": "BATCH001",
-                        "current_status_summary": {"population_count": 10000, "biomass_kg": 1500.0},
-                        "mortality_metrics": {"total_mortalities": 50, "cumulative_mortality_rate_percent": 0.5}
-                    }
-                }
-            ),
-            404: openapi.Response("Not Found - Batch not found."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     @action(detail=True, methods=['get'])
     def performance_metrics(self, request, pk=None):
         """
@@ -537,54 +371,6 @@ class BatchViewSet(viewsets.ModelViewSet):
         
         return Response(result)
     
-    @swagger_auto_schema(
-        method='get', # Explicitly state method for clarity with @action
-        operation_summary="Compare Multiple Batches",
-        operation_description=(
-            "Compares specified metrics across multiple batches. "
-            "Use query parameters to specify a comma-separated list of batch IDs and "
-            "a comma-separated list of metrics to compare (e.g., growth, mortality, biomass). "
-            "If 'metrics' is not provided, 'all' available metrics are compared."
-        ),
-        manual_parameters=[
-            openapi.Parameter(
-                'batch_ids', 
-                openapi.IN_QUERY, 
-                description="Comma-separated list of batch IDs to compare (e.g., '1,2,3'). At least two IDs are required.",
-                type=openapi.TYPE_STRING,
-                required=True
-            ),
-            openapi.Parameter(
-                'metrics', 
-                openapi.IN_QUERY, 
-                description="Comma-separated list of metrics to include. Options: growth, mortality, biomass, all. (default: all)",
-                type=openapi.TYPE_STRING,
-                required=False 
-            )
-        ],
-        responses={
-            200: openapi.Response(
-                description="Successful batch comparison. The structure of the response depends on the metrics requested.",
-                examples={
-                    "application/json": {
-                        "comparison_summary": "Comparison of 2 batches for metrics: growth, biomass.",
-                        "growth_comparison": [ 
-                            {"batch_id": 1, "batch_number": "BATCH001", "avg_sgr": 1.5},
-                            {"batch_id": 2, "batch_number": "BATCH002", "avg_sgr": 1.3}
-                        ],
-                        "biomass_comparison": [ 
-                             {"batch_id": 1, "batch_number": "BATCH001", "current_biomass_kg": 1500.0},
-                             {"batch_id": 2, "batch_number": "BATCH002", "current_biomass_kg": 1200.0}
-                        ]
-                    }
-                }
-            ),
-            400: openapi.Response("Bad Request - Invalid parameters (e.g., missing or invalid batch_ids, invalid metrics)."),
-            404: openapi.Response("Not Found - One or more specified batches not found."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     @action(detail=False, methods=['get'])
     def compare(self, request):
         """
@@ -747,7 +533,6 @@ class BatchViewSet(viewsets.ModelViewSet):
         
         return Response(result)
 
-
 class BatchTransferViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing Batch Transfers.
@@ -804,88 +589,23 @@ class BatchTransferViewSet(viewsets.ModelViewSet):
     ]
     ordering = ['-transfer_date']
 
-    @swagger_auto_schema(
-        operation_summary="List Batch Transfers",
-        operation_description="Retrieves a list of all batch transfers, with support for filtering, searching, and ordering.",
-        responses={
-            200: BatchTransferSerializer(many=True),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Batch Transfer",
-        operation_description="Creates a new batch transfer record.",
-        request_body=BatchTransferSerializer,
-        responses={
-            201: BatchTransferSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided for the transfer."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Batch Transfer",
-        operation_description="Retrieves a specific batch transfer instance by its ID.",
-        responses={
-            200: BatchTransferSerializer(),
-            404: openapi.Response("Not Found - Batch transfer with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Batch Transfer",
-        operation_description="Updates an existing batch transfer instance fully.",
-        request_body=BatchTransferSerializer,
-        responses={
-            200: BatchTransferSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Batch transfer with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Batch Transfer",
-        operation_description="Partially updates an existing batch transfer instance. Only include fields to be updated.",
-        request_body=BatchTransferSerializer,
-        responses={
-            200: BatchTransferSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Batch transfer with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Batch Transfer",
-        operation_description="Deletes a specific batch transfer instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Batch transfer deleted successfully."),
-            404: openapi.Response("Not Found - Batch transfer with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
-
 
 class MortalityEventViewSet(viewsets.ModelViewSet):
     """
@@ -923,88 +643,23 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
     ordering_fields = ['event_date', 'batch__batch_number', 'count', 'created_at']
     ordering = ['-event_date']
 
-    @swagger_auto_schema(
-        operation_summary="List Mortality Events",
-        operation_description="Retrieves a list of all mortality events, with support for filtering, searching, and ordering.",
-        responses={
-            200: MortalityEventSerializer(many=True),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Mortality Event",
-        operation_description="Creates a new mortality event record for a batch.",
-        request_body=MortalityEventSerializer,
-        responses={
-            201: MortalityEventSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided for the mortality event."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Mortality Event",
-        operation_description="Retrieves a specific mortality event instance by its ID.",
-        responses={
-            200: MortalityEventSerializer(),
-            404: openapi.Response("Not Found - Mortality event with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Mortality Event",
-        operation_description="Updates an existing mortality event instance fully.",
-        request_body=MortalityEventSerializer,
-        responses={
-            200: MortalityEventSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Mortality event with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Mortality Event",
-        operation_description="Partially updates an existing mortality event instance. Only include fields to be updated.",
-        request_body=MortalityEventSerializer,
-        responses={
-            200: MortalityEventSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Mortality event with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Mortality Event",
-        operation_description="Deletes a specific mortality event instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Mortality event deleted successfully."),
-            404: openapi.Response("Not Found - Mortality event with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
-
 
 class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
     """
@@ -1051,88 +706,23 @@ class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
     ]
     ordering = ['-assignment_date']
 
-    @swagger_auto_schema(
-        operation_summary="List Batch Container Assignments",
-        operation_description="Retrieves a list of all batch container assignments, with support for filtering, searching, and ordering.",
-        responses={
-            200: BatchContainerAssignmentSerializer(many=True),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Batch Container Assignment",
-        operation_description="Creates a new batch container assignment record.",
-        request_body=BatchContainerAssignmentSerializer,
-        responses={
-            201: BatchContainerAssignmentSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided for the assignment."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Batch Container Assignment",
-        operation_description="Retrieves a specific batch container assignment instance by its ID.",
-        responses={
-            200: BatchContainerAssignmentSerializer(),
-            404: openapi.Response("Not Found - Assignment with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Batch Container Assignment",
-        operation_description="Updates an existing batch container assignment instance fully.",
-        request_body=BatchContainerAssignmentSerializer,
-        responses={
-            200: BatchContainerAssignmentSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Assignment with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Batch Container Assignment",
-        operation_description="Partially updates an existing batch container assignment. Only include fields to be updated.",
-        request_body=BatchContainerAssignmentSerializer,
-        responses={
-            200: BatchContainerAssignmentSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Assignment with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Batch Container Assignment",
-        operation_description="Deletes a specific batch container assignment instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Assignment deleted successfully."),
-            404: openapi.Response("Not Found - Assignment with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
-
 
 class BatchCompositionViewSet(viewsets.ModelViewSet):
     """
@@ -1175,88 +765,23 @@ class BatchCompositionViewSet(viewsets.ModelViewSet):
     ]
     ordering = ['mixed_batch__batch_number', 'percentage']
 
-    @swagger_auto_schema(
-        operation_summary="List Batch Compositions",
-        operation_description="Retrieves a list of all batch composition records, with support for filtering, searching, and ordering.",
-        responses={
-            200: BatchCompositionSerializer(many=True),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Batch Composition",
-        operation_description="Creates a new batch composition record, linking a source batch to a mixed batch.",
-        request_body=BatchCompositionSerializer,
-        responses={
-            201: BatchCompositionSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided for the composition."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Batch Composition",
-        operation_description="Retrieves a specific batch composition instance by its ID.",
-        responses={
-            200: BatchCompositionSerializer(),
-            404: openapi.Response("Not Found - Composition record with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Batch Composition",
-        operation_description="Updates an existing batch composition record instance fully.",
-        request_body=BatchCompositionSerializer,
-        responses={
-            200: BatchCompositionSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Composition record with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Batch Composition",
-        operation_description="Partially updates an existing batch composition record. Only include fields to be updated.",
-        request_body=BatchCompositionSerializer,
-        responses={
-            200: BatchCompositionSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Composition record with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Batch Composition",
-        operation_description="Deletes a specific batch composition record instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Composition record deleted successfully."),
-            404: openapi.Response("Not Found - Composition record with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
-
 
 class GrowthSampleViewSet(viewsets.ModelViewSet):
     """
@@ -1292,84 +817,20 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
     ordering_fields = ['sample_date', 'batch__batch_number', 'avg_weight_g', 'created_at']
     ordering = ['-sample_date']
 
-    @swagger_auto_schema(
-        operation_summary="List Growth Samples",
-        operation_description="Retrieves a list of all growth samples, with support for filtering, searching, and ordering.",
-        responses={
-            200: GrowthSampleSerializer(many=True),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Create Growth Sample",
-        operation_description="Creates a new growth sample record for a batch or batch container assignment.",
-        request_body=GrowthSampleSerializer,
-        responses={
-            201: GrowthSampleSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided for the growth sample."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Retrieve Growth Sample",
-        operation_description="Retrieves a specific growth sample instance by its ID.",
-        responses={
-            200: GrowthSampleSerializer(),
-            404: openapi.Response("Not Found - Growth sample with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Update Growth Sample",
-        operation_description="Updates an existing growth sample instance fully.",
-        request_body=GrowthSampleSerializer,
-        responses={
-            200: GrowthSampleSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Growth sample with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially Update Growth Sample",
-        operation_description="Partially updates an existing growth sample instance. Only include fields to be updated.",
-        request_body=GrowthSampleSerializer,
-        responses={
-            200: GrowthSampleSerializer(),
-            400: openapi.Response("Bad Request - Invalid data provided."),
-            404: openapi.Response("Not Found - Growth sample with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Delete Growth Sample",
-        operation_description="Deletes a specific growth sample instance by its ID.",
-        responses={
-            204: openapi.Response("No Content - Growth sample deleted successfully."),
-            404: openapi.Response("Not Found - Growth sample with the specified ID does not exist."),
-            401: openapi.Response("Unauthorized - Authentication credentials were not provided or were invalid."),
-            403: openapi.Response("Forbidden - You do not have permission to perform this action.")
-        }
-    )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)

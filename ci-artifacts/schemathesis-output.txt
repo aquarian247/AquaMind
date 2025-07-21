@@ -1,0 +1,1616 @@
+🔌 AquaMind Schemathesis hooks loaded!
+INFO:schemathesis.hooks:AquaMind Schemathesis hooks initialized
+Warning: Option `--show-errors-tracebacks` is deprecated and will be removed in Schemathesis 4.0. Use `--show-trace` instead
+======================= Schemathesis test session starts =======================
+Schema location: file:///home/runner/work/AquaMind/AquaMind/api/openapi.yaml
+Base URL: http://127.0.0.1:8000
+Specification version: Open API 3.0.3
+Workers: 1
+Collected API operations: 392
+Collected API links: 0
+API probing: ...API probing: SUCCESS
+Schema analysis: ...Schema analysis: SKIP
+
+POST /api/v1/auth/token/ .                                                [  0%]
+GET /api/v1/auth/dev-auth/ .                                              [  0%]
+GET /api/v1/environmental/parameters/ .                                   [  0%]
+POST /api/v1/environmental/parameters/ .                                  [  1%]
+DELETE /api/v1/environmental/parameters/{id}/ .                           [  1%]
+PUT /api/v1/environmental/parameters/{id}/ .                              [  1%]
+GET /api/v1/environmental/parameters/{id}/ .                              [  1%]
+PATCH /api/v1/environmental/parameters/{id}/ .                            [  2%]
+GET /api/v1/environmental/readings/ .                                     [  2%]
+POST /api/v1/environmental/readings/ .                                    [  2%]
+GET /api/v1/environmental/readings/recent/ .                              [  2%]
+GET /api/v1/environmental/readings/stats/ .                               [  3%]
+DELETE /api/v1/environmental/readings/{id}/ .                             [  3%]
+PUT /api/v1/environmental/readings/{id}/ .                                [  3%]
+GET /api/v1/environmental/readings/{id}/ .                                [  3%]
+PATCH /api/v1/environmental/readings/{id}/ .                              [  4%]
+GET /api/v1/environmental/photoperiod/ .                                  [  4%]
+POST /api/v1/environmental/photoperiod/ .                                 [  4%]
+DELETE /api/v1/environmental/photoperiod/{id}/ .                          [  4%]
+PUT /api/v1/environmental/photoperiod/{id}/ .                             [  5%]
+GET /api/v1/environmental/photoperiod/{id}/ .                             [  5%]
+PATCH /api/v1/environmental/photoperiod/{id}/ .                           [  5%]
+GET /api/v1/environmental/weather/ .                                      [  5%]
+POST /api/v1/environmental/weather/ .                                     [  6%]
+GET /api/v1/environmental/weather/recent/ .                               [  6%]
+DELETE /api/v1/environmental/weather/{id}/ .                              [  6%]
+PUT /api/v1/environmental/weather/{id}/ .                                 [  6%]
+GET /api/v1/environmental/weather/{id}/ .                                 [  7%]
+PATCH /api/v1/environmental/weather/{id}/ .                               [  7%]
+GET /api/v1/environmental/stage-transitions/ .                            [  7%]
+POST /api/v1/environmental/stage-transitions/ .                           [  7%]
+DELETE /api/v1/environmental/stage-transitions/{id}/ .                    [  8%]
+PUT /api/v1/environmental/stage-transitions/{id}/ .                       [  8%]
+GET /api/v1/environmental/stage-transitions/{id}/ .                       [  8%]
+PATCH /api/v1/environmental/stage-transitions/{id}/ .                     [  8%]
+GET /api/v1/batch/species/ .                                              [  9%]
+POST /api/v1/batch/species/ .                                             [  9%]
+DELETE /api/v1/batch/species/{id}/ .                                      [  9%]
+PUT /api/v1/batch/species/{id}/ .                                         [  9%]
+GET /api/v1/batch/species/{id}/ .                                         [ 10%]
+PATCH /api/v1/batch/species/{id}/ .                                       [ 10%]
+GET /api/v1/batch/lifecycle-stages/ .                                     [ 10%]
+POST /api/v1/batch/lifecycle-stages/ .                                    [ 10%]
+DELETE /api/v1/batch/lifecycle-stages/{id}/ .                             [ 11%]
+PUT /api/v1/batch/lifecycle-stages/{id}/ .                                [ 11%]
+GET /api/v1/batch/lifecycle-stages/{id}/ .                                [ 11%]
+PATCH /api/v1/batch/lifecycle-stages/{id}/ .                              [ 11%]
+GET /api/v1/batch/batches/ .                                              [ 12%]
+POST /api/v1/batch/batches/ .                                             [ 12%]
+GET /api/v1/batch/batches/compare/ F                                      [ 12%]
+DELETE /api/v1/batch/batches/{id}/ .                                      [ 13%]
+PUT /api/v1/batch/batches/{id}/ .                                         [ 13%]
+GET /api/v1/batch/batches/{id}/ .                                         [ 13%]
+PATCH /api/v1/batch/batches/{id}/ .                                       [ 13%]
+GET /api/v1/batch/batches/{id}/growth_analysis/ .                         [ 14%]
+GET /api/v1/batch/batches/{id}/performance_metrics/ .                     [ 14%]
+GET /api/v1/batch/container-assignments/ .                                [ 14%]
+POST /api/v1/batch/container-assignments/ .                               [ 14%]
+DELETE /api/v1/batch/container-assignments/{id}/ .                        [ 15%]
+PUT /api/v1/batch/container-assignments/{id}/ .                           [ 15%]
+GET /api/v1/batch/container-assignments/{id}/ .                           [ 15%]
+PATCH /api/v1/batch/container-assignments/{id}/ .                         [ 15%]
+GET /api/v1/batch/batch-compositions/ .                                   [ 16%]
+POST /api/v1/batch/batch-compositions/ .                                  [ 16%]
+DELETE /api/v1/batch/batch-compositions/{id}/ .                           [ 16%]
+PUT /api/v1/batch/batch-compositions/{id}/ .                              [ 16%]
+GET /api/v1/batch/batch-compositions/{id}/ .                              [ 17%]
+PATCH /api/v1/batch/batch-compositions/{id}/ .                            [ 17%]
+GET /api/v1/batch/transfers/ .                                            [ 17%]
+POST /api/v1/batch/transfers/ .                                           [ 17%]
+DELETE /api/v1/batch/transfers/{id}/ .                                    [ 18%]
+PUT /api/v1/batch/transfers/{id}/ .                                       [ 18%]
+GET /api/v1/batch/transfers/{id}/ .                                       [ 18%]
+PATCH /api/v1/batch/transfers/{id}/ .                                     [ 18%]
+GET /api/v1/batch/mortality-events/ .                                     [ 19%]
+POST /api/v1/batch/mortality-events/ .                                    [ 19%]
+DELETE /api/v1/batch/mortality-events/{id}/ .                             [ 19%]
+PUT /api/v1/batch/mortality-events/{id}/ .                                [ 19%]
+GET /api/v1/batch/mortality-events/{id}/ .                                [ 20%]
+PATCH /api/v1/batch/mortality-events/{id}/ .                              [ 20%]
+GET /api/v1/batch/growth-samples/ .                                       [ 20%]
+POST /api/v1/batch/growth-samples/ F                                      [ 20%]
+DELETE /api/v1/batch/growth-samples/{id}/ .                               [ 21%]
+PUT /api/v1/batch/growth-samples/{id}/ .                                  [ 21%]
+GET /api/v1/batch/growth-samples/{id}/ .                                  [ 21%]
+PATCH /api/v1/batch/growth-samples/{id}/ .                                [ 21%]
+GET /api/v1/inventory/feeds/ .                                            [ 22%]
+POST /api/v1/inventory/feeds/ .                                           [ 22%]
+DELETE /api/v1/inventory/feeds/{id}/ .                                    [ 22%]
+PUT /api/v1/inventory/feeds/{id}/ .                                       [ 22%]
+GET /api/v1/inventory/feeds/{id}/ .                                       [ 23%]
+PATCH /api/v1/inventory/feeds/{id}/ .                                     [ 23%]
+GET /api/v1/inventory/feed-purchases/ .                                   [ 23%]
+POST /api/v1/inventory/feed-purchases/ .                                  [ 23%]
+DELETE /api/v1/inventory/feed-purchases/{id}/ .                           [ 24%]
+PUT /api/v1/inventory/feed-purchases/{id}/ .                              [ 24%]
+GET /api/v1/inventory/feed-purchases/{id}/ .                              [ 24%]
+PATCH /api/v1/inventory/feed-purchases/{id}/ .                            [ 25%]
+GET /api/v1/inventory/feed-stocks/ .                                      [ 25%]
+POST /api/v1/inventory/feed-stocks/ .                                     [ 25%]
+GET /api/v1/inventory/feed-stocks/low_stock/ .                            [ 25%]
+DELETE /api/v1/inventory/feed-stocks/{id}/ .                              [ 26%]
+PUT /api/v1/inventory/feed-stocks/{id}/ .                                 [ 26%]
+GET /api/v1/inventory/feed-stocks/{id}/ .                                 [ 26%]
+PATCH /api/v1/inventory/feed-stocks/{id}/ .                               [ 26%]
+GET /api/v1/inventory/feeding-events/ .                                   [ 27%]
+POST /api/v1/inventory/feeding-events/ .                                  [ 27%]
+GET /api/v1/inventory/feeding-events/by_batch/ F                          [ 27%]
+DELETE /api/v1/inventory/feeding-events/{id}/ .                           [ 27%]
+PUT /api/v1/inventory/feeding-events/{id}/ .                              [ 28%]
+GET /api/v1/inventory/feeding-events/{id}/ .                              [ 28%]
+PATCH /api/v1/inventory/feeding-events/{id}/ .                            [ 28%]
+GET /api/v1/inventory/batch-feeding-summaries/ .                          [ 28%]
+GET /api/v1/inventory/batch-feeding-summaries/by_batch/ F                 [ 29%]
+POST /api/v1/inventory/batch-feeding-summaries/generate/ .                [ 29%]
+GET /api/v1/inventory/batch-feeding-summaries/{id}/ .                     [ 29%]
+GET /api/v1/inventory/feed-container-stock/ .                             [ 29%]
+POST /api/v1/inventory/feed-container-stock/ .                            [ 30%]
+POST /api/v1/inventory/feed-container-stock/add_to_container/ .           [ 30%]
+GET /api/v1/inventory/feed-container-stock/by_container/ .                [ 30%]
+GET /api/v1/inventory/feed-container-stock/fifo_order/ F                  [ 30%]
+DELETE /api/v1/inventory/feed-container-stock/{id}/ .                     [ 31%]
+PUT /api/v1/inventory/feed-container-stock/{id}/ .                        [ 31%]
+GET /api/v1/inventory/feed-container-stock/{id}/ .                        [ 31%]
+PATCH /api/v1/inventory/feed-container-stock/{id}/ .                      [ 31%]
+GET /api/v1/health/journal-entries/ .                                     [ 32%]
+POST /api/v1/health/journal-entries/ .                                    [ 32%]
+DELETE /api/v1/health/journal-entries/{id}/ .                             [ 32%]
+PUT /api/v1/health/journal-entries/{id}/ .                                [ 32%]
+GET /api/v1/health/journal-entries/{id}/ .                                [ 33%]
+PATCH /api/v1/health/journal-entries/{id}/ .                              [ 33%]
+GET /api/v1/health/mortality-reasons/ .                                   [ 33%]
+POST /api/v1/health/mortality-reasons/ .                                  [ 33%]
+DELETE /api/v1/health/mortality-reasons/{id}/ .                           [ 34%]
+PUT /api/v1/health/mortality-reasons/{id}/ .                              [ 34%]
+GET /api/v1/health/mortality-reasons/{id}/ .                              [ 34%]
+PATCH /api/v1/health/mortality-reasons/{id}/ .                            [ 34%]
+GET /api/v1/health/mortality-records/ .                                   [ 35%]
+POST /api/v1/health/mortality-records/ .                                  [ 35%]
+DELETE /api/v1/health/mortality-records/{id}/ .                           [ 35%]
+PUT /api/v1/health/mortality-records/{id}/ .                              [ 35%]
+GET /api/v1/health/mortality-records/{id}/ .                              [ 36%]
+PATCH /api/v1/health/mortality-records/{id}/ .                            [ 36%]
+GET /api/v1/health/lice-counts/ .                                         [ 36%]
+POST /api/v1/health/lice-counts/ .                                        [ 36%]
+DELETE /api/v1/health/lice-counts/{id}/ .                                 [ 37%]
+PUT /api/v1/health/lice-counts/{id}/ .                                    [ 37%]
+GET /api/v1/health/lice-counts/{id}/ .                                    [ 37%]
+PATCH /api/v1/health/lice-counts/{id}/ .                                  [ 38%]
+GET /api/v1/health/vaccination-types/ .                                   [ 38%]
+POST /api/v1/health/vaccination-types/ .                                  [ 38%]
+DELETE /api/v1/health/vaccination-types/{id}/ .                           [ 38%]
+PUT /api/v1/health/vaccination-types/{id}/ .                              [ 39%]
+GET /api/v1/health/vaccination-types/{id}/ .                              [ 39%]
+PATCH /api/v1/health/vaccination-types/{id}/ .                            [ 39%]
+GET /api/v1/health/treatments/ .                                          [ 39%]
+POST /api/v1/health/treatments/ .                                         [ 40%]
+DELETE /api/v1/health/treatments/{id}/ .                                  [ 40%]
+PUT /api/v1/health/treatments/{id}/ .                                     [ 40%]
+GET /api/v1/health/treatments/{id}/ .                                     [ 40%]
+PATCH /api/v1/health/treatments/{id}/ .                                   [ 41%]
+GET /api/v1/health/sample-types/ F                                        [ 41%]
+POST /api/v1/health/sample-types/ .                                       [ 41%]
+DELETE /api/v1/health/sample-types/{id}/ .                                [ 41%]
+PUT /api/v1/health/sample-types/{id}/ .                                   [ 42%]
+GET /api/v1/health/sample-types/{id}/ .                                   [ 42%]
+PATCH /api/v1/health/sample-types/{id}/ .                                 [ 42%]
+GET /api/v1/health/health-parameters/ .                                   [ 42%]
+POST /api/v1/health/health-parameters/ .                                  [ 43%]
+DELETE /api/v1/health/health-parameters/{id}/ .                           [ 43%]
+PUT /api/v1/health/health-parameters/{id}/ .                              [ 43%]
+GET /api/v1/health/health-parameters/{id}/ .                              [ 43%]
+PATCH /api/v1/health/health-parameters/{id}/ .                            [ 44%]
+GET /api/v1/health/health-sampling-events/ .                              [ 44%]
+POST /api/v1/health/health-sampling-events/ .                             [ 44%]
+DELETE /api/v1/health/health-sampling-events/{id}/ .                      [ 44%]
+PUT /api/v1/health/health-sampling-events/{id}/ .                         [ 45%]
+GET /api/v1/health/health-sampling-events/{id}/ .                         [ 45%]
+PATCH /api/v1/health/health-sampling-events/{id}/ .                       [ 45%]
+POST /api/v1/health/health-sampling-events/{id}/calculate-aggregat[...] . [ 45%]
+GET /api/v1/health/individual-fish-observations/ .                        [ 46%]
+POST /api/v1/health/individual-fish-observations/ .                       [ 46%]
+DELETE /api/v1/health/individual-fish-observations/{id}/ .                [ 46%]
+PUT /api/v1/health/individual-fish-observations/{id}/ .                   [ 46%]
+GET /api/v1/health/individual-fish-observations/{id}/ .                   [ 47%]
+PATCH /api/v1/health/individual-fish-observations/{id}/ .                 [ 47%]
+GET /api/v1/health/fish-parameter-scores/ .                               [ 47%]
+POST /api/v1/health/fish-parameter-scores/ .                              [ 47%]
+DELETE /api/v1/health/fish-parameter-scores/{id}/ .                       [ 48%]
+PUT /api/v1/health/fish-parameter-scores/{id}/ .                          [ 48%]
+GET /api/v1/health/fish-parameter-scores/{id}/ .                          [ 48%]
+PATCH /api/v1/health/fish-parameter-scores/{id}/ .                        [ 48%]
+GET /api/v1/health/health-lab-samples/ .                                  [ 49%]
+POST /api/v1/health/health-lab-samples/ .                                 [ 49%]
+DELETE /api/v1/health/health-lab-samples/{id}/ .                          [ 49%]
+PUT /api/v1/health/health-lab-samples/{id}/ .                             [ 50%]
+GET /api/v1/health/health-lab-samples/{id}/ .                             [ 50%]
+PATCH /api/v1/health/health-lab-samples/{id}/ .                           [ 50%]
+GET /api/v1/broodstock/maintenance-tasks/ .                               [ 50%]
+POST /api/v1/broodstock/maintenance-tasks/ .                              [ 51%]
+GET /api/v1/broodstock/maintenance-tasks/overdue/ .                       [ 51%]
+DELETE /api/v1/broodstock/maintenance-tasks/{id}/ .                       [ 51%]
+PUT /api/v1/broodstock/maintenance-tasks/{id}/ .                          [ 51%]
+GET /api/v1/broodstock/maintenance-tasks/{id}/ .                          [ 52%]
+PATCH /api/v1/broodstock/maintenance-tasks/{id}/ .                        [ 52%]
+POST /api/v1/broodstock/maintenance-tasks/{id}/complete/ .                [ 52%]
+GET /api/v1/broodstock/fish/ .                                            [ 52%]
+POST /api/v1/broodstock/fish/ .                                           [ 53%]
+GET /api/v1/broodstock/fish/by_container/ F                               [ 53%]
+GET /api/v1/broodstock/fish/healthy/ F                                    [ 53%]
+DELETE /api/v1/broodstock/fish/{id}/ .                                    [ 53%]
+PUT /api/v1/broodstock/fish/{id}/ .                                       [ 54%]
+GET /api/v1/broodstock/fish/{id}/ .                                       [ 54%]
+PATCH /api/v1/broodstock/fish/{id}/ .                                     [ 54%]
+GET /api/v1/broodstock/fish-movements/ .                                  [ 54%]
+POST /api/v1/broodstock/fish-movements/ .                                 [ 55%]
+POST /api/v1/broodstock/fish-movements/bulk_transfer/ .                   [ 55%]
+DELETE /api/v1/broodstock/fish-movements/{id}/ .                          [ 55%]
+PUT /api/v1/broodstock/fish-movements/{id}/ .                             [ 55%]
+GET /api/v1/broodstock/fish-movements/{id}/ .                             [ 56%]
+PATCH /api/v1/broodstock/fish-movements/{id}/ .                           [ 56%]
+GET /api/v1/broodstock/breeding-plans/ F                                  [ 56%]
+POST /api/v1/broodstock/breeding-plans/ .                                 [ 56%]
+GET /api/v1/broodstock/breeding-plans/active/ .                           [ 57%]
+DELETE /api/v1/broodstock/breeding-plans/{id}/ .                          [ 57%]
+PUT /api/v1/broodstock/breeding-plans/{id}/ .                             [ 57%]
+GET /api/v1/broodstock/breeding-plans/{id}/ .                             [ 57%]
+PATCH /api/v1/broodstock/breeding-plans/{id}/ .                           [ 58%]
+GET /api/v1/broodstock/trait-priorities/ .                                [ 58%]
+POST /api/v1/broodstock/trait-priorities/ .                               [ 58%]
+DELETE /api/v1/broodstock/trait-priorities/{id}/ .                        [ 58%]
+PUT /api/v1/broodstock/trait-priorities/{id}/ .                           [ 59%]
+GET /api/v1/broodstock/trait-priorities/{id}/ .                           [ 59%]
+PATCH /api/v1/broodstock/trait-priorities/{id}/ .                         [ 59%]
+GET /api/v1/broodstock/breeding-pairs/ .                                  [ 59%]
+POST /api/v1/broodstock/breeding-pairs/ .                                 [ 60%]
+DELETE /api/v1/broodstock/breeding-pairs/{id}/ .                          [ 60%]
+PUT /api/v1/broodstock/breeding-pairs/{id}/ .                             [ 60%]
+GET /api/v1/broodstock/breeding-pairs/{id}/ .                             [ 60%]
+PATCH /api/v1/broodstock/breeding-pairs/{id}/ .                           [ 61%]
+POST /api/v1/broodstock/breeding-pairs/{id}/record_progeny/ .             [ 61%]
+GET /api/v1/broodstock/egg-suppliers/ .                                   [ 61%]
+POST /api/v1/broodstock/egg-suppliers/ .                                  [ 61%]
+DELETE /api/v1/broodstock/egg-suppliers/{id}/ .                           [ 62%]
+PUT /api/v1/broodstock/egg-suppliers/{id}/ .                              [ 62%]
+GET /api/v1/broodstock/egg-suppliers/{id}/ .                              [ 62%]
+PATCH /api/v1/broodstock/egg-suppliers/{id}/ .                            [ 63%]
+GET /api/v1/broodstock/egg-productions/ .                                 [ 63%]
+POST /api/v1/broodstock/egg-productions/ F                                [ 63%]
+POST /api/v1/broodstock/egg-productions/acquire_external/ .               [ 63%]
+POST /api/v1/broodstock/egg-productions/produce_internal/ .               [ 64%]
+DELETE /api/v1/broodstock/egg-productions/{id}/ .                         [ 64%]
+PUT /api/v1/broodstock/egg-productions/{id}/ .                            [ 64%]
+GET /api/v1/broodstock/egg-productions/{id}/ .                            [ 64%]
+PATCH /api/v1/broodstock/egg-productions/{id}/ .                          [ 65%]
+GET /api/v1/broodstock/external-egg-batches/ .                            [ 65%]
+POST /api/v1/broodstock/external-egg-batches/ .                           [ 65%]
+DELETE /api/v1/broodstock/external-egg-batches/{id}/ .                    [ 65%]
+PUT /api/v1/broodstock/external-egg-batches/{id}/ .                       [ 66%]
+GET /api/v1/broodstock/external-egg-batches/{id}/ .                       [ 66%]
+PATCH /api/v1/broodstock/external-egg-batches/{id}/ .                     [ 66%]
+GET /api/v1/broodstock/batch-parentages/ .                                [ 66%]
+POST /api/v1/broodstock/batch-parentages/ .                               [ 67%]
+GET /api/v1/broodstock/batch-parentages/lineage/ F                        [ 67%]
+DELETE /api/v1/broodstock/batch-parentages/{id}/ .                        [ 67%]
+PUT /api/v1/broodstock/batch-parentages/{id}/ .                           [ 67%]
+GET /api/v1/broodstock/batch-parentages/{id}/ .                           [ 68%]
+PATCH /api/v1/broodstock/batch-parentages/{id}/ .                         [ 68%]
+GET /api/v1/infrastructure/geographies/ .                                 [ 68%]
+POST /api/v1/infrastructure/geographies/ .                                [ 68%]
+DELETE /api/v1/infrastructure/geographies/{id}/ .                         [ 69%]
+PUT /api/v1/infrastructure/geographies/{id}/ .                            [ 69%]
+GET /api/v1/infrastructure/geographies/{id}/ .                            [ 69%]
+PATCH /api/v1/infrastructure/geographies/{id}/ .                          [ 69%]
+GET /api/v1/infrastructure/areas/ .                                       [ 70%]
+POST /api/v1/infrastructure/areas/ .                                      [ 70%]
+DELETE /api/v1/infrastructure/areas/{id}/ .                               [ 70%]
+PUT /api/v1/infrastructure/areas/{id}/ .                                  [ 70%]
+GET /api/v1/infrastructure/areas/{id}/ .                                  [ 71%]
+PATCH /api/v1/infrastructure/areas/{id}/ .                                [ 71%]
+GET /api/v1/infrastructure/freshwater-stations/ .                         [ 71%]
+POST /api/v1/infrastructure/freshwater-stations/ .                        [ 71%]
+DELETE /api/v1/infrastructure/freshwater-stations/{id}/ .                 [ 72%]
+PUT /api/v1/infrastructure/freshwater-stations/{id}/ .                    [ 72%]
+GET /api/v1/infrastructure/freshwater-stations/{id}/ .                    [ 72%]
+PATCH /api/v1/infrastructure/freshwater-stations/{id}/ .                  [ 72%]
+GET /api/v1/infrastructure/halls/ .                                       [ 73%]
+POST /api/v1/infrastructure/halls/ .                                      [ 73%]
+DELETE /api/v1/infrastructure/halls/{id}/ .                               [ 73%]
+PUT /api/v1/infrastructure/halls/{id}/ .                                  [ 73%]
+GET /api/v1/infrastructure/halls/{id}/ .                                  [ 74%]
+PATCH /api/v1/infrastructure/halls/{id}/ .                                [ 74%]
+GET /api/v1/infrastructure/container-types/ .                             [ 74%]
+POST /api/v1/infrastructure/container-types/ .                            [ 75%]
+DELETE /api/v1/infrastructure/container-types/{id}/ .                     [ 75%]
+PUT /api/v1/infrastructure/container-types/{id}/ .                        [ 75%]
+GET /api/v1/infrastructure/container-types/{id}/ .                        [ 75%]
+PATCH /api/v1/infrastructure/container-types/{id}/ .                      [ 76%]
+GET /api/v1/infrastructure/containers/ .                                  [ 76%]
+POST /api/v1/infrastructure/containers/ .                                 [ 76%]
+DELETE /api/v1/infrastructure/containers/{id}/ .                          [ 76%]
+PUT /api/v1/infrastructure/containers/{id}/ .                             [ 77%]
+GET /api/v1/infrastructure/containers/{id}/ .                             [ 77%]
+PATCH /api/v1/infrastructure/containers/{id}/ .                           [ 77%]
+GET /api/v1/infrastructure/sensors/ .                                     [ 77%]
+POST /api/v1/infrastructure/sensors/ .                                    [ 78%]
+DELETE /api/v1/infrastructure/sensors/{id}/ .                             [ 78%]
+PUT /api/v1/infrastructure/sensors/{id}/ .                                [ 78%]
+GET /api/v1/infrastructure/sensors/{id}/ .                                [ 78%]
+PATCH /api/v1/infrastructure/sensors/{id}/ .                              [ 79%]
+GET /api/v1/infrastructure/feed-containers/ .                             [ 79%]
+POST /api/v1/infrastructure/feed-containers/ .                            [ 79%]
+DELETE /api/v1/infrastructure/feed-containers/{id}/ .                     [ 79%]
+PUT /api/v1/infrastructure/feed-containers/{id}/ .                        [ 80%]
+GET /api/v1/infrastructure/feed-containers/{id}/ .                        [ 80%]
+PATCH /api/v1/infrastructure/feed-containers/{id}/ .                      [ 80%]
+GET /api/v1/scenario/temperature-profiles/ .                              [ 80%]
+POST /api/v1/scenario/temperature-profiles/ F                             [ 81%]
+POST /api/v1/scenario/temperature-profiles/bulk_date_ranges/ .            [ 81%]
+GET /api/v1/scenario/temperature-profiles/download_template/ F            [ 81%]
+POST /api/v1/scenario/temperature-profiles/upload_csv/ .                  [ 81%]
+DELETE /api/v1/scenario/temperature-profiles/{profile_id}/ .              [ 82%]
+PUT /api/v1/scenario/temperature-profiles/{profile_id}/ .                 [ 82%]
+GET /api/v1/scenario/temperature-profiles/{profile_id}/ .                 [ 82%]
+PATCH /api/v1/scenario/temperature-profiles/{profile_id}/ .               [ 82%]
+GET /api/v1/scenario/temperature-profiles/{profile_id}/statistics/ .      [ 83%]
+GET /api/v1/scenario/tgc-models/ .                                        [ 83%]
+POST /api/v1/scenario/tgc-models/ .                                       [ 83%]
+GET /api/v1/scenario/tgc-models/templates/ F                              [ 83%]
+DELETE /api/v1/scenario/tgc-models/{model_id}/ .                          [ 84%]
+PUT /api/v1/scenario/tgc-models/{model_id}/ .                             [ 84%]
+GET /api/v1/scenario/tgc-models/{model_id}/ .                             [ 84%]
+PATCH /api/v1/scenario/tgc-models/{model_id}/ .                           [ 84%]
+POST /api/v1/scenario/tgc-models/{model_id}/duplicate/ .                  [ 85%]
+GET /api/v1/scenario/fcr-models/ .                                        [ 85%]
+POST /api/v1/scenario/fcr-models/ F                                       [ 85%]
+GET /api/v1/scenario/fcr-models/templates/ F                              [ 85%]
+DELETE /api/v1/scenario/fcr-models/{model_id}/ .                          [ 86%]
+PUT /api/v1/scenario/fcr-models/{model_id}/ .                             [ 86%]
+GET /api/v1/scenario/fcr-models/{model_id}/ .                             [ 86%]
+PATCH /api/v1/scenario/fcr-models/{model_id}/ .                           [ 86%]
+GET /api/v1/scenario/fcr-models/{model_id}/stage_summary/ .               [ 87%]
+GET /api/v1/scenario/mortality-models/ .                                  [ 87%]
+POST /api/v1/scenario/mortality-models/ .                                 [ 87%]
+GET /api/v1/scenario/mortality-models/templates/ F                        [ 88%]
+DELETE /api/v1/scenario/mortality-models/{model_id}/ .                    [ 88%]
+PUT /api/v1/scenario/mortality-models/{model_id}/ .                       [ 88%]
+GET /api/v1/scenario/mortality-models/{model_id}/ .                       [ 88%]
+PATCH /api/v1/scenario/mortality-models/{model_id}/ .                     [ 89%]
+GET /api/v1/scenario/biological-constraints/ .                            [ 89%]
+POST /api/v1/scenario/biological-constraints/ F                           [ 89%]
+GET /api/v1/scenario/biological-constraints/active/ .                     [ 89%]
+DELETE /api/v1/scenario/biological-constraints/{id}/ .                    [ 90%]
+PUT /api/v1/scenario/biological-constraints/{id}/ .                       [ 90%]
+GET /api/v1/scenario/biological-constraints/{id}/ .                       [ 90%]
+PATCH /api/v1/scenario/biological-constraints/{id}/ .                     [ 90%]
+GET /api/v1/scenario/scenarios/ .                                         [ 91%]
+POST /api/v1/scenario/scenarios/ .                                        [ 91%]
+POST /api/v1/scenario/scenarios/compare/ .                                [ 91%]
+POST /api/v1/scenario/scenarios/from_batch/ .                             [ 91%]
+GET /api/v1/scenario/scenarios/summary_stats/ F                           [ 92%]
+DELETE /api/v1/scenario/scenarios/{scenario_id}/ .                        [ 92%]
+PUT /api/v1/scenario/scenarios/{scenario_id}/ .                           [ 92%]
+GET /api/v1/scenario/scenarios/{scenario_id}/ .                           [ 92%]
+PATCH /api/v1/scenario/scenarios/{scenario_id}/ .                         [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/chart_data/ .                [ 93%]
+POST /api/v1/scenario/scenarios/{scenario_id}/duplicate/ .                [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/export_projections/ .        [ 93%]
+GET /api/v1/scenario/scenarios/{scenario_id}/projections/ .               [ 94%]
+POST /api/v1/scenario/scenarios/{scenario_id}/run_projection/ .           [ 94%]
+POST /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis[...] . [ 94%]
+GET /api/v1/scenario/data-entry/csv_template/ F                           [ 94%]
+GET /api/v1/scenario/data-entry/import_status/ F                          [ 95%]
+POST /api/v1/scenario/data-entry/validate_csv/ .                          [ 95%]
+POST /api/v1/users/auth/token/ .                                          [ 95%]
+POST /api/v1/users/auth/token/refresh/ .                                  [ 95%]
+GET /api/v1/users/auth/profile/ F                                         [ 96%]
+PUT /api/v1/users/auth/profile/ F                                         [ 96%]
+PATCH /api/v1/users/auth/profile/ F                                       [ 96%]
+GET /api/v1/users/users/ F                                                [ 96%]
+POST /api/v1/users/users/ F                                               [ 97%]
+PUT /api/v1/users/users/change_password/ .                                [ 97%]
+GET /api/v1/users/users/me/ F                                             [ 97%]
+DELETE /api/v1/users/users/{id}/ .                                        [ 97%]
+PUT /api/v1/users/users/{id}/ .                                           [ 98%]
+GET /api/v1/users/users/{id}/ .                                           [ 98%]
+PATCH /api/v1/users/users/{id}/ .                                         [ 98%]
+POST /api/token/ .                                                        [ 98%]
+POST /api/token/refresh/ .                                                [ 99%]
+POST /api/auth/token/ .                                                   [ 99%]
+POST /api/auth/jwt/ .                                                     [ 99%]
+POST /api/auth/jwt/refresh/ .                                             [100%]
+
+=================================== FAILURES ===================================
+______________________ GET /api/v1/batch/batches/compare/ ______________________
+1. Test Case ID: MhXL05
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"detail":"batch_ids parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/batch/batches/compare/
+
+______________________ POST /api/v1/batch/growth-samples/ ______________________
+1. Test Case ID: cltWS3
+
+- Server error
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>TypeError
+              at /api/v1/batch/growth-samples/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { ma // Output truncated...`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/json' -d '{"sample_size": 0}' http://127.0.0.1:8000/api/v1/batch/growth-samples/
+
+________________ GET /api/v1/inventory/feeding-events/by_batch/ ________________
+1. Test Case ID: FoBrtk
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feeding-events/by_batch/
+
+___________ GET /api/v1/inventory/batch-feeding-summaries/by_batch/ ____________
+1. Test Case ID: GEiLPY
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/batch-feeding-summaries/by_batch/
+
+____________ GET /api/v1/inventory/feed-container-stock/fifo_order/ ____________
+1. Test Case ID: FgCE7E
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"error":"container_id parameter is required"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/inventory/feed-container-stock/fifo_order/
+
+_______________________ GET /api/v1/health/sample-types/ _______________________
+1. Test Case ID: BXxt8c
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400, 401, 403, 500
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/health/sample-types/?page=2'
+
+__________________ GET /api/v1/broodstock/fish/by_container/ ___________________
+1. Test Case ID: VQM2CR
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"error":"container_id parameter is required."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/by_container/
+
+_____________________ GET /api/v1/broodstock/fish/healthy/ _____________________
+1. Test Case ID: GIO6sA
+
+- Response violates schema
+
+    [] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for broodstock fish.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container": {
+                    "type": "integer",
+                    "description": "Current container housing the fish",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "container_name": {
+                    "type": "string",
+                    "readOnly": true
+            // Output truncated...
+        }
+
+    Value:
+
+        []
+
+[200] OK:
+
+    `[]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/fish/healthy/
+
+____________________ GET /api/v1/broodstock/breeding-plans/ ____________________
+1. Test Case ID: Mcnd4I
+
+- Undocumented HTTP status code
+
+    Received: 404
+    Documented: 200, 400, 401, 403, 500
+
+[404] Not Found:
+
+    `{"detail":"Invalid page."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' 'http://127.0.0.1:8000/api/v1/broodstock/breeding-plans/?page=2'
+
+___________________ POST /api/v1/broodstock/egg-productions/ ___________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: dZ3q6t
+
+- Response violates schema
+
+    None is not of type 'object'
+
+    Schema at /properties/external_batch/allOf/0:
+
+        {
+            "type": "object",
+            "description": "Serializer for external egg batches.",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "egg_production": {
+                    "type": "integer",
+                    "description": "Link to egg production record",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "supplier": {
+                    "type": "integer",
+                    "maximum": 9223372036854775807,
+            // Output truncated...
+        }
+
+    Value:
+
+        null
+
+[201] Created:
+
+    `{"id":1,"pair":null,"pair_display":"<method-wrapper '__str__' of NoneType object at 0x7f3d038468c0>","egg_batch_id":"{Ü","egg_count":33556,"production_date":"2025-07-21T14:51:56.705567Z","destination_station":null,"source_type":"external","external_batch":null,"batch_assignment_count":0,"created_at":"2025-07-21T14:51:56.705747Z","updated_at":"2025-07-21T14:51:56.705757Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=62af8e41b1e1570f360b3f8ba0dffc89' -d '--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="egg_batch_id"
+
+{Ü
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="egg_count"
+
+33556
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="source_type"
+
+external
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="񴤏i"; filename="񴤏i"
+
+{}
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="񴤏i"; filename="񴤏i"
+
+[]
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="󝟋u'"'"'%22Ê"; filename="󝟋u'"'"'%22Ê"
+
+['"'"'\x03`zèT1\U000e7874¦𐊲Mï'"'"', '"'"''"'"']
+--9cad293849e01fb40e864732178e2b37
+Content-Disposition: form-data; name="¤"
+
+{'"'"'\U000ee26b$\x1cQ\U0005477dÎ\U00072491ö<ÅÄIÔ'"'"': '"'"'®'"'"'}
+--9cad293849e01fb40e864732178e2b37--
+' http://127.0.0.1:8000/api/v1/broodstock/egg-productions/
+
+_______________ GET /api/v1/broodstock/batch-parentages/lineage/ _______________
+1. Test Case ID: XcRLap
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"error":"batch_id parameter is required."}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/broodstock/batch-parentages/lineage/
+
+_________________ POST /api/v1/scenario/temperature-profiles/ __________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: BN9ezY
+
+- Response violates schema
+
+    'reading_count' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Serializer for temperature profiles with nested readings.",
+            "properties": {
+                "profile_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Descriptive name (e.g., 'Faroe Islands Winter')",
+                    "maxLength": 255
+                },
+                "readings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/TemperatureReading"
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "profile_id": 2,
+            "name": "\u00ce",
+            "readings": [],
+            "date_range": null,
+            "temperature_summary": null,
+            "created_at": "2025-07-21T14:52:09.508785Z",
+            "updated_at": "2025-07-21T14:52:09.508804Z"
+        }
+
+[201] Created:
+
+    `{"profile_id":2,"name":"Î","readings":[],"date_range":null,"temperature_summary":null,"created_at":"2025-07-21T14:52:09.508785Z","updated_at":"2025-07-21T14:52:09.508804Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'name=%C3%8E&%C2%92%F0%95%B3%BE%04=-2.452157302362936e%2B16&%10G%C3%B4=%7B%7D&%10G%C3%B4=%5B%5D&%10G%C3%B4=%C2%8Cy%C3%8B%23%C2%B7%C2%81%C2%9C%F2%83%87%BA&%10G%C3%B4=V%11%C3%8A&%10G%C3%B4=+&%F1%BE%A4%BF%F3%AC%88%B8%C2%84%C3%83=%F1%94%84%8407%F2%A4%AF%B2%F3%88%A5%92%F0%B9%A6%86%C2%8F%C2%B7%C2%96&%F1%BE%A4%BF%F3%AC%88%B8%C2%84%C3%83=info&%F1%BE%A4%BF%F3%AC%88%B8%C2%84%C3%83=%C3%8C%C2%8C%F1%99%B9%B1&%C2%A9P=Ykd%C3%86%7C%0F%25G%04z%0B4%C2%8D&%C2%A9P=%0C&=%C3%A1t%C2%AF%C3%BB%F1%B3%96%99%F2%A3%AE%A8%C2%ADnJ%7B%F3%88%90%98%15%C3%AF%C3%BEQ%C3%91%C3%A2%C3%A8%C3%B8q3e%2C5%C2%B4%28t%C3%B1%3A%C2%AECN%C3%92%C3%8D%C2%96%C3%95%C3%B6%C3%BE%C3%AAb%C2%BD%F0%A5%BD%B2%C3%84%C3%B4&=%05%C2%86q%C3%92%C2%80+%F3%8B%96%84%C3%8E%F2%BD%B2%A1%7B%0D%F1%B5%88%99%C2%83%F0%A0%90%94&%C3%93%C2%A0%C3%BF=z%C2%BA%14&%C3%93%C2%A0%C3%BF=%F3%AD%89%BA%5D%F2%9D%B4%94C&%C3%93%C2%A0%C3%BF=_%C2%AE%1Df&%C3%91%C3%8E%C2%B1=True&%C3%91%C3%8E%C2%B1=False&%C3%91%C3%8E%C2%B1=False&%C3%A5%C3%BDe=15&%0D%3B=7%C3%93&%0D%3B=%F2%9D%A3%8A~%C2%83B%F1%AE%89%8D%0A5&%C2%9EB%10%12%C2%A9%C2%841%C3%80%C2%80%F1%85%87%A0%C2%B8%F4%86%9A%B3I%C3%B9%C3%B0%F0%9A%92%BE%C3%9AP%C3%B1=%19&%C2%9EB%10%12%C2%A9%C2%841%C3%80%C2%80%F1%85%87%A0%C2%B8%F4%86%9A%B3I%C3%B9%C3%B0%F0%9A%92%BE%C3%9AP%C3%B1=~%C2%8A%F3%B8%A8%9F%C2%84%C3%B74&%C2%9EB%10%12%C2%A9%C2%841%C3%80%C2%80%F1%85%87%A0%C2%B8%F4%86%9A%B3I%C3%B9%C3%B0%F0%9A%92%BE%C3%9AP%C3%B1=%15%C3%88' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/
+
+_________ GET /api/v1/scenario/temperature-profiles/download_template/ _________
+1. Test Case ID: teg8Iy
+
+- Undocumented Content-Type
+
+    Received: text/csv
+    Documented: application/json
+
+[200] OK:
+
+    `date,temperature
+    2024-01-01,8.5
+    2024-01-02,8.7
+    2024-01-03,8.6`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/temperature-profiles/download_template/
+
+__________________ GET /api/v1/scenario/tgc-models/templates/ __________________
+1. Test Case ID: CVz1di
+
+- Response violates schema
+
+    [{'name': 'Standard Scottish TGC', 'location': 'Scotland', 'release_period': 'Spring', 'tgc_value': 0.025, 'exponent_n': 0.33, 'exponent_m': 0.66, 'description': 'Standard TGC model for Scottish waters with spring release'}, {'name': 'Norwegian Winter TGC', 'location': 'Norway', 'release_period': 'Winter', 'tgc_value': 0.022, 'exponent_n': 0.35, 'exponent_m': 0.65, 'description': 'Optimized for Norwegian fjords with winter release'}, {'name': 'Faroe Islands TGC', 'location': 'Faroe Islands', 'release_period': 'Year-round', 'tgc_value': 0.024, 'exponent_n': 0.33, 'exponent_m': 0.66, 'description': 'Adapted for Faroe Islands conditions'}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for TGC models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Scotland April TGC')",
+                    "maxLength": 255
+                },
+                "location": {
+                    "type": "string",
+                    "description": "Location (e.g., 'Scotland Site 1')",
+                    "maxLength": 255
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Standard Scottish TGC",
+                "location": "Scotland",
+                "release_period": "Spring",
+                "tgc_value": 0.025,
+                "exponent_n": 0.33,
+                "exponent_m": 0.66,
+                "description": "Standard TGC model for Scottish waters with spring re...
+            },
+            {
+                "name": "Norwegian Winter TGC",
+                "location": "Norway",
+                "release_period": "Winter",
+                "tgc_value": 0.022,
+                "exponent_n": 0.35,
+                "exponent_m": 0.65,
+                "description": "Optimized for Norwegian fjords with winter release"
+            },
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Standard Scottish TGC","location":"Scotland","release_period":"Spring","tgc_value":0.025,"exponent_n":0.33,"exponent_m":0.66,"description":"Standard TGC model for Scottish waters with spring release"},{"name":"Norwegian Winter TGC","location":"Norway","release_period":"Winter","tgc_value":0.022,"exponent_n":0.35,"exponent_m":0.65,"description":"Optimized for Norwegian fjords with winter release"},{"name":"Faroe Islands TGC","location":"Faroe Islands","release_period":"Year-round","tgc_value":0.024 // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/tgc-models/templates/
+
+______________________ POST /api/v1/scenario/fcr-models/ _______________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: IDsr2n
+
+- Response violates schema
+
+    0 is not of type 'string'
+
+    Schema at /properties/total_duration:
+
+        {
+            "type": "string",
+            "readOnly": true
+        }
+
+    Value:
+
+        0
+
+[201] Created:
+
+    `{"model_id":1,"name":"򥸀","stages":[],"total_duration":0,"stage_coverage":{"covered":[],"missing":[],"coverage_percent":0},"created_at":"2025-07-21T14:52:13.097066Z","updated_at":"2025-07-21T14:52:13.097088Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: application/x-www-form-urlencoded' -d 'name=%F2%A5%B8%80&%5B%F1%84%AC%9F%C3%AE%F3%9C%9C%A1=%C2%B6&%5B%F1%84%AC%9F%C3%AE%F3%9C%9C%A1=%C2%B2%F0%9A%AD%B8qs&%5B%F1%84%AC%9F%C3%AE%F3%9C%9C%A1=%7B%7D' http://127.0.0.1:8000/api/v1/scenario/fcr-models/
+
+__________________ GET /api/v1/scenario/fcr-models/templates/ __________________
+1. Test Case ID: BnKVdW
+
+- Response violates schema
+
+    [{'name': 'Standard FCR Model', 'description': 'Standard FCR progression across lifecycle stages', 'stages': [{'stage': 'Fry', 'fcr': 0.8, 'duration': 60}, {'stage': 'Parr', 'fcr': 0.9, 'duration': 90}, {'stage': 'Smolt', 'fcr': 1.0, 'duration': 60}, {'stage': 'Post-Smolt', 'fcr': 1.1, 'duration': 120}, {'stage': 'Harvest', 'fcr': 1.2, 'duration': 365}]}, {'name': 'Optimized FCR Model', 'description': 'Optimized FCR for high-performance feeds', 'stages': [{'stage': 'Fry', 'fcr': 0.7, 'duration': 60}, {'stage': 'Parr', 'fcr': 0.8, 'duration': 90}, {'stage': 'Smolt', 'fcr': 0.9, 'duration': 60}, {'stage': 'Post-Smolt', 'fcr': 1.0, 'duration': 120}, {'stage': 'Harvest', 'fcr': 1.1, 'duration': 365}]}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for FCR models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Standard FCR')",
+                    "maxLength": 255
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/FCRModelStage"
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Standard FCR Model",
+                "description": "Standard FCR progression across lifecycle stages",
+                "stages": [
+                    {
+                        "stage": "Fry",
+                        "fcr": 0.8,
+                        "duration": 60
+                    },
+                    {
+                        "stage": "Parr",
+                        "fcr": 0.9,
+                        "duration": 90
+                    },
+                    {
+                        "stage": "Smolt",
+                        "fcr": 1.0,
+                        "duration": 60
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Standard FCR Model","description":"Standard FCR progression across lifecycle stages","stages":[{"stage":"Fry","fcr":0.8,"duration":60},{"stage":"Parr","fcr":0.9,"duration":90},{"stage":"Smolt","fcr":1.0,"duration":60},{"stage":"Post-Smolt","fcr":1.1,"duration":120},{"stage":"Harvest","fcr":1.2,"duration":365}]},{"name":"Optimized FCR Model","description":"Optimized FCR for high-performance feeds","stages":[{"stage":"Fry","fcr":0.7,"duration":60},{"stage":"Parr","fcr":0.8,"duration":90},{"stage":"S // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/fcr-models/templates/
+
+_______________ GET /api/v1/scenario/mortality-models/templates/ _______________
+1. Test Case ID: oP7EfI
+
+- Response violates schema
+
+    [{'name': 'Low Mortality', 'frequency': 'daily', 'rate': 0.02, 'description': 'Low mortality rate for optimal conditions'}, {'name': 'Standard Mortality', 'frequency': 'daily', 'rate': 0.05, 'description': 'Industry standard mortality rate'}, {'name': 'High Mortality', 'frequency': 'daily', 'rate': 0.1, 'description': 'Higher mortality for challenging conditions'}, {'name': 'Weekly Standard', 'frequency': 'weekly', 'rate': 0.35, 'description': 'Standard weekly mortality rate'}] is not of type 'object'
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for mortality models with validation.",
+            "properties": {
+                "model_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Model name (e.g., 'Low Mortality')",
+                    "maxLength": 255
+                },
+                "frequency": {
+                    "enum": [
+                        "daily",
+                        "weekly"
+            // Output truncated...
+        }
+
+    Value:
+
+        [
+            {
+                "name": "Low Mortality",
+                "frequency": "daily",
+                "rate": 0.02,
+                "description": "Low mortality rate for optimal conditions"
+            },
+            {
+                "name": "Standard Mortality",
+                "frequency": "daily",
+                "rate": 0.05,
+                "description": "Industry standard mortality rate"
+            },
+            {
+                "name": "High Mortality",
+                "frequency": "daily",
+                "rate": 0.1,
+                "description": "Higher mortality for challenging conditions"
+            },
+            // Output truncated...
+        ]
+
+[200] OK:
+
+    `[{"name":"Low Mortality","frequency":"daily","rate":0.02,"description":"Low mortality rate for optimal conditions"},{"name":"Standard Mortality","frequency":"daily","rate":0.05,"description":"Industry standard mortality rate"},{"name":"High Mortality","frequency":"daily","rate":0.1,"description":"Higher mortality for challenging conditions"},{"name":"Weekly Standard","frequency":"weekly","rate":0.35,"description":"Standard weekly mortality rate"}]`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/mortality-models/templates/
+
+________________ POST /api/v1/scenario/biological-constraints/ _________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: 77xKG6
+
+- Response violates schema
+
+    [] is not of type 'string'
+
+    Schema at /properties/stage_constraints:
+
+        {
+            "type": "string",
+            "readOnly": true
+        }
+
+    Value:
+
+        []
+
+[201] Created:
+
+    `{"id":1,"name":"ÚQ","description":"","is_active":false,"stage_constraints":[],"created_at":"2025-07-21T14:52:15.905230Z","updated_at":"2025-07-21T14:52:15.905253Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=74aafaceb8facac8a7da2176f26feee5' -d '--868c669f1b858a027e141040fcdab7f8
+Content-Disposition: form-data; name="name"
+
+ÚQ
+--868c669f1b858a027e141040fcdab7f8
+Content-Disposition: form-data; name="is_active"
+
+False
+--868c669f1b858a027e141040fcdab7f8--
+' http://127.0.0.1:8000/api/v1/scenario/biological-constraints/
+
+________________ GET /api/v1/scenario/scenarios/summary_stats/ _________________
+1. Test Case ID: jBANDq
+
+- Response violates schema
+
+    'biological_constraints_info' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for scenarios with comprehensive vali...
+            "properties": {
+                "scenario_id": {
+                    "type": "integer",
+                    "readOnly": true,
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Scenario name (e.g., 'Scotland April Sim')",
+                    "maxLength": 255
+                },
+                "start_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Simulation start date"
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "total_scenarios": 0,
+            "scenarios_with_projections": 0,
+            "average_duration": null,
+            "location_distribution": [],
+            "recent_scenarios": []
+        }
+
+[200] OK:
+
+    `{"total_scenarios":0,"scenarios_with_projections":0,"average_duration":null,"location_distribution":[],"recent_scenarios":[]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/scenarios/summary_stats/
+
+________________ GET /api/v1/scenario/data-entry/csv_template/ _________________
+1. Test Case ID: sasFky
+
+- Undocumented HTTP status code
+
+    Received: 400
+    Documented: 200, 401, 403, 500
+
+[400] Bad Request:
+
+    `{"data_type":["This field is required."]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/data-entry/csv_template/
+
+________________ GET /api/v1/scenario/data-entry/import_status/ ________________
+1. Test Case ID: by8JSK
+
+- Response violates schema
+
+    'data_type' is a required property
+
+    Schema:
+
+        {
+            "type": "object",
+            "description": "Enhanced serializer for CSV file upload.",
+            "properties": {
+                "file": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "data_type": {
+                    "enum": [
+                        "temperature",
+                        "fcr",
+                        "mortality"
+                    ],
+                    "type": "string",
+                    "description": "* `temperature` - temperature\n* `fcr` - fcr\n* `...
+                    "x-spec-enum-id": "e9b9c3b99b8ec926"
+                },
+                "profile_name": {
+            // Output truncated...
+        }
+
+    Value:
+
+        {
+            "message": "Import status tracking not yet implemented",
+            "recent_imports": []
+        }
+
+[200] OK:
+
+    `{"message":"Import status tracking not yet implemented","recent_imports":[]}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/scenario/data-entry/import_status/
+
+_______________________ GET /api/v1/users/auth/profile/ ________________________
+1. Test Case ID: NkWyRw
+
+- Server error
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+_______________________ PUT /api/v1/users/auth/profile/ ________________________
+1. Test Case ID: s8bMMQ
+
+- Server error
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X PUT -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+______________________ PATCH /api/v1/users/auth/profile/ _______________________
+1. Test Case ID: FInFUD
+
+- Server error
+
+[500] Internal Server Error:
+
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <meta name="robots" content="NONE,NOARCHIVE">
+      <title>DoesNotExist
+              at /api/v1/users/auth/profile/</title>
+      <style type="text/css">
+        html * { padding:0; margin:0; }
+        body * { padding:10px 20px; }
+        body * * { padding:0; }
+        body { font:small sans-serif; background-color:#fff; color:#000; }
+        body>div { border-bottom:1px solid #ddd; }
+        h1 { font-weight:normal; }
+        h2 { m // Output truncated...`
+
+Reproduce with: 
+
+    curl -X PATCH -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/auth/profile/
+
+___________________________ GET /api/v1/users/users/ ___________________________
+1. Test Case ID: 3hwozl
+
+- Response violates schema
+
+    None is not one of ['BS', 'FW', 'FM', 'LG', 'ALL']
+
+    Schema at /properties/results/items/properties/subsidiary:
+
+        {
+            "enum": [
+                "BS",
+                "FW",
+                "FM",
+                "LG",
+                "ALL"
+            ],
+            "type": "string",
+            "description": "* `BS` - Broodstock\n* `FW` - Freshwater\n* `FM` - Farmin...
+            "x-spec-enum-id": "4e135cac36bd030a"
+        }
+
+    Value:
+
+        null
+
+[200] OK:
+
+    `{"count":2,"next":null,"previous":null,"results":[{"id":2,"username":"devuser","email":"dev@example.com","full_name":"","phone":null,"geography":"ALL","subsidiary":"ALL","role":"VIEW","is_active":true,"profile":{"profile_picture":null,"job_title":null,"department":null,"language_preference":"en","date_format_preference":"DMY","created_at":"2025-07-21T14:51:09.504496Z","updated_at":"2025-07-21T14:51:09.694384Z"},"date_joined":"2025-07-21T14:51:09.503517Z"},{"id":1,"username":"schemathesis_ci","email":"ci@exa // Output truncated...`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/
+
+__________________________ POST /api/v1/users/users/ ___________________________
+[FLAKY] Schemathesis was not able to reliably reproduce this failure
+
+1. Test Case ID: llXM73
+
+- Response violates schema
+
+    None is not of type 'string'
+
+    Schema at /properties/phone:
+
+        {
+            "type": "string"
+        }
+
+    Value:
+
+        null
+
+[201] Created:
+
+    `{"id":3,"username":"ĴĞ8","email":"=dsaakNP8`j&@IpV.nbtia.K.s.S4.F05a0Nob.pIZza","full_name":"","phone":null,"geography":"ALL","subsidiary":"ALL","role":"VIEW","is_active":false,"profile":{"profile_picture":null,"job_title":null,"department":null,"language_preference":"en","date_format_preference":"DMY","created_at":"2025-07-21T14:52:22.245865Z","updated_at":"2025-07-21T14:52:22.435243Z"},"date_joined":"2025-07-21T14:52:22.244053Z"}`
+
+Reproduce with: 
+
+    curl -X POST -H 'Authorization: [Filtered]' -H 'Content-Type: multipart/form-data; boundary=15c8cdeaa6670334868990f275aa0294' -d '--72a5bd9aa0fa3dadf1cc1403d77e8457
+Content-Disposition: form-data; name="email"
+
+=dsaakNP8`j&@IpV.nbtia.K.s.S4.F05a0Nob.pIZza
+--72a5bd9aa0fa3dadf1cc1403d77e8457
+Content-Disposition: form-data; name="password"
+
+Y񛔽0𸊼%2x󹹌T©$
+S񾦒.󩆞á¤
+--72a5bd9aa0fa3dadf1cc1403d77e8457
+Content-Disposition: form-data; name="username"
+
+ĴĞ8
+--72a5bd9aa0fa3dadf1cc1403d77e8457--
+' http://127.0.0.1:8000/api/v1/users/users/
+
+_________________________ GET /api/v1/users/users/me/ __________________________
+1. Test Case ID: Hkw1a3
+
+- Response violates schema
+
+    None is not one of ['BS', 'FW', 'FM', 'LG', 'ALL']
+
+    Schema at /properties/subsidiary:
+
+        {
+            "enum": [
+                "BS",
+                "FW",
+                "FM",
+                "LG",
+                "ALL"
+            ],
+            "type": "string",
+            "description": "* `BS` - Broodstock\n* `FW` - Freshwater\n* `FM` - Farmin...
+            "x-spec-enum-id": "4e135cac36bd030a"
+        }
+
+    Value:
+
+        null
+
+[200] OK:
+
+    `{"id":1,"username":"schemathesis_ci","email":"ci@example.com","full_name":null,"phone":null,"geography":null,"subsidiary":null,"role":null,"is_active":true,"profile":null,"date_joined":"2025-07-21T14:48:09.461717Z"}`
+
+Reproduce with: 
+
+    curl -X GET -H 'Authorization: [Filtered]' http://127.0.0.1:8000/api/v1/users/users/me/
+
+=================================== SUMMARY ====================================
+
+Performed checks:
+    not_a_server_error                              1203 / 1234 passed          FAILED 
+    status_code_conformance                         1193 / 1234 passed          FAILED 
+    content_type_conformance                        1232 / 1234 passed          FAILED 
+    response_headers_conformance                    1234 / 1234 passed          PASSED 
+    response_schema_conformance                     1210 / 1234 passed          FAILED 
+    negative_data_rejection                         1234 / 1234 passed          PASSED 
+    ignored_auth                                    1234 / 1234 passed          PASSED 
+
+WARNINGS:
+  - `POST /api/v1/auth/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/environmental/parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/environmental/parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/environmental/parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/environmental/parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/readings/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/environmental/readings/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/environmental/readings/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/environmental/readings/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/environmental/readings/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/photoperiod/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/environmental/photoperiod/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/environmental/photoperiod/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/environmental/photoperiod/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/environmental/photoperiod/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/weather/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/environmental/weather/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/environmental/weather/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/environmental/weather/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/environmental/weather/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/environmental/stage-transitions/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/environmental/stage-transitions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/environmental/stage-transitions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/environmental/stage-transitions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/environmental/stage-transitions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/species/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/species/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/species/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/species/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/lifecycle-stages/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/lifecycle-stages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/lifecycle-stages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/lifecycle-stages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/lifecycle-stages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/batches/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/batches/{id}/growth_analysis/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/batches/{id}/performance_metrics/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/container-assignments/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/container-assignments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/container-assignments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/container-assignments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/container-assignments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/batch-compositions/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/batch-compositions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/batch-compositions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/batch-compositions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/batch-compositions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/transfers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/transfers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/transfers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/transfers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/transfers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/batch/mortality-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/mortality-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/mortality-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/mortality-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/mortality-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/batch/growth-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/batch/growth-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/batch/growth-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/batch/growth-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/inventory/feeds/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/inventory/feeds/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/feeds/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/inventory/feeds/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-purchases/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/inventory/feed-purchases/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/inventory/feed-purchases/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/feed-purchases/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/inventory/feed-purchases/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-stocks/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/inventory/feed-stocks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/inventory/feed-stocks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/feed-stocks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/inventory/feed-stocks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feeding-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/inventory/feeding-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/inventory/feeding-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/feeding-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/inventory/feeding-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/batch-feeding-summaries/generate/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/batch-feeding-summaries/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-container-stock/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/inventory/feed-container-stock/add_to_container/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/inventory/feed-container-stock/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/inventory/feed-container-stock/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/inventory/feed-container-stock/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/inventory/feed-container-stock/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/journal-entries/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/journal-entries/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/journal-entries/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/journal-entries/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/journal-entries/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/mortality-reasons/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/mortality-reasons/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/mortality-reasons/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/mortality-reasons/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/mortality-records/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/mortality-records/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/mortality-records/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/mortality-records/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/mortality-records/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/lice-counts/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/lice-counts/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/lice-counts/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/lice-counts/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/lice-counts/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/vaccination-types/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/vaccination-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/vaccination-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/vaccination-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/vaccination-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/treatments/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/treatments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/treatments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/treatments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/treatments/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/sample-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/sample-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/sample-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/sample-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/health-parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/health-parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/health-parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/health-parameters/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/health-sampling-events/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/health-sampling-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/health-sampling-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/health-sampling-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/health-sampling-events/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/health-sampling-events/{id}/calculate-aggregates/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/individual-fish-observations/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/individual-fish-observations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/individual-fish-observations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/individual-fish-observations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/individual-fish-observations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/fish-parameter-scores/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/fish-parameter-scores/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/fish-parameter-scores/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/fish-parameter-scores/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/fish-parameter-scores/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/health/health-lab-samples/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/health/health-lab-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/health/health-lab-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/health/health-lab-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/health/health-lab-samples/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/maintenance-tasks/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/maintenance-tasks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/maintenance-tasks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/maintenance-tasks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/maintenance-tasks/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/maintenance-tasks/{id}/complete/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/fish/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/fish/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/fish/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/fish/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish-movements/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/fish-movements/bulk_transfer/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/fish-movements/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/fish-movements/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/fish-movements/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/fish-movements/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/breeding-plans/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/breeding-plans/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/breeding-plans/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/breeding-plans/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/trait-priorities/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/trait-priorities/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/trait-priorities/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/trait-priorities/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/trait-priorities/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/breeding-pairs/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/breeding-pairs/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/breeding-pairs/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/breeding-pairs/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/breeding-pairs/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/breeding-pairs/{id}/record_progeny/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/egg-suppliers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/egg-suppliers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/egg-suppliers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/egg-suppliers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/egg-productions/acquire_external/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/egg-productions/produce_internal/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/egg-productions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/egg-productions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/egg-productions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/egg-productions/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/external-egg-batches/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/external-egg-batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/external-egg-batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/external-egg-batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/external-egg-batches/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/broodstock/batch-parentages/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/broodstock/batch-parentages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/broodstock/batch-parentages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/broodstock/batch-parentages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/broodstock/batch-parentages/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/geographies/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/geographies/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/geographies/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/geographies/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/areas/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/areas/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/areas/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/areas/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/areas/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/freshwater-stations/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/freshwater-stations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/freshwater-stations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/freshwater-stations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/freshwater-stations/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/halls/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/halls/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/halls/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/halls/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/halls/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/container-types/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/container-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/container-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/container-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/container-types/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/containers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/sensors/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/sensors/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/sensors/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/sensors/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/sensors/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/infrastructure/feed-containers/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/infrastructure/feed-containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/infrastructure/feed-containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/infrastructure/feed-containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/infrastructure/feed-containers/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/temperature-profiles/bulk_date_ranges/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/temperature-profiles/upload_csv/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/temperature-profiles/{profile_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/temperature-profiles/{profile_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/temperature-profiles/{profile_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/temperature-profiles/{profile_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/temperature-profiles/{profile_id}/statistics/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/tgc-models/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/tgc-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/tgc-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/tgc-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/tgc-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/tgc-models/{model_id}/duplicate/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/fcr-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/fcr-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/fcr-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/fcr-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/fcr-models/{model_id}/stage_summary/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/mortality-models/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/mortality-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/mortality-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/mortality-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/mortality-models/{model_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/biological-constraints/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/biological-constraints/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/biological-constraints/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/biological-constraints/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/compare/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/from_batch/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/scenario/scenarios/{scenario_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/scenario/scenarios/{scenario_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/scenarios/{scenario_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/scenario/scenarios/{scenario_id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/scenarios/{scenario_id}/chart_data/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/{scenario_id}/duplicate/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/scenarios/{scenario_id}/export_projections/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/scenario/scenarios/{scenario_id}/projections/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/{scenario_id}/run_projection/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/scenario/data-entry/validate_csv/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/users/auth/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/v1/users/auth/token/refresh/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/users/users/change_password/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `DELETE /api/v1/users/users/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PUT /api/v1/users/users/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `GET /api/v1/users/users/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `PATCH /api/v1/users/users/{id}/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/token/refresh/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/auth/token/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/auth/jwt/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+  - `POST /api/auth/jwt/refresh/` returned only 4xx responses during unit tests. Check base URL or adjust data generation settings
+
+Note: Use the 'X-Schemathesis-TestCaseId' header to correlate test case ids from failure messages with server logs for debugging.
+
+======================= 365 passed, 27 failed in 78.72s ========================
