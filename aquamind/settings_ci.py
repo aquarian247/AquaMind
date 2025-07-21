@@ -136,6 +136,17 @@ std_hook_path = 'aquamind.utils.openapi_utils.add_standard_responses'
 if std_hook_path not in _ci_hooks:
     _ci_hooks.append(std_hook_path)
 
+# 8) Append hook that fixes **@action list-response schemas**
+#    ---------------------------------------------------------------
+#    Several custom ``@action(detail=False)`` endpoints legitimately return
+#    **arrays** (e.g. ``/recent/``, ``/stats/``, ``/by_batch/``) but
+#    drf-spectacular documents them with the single-object serializer,
+#    causing Schemathesis type-mismatch errors.  The hook below wraps such
+#    schemas in ``type: array`` when appropriate.
+act_hook_path = 'aquamind.utils.openapi_utils.fix_action_response_types'
+if act_hook_path not in _ci_hooks:
+    _ci_hooks.append(act_hook_path)
+
 _ci_spec_settings['POSTPROCESSING_HOOKS'] = _ci_hooks
 
 # Final CI-specific spectacular config

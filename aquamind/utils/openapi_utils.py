@@ -183,6 +183,105 @@ def add_standard_responses(
     return schema
 
 
+# --------------------------------------------------------------------------- #
+#             ***  HOOK: FIX @action LIST-STYLE RESPONSE TYPES  ***            #
+# --------------------------------------------------------------------------- #
+def fix_action_response_types(
+    result: Dict[str, Any],
+    *,
+    generator: Any = None,
+    request: Any = None,
+    public: bool | None = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """
+    Many DRF ``@action(detail=False)`` endpoints are *list* actions that return
+    **arrays** but drf-spectacular frequently documents them with the serializer
+    for a *single* object.  Schemathesis then flags a type-mismatch when the
+    implementation legitimately returns ``[]``.
+
+    This hook looks for well-known list-action suffixes (``/recent/``,
+    ``/stats/``, ``/by_batch/`` …) and, *for GET operations only*, wraps any
+    object-type success schema (2xx) in an ``array`` when it is currently
+    declared as an ``object``.
+
+    It is deliberately conservative:
+        • Touches **only** the first media-type in the success response.
+        • Leaves schemas that already declare ``type: array`` untouched.
+        • Skips operations that use ``oneOf`` / ``anyOf`` / ``allOf`` as these
+          are assumed to be intentionally polymorphic.
+    """
+
+    list_suffixes = (
+        "/recent/",
+        "/stats/",
+        "/by_batch/",
+        "/by_container/",
+        "/low_stock/",
+        "/fifo_order/",
+        "/active/",
+        "/overdue/",
+        "/compare/",
+        "/lineage/",
+    )
+
+    schema = result  # alias
+    patched_ops: list[str] = []
+
+    for path, path_item in schema.get("paths", {}).items():
+        if not any(path.endswith(suffix) for suffix in list_suffixes):
+            continue  # Not a candidate
+
+        for method, operation in path_item.items():
+            if method != "get":
+                continue
+
+            responses: Dict[str, Any] = operation.get("responses", {})
+            for status_code, response in responses.items():
+                # Only patch 2xx responses
+                if not status_code.startswith("2"):
+                    continue
+                content = response.get("content")
+                if not content:
+                    continue
+
+                # Use first declared media-type (usually application/json)
+                media_type_schema: Optional[Dict[str, Any]] = None
+                for media in content.values():
+                    media_type_schema = media.get("schema")
+                    break
+                if not media_type_schema:
+                    continue
+
+                # Skip if already array / polymorphic
+                if media_type_schema.get("type") == "array":
+                    continue
+                if any(key in media_type_schema for key in ("oneOf", "anyOf", "allOf")):
+                    continue
+
+                # Wrap existing schema
+                new_schema = {
+                    "type": "array",
+                    "items": media_type_schema.copy(),
+                }
+                # Apply inplace replacement
+                for media in content.values():
+                    media["schema"] = new_schema
+
+                patched_ops.append(f"{method.upper()} {path} ({status_code})")
+
+    if patched_ops:
+        logger.info(
+            "fix_action_response_types wrapped %d list-action responses: %s",
+            len(patched_ops),
+            "; ".join(patched_ops),
+        )
+    else:
+        logger.info("fix_action_response_types: no endpoints required patching")
+
+    return schema
+
+
 def cleanup_duplicate_security(
     result: Dict[str, Any],
     *,
