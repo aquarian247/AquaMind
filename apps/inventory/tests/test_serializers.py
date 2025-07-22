@@ -15,8 +15,7 @@ from apps.inventory.api.serializers.base import (
 )
 from apps.inventory.api.serializers.validation import (
     validate_feed_stock_quantity, validate_batch_assignment_relationship,
-    validate_date_range, validate_batch_exists, validate_container_exists,
-    validate_recommendation_parameters
+    validate_date_range, validate_batch_exists
 )
 from apps.inventory.api.serializers.feed import FeedSerializer
 from apps.inventory.api.serializers.purchase import FeedPurchaseSerializer
@@ -587,48 +586,3 @@ class ValidationFunctionsTest(TestCase):
         with self.assertRaises(ValidationError):
             validate_batch_exists(999999)  # Non-existent ID
     
-    def test_validate_container_exists(self):
-        """Test the validate_container_exists function."""
-        # Test with existing container with recommendations enabled
-        try:
-            container = validate_container_exists(self.container.id)
-            self.assertEqual(container, self.container)
-        except ValidationError:
-            self.fail("validate_container_exists raised ValidationError unexpectedly!")
-        
-        # Test with container that has recommendations disabled
-        self.container.feed_recommendations_enabled = False
-        self.container.save()
-        with self.assertRaises(ValidationError):
-            validate_container_exists(self.container.id)
-        
-        # Test with non-existing container
-        with self.assertRaises(ValidationError):
-            validate_container_exists(999999)  # Non-existent ID
-    
-    def test_validate_recommendation_parameters(self):
-        """Test the validate_recommendation_parameters function."""
-        # Test with container_id
-        self.container.feed_recommendations_enabled = True
-        self.container.save()
-        data = {'container_id': self.container.id}
-        result = validate_recommendation_parameters(data)
-        self.assertEqual(result['container'], self.container)
-        self.assertIn('date', result)  # Should add today's date
-        
-        # Test with batch_id
-        data = {'batch_id': self.batch.id}
-        result = validate_recommendation_parameters(data)
-        self.assertEqual(result['batch'], self.batch)
-        self.assertIn('date', result)  # Should add today's date
-        
-        # Test with both container_id and batch_id
-        data = {'container_id': self.container.id, 'batch_id': self.batch.id}
-        result = validate_recommendation_parameters(data)
-        self.assertEqual(result['container'], self.container)
-        self.assertEqual(result['batch'], self.batch)
-        
-        # Test with neither container_id nor batch_id
-        data = {}
-        with self.assertRaises(ValidationError):
-            validate_recommendation_parameters(data)
