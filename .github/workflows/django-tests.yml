@@ -125,7 +125,7 @@ jobs:
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
-          --hypothesis-max-examples=1 \
+          --hypothesis-max-examples=10 \
           --hypothesis-suppress-health-check=filter_too_much,data_too_large \
           --hypothesis-derandomize \
           --show-errors-tracebacks \
