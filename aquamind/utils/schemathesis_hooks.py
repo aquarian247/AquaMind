@@ -15,6 +15,7 @@ Usage:
 import logging
 import json
 import sys
+import os
 from typing import Dict, Any, Optional, List
 
 # Configure logging
@@ -24,6 +25,61 @@ logger = logging.getLogger("schemathesis.hooks")
 # Print a message to confirm hooks are loaded
 print("🔌 AquaMind Schemathesis hooks loaded!", file=sys.stderr)
 logger.info("AquaMind Schemathesis hooks initialized")
+
+# --------------------------------------------------------------------------- #
+# Runtime helpers                                                             #
+# --------------------------------------------------------------------------- #
+
+def _strip_cookies(headers: Dict[str, str]) -> None:
+    """Remove any Cookie headers that might carry an invalid session.
+
+    Schemathesis re-uses a single `requests.Session` across calls which may
+    automatically persist `Set-Cookie` values from previous responses.  In the
+    AquaMind API we rely exclusively on token authentication, therefore any
+    session cookies will break auth in fresh CI databases and cause 401s.
+    """
+    for key in list(headers.keys()):
+        if key.lower() == "cookie":
+            logger.debug("Removing Cookie header from request to avoid auth clash")
+            headers.pop(key, None)
+
+
+# --------------------------------------------------------------------------- #
+# Hook: before_call                                                           #
+# --------------------------------------------------------------------------- #
+
+def before_call(context, case, **kwargs):  # noqa: D401
+    """
+    Modify outgoing HTTP request *before* it is sent.
+
+    1. Inject a valid ``Authorization`` header unless one is already present.
+       The header value is taken from the ``SCHEMATHESIS_AUTH_TOKEN`` env var
+       which should be exported by the CI workflow after running the
+       ``get_ci_token`` management command.
+    2. Remove all ``Cookie`` headers to ensure no stale session is transmitted.
+    """
+
+    # ``headers`` may be absent if the test does not specify any – normalise.
+    headers: Dict[str, str] = kwargs.setdefault("headers", {})
+
+    # Strip session cookies first – they should never be sent.
+    _strip_cookies(headers)
+
+    # Inject token if available & not already provided.
+    if "Authorization" not in headers:
+        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+        if token:
+            headers["Authorization"] = f"Token {token}"
+            logger.debug(
+                "Injected Authorization header for %s %s", case.method, case.path
+            )
+        else:
+            logger.warning(
+                "SCHEMATHESIS_AUTH_TOKEN not set – request may be unauthenticated"
+            )
+
+    # Nothing else to mutate; Schemathesis will use the modified kwargs.
+    return kwargs
 
 def after_init(context, schema):
     """

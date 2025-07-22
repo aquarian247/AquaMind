@@ -91,6 +91,11 @@ jobs:
         echo "::add-mask::$TOKEN"
         echo "✅ CI auth token ready"
 
+        # ------------------------------------------------------------------
+        # Export token for Schemathesis hooks
+        # ------------------------------------------------------------------
+        export SCHEMATHESIS_AUTH_TOKEN="$TOKEN"
+
         # Start Django dev server in background
         python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &
         SERVER_PID=$!
@@ -124,7 +129,6 @@ jobs:
           --hypothesis-suppress-health-check=filter_too_much,data_too_large \
           --hypothesis-derandomize \
           --show-errors-tracebacks \
-          --header "Authorization: Token $TOKEN" \
           api/openapi.yaml \
           > schemathesis-output.txt 2>&1
         STATUS=$?
