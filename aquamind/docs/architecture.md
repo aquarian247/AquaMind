@@ -171,6 +171,22 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
    - Integration Method: API client with scheduled data collection
    - Data Flow: OpenWeatherMap API → Environmental App → TimescaleDB hypertables
 
+### API Contract Synchronization
+
+| Pillar | Details |
+|--------|---------|
+| **Spec Generation** | `drf-spectacular ≥ 0.28` builds a **single OpenAPI 3.1** file (`api/openapi.yaml`) on every push. |
+| **CI Artefact** | GitHub Actions uploads this schema as an artefact; workflow name `Generate & Validate API Spec`. |
+| **Frontend Consumption** | Front-end repo downloads the artefact, then runs `openapi-typescript-codegen` to regenerate the typed client & hooks. |
+| **Contract Testing** | Backend CI runs **Schemathesis** with `--hypothesis-max-examples=10`, using runtime hooks (`aquamind.utils.schemathesis_hooks`) for auth & SQLite integer clamping. |
+| **Cross-Repo Sync** | A Factory **Code Droid** watches for spec diffs; when detected, it opens coordinated PRs:<br>① Backend – spec change<br>② Frontend – regenerated TypeScript client.<br>Both PRs must pass contract tests before merge. |
+
+**Why It Matters**  
+This architecture guarantees that:  
+1. Backend implementation ↔ OpenAPI spec stay in lock-step (Schemathesis fails CI if they diverge).  
+2. Frontend always compiles against the latest, type-safe client without manual steps.  
+3. Documentation (Swagger / ReDoc) is auto-published and always accurate.  
+
 ### Internal Component Interfaces
 
 1. **Batch-Infrastructure Interface**
