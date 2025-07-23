@@ -45,9 +45,8 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'corsheaders',
-    # OpenAPI 3.1 schema generation (migration target)
+    # OpenAPI 3.1 schema generation (single source of truth)
     'drf_spectacular',
-    'drf_yasg',
     'simple_history',
 ]
 

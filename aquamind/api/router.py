@@ -6,8 +6,6 @@ providing consistent URL patterns for the entire application.
 """
 from django.urls import path, include
 from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from rest_framework.routers import DefaultRouter
 
 # Core functionality imports
@@ -24,20 +22,6 @@ from apps.scenario.api.routers import router as scenario_router
 # from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
-# Create a schema view for API documentation
-schema_view = get_schema_view(
-    openapi.Info(
-        title="AquaMind API",
-        default_version='v1',
-        description="API for AquaMind - Aquaculture Management System",
-        terms_of_service="https://www.aquamind.com/terms/",
-        contact=openapi.Contact(email="contact@aquamind.com"),
-        license=openapi.License(name="Proprietary"),
-    ),
-    public=True,
-    permission_classes=(permissions.IsAuthenticated,),
-)
-
 # Configure API URL patterns
 router = DefaultRouter()
 
@@ -50,10 +34,6 @@ router.registry.extend(broodstock_router.registry)
 router.registry.extend(scenario_router.registry)
 
 urlpatterns = [
-    # API documentation endpoints
-    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    
     # Authentication endpoints
     path('auth/', include('apps.users.api.urls')),
     

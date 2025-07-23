@@ -14,9 +14,7 @@ python-dotenv==1.0.1
 django-pandas==0.6.6
 pandas==2.2.0
 numpy==1.26.3
-# API documentation
-drf-yasg==1.21.7
-# OpenAPI 3.1 generation & UI (migration target)
+# API documentation (single-source OpenAPI 3.1 generation & UI)
 drf-spectacular==0.27.1
 drf-spectacular-sidecar==2024.5.1
 # JWT Authentication

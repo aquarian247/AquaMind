@@ -20,56 +20,34 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
 # from apps.core.views import CSRFTokenView  # Temporarily disabled
-# drf-spectacular (OpenAPI 3.1) views – target replacement for drf-yasg
+# drf-spectacular (OpenAPI 3.1) views – single source of truth
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
 
-# Swagger/OpenAPI documentation setup
-schema_view = get_schema_view(
-    openapi.Info(
-        title="AquaMind API",
-        default_version='v1',
-        description="API for AquaMind aquaculture management system",
-        contact=openapi.Contact(email="contact@example.com"),
-        license=openapi.License(name="Commercial License"),
-    ),
-    public=True,
-    # Documentation endpoints should respect the same authentication guard as
-    # the rest of the API.  Requiring authentication here prevents accidental
-    # exposure of schema details in non-development environments and keeps
-    # contract-test tooling consistent.
-    permission_classes=(permissions.IsAuthenticated,),
-)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", include(('apps.health.urls', 'health'), namespace='health')), # Include health app URLs
     
     # API documentation
-    # --- drf-spectacular (new, OpenAPI 3.1 single source of truth) ---
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/schema/", SpectacularAPIView.as_view(permission_classes=[permissions.AllowAny]), name="schema"),
     path(
         "api/schema/swagger-ui/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
+        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[permissions.AllowAny]),
         name="spectacular-swagger-ui",
     ),
     path(
         "api/schema/redoc/",
-        SpectacularRedocView.as_view(url_name="schema"),
+        SpectacularRedocView.as_view(url_name="schema", permission_classes=[permissions.AllowAny]),
         name="spectacular-redoc",
     ),
-    # --- legacy drf-yasg endpoints (to be deprecated once migration completes) ---
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
     # Redirect root URL to admin for now
     path('', RedirectView.as_view(url='/admin/'), name='index'),
