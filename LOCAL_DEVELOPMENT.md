@@ -41,12 +41,12 @@ This document describes how to set up and run the AquaMind project locally witho
 
 1. Create a virtual environment:
    ```bash
-   python -m venv venv
+   python -m venv .venv
    ```
 
 2. Activate the virtual environment:
-   - Windows: `.\venv\Scripts\activate`
-   - Linux/Mac: `source venv/bin/activate`
+   - Windows: `.venv\Scripts\activate`
+   - Linux/Mac: `source .venv/bin/activate`
 
 3. Install dependencies:
    ```bash
