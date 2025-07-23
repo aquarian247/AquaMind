@@ -5,8 +5,12 @@ Explicitly includes all API routes needed for tests.
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
+# drf-spectacular (OpenAPI 3.1) views – single source of truth for tests
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
 
@@ -16,25 +20,25 @@ from apps.environmental.api.routers import router as environmental_router
 from apps.batch.api.routers import router as batch_router
 from apps.health.api.routers import router as health_router
 
-# Swagger/OpenAPI documentation setup
-schema_view = get_schema_view(
-    openapi.Info(
-        title="AquaMind API",
-        default_version='v1',
-        description="API for AquaMind aquaculture management system",
-        contact=openapi.Contact(email="contact@example.com"),
-        license=openapi.License(name="Commercial License"),
-    ),
-    public=True,
-    permission_classes=(permissions.IsAuthenticated,),
-)
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     
-    # API documentation
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    # API documentation (drf-spectacular)
+    path(
+        "api/schema/",
+        SpectacularAPIView.as_view(permission_classes=[permissions.AllowAny]),
+        name="schema",
+    ),
+    path(
+        "api/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[permissions.AllowAny]),
+        name="spectacular-swagger-ui",
+    ),
+    path(
+        "api/schema/redoc/",
+        SpectacularRedocView.as_view(url_name="schema", permission_classes=[permissions.AllowAny]),
+        name="spectacular-redoc",
+    ),
     
     # Register API routes explicitly for testing with proper namespaces
     path('api/v1/infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
