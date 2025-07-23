@@ -49,13 +49,15 @@ jobs:
             const fs = require('fs');
             fs.writeFileSync('api-spec.zip', Buffer.from(download.data));
             
-            const AdmZip = require('adm-zip');
-            const zip = new AdmZip('api-spec.zip');
-            zip.extractAllTo('api-spec-extracted', true);
-            
-            console.log('API spec artifact downloaded and extracted successfully');
+            console.log('API spec artifact downloaded successfully');
+
+      - name: Extract API spec artifact
+        run: |
+          unzip -o api-spec.zip -d api-spec-extracted
+          echo "API spec artifact extracted to ./api-spec-extracted"
 
       - name: Trigger frontend repository update
+        id: dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.FRONTEND_REPO_PAT }}
@@ -71,7 +73,7 @@ jobs:
       - name: Report status
         if: always()
         run: |
-          if [ "${{ job.status }}" == "success" ]; then
+          if [ "${{ steps.dispatch.outcome }}" == "success" ]; then
             echo "✅ Successfully triggered frontend API client regeneration"
           else
             echo "❌ Failed to trigger frontend API client regeneration"
