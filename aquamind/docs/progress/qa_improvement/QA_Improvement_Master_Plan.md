@@ -6,7 +6,6 @@ Place this file at: `aquamind/docs/progress/qa_improvement/QA_Improvement_Master
 ---
 
 ## OVERALL-PLAN  
-(Include this block verbatim at the top of every code-droid prompt)
 
 Goal: Raise overall test coverage of AquaMind (Django backend) and AquaMind-Frontend (React/TS) to **≥ 70 %**, keeping technical debt below the current baseline.  
 
