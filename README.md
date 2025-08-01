@@ -38,6 +38,7 @@ The application follows Django's Model-Template-View (MTV) architecture with the
    - `environmental`: Monitoring systems integration and time-series data
    - `operational`: Daily optimization and planning
    - `inventory`: Resource and feed management
+   - `health`: Medical journal for batches
 
 
 2. **Data Storage**:
@@ -153,7 +154,7 @@ AquaMind/
 │   ├── environmental/      # Environmental monitoring
 │   ├── operational/        # Daily operations and planning
 │   ├── inventory/          # Resource and feed management
-│   └── # (medical app removed – health data now lives in `apps/health`)
+│   └── health				# Medical journal and health observation
 ├── aquamind/               # Project settings
 │   ├── settings.py         # Django settings
 │   ├── urls.py             # Main URL configuration
