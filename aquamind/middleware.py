@@ -1,5 +1,5 @@
 """
-TEMPORARY DEBUGGING MIDDLEWARE - API Contract Unification Project
+TEMPORARY DEBUGGING MIDDLEWARE – API Contract Unification Project.
 
 This middleware is part of Phase 1: Enhanced Diagnostics for the API contract unification project.
 It logs the Authorization header for every request to help debug Schemathesis authentication failures.

@@ -1,5 +1,5 @@
-"""
-CI-specific Django settings for AquaMind project.
+"""CI-specific Django settings for AquaMind project.
+
 This file extends the base settings and overrides database configuration for CI environments.
 """
 

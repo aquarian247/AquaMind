@@ -1,12 +1,9 @@
-"""
-Utility module for generating sequence-based IDs for sampling events.
-"""
+"""Utility module for generating sequence-based IDs for sampling events."""
 
 from django.db import connection
 
 def generate_sampling_event_id():
-    """
-    Generates a unique sequence-based ID for sampling events.
+    """Generate a unique sequence-based ID for sampling events.
     
     Returns:
         int: A unique BigInteger ID for the sampling event.

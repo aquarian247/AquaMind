@@ -1,5 +1,5 @@
 """
-Schemathesis Runtime Hooks for AquaMind API
+Schemathesis Runtime Hooks for AquaMind API.
 
 This module contains hooks that modify the runtime behavior of Schemathesis tests
 to work around known API quirks. These hooks are applied during test execution
@@ -48,9 +48,8 @@ def _strip_cookies(headers: Dict[str, str]) -> None:
 # Hook: before_call                                                           #
 # --------------------------------------------------------------------------- #
 
-def before_call(context, case, **kwargs):  # noqa: D401
-    """
-    Modify outgoing HTTP request *before* it is sent.
+def before_call(context, case, **kwargs):  # noqa: D401,D202
+    """Prepare the HTTP request *before* Schemathesis sends it.
 
     1. Inject a valid ``Authorization`` header unless one is already present.
        The header value is taken from the ``SCHEMATHESIS_AUTH_TOKEN`` env var
@@ -82,22 +81,24 @@ def before_call(context, case, **kwargs):  # noqa: D401
     return kwargs
 
 def after_init(context, schema):
-    """
-    Called after Schemathesis is initialized.
-    Used to confirm hooks are properly loaded.
+    """Run immediately after Schemathesis initializes.
+
+    The hook logs a confirmation message to indicate that custom runtime hooks
+    have been loaded successfully.
     """
     print("✅ AquaMind Schemathesis hooks successfully initialized", file=sys.stderr)
     logger.info("Schemathesis hooks successfully initialized for schema: %s", schema.raw_schema.get("info", {}).get("title", "Unknown"))
     return schema
 
 def after_call(response, case):
-    """
-    Called after each API call is made.
-    Applies fixes to responses that would otherwise fail schema validation.
-    
+    """Handle the response after each API call.
+
+    This hook mutates the response in-memory to work around known schema
+    mismatches that would otherwise cause Schemathesis validation failures.
+
     Args:
-        response: The HTTP response object
-        case: The test case that was executed
+        response: The HTTP response object.
+        case:    The executed test case.
     """
     # Apply dev-auth response fix
     if case.path == "/api/v1/auth/dev-auth/" and case.method == "GET":

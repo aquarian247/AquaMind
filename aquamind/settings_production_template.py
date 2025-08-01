@@ -1,5 +1,5 @@
-"""
-Production settings template for AquaMind project.
+"""Production settings template for AquaMind project.
+
 Copy this to settings_production.py and configure with your environment variables.
 """
 
