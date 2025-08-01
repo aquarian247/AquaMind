@@ -22,7 +22,7 @@ AquaMind is built using modern technologies for reliability, scalability, and ma
 - **Backend**: Django 4.2.11 (Python 3.11)
 - **Database**: PostgreSQL with TimescaleDB extension for efficient time-series data management
 - **API**: Django REST Framework for robust API development
-- **Frontend**: TBD
+ - **Frontend**: React 18 + TypeScript, Vite build tool, Tailwind CSS (shadcn/ui) and TanStack Query for server-state management
 - **Authentication**: Django's authentication system with role-based access control
 - **Testing**: Django's testing framework for comprehensive test coverage
 
@@ -38,7 +38,7 @@ The application follows Django's Model-Template-View (MTV) architecture with the
    - `environmental`: Monitoring systems integration and time-series data
    - `operational`: Daily optimization and planning
    - `inventory`: Resource and feed management
-   - `medical`: Health tracking and veterinary records
+
 
 2. **Data Storage**:
    - PostgreSQL with TimescaleDB extension for efficient time-series data storage
@@ -153,7 +153,7 @@ AquaMind/
 │   ├── environmental/      # Environmental monitoring
 │   ├── operational/        # Daily operations and planning
 │   ├── inventory/          # Resource and feed management
-│   └── medical/            # Health tracking and records
+│   └── # (medical app removed – health data now lives in `apps/health`)
 ├── aquamind/               # Project settings
 │   ├── settings.py         # Django settings
 │   ├── urls.py             # Main URL configuration
