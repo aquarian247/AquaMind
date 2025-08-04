@@ -423,6 +423,22 @@ class ScenarioModelChange(models.Model):
         verbose_name_plural = "Scenario Model Changes"
         ordering = ['scenario', 'change_day']
     
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+    def clean(self):
+        """
+        Ensure that at least one of the model fields is provided so that
+        the change actually modifies the scenario configuration.
+        """
+        from django.core.exceptions import ValidationError
+
+        if not any([self.new_tgc_model, self.new_fcr_model, self.new_mortality_model]):
+            raise ValidationError(
+                "At least one of new_tgc_model, new_fcr_model, or "
+                "new_mortality_model must be specified for a model change."
+            )
+
     def __str__(self):
         return f"{self.scenario.name} - Day {self.change_day} change"
 
@@ -583,6 +599,44 @@ class StageConstraint(models.Model):
     def __str__(self):
         return f"{self.constraint_set.name} - {self.get_lifecycle_stage_display()}"
 
+    # ---------------------------------------------------------------------
+    # Validation
+    # ---------------------------------------------------------------------
+    def clean(self):
+        """
+        Ensure that the numeric range fields are logically correct.
+
+        1. min_weight_g must be less than max_weight_g
+        2. If temperature bounds are provided, min_temperature_c must be
+           less than max_temperature_c
+        """
+        from django.core.exceptions import ValidationError
+
+        errors = {}
+
+        # Weight range validation
+        if (
+            self.min_weight_g is not None
+            and self.max_weight_g is not None
+            and self.min_weight_g >= self.max_weight_g
+        ):
+            errors["min_weight_g"] = (
+                "min_weight_g must be less than max_weight_g."
+            )
+
+        # Temperature range validation (only if both provided)
+        if (
+            self.min_temperature_c is not None
+            and self.max_temperature_c is not None
+            and self.min_temperature_c >= self.max_temperature_c
+        ):
+            errors["min_temperature_c"] = (
+                "min_temperature_c must be less than max_temperature_c."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
 
 # Stage-specific parameter models
 class TGCModelStage(models.Model):
@@ -651,6 +705,26 @@ class FCRModelStageOverride(models.Model):
     
     def __str__(self):
         return f"{self.fcr_stage} ({self.min_weight_g}g-{self.max_weight_g}g): {self.fcr_value}"
+
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+    def clean(self):
+        """
+        Ensure the minimum weight bound is less than the maximum weight bound.
+        """
+        from django.core.exceptions import ValidationError
+
+        if (
+            self.min_weight_g is not None
+            and self.max_weight_g is not None
+            and self.min_weight_g >= self.max_weight_g
+        ):
+            raise ValidationError(
+                {
+                    "min_weight_g": "min_weight_g must be less than max_weight_g."
+                }
+            )
 
 
 class MortalityModelStage(models.Model):
