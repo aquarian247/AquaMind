@@ -101,7 +101,8 @@ class TemperatureReadingModelTests(TestCase):
             reading = TemperatureReading(
                 profile=self.profile,
                 # ensure each reading_date is unique by offsetting with loop index
-                reading_date=date.today() + timedelta(days=i),
+                # +1 to avoid clashing with the reading created in setUp (day 0)
+                reading_date=date.today() + timedelta(days=i + 1),
                 temperature=temp
             )
             reading.full_clean()  # Should not raise ValidationError
@@ -194,6 +195,9 @@ class FCRModelTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
+        # NOTE: The correct model class is LifeCycleStage (capital “C”),
+        # not LifecycleStage. Using the proper class prevents NameError
+        # issues in tests.
         self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
@@ -534,7 +538,8 @@ class ScenarioModelTests(TestCase):
             tgc_model=self.tgc_model,
             fcr_model=self.fcr_model,
             mortality_model=self.mortality_model,
-            biological_constraints=self.constraints
+            biological_constraints=self.constraints,
+            created_by=self.user
         )
         scenario.clean()  # Should not raise ValidationError
         scenario.save()
@@ -552,7 +557,8 @@ class ScenarioModelTests(TestCase):
                 tgc_model=self.tgc_model,
                 fcr_model=self.fcr_model,
                 mortality_model=self.mortality_model,
-                biological_constraints=self.constraints
+                biological_constraints=self.constraints,
+                created_by=self.user
             )
             scenario.clean()
 
@@ -578,7 +584,8 @@ class ScenarioModelTests(TestCase):
             tgc_model=freshwater_tgc,
             fcr_model=self.fcr_model,
             mortality_model=self.mortality_model,
-            biological_constraints=self.constraints
+            biological_constraints=self.constraints,
+            created_by=self.user
         )
         scenario.clean()  # Should not raise ValidationError
         scenario.save()
@@ -596,7 +603,8 @@ class ScenarioModelTests(TestCase):
                 tgc_model=freshwater_tgc,
                 fcr_model=self.fcr_model,
                 mortality_model=self.mortality_model,
-                biological_constraints=self.constraints
+                biological_constraints=self.constraints,
+                created_by=self.user
             )
             scenario.clean()
 
