@@ -54,7 +54,7 @@ class ScenarioWorkflowTests(TestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage = LifecycleStage.objects.create(
+        self.fry_stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -62,7 +62,7 @@ class ScenarioWorkflowTests(TestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage = LifecycleStage.objects.create(
+        self.parr_stage = LifeCycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -70,7 +70,7 @@ class ScenarioWorkflowTests(TestCase):
             expected_weight_max_g=30.0
         )
         
-        self.smolt_stage = LifecycleStage.objects.create(
+        self.smolt_stage = LifeCycleStage.objects.create(
             name="smolt",
             species=self.species,
             order=5,
@@ -80,10 +80,11 @@ class ScenarioWorkflowTests(TestCase):
         
         # Create a batch
         self.batch = Batch.objects.create(
-            name="Test Batch",
+            batch_number="Test Batch",
             species=self.species,
-            initial_count=10000,
-            created_by=self.user
+            lifecycle_stage=self.fry_stage,
+            start_date=date.today() - timedelta(days=30),
+            expected_end_date=date.today() + timedelta(days=335)
         )
         
         # Create temperature profile
@@ -289,7 +290,8 @@ class ScenarioWorkflowTests(TestCase):
             name="Batch-based Scenario",
             start_date=date.today(),
             duration_days=90,
-            initial_count=self.batch.initial_count,  # Use batch's initial count
+            # Batch model doesn't store initial_count directly; using a fixed value for tests
+            initial_count=10000,
             genotype="Standard",
             supplier="Test Supplier",
             initial_weight=2.5,
@@ -303,8 +305,8 @@ class ScenarioWorkflowTests(TestCase):
         
         # Verify the scenario was created with the batch's data
         self.assertEqual(scenario.batch, self.batch)
-        self.assertEqual(scenario.initial_count, self.batch.initial_count)
-        self.assertEqual(scenario.species, self.batch.species)
+        self.assertEqual(scenario.initial_count, 10000)
+        self.assertEqual(scenario.species, self.species)
         
         # Mock the projection engine to simulate running a projection
         with patch('apps.scenario.services.calculations.projection_engine.ProjectionEngine') as MockEngine:
@@ -958,7 +960,7 @@ class EndToEndWorkflowTests(TestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage = LifecycleStage.objects.create(
+        self.fry_stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -966,7 +968,7 @@ class EndToEndWorkflowTests(TestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage = LifecycleStage.objects.create(
+        self.parr_stage = LifeCycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -1188,7 +1190,7 @@ class PerformanceTests(TransactionTestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage = LifecycleStage.objects.create(
+        self.fry_stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -1196,7 +1198,7 @@ class PerformanceTests(TransactionTestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage = LifecycleStage.objects.create(
+        self.parr_stage = LifeCycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -1204,7 +1206,7 @@ class PerformanceTests(TransactionTestCase):
             expected_weight_max_g=30.0
         )
         
-        self.smolt_stage = LifecycleStage.objects.create(
+        self.smolt_stage = LifeCycleStage.objects.create(
             name="smolt",
             species=self.species,
             order=5,
@@ -1506,7 +1508,7 @@ class DataConsistencyTests(TestCase):
         )
         
         # Create lifecycle stage
-        self.stage = LifecycleStage.objects.create(
+        self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,

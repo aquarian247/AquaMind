@@ -210,7 +210,7 @@ class FCRModelValidationTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage = LifecycleStage.objects.create(
+        self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -285,11 +285,10 @@ class FCRModelValidationTests(TestCase):
         # Test with non-existent stage ID
         with self.assertRaises(ValueError):
             FCRModelStage.objects.create(
-                **{**self.fcr_stage_data, "stage_id": 999999}
-            )
+                **{**self.fcr_stage_data, "stage_id": 999999})
             
         # Test with deleted stage
-        stage_to_delete = LifecycleStage.objects.create(
+        stage_to_delete = LifeCycleStage.objects.create(
             name="stage_to_delete",
             species=self.species,
             order=10,
@@ -316,7 +315,7 @@ class FCRModelValidationTests(TestCase):
             FCRModelStage.objects.create(**self.fcr_stage_data)
             
         # Different stage should work
-        different_stage = LifecycleStage.objects.create(
+        different_stage = LifeCycleStage.objects.create(
             name="different_stage",
             species=self.species,
             order=4,
@@ -451,7 +450,7 @@ class ScenarioValidationTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage = LifecycleStage.objects.create(
+        self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -461,10 +460,11 @@ class ScenarioValidationTests(TestCase):
         
         # Create a batch
         self.batch = Batch.objects.create(
-            name="Test Batch",
+            batch_number="Test Batch",
             species=self.species,
-            initial_count=10000,
-            created_by=self.user
+            lifecycle_stage=self.stage,
+            start_date=date.today() - timedelta(days=30),
+            expected_end_date=date.today() + timedelta(days=335)
         )
         
         # Create temperature profile and TGC model
