@@ -39,19 +39,19 @@ Rules for every phase:
 
 **Required Reading**  
 - `LOCAL_DEVELOPMENT.md` (setup)  
-- `aquamind/docs/quality_assurance/testing_strategy.md` (commands)
+- `aquamind/docs/quality_assurance/testing_guide.md` (commands)
 
 **Tasks**  
-- [ ] Create branch `qa-improvement`; ensure `coverage` is installed.  
-- [ ] Run baseline coverage  
+- [x] Create branch `qa-improvement`; ensure `coverage` is installed.  
+- [x] Run baseline coverage  
 
   ```bash
   coverage run --source='.' manage.py test && coverage html
   ```  
 
-- [ ] Save HTML report as CI artifact (if pipeline present).  
-- [ ] Fix any failing tests without altering production logic.  
-- [ ] Commit results.
+- [x] Save HTML report as CI artifact (if pipeline present).  
+- [x] Fix any failing tests without altering production logic.  
+- [x] Commit results.
 
 **Exit Criteria**  
 - All tests pass under coverage; baseline numbers recorded in commit message.
@@ -63,19 +63,19 @@ Rules for every phase:
 **Required Reading**  
 - `apps/broodstock/models.py` (skim)  
 - `aquamind/docs/architecture.md` § Broodstock  
-- `aquamind/docs/quality_assurance/testing_strategy.md`
+- `aquamind/docs/quality_assurance/testing_guide.md`
 
 **Tasks**  
-- [ ] Implement `apps/broodstock/tests/test_models.py` covering validations, relationships, computed properties (≥ 80 %).  
-- [ ] Run coverage for broodsock app  
+- [x] Implement `apps/broodstock/tests/test_models.py` covering validations, relationships, computed properties (≥ 80 %). End result: 100% coverage.  
+- [x] Run coverage for broodsock app  
 
   ```bash
   coverage run --source='.' manage.py test apps.broodstock && coverage report
   ```  
 
-- [ ] Ensure Broodstock app ≥ 50 % coverage.  
-- [ ] Run full suite.  
-- [ ] Commit.
+- [x] Ensure Broodstock app ≥ 50 % coverage. End result: 83% coverage. 
+- [x] Run full suite.  
+- [x] Commit.
 
 **Exit Criteria**  
 - Broodstock app ≥ 50 %; file ≥ 80 %; all tests green.
@@ -104,7 +104,7 @@ Rules for every phase:
 
 **Required Reading**  
 - `apps/environmental/models.py`  
-- `aquamind/docs/quality_assurance/timescaledb_testing_strategy.md`
+- `aquamind/docs/quality_assurance/timescaledb_testing_guide.md`
 
 **Tasks**  
 - [ ] Remove duplicate `tests/api` vs `tests/test_api` folder; update imports.  
@@ -214,7 +214,7 @@ Rules for every phase:
 ## Phase 9 — Final Audit & Polish
 
 **Required Reading**  
-- `aquamind/docs/quality_assurance/testing_strategy.md`  
+- `aquamind/docs/quality_assurance/testing_guide.md`  
 - `docs/DEVELOPMENT_WORKFLOW.md`
 
 **Tasks**  
