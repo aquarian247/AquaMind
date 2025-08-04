@@ -4,11 +4,15 @@ This document outlines the specific issues with scenario integration tests disco
 
 ## Context
 
-During Phase 2b of the QA Improvement project, we implemented comprehensive tests for the scenario app, achieving 59% coverage. However, 7 integration tests had to be skipped due to API namespace issues. These tests expect URL patterns using `reverse('api:scenario-...')` but fail because the router doesn't define an 'api' namespace.
+During Phase 2b of the QA Improvement project, we implemented comprehensive tests for the scenario app, achieving **59 % coverage with 99 passing tests**.  
+However, **13 integration-style tests** had to be skipped (initially 7, now 13 after additional findings) due to API namespace issues or other deeper technical gaps.  
+The common problem is that these tests expect URL patterns using `reverse('api:scenario-...')` but fail because the router doesn't define an **`api`** namespace (or, for validation-specific cases, because domain validation logic is incomplete).
 
 ## Skipped Integration Tests
 
-The following 7 tests in `apps/scenario/tests/test_integration.py` are skipped with `@unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")`:
+The following **13** tests in `apps/scenario/tests/test_integration.py` are currently skipped.  
+Unless noted otherwise they carry  
+`@unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")`.
 
 1. **`test_create_scenario_from_scratch`**
    - Tests creating a scenario and running a projection
@@ -37,6 +41,32 @@ The following 7 tests in `apps/scenario/tests/test_integration.py` are skipped w
 7. **`test_temperature_profile_upload`**
    - Tests uploading temperature profile data
    - Fails on: `reverse('api:temperature-profile-upload', kwargs={'pk': new_profile.pk})`
+
+8. **`test_create_scenario_from_batch`** (in *ScenarioWorkflowTests*)
+   - Tests creating a scenario from an existing batch  
+   - Fails on: `reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk})`
+
+9. **`test_biological_constraint_enforcement`** (in *ScenarioWorkflowTests*)  
+   - Ensures biological constraints block invalid scenarios  
+   - Skipped with `"TODO: Enable after biological constraint validation refactor"`  
+   - Issue: Validation logic not yet enforcing limits.
+
+10. **`test_complete_scenario_workflow`** (in *EndToEndWorkflowTests*)  
+    - Full end-to-end scenario workflow  
+    - Skipped with `"TODO: Enable after API consolidation / ProjectionEngine refactor"`  
+    - Issue: `ProjectionEngine` expects non-existent field `typical_start_weight`.
+
+11. **`test_long_duration_projection`** (in *PerformanceTests*)  
+    - 900-day performance scenario  
+    - Fails on: `reverse('api:scenario-run-projection', ...)`
+
+12. **`test_large_population_scenario`** (in *PerformanceTests*)  
+    - Large population performance scenario  
+    - Same URL-namespace failure as above.
+
+13. **`test_concurrent_scenario_processing`** (in *PerformanceTests*)  
+    - Concurrent processing of multiple scenarios  
+    - Same URL-namespace failure as above.
 
 ## API Namespace Issues
 

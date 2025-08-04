@@ -107,12 +107,14 @@ Baseline suite green; initial coverage numbers recorded.
   * `test_models.py` fully implemented (312 LOC) – **100 %** file coverage.  
   * `test_api_endpoints.py` and `test_calculations.py` implemented – **100 %** file coverage each.  
   * `test_model_validation.py` and `test_integration.py` added; some database-isolation issues remain.  
-    • 7 integration tests are **skipped** pending API-consolidation (missing `api:` namespace).  
+    • 13 integration tests are **skipped** pending API-consolidation (missing `api:` namespace or awaiting validation refactor).  
 - [x] Scenario app coverage – **59 %** (≥ 50 % requirement).  
 - [x] Working tests – **99** passing (skipped tests excluded).  
 - [x] Commits  
   * `f738bbd` – initial completion of scenario tests  
   * `be5d183` – fixes, skips & documentation for API-dependent tests
+  * `680f1a3` – additional skips & biological-constraint fixes  
+  * `115eb69` – final skip adjustments; validation-test corrections
 
 **Exit Criteria**  
 Scenario app **59 %**; suite green.
