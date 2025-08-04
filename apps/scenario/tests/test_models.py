@@ -97,10 +97,11 @@ class TemperatureReadingModelTests(TestCase):
         """Test temperature field validation."""
         # Valid temperatures
         valid_temps = [-10.0, 0.0, 25.5, 35.0]
-        for temp in valid_temps:
+        for i, temp in enumerate(valid_temps):
             reading = TemperatureReading(
                 profile=self.profile,
-                reading_date=date.today() + timedelta(days=len(valid_temps)),
+                # ensure each reading_date is unique by offsetting with loop index
+                reading_date=date.today() + timedelta(days=i),
                 temperature=temp
             )
             reading.full_clean()  # Should not raise ValidationError
@@ -392,10 +393,11 @@ class ScenarioModelTests(TestCase):
         
         # Create a batch
         self.batch = Batch.objects.create(
-            name="Test Batch",
+            batch_number="Test Batch",
             species=self.species,
-            initial_count=10000,
-            created_by=self.user
+            lifecycle_stage=self.stage,
+            start_date=date.today() - timedelta(days=30),
+            expected_end_date=date.today() + timedelta(days=335)
         )
         
         # Create temperature profile and TGC model
