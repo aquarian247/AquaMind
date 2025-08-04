@@ -170,10 +170,11 @@ class TGCModelValidationTests(TestCase):
     def test_profile_relationship_validation(self):
         """Test profile relationship validation."""
         # Test with non-existent profile ID
-        with self.assertRaises(ValueError):
-            TGCModel.objects.create(
-                **{**self.valid_data, "profile_id": 999999}
-            )
+        with transaction.atomic():
+            with self.assertRaises(ValueError):
+                TGCModel.objects.create(
+                    **{**self.valid_data, "profile_id": 999999}
+                )
         
         # Test with deleted profile
         profile_to_delete = TemperatureProfile.objects.create(
@@ -189,11 +190,12 @@ class TGCModelValidationTests(TestCase):
     def test_name_uniqueness(self):
         """Test name must be unique."""
         # Create first model
-        TGCModel.objects.create(**self.valid_data)
-        
-        # Try to create another with same name
-        with self.assertRaises(IntegrityError):
-            TGCModel.objects.create(**self.valid_data)  # Same name
+        with transaction.atomic():
+            TGCModel.objects.create(**self.valid_data)
+            
+            # Try to create another with same name
+            with self.assertRaises(IntegrityError):
+                TGCModel.objects.create(**self.valid_data)  # Same name
             
         # Different name should work
         TGCModel.objects.create(
@@ -277,9 +279,10 @@ class FCRModelValidationTests(TestCase):
     def test_fcr_stage_relationship_validation(self):
         """Test FCRModelStage relationship validation."""
         # Test with non-existent stage ID
-        with self.assertRaises(ValueError):
-            FCRModelStage.objects.create(
-                **{**self.fcr_stage_data, "stage_id": 999999})
+        with transaction.atomic():
+            with self.assertRaises(ValueError):
+                FCRModelStage.objects.create(
+                    **{**self.fcr_stage_data, "stage_id": 999999})
             
         # Test with deleted stage
         stage_to_delete = LifeCycleStage.objects.create(
@@ -305,8 +308,9 @@ class FCRModelValidationTests(TestCase):
         FCRModelStage.objects.create(**self.fcr_stage_data)
         
         # Try to create another with same model and stage
-        with self.assertRaises(IntegrityError):
-            FCRModelStage.objects.create(**self.fcr_stage_data)
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                FCRModelStage.objects.create(**self.fcr_stage_data)
             
         # Different stage should work
         different_stage = LifeCycleStage.objects.create(
@@ -396,8 +400,9 @@ class MortalityModelValidationTests(TestCase):
         MortalityModel.objects.create(**self.valid_data)
         
         # Try to create another with same name
-        with self.assertRaises(IntegrityError):
-            MortalityModel.objects.create(**self.valid_data)
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                MortalityModel.objects.create(**self.valid_data)
             
         # Different name should work
         MortalityModel.objects.create(
@@ -744,7 +749,7 @@ class BiologicalConstraintsValidationTests(TestCase):
         # Test default is True
         constraints = BiologicalConstraints.objects.create(
             **{k: v for k, v in self.valid_data.items() if k != "is_active"},
-            name="Default Active Constraints"
+            name="Default Active Constraints"  # Use unique name
         )
         self.assertTrue(constraints.is_active)
         
@@ -759,7 +764,7 @@ class BiologicalConstraintsValidationTests(TestCase):
         # Test can be null
         constraints = BiologicalConstraints.objects.create(
             **{k: v for k, v in self.valid_data.items() if k != "created_by"},
-            name="No User Constraints"
+            name="No User Constraints"  # Use unique name
         )
         self.assertIsNone(constraints.created_by)
         
@@ -980,7 +985,7 @@ class ScenarioModelChangeValidationTests(TestCase):
         
         # Test CASCADE behavior for scenario
         self.scenario.delete()
-        self.assertEqual(ScenarioModelChange.objects.filter(id=change.id).count(), 0)
+        self.assertEqual(ScenarioModelChange.objects.filter(change_id=change.change_id).count(), 0)
     
     def test_scenario_relationship_required(self):
         """Test scenario relationship is required."""

@@ -50,8 +50,12 @@ class TemperatureProfileModelTests(TestCase):
 
         # Try to create a profile with a name that's too long
         too_long_name = "X" * 256
-        with self.assertRaises(Exception):
-            TemperatureProfile.objects.create(name=too_long_name)
+        # Validate before saving so Django's max_length validation is triggered,
+        # which raises a ValidationError (DataError is backend-specific and may
+        # not be raised on SQLite during tests).
+        with self.assertRaises(ValidationError):
+            invalid_profile = TemperatureProfile(name=too_long_name)
+            invalid_profile.full_clean()
 
     def test_timestamps_auto_creation(self):
         """Test that created_at and updated_at are automatically set."""
