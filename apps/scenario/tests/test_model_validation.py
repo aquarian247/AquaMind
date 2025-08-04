@@ -18,7 +18,7 @@ from apps.scenario.models import (
     BiologicalConstraints, StageConstraint, TGCModelStage,
     FCRModelStageOverride, MortalityModelStage, LifecycleStageChoices
 )
-from apps.batch.models import, Batch, Species
+from apps.batch.models import LifeCycleStage, Batch, Species
 
 User = get_user_model()
 
@@ -210,7 +210,7 @@ class FCRModelValidationTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage =.objects.create(
+        self.stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -289,7 +289,7 @@ class FCRModelValidationTests(TestCase):
             )
             
         # Test with deleted stage
-        stage_to_delete =.objects.create(
+        stage_to_delete = LifecycleStage.objects.create(
             name="stage_to_delete",
             species=self.species,
             order=10,
@@ -316,7 +316,7 @@ class FCRModelValidationTests(TestCase):
             FCRModelStage.objects.create(**self.fcr_stage_data)
             
         # Different stage should work
-        different_stage =.objects.create(
+        different_stage = LifecycleStage.objects.create(
             name="different_stage",
             species=self.species,
             order=4,
@@ -451,7 +451,7 @@ class ScenarioValidationTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage =.objects.create(
+        self.stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,

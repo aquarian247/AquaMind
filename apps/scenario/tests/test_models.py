@@ -18,7 +18,7 @@ from apps.scenario.models import (
     BiologicalConstraints, StageConstraint, TGCModelStage,
     FCRModelStageOverride, MortalityModelStage, LifecycleStageChoices
 )
-from apps.batch.models import, Batch, Species
+from apps.batch.models import LifeCycleStage, Batch, Species
 
 User = get_user_model()
 
@@ -193,7 +193,7 @@ class FCRModelTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage =.objects.create(
+        self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -382,7 +382,7 @@ class ScenarioModelTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.stage =.objects.create(
+        self.stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -876,14 +876,14 @@ class StageSpecificOverrideTests(TestCase):
             name="Atlantic Salmon",
             scientific_name="Salmo salar"
         )
-        self.fry_stage =.objects.create(
+        self.fry_stage = LifeCycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
             expected_weight_min_g=1.0,
             expected_weight_max_g=5.0
         )
-        self.smolt_stage =.objects.create(
+        self.smolt_stage = LifeCycleStage.objects.create(
             name="smolt",
             species=self.species,
             order=5,

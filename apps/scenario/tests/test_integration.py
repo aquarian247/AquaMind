@@ -25,7 +25,7 @@ from apps.scenario.models import (
     FCRModelStageOverride, MortalityModelStage, ScenarioProjection,
     LifecycleStageChoices
 )
-from apps.batch.models import, Batch, Species
+from apps.batch.models import LifeCycleStage, Batch, Species
 from apps.scenario.services.calculations.projection_engine import ProjectionEngine
 from apps.scenario.services.calculations.tgc_calculator import TGCCalculator
 from apps.scenario.services.calculations.fcr_calculator import FCRCalculator
@@ -54,7 +54,7 @@ class ScenarioWorkflowTests(TestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage =.objects.create(
+        self.fry_stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -62,7 +62,7 @@ class ScenarioWorkflowTests(TestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage =.objects.create(
+        self.parr_stage = LifecycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -70,7 +70,7 @@ class ScenarioWorkflowTests(TestCase):
             expected_weight_max_g=30.0
         )
         
-        self.smolt_stage =.objects.create(
+        self.smolt_stage = LifecycleStage.objects.create(
             name="smolt",
             species=self.species,
             order=5,
@@ -958,7 +958,7 @@ class EndToEndWorkflowTests(TestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage =.objects.create(
+        self.fry_stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -966,7 +966,7 @@ class EndToEndWorkflowTests(TestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage =.objects.create(
+        self.parr_stage = LifecycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -1188,7 +1188,7 @@ class PerformanceTests(TransactionTestCase):
         )
         
         # Create lifecycle stages
-        self.fry_stage =.objects.create(
+        self.fry_stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
@@ -1196,7 +1196,7 @@ class PerformanceTests(TransactionTestCase):
             expected_weight_max_g=5.0
         )
         
-        self.parr_stage =.objects.create(
+        self.parr_stage = LifecycleStage.objects.create(
             name="parr",
             species=self.species,
             order=4,
@@ -1204,7 +1204,7 @@ class PerformanceTests(TransactionTestCase):
             expected_weight_max_g=30.0
         )
         
-        self.smolt_stage =.objects.create(
+        self.smolt_stage = LifecycleStage.objects.create(
             name="smolt",
             species=self.species,
             order=5,
@@ -1506,7 +1506,7 @@ class DataConsistencyTests(TestCase):
         )
         
         # Create lifecycle stage
-        self.stage =.objects.create(
+        self.stage = LifecycleStage.objects.create(
             name="fry",
             species=self.species,
             order=3,
