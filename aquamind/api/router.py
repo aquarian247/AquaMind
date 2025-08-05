@@ -26,12 +26,6 @@ from apps.scenario.api.routers import router as scenario_router
 router = DefaultRouter()
 
 # Include routers from all apps
-router.registry.extend(batch_router.registry)
-router.registry.extend(environmental_router.registry)
-router.registry.extend(inventory_router.registry)
-router.registry.extend(health_router.registry)
-router.registry.extend(broodstock_router.registry)
-router.registry.extend(scenario_router.registry)
 
 urlpatterns = [
     # Authentication endpoints
