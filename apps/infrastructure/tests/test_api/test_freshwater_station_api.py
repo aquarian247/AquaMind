@@ -54,8 +54,8 @@ class FreshwaterStationAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:freshwaterstation-list')
-        self.detail_url = reverse('infrastructure:freshwaterstation-detail', kwargs={'pk': self.station.pk})
+        self.list_url = reverse('infrastructure:freshwater-station-list')
+        self.detail_url = reverse('infrastructure:freshwater-station-detail', kwargs={'pk': self.station.pk})
 
     def test_list_stations(self):
         """Test retrieving a list of freshwater stations."""
