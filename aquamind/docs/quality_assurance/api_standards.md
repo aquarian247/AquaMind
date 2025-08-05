@@ -440,3 +440,46 @@ urlpatterns = [
 ```
 
 By following these standards, we ensure a clean, consistent, and maintainable API structure across the entire AquaMind platform.
+
+## 10. Contract Testing and Validation
+
+The static **contract test** layer (located in `tests/contract/`) guarantees that
+our implementation and documentation never drift apart.  These tests are fast,
+pure-Python checks that run **before** Schemathesis in CI.
+
+### 10.1 What They Validate
+
+| Area                         | Assertion                                                                    |
+|------------------------------|-------------------------------------------------------------------------------|
+| ViewSet registration         | Every `ViewSet` class is registered in at least one DRF router               |
+| Serializer presence          | `serializer_class` (or `get_serializer_class`) is defined                    |
+| Authentication               | `permission_classes` are explicitly declared *(defaulting to IsAuthenticated)*|
+| URL versioning               | All paths begin with `/api/v1/`                                              |
+| OpenAPI schema               | Schema generation succeeds and passes OpenAPI 3.1 validation                 |
+| Security schemes             | Token / JWT auth schemes appear in the schema                                |
+
+### 10.2 Running Contract Tests Locally
+
+```bash
+# Quick run – fails fast on structural issues
+python manage.py test tests.contract
+```
+
+### 10.3 CI Enforcement
+
+The GitHub Action executes the contract suite automatically; a pull-request
+cannot be merged unless **all contract tests pass**.  This ensures:
+
+* New endpoints are documented
+* No broken router registrations reach main
+* The generated `openapi.yaml` remains valid
+
+### 10.4 Relationship to Schemathesis
+
+* **Contract tests** – static, introspective, catch obvious structural /
+  documentation mistakes.
+* **Schemathesis** – dynamic, property-based HTTP calls derived from the schema;
+  catches behavioural and edge-case issues.
+
+Both layers together provide high confidence in API quality and backwards
+compatibility guarantees.
