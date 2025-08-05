@@ -42,7 +42,7 @@ class ContainerTypeAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:container-type-list')
+        self.list_url = reverse('container-type-list')
         self.detail_url = reverse(
             'infrastructure:container-type-detail',
             kwargs={'pk': self.container_type.pk}

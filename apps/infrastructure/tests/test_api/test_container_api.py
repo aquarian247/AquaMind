@@ -110,9 +110,10 @@ class ContainerAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:container-list')
-        self.hall_container_detail_url = reverse('infrastructure:container-detail', kwargs={'pk': self.hall_container.pk})
-        self.area_container_detail_url = reverse('infrastructure:container-detail', kwargs={'pk': self.area_container.pk})
+        # The router no longer uses the "infrastructure" namespace, so drop the prefix
+        self.list_url = reverse('container-list')
+        self.hall_container_detail_url = reverse('container-detail', kwargs={'pk': self.hall_container.pk})
+        self.area_container_detail_url = reverse('container-detail', kwargs={'pk': self.area_container.pk})
 
     def test_list_containers(self):
         """Test retrieving a list of containers."""

@@ -61,8 +61,8 @@ class HallAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:hall-list')
-        self.detail_url = reverse('infrastructure:hall-detail', kwargs={'pk': self.hall.pk})
+        self.list_url = reverse('hall-list')
+        self.detail_url = reverse('hall-detail', kwargs={'pk': self.hall.pk})
 
     def test_list_halls(self):
         """Test retrieving a list of halls."""

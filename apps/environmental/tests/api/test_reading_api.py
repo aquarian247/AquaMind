@@ -83,8 +83,8 @@ class EnvironmentalReadingAPITest(APITestCase):
         }
         
         self.reading = EnvironmentalReading.objects.create(**self.reading_data)
-        self.list_url = reverse('environmental:reading-list')
-        self.detail_url = reverse('environmental:reading-detail', kwargs={'pk': self.reading.pk})
+        self.list_url = reverse('reading-list')
+        self.detail_url = reverse('reading-detail', kwargs={'pk': self.reading.pk})
         
         # Create additional readings for time-series tests
         for i in range(1, 6):

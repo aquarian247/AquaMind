@@ -32,8 +32,8 @@ class EnvironmentalParameterAPITest(BaseAPITestCase):
             'optimal_max': 20.00
         }
         self.parameter = EnvironmentalParameter.objects.create(**self.parameter_data)
-        self.list_url = reverse('environmental:parameter-list')
-        self.detail_url = reverse('environmental:parameter-detail', kwargs={'pk': self.parameter.pk})
+        self.list_url = reverse('parameter-list')
+        self.detail_url = reverse('parameter-detail', kwargs={'pk': self.parameter.pk})
 
     def test_list_parameters(self):
         """Test retrieving a list of environmental parameters."""

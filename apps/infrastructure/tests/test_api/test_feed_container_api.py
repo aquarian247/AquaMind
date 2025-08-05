@@ -100,7 +100,7 @@ class FeedContainerAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:feed-container-list')
+        self.list_url = reverse('feed-container-list')
         self.hall_container_detail_url = reverse(
             'infrastructure:feed-container-detail',
             kwargs={'pk': self.hall_feed_container.pk}

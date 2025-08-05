@@ -88,8 +88,8 @@ class SensorAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:sensor-list')
-        self.detail_url = reverse('infrastructure:sensor-detail', kwargs={'pk': self.sensor.pk})
+        self.list_url = reverse('sensor-list')
+        self.detail_url = reverse('sensor-detail', kwargs={'pk': self.sensor.pk})
 
     def test_list_sensors(self):
         """Test retrieving a list of sensors."""

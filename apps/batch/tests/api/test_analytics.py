@@ -277,7 +277,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
             start_date=date.today(),
             lifecycle_stage=self.stage1
         )
-        url = reverse('batch:batch-growth-analysis', kwargs={'pk': batch.id})
+        url = reverse('batch-growth-analysis', kwargs={'pk': batch.id})
         response = self.client.get(url)
         print(f"Growth Analysis URL: {url}")
         print(f"Response Status Code: {response.status_code}")
@@ -288,7 +288,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
 
     def test_performance_metrics_endpoint(self):
         """Test the performance metrics endpoint."""
-        url = reverse('batch:batch-list')
+        url = reverse('batch-list')
         response = self.client.get(url)
         print("Performance Metrics Response:", response.status_code, response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -301,7 +301,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
 
     def test_batch_comparison_endpoint(self):
         """Test the batch comparison endpoint."""
-        url = reverse('batch:batch-compare')
+        url = reverse('batch-compare')
         batch_ids_str = f"{self.batch.id},{self.batch2.id}"
         response = self.client.get(url, {'batch_ids': batch_ids_str})
         print(f"Batch Comparison Response: {response.status_code} {response.data}")

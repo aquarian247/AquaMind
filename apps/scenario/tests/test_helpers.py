@@ -378,9 +378,9 @@ def get_scenario_api_url(action: str, pk: Optional[int] = None,
     """
     if use_reverse:
         if action == 'list':
-            return reverse('api:scenario-list')
+            return reverse('scenario-list')
         elif action == 'detail':
-            return reverse('api:scenario-detail', kwargs={'pk': pk})
+            return reverse('scenario-detail', kwargs={'pk': pk})
         else:
             return reverse(f'api:scenario-{action}', kwargs={'pk': pk})
     else:

@@ -57,8 +57,8 @@ class WeatherDataAPITest(APITestCase):
         
         self.weather = WeatherData.objects.create(**self.weather_data)
         # Use reverse with the proper namespace
-        self.list_url = reverse('environmental:weather-list')
-        self.detail_url = reverse('environmental:weather-detail', kwargs={'pk': self.weather.pk})
+        self.list_url = reverse('weather-list')
+        self.detail_url = reverse('weather-detail', kwargs={'pk': self.weather.pk})
         
         # Create additional weather data for time-series tests
         for i in range(1, 4):
@@ -264,7 +264,7 @@ class WeatherDataAPITest(APITestCase):
 
     def test_recent_weather_endpoint(self):
         """Test the custom endpoint for recent weather data."""
-        url = reverse('environmental:weather-recent')
+        url = reverse('weather-recent')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)  # Only one area
