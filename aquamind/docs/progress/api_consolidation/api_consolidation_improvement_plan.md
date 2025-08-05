@@ -92,17 +92,19 @@ Reference documents & sections:
 ## Progress Tracking
 
 ### Phase 1: Audit Current State and Fix Router Duplication
-**Started:** August 5, 2025
+**Started:** August 5 2025  
+**Completed:** August 5 2025 @ 10:40 UTC
 
-**Current Status:** In progress
+**Current Status:** ✅ **COMPLETE**
 
-**Findings:**
-- Confirmed router duplication issue in `aquamind/api/router.py` where the main router both extends the registry using `router.registry.extend()` AND includes URLs explicitly with `path()` statements
-- This dual approach is causing duplicate URL patterns and conflicts
-- The issue is exactly as described in the API Structure Analysis Report under "Router Registration Duplication"
-- This duplication is likely causing the "404 noise" in Schemathesis tests and conflicts in URL resolution
+**Key Outcomes / Findings**
+1. 🚀 **Router duplication resolved** – switched to clean `path()` includes and removed all `router.registry.extend()` calls. Duplicate URL patterns dropped from dozens to **one minor duplicate** (`api/auth/token/` registered twice with different names).  
+2. 🧪 **Full test-suite restored** – after rebasing `api-consolidation` on the updated `main`, **599 tests** are now detected (was 497). All existing tests pass.  
+3. ⏸ **13 scenario integration tests still skipped** – remain blocked by missing `api` namespace & related validation gaps (see `scenario_integration_tests_todo.md`).  
+4. 📈 **Schemathesis run clean of 404 noise** – aside from expected auth-validation failures, contract testing shows no duplicate/ghost endpoints; overall API behaves as expected.  
+5. 🔍 **Auth duplicate noted** – `api/auth/token/` appears twice (`api-token-auth` vs `api_token_auth`). Logged for later clean-up in Phase 2/4.
 
-**Next Steps:**
-- Update `aquamind/api/router.py` to use clean path includes only
-- Remove all `router.registry.extend()` calls
-- Add consistent namespaces to path includes
+**Next Steps (Phase 2 & beyond)**
+• Eliminate the remaining `api/auth/token` duplication when basenames are standardised.  
+• Add `api` namespace to all path includes and enable the 13 skipped scenario tests.  
+• Continue with baseline Schemathesis & coverage checks after each phase.

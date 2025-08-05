@@ -10,6 +10,7 @@ import os
 import sys
 import re
 from collections import defaultdict
+import argparse
 
 # Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
@@ -84,22 +85,15 @@ def find_duplicates(urls):
     return duplicates
 
 
-def main():
-    """Main function to list all URLs and find duplicates."""
-    resolver = get_resolver()
-    all_urls = get_all_urls(resolver.url_patterns)
-    
+def detailed_report(all_urls, duplicates):
+    """Print the existing verbose report."""
     # Print all URLs
     print("\n=== All URL Patterns ===")
     print(f"{'URL Pattern':<60} {'URL Name':<30} {'Namespace'}")
     print("-" * 100)
-    
     for url, name, namespace in sorted(all_urls, key=lambda x: x[0]):
         print(f"{url:<60} {name:<30} {namespace or '-'}")
-    
-    # Find and print duplicates
-    duplicates = find_duplicates(all_urls)
-    
+
     if duplicates:
         print("\n=== Duplicate URL Patterns ===")
         for norm_url, patterns in duplicates.items():
@@ -108,10 +102,75 @@ def main():
                 print(f"  - {url:<60} {name:<30} {namespace or '-'}")
     else:
         print("\nNo duplicate URL patterns found.")
-    
+
     # Print summary
     print(f"\nTotal URL patterns: {len(all_urls)}")
     print(f"Duplicate patterns: {len(duplicates)}")
+
+
+def _infer_app_from_url(url: str) -> str:
+    """
+    Attempt to infer the app name from a URL pattern.
+    Heuristic: take the first non-empty segment after optional leading slash
+    and optional 'api' or 'api/v1'.
+    """
+    parts = [p for p in url.split('/') if p]  # filter empties
+    if not parts:
+        return 'root'
+    if parts[0] == 'api':
+        # Strip version if present
+        if len(parts) > 1 and re.match(r'v[0-9]+', parts[1]):
+            return parts[2] if len(parts) > 2 else 'api'
+        return parts[1] if len(parts) > 1 else 'api'
+    return parts[0]
+
+
+def summary_report(all_urls, duplicates):
+    """Print condensed duplicate statistics."""
+    print("=== URL Pattern Summary ===")
+    print(f"Total URL patterns : {len(all_urls)}")
+    print(f"Duplicate patterns : {len(duplicates)}")
+
+    if not duplicates:
+        print("No duplicate URL patterns detected.")
+        return
+
+    # List duplicate patterns only once
+    print("\nDuplicate pattern list:")
+    for pattern in sorted(duplicates.keys()):
+        print(f" - {pattern}")
+
+    # Group duplicates by inferred app
+    dup_by_app = defaultdict(int)
+    for norm_url in duplicates.keys():
+        app = _infer_app_from_url(norm_url)
+        dup_by_app[app] += 1
+
+    print("\nDuplicate pattern count by app:")
+    for app, count in sorted(dup_by_app.items(), key=lambda x: x[0]):
+        print(f" {app:<20} : {count}")
+
+
+def main():
+    """Entry point. Parses args & shows requested report."""
+    parser = argparse.ArgumentParser(
+        description="List Django URL patterns and identify duplicates."
+    )
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Show only summary information about duplicates.",
+    )
+    args = parser.parse_args()
+
+    resolver = get_resolver()
+    all_urls = get_all_urls(resolver.url_patterns)
+    duplicates = find_duplicates(all_urls)
+
+    if args.summary:
+        summary_report(all_urls, duplicates)
+    else:
+        detailed_report(all_urls, duplicates)
 
 
 if __name__ == "__main__":
