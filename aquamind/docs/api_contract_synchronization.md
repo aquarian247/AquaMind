@@ -36,6 +36,10 @@ If dispatch fails (e.g. PAT expired):
 
 ## 4 Contract Testing Quick-Ref
 
+**Note** Contract validation is enforced in **two complementary layers**:  
+• **Static contract tests** (`tests/contract/`) – quick structural checks (see `quality_assurance/testing_guide.md`)  
+• **Schemathesis** – dynamic, property-based HTTP testing (commands below)
+
 | Context | Command |
 |---------|---------|
 | Local full suite | `coverage run --source='.' manage.py test && coverage report` |
