@@ -76,6 +76,42 @@ Reference documents & sections:
 4. Commit to `api-consolidation` branch with message "Phase 4: Namespace fixes and contract enhancements".
 5. **QA Steps**: Run full tests, Schemathesis (10 examples, verify no namespace errors), and coverage. Confirm all 7 scenario integration tests pass. Regenerate openapi.yaml (per api_contract_synchronization.md) and test frontend sync simulation. **End session here after QA passes.**
 
+### Phase 4B: Zero-Error Resolution 🔧
+**Objective**: Resolve all remaining test failures to achieve 100% test passage before Phase 5
+
+**Remaining Issues to Fix**
+
+1. **MortalityCalculator missing method** (4 errors)
+   • `AttributeError: 'MortalityCalculator' object has no attribute 'calculate_mortality'`
+   • Action: Check if method was renamed or needs implementation
+   • Files: `apps/scenario/services/calculations/mortality_calculator.py`
+
+2. **Container Type API namespace issues** (7 errors)
+   • `KeyError: 'infrastructure'` in reverse() calls
+   • Action: Update container_type_api.py tests to remove namespace prefixes
+   • Files: `apps/infrastructure/tests/test_api/test_container_type_api.py`
+
+3. **LoadBatchAssignmentsViewTests URL pattern** (1 error)
+   • `NoReverseMatch` for 'ajax_load_batch_assignments'
+   • Action: Check if URL pattern exists or update test
+   • Files: `apps/health/tests/test_views.py`
+
+4. **Performance test authentication** (3 failures)
+   • 401 Unauthorized errors in concurrent/large/long duration tests
+   • Action: Ensure proper authentication setup in performance tests
+   • Files: `apps/scenario/tests/test_integration.py` (PerformanceTests class)
+
+5. **Test data validation failures** (5 failures)
+   • Temperature profile upload expecting different format
+   • Export data headers mismatch
+   • Chart data structure issues
+   • Action: Update test expectations to match current API responses
+
+**Success Criteria**
+- All 599 tests passing (0 failures, 0 errors)
+- Schemathesis validation passing locally
+- No namespace-related errors
+- All authentication properly configured
 ## Phase 5: Final Polish, App Structure Standardization
 Standardize app structures and decide on operational app; reference report's "Standard App API Structure". **Note: This phase should only begin after Phase 4B is complete with zero errors.**
 
@@ -185,40 +221,3 @@ Reference documents & sections:
 • Reduced errors from 145 to 12
 • Reduced failures from many to 8
 • 10 tests still skipped
-
-### Phase 4B: Zero-Error Resolution 🔧
-**Objective**: Resolve all remaining test failures to achieve 100% test passage before Phase 5
-
-**Remaining Issues to Fix**
-
-1. **MortalityCalculator missing method** (4 errors)
-   • `AttributeError: 'MortalityCalculator' object has no attribute 'calculate_mortality'`
-   • Action: Check if method was renamed or needs implementation
-   • Files: `apps/scenario/services/calculations/mortality_calculator.py`
-
-2. **Container Type API namespace issues** (7 errors)
-   • `KeyError: 'infrastructure'` in reverse() calls
-   • Action: Update container_type_api.py tests to remove namespace prefixes
-   • Files: `apps/infrastructure/tests/test_api/test_container_type_api.py`
-
-3. **LoadBatchAssignmentsViewTests URL pattern** (1 error)
-   • `NoReverseMatch` for 'ajax_load_batch_assignments'
-   • Action: Check if URL pattern exists or update test
-   • Files: `apps/health/tests/test_views.py`
-
-4. **Performance test authentication** (3 failures)
-   • 401 Unauthorized errors in concurrent/large/long duration tests
-   • Action: Ensure proper authentication setup in performance tests
-   • Files: `apps/scenario/tests/test_integration.py` (PerformanceTests class)
-
-5. **Test data validation failures** (5 failures)
-   • Temperature profile upload expecting different format
-   • Export data headers mismatch
-   • Chart data structure issues
-   • Action: Update test expectations to match current API responses
-
-**Success Criteria**
-- All 599 tests passing (0 failures, 0 errors)
-- Schemathesis validation passing locally
-- No namespace-related errors
-- All authentication properly configured
