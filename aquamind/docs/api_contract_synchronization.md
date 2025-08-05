@@ -45,6 +45,36 @@ If dispatch fails (e.g. PAT expired):
 
 ---
 
+## 4.5 Router Registration Standards
+
+Keeping DRF routers consistent is **critical** to a stable OpenAPI spec and to avoiding 404 / duplicate-route noise during Schemathesis runs.
+
+### DRF Router Guidelines
+
+| Principle | Implementation |
+|-----------|----------------|
+| **One router per app** | Create `api/routers.py` inside every app; instantiate its own `DefaultRouter` & perform all registrations there. |
+| **Explicit basenames** | Always supply `basename=` and use **kebab-case** (`growth-samples`, `feed-containers`). |
+| **Project-wide unique** | A basename must not collide with any other app's basename. |
+| **No registry merging** | Never call `router.registry.extend()` – include routers via `path('', include(...))` instead. |
+
+### Preventing Duplicate Endpoints
+
+Common pitfalls that introduce URL conflicts:  
+* Relying on auto-generated basenames (missing `basename=`).  
+* Copy-pasting routers and later calling `router.registry.extend()`.  
+* Mixing camelCase / snake_case / kebab-case between apps.  
+
+### Validation Checklist ✅
+
+Before committing router changes, ensure:
+
+- [ ] All ViewSets have **explicit kebab-case basenames**.  
+- [ ] `python manage.py show_urls | sort` shows **no duplicates**.  
+- [ ] Full test-suite passes (`coverage run …`).  
+- [ ] Schemathesis run is green (no unexpected 404 / duplicate warnings).  
+- [ ] Any changed basenames are reflected in tests (`reverse('<basename>-list')`).  
+
 ## 5 Troubleshooting Checklist
 
 | Symptom | Likely Cause · Fix |
