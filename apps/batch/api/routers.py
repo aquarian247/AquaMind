@@ -18,14 +18,14 @@ from apps.batch.api.viewsets import (
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
-router.register(r'species', SpeciesViewSet)
-router.register(r'lifecycle-stages', LifeCycleStageViewSet)
-router.register(r'batches', BatchViewSet)
-router.register(r'container-assignments', BatchContainerAssignmentViewSet)
-router.register(r'batch-compositions', BatchCompositionViewSet)
-router.register(r'transfers', BatchTransferViewSet)
-router.register(r'mortality-events', MortalityEventViewSet)
-router.register(r'growth-samples', GrowthSampleViewSet)
+router.register(r'species', SpeciesViewSet, basename='species')
+router.register(r'lifecycle-stages', LifeCycleStageViewSet, basename='lifecycle-stage')
+router.register(r'batches', BatchViewSet, basename='batch')
+router.register(r'container-assignments', BatchContainerAssignmentViewSet, basename='batch-container-assignment')
+router.register(r'batch-compositions', BatchCompositionViewSet, basename='batch-composition')
+router.register(r'transfers', BatchTransferViewSet, basename='batch-transfer')
+router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-event')
+router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-sample')
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls

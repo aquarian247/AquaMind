@@ -18,14 +18,14 @@ from apps.infrastructure.api.viewsets import (
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
-router.register(r'geographies', GeographyViewSet)
-router.register(r'areas', AreaViewSet)
-router.register(r'freshwater-stations', FreshwaterStationViewSet)
-router.register(r'halls', HallViewSet)
-router.register(r'container-types', ContainerTypeViewSet)
-router.register(r'containers', ContainerViewSet)
-router.register(r'sensors', SensorViewSet)
-router.register(r'feed-containers', FeedContainerViewSet)
+router.register(r'geographies', GeographyViewSet, basename='geography')
+router.register(r'areas', AreaViewSet, basename='area')
+router.register(r'freshwater-stations', FreshwaterStationViewSet, basename='freshwater-station')
+router.register(r'halls', HallViewSet, basename='hall')
+router.register(r'container-types', ContainerTypeViewSet, basename='container-type')
+router.register(r'containers', ContainerViewSet, basename='container')
+router.register(r'sensors', SensorViewSet, basename='sensor')
+router.register(r'feed-containers', FeedContainerViewSet, basename='feed-container')
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls
