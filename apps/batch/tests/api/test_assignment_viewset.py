@@ -1,15 +1,13 @@
 """
 Tests for the BatchContainerAssignmentViewSet.
 """
-from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APITestCase
+from tests.base import BaseAPITestCase
 from decimal import Decimal
 from datetime import date, timedelta
 
 from apps.batch.models import BatchContainerAssignment
-from apps.batch.tests.api.test_helpers import get_api_url
 from apps.batch.tests.api.test_utils import (
     create_test_user,
     create_test_species,
@@ -20,12 +18,7 @@ from apps.batch.tests.api.test_utils import (
 )
 
 
-def get_batch_url(endpoint, detail=False, **kwargs):
-    """Helper function to construct URLs for batch API endpoints"""
-    return get_api_url('batch', endpoint, detail, **kwargs)
-
-
-class BatchContainerAssignmentViewSetTest(APITestCase):
+class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
     """Test the BatchContainerAssignment viewset."""
 
     def setUp(self):
@@ -75,7 +68,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
 
     def test_list_assignments(self):
         """Test listing container assignments."""
-        url = get_batch_url('container-assignments')
+        url = self.get_api_url('batch', 'container-assignments')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -109,7 +102,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
             'notes': 'New test assignment from create test'
         }
         
-        url = get_batch_url('container-assignments')
+        url = self.get_api_url('batch', 'container-assignments')
         
         # Print request data for debugging
         print("Create Assignment Request Data:", assignment_data)
@@ -135,7 +128,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
 
     def test_retrieve_assignment(self):
         """Test retrieving a container assignment."""
-        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        url = self.get_api_url('batch', 'container-assignments', detail=True, pk=self.assignment.id)
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -149,7 +142,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
 
     def test_update_assignment(self):
         """Test updating a container assignment."""
-        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        url = self.get_api_url('batch', 'container-assignments', detail=True, pk=self.assignment.id)
         update_data = {
             'batch_id': self.batch.id,
             'container_id': self.container.id,
@@ -176,7 +169,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
 
     def test_partial_update_assignment(self):
         """Test partially updating a container assignment."""
-        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        url = self.get_api_url('batch', 'container-assignments', detail=True, pk=self.assignment.id)
         update_data = {
             'population_count': 600
         }
@@ -193,7 +186,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
 
     def test_delete_assignment(self):
         """Test deleting a container assignment."""
-        url = get_batch_url('container-assignments', detail=True, pk=self.assignment.id)
+        url = self.get_api_url('batch', 'container-assignments', detail=True, pk=self.assignment.id)
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -217,7 +210,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         )
         
         # Filter by batch
-        url = get_batch_url('container-assignments') + f'?batch={self.batch.id}'
+        url = self.get_api_url('batch', 'container-assignments') + f'?batch={self.batch.id}'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -226,7 +219,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         self.assertEqual(response.data['results'][0]['batch']['batch_number'], self.batch.batch_number)
         
         # Filter by container
-        url = get_batch_url('container-assignments') + f'?container={self.container.id}'
+        url = self.get_api_url('batch', 'container-assignments') + f'?container={self.container.id}'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -235,7 +228,7 @@ class BatchContainerAssignmentViewSetTest(APITestCase):
         self.assertEqual(response.data['results'][0]['container']['name'], self.container.name)
         
         # Filter by active status
-        url = get_batch_url('container-assignments') + '?is_active=true'
+        url = self.get_api_url('batch', 'container-assignments') + '?is_active=true'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -3,17 +3,17 @@ Test suite for Scenario Planning API endpoints.
 
 Tests validation, serialization, and API functionality.
 """
-from datetime import date, timedelta
 from decimal import Decimal
+from datetime import date, timedelta
 import json
 import io
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
 
+
+from tests.base import BaseAPITestCase
 from apps.batch.models import LifeCycleStage, Batch, Species
 from apps.infrastructure.models import Geography, Area, Container, ContainerType
 from ..models import (
@@ -25,26 +25,19 @@ from ..models import (
 User = get_user_model()
 
 
-class BaseScenarioAPITestCase(TestCase):
+class BaseScenarioAPITestCase(BaseAPITestCase):
     """Base test case with common setup for scenario API tests."""
     
     def setUp(self):
         """Set up test data."""
-        # Create test user
-        self.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
+        # Initialize auth & default user from BaseAPITestCase
+        super().setUp()
+
         self.other_user = User.objects.create_user(
             username='otheruser',
             email='other@example.com',
             password='testpass123'
         )
-        
-        # Create API client
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
         
         # Create lifecycle stages
         self.create_lifecycle_stages()

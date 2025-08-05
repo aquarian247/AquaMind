@@ -14,7 +14,7 @@ from decimal import Decimal
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.test import APITestCase
+from tests.base import BaseAPITestCase
 from rest_framework.authtoken.models import Token
 
 from apps.batch.models import (
@@ -27,10 +27,8 @@ from apps.batch.models import (
 )
 from apps.infrastructure.models import Container, Hall, Geography, FreshwaterStation, Area, ContainerType
 
-from apps.batch.tests.api.test_helpers import get_api_url
 
-
-class BatchAnalyticsTestCase(APITestCase):
+class BatchAnalyticsTestCase(BaseAPITestCase):
     """Test case for batch analytics endpoints."""
     
     def setUp(self):
@@ -232,7 +230,7 @@ class BatchAnalyticsTestCase(APITestCase):
 
     def test_growth_analysis_endpoint(self):
         """Test the growth analysis endpoint."""
-        url = get_api_url('batch', 'batches', detail=True, pk=self.batch.id) + 'growth_analysis/'
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id) + 'growth_analysis/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -1,7 +1,8 @@
 from django.urls import reverse
 from decimal import Decimal
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+# Use centralized BaseAPITestCase for shared helpers & auth setup
+from tests.base import BaseAPITestCase
 from django.contrib.auth import get_user_model
 import unittest
 import decimal # Renamed from 'decimal' to 'py_decimal' to avoid conflict if any model field is named 'decimal'
@@ -23,18 +24,12 @@ from apps.health.api.serializers import HealthSamplingEventSerializer # Added fo
 User = get_user_model()
 
 
-class HealthAPITestCase(APITestCase):
+class HealthAPITestCase(BaseAPITestCase):
     """Base class for Health app API tests."""
     
-    def get_api_url(self, app_name, endpoint, detail=False, **kwargs):
-        """Helper function to construct URLs for API endpoints"""
-        if detail:
-            pk = kwargs.get('pk')
-            return f'/api/v1/{app_name}/{endpoint}/{pk}/'
-        return f'/api/v1/{app_name}/{endpoint}/'
-    
     def setUp(self):
-        self.client = APIClient()
+        # Initialize BaseAPITestCase setup (creates & authenticates default user)
+        super().setUp()
         try:
             self.user = User.objects.create_user(username='testuser', password='testpass')
             self.client.force_authenticate(user=self.user)

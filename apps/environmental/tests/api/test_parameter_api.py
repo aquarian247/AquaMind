@@ -6,12 +6,13 @@ This module tests CRUD operations for the EnvironmentalParameter model through t
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APITestCase
+# Use the centralized BaseAPITestCase for consistent helpers & authentication
+from tests.base import BaseAPITestCase
 
 from apps.environmental.models import EnvironmentalParameter
 
 
-class EnvironmentalParameterAPITest(APITestCase):
+class EnvironmentalParameterAPITest(BaseAPITestCase):
     """Test suite for EnvironmentalParameter API endpoints."""
 
     def setUp(self):
