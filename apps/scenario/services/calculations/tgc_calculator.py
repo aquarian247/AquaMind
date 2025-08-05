@@ -95,14 +95,14 @@ class TGCCalculator:
             Dict with growth_g and new_weight_g
         """
         # Check for stage-specific TGC override
-        tgc_value = self.tgc_model.tgc_value
-        temp_exponent = self.tgc_model.exponent_n
-        weight_exponent = self.tgc_model.exponent_m
+        tgc_value = self.model.tgc_value
+        temp_exponent = self.model.exponent_n
+        weight_exponent = self.model.exponent_m
         
         if lifecycle_stage:
             # Look for stage-specific override
             try:
-                stage_override = self.tgc_model.stage_overrides.get(
+                stage_override = self.model.stage_overrides.get(
                     lifecycle_stage=lifecycle_stage
                 )
                 tgc_value = float(stage_override.tgc_value)
