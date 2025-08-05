@@ -108,3 +108,21 @@ Reference documents & sections:
 • Eliminate the remaining `api/auth/token` duplication when basenames are standardised.  
 • Add `api` namespace to all path includes and enable the 13 skipped scenario tests.  
 • Continue with baseline Schemathesis & coverage checks after each phase.
+
+### Phase 2: Standardize Basename Usage Across Apps
+**Started:** August 5 2025  
+**Completed:** August 5 2025 @ 11:55 UTC
+
+**Current Status:** ✅ **COMPLETE**
+
+**Key Outcomes / Findings**
+1. 🏷 **Basename standardization finished** – every ViewSet across **4 apps** now uses an explicit, project-wide-unique **kebab-case** basename (total = 28 registrations updated).  
+2. 🔧 **Tests repaired** – three infrastructure API test modules updated to use new reverse() names; **all 599 tests pass**.  
+3. 📚 **Documentation upgraded** – added *API Standards & Conventions* doc; expanded router & basename guidelines in existing QA docs; updated contract-sync guide.  
+4. 📈 **Contract integrity verified** – Schemathesis run shows no duplicate or ghost endpoints; only expected auth failures remain.  
+5. 🛡 **Coverage preserved** – no drop in coverage; CI green end-to-end.
+
+**Next Steps (Phase 3 & beyond)**
+• Centralise testing helpers to remove duplicated test code.  
+• Begin migration of scenario tests to shared helpers.  
+• Maintain 100 % pass rate & clean Schemathesis runs.
