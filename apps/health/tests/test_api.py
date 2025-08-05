@@ -30,13 +30,6 @@ class HealthAPITestCase(BaseAPITestCase):
     def setUp(self):
         # Initialize BaseAPITestCase setup (creates & authenticates default user)
         super().setUp()
-        try:
-            self.user = User.objects.create_user(username='testuser', password='testpass')
-            self.client.force_authenticate(user=self.user)
-            print("User created and authenticated successfully")
-        except Exception as e:
-            print(f"Error creating or authenticating User: {e}")
-            raise
 
         try:
             self.species = Species.objects.create(name='Salmon')
