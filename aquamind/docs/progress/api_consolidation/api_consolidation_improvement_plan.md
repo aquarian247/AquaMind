@@ -85,9 +85,10 @@ Reference documents & sections:
 * `aquamind/docs/architecture.md` → "Component Architecture" for official app responsibilities, ensuring directories align.
 
 1. For each app, enforce standard API dir structure (api/routers.py, api/viewsets.py, etc.; add linter checks if possible).
-2. Update docs (e.g., testing_guide.md with new utils) and add monitoring (e.g., GitHub Action for OpenAPI validation on PRs).
-3. Commit to `api-consolidation` branch with message "Phase 5: App structure polish".
-4. **QA Steps**: Run full tests, Schemathesis, and coverage (aim for 80%+ in affected apps). Verify no regressions in skipped tests or contract sync. If changes affect API, regenerate yaml and document. Merge `api-consolidation` to main after verification. **End session here after QA passes; project complete.**
+2. Check the Django app 'scenario' test structure for refactoring. Use the apps/batch/tests folder and refactoring structure as a reference, where large files are split up for maintenance reasons, and the api test are placed in the test/api folder and the model tests are in the tests/models folder. 
+3. Update docs (e.g., testing_guide.md with new utils) and add monitoring (e.g., GitHub Action for OpenAPI validation on PRs).
+4. Commit to `api-consolidation` branch with message "Phase 5: App structure polish".
+5. **QA Steps**: Run full tests, Schemathesis, and coverage (aim for 80%+ in affected apps). Verify no regressions in skipped tests or contract sync. If changes affect API, regenerate yaml and document. Merge `api-consolidation` to main after verification. **End session here after QA passes; project complete.**
 
 ## Progress Tracking
 

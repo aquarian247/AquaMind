@@ -20,6 +20,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 import unittest
+from rest_framework.test import APIClient   # DRF test client for auth-aware requests
 
 from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
@@ -48,7 +49,9 @@ class ScenarioWorkflowTests(TestCase):
             password="testpass",
             is_staff=True
         )
-        self.client.force_login(self.user)
+        # Use DRF's APIClient and authenticate the user for JWT/DRF-aware views
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
         # Create species and lifecycle stages
         self.species = Species.objects.create(
@@ -193,8 +196,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_create_scenario_from_scratch(self):
         """Test creating a scenario from scratch and running a projection."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_create_scenario_from_scratch(self):
         # Create a scenario
         scenario = Scenario.objects.create(
             name="Test Scenario",
@@ -264,7 +265,7 @@ class ScenarioWorkflowTests(TestCase):
             
             # Call the API endpoint to run the projection
             response = self.client.post(
-                reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
             )
             
@@ -288,9 +289,6 @@ class ScenarioWorkflowTests(TestCase):
             self.assertEqual(final_projection.cumulative_feed, 150.0)
             self.assertEqual(final_projection.current_stage.id, self.smolt_stage.id)
 
-    def test_create_scenario_from_batch(self):
-        """Test creating a scenario from an existing batch."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
     def test_create_scenario_from_batch(self):
         """Test creating a scenario from an existing batch."""
         # Create a scenario from an existing batch
@@ -337,7 +335,7 @@ class ScenarioWorkflowTests(TestCase):
             
             # Call the API endpoint to run the projection
             response = self.client.post(
-                reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
             )
             
@@ -349,8 +347,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_compare_multiple_scenarios(self):
         """Test comparing multiple scenarios."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_compare_multiple_scenarios(self):
         # Create two scenarios with different parameters
         scenario1 = Scenario.objects.create(
             name="Scenario 1",
@@ -432,7 +428,10 @@ class ScenarioWorkflowTests(TestCase):
         
         # Get comparison data from API
         response = self.client.get(
-            reverse('api:scenario-compare', kwargs={'pk': scenario1.pk}) + f'?compare_to={scenario2.pk}',
+            # `compare` is a collection-level action (detail=False) so it does
+            # not take a primary-key argument.  The API expects a comma-separated
+            # list of scenario IDs in the `scenario_ids` query parameter.
+            reverse('scenario-compare') + f'?scenario_ids={scenario1.pk},{scenario2.pk}',
             content_type='application/json'
         )
         
@@ -465,8 +464,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_sensitivity_analysis(self):
         """Test sensitivity analysis by varying TGC values."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_sensitivity_analysis(self):
         # Create base scenario
         base_scenario = Scenario.objects.create(
             name="Base Scenario",
@@ -482,7 +479,7 @@ class ScenarioWorkflowTests(TestCase):
             biological_constraints=self.constraints,
             created_by=self.user
         )
-        
+
         # Mock the projection engine for sensitivity analysis
         with patch('apps.scenario.services.calculations.projection_engine.ProjectionEngine') as MockEngine:
             # Configure the mock to return different results for different TGC values
@@ -564,7 +561,7 @@ class ScenarioWorkflowTests(TestCase):
                 
                 # Run projection
                 response = self.client.post(
-                    reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                    reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                     content_type='application/json'
                 )
                 
@@ -592,8 +589,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_export_data(self):
         """Test exporting scenario data to CSV."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_export_data(self):
         # Create a scenario
         scenario = Scenario.objects.create(
             name="Export Test Scenario",
@@ -630,7 +625,10 @@ class ScenarioWorkflowTests(TestCase):
         
         # Call the export endpoint
         response = self.client.get(
-            reverse('api:scenario-export', kwargs={'pk': scenario.pk}),
+            # The action name in the viewset is `export_projections`, and the
+            # router-generated route name follows the pattern
+            # 'scenario-export-projections'.
+            reverse('scenario-export-projections', kwargs={'pk': scenario.pk}),
             content_type='application/json'
         )
         
@@ -667,8 +665,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_chart_data_generation(self):
         """Test generating chart data for scenarios."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_chart_data_generation(self):
         # Create a scenario
         scenario = Scenario.objects.create(
             name="Chart Test Scenario",
@@ -705,7 +701,7 @@ class ScenarioWorkflowTests(TestCase):
         
         # Call the chart data endpoint
         response = self.client.get(
-            reverse('api:scenario-chart-data', kwargs={'pk': scenario.pk}),
+            reverse('scenario-chart-data', kwargs={'pk': scenario.pk}),
             content_type='application/json'
         )
         
@@ -739,8 +735,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_model_changes_mid_scenario(self):
         """Test applying model changes mid-scenario."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_model_changes_mid_scenario(self):
         # Create a scenario
         scenario = Scenario.objects.create(
             name="Model Change Scenario",
@@ -824,7 +818,7 @@ class ScenarioWorkflowTests(TestCase):
             
             # Call the API endpoint to run the projection
             response = self.client.post(
-                reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
             )
             
@@ -857,8 +851,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_temperature_profile_upload(self):
         """Test uploading temperature profile data."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_temperature_profile_upload(self):
         # Create a new temperature profile
         new_profile = TemperatureProfile.objects.create(
             name="Uploaded Temperature Profile"
@@ -879,8 +871,13 @@ class ScenarioWorkflowTests(TestCase):
         
         # Upload the file
         response = self.client.post(
-            reverse('api:temperature-profile-upload', kwargs={'pk': new_profile.pk}),
-            {'file': csv_file},
+            reverse('temperature-profile-upload-csv'),
+            {
+                'file': csv_file,
+                # The upload_csv endpoint requires a profile_name to be supplied
+                # alongside the file so the view can create / validate the profile.
+                'profile_name': new_profile.name,
+            },
             format='multipart'
         )
         
@@ -899,8 +896,6 @@ class ScenarioWorkflowTests(TestCase):
 
     def test_biological_constraint_enforcement(self):
         """Test that biological constraints are enforced when creating scenarios."""
-    @unittest.skip("TODO: Enable after biological constraint validation refactor")
-    def test_biological_constraint_enforcement(self):
         # Try to create a scenario with weight outside constraints
         with self.assertRaises(ValidationError):
             scenario = Scenario(
@@ -998,10 +993,9 @@ class EndToEndWorkflowTests(TestCase):
             expected_weight_max_g=30.0
         )
 
-    def test_complete_scenario_workflow(self):
-        """Test a complete end-to-end scenario workflow."""
     @unittest.skip("TODO: Enable after API consolidation / ProjectionEngine refactor")
     def test_complete_scenario_workflow(self):
+        """Test a complete end-to-end scenario workflow."""
         # Step 1: Create a temperature profile
         temp_profile = TemperatureProfile.objects.create(
             name="E2E Test Temperature Profile"
@@ -1289,9 +1283,6 @@ class PerformanceTests(TransactionTestCase):
 
     def test_long_duration_projection(self):
         """Test performance with a 900+ day projection."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
-    def test_long_duration_projection(self):
-        """Test performance with a 900+ day projection."""
         # Create a scenario with a long duration
         scenario = Scenario.objects.create(
             name="Long Duration Scenario",
@@ -1340,7 +1331,7 @@ class PerformanceTests(TransactionTestCase):
             # Call the API endpoint to run the projection
             self.client.force_login(self.user)
             response = self.client.post(
-                reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
             )
             
@@ -1358,9 +1349,6 @@ class PerformanceTests(TransactionTestCase):
             # This is a reasonable threshold for saving 30+ data points
             self.assertLess(execution_time, 5.0)
 
-    def test_large_population_scenario(self):
-        """Test performance with a large population scenario."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
     def test_large_population_scenario(self):
         """Test performance with a large population scenario."""
         # Create a scenario with a large initial population
@@ -1409,7 +1397,7 @@ class PerformanceTests(TransactionTestCase):
             # Call the API endpoint to run the projection
             self.client.force_login(self.user)
             response = self.client.post(
-                reverse('api:scenario-run-projection', kwargs={'pk': scenario.pk}),
+                reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
             )
             
@@ -1430,9 +1418,6 @@ class PerformanceTests(TransactionTestCase):
             self.assertTrue(final_projection.population > 1900000)  # Should still be close to 2 million
             self.assertTrue(final_projection.biomass > 5000)  # Should be several tons
 
-    def test_concurrent_scenario_processing(self):
-        """Test concurrent processing of multiple scenarios."""
-    @unittest.skip("TODO: Enable after API consolidation - requires 'api' namespace")
     def test_concurrent_scenario_processing(self):
         """Test concurrent processing of multiple scenarios."""
         # Create multiple scenarios
@@ -1485,7 +1470,7 @@ class PerformanceTests(TransactionTestCase):
             
             def run_projection(scenario_id):
                 return self.client.post(
-                    reverse('api:scenario-run-projection', kwargs={'pk': scenario_id}),
+                    reverse('scenario-run-projection', kwargs={'pk': scenario_id}),
                     content_type='application/json'
                 )
             
@@ -1582,6 +1567,7 @@ class DataConsistencyTests(TestCase):
             frequency="daily",
             rate=0.05
         )
+
 
     def test_relationship_integrity(self):
         """Test that relationships between models are maintained correctly."""

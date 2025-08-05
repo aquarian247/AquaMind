@@ -42,13 +42,13 @@ urlpatterns = [
     # 404 noise in Schemathesis.  Now that the router duplication issue is
     # resolved we restore them via a single explicit `path()` include.
     # ------------------------------------------------------------------
-    path('environmental/', include((environmental_router.urls, 'environmental'))),
-    path('batch/', include((batch_router.urls, 'batch'))),
-    path('inventory/', include((inventory_router.urls, 'inventory'))),
-    path('health/', include((health_router.urls, 'health-api'))),
-    path('broodstock/', include((broodstock_router.urls, 'broodstock'))),
+    path('environmental/', include(environmental_router.urls)),
+    path('batch/', include(batch_router.urls)),
+    path('inventory/', include(inventory_router.urls)),
+    path('health/', include(health_router.urls)),
+    path('broodstock/', include(broodstock_router.urls)),
     # Restored infrastructure endpoints
-    path('infrastructure/', include((infrastructure_router.urls, 'infrastructure'))),
-    path('scenario/', include((scenario_router.urls, 'scenario'))),
+    path('infrastructure/', include(infrastructure_router.urls)),
+    path('scenario/', include(scenario_router.urls)),
     path('users/', include('apps.users.urls')),
 ]
