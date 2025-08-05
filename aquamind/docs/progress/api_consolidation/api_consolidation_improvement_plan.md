@@ -23,9 +23,9 @@ The plan is structured as **phases**, each designed for a single agent session (
 This phase assesses the router setup and removes duplications to eliminate conflicts and Schemathesis noise; reference the report's "Router Registration Issues" and TODO's "Double Registration" example.
 
 Reference documents & sections:
-* `docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Router Registration Duplication" (shows `router.registry.extend` and duplicate `path()` includes).
-* `docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "Router Registration Problems" (bullets 1-3) for concrete failure context.
-* `docs/quality_assurance/testing_guide.md` → Section 3 "Running Tests" for commands; Section 4 for Schemathesis invocation.
+* `aquamind/docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Router Registration Duplication" (shows `router.registry.extend` and duplicate `path()` includes).
+* `aquamind/docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "Router Registration Problems" (bullets 1-3) for concrete failure context.
+* `aquamind/docs/quality_assurance/testing_guide.md` → Section 3 "Running Tests" for commands; Section 4 for Schemathesis invocation.
 * `README.md` → "Getting Started / Installation" for quick local run.
 
 1. Check the status of the repo (per README.md).
@@ -38,9 +38,9 @@ Reference documents & sections:
 Focus on adding explicit basenames to prevent naming collisions; reference report's "Inconsistent Basename Usage" examples and kebab-case convention.
 
 Reference documents & sections:
-* `docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Inconsistent Basename Usage" list and code snippets.
-* `docs/quality_assurance/code_organization_guidelines.md` → "Django-Specific Organization → Views and ViewSets" for ordering & naming; also general kebab-case advice.
-* `docs/architecture.md` → "API Contract Synchronization" table stressing spec generation importance—basenames must be stable for OpenAPI.
+* `aquamind/docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Inconsistent Basename Usage" list and code snippets.
+* `aquamind/docs/quality_assurance/code_organization_guidelines.md` → "Django-Specific Organization → Views and ViewSets" for ordering & naming; also general kebab-case advice.
+* `aquamind/docs/architecture.md` → "API Contract Synchronization" table stressing spec generation importance—basenames must be stable for OpenAPI.
 
 1. For each app (batch, infrastructure, health, etc.), update api/routers.py to use explicit basenames (e.g., router.register(r'species', SpeciesViewSet, basename='species')).
 2. Ensure kebab-case consistency (e.g., 'batch-composition') and uniqueness project-wide.
@@ -52,9 +52,9 @@ Reference documents & sections:
 Implement shared helpers to eliminate duplication; reference report's "Standardized Testing URL Construction" proposal and TODO's isolation fixes (e.g., transaction.atomic()).
 
 Reference documents & sections:
-* `docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Testing Approach Consistency" & "Duplicated Helper Functions".
-* `docs/quality_assurance/testing_guide.md` → Section 2 (Directory Layout) & Section 3 (Running Tests) for placement and commands.
-* `docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "Additional Test Isolation Issues" for concrete fixes needed.
+* `aquamind/docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Testing Approach Consistency" & "Duplicated Helper Functions".
+* `aquamind/docs/quality_assurance/testing_guide.md` → Section 2 (Directory Layout) & Section 3 (Running Tests) for placement and commands.
+* `aquamind/docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "Additional Test Isolation Issues" for concrete fixes needed.
 
 1. Create tests/utils/api_helpers.py with APITestHelper (including get_api_url and get_named_url methods per report example).
 2. Create tests/base.py with BaseAPITestCase (extending APITestCase, force_authenticate).
@@ -66,9 +66,9 @@ Reference documents & sections:
 Resolve 'api' namespace errors to unblock skipped tests; reference TODO's Option A and report's "Enhanced Schemathesis Integration".
 
 Reference documents & sections:
-* `docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "API Namespace Issues" section for failing reverse lookups.
-* `docs/api_contract_synchronization.md` → Sections 2 & 4 (Automatic Flow and Contract Testing Quick-Ref) for spec sync flow and Schemathesis flags.
-* `docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Enhanced Schemathesis Integration" recommendations.
+* `aquamind/docs/progress/api_consolidation/scenario_integration_tests_todo.md` → "API Namespace Issues" section for failing reverse lookups.
+* `aquamind/docs/api_contract_synchronization.md` → Sections 2 & 4 (Automatic Flow and Contract Testing Quick-Ref) for spec sync flow and Schemathesis flags.
+* `aquamind/docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Enhanced Schemathesis Integration" recommendations.
 
 1. Update aquamind/api/router.py to add namespace='api' to all path includes (e.g., path('batch/', include((batch_router.urls, 'batch'), namespace='api'))).
 2. Update affected tests (e.g., scenario integration) to use reverse('api:...') consistently.
@@ -80,9 +80,9 @@ Reference documents & sections:
 Standardize app structures and decide on operational app; reference report's "Standard App API Structure".
 
 Reference documents & sections:
-* `docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Standard App API Structure" & "Implementation Priority".
-* `docs/quality_assurance/code_organization_guidelines.md` → Entire doc for file size, directory conventions.
-* `docs/architecture.md` → "Component Architecture" for official app responsibilities, ensuring directories align.
+* `aquamind/docs/progress/api_consolidation/AquaMind Django REST API Structure Analysis Report.md` → "Standard App API Structure" & "Implementation Priority".
+* `aquamind/docs/quality_assurance/code_organization_guidelines.md` → Entire doc for file size, directory conventions.
+* `aquamind/docs/architecture.md` → "Component Architecture" for official app responsibilities, ensuring directories align.
 
 1. For each app, enforce standard API dir structure (api/routers.py, api/viewsets.py, etc.; add linter checks if possible).
 2. Update docs (e.g., testing_guide.md with new utils) and add monitoring (e.g., GitHub Action for OpenAPI validation on PRs).
