@@ -335,14 +335,17 @@ class FCRCalculator:
         """
         summaries = []
         
-        for stage_fcr in self.model.stages.select_related('stage').order_by('stage__typical_start_weight'):
+        # Order by the correct minimum expected weight field
+        for stage_fcr in self.model.stages.select_related('stage').order_by('stage__expected_weight_min_g'):
             summaries.append({
                 'stage_name': stage_fcr.stage.name,
                 'fcr_value': float(stage_fcr.fcr_value),
                 'duration_days': stage_fcr.duration_days,
                 'weight_range': {
-                    'start': float(stage_fcr.stage.typical_start_weight) if stage_fcr.stage.typical_start_weight else None,
-                    'end': float(stage_fcr.stage.typical_end_weight) if stage_fcr.stage.typical_end_weight else None
+                    # Use the correct field name for the start weight of the stage
+                    'start': float(stage_fcr.stage.expected_weight_min_g) if stage_fcr.stage.expected_weight_min_g else None,
+                    # And the correct field for the end weight of the stage
+                    'end': float(stage_fcr.stage.expected_weight_max_g) if stage_fcr.stage.expected_weight_max_g else None
                 }
             })
         
