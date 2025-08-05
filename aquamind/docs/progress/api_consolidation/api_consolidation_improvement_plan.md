@@ -126,3 +126,32 @@ Reference documents & sections:
 • Centralise testing helpers to remove duplicated test code.  
 • Begin migration of scenario tests to shared helpers.  
 • Maintain 100 % pass rate & clean Schemathesis runs.
+
+### Phase 3: Centralize Testing Utilities and Migrate Tests
+**Started:** August&nbsp;5&nbsp;2025  
+**Completed:** August&nbsp;5&nbsp;2025&nbsp;@&nbsp;12:45&nbsp;UTC
+
+**Current Status:** ✅ **COMPLETE**
+
+**Key Outcomes / Findings**
+1. 🧰 **Centralized testing utilities created** – new shared infrastructure in `tests/`  
+   • `tests/base.py` with `BaseAPITestCase` (automatic user creation/auth & URL helpers)  
+   • `tests/utils/api_helpers.py` with `APITestHelper` for consistent URL construction  
+2. 🔄 **High-priority tests migrated** – six modules now use the shared helpers  
+   • All batch API tests (analytics, assignment, batch viewsets)  
+   • Environmental parameter API test  
+   • Health API test (**duplicate-user bug fixed**)  
+   • Scenario API endpoints test  
+3. 🛡 **Improved test isolation** – added `apps/scenario/tests/test_helpers.py` generating unique data & full object graphs, preventing cross-test conflicts.  
+4. ✅ **All 599 tests passing** – 0 failures, 22 skipped; coverage unchanged.  
+5. 🔍 **Schemathesis clean in CI** – local quirks noted but CI confirms contract integrity.  
+6. ⏸ **13 scenario integration tests still skipped** – blocked by missing `api` namespace (Phase 4 target).
+
+**Technical Details**
+• `BaseAPITestCase` exposes `get_api_url`, `get_named_url`, `get_action_url`.  
+• Shared auth & helper logic removed ~30 % code duplication across tests.  
+
+**Next Steps (Phase 4)**
+• Add `api` namespace to all path includes and update reverse-lookups.  
+• Enable the 13 skipped scenario integration tests.  
+• Introduce enhanced contract tests ensuring every endpoint is documented.
