@@ -90,7 +90,8 @@ class LoadBatchAssignmentsViewTests(TestCase):
         )
 
         cls.client = Client()
-        cls.url = reverse('ajax_load_batch_assignments')
+        # Updated to use the correct namespaced URL
+        cls.url = reverse('health:ajax_load_batch_assignments')
 
     def setUp(self):
         """Login the user for each test."""
