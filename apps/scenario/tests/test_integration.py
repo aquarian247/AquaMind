@@ -270,19 +270,39 @@ class ScenarioWorkflowTests(TestCase):
                 }
             ]
             
-            # Update to return a dictionary with success, summary, and warnings keys
-            mock_engine_instance.run_projection.return_value = {
-                'success': True,
-                'summary': {
-                    'final_weight': 35.0,
-                    'final_biomass': 334.25,
-                    'final_population': 9550.0,
-                    'total_feed': 150.0,
-                    'fcr': 1.2
-                },
-                'warnings': [],
-                'projections': projection_data
-            }
+            # Side-effect that mimics real engine behaviour: persist projections
+            def mock_run_projection(save_results=True, *args, **kwargs):
+                if save_results:
+                    ScenarioProjection.objects.bulk_create([
+                        ScenarioProjection(
+                            scenario=scenario,
+                            projection_date=p['projection_date'],
+                            day_number=p['day_number'],
+                            average_weight=p['average_weight'],
+                            population=p['population'],
+                            biomass=p['biomass'],
+                            daily_feed=p['daily_feed'],
+                            cumulative_feed=p['cumulative_feed'],
+                            temperature=p['temperature'],
+                            current_stage_id=p['current_stage_id'],
+                        )
+                        for p in projection_data
+                    ])
+                return {
+                    'success': True,
+                    'summary': {
+                        'final_weight': 35.0,
+                        'final_biomass': 334.25,
+                        'final_population': 9550.0,
+                        'total_feed': 150.0,
+                        'fcr': 1.2
+                    },
+                    'warnings': [],
+                    # real engine returns [] if it saved projections
+                    'projections': [] if save_results else projection_data
+                }
+
+            mock_engine_instance.run_projection.side_effect = mock_run_projection
             
             # Call the API endpoint to run the projection
             response = self.client.post(
@@ -354,19 +374,38 @@ class ScenarioWorkflowTests(TestCase):
                 # Additional projection data points...
             ]
             
-            # Update to return a dictionary with success, summary, and warnings keys
-            mock_engine_instance.run_projection.return_value = {
-                'success': True,
-                'summary': {
-                    'final_weight': 2.5,
-                    'final_biomass': 25.0,
-                    'final_population': 10000.0,
-                    'total_feed': 0.0,
-                    'fcr': 0.0
-                },
-                'warnings': [],
-                'projections': projection_data
-            }
+            # Side-effect persisting projections
+            def batch_mock_run_projection(save_results=True, *args, **kwargs):
+                if save_results:
+                    ScenarioProjection.objects.bulk_create([
+                        ScenarioProjection(
+                            scenario=scenario,
+                            projection_date=p['projection_date'],
+                            day_number=p['day_number'],
+                            average_weight=p['average_weight'],
+                            population=p['population'],
+                            biomass=p['biomass'],
+                            daily_feed=p.get('daily_feed', 0.0),
+                            cumulative_feed=p.get('cumulative_feed', 0.0),
+                            temperature=p.get('temperature', 12.0),
+                            current_stage_id=p['current_stage_id'],
+                        )
+                        for p in projection_data
+                    ])
+                return {
+                    'success': True,
+                    'summary': {
+                        'final_weight': 2.5,
+                        'final_biomass': 25.0,
+                        'final_population': 10000.0,
+                        'total_feed': 0.0,
+                        'fcr': 0.0
+                    },
+                    'warnings': [],
+                    'projections': [] if save_results else projection_data
+                }
+
+            mock_engine_instance.run_projection.side_effect = batch_mock_run_projection
             
             # Call the API endpoint to run the projection
             response = self.client.post(
@@ -465,12 +504,12 @@ class ScenarioWorkflowTests(TestCase):
         # Build JSON payload explicitly; use `content=` so the request body
         # is passed exactly as-is.  DRF will not attempt to encode it again.
         response = self.client.post(
-            reverse('scenario-compare'),            # collection-level action
-            content=json.dumps({
+            reverse('scenario-compare'),  # collection-level action
+            {
                 'scenario_ids': [scenario1.pk, scenario2.pk]
                 # Rely on default comparison metrics defined in the serializer
-            }),
-            content_type='application/json'
+            },
+            format='json'  # Let DRF handle JSON serialization
         )
         
         # Check that the response is successful
@@ -479,25 +518,33 @@ class ScenarioWorkflowTests(TestCase):
         # Parse the response data
         comparison_data = response.json()
         
-        # Verify the comparison data contains both scenarios
-        self.assertIn('base_scenario', comparison_data)
-        self.assertIn('compare_scenario', comparison_data)
-        self.assertEqual(comparison_data['base_scenario']['id'], scenario1.pk)
-        self.assertEqual(comparison_data['compare_scenario']['id'], scenario2.pk)
-        
-        # Verify the comparison data includes projections
-        self.assertIn('projections', comparison_data)
-        self.assertEqual(len(comparison_data['projections']), 4)  # 4 time points
-        
-        # Check that the final weights are different
-        final_day = comparison_data['projections'][-1]
-        self.assertNotEqual(
-            final_day['base_scenario']['average_weight'],
-            final_day['compare_scenario']['average_weight']
-        )
-        self.assertTrue(
-            final_day['compare_scenario']['average_weight'] > 
-            final_day['base_scenario']['average_weight']
+        # ------------------------------------------------------------------
+        # New comparison format (ScenarioComparisonSerializer.to_representation)
+        # ------------------------------------------------------------------
+        # Must contain:
+        #   • "scenarios" → list of scenario summaries
+        #   • "metrics"   → dict of metric comparisons
+        # ------------------------------------------------------------------
+        self.assertIn("scenarios", comparison_data)
+        self.assertIn("metrics", comparison_data)
+
+        # Two scenarios should be returned
+        self.assertEqual(len(comparison_data["scenarios"]), 2)
+        returned_ids = {s["id"] for s in comparison_data["scenarios"]}
+        self.assertEqual(returned_ids, {scenario1.pk, scenario2.pk})
+
+        # Ensure at least the default metric "final_weight" is present
+        self.assertIn("final_weight", comparison_data["metrics"])
+
+        # Metric values should reflect that scenario 2 (higher growth)
+        # has a larger final weight than scenario 1.
+        final_weight_values = {
+            v["scenario"]: v["value"]
+            for v in comparison_data["metrics"]["final_weight"]["values"]
+        }
+        self.assertGreater(
+            final_weight_values["Scenario 2"],
+            final_weight_values["Scenario 1"],
         )
 
     def test_sensitivity_analysis(self):
@@ -523,20 +570,39 @@ class ScenarioWorkflowTests(TestCase):
             # Configure the mock to return different results for different TGC values
             mock_engine_instance = MockEngine.return_value
             
+            # ------------------------------------------------------------------
+            # Ensure the mocked engine keeps a reference to the *actual* scenario
+            # object passed in by the viewset so that `side_effect_func` can
+            # inspect its attributes (e.g., the associated TGC model).  We
+            # achieve this by using a constructor side-effect that stores the
+            # incoming scenario on the shared `mock_engine_instance`.
+            # ------------------------------------------------------------------
+            def _engine_ctor_side_effect(scenario_obj, *args, **kwargs):
+                mock_engine_instance._scenario = scenario_obj
+                return mock_engine_instance
+
+            MockEngine.side_effect = _engine_ctor_side_effect
+
             # Define sensitivity variations
-            variations = [
+            # Keep the variations list **outside** of the side-effect function so
+            # it is available when the mock is executed.  Using a distinct name
+            # avoids shadowing the ``variations`` kwarg that DRF may inject.
+            tgc_variations = [
                 {'tgc_value': 0.020, 'final_weight': 30.0},  # Lower TGC
                 {'tgc_value': 0.025, 'final_weight': 35.0},  # Base TGC
                 {'tgc_value': 0.030, 'final_weight': 40.0}   # Higher TGC
             ]
             
             # Set up the mock to return different results based on TGC value
-            def side_effect_func(parameter=None, variations=None, save_results=False):
+            def side_effect_func(*args, **kwargs):
                 # Find the TGC value of the scenario
                 tgc_value = mock_engine_instance._scenario.tgc_model.tgc_value
                 
                 # Find the matching variation
-                variation = next((v for v in variations if abs(v['tgc_value'] - tgc_value) < 0.001), variations[1])
+                variation = next(
+                    (v for v in tgc_variations if abs(v['tgc_value'] - tgc_value) < 0.001),
+                    tgc_variations[1]  # Fallback to base variation
+                )
                 
                 # Generate projection data
                 projection_data = [
@@ -564,6 +630,32 @@ class ScenarioWorkflowTests(TestCase):
                     }
                 ]
                 
+                # Persist projections when requested (default save_results=True)
+                save_results = kwargs.get("save_results", True)
+                if save_results:
+                    ScenarioProjection.objects.bulk_create(
+                        [
+                            ScenarioProjection(
+                                scenario=mock_engine_instance._scenario,
+                                projection_date=p["projection_date"],
+                                day_number=p["day_number"],
+                                average_weight=p["average_weight"],
+                                population=p["population"],
+                                biomass=p["biomass"],
+                                daily_feed=p["daily_feed"],
+                                cumulative_feed=p["cumulative_feed"],
+                                temperature=p["temperature"],
+                                current_stage_id=p["current_stage_id"],
+                            )
+                            for p in projection_data
+                        ]
+                    )
+                    # When saved we mimic real engine contract by returning
+                    # an empty list for projections
+                    projections_payload = []
+                else:
+                    projections_payload = projection_data
+
                 # Return dictionary with success, summary, warnings
                 return {
                     'success': True,
@@ -575,7 +667,7 @@ class ScenarioWorkflowTests(TestCase):
                         'fcr': 1.2
                     },
                     'warnings': [],
-                    'projections': projection_data
+                    'projections': projections_payload
                 }
             
             # Configure the mock to use the side effect function
@@ -584,7 +676,7 @@ class ScenarioWorkflowTests(TestCase):
             # Run sensitivity analysis for different TGC values
             sensitivity_results = []
             
-            for variation in variations:
+            for variation in tgc_variations:
                 # Create a TGC model with the variation
                 tgc_model = TGCModel.objects.create(
                     name=f"TGC Model {variation['tgc_value']}",
@@ -936,13 +1028,11 @@ class ScenarioWorkflowTests(TestCase):
             # Check that the response is successful
             self.assertEqual(response.status_code, 200)
             
-            # Check that the projection engine was called with the model change
-            MockEngine.assert_called_once()
-            call_kwargs = mock_engine_instance.run_projection.call_args[1]
-            self.assertIn('model_changes', call_kwargs)
-            self.assertEqual(len(call_kwargs['model_changes']), 1)
-            self.assertEqual(call_kwargs['model_changes'][0].change_day, 90)
-            self.assertEqual(call_kwargs['model_changes'][0].new_tgc_model, tgc_model2)
+            # Verify that ProjectionEngine was instantiated with this scenario,
+            # which already contains the `ScenarioModelChange` record.  The
+            # engine itself is responsible for loading & applying those changes
+            # internally, so we only need to assert correct instantiation here.
+            MockEngine.assert_called_once_with(scenario)
             
             # Check that the projections were saved to the database
             projections = ScenarioProjection.objects.filter(scenario=scenario).order_by('day_number')
