@@ -15,7 +15,7 @@ from apps.scenario.models import (
     FCRModelStage, MortalityModel, Scenario, BiologicalConstraints,
     StageConstraint
 )
-from ..services.calculations import (
+from apps.scenario.services.calculations import (
     TGCCalculator, FCRCalculator, MortalityCalculator
 )
 
