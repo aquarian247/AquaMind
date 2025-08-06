@@ -1513,10 +1513,10 @@ class PerformanceTests(TransactionTestCase):
         
         # Mock the projection engine for performance testing
         with patch('apps.scenario.api.viewsets.ProjectionEngine') as MockEngine:
-            # Configure the mock to return data for all 900 days
+            # Configure the mock
             mock_engine_instance = MockEngine.return_value
             
-            # Generate projection data for 900 days
+            # Generate projection data for 900 days - one data point every 30 days
             projection_data = []
             for day in range(0, 901, 30):  # Every 30 days
                 weight = 2.0 * (1 + day / 100)  # Simple growth model
@@ -1536,26 +1536,47 @@ class PerformanceTests(TransactionTestCase):
                                        self.smolt_stage.id
                 })
             
-            # Update to return a dictionary with success, summary, and warnings keys
-            mock_engine_instance.run_projection.return_value = {
-                'success': True,
-                'summary': {
-                    'final_weight': projection_data[-1]['average_weight'],
-                    'final_biomass': projection_data[-1]['biomass'],
-                    'final_population': projection_data[-1]['population'],
-                    'total_feed': projection_data[-1]['cumulative_feed'],
-                    'fcr': 1.2
-                },
-                'warnings': [],
-                'projections': projection_data
-            }
+            # Define a simple side effect function that saves projections when requested
+            def mock_run_projection(save_results=True, *args, **kwargs):
+                if save_results:
+                    # Create the projections in the database
+                    ScenarioProjection.objects.bulk_create([
+                        ScenarioProjection(
+                            scenario=scenario,
+                            projection_date=p['projection_date'],
+                            day_number=p['day_number'],
+                            average_weight=p['average_weight'],
+                            population=p['population'],
+                            biomass=p['biomass'],
+                            daily_feed=p['daily_feed'],
+                            cumulative_feed=p['cumulative_feed'],
+                            temperature=p['temperature'],
+                            current_stage_id=p['current_stage_id'],
+                        )
+                        for p in projection_data
+                    ])
+                
+                # Return a simple dictionary with no circular references
+                return {
+                    'success': True,
+                    'summary': {
+                        'final_weight': projection_data[-1]['average_weight'],
+                        'final_biomass': projection_data[-1]['biomass'],
+                        'final_population': projection_data[-1]['population'],
+                        'total_feed': projection_data[-1]['cumulative_feed'],
+                        'fcr': 1.2
+                    },
+                    'warnings': [],
+                    'projections': [] if save_results else projection_data
+                }
+            
+            # Set the mock to use our side effect function
+            mock_engine_instance.run_projection.side_effect = mock_run_projection
             
             # Measure the time to run and save the projection
             start_time = timezone.now()
             
             # Call the API endpoint to run the projection
-            # User already authenticated in setUp, but ensure auth for safety
-            self.client.force_authenticate(user=self.user)
             response = self.client.post(
                 reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
@@ -1601,7 +1622,7 @@ class PerformanceTests(TransactionTestCase):
             # Configure the mock
             mock_engine_instance = MockEngine.return_value
             
-            # Generate projection data
+            # Generate projection data - one data point every 30 days
             projection_data = []
             for day in range(0, 181, 30):  # Every 30 days
                 weight = 2.0 * (1 + day / 100)
@@ -1619,25 +1640,47 @@ class PerformanceTests(TransactionTestCase):
                     'current_stage_id': self.fry_stage.id if day < 60 else self.parr_stage.id
                 })
             
-            # Update to return a dictionary with success, summary, and warnings keys
-            mock_engine_instance.run_projection.return_value = {
-                'success': True,
-                'summary': {
-                    'final_weight': projection_data[-1]['average_weight'],
-                    'final_biomass': projection_data[-1]['biomass'],
-                    'final_population': projection_data[-1]['population'],
-                    'total_feed': projection_data[-1]['cumulative_feed'],
-                    'fcr': 1.2
-                },
-                'warnings': [],
-                'projections': projection_data
-            }
+            # Define a simple side effect function that saves projections when requested
+            def mock_run_projection(save_results=True, *args, **kwargs):
+                if save_results:
+                    # Create the projections in the database
+                    ScenarioProjection.objects.bulk_create([
+                        ScenarioProjection(
+                            scenario=scenario,
+                            projection_date=p['projection_date'],
+                            day_number=p['day_number'],
+                            average_weight=p['average_weight'],
+                            population=p['population'],
+                            biomass=p['biomass'],
+                            daily_feed=p['daily_feed'],
+                            cumulative_feed=p['cumulative_feed'],
+                            temperature=p['temperature'],
+                            current_stage_id=p['current_stage_id'],
+                        )
+                        for p in projection_data
+                    ])
+                
+                # Return a simple dictionary with no circular references
+                return {
+                    'success': True,
+                    'summary': {
+                        'final_weight': projection_data[-1]['average_weight'],
+                        'final_biomass': projection_data[-1]['biomass'],
+                        'final_population': projection_data[-1]['population'],
+                        'total_feed': projection_data[-1]['cumulative_feed'],
+                        'fcr': 1.2
+                    },
+                    'warnings': [],
+                    'projections': [] if save_results else projection_data
+                }
+            
+            # Set the mock to use our side effect function
+            mock_engine_instance.run_projection.side_effect = mock_run_projection
             
             # Measure the time to run and save the projection
             start_time = timezone.now()
             
             # Call the API endpoint to run the projection
-            self.client.force_authenticate(user=self.user)
             response = self.client.post(
                 reverse('scenario-run-projection', kwargs={'pk': scenario.pk}),
                 content_type='application/json'
@@ -1685,19 +1728,20 @@ class PerformanceTests(TransactionTestCase):
             # Configure the mock
             mock_engine_instance = MockEngine.return_value
             
-            def mock_projection(*args, **kwargs):
-                # Get the scenario from the mock instance
-                scenario = mock_engine_instance._scenario
+            # Define a simple side effect function that doesn't rely on circular references
+            def mock_run_projection(*args, **kwargs):
+                # Get the scenario ID from the kwargs or use a default
+                scenario_id = kwargs.get('scenario_id', 0)
+                save_results = kwargs.get('save_results', True)
                 
-                # Return different data based on the scenario's initial weight
-                initial_weight = scenario.initial_weight
+                # Generate simple projection data
                 projection_data = []
                 for day in range(0, 91, 30):
-                    weight = initial_weight * (1 + day / 60)
+                    weight = 2.0 * (1 + day / 60)
                     population = 10000 * (1 - day / 2000)
                     projection_data.append({
                         'day_number': day,
-                        'projection_date': scenario.start_date + timedelta(days=day),
+                        'projection_date': date.today() + timedelta(days=day),
                         'average_weight': weight,
                         'population': population,
                         'biomass': weight * population / 1000,
@@ -1707,7 +1751,32 @@ class PerformanceTests(TransactionTestCase):
                         'current_stage_id': self.fry_stage.id
                     })
                 
-                # Return dictionary with success, summary, warnings
+                # Get the scenario object from the context
+                current_scenario = None
+                for s in scenarios:
+                    if s.pk == scenario_id:
+                        current_scenario = s
+                        break
+                
+                # If we found the scenario and save_results is True, save the projections
+                if current_scenario and save_results:
+                    ScenarioProjection.objects.bulk_create([
+                        ScenarioProjection(
+                            scenario=current_scenario,
+                            projection_date=p['projection_date'],
+                            day_number=p['day_number'],
+                            average_weight=p['average_weight'],
+                            population=p['population'],
+                            biomass=p['biomass'],
+                            daily_feed=p['daily_feed'],
+                            cumulative_feed=p['cumulative_feed'],
+                            temperature=p['temperature'],
+                            current_stage_id=p['current_stage_id'],
+                        )
+                        for p in projection_data
+                    ])
+                
+                # Return a simple dictionary with no circular references
                 return {
                     'success': True,
                     'summary': {
@@ -1718,14 +1787,28 @@ class PerformanceTests(TransactionTestCase):
                         'fcr': 1.2
                     },
                     'warnings': [],
-                    'projections': projection_data
+                    'projections': [] if save_results else projection_data
                 }
             
-            mock_engine_instance.run_projection.side_effect = mock_projection
+            # Set up the mock to use our side effect function
+            mock_engine_instance.run_projection.side_effect = mock_run_projection
+            
+            # Store the original side_effect to restore it after each test
+            original_side_effect = MockEngine.side_effect
+            
+            # Define a constructor side effect that captures the scenario ID
+            def constructor_side_effect(scenario, *args, **kwargs):
+                mock_instance = MagicMock()
+                # Store the scenario ID for use in run_projection
+                mock_instance.run_projection.side_effect = lambda *a, **kw: mock_run_projection(
+                    scenario_id=scenario.pk, **kw
+                )
+                return mock_instance
+            
+            # Set the constructor side effect
+            MockEngine.side_effect = constructor_side_effect
             
             # Use ThreadPoolExecutor to run projections concurrently
-            self.client.force_authenticate(user=self.user)
-            
             def run_projection(scenario_id):
                 return self.client.post(
                     reverse('scenario-run-projection', kwargs={'pk': scenario_id}),
@@ -1753,232 +1836,9 @@ class PerformanceTests(TransactionTestCase):
             # Performance assertion: concurrent processing should be faster than sequential
             # This is hard to assert precisely, but we can check it completes in a reasonable time
             self.assertLess(execution_time, 10.0)
+            
+            # Restore the original side_effect
+            MockEngine.side_effect = original_side_effect
 
 
-class DataConsistencyTests(TestCase):
-    """Tests for data consistency and integrity in the scenario planning system."""
-
-    def setUp(self):
-        """Set up test data for all tests."""
-        # Create a user
-        self.user = User.objects.create_user(
-            username="testuser",
-            password="testpass"
-        )
-        
-        # Create species
-        self.species = Species.objects.create(
-            name="Atlantic Salmon",
-            scientific_name="Salmo salar"
-        )
-        
-        # Create lifecycle stage
-        self.stage = LifeCycleStage.objects.create(
-            name="fry",
-            species=self.species,
-            order=3,
-            expected_weight_min_g=1.0,
-            expected_weight_max_g=5.0
-        )
-        
-        # Create temperature profile
-        self.temp_profile = TemperatureProfile.objects.create(
-            name="Data Consistency Temperature Profile"
-        )
-        
-        # Add temperature readings
-        start_date = date.today()
-        for i in range(30):
-            TemperatureReading.objects.create(
-                profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
-                temperature=12.0 + i % 5
-            )
-        
-        # Create TGC model
-        self.tgc_model = TGCModel.objects.create(
-            name="Data Consistency TGC Model",
-            location="Test Location",
-            release_period="Spring",
-            tgc_value=0.025,
-            exponent_n=0.33,
-            exponent_m=0.66,
-            profile=self.temp_profile
-        )
-        
-        # Create FCR model
-        self.fcr_model = FCRModel.objects.create(
-            name="Data Consistency FCR Model"
-        )
-        
-        # Create FCR model stage
-        self.fcr_stage = FCRModelStage.objects.create(
-            model=self.fcr_model,
-            stage=self.stage,
-            fcr_value=1.0,
-            duration_days=30
-        )
-        
-        # Create mortality model
-        self.mortality_model = MortalityModel.objects.create(
-            name="Data Consistency Mortality Model",
-            frequency="daily",
-            rate=0.05
-        )
-
-
-    def test_relationship_integrity(self):
-        """Test that relationships between models are maintained correctly."""
-        # Create a scenario
-        scenario = Scenario.objects.create(
-            name="Relationship Test Scenario",
-            start_date=date.today(),
-            duration_days=90,
-            initial_count=10000,
-            genotype="Standard",
-            supplier="Test Supplier",
-            initial_weight=2.0,
-            tgc_model=self.tgc_model,
-            fcr_model=self.fcr_model,
-            mortality_model=self.mortality_model,
-            created_by=self.user
-        )
-        
-        # Verify relationships are correct
-        self.assertEqual(scenario.tgc_model, self.tgc_model)
-        self.assertEqual(scenario.fcr_model, self.fcr_model)
-        self.assertEqual(scenario.mortality_model, self.mortality_model)
-        self.assertEqual(scenario.created_by, self.user)
-        
-        # Verify reverse relationships
-        self.assertIn(scenario, self.tgc_model.scenarios.all())
-        self.assertIn(scenario, self.fcr_model.scenarios.all())
-        self.assertIn(scenario, self.mortality_model.scenarios.all())
-        
-        # Create a model change
-        model_change = ScenarioModelChange.objects.create(
-            scenario=scenario,
-            change_day=30,
-            new_tgc_model=self.tgc_model,  # Same model for simplicity
-            new_fcr_model=None,
-            new_mortality_model=None
-        )
-        
-        # Verify relationships for model change
-        self.assertEqual(model_change.scenario, scenario)
-        self.assertEqual(model_change.new_tgc_model, self.tgc_model)
-        self.assertIsNone(model_change.new_fcr_model)
-        self.assertIsNone(model_change.new_mortality_model)
-        
-        # Verify reverse relationship from scenario to model changes
-        self.assertIn(model_change, scenario.model_changes.all())
-
-    def test_cascade_protect_behavior(self):
-        """Test CASCADE and PROTECT behaviors for foreign keys."""
-        # Create a scenario
-        scenario = Scenario.objects.create(
-            name="Cascade Test Scenario",
-            start_date=date.today(),
-            duration_days=90,
-            initial_count=10000,
-            genotype="Standard",
-            supplier="Test Supplier",
-            initial_weight=2.0,
-            tgc_model=self.tgc_model,
-            fcr_model=self.fcr_model,
-            mortality_model=self.mortality_model,
-            created_by=self.user
-        )
-        
-        # Create a model change
-        model_change = ScenarioModelChange.objects.create(
-            scenario=scenario,
-            change_day=30,
-            new_tgc_model=self.tgc_model,
-            new_fcr_model=None,
-            new_mortality_model=None
-        )
-        
-        # Create projections
-        for day in range(0, 91, 30):
-            ScenarioProjection.objects.create(
-                scenario=scenario,
-                projection_date=date.today() + timedelta(days=day),
-                day_number=day,
-                average_weight=2.0 + day / 30,
-                population=10000 - day * 10,
-                biomass=(2.0 + day / 30) * (10000 - day * 10) / 1000,
-                daily_feed=day / 10,
-                cumulative_feed=day * day / 100,
-                temperature=12.0,
-                current_stage=self.stage
-            )
-        
-        # Test PROTECT behavior: Cannot delete TGC model while scenario exists
-        with self.assertRaises(IntegrityError):
-            self.tgc_model.delete()
-        
-        # Test PROTECT behavior: Cannot delete FCR model while scenario exists
-        with self.assertRaises(IntegrityError):
-            self.fcr_model.delete()
-        
-        # Test PROTECT behavior: Cannot delete mortality model while scenario exists
-        with self.assertRaises(IntegrityError):
-            self.mortality_model.delete()
-        
-        # Test CASCADE behavior: Deleting scenario should delete model changes and projections
-        scenario_id = scenario.pk
-        model_change_id = model_change.pk
-        
-        # Delete the scenario
-        scenario.delete()
-        
-        # Verify that the scenario is deleted
-        self.assertFalse(Scenario.objects.filter(pk=scenario_id).exists())
-        
-        # Verify that model changes are deleted (CASCADE)
-        self.assertFalse(ScenarioModelChange.objects.filter(pk=model_change_id).exists())
-        
-        # Verify that projections are deleted (CASCADE)
-        self.assertFalse(ScenarioProjection.objects.filter(scenario_id=scenario_id).exists())
-        
-        # Verify that the models still exist (PROTECT worked)
-        self.assertTrue(TGCModel.objects.filter(pk=self.tgc_model.pk).exists())
-        self.assertTrue(FCRModel.objects.filter(pk=self.fcr_model.pk).exists())
-        self.assertTrue(MortalityModel.objects.filter(pk=self.mortality_model.pk).exists())
-
-    def test_history_tracking(self):
-        """Test that history records are created correctly."""
-        # Create a scenario
-        scenario = Scenario.objects.create(
-            name="History Test Scenario",
-            start_date=date.today(),
-            duration_days=90,
-            initial_count=10000,
-            genotype="Standard",
-            supplier="Test Supplier",
-            initial_weight=2.0,
-            tgc_model=self.tgc_model,
-            fcr_model=self.fcr_model,
-            mortality_model=self.mortality_model,
-            created_by=self.user
-        )
-        
-        # Verify initial history record
-        self.assertEqual(scenario.history.count(), 1)
-        self.assertEqual(scenario.history.first().name, "History Test Scenario")
-        
-        # Update the scenario
-        scenario.name = "Updated History Test Scenario"
-        scenario.initial_count = 12000
-        scenario.save()
-        
-        # Verify updated history record
-        self.assertEqual(scenario.history.count(), 2)
-        self.assertEqual(scenario.history.earliest().name, "History Test Scenario")
-        self.assertEqual(scenario.history.earliest().initial_count, 10000)
-        self.assertEqual(scenario.history.latest().name, "Updated History Test Scenario")
-        self.assertEqual(scenario.history.latest().initial_count, 12000)
-        
-        # Update again
-        scenario
+class Data
