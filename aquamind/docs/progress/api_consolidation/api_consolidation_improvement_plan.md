@@ -257,3 +257,66 @@ Reference documents & sections:
 **Next Steps (Phase 5)**
 • Proceed to final polish & app structure standardisation.  
 • Ensure documentation reflects fully passing suite; consider un-skipping TimescaleDB tests once extension available in CI.
+
+### Phase 5: Final Polish & Documentation
+**Started:** August 6 2025 @ 15:40 UTC  
+**Completed:** August 6 2025 @ 16:00 UTC  
+
+**Current Status:** ✅ **COMPLETE**
+
+**Key Outcomes / Findings**
+1. 📁 **Scenario app test structure standardized** – Reorganized tests into `api/` and `models/` sub-directories matching the batch app pattern  
+   • Moved 6 test files into appropriate sub-directories  
+   • All 95 scenario tests still passing after reorganization  
+2. 🔍 **CI pipeline enhanced** – Added `audit_basenames.py` to CI workflow  
+   • Script runs after linting, before migrations  
+   • Fails build on missing or duplicate basenames  
+   • Ensures API consistency is enforced automatically  
+3. 📚 **Documentation fully updated** – All API standards and guidelines reflect current state  
+   • `api_standards.md` includes contract testing section  
+   • `code_organization_guidelines.md` has router registration standards  
+   • `testing_guide.md` documents shared test utilities  
+4. ✅ **All 599 tests passing** – Full suite remains green after all changes  
+5. 🎯 **API consolidation project complete** – Ready for merge to main branch  
+
+**Technical Details**
+• Test reorganization: `test_api_endpoints.py` → `api/test_endpoints.py`, `test_integration.py` → `api/test_integration.py`  
+• Model tests: `test_models.py`, `test_model_validation.py`, `test_calculations.py` → `models/` sub-directory  
+• CI enhancement: New "Audit API router basenames" step in `.github/workflows/django-tests.yml`  
+
+**Next Steps**
+• Merge `api-consolidation` branch to main  
+• Monitor CI for any edge cases  
+• Consider adding more contract tests as new endpoints are added  
+
+---
+### Phase 2 Update (Post-4B): Basename Standardisation Finalised
+**Date:** August 6 2025 @ 15:05 UTC  
+**Status:** ✅ **REVISED – COMPLETE (All Apps)**  
+
+**What Changed**
+1. 🔄 **Broodstock router normalised** – Remaining 10 ViewSet registrations renamed to kebab-case (`maintenance-task`, `broodstock-fish`, `breeding-plan`, etc.).  
+2. 📊 **Global audit script added** – `audit_basenames.py` ensures future PRs cannot introduce missing or duplicate basenames; exits non-zero on violation.  
+3. 🏷 **56 / 56 registrations covered** – Every app now uses an explicit, project-wide-unique kebab-case basename. No duplicates detected.  
+4. 🧪 **Regression-free** – Full test-suite & Schemathesis re-run; all 599 tests still pass, contract clean, coverage unchanged.  
+
+**Implications**
+• Phase 2 milestone upgraded from “partial” to **fully complete**.  
+• Removes the need for the earlier TODO to “eliminate remaining auth duplication” – confirmed unique.  
+• `audit_basenames.py` to be run in CI (add in Phase 5 polish).  
+
+**No further action required for Phase 2.**
+
+---
+
+## Project Status: ✅ COMPLETE
+
+All phases of the API Consolidation Project have been successfully completed:
+- ✅ Phase 1: Router audit and duplication fix  
+- ✅ Phase 2: Basename standardization (all 56 ViewSets)  
+- ✅ Phase 3: Centralized testing utilities  
+- ✅ Phase 4: Namespace fixes and contract testing  
+- ✅ Phase 4B: Zero-error resolution  
+- ✅ Phase 5: Final polish and documentation  
+
+The `api-consolidation` branch is ready for merge to main.

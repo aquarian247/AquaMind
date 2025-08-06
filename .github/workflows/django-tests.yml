@@ -30,6 +30,14 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Audit API router basenames
+      run: |
+        # Ensure all DRF router registrations use explicit, unique kebab-case basenames.
+        # The script exits with a non-zero status code if any violations are found,
+        # thereby failing the workflow and preventing a merge that would break
+        # our API consistency guarantees.
+        python audit_basenames.py
     
     - name: Run migrations
       run: |
