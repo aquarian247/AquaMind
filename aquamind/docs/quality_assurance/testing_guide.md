@@ -47,12 +47,47 @@ GitHub Action `.github/workflows/django-tests.yml` automatically:
 
 1. Installs deps & runs migrations (SQLite, `settings_ci`).
 2. Executes full unit/integration suite.
-3. Runs Schemathesis contract tests (section 4).
+3. Runs Schemathesis contract tests (section 5).
 4. Uploads coverage & artefacts.
 
 ---
 
-## 4. Contract Testing with Schemathesis
+## 4. Contract Testing
+
+Contract tests live in `tests/contract/` and validate that the **structure** of the
+REST API matches our documented standards before we even exercise the endpoints
+with property-based tools:
+
+| What is verified? | Examples of checks |
+|-------------------|--------------------|
+| **Viewset registration** | Every viewset class is registered in at least one router & exposed under `/api/v1/…` URLs |
+| **Required attributes**  | `serializer_class` and authentication permissions are declared |
+| **URL consistency**      | All paths start with the version prefix `/api/v1/` |
+| **OpenAPI coverage**     | The generated OpenAPI document contains every route and passes OpenAPI 3.1 validation |
+| **Security docs**        | Token / JWT security schemes are present in the schema |
+
+### 4.1 Running contract tests
+
+```bash
+# run only the structural contract suite
+python manage.py test tests.contract
+```
+
+Contract tests are fast (pure introspection) and run **before** Schemathesis in
+CI so that obvious structural problems fail quickly.
+
+### 4.2 Contract vs Schemathesis
+
+* **Contract tests**: Static assertions about routers, viewsets & schema
+  generation.
+* **Schemathesis** (next section): Dynamic, property-based testing that makes
+  HTTP requests generated from the schema.
+
+Both layers are complementary and together give high confidence in API quality.
+
+---
+
+## 5. Contract Testing with Schemathesis
 
 | Key Point                         | Value / Command                                                                                          |
 |----------------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -87,7 +122,7 @@ schemathesis run \
 
 ---
 
-## 5. Decimal Formatting Standards
+## 6. Decimal Formatting Standards
 
 | Context                          | Decimal Places | Example  |
 |---------------------------------|---------------|----------|
@@ -98,7 +133,7 @@ Unit & contract tests assert these exact formats to avoid drift.
 
 ---
 
-## 6. Troubleshooting Checklist
+## 7. Troubleshooting Checklist
 
 | Symptom / Error                              | Likely Cause & Fix                                                         |
 |----------------------------------------------|----------------------------------------------------------------------------|
@@ -110,7 +145,7 @@ Unit & contract tests assert these exact formats to avoid drift.
 
 ---
 
-## 7. Further Reading
+## 8. Further Reading
 
 * `api_contract_synchronization.md` — cross-repo spec workflow  
 * `api_documentation_standards.md` — docstring conventions  

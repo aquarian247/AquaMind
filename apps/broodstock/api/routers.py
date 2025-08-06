@@ -23,16 +23,16 @@ from apps.broodstock.views import (
 router = DefaultRouter()
 
 # Register ViewSets
-router.register(r'maintenance-tasks', MaintenanceTaskViewSet, basename='maintenancetask')
-router.register(r'fish', BroodstockFishViewSet, basename='broodstockfish')
-router.register(r'fish-movements', FishMovementViewSet, basename='fishmovement')
-router.register(r'breeding-plans', BreedingPlanViewSet, basename='breedingplan')
-router.register(r'trait-priorities', BreedingTraitPriorityViewSet, basename='breedingtraitpriority')
-router.register(r'breeding-pairs', BreedingPairViewSet, basename='breedingpair')
-router.register(r'egg-suppliers', EggSupplierViewSet, basename='eggsupplier')
-router.register(r'egg-productions', EggProductionViewSet, basename='eggproduction')
-router.register(r'external-egg-batches', ExternalEggBatchViewSet, basename='externaleggbatch')
-router.register(r'batch-parentages', BatchParentageViewSet, basename='batchparentage')
+router.register(r'maintenance-tasks', MaintenanceTaskViewSet, basename='maintenance-task')
+router.register(r'fish', BroodstockFishViewSet, basename='broodstock-fish')
+router.register(r'fish-movements', FishMovementViewSet, basename='fish-movement')
+router.register(r'breeding-plans', BreedingPlanViewSet, basename='breeding-plan')
+router.register(r'trait-priorities', BreedingTraitPriorityViewSet, basename='breeding-trait-priority')
+router.register(r'breeding-pairs', BreedingPairViewSet, basename='breeding-pair')
+router.register(r'egg-suppliers', EggSupplierViewSet, basename='egg-supplier')
+router.register(r'egg-productions', EggProductionViewSet, basename='egg-production')
+router.register(r'external-egg-batches', ExternalEggBatchViewSet, basename='external-egg-batch')
+router.register(r'batch-parentages', BatchParentageViewSet, basename='batch-parentage')
 
 # Export router
 __all__ = ['router'] 

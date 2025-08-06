@@ -10,12 +10,12 @@ from decimal import Decimal
 from django.test import TestCase
 
 from apps.batch.models import LifeCycleStage
-from ..models import (
+from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
     FCRModelStage, MortalityModel, Scenario, BiologicalConstraints,
     StageConstraint
 )
-from ..services.calculations import (
+from apps.scenario.services.calculations import (
     TGCCalculator, FCRCalculator, MortalityCalculator
 )
 

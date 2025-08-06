@@ -320,3 +320,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 BROODSTOCK_DEFAULTS = {
     'AVG_FISH_WEIGHT_KG': 10.0,
 }
+
+# ------------------------------------------------------------------
+# Test configuration
+# ------------------------------------------------------------------
+# Use a custom test-runner that guarantees all PostgreSQL connections
+# are terminated before the test database is dropped.  This prevents the
+# “database is being accessed by other users” error seen when running the
+# Django parallel test runner.
+TEST_RUNNER = 'aquamind.test_runner.CleanupTestRunner'
+

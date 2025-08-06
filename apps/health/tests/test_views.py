@@ -90,6 +90,7 @@ class LoadBatchAssignmentsViewTests(TestCase):
         )
 
         cls.client = Client()
+        # Updated to use the correct namespaced URL
         cls.url = reverse('health:ajax_load_batch_assignments')
 
     def setUp(self):
@@ -123,7 +124,7 @@ class LoadBatchAssignmentsViewTests(TestCase):
         # If the view is not decorated, this test might fail. We'll adjust if needed.
         self.assertEqual(response.status_code, 302) # Expect a redirect to login
         # Check if the redirect URL contains the standard login path
-        # This is more robust than hardcoding reverse('admin:login') or settings.LOGIN_URL
+        # This is more robust than hardcoding reverse('login') or settings.LOGIN_URL
         self.assertIn('/accounts/login/', response.url)
 
     def test_load_assignments_active_on_sample_date(self):

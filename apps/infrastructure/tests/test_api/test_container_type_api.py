@@ -42,8 +42,11 @@ class ContainerTypeAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:containertype-list')
-        self.detail_url = reverse('infrastructure:containertype-detail', kwargs={'pk': self.container_type.pk})
+        self.list_url = reverse('container-type-list')
+        self.detail_url = reverse(
+            'container-type-detail',
+            kwargs={'pk': self.container_type.pk}
+        )
 
     def test_list_container_types(self):
         """Test retrieving a list of container types."""

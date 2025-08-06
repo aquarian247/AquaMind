@@ -54,8 +54,8 @@ class AreaAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:area-list')
-        self.detail_url = reverse('infrastructure:area-detail', kwargs={'pk': self.area.pk})
+        self.list_url = reverse('area-list')
+        self.detail_url = reverse('area-detail', kwargs={'pk': self.area.pk})
 
     def test_list_areas(self):
         """Test retrieving a list of areas."""

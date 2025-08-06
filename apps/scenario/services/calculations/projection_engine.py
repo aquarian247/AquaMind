@@ -77,7 +77,8 @@ class ProjectionEngine:
     def _load_lifecycle_stages(self):
         """Load lifecycle stages for stage transitions."""
         self.lifecycle_stages = list(
-            LifeCycleStage.objects.order_by('typical_start_weight')
+            # Use the correct weight fields defined on LifeCycleStage
+            LifeCycleStage.objects.order_by('expected_weight_min_g')
         )
     
     def _determine_lifecycle_stage(self, weight: float) -> Optional[LifeCycleStage]:
@@ -91,10 +92,10 @@ class ProjectionEngine:
             Appropriate lifecycle stage or None
         """
         for stage in self.lifecycle_stages:
-            if stage.typical_start_weight and stage.typical_end_weight:
-                if float(stage.typical_start_weight) <= weight <= float(stage.typical_end_weight):
+            if stage.expected_weight_min_g and stage.expected_weight_max_g:
+                if float(stage.expected_weight_min_g) <= weight <= float(stage.expected_weight_max_g):
                     return stage
-            elif stage.typical_start_weight and weight >= float(stage.typical_start_weight):
+            elif stage.expected_weight_min_g and weight >= float(stage.expected_weight_min_g):
                 # Last stage with no end weight
                 return stage
         

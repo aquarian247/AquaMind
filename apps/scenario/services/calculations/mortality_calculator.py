@@ -84,6 +84,60 @@ class MortalityCalculator:
             'survival_rate': round(survival_rate, 4)
         }
     
+    # ------------------------------------------------------------------
+    # Compatibility wrapper
+    # ------------------------------------------------------------------
+    def calculate_mortality(
+        self,
+        population: int,
+        days: int = 1,
+        custom_rate: Optional[float] = None
+    ) -> Dict[str, float]:
+        """
+        Wrapper for backward-compatibility with callers expecting a
+        ``calculate_mortality`` method (see ProjectionEngine).
+
+        Internally delegates to ``calculate_daily_mortality``. If
+        ``days`` is greater than one, mortality is applied iteratively
+        for each day using the same rate. This keeps the behaviour
+        logically consistent with a compounded daily mortality.
+
+        Args:
+            population: Current population size.
+            days: Number of consecutive days to apply mortality.
+            custom_rate: Optional override of the calculator's rate
+                         (percentage value).
+
+        Returns:
+            Dict with the same structure as :py:meth:`calculate_daily_mortality`
+            but with deaths/surviving aggregated across the requested
+            number of days.
+        """
+        # Handle the common single-day case quickly.
+        if days <= 1:
+            return self.calculate_daily_mortality(population, custom_rate)
+
+        current_population = population
+        total_deaths = 0
+        last_day_data: Dict[str, float] = {}
+
+        for _ in range(days):
+            day_data = self.calculate_daily_mortality(
+                current_population, custom_rate
+            )
+            total_deaths += day_data["deaths"]
+            current_population = day_data["surviving_population"]
+            last_day_data = day_data
+
+        # Build aggregated response re-using rate information from the
+        # final iteration (rates remain constant if custom_rate is used).
+        return {
+            "deaths": total_deaths,
+            "surviving_population": current_population,
+            "mortality_rate": last_day_data.get("mortality_rate", 0.0),
+            "survival_rate": last_day_data.get("survival_rate", 0.0),
+        }
+
     def project_population(
         self,
         initial_population: int,

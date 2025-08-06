@@ -191,6 +191,77 @@ urlpatterns = [
 
 ## Refactoring Guidelines
 
+## DRF Router Registration
+
+The following standards were introduced during the **API Consolidation Project (Aug 2025)** to ensure a clean, conflict-free URL space that stays in sync with the OpenAPI contract.
+
+### Router Organization
+
+* **One router file per app**  
+  Each Django app MUST provide `api/routers.py` that instantiates its own `DefaultRouter` (or `SimpleRouter`) and performs *all* registrations for that app.
+* **Namespace include**  
+  Apps expose router URLs via `path('', include((router.urls, '<app>'), namespace='api'))` in the app-level `urls.py`.  
+* **No `router.registry.extend()`** – Never merge routers: include them instead.  Registry extension is the #1 source of duplicate routes.
+
+### Basename Convention
+
+1. **Explicit every time** – Always pass the `basename` argument.  
+2. **kebab-case** – Lower-case words separated by hyphens (`growth-samples`, `feed-containers`).  
+3. **Project-wide unique** – A basename must not collide with any other app’s basename.  
+4. **Match the URL segment** – `router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-samples')`.
+
+#### Example
+
+```python
+# apps/batch/api/routers.py
+from rest_framework.routers import DefaultRouter
+from apps.batch.api.viewsets import (
+    SpeciesViewSet,
+    LifecycleStageViewSet,
+    BatchViewSet,
+    BatchContainerAssignmentViewSet,
+    GrowthSampleViewSet,
+    MortalityEventViewSet,
+    BatchTransferViewSet,
+    BatchCompositionViewSet,
+)
+
+router = DefaultRouter()
+
+# Collection endpoints – note explicit kebab-case basenames
+router.register(r'species', SpeciesViewSet, basename='species')
+router.register(r'lifecycle-stages', LifecycleStageViewSet, basename='lifecycle-stages')
+router.register(r'batches', BatchViewSet, basename='batches')
+router.register(r'container-assignments', BatchContainerAssignmentViewSet, basename='container-assignments')
+router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-samples')
+router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-events')
+router.register(r'transfers', BatchTransferViewSet, basename='transfers')
+router.register(r'batch-compositions', BatchCompositionViewSet, basename='batch-compositions')
+```
+
+### Router Integration in URLs
+
+```python
+# apps/batch/urls.py
+from django.urls import path, include
+from apps.batch.api import router
+
+app_name = 'batch'
+
+urlpatterns = [
+    path('', include((router.urls, 'batch'), namespace='api')),
+]
+```
+
+### Basename Naming Standards
+
+* **Format**: kebab-case only (no CamelCase, no underscores).  
+* **Plural form**: Use plural for collections (e.g., `batches`, `growth-samples`).  
+* **No redundant prefixes**: Do **not** prefix with the app name (`batch-batches` ❌).  
+* **Consistency test**: `reverse('<basename>-list')` and `reverse('<basename>-detail', kwargs={'pk': 1})` must resolve.
+
+Adhering to these rules prevents duplicate routes, keeps the OpenAPI spec deterministic, and guarantees that Schemathesis & frontend codegen remain green.
+
 ### When to Refactor
 
 - When a file exceeds 200-300 lines of code

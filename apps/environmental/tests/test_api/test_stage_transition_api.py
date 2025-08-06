@@ -143,8 +143,8 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
         }
         
         self.transition = StageTransitionEnvironmental.objects.create(**self.transition_data)
-        self.list_url = reverse('environmental:transition-list')
-        self.detail_url = reverse('environmental:transition-detail', kwargs={'pk': self.transition.pk})
+        self.list_url = reverse('transition-list')
+        self.detail_url = reverse('transition-detail', kwargs={'pk': self.transition.pk})
 
     def test_list_transitions(self):
         """Test retrieving a list of stage transition environmental data."""

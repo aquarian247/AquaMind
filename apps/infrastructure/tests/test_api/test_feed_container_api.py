@@ -100,9 +100,15 @@ class FeedContainerAPITest(APITestCase):
         )
         
         # Set up URLs for API endpoints
-        self.list_url = reverse('infrastructure:feedcontainer-list')
-        self.hall_container_detail_url = reverse('infrastructure:feedcontainer-detail', kwargs={'pk': self.hall_feed_container.pk})
-        self.area_container_detail_url = reverse('infrastructure:feedcontainer-detail', kwargs={'pk': self.area_feed_container.pk})
+        self.list_url = reverse('feed-container-list')
+        self.hall_container_detail_url = reverse(
+            'feed-container-detail',
+            kwargs={'pk': self.hall_feed_container.pk}
+        )
+        self.area_container_detail_url = reverse(
+            'feed-container-detail',
+            kwargs={'pk': self.area_feed_container.pk}
+        )
 
     def test_list_feed_containers(self):
         """Test retrieving a list of feed containers."""

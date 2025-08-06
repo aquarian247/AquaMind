@@ -1,10 +1,8 @@
 """
 Tests for the BatchViewSet.
 """
-from django.urls import reverse
-from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APITestCase
+from tests.base import BaseAPITestCase
 from decimal import Decimal
 from datetime import date, timedelta
 import datetime # Import the full module for aliasing
@@ -13,7 +11,6 @@ from unittest.mock import patch
 OriginalDate = datetime.date  # Alias for the original datetime.date
 
 from apps.batch.models import Batch
-from apps.batch.tests.api.test_helpers import get_api_url
 from apps.batch.tests.api.test_utils import (
     create_test_user,
     create_test_species,
@@ -24,12 +21,7 @@ from apps.batch.tests.api.test_utils import (
 )
 
 
-def get_batch_url(endpoint, detail=False, **kwargs):
-    """Helper function to construct URLs for batch API endpoints"""
-    return get_api_url('batch', endpoint, detail, **kwargs)
-
-
-class BatchViewSetTest(APITestCase):
+class BatchViewSetTest(BaseAPITestCase):
     """Test the Batch viewset."""
 
     def setUp(self):
@@ -77,7 +69,7 @@ class BatchViewSetTest(APITestCase):
 
     def test_list_batches(self):
         """Test listing batches."""
-        url = get_batch_url('batches')
+        url = self.get_api_url('batch', 'batches')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -93,7 +85,7 @@ class BatchViewSetTest(APITestCase):
         """
         Test creating a new batch via the API.
         """
-        url = get_batch_url('batches')
+        url = self.get_api_url('batch', 'batches')
         
         # Print request data for debugging
         print("Create Batch Request Data:", self.valid_batch_data)
@@ -118,7 +110,7 @@ class BatchViewSetTest(APITestCase):
 
     def test_retrieve_batch(self):
         """Test retrieving a batch."""
-        url = get_batch_url('batches', detail=True, pk=self.batch.id)
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id)
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -131,7 +123,7 @@ class BatchViewSetTest(APITestCase):
 
     def test_update_batch(self):
         """Test updating a batch (direct fields like status, notes)."""
-        url = get_batch_url('batches', detail=True, pk=self.batch.id)
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id)
         update_data = {
             'batch_number': 'BATCH001-UPDATED',
             'species': self.species.id,
@@ -155,7 +147,7 @@ class BatchViewSetTest(APITestCase):
 
     def test_partial_update_batch(self):
         """Test partially updating a batch (direct fields like status, notes)."""
-        url = get_batch_url('batches', detail=True, pk=self.batch.id)
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id)
         update_data = {
             'status': 'COMPLETED',
             'notes': 'Partially updated batch'
@@ -172,7 +164,7 @@ class BatchViewSetTest(APITestCase):
 
     def test_delete_batch(self):
         """Test deleting a batch."""
-        url = get_batch_url('batches', detail=True, pk=self.batch.id)
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id)
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -205,7 +197,7 @@ class BatchViewSetTest(APITestCase):
             MockDateType.side_effect = lambda *args, **kwargs: OriginalDate(*args, **kwargs)
             
             # Filter by species
-            url = f"{get_batch_url('batches')}?species={self.species.id}"
+            url = f"{self.get_api_url('batch', 'batches')}?species={self.species.id}"
             response = self.client.get(url)
             
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -213,7 +205,7 @@ class BatchViewSetTest(APITestCase):
             self.assertEqual(response.data['results'][0]['batch_number'], 'BATCH001')
             
             # Filter by status
-            url = f"{get_batch_url('batches')}?status=ACTIVE"
+            url = f"{self.get_api_url('batch', 'batches')}?status=ACTIVE"
             response = self.client.get(url)
             
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -223,7 +215,7 @@ class BatchViewSetTest(APITestCase):
             # Uses the mocked date.today() (which returns simulated_today)
             start_date_query_val = (date.today() - timedelta(days=60)).isoformat()
             end_date_query_val = (date.today() - timedelta(days=1)).isoformat()
-            url = f"{get_batch_url('batches')}?start_date_after={start_date_query_val}&start_date_before={end_date_query_val}"
+            url = f"{self.get_api_url('batch', 'batches')}?start_date_after={start_date_query_val}&start_date_before={end_date_query_val}"
             response = self.client.get(url)
             
             # Print response for debugging
@@ -234,7 +226,7 @@ class BatchViewSetTest(APITestCase):
             self.assertEqual(len(response.data['results']), 2)
             
             # Filter by batch number
-            url = f"{get_batch_url('batches')}?batch_number=BATCH001"
+            url = f"{self.get_api_url('batch', 'batches')}?batch_number=BATCH001"
             response = self.client.get(url)
             
             self.assertEqual(response.status_code, status.HTTP_200_OK)

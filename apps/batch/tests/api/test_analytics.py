@@ -14,7 +14,7 @@ from decimal import Decimal
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.test import APITestCase
+from tests.base import BaseAPITestCase
 from rest_framework.authtoken.models import Token
 
 from apps.batch.models import (
@@ -27,10 +27,8 @@ from apps.batch.models import (
 )
 from apps.infrastructure.models import Container, Hall, Geography, FreshwaterStation, Area, ContainerType
 
-from apps.batch.tests.api.test_helpers import get_api_url
 
-
-class BatchAnalyticsTestCase(APITestCase):
+class BatchAnalyticsTestCase(BaseAPITestCase):
     """Test case for batch analytics endpoints."""
     
     def setUp(self):
@@ -232,7 +230,7 @@ class BatchAnalyticsTestCase(APITestCase):
 
     def test_growth_analysis_endpoint(self):
         """Test the growth analysis endpoint."""
-        url = get_api_url('batch', 'batches', detail=True, pk=self.batch.id) + 'growth_analysis/'
+        url = self.get_api_url('batch', 'batches', detail=True, pk=self.batch.id) + 'growth_analysis/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -279,7 +277,7 @@ class BatchAnalyticsTestCase(APITestCase):
             start_date=date.today(),
             lifecycle_stage=self.stage1
         )
-        url = reverse('batch:batch-growth-analysis', kwargs={'pk': batch.id})
+        url = reverse('batch-growth-analysis', kwargs={'pk': batch.id})
         response = self.client.get(url)
         print(f"Growth Analysis URL: {url}")
         print(f"Response Status Code: {response.status_code}")
@@ -290,7 +288,7 @@ class BatchAnalyticsTestCase(APITestCase):
 
     def test_performance_metrics_endpoint(self):
         """Test the performance metrics endpoint."""
-        url = reverse('batch:batch-list')
+        url = reverse('batch-list')
         response = self.client.get(url)
         print("Performance Metrics Response:", response.status_code, response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -303,7 +301,7 @@ class BatchAnalyticsTestCase(APITestCase):
 
     def test_batch_comparison_endpoint(self):
         """Test the batch comparison endpoint."""
-        url = reverse('batch:batch-compare')
+        url = reverse('batch-compare')
         batch_ids_str = f"{self.batch.id},{self.batch2.id}"
         response = self.client.get(url, {'batch_ids': batch_ids_str})
         print(f"Batch Comparison Response: {response.status_code} {response.data}")
