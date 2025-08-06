@@ -16,7 +16,7 @@ from rest_framework import status
 from tests.base import BaseAPITestCase
 from apps.batch.models import LifeCycleStage, Batch, Species
 from apps.infrastructure.models import Geography, Area, Container, ContainerType
-from ..models import (
+from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
     FCRModelStage, MortalityModel, Scenario, ScenarioProjection,
     BiologicalConstraints, StageConstraint
