@@ -1839,6 +1839,3 @@ class PerformanceTests(TransactionTestCase):
             
             # Restore the original side_effect
             MockEngine.side_effect = original_side_effect
-
-
-class Data
