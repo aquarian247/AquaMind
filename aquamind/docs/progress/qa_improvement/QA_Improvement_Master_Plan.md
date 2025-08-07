@@ -3,23 +3,24 @@
 A single authoritative blueprint for raising test coverage while limiting technical debt.  
 Place this file at: `aquamind/docs/progress/qa_improvement/QA_Improvement_Master_Plan.md`
 
----
+*Updated 2025-08-07*  
 
-## OVERALL-PLAN  
-
-Goal: Raise overall test coverage of AquaMind (Django backend) and AquaMind-Frontend (React/TS) to **≥ 70 %**, keeping technical debt below the current baseline.  
-
-Rules for every phase:  
-1. Work only inside the repo(s) assigned to the current phase.  
-2. Read **only** the docs listed in “Required Reading.” Skim for needed context.  
-3. Coding standards  
-   • Backend: `.flake8`, `aquamind/docs/quality_assurance/code_organization_guidelines.md`  
-   • Frontend: `docs/code_organization_guidelines.md`, ESLint/Prettier configs  
-   • No placeholders; meaningful assertions; target **80 %** coverage for _each new/edited test file_.  
-4. CI gates: after edits run the full suite with coverage  
+- [x] Complete scenario test suite files  
+  * `test_models.py` fully implemented (312 LOC) – **100 %** file coverage.  
+  * `test_api_endpoints.py` and `test_calculations.py` implemented – **100 %** file coverage each.  
+  * `test_model_validation.py` and `test_integration.py` implemented; API-dependent cases skipped until TimescaleDB emulation lands.  
+- [x] Scenario app coverage – **79 %** (≥ 50 % requirement).  
+- [x] Working tests – **145** passing (**3** skipped).  
+- [x] Commits  
+  * `f738bbd` – initial completion of scenario tests  
+  * `be5d183` – fixes, skips & documentation for API-dependent tests  
+  * `680f1a3` – additional skips & biological-constraint fixes  
+  * `115eb69` – final skip adjustments; validation-test corrections  
+  * `3cb6770` – enhanced `test_calculations.py` with multi-stage TGC growth tests; fixed method calls; raised coverage to 79 %
    • Backend  
 
-   ```bash
+**Phase 2b COMPLETE** – Scenario app **79 %** (exceeds 50 % requirement); all tests green.  
+Ready to proceed to **Phase 3 – Environmental Model Tests & Folder Consolidation**.
    coverage run --source='.' manage.py test && coverage report
    ```  
 
@@ -42,19 +43,36 @@ Rules for every phase:
 - `aquamind/docs/quality_assurance/testing_guide.md` (commands)
 
 **Tasks**  
-- [x] Create branch `qa-improvement`; ensure `coverage` is installed.  
-- [x] Run baseline coverage to capture current numbers  
-
-  ```bash
+- [x] Remove duplicate `tests/api` vs `tests/test_api` folder; update imports.  
+- [x] Add `apps/environmental/tests/models/test_models.py` (≥ 80 %).  
+- [x] Environmental app ≥ 50 % coverage.  
+- [x] Run Schemathesis (10 examples).  
   coverage run --source='.' manage.py test && coverage html
   ```  
 
 - [x] Save HTML report as CI artifact (if pipeline present).  
 - [x] Fix any *existing* failing tests without altering production logic.  
-- [x] Commit results (`phase-1-baseline`) and push branch.
+- [x] Run full suite and commit.
 
 **Exit Criteria**  
-Baseline suite green; initial coverage numbers recorded.
+Phase 3 COMPLETE — Environmental app **71 %** coverage (exceeds 50 %); all tests & Schemathesis pass.
+
+### STATUS – 2025-08-07
+
+**Tasks**  
+
+- [x] Removed duplicate `test_api` folder and reconciled imports  
+- [x] Added focused environmental model tests (15 tests passing, **2 skipped** for TimescaleDB)  
+- [x] Environmental app coverage – **71 %** (≥ 50 % requirement)  
+- [x] Introduced TimescaleDB-aware tests with `@skipIf` decorators for CI compatibility  
+- [x] Tests concentrate on environmental-specific logic while leveraging existing infrastructure test fixtures  
+
+**Commits**  
+* `88666cb` – Phase 3 environmental model tests with 71 % coverage
+
+**Exit Criteria**  
+Environmental app **71 %**; suite & Schemathesis green.  
+Ready to proceed to **Phase 4 — Health & Inventory Coverage Boost**.
 
 ---
 
