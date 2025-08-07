@@ -23,7 +23,13 @@ AquaMind is built using modern technologies for reliability, scalability, and ma
 - **Database**: PostgreSQL with TimescaleDB extension for efficient time-series data management
 - **API**: Django REST Framework for robust API development
  - **Frontend**: React 18 + TypeScript, Vite build tool, Tailwind CSS (shadcn/ui) and TanStack Query for server-state management
-- **Authentication**: Django's authentication system with role-based access control
+- **Authentication**: *Multi-tier authentication system*  
+  - **JWT Authentication** (`/users/auth/…`) – primary auth flow for the React frontend.  
+    • Endpoints: token obtain / refresh, user management, profile.  
+    • Designed for production use and future AD/LDAP integration.  
+  - **DRF Token Authentication** (`/auth/…`) – lightweight token & `dev-auth` helper endpoints used in development and automated API tests.  
+  - **Role-Based Access Control** – geography / subsidiary filtering with fine-grained permissions.  
+  - **Multi-Environment Support** – local dev, shared test, and production back-ends share a common strategy (see `AquaMind_Authentication_Architecture_Strategy.md`).
 - **Testing**: Django's testing framework for comprehensive test coverage
 
 ## 🏗️ Architecture

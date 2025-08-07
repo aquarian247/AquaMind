@@ -213,9 +213,55 @@ This architecture guarantees that:
 
 ### Authentication
 
-- JWT (JSON Web Token) based authentication
-- Token refresh mechanism for extended sessions
-- Secure token storage and transmission
+> **Design Goal:** provide a single, consistent _frontend_ login flow while
+> allowing the backend to operate in three very different environments  
+> (local‐dev, shared DEV / TEST in the cloud, and production behind the
+> corporate firewall).
+
+The authentication stack therefore exposes **two parallel mechanisms** that
+share the same `auth_user` table but are mounted at different URL prefixes.
+
+| Purpose | URL prefix | Auth style | Typical environment |
+|---------|------------|-----------|----------------------|
+| **Primary / Production** – React frontend, mobile clients | `/users/auth/…` | **JWT** (*drf-simplejwt*) | All environments |
+| **Development / CI** – fast API scripting, Fixture loading, Schemathesis | `/auth/…` | **DRF Token** + `dev-auth` helper | Local & CI only |
+
+### 1. JWT Flow (`/users/auth/…`)
+*   Endpoints: `token/`, `token/refresh/`, user registration, profile, password
+    change.  
+*   Issued tokens include custom claims (`auth_source`, `full_name`).  
+*   Backed by **multibackend** Django auth:  
+    1. `django_auth_ldap.backend.LDAPBackend` (production)  
+    2. `django.contrib.auth.backends.ModelBackend` (local fallback)  
+*   Token lifetimes: **12 h access / 7 d refresh** (see `settings.py → SIMPLE_JWT`).  
+*   Front-end stores the *access* token in `localStorage.aquamine_token`
+    (configurable). Refresh handled transparently by TanStack Query hooks.
+
+### 2. DRF Token Flow (`/auth/…`)
+*   Endpoints: `token/` (obtain), `dev-auth/` (fetch token for anonymous dev).  
+*   **Not enabled in production** – guarded by `settings.DEBUG`.  
+*   Used heavily by unit tests and Schemathesis where a quick token without JWT
+    decoding overhead speeds up thousands of requests.
+
+### 3. Multi-Environment Strategy
+* **Local Dev / CI:** Uses DRF Token *or* JWT with local accounts. LDAP
+  libraries are not loaded.  
+* **Shared DEV / TEST:** Same as local but published on the Internet; testers
+  use JWT.  
+* **Production:** LDAP is enabled via env flag `USE_LDAP_AUTH=true`. If AD is
+  unavailable the chain silently falls back to local super-users (break-glass).
+
+### 4. Security Considerations
+* HTTPS enforced in all non-local environments.  
+* Argon2 password hasher for local accounts.  
+* Tokens transmitted only via `Authorization: Bearer …` header – _never_
+  in query-string.  
+* CSRF protection is maintained for session-based admin logins; API uses
+  stateless auth.  
+* All auth events are audit-logged with source (ldap / local) for forensics.
+
+For a deep-dive see  
+`/AquaMind_Authentication_Architecture_Strategy.md`.
 
 ### Authorization
 
