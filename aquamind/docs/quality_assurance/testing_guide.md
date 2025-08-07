@@ -148,7 +148,7 @@ Unit & contract tests assert these exact formats to avoid drift.
 ## 8. Further Reading
 
 * `api_contract_synchronization.md` — cross-repo spec workflow  
-* `api_documentation_standards.md` — docstring conventions  
+* `api_standards.md` — docstring conventions  
 * GitHub Actions workflow: `.github/workflows/django-tests.yml`
 
 ---
