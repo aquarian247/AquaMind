@@ -33,13 +33,13 @@ Place tests **next to the code they exercise** (`apps/<app>/tests/`), except tru
 
 ### 3.1 Local Development
 
-| Action                           | Command                                                                                           |
-|---------------------------------|---------------------------------------------------------------------------------------------------|
-| Run all tests (PostgreSQL)      | `python manage.py test`                                                                            |
-| Mimic CI (SQLite, faster)       | `python manage.py test --settings=aquamind.settings_ci`                                            |
-| Single app                       | `python manage.py test apps.inventory`                                                            |
-| Specific test file               | `python manage.py test apps.inventory.tests.test_serializers`                                     |
-| Coverage report                  | `coverage run --source='.' manage.py test && coverage report`                                     |
+| Action                      | Command                                                                    |
+|-----------------------------|----------------------------------------------------------------------------|
+| Run all tests (PostgreSQL)  | `python manage.py test`                                                    |
+| Mimic CI (SQLite, faster)   | `python manage.py test --settings=aquamind.settings_ci`                    |
+| Single app                  | `python manage.py test apps.inventory`                                     |
+| Specific test file          | `python manage.py test apps.inventory.tests.test_serializers`              |
+| Coverage report             | `coverage run --source='.' manage.py test && coverage report`              |
 
 ### 3.2 Continuous Integration
 
@@ -47,12 +47,50 @@ GitHub Action `.github/workflows/django-tests.yml` automatically:
 
 1. Installs deps & runs migrations (SQLite, `settings_ci`).
 2. Executes full unit/integration suite.
-3. Runs Schemathesis contract tests (section 5).
+3. Runs Schemathesis contract tests (section 6).
 4. Uploads coverage & artefacts.
 
 ---
 
-## 4. Contract Testing
+## 4. Smart Test Design
+
+### 4.1 Principles
+
+| # | Principle | Quick Take |
+|---|-----------|------------|
+| 1 | **Leverage existing patterns** | Re-use fixture helpers in `tests/base.py` and app fixtures such as `apps/infrastructure/tests/test_models.py`. |
+| 2 | **Focus on app-specific logic** | Test business rules & domain behaviour, not Django or DRF internals. |
+| 3 | **Reuse utilities** | Use shared helpers (e.g. `get_api_url()`, `BaseAPITestCase`) instead of re-implementing request logic. |
+| 4 | **Keep tests simple & focused** | 200-300 LOC of meaningful assertions > 600+ LOC of duplicated setup. |
+
+### 4.2 Proven Patterns
+
+* **Minimal fixtures** – Prefer `Model.objects.get_or_create()` and factory defaults over hand-crafting long hierarchies.  
+* **Selective imports** – Import only the models under test; avoid deep relationship trees when not required.  
+* **Environment-specific skips** – Gate TimescaleDB or external-service tests behind `@unittest.skipIf`.  
+* **Focus areas** – String representations, validators, computed properties, permission checks, and critical services.
+
+| Pattern                       | Example                                  |
+|-------------------------------|------------------------------------------|
+| Minimal fixture               | `batch, _ = Batch.objects.get_or_create(...)` |
+| Single-purpose test class     | `class LiceCountLogicTest(TestCase): ...` |
+| Skip for PG-only feature      | `@skipIf(not is_postgres(), "PG only")`  |
+| Assert validation             | `with self.assertRaises(ValidationError): obj.full_clean()` |
+
+### 4.3 Coverage Strategy
+
+| Target                     | Goal |
+|----------------------------|------|
+| **Per new test file**      | ≥ 80 % line coverage |
+| **Per app overall**        | ≥ 50 % line coverage |
+| **Prioritisation**         | 1. Business-critical paths<br>2. Bug-prone areas<br>3. Edge cases |
+| **Philosophy**             | _Quality > Quantity_ – prefer fewer, meaningful assertions to large boilerplate suites. |
+
+Apply these guidelines to avoid maintenance overhead while steadily increasing confidence.
+
+---
+
+## 5. Contract Testing
 
 Contract tests live in `tests/contract/` and validate that the **structure** of the
 REST API matches our documented standards before we even exercise the endpoints
@@ -66,7 +104,7 @@ with property-based tools:
 | **OpenAPI coverage**     | The generated OpenAPI document contains every route and passes OpenAPI 3.1 validation |
 | **Security docs**        | Token / JWT security schemes are present in the schema |
 
-### 4.1 Running contract tests
+### 5.1 Running contract tests
 
 ```bash
 # run only the structural contract suite
@@ -76,7 +114,7 @@ python manage.py test tests.contract
 Contract tests are fast (pure introspection) and run **before** Schemathesis in
 CI so that obvious structural problems fail quickly.
 
-### 4.2 Contract vs Schemathesis
+### 5.2 Contract vs Schemathesis
 
 * **Contract tests**: Static assertions about routers, viewsets & schema
   generation.
@@ -87,7 +125,7 @@ Both layers are complementary and together give high confidence in API quality.
 
 ---
 
-## 5. Contract Testing with Schemathesis
+## 6. Contract Testing with Schemathesis
 
 | Key Point                         | Value / Command                                                                                          |
 |----------------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -122,7 +160,7 @@ schemathesis run \
 
 ---
 
-## 6. Decimal Formatting Standards
+## 7. Decimal Formatting Standards
 
 | Context                          | Decimal Places | Example  |
 |---------------------------------|---------------|----------|
@@ -133,7 +171,7 @@ Unit & contract tests assert these exact formats to avoid drift.
 
 ---
 
-## 7. Troubleshooting Checklist
+## 8. Troubleshooting Checklist
 
 | Symptom / Error                              | Likely Cause & Fix                                                         |
 |----------------------------------------------|----------------------------------------------------------------------------|
@@ -145,7 +183,7 @@ Unit & contract tests assert these exact formats to avoid drift.
 
 ---
 
-## 8. Further Reading
+## 9. Further Reading
 
 * `api_contract_synchronization.md` — cross-repo spec workflow  
 * `api_standards.md` — docstring conventions  
