@@ -12,8 +12,7 @@ from django.test import TestCase
 from apps.batch.models import LifeCycleStage
 from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
-    FCRModelStage, MortalityModel, Scenario, BiologicalConstraints,
-    StageConstraint
+    FCRModelStage, MortalityModel
 )
 from apps.scenario.services.calculations import (
     TGCCalculator, FCRCalculator, MortalityCalculator
@@ -189,6 +188,89 @@ class TGCCalculatorTests(TestCase):
         
         # Should be close to target
         self.assertAlmostEqual(final_weight, 500.0, delta=10.0)
+    
+    def test_multi_stage_growth_projection(self):
+        """Test growth across multiple lifecycle stages."""
+        # Create species and lifecycle stages
+        from apps.batch.models import Species
+        species = Species.objects.create(
+            name='Test Species',
+            scientific_name='Test scientific'
+        )
+        
+        # Create lifecycle stages with different TGC values
+        fry_stage = LifeCycleStage.objects.create(
+            name='fry',
+            species=species,
+            order=1,
+            expected_weight_min_g=1.0,
+            expected_weight_max_g=5.0
+        )
+        
+        parr_stage = LifeCycleStage.objects.create(
+            name='parr',
+            species=species,
+            order=2,
+            expected_weight_min_g=5.0,
+            expected_weight_max_g=50.0
+        )
+        
+        # Create TGC models for different stages
+        fry_tgc = TGCModel.objects.create(
+            name='Fry TGC',
+            location='Test',
+            release_period='Test',
+            tgc_value=2.0,  # Lower TGC for fry
+            exponent_n=1.0,
+            exponent_m=0.333,
+            profile=self.temp_profile
+        )
+        
+        parr_tgc = TGCModel.objects.create(
+            name='Parr TGC',
+            location='Test',
+            release_period='Test',
+            tgc_value=2.5,  # Higher TGC for parr
+            exponent_n=1.0,
+            exponent_m=0.333,
+            profile=self.temp_profile
+        )
+        
+        # Create calculators
+        fry_calc = TGCCalculator(fry_tgc)
+        parr_calc = TGCCalculator(parr_tgc)
+        
+        # Start with fry
+        weight = 3.0  # Starting weight
+        days_as_fry = 30
+        
+        # Grow as fry
+        fry_weight = fry_calc.calculate_weight_gain(
+            initial_weight=weight,
+            temperature=10.0,
+            days=days_as_fry
+        )
+        
+        # Should have grown but still be small
+        self.assertGreater(fry_weight, weight)
+        
+        # Now grow as parr
+        days_as_parr = 60
+        parr_weight = parr_calc.calculate_weight_gain(
+            initial_weight=fry_weight,
+            temperature=10.0,
+            days=days_as_parr
+        )
+        
+        # Should have grown more
+        self.assertGreater(parr_weight, fry_weight)
+        
+        # Growth rate should be higher in parr stage
+        fry_growth_rate = (fry_weight - weight) / days_as_fry
+        parr_growth_rate = (parr_weight - fry_weight) / days_as_parr
+        
+        # Parr should grow faster per day
+        self.assertGreater(parr_growth_rate, fry_growth_rate)
 
 
 class FCRCalculatorTests(TestCase):
@@ -285,7 +367,7 @@ class FCRCalculatorTests(TestCase):
         # This test is commented out as calculate_cumulative_feed doesn't exist
         # TODO: Implement using calculate_feed_for_period
         pass
-    
+        
     def test_stage_transition_feed(self):
         """Test feed calculation across stage transitions."""
         # This test is commented out as calculate_cumulative_feed doesn't exist
@@ -538,4 +620,4 @@ class EdgeCaseTests(TestCase):
         """Test FCR at stage boundaries."""
         # This test is commented out as it requires FCR stages to be set up
         # which aren't created in the minimal EdgeCaseTests setup
-        pass 
+        pass
