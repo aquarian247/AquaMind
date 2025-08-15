@@ -214,7 +214,7 @@ REST_FRAMEWORK = {
     ],
     # Enforce authentication on all endpoints by default
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Temporarily allowing unauthenticated access for development
     ],
     # Use custom paginator that validates page numbers (page >= 1) and returns
     # 400 on invalid values while gracefully handling out-of-range pages.

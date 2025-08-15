@@ -311,7 +311,15 @@ class GrowthManager:
                         logger.debug(f"Sample for {current_date}: Weight={avg_weight_g}g, Length={avg_length_cm}cm")
                         
                         # Determine sample size (1% of population, min 10, max 100)
-                        sample_size = min(100, max(10, int(assignment.batch.population_count * 0.01)))
+                        # Use the population_count stored on the container assignment
+                        # (the Batch model no longer tracks population directly)
+                        sample_size = min(
+                            100,
+                            max(
+                                10,
+                                int((assignment.population_count or 0) * 0.01)
+                            )
+                        )
                         
                         # Calculate condition factor
                         condition_factor = self._calculate_condition_factor(avg_weight_g, avg_length_cm)
@@ -319,7 +327,9 @@ class GrowthManager:
                         # Create the growth sample
                         try:
                             sample = GrowthSample.objects.create(
-                                batch=assignment.batch,
+                                # GrowthSample links to the specific BatchContainerAssignment
+                                # via the `assignment` ForeignKey (not directly to Batch)
+                                assignment=assignment,
                                 sample_date=current_date,
                                 avg_weight_g=avg_weight_g,
                                 avg_length_cm=avg_length_cm,

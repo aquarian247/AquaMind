@@ -122,8 +122,6 @@ class BatchManager:
                 batch_number=batch_number,
                 species=self.species,
                 lifecycle_stage=self.lifecycle_stages[0],  # Start at Egg stage
-                population_count=initial_population,
-                biomass_kg=Decimal(str(initial_population * 0.001)),  # 1g per egg as initial biomass
                 start_date=start_date,
                 expected_end_date=target_harvest_date,
                 notes=f"Test batch created for data generation on {timezone.now().date()}"
@@ -264,7 +262,8 @@ class BatchManager:
             # Apply mortality for this transition (1-5%)
             mortality_rate = random.uniform(0.01, 0.05)
             mortality_count = int(current_total_population * mortality_rate)
-            mortality_biomass = Decimal(str(current_total_biomass * mortality_rate))
+            # Ensure we multiply Decimals together to avoid TypeError
+            mortality_biomass = current_total_biomass * Decimal(str(mortality_rate))
             
             # Create a mortality event
             if mortality_count > 0:
@@ -292,8 +291,6 @@ class BatchManager:
             
             # Update the batch with new stage, population and biomass
             batch.lifecycle_stage = next_stage
-            batch.population_count = new_total_population
-            batch.biomass_kg = new_total_biomass
             batch.save()
             logger.info(f"Updated batch: stage={next_stage.name}, population={new_total_population:,}, biomass={new_total_biomass}kg")
             
