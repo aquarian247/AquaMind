@@ -15,6 +15,7 @@ The data generation system is organized into modules for better maintainability 
 - `modules/feed_manager.py` - Handles feed types, feeding events, and feed consumption patterns
 - `modules/growth_manager.py` - Creates growth samples and metrics with realistic growth curves
 - `modules/mortality_manager.py` - Generates mortality events with appropriate patterns and causes
+- `modules/health_manager.py` - Produces health-related data such as veterinary journal entries, sampling events, lice counts, treatments, and lab samples
 
 ## Running the Scripts
 
@@ -59,6 +60,12 @@ This script generates:
 5. **Mortality Events**: Daily mortality records with:
    - Stage-appropriate mortality rates
    - Realistic causes of mortality
+6. **Health Monitoring**:
+   - **Journal Entries**: Weekly veterinary notes with issue severity and tags
+   - **Health Sampling Events**: Monthly sampling with 10-30 individual fish assessed (weight, length, K-factor, parameter scores)
+   - **Lice Counts**: Bi-weekly counts for sea stages with seasonal variation
+   - **Treatments**: Generated when thresholds are exceeded – includes vaccinations, lice treatments (freshwater/chemical/thermal/mechanical), antibiotics, and supportive care
+   - **Lab Samples**: Quarterly blood, gill, tissue, fecal, or water samples with realistic results
    - Occasional mortality spikes
 
 ## Technical Notes
@@ -67,6 +74,12 @@ This script generates:
 - TimescaleDB-specific operations are conditionally executed based on database detection
 - Environmental readings are stored in TimescaleDB hypertables when available
 - All data generation follows a realistic temporal progression
+- Health data follows industry practices:
+  - Higher lice pressure during warmer months (May–September)
+  - Lice treatments only applied when adult female counts exceed threshold (0.5 per fish) and respect minimum 14-day intervals
+  - Vaccinations scheduled once per batch during Parr/Smolt freshwater stages
+  - Treatments include dosage, duration, withholding periods, and outcome success rates
+  - Lab sample “abnormal” flags correlate with journal issues to create meaningful follow-ups
 
 ## Data Validity
 

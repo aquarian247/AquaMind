@@ -48,10 +48,15 @@ from scripts.data_generation.modules.environmental_manager import EnvironmentalM
 from scripts.data_generation.modules.feed_manager import FeedManager
 from scripts.data_generation.modules.growth_manager import GrowthManager
 from scripts.data_generation.modules.mortality_manager import MortalityManager
+from scripts.data_generation.modules.health_manager import HealthManager
 
 # Import for infrastructure setup
 from apps.infrastructure.models import Geography, Area, FreshwaterStation, ContainerType, Hall, Container, FeedContainer
 from apps.batch.models import Species, LifeCycleStage, GrowthSample, MortalityEvent
+# Health models for statistics
+from apps.health.models import (
+    JournalEntry, HealthSamplingEvent, LiceCount, Treatment, HealthLabSample
+)
 
 def is_timescaledb_available():
     """Check if TimescaleDB is available in the current database connection."""
@@ -82,7 +87,7 @@ def cleanup_generated_data():
     if growth_count > 0:
         print(f"Deleting {growth_count} growth samples...")
         GrowthSample.objects.all().delete()
-        print(f"✓ Deleted {growth_count} growth samples")
+        print(f"Done: Deleted {growth_count} growth samples")
     else:
         print("No growth samples to delete")
     
@@ -91,7 +96,7 @@ def cleanup_generated_data():
     if mortality_count > 0:
         print(f"Deleting {mortality_count} mortality events...")
         MortalityEvent.objects.all().delete()
-        print(f"✓ Deleted {mortality_count} mortality events")
+        print(f"Done: Deleted {mortality_count} mortality events")
     else:
         print("No mortality events to delete")
     
@@ -132,7 +137,8 @@ def verify_infrastructure():
     print(f"Container Types: {container_types}")
     print(f"Containers: {containers}")
     print(f"Feed Containers: {feed_containers}")
-    print(f"Atlantic Salmon species: {'✓' if species else '✗'}")
+    # Avoid Unicode symbols that may cause encoding issues on some terminals (e.g., Windows cmd)
+    print(f"Atlantic Salmon species: {'Yes' if species else 'No'}")
     print(f"Lifecycle Stages: {lifecycle_stages}")
 
     return infrastructure_ok
@@ -157,6 +163,7 @@ def generate_test_data(start_date=None, days_to_generate=900):
     feed_manager = FeedManager()
     growth_manager = GrowthManager()
     mortality_manager = MortalityManager()
+    health_manager = HealthManager()
     
     # Set start and end dates
     if start_date is None:
@@ -178,7 +185,8 @@ def generate_test_data(start_date=None, days_to_generate=900):
     environmental_readings = environmental_manager.generate_readings(
         start_date, 
         end_date, 
-        reading_count=8
+        # Reduce density to speed up generation & avoid duplicate‐key conflicts
+        reading_count=2
     )
     
     # Generate growth samples (weekly)
@@ -225,6 +233,49 @@ def generate_test_data(start_date=None, days_to_generate=900):
         print(f"ERROR generating mortality events: {str(e)}")
         mortality_events = 0
     
+    # ------------------------------------------------------------------
+    # Generate health monitoring data (journal entries, samples, lice, etc.)
+    # ------------------------------------------------------------------
+    print_section_header("Generating Health Data")
+    try:
+        health_manager.generate_health_data(
+            batch=batch,
+            start_date=start_date,
+            end_date=end_date
+        )
+    except Exception as e:
+        logger.error(f"Error generating health data: {str(e)}")
+        logger.error(traceback.format_exc())
+
+    # ------------------------------------------------------------------
+    # Collect health-related statistics
+    # ------------------------------------------------------------------
+    journal_entries = JournalEntry.objects.filter(
+        batch=batch,
+        entry_date__date__gte=start_date,
+        entry_date__date__lte=end_date
+    ).count()
+    sampling_events = HealthSamplingEvent.objects.filter(
+        batch=batch,
+        sample_date__date__gte=start_date,
+        sample_date__date__lte=end_date
+    ).count()
+    lice_counts = LiceCount.objects.filter(
+        batch=batch,
+        count_date__date__gte=start_date,
+        count_date__date__lte=end_date
+    ).count()
+    treatments = Treatment.objects.filter(
+        batch=batch,
+        treatment_date__date__gte=start_date,
+        treatment_date__date__lte=end_date
+    ).count()
+    lab_samples = HealthLabSample.objects.filter(
+        batch=batch,
+        sample_date__date__gte=start_date,
+        sample_date__date__lte=end_date
+    ).count()
+
     # Compile statistics
     stats = {
         'batch': 1,
@@ -232,6 +283,11 @@ def generate_test_data(start_date=None, days_to_generate=900):
         'growth_samples': growth_samples,
         'feeding_events': feeding_events,
         'mortality_events': mortality_events,
+        'journal_entries': journal_entries,
+        'health_sampling_events': sampling_events,
+        'lice_counts': lice_counts,
+        'treatments': treatments,
+        'lab_samples': lab_samples,
         'start_date': start_date,
         'end_date': end_date,
         'duration_days': (end_date - start_date).days
@@ -243,6 +299,11 @@ def generate_test_data(start_date=None, days_to_generate=900):
     print(f"- {stats['growth_samples']:,} growth samples")
     print(f"- {stats['feeding_events']:,} feeding events")
     print(f"- {stats['mortality_events']:,} mortality events")
+    print(f"- {stats['journal_entries']:,} health journal entries")
+    print(f"- {stats['health_sampling_events']:,} health sampling events")
+    print(f"- {stats['lice_counts']:,} lice counts")
+    print(f"- {stats['treatments']:,} treatments")
+    print(f"- {stats['lab_samples']:,} lab samples")
     print(f"Total duration: {stats['duration_days']} days ({stats['start_date']} to {stats['end_date']})")
     
     return stats

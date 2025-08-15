@@ -6,11 +6,12 @@ including temperature, oxygen, pH, and salinity readings.
 """
 import random
 import datetime
+import math
 from decimal import Decimal
 from django.utils import timezone
 from django.db import transaction
 
-from apps.environmental.models import EnvironmentalParameter, EnvironmentalReading
+from apps.environmental.models import EnvironmentalParameter, EnvironmentalReading, Sensor
 from apps.batch.models import BatchContainerAssignment, LifeCycleStage
 from apps.infrastructure.models import Container
 
@@ -62,6 +63,9 @@ class EnvironmentalManager:
                 "Salinity": (30.0, 35.0),           # 30-35 ppt (seawater)
             }
         }
+        
+        # Cache for container sensors
+        self.container_sensors = {}
     
     def _ensure_parameters_exist(self):
         """Ensure that all required environmental parameters exist in the database."""
@@ -127,6 +131,56 @@ class EnvironmentalManager:
         
         return parameters
     
+    def _get_or_create_sensor(self, container_id, parameter_name):
+        """
+        Get or create a sensor for a container and parameter.
+        
+        Args:
+            container_id: The ID of the container
+            parameter_name: The name of the parameter
+            
+        Returns:
+            The Sensor object
+        """
+        # Check if we already have this sensor in cache
+        cache_key = f"{container_id}_{parameter_name}"
+        if cache_key in self.container_sensors:
+            return self.container_sensors[cache_key]
+        
+        # Map parameter name to Sensor.SENSOR_TYPES code
+        PARAM_TO_SENSOR_TYPE = {
+            "Temperature": "TEMPERATURE",
+            "Oxygen": "OXYGEN",
+            "pH": "PH",
+            "Salinity": "SALINITY",
+        }
+        sensor_type = PARAM_TO_SENSOR_TYPE.get(parameter_name)
+        if sensor_type is None:
+            # Unsupported parameter – skip creating a sensor
+            raise ValueError(f"Unsupported sensor type mapping for parameter '{parameter_name}'")
+        
+        # Try to get an existing sensor
+        sensor = Sensor.objects.filter(
+            container_id=container_id,
+            sensor_type=sensor_type
+        ).first()
+        
+        # Create a new sensor if none exists
+        if not sensor:
+            container = Container.objects.get(id=container_id)
+            sensor = Sensor.objects.create(
+                name=f"{parameter_name} Sensor - {container.name}",
+                container_id=container_id,
+                sensor_type=sensor_type,
+                active=True,
+                installation_date=timezone.now().date()
+            )
+            print(f"Created sensor: {sensor.name}")
+        
+        # Cache the sensor
+        self.container_sensors[cache_key] = sensor
+        return sensor
+    
     @transaction.atomic
     def generate_readings(self, start_date, end_date=None, reading_count=8):
         """
@@ -146,13 +200,13 @@ class EnvironmentalManager:
         # Get all active container assignments within the date range
         assignments = BatchContainerAssignment.objects.filter(
             assignment_date__lte=end_date,
-            removal_date__isnull=True
+            departure_date__isnull=True
         ).select_related('batch', 'container', 'batch__lifecycle_stage')
         
         # Also get assignments that ended within the date range
         ended_assignments = BatchContainerAssignment.objects.filter(
             assignment_date__lte=end_date,
-            removal_date__gte=start_date
+            departure_date__gte=start_date
         ).select_related('batch', 'container', 'batch__lifecycle_stage')
         
         # Combine all relevant assignments
@@ -181,7 +235,7 @@ class EnvironmentalManager:
                         # Check if this assignment was active on this date
                         is_active = (
                             assignment.assignment_date <= current_date and
-                            (assignment.removal_date is None or assignment.removal_date >= current_date)
+                            (assignment.departure_date is None or assignment.departure_date >= current_date)
                         )
                         if is_active:
                             active_assignment = assignment
@@ -222,13 +276,16 @@ class EnvironmentalManager:
                             value *= seasonal_factor
                         
                         value = round(value, 2)
+                        
+                        # Get or create a sensor for this container and parameter
+                        sensor = self._get_or_create_sensor(container_id, param_name)
                             
                         # Create the reading
                         EnvironmentalReading.objects.create(
                             parameter=parameter,
                             container_id=container_id,
                             batch=active_assignment.batch,
-                            sensor=None,
+                            sensor=sensor,
                             value=value,
                             reading_time=reading_time.replace(tzinfo=timezone.utc),
                             is_manual=False
@@ -244,7 +301,3 @@ class EnvironmentalManager:
     def get_parameters_for_stage(self, stage_name):
         """Get the parameter ranges for a specific lifecycle stage."""
         return self.parameter_ranges.get(stage_name, {})
-
-
-# Add to make the math module available
-import math
