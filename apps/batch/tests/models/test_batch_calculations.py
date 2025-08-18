@@ -262,3 +262,67 @@ class BatchCalculationsTests(TestCase):
         self.assertEqual(self.batch.calculated_population_count, 0)
         self.assertEqual(self.batch.calculated_avg_weight_g, Decimal('0.0'))
         self.assertEqual(self.batch.calculated_biomass_kg, Decimal('0.0'))
+
+    def test_biomass_sum_from_assignments_issue_17(self):
+        """
+        Test that calculated_biomass_kg correctly sums biomass values from assignments.
+        This test specifically addresses GitHub issue #17 where biomass was returning 0
+        instead of summing the actual biomass_kg values from container assignments.
+        """
+        # Create multiple assignments with the biomass values from the issue
+        biomass_values = [
+            Decimal('3.60'),
+            Decimal('34597.90'),
+            Decimal('101832.81'),
+            Decimal('258141.44'),
+            Decimal('1562137.50'),
+            Decimal('2075355.00'),
+            Decimal('2082625.00'),
+            Decimal('2136475.00'),
+            Decimal('2130100.00'),
+            Decimal('2205420.00'),
+            Decimal('2239640.00'),
+            Decimal('2192070.00'),
+        ]
+        
+        # Create a batch for this test
+        test_batch = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lc_stage,
+            batch_number="B2023-010"
+        )
+        
+        # Create assignments with the specific biomass values
+        assignments = []
+        for i, biomass in enumerate(biomass_values):
+            container = create_test_container(name=f"Tank {i+1}")
+            
+            # Create assignment and then update biomass directly
+            assignment = BatchContainerAssignment(
+                batch=test_batch,
+                container=container,
+                lifecycle_stage=self.lc_stage,
+                population_count=1000,  # Use a reasonable population
+                biomass_kg=biomass,  # Set the exact biomass value
+                assignment_date=date.today() - timedelta(days=30-i),
+                is_active=True
+            )
+            assignments.append(assignment)
+        
+        # Bulk create to avoid save method logic
+        BatchContainerAssignment.objects.bulk_create(assignments)
+        
+        # Calculate expected total
+        expected_total = sum(biomass_values)
+        
+        # Refresh and check the calculated biomass
+        test_batch.refresh_from_db()
+        
+        # The calculated_biomass_kg should now sum all the biomass_kg values
+        self.assertEqual(test_batch.calculated_biomass_kg, expected_total)
+        # Verify the sum matches the issue's data (sum = 17,018,398.25 kg)
+        self.assertAlmostEqual(
+            float(test_batch.calculated_biomass_kg), 
+            17018398.25,  # The exact sum of all values from issue #17
+            places=2
+        )
