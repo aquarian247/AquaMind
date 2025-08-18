@@ -108,10 +108,12 @@ class Batch(models.Model):
 
     @property
     def calculated_biomass_kg(self):
-        """Calculates total biomass from calculated population and average weight."""
-        pop_count = self.calculated_population_count
-        avg_w = self.calculated_avg_weight_g
-        # Ensure avg_w is compared appropriately, it will be Decimal('0.00') if no assignments
-        if pop_count > 0 and avg_w > Decimal('0.00'):
-            return (Decimal(pop_count) * Decimal(avg_w)) / Decimal(1000)
+        """Calculates total biomass from active assignments by summing their biomass_kg values."""
+        from django.db.models import Sum
+        result = self.batch_assignments.filter(is_active=True).aggregate(
+            total_biomass=Sum('biomass_kg')
+        )
+        total_biomass = result['total_biomass']
+        if total_biomass is not None:
+            return Decimal(str(total_biomass))
         return Decimal('0.00')
