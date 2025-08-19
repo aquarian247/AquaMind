@@ -60,12 +60,25 @@ Stage              Days    Containers Needed
 Egg/Alevin         85-95   20-30 trays
 Fry                85-95   30-40 start tanks
 Parr               85-95   40-50 circular tanks
-Smolt              85-95   30-40 large tanks + 20 pre-transfer
-Post-Smolt (Sea)   85-95   10-15 small cages
+Smolt              85-95   30-40 large tanks 
+Post-Smolt         85-95   10-15 even larger tanks + 20 pre-transfer
 Grow-Out (Sea)     400-500 20-30 large cages
 ```
 
 **IMPORTANT BUG TO FIX**: The batch.py generator is hardcoding stage durations instead of using the correct values from `generation_params.py`. Fix line 324-330 in `batch.py` to use `GP.STAGE_DURATIONS` instead of hardcoded values.
+
+**CRITICAL CORRECTION - POST-SMOLT IS FRESHWATER**: There's a fundamental error throughout the codebase treating post-smolt as a sea phase. POST-SMOLT IS ACTUALLY A FRESHWATER STAGE that occurs in freshwater stations (in halls with large tanks). This affects:
+- Container types: Post-smolt uses large freshwater tanks, NOT sea cages
+- Environmental parameters: Should be freshwater conditions (salinity=0), not seawater
+- Infrastructure: Post-smolt facilities are in freshwater stations, not sea sites
+- The transition to sea happens AFTER post-smolt, when moving to grow-out phase
+- Pre-Transfer Tanks are used at the END of post-smolt, preparing for sea transfer
+
+Check and fix:
+- `generation_params.py` - Container progression for post-smolt
+- `infrastructure.py` - Ensure post-smolt containers are in freshwater stations
+- `environmental.py` - Post-smolt should have freshwater parameters
+- `batch.py` - Transfer logic for post-smolt to grow-out transition
 
 ## Commands to Use
 
