@@ -7,6 +7,7 @@ Main orchestrator for multi-session data generation with 10 years of aquaculture
 import os
 import sys
 import logging
+import random
 from datetime import datetime, date, timedelta
 from typing import Dict, Any, Optional, List
 from pathlib import Path
@@ -276,36 +277,156 @@ class DataGenerationSessionManager:
                       resume_point: Optional[Dict] = None):
         """
         Session 1: Infrastructure & Historical Setup (Years 1-3)
+        
+        This session sets up all infrastructure and generates the first 3 years of data.
         """
         logger.info("Executing Session 1: Infrastructure & Historical Setup")
+        
+        # Import generators
+        from scripts.data_generation.generators import (
+            InfrastructureGenerator,
+            BatchGenerator,
+            EnvironmentalGenerator,
+            OperationsGenerator
+        )
+        
+        # Initialize generators
+        infra_gen = InfrastructureGenerator(dry_run=self.dry_run)
+        batch_gen = BatchGenerator(dry_run=self.dry_run)
+        env_gen = EnvironmentalGenerator(dry_run=self.dry_run)
+        ops_gen = OperationsGenerator(dry_run=self.dry_run)
         
         # Phase 1.1: Infrastructure Initialization
         if not resume_point or '1.1' not in resume_point.get('completed_steps', []):
             self.progress_tracker.update_progress('1.1', 'Infrastructure Initialization')
+            logger.info("Setting up geography hierarchy and facilities...")
             
-            # This is a placeholder - actual implementation will come from generators
-            logger.info("Setting up geography hierarchy...")
             if not self.dry_run:
-                # TODO: Call infrastructure generator
-                pass
+                # Generate all infrastructure
+                infra_stats = infra_gen.generate_all()
+                
+                # Update metrics
+                self.progress_tracker.increment_metric('geographies_created', infra_stats['geographies'])
+                self.progress_tracker.increment_metric('areas_created', infra_stats['areas'])
+                self.progress_tracker.increment_metric('stations_created', infra_stats['stations'])
+                self.progress_tracker.increment_metric('containers_created', infra_stats['containers'])
+                self.progress_tracker.increment_metric('sensors_created', infra_stats['sensors'])
+                
+                logger.info(infra_gen.get_summary())
             
             self.progress_tracker.update_progress('1.1', 'Infrastructure Initialization', completed=True)
             self._save_checkpoint()
+            
+            # Check memory
+            if not self.memory_manager.check_memory():
+                logger.warning("Memory threshold reached after infrastructure setup")
+                return
         
-        # Phase 1.2: Initial Batch Creation
+        # Phase 1.2: Initial Batch Creation (Year 1)
         if not resume_point or '1.2' not in resume_point.get('completed_steps', []):
             self.progress_tracker.update_progress('1.2', 'Initial Batch Creation')
+            logger.info("Creating initial 15-20 batches with staggered starts...")
             
-            logger.info("Creating initial batches...")
             if not self.dry_run:
-                # TODO: Call batch generator
-                pass
+                # Create initial batches (8 for realistic pipeline start)
+                # Based on: 10 batches/year harvest × 2.5 year cycle = 25 total
+                # Starting with 8 allows pipeline to build naturally
+                num_initial_batches = 8
+                batch_stats = batch_gen.generate_initial_batches(start_date, num_initial_batches)
+                
+                # Update metrics
+                self.progress_tracker.increment_metric('total_batches_created', batch_stats['batches'])
+                self.progress_tracker.increment_metric('container_assignments', batch_stats['assignments'])
+                
+                logger.info(batch_gen.get_summary())
             
             self.progress_tracker.update_progress('1.2', 'Initial Batch Creation', completed=True)
             self._save_checkpoint()
+            
+            # Check memory
+            if not self.memory_manager.check_memory():
+                logger.warning("Memory threshold reached after batch creation")
+                return
         
-        # Continue with other phases...
-        logger.info("Session 1 implementation in progress...")
+        # Phase 1.3: Environmental Baseline (Years 1-3)
+        if not resume_point or '1.3' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('1.3', 'Environmental Baseline')
+            logger.info("Generating environmental data for Years 1-3...")
+            
+            if not self.dry_run:
+                # Generate baseline environmental data
+                env_stats = env_gen.generate_baseline_data(start_date, end_date, readings_per_day=8)
+                
+                # Update metrics
+                self.progress_tracker.increment_metric('environmental_readings', env_stats['readings'])
+                
+                logger.info(env_gen.get_summary())
+            
+            self.progress_tracker.update_progress('1.3', 'Environmental Baseline', completed=True)
+            self._save_checkpoint()
+            
+            # Check memory
+            if not self.memory_manager.check_memory():
+                logger.warning("Memory threshold reached after environmental generation")
+                return
+        
+        # Phase 1.4: Early Operations (Years 1-3)
+        if not resume_point or '1.4' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('1.4', 'Early Operations')
+            logger.info("Generating operational data for Years 1-3...")
+            
+            if not self.dry_run:
+                # Process daily operations for the entire period
+                current_date = start_date
+                days_processed = 0
+                
+                while current_date <= end_date:
+                    # Generate new batches as needed
+                    new_batch = batch_gen.create_batch_for_date(current_date)
+                    if new_batch:
+                        self.progress_tracker.increment_metric('total_batches_created', 1)
+                    
+                    # Progress lifecycle stages
+                    progressed = batch_gen.progress_lifecycle_stages(current_date)
+                    if progressed > 0:
+                        self.progress_tracker.increment_metric('stage_progressions', progressed)
+                    
+                    # Generate daily operations
+                    ops_stats = ops_gen.generate_daily_operations(current_date)
+                    
+                    # Process batch transfers
+                    transfers = ops_gen.process_batch_transfers(current_date)
+                    if transfers > 0:
+                        self.progress_tracker.increment_metric('batch_transfers', transfers)
+                    
+                    current_date += timedelta(days=1)
+                    days_processed += 1
+                    
+                    # Log progress every 30 days
+                    if days_processed % 30 == 0:
+                        logger.info(f"Processed {days_processed} days of operations")
+                        
+                        # Check memory periodically
+                        if not self.memory_manager.check_memory():
+                            logger.warning(f"Memory threshold reached after {days_processed} days")
+                            # Save checkpoint with current date
+                            self._save_session_checkpoint('session_1', 'paused', 
+                                                        f"Memory limit at day {days_processed}",
+                                                        {'last_date': current_date})
+                            return
+                
+                # Update final metrics
+                self.progress_tracker.increment_metric('feed_events', ops_stats['feed_events'])
+                self.progress_tracker.increment_metric('growth_samples', ops_stats['growth_samples'])
+                self.progress_tracker.increment_metric('mortality_events', ops_stats['mortality_events'])
+                self.progress_tracker.increment_metric('vaccinations', ops_stats['vaccinations'])
+                
+                logger.info(ops_gen.get_summary())
+            
+            self.progress_tracker.update_progress('1.4', 'Early Operations', completed=True)
+            self._save_checkpoint()
+        
+        logger.info("Session 1 completed successfully!")
     
     def _run_session_2(self, start_date: date, end_date: date,
                       resume_point: Optional[Dict] = None):
