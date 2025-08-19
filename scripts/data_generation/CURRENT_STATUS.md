@@ -131,6 +131,21 @@ py scripts/data_generation/run_generation.py --resume
 py scripts/data_generation/run_generation.py --dry-run
 ```
 
+## 📦 Git Status
+
+**Branch:** `feature/10-year-data-generation`  
+**Status:** ✅ Committed and pushed to remote  
+**Commit:** `6967eac` - feat: Implement 10-year data generation orchestration framework  
+**Ready for:** Next session to implement actual data generators  
+
+### To continue work:
+```bash
+git checkout feature/10-year-data-generation
+```
+
+### To merge when complete:
+Create a pull request from `feature/10-year-data-generation` to `main`
+
 ## 📝 Notes
 
 - All work contained within `scripts/` folder as requested
