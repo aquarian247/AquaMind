@@ -319,14 +319,15 @@ class BatchGenerator:
         """
         progressed_count = 0
         
-        # Define stage progression rules
+        # Define stage progression rules using correct durations from config
+        # Using average of min/max duration from GP.STAGE_DURATIONS
         stage_progression = {
-            'egg': ('alevin', 90),  # After ~90 days
-            'alevin': ('fry', 90),   # After ~90 days
-            'fry': ('parr', 90),     # After ~90 days
-            'parr': ('smolt', 90),   # After ~90 days
-            'smolt': ('post_smolt', 10),  # Quick transition after seawater transfer
-            'post_smolt': ('grow_out', 90),  # After ~90 days
+            'egg': ('alevin', int(sum(GP.STAGE_DURATIONS['alevin']) / 2)),  # ~90 days
+            'alevin': ('fry', int(sum(GP.STAGE_DURATIONS['fry']) / 2)),   # ~90 days
+            'fry': ('parr', int(sum(GP.STAGE_DURATIONS['parr']) / 2)),     # ~90 days
+            'parr': ('smolt', int(sum(GP.STAGE_DURATIONS['smolt']) / 2)),   # ~90 days
+            'smolt': ('post_smolt', int(sum(GP.STAGE_DURATIONS['post_smolt']) / 2)),  # ~90 days
+            'post_smolt': ('grow_out', int(sum(GP.STAGE_DURATIONS['grow_out']) / 2)),  # ~450 days
             # grow_out ends with harvest, not progression
         }
         

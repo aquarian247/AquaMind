@@ -57,13 +57,15 @@ You are continuing work on the AquaMind aquaculture management system's data gen
 ```
 Stage              Days    Containers Needed
 ------------------------------------------------
-Incubation         60      20-30 trays
-Start Tank         60      30-40 tanks
-Parr               180     40-50 circular tanks
-Smolt              240     30-40 large tanks + 20 pre-transfer
-Post-Smolt (Sea)   90      10-15 small cages
-Grow-Out (Sea)     270+    20-30 large cages
+Egg/Alevin         85-95   20-30 trays
+Fry                85-95   30-40 start tanks
+Parr               85-95   40-50 circular tanks
+Smolt              85-95   30-40 large tanks + 20 pre-transfer
+Post-Smolt (Sea)   85-95   10-15 small cages
+Grow-Out (Sea)     400-500 20-30 large cages
 ```
+
+**IMPORTANT BUG TO FIX**: The batch.py generator is hardcoding stage durations instead of using the correct values from `generation_params.py`. Fix line 324-330 in `batch.py` to use `GP.STAGE_DURATIONS` instead of hardcoded values.
 
 ## Commands to Use
 
