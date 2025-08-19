@@ -1,0 +1,12 @@
+{
+  "status": "in_progress",
+  "last_processed_date": "2024-01-15",
+  "active_batches": [
+    1,
+    2,
+    3
+  ],
+  "progress": {
+    "percent": 25
+  }
+}
