@@ -11,23 +11,26 @@ You are continuing work on the AquaMind aquaculture management system's data gen
 
 ## Critical Issues to Fix
 
-### 1. Missing Sea Cage Infrastructure
-**Problem**: No Sea Cage Small or Sea Cage Large containers are being created
+### 1. Missing Sea Cage Infrastructure (CRITICAL UNDER-CAPACITY)
+**Problem**: Infrastructure is creating ~20-30 containers when it needs **HUNDREDS**
 **Location**: `scripts/data_generation/generators/infrastructure.py`
-**Solution**: Add sea cage creation logic in the infrastructure generator
+**Solution**: Scale up infrastructure creation to match Bakkafrost model
 ```python
-# Need to add sea sites and sea cages
-# Sea sites should have Sea Cage Small and Sea Cage Large containers
-# Reference the Bakkafrost model: need ~20-30 sea cages for production
+# CORRECT SCALE PER GEOGRAPHY:
+# - 10-15 sea areas, EACH with 15-25 large sea cages = 150-375 total sea cages
+# - 10 freshwater stations, EACH with 5 halls (one per stage)
+# - Each hall has stage-specific containers (50 trays, 40 fry tanks, etc.)
+# Total containers needed: 1000+ freshwater containers, 200+ sea cages
 ```
 
-### 2. Container Capacity Bottlenecks
-**Problem**: Insufficient Pre-Transfer Tanks causing batch transfer failures
-**Symptoms**: Warnings "No free containers of type Pre-Transfer Tank for batch..."
+### 2. Container Capacity Bottlenecks (ROOT CAUSE: INFRASTRUCTURE SCALE)
+**Problem**: Massive under-capacity - creating 548 containers when need **2000+**
+**Symptoms**: Warnings "No free containers..." for all container types
 **Solution**: 
-- Increase Pre-Transfer Tank count in smolt facilities
-- Implement better container allocation logic
-- Consider container turnover rates
+- Scale infrastructure to Bakkafrost levels (see corrected requirements above)
+- With 25 active batches, need sufficient containers for parallel operations
+- Implement proper hall-based organization in freshwater stations
+- Each freshwater station needs 5 halls with stage-specific containers
 
 ### 3. Environmental Readings Not Created
 **Problem**: 0 environmental readings being generated despite 140 sensors
@@ -53,17 +56,29 @@ You are continuing work on the AquaMind aquaculture management system's data gen
 - **Active Batches**: ~25 (10 × 2.5 year cycle)
 - **Batch Size**: 3-3.5 million eggs
 
-## Infrastructure Requirements
+## Infrastructure Requirements (CORRECTED - Bakkafrost Scale)
+
+**PER GEOGRAPHY** (assuming 1-2 geographies total):
+- **10-15 Sea Areas**: Each with 15-25 large sea cages = **150-375 sea cages per geography**
+- **10 Freshwater Stations**: Each with 5 halls (one per lifecycle stage)
+
+**PER FRESHWATER STATION** (10 stations × quantities below = total per geography):
 ```
-Stage              Days    Containers Needed
-------------------------------------------------
-Egg/Alevin         85-95   20-30 trays
-Fry                85-95   30-40 start tanks
-Parr               85-95   40-50 circular tanks
-Smolt              85-95   30-40 large tanks 
-Post-Smolt         85-95   10-15 even larger tanks + 20 pre-transfer
-Grow-Out (Sea)     400-500 20-30 large cages
+Stage/Hall         Containers per Station    Total per Geography
+-----------------------------------------------------------------
+Egg/Alevin Hall    ~50 trays                 500 trays
+Fry Hall           ~40 fry tanks             400 fry tanks
+Parr Hall          ~30 parr tanks            300 parr tanks
+Smolt Hall         ~15 smolt tanks           150 smolt tanks
+Post-Smolt Hall    ~12 post-smolt tanks      120 post-smolt tanks
+                   + Pre-Transfer Tanks      ~20-30 pre-transfer
 ```
+
+**FEED INFRASTRUCTURE**:
+- **1-2 feed silos per hall** = 50-100 feed silos per geography
+- **2-3 feed barges per sea area** = 20-45 feed barges per geography
+
+⚠️ **THIS IS THE ROOT CAUSE**: Current implementation creates maybe 20-30 containers of each type when it should create **HUNDREDS**!
 
 **IMPORTANT BUG TO FIX**: The batch.py generator is hardcoding stage durations instead of using the correct values from `generation_params.py`. Fix line 324-330 in `batch.py` to use `GP.STAGE_DURATIONS` instead of hardcoded values.
 
