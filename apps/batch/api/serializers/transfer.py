@@ -7,6 +7,7 @@ for batch transfer data, including validation of transfer counts and biomass.
 from rest_framework import serializers
 from apps.batch.models import BatchTransfer
 from apps.batch.api.serializers.utils import NestedModelMixin
+from typing import Dict, Any, Optional
 
 
 class BatchTransferSerializer(NestedModelMixin, serializers.ModelSerializer):
@@ -42,14 +43,14 @@ class BatchTransferSerializer(NestedModelMixin, serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at',)
 
-    def get_source_batch_info(self, obj):
+    def get_source_batch_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic source batch information."""
         return self.get_nested_info(obj, 'source_batch', {
             'id': 'id',
             'batch_number': 'batch_number'
         })
 
-    def get_destination_batch_info(self, obj):
+    def get_destination_batch_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic destination batch information."""
         return self.get_nested_info(obj, 'destination_batch', {
             'id': 'id',

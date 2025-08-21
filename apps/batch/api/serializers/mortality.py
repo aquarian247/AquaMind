@@ -7,6 +7,7 @@ for mortality event data, including validation of mortality counts and biomass.
 from rest_framework import serializers
 from apps.batch.models import MortalityEvent
 from apps.batch.api.serializers.utils import NestedModelMixin, DecimalFieldsMixin
+from typing import Dict, Any, Optional
 
 
 class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers.ModelSerializer):
@@ -23,21 +24,21 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
         fields = '__all__'
         read_only_fields = ('created_at',)
     
-    def get_batch_info(self, obj):
+    def get_batch_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic batch information."""
         return self.get_nested_info(obj, 'batch', {
             'id': 'id',
             'batch_number': 'batch_number'
         })
 
-    def get_container_info(self, obj):
+    def get_container_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic container information."""
         return self.get_nested_info(obj, 'container', {
             'id': 'id',
             'name': 'name'
         })
 
-    def get_reason_info(self, obj):
+    def get_reason_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get mortality reason information."""
         return self.get_nested_info(obj, 'reason', {
             'id': 'id',

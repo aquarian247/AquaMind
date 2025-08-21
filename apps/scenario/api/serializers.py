@@ -13,6 +13,7 @@ import base64
 import io
 import csv
 from datetime import datetime, date
+from typing import Dict, Any, Optional, List  # added for explicit return typing
 
 from ..models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
@@ -58,7 +59,7 @@ class TemperatureProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['profile_id', 'created_at', 'updated_at']
     
-    def get_date_range(self, obj):
+    def get_date_range(self, obj) -> Optional[Dict[str, Any]]:
         """Get the date range of readings."""
         readings = obj.readings.order_by('reading_date')
         if readings.exists():
@@ -69,7 +70,7 @@ class TemperatureProfileSerializer(serializers.ModelSerializer):
             }
         return None
     
-    def get_temperature_summary(self, obj):
+    def get_temperature_summary(self, obj) -> Optional[Dict[str, Any]]:
         """Get temperature statistics."""
         readings = obj.readings.all()
         if not readings.exists():
@@ -132,7 +133,7 @@ class TGCModelSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['model_id', 'created_at', 'updated_at']
     
-    def get_has_temperature_data(self, obj):
+    def get_has_temperature_data(self, obj) -> bool:
         """Check if temperature profile has data."""
         return obj.profile.readings.exists()
     
@@ -187,7 +188,7 @@ class FCRModelStageSerializer(serializers.ModelSerializer):
             'stage', 'stage_name', 'fcr_value', 'duration_days', 'overrides'
         ]
     
-    def get_overrides(self, obj):
+    def get_overrides(self, obj) -> List[Dict[str, Any]]:
         """Get weight-based FCR overrides."""
         overrides = obj.overrides.all().order_by('min_weight_g')
         return [
@@ -235,11 +236,11 @@ class FCRModelSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['model_id', 'created_at', 'updated_at']
     
-    def get_total_duration(self, obj):
+    def get_total_duration(self, obj) -> int:
         """Calculate total duration across all stages."""
         return sum(stage.duration_days for stage in obj.stages.all())
     
-    def get_stage_coverage(self, obj):
+    def get_stage_coverage(self, obj) -> Dict[str, Any]:
         """Check which lifecycle stages are covered."""
         covered_stages = set(stage.stage.name for stage in obj.stages.all())
         all_stages = set(LifeCycleStage.objects.values_list('name', flat=True))
@@ -280,7 +281,7 @@ class MortalityModelSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['model_id', 'created_at', 'updated_at']
     
-    def get_effective_annual_rate(self, obj):
+    def get_effective_annual_rate(self, obj) -> float:
         """Calculate effective annual mortality rate."""
         if obj.frequency == 'daily':
             # Convert daily rate to annual
@@ -330,7 +331,7 @@ class ScenarioModelChangeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['change_id']
     
-    def get_change_description(self, obj):
+    def get_change_description(self, obj) -> str:
         """Generate human-readable change description."""
         changes = []
         if obj.new_tgc_model:
@@ -375,7 +376,7 @@ class BiologicalConstraintsSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at', 'updated_at']
     
-    def get_stage_constraints(self, obj):
+    def get_stage_constraints(self, obj) -> List[Dict[str, Any]]:
         """Get stage constraints in a structured format."""
         constraints = obj.stage_constraints.all().order_by('min_weight_g')
         return [
@@ -425,7 +426,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
             'scenario_id', 'created_by', 'created_at', 'updated_at'
         ]
     
-    def get_initial_stage(self, obj):
+    def get_initial_stage(self, obj) -> Optional[Dict[str, str]]:
         """Determine initial lifecycle stage based on weight."""
         if not obj.initial_weight:
             return None
@@ -456,7 +457,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
         else:
             return {'stage': 'harvest', 'display': 'Harvest'}
     
-    def get_projected_harvest_day(self, obj):
+    def get_projected_harvest_day(self, obj) -> Optional[int]:
         """Estimate harvest day based on growth model."""
         # This is a simplified estimate
         if obj.initial_weight and obj.tgc_model:
@@ -546,7 +547,7 @@ class ScenarioProjectionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['projection_id']
     
-    def get_growth_rate(self, obj):
+    def get_growth_rate(self, obj) -> Optional[float]:
         """Calculate daily growth rate percentage."""
         if obj.day_number > 0:
             # Would need previous day's weight for accurate calculation
@@ -554,7 +555,7 @@ class ScenarioProjectionSerializer(serializers.ModelSerializer):
             return None
         return 0
     
-    def get_fcr_actual(self, obj):
+    def get_fcr_actual(self, obj) -> Optional[float]:
         """Calculate actual FCR up to this point."""
         if obj.biomass > 0 and obj.cumulative_feed > 0:
             # Simplified calculation - would need initial biomass

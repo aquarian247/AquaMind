@@ -1,2 +1,5 @@
-"""API subpackage containing routers and helpers for AquaMind's Django project."""
+"""
+AquaMind API package.
 
+This package contains API-related functionality for the AquaMind application.
+"""

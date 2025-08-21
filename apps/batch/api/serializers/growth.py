@@ -10,6 +10,7 @@ import decimal
 from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
 from apps.batch.models import GrowthSample  # BatchContainerAssignment not directly used
+from typing import Dict, Any, Optional
 from apps.batch.api.serializers.utils import (
     NestedModelMixin, DecimalFieldsMixin, format_decimal
 )
@@ -67,7 +68,7 @@ class GrowthSampleSerializer(
             'condition_factor': {'required': False}  # Calculated if possible
         }
 
-    def get_assignment_details(self, obj):
+    def get_assignment_details(self, obj) -> Optional[Dict[str, Any]]:
         """Get detailed information about the batch container assignment."""
         if not obj.assignment:
             return None
