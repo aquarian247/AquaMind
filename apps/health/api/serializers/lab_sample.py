@@ -10,6 +10,7 @@ from rest_framework import serializers
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
 from ...models import SampleType, HealthLabSample
+from typing import Dict, Any, Optional
 from ..utils import (
     validate_date_order,
     HealthDecimalFieldsMixin, UserAssignmentMixin
@@ -132,7 +133,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             'batch_container_assignment_details'
         ]
 
-    def get_batch_number(self, obj):
+    def get_batch_number(self, obj) -> Optional[str]:
         """Get the batch number from the assignment.
 
         Args:
@@ -145,7 +146,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.batch_container_assignment.batch.batch_number
         return None
 
-    def get_container_name(self, obj):
+    def get_container_name(self, obj) -> Optional[str]:
         """Get the container name from the assignment.
 
         Args:
@@ -158,7 +159,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.batch_container_assignment.container.name
         return None
 
-    def get_sample_type_name(self, obj):
+    def get_sample_type_name(self, obj) -> Optional[str]:
         """Get the sample type name.
 
         Args:
@@ -171,7 +172,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.sample_type.name
         return None
 
-    def get_recorded_by_username(self, obj):
+    def get_recorded_by_username(self, obj) -> Optional[str]:
         """Get the username of the user who recorded the sample.
 
         Args:
@@ -184,7 +185,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.recorded_by.username
         return None
         
-    def get_batch_container_assignment_details(self, obj):
+    def get_batch_container_assignment_details(self, obj) -> Optional[Dict[str, Any]]:
         """Get details of the batch container assignment.
 
         Args:

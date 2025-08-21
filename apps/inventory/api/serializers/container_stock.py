@@ -10,6 +10,8 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from typing import Optional
+
 from apps.inventory.models import FeedContainerStock, FeedPurchase
 from apps.infrastructure.models import FeedContainer
 
@@ -56,7 +58,7 @@ class FeedContainerStockSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at', 'updated_at', 'total_value']
     
-    def get_total_value(self, obj):
+    def get_total_value(self, obj) -> Optional[Decimal]:
         """Calculate total value of remaining stock."""
         return obj.quantity_kg * obj.feed_purchase.cost_per_kg
     

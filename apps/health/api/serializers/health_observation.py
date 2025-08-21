@@ -7,6 +7,7 @@ HealthParameter, HealthSamplingEvent, IndividualFishObservation, and FishParamet
 
 from rest_framework import serializers
 from django.db import transaction
+from typing import Dict, Any, Optional
 
 from ...models import (
     HealthParameter,
@@ -86,7 +87,7 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
         ]
         read_only_fields = ['id', 'calculated_k_factor']
 
-    def get_calculated_k_factor(self, obj):
+    def get_calculated_k_factor(self, obj) -> Optional[float]:
         """Calculate K-factor if weight and length are provided.
 
         Args:
@@ -219,7 +220,7 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
             'avg_k_factor', 'calculated_sample_size', 'batch_number', 'container_name', 'sampled_by_username'
         ]
     
-    def get_batch_number(self, obj):
+    def get_batch_number(self, obj) -> Optional[str]:
         """Get the batch number from the assignment.
 
         Args:
@@ -232,7 +233,7 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
             return obj.assignment.batch.batch_number
         return None
     
-    def get_container_name(self, obj):
+    def get_container_name(self, obj) -> Optional[str]:
         """Get the container name from the assignment.
 
         Args:
@@ -245,7 +246,7 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
             return obj.assignment.container.name
         return None
     
-    def get_sampled_by_username(self, obj):
+    def get_sampled_by_username(self, obj) -> Optional[str]:
         """Get the username of the user who performed the sampling.
 
         Args:

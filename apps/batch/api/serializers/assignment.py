@@ -7,6 +7,8 @@ for batch container assignment data, including validation of capacity and popula
 from decimal import Decimal
 from rest_framework import serializers
 from django.core.validators import MinValueValidator
+from typing import Dict, Any, Optional
+
 from apps.batch.models import BatchContainerAssignment, Batch, LifeCycleStage
 from apps.infrastructure.models import Container
 from apps.batch.api.serializers.utils import calculate_biomass_kg
@@ -114,7 +116,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
             'notes': {'required': False},
         }
 
-    def get_batch_info(self, obj):
+    def get_batch_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic batch information."""
         return self.get_nested_info(obj, 'batch', {
             'id': 'id',
@@ -122,7 +124,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
             'species_name': 'species.name'
         })
 
-    def get_container_info(self, obj):
+    def get_container_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic container information."""
         return self.get_nested_info(obj, 'container', {
             'id': 'id',
@@ -130,7 +132,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
             'container_type': 'container_type.name'
         })
 
-    def get_lifecycle_stage_info(self, obj):
+    def get_lifecycle_stage_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get lifecycle stage information."""
         return self.get_nested_info(obj, 'lifecycle_stage', {
             'id': 'id',
