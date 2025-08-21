@@ -1,45 +1,185 @@
 # AquaMind Test Data Generation Scripts
 
-This directory contains scripts for generating comprehensive test data for the AquaMind system, following the established data model and application architecture.
+This directory contains a comprehensive system for generating 10 years of realistic aquaculture data for the AquaMind system, following the established data model and Bakkafrost operational patterns.
 
-## Main Script
+## 🏗️ Architecture Overview
 
-- `generate_batch_lifecycle.py` - Primary script that generates complete test data including batches with full lifecycle progression, environmental readings, growth metrics, feeding events, and mortality records.
+The data generation system uses a **4-session sequential approach** to manage memory constraints while generating comprehensive data:
 
-## Module Structure
+- **Session 1**: Years 1-3 (Infrastructure & Historical Setup)
+- **Session 2**: Years 4-6 (Early Production Cycles)
+- **Session 3**: Years 7-9 (Mature Operations)
+- **Session 4**: Year 10 (Recent History & Validation)
 
-The data generation system is organized into modules for better maintainability and extensibility:
+## 📁 Directory Structure
 
-- `modules/batch_manager.py` - Manages batch creation, lifecycle progression, and container assignments
-- `modules/environmental_manager.py` - Generates environmental readings with appropriate parameters by lifecycle stage
-- `modules/feed_manager.py` - Handles feed types, feeding events, and feed consumption patterns
-- `modules/growth_manager.py` - Creates growth samples and metrics with realistic growth curves
-- `modules/mortality_manager.py` - Generates mortality events with appropriate patterns and causes
-- `modules/health_manager.py` - Produces health-related data such as veterinary journal entries, sampling events, lice counts, treatments, and lab samples
+```
+scripts/data_generation/
+├── orchestrator/              # Core orchestration system
+│   ├── session_manager.py    # Multi-session coordination
+│   ├── checkpoint_manager.py # State persistence & recovery
+│   ├── memory_manager.py     # Memory monitoring & cleanup
+│   └── progress_tracker.py   # Progress tracking & reporting
+├── config/                   # Configuration files
+│   ├── generation_params.py  # All generation parameters
+│   └── disease_profiles.py   # Disease modeling configs
+├── modules/                  # Data generators (existing)
+│   ├── batch_manager.py      
+│   ├── environmental_manager.py
+│   ├── feed_manager.py
+│   ├── growth_manager.py
+│   ├── mortality_manager.py
+│   └── health_manager.py
+├── checkpoints/              # Session checkpoints (auto-created)
+├── logs/                     # Generation logs (auto-created)
+├── reports/                  # Progress reports (auto-created)
+├── run_generation.py         # Main entry point
+├── test_orchestrator.py      # Test suite
+├── IMPLEMENTATION_PLAN.md    # Detailed plan with progress tracking
+└── CURRENT_STATUS.md         # Current implementation status
+```
 
-## Running the Scripts
+## 🚀 Running the Data Generation
 
-The proper way to run these scripts is through the provided utility script to ensure all imports work correctly:
+### Quick Start
 
 ```bash
-# From project root
-python -m scripts.utils.run_data_generation
+# Test the system first
+py scripts/data_generation/test_orchestrator.py
 
-# With options
+# Run all sessions sequentially (recommended)
+py scripts/data_generation/run_generation.py
+
+# Run a specific session
+py scripts/data_generation/run_generation.py --session=1
+
+# Resume from last checkpoint after interruption
+py scripts/data_generation/run_generation.py --resume
+
+# Dry run without creating data
+py scripts/data_generation/run_generation.py --dry-run
+```
+
+### Legacy Scripts (Still Available)
+
+The original scripts remain available for smaller-scale testing:
+
+```bash
+# Generate 900 days of data (original approach)
 python -m scripts.utils.run_data_generation --days 900 --start-date 2023-01-01
 ```
 
-You can also run the data generation script directly (if you know what you're doing):
+## 📊 Key Features
+
+### Memory Management
+- Automatic memory monitoring with configurable thresholds
+- Cleanup triggers at 60% usage, emergency cleanup at 80%
+- Chunked data generation (30-day chunks)
+- Periodic garbage collection
+
+### Checkpoint & Recovery
+- Automatic checkpointing every chunk
+- Resume capability from any failure point
+- Session state persistence
+- Progress tracking across sessions
+
+### Realistic Data Modeling
+- **40-50 active batches** maintained continuously
+- **TGC-based growth** calculations with environmental factors
+- **10 disease types** with seasonal patterns
+- **FIFO feed inventory** management
+- **Facility grace periods** for biosecurity compliance
+- **Staggered batch starts** following seasonal patterns
+
+## 📈 Data Generation Parameters
+
+### Batch Management
+- Target: 45 active batches (range 40-50)
+- Initial eggs: 3-3.5 million per batch
+- Sourcing: 60% external, 40% internal
+- Naming: BAK{year}{week}{number}
+
+### Lifecycle Stages & Duration
+- Egg/Alevin: 85-95 days each
+- Fry/Parr/Smolt: 85-95 days each
+- Post-Smolt: 85-95 days
+- Grow-out: 400-500 days
+- Total cycle: ~2.5 years
+
+### Environmental Parameters
+- Temperature: Season and site-specific
+- Oxygen: Inversely correlated with temperature
+- 8 readings per day per sensor
+- TimescaleDB hypertable storage
+
+### Health & Mortality
+- Stage-specific base mortality rates
+- Disease outbreaks with realistic frequency
+- Treatment protocols and effectiveness
+- Vaccination schedules
+
+## 🔍 Monitoring Progress
+
+### Implementation Plan
+Check `IMPLEMENTATION_PLAN.md` for detailed progress tracking with checkable items for each phase.
+
+### Current Status
+See `CURRENT_STATUS.md` for the latest implementation status and next steps.
+
+### Session Reports
+After each session completes, detailed reports are saved to `reports/session_X_report.json`
+
+### Logs
+Detailed logs are saved to `logs/data_generation_YYYYMMDD_HHMMSS.log`
+
+## ⚠️ Important Notes
+
+1. **Memory Requirements**: Each session requires 6-12 GB RAM at peak
+2. **Execution Time**: Each session takes 2-4 hours
+3. **Database Load**: Uses bulk inserts with 5000-record batches
+4. **Django Integration**: All operations go through Django models to preserve business logic
+5. **No Scenario Data**: This generates actual historical data, not hypothetical scenarios
+
+## 🧪 Testing
+
+Run the test suite to verify all components:
 
 ```bash
-# From project root
-python -m scripts.data_generation.generate_batch_lifecycle
+py scripts/data_generation/test_orchestrator.py
 ```
 
-### Options
+This tests:
+- Checkpoint persistence and recovery
+- Memory management and cleanup
+- Progress tracking
+- Configuration loading
+- Session coordination
 
-- `--days N` - Number of days to generate data for (default: 900)
-- `--start-date YYYY-MM-DD` - Start date for data generation (default: 900 days ago)
+## 📝 Configuration
+
+All parameters are centralized in `config/generation_params.py` based on the technical specification. Disease profiles are defined in `config/disease_profiles.py`.
+
+## 🔧 Troubleshooting
+
+### Out of Memory
+- Reduce `GENERATION_CHUNK_SIZE` in config
+- Increase memory cleanup frequency
+- Run sessions individually with breaks
+
+### Resume After Failure
+```bash
+py scripts/data_generation/run_generation.py --resume
+```
+
+### Clear All Data
+```bash
+py scripts/data_generation/run_generation.py --clear
+```
+
+### Generate Report Only
+```bash
+py scripts/data_generation/run_generation.py --report
+```
 
 ## Generated Data
 
