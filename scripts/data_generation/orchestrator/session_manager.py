@@ -392,12 +392,22 @@ class DataGenerationSessionManager:
                         self.progress_tracker.increment_metric('stage_progressions', progressed)
                     
                     # Generate daily operations
-                    ops_stats = ops_gen.generate_daily_operations(current_date)
-                    
+                    try:
+                        ops_stats = ops_gen.generate_daily_operations(current_date)
+                        if ops_stats is None:
+                            ops_stats = {'feed_events': 0, 'growth_samples': 0, 'mortality_events': 0, 'vaccinations': 0}
+                    except Exception as e:
+                        logger.error(f"Error generating daily operations: {e}")
+                        ops_stats = {'feed_events': 0, 'growth_samples': 0, 'mortality_events': 0, 'vaccinations': 0}
+
                     # Process batch transfers
-                    transfers = ops_gen.process_batch_transfers(current_date)
-                    if transfers > 0:
-                        self.progress_tracker.increment_metric('batch_transfers', transfers)
+                    try:
+                        transfers = ops_gen.process_batch_transfers(current_date)
+                        if transfers > 0:
+                            self.progress_tracker.increment_metric('batch_transfers', transfers)
+                    except Exception as e:
+                        logger.error(f"Error processing batch transfers: {e}")
+                        transfers = 0
                     
                     current_date += timedelta(days=1)
                     days_processed += 1
