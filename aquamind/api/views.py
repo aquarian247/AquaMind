@@ -44,19 +44,21 @@ class APIRootView(APIView):
         
         # App-specific endpoints
         data['apps'] = OrderedDict([
-            ('environmental', self._get_url(request, 'api/v1/environmental/', format)),
-            ('batch', self._get_url(request, 'api/v1/batch/', format)),
-            ('inventory', self._get_url(request, 'api/v1/inventory/', format)),
-            ('health', self._get_url(request, 'api/v1/health/', format)),
-            ('broodstock', self._get_url(request, 'api/v1/broodstock/', format)),
-            ('infrastructure', self._get_url(request, 'api/v1/infrastructure/', format)),
-            ('scenario', self._get_url(request, 'api/v1/scenario/', format)),
-            ('users', self._get_url(request, 'api/v1/users/', format)),
+            ('environmental', self._get_url(request, '/api/v1/environmental/', format)),
+            ('batch', self._get_url(request, '/api/v1/batch/', format)),
+            ('inventory', self._get_url(request, '/api/v1/inventory/', format)),
+            ('health', self._get_url(request, '/api/v1/health/', format)),
+            ('broodstock', self._get_url(request, '/api/v1/broodstock/', format)),
+            ('infrastructure', self._get_url(request, '/api/v1/infrastructure/', format)),
+            ('scenario', self._get_url(request, '/api/v1/scenario/', format)),
+            ('users', self._get_url(request, '/api/v1/users/', format)),
         ])
         
         # Health check endpoint
         data['system'] = OrderedDict([
-            ('health-check', self._get_url(request, 'api/v1/health/', format)),
+            # Dedicated health-check endpoint that does **not** collide with the
+            # health app’s API namespace.
+            ('health-check', self._get_url(request, '/health-check/', format)),
         ])
         
         return Response(data)
@@ -73,4 +75,6 @@ class APIRootView(APIView):
         Returns:
             str: The absolute URL to the endpoint
         """
-        return request.build_absolute_uri(f'/{path}')
+        # Ensure there is exactly one leading slash before joining with domain.
+        normalized_path = path if path.startswith('/') else f'/{path}'
+        return request.build_absolute_uri(normalized_path)
