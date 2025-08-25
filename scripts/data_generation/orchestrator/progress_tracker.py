@@ -65,7 +65,6 @@ class ProgressTracker:
         }
         
         logger.info(f"Started {session_id}")
-        self._update_plan_status(session_id, '🏃 Running')
     
     def end_session(self, session_id: str, memory_peak_mb: float = 0):
         """
@@ -91,7 +90,6 @@ class ProgressTracker:
         })
         
         logger.info(f"Completed {session_id} in {self._format_duration(elapsed_time)}")
-        self._update_plan_status(session_id, '✅ Completed', elapsed_time, memory_peak_mb)
         
         # Save session report
         self._save_session_report(session_id)
@@ -222,52 +220,6 @@ class ProgressTracker:
         else:
             return f"{secs}s"
     
-    def _update_plan_status(self, session_id: str, status: str, 
-                           runtime: float = 0, memory_peak: float = 0):
-        """
-        Update the implementation plan markdown file with session status.
-        
-        Args:
-            session_id: Session identifier
-            status: Status string
-            runtime: Runtime in seconds
-            memory_peak: Peak memory in MB
-        """
-        try:
-            if not self.plan_file.exists():
-                logger.warning(f"Implementation plan file not found: {self.plan_file}")
-                return
-            
-            content = self.plan_file.read_text()
-            lines = content.split('\n')
-            
-            # Find and update the session row in the progress table
-            session_num = session_id.split('_')[1]
-            for i, line in enumerate(lines):
-                if line.startswith(f"| Session {session_num} |"):
-                    parts = line.split('|')
-                    
-                    # Update status
-                    parts[3] = f" {status} "
-                    
-                    # Update timestamps and metrics if completed
-                    if status == '✅ Completed':
-                        parts[4] = f" {datetime.now().strftime('%Y-%m-%d %H:%M')} "
-                        parts[5] = f" {datetime.now().strftime('%Y-%m-%d %H:%M')} "
-                        parts[6] = f" {self._format_duration(runtime)} "
-                        parts[7] = f" {memory_peak:.1f} MB "
-                    elif status == '🏃 Running':
-                        parts[4] = f" {datetime.now().strftime('%Y-%m-%d %H:%M')} "
-                    
-                    lines[i] = '|'.join(parts)
-                    break
-            
-            # Write updated content
-            self.plan_file.write_text('\n'.join(lines))
-            
-        except Exception as e:
-            logger.error(f"Error updating implementation plan: {e}")
-    
     def _save_session_report(self, session_id: str):
         """
         Save detailed session report to file.
@@ -326,3 +278,4 @@ class ProgressTracker:
             print(f"\nEstimated Time Remaining: {remaining}")
         
         print("="*60 + "\n")
+

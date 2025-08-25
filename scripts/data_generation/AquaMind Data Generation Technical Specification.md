@@ -45,8 +45,8 @@ The system must accurately model the complete salmon lifecycle with realistic du
 - Alevin: Start tanks in freshwater halls
 - Fry: Circular tanks (increasing size)
 - Parr: Larger circular tanks or raceways
-- Smolt: Pre-transfer tanks
-- Post-Smolt: Sea cages (smaller mesh)
+- Smolt: Even larger circular tanks or raceways
+- Post-Smolt: Pre-transfer tanks
 - Grow-out: Sea cages (standard mesh)
 
 ### Growth Modeling Implementation

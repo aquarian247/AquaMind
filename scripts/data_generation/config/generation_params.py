@@ -48,14 +48,22 @@ class GenerationParameters:
     
     # Container type progression
     CONTAINER_PROGRESSION = {
-        'egg': 'incubation_tray',
-        'alevin': 'start_tank',
-        'fry': 'circular_tank_small',
-        'parr': 'circular_tank_large',
-        'smolt': 'pre_transfer_tank',
-        'post_smolt': 'sea_cage_small',
-        'grow_out': 'sea_cage_standard'
+        'egg': 'incubation tray',
+        'alevin': 'start tank',
+        'fry': 'circular tank small',
+        'parr': 'circular tank large',
+        'smolt': 'pre-transfer tank',
+        'post_smolt': 'pre-transfer tank',  # FIXED: Post-smolt is freshwater, not sea
+        'grower': 'sea_cage_large'
     }
+    
+    # Infrastructure scaling constants
+    SEA_AREAS_PER_GEOGRAPHY = 15
+    FRESHWATER_STATIONS_PER_GEOGRAPHY = 15
+    HALLS_PER_STATION = 5
+    CAGES_PER_SEA_AREA = 20  # 15-25 range per Bakkafrost model, starting at 20
+    FEED_SILOS_PER_HALL = 2
+    FEED_BARGES_PER_SEA_AREA = 3
     
     # ==================== GROWTH MODELING ====================
     
@@ -240,7 +248,7 @@ class GenerationParameters:
         'circular_tank_small': 100_000,  # fry/parr
         'circular_tank_large': 50_000,   # parr/smolt
         'pre_transfer_tank': 30_000,     # smolt
-        'sea_cage_small': 25_000,        # post-smolt
+        'sea_cage_large': 25_000,        # post-smolt
         'sea_cage_standard': 20_000      # grow-out
     }
     
@@ -365,3 +373,4 @@ class GenerationParameters:
             return 'summer'
         else:
             return 'autumn'
+

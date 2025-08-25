@@ -292,6 +292,12 @@ class BatchGenerator:
         
         create_probability *= seasonal_multipliers.get(month, 1.0)
         
+        # Tweak create_probability based on active_batches vs target
+        if active_batches > target_active_batches:
+            create_probability = 0 # Ensure no new batches if already at capacity
+        elif active_batches < target_active_batches:
+            create_probability = 0.8 # Increase probability if below target
+        
         # Random decision
         if random.random() < create_probability:
             # Generate batch number for the day
@@ -320,14 +326,14 @@ class BatchGenerator:
         progressed_count = 0
         
         # Define stage progression rules using correct durations from config
-        # Using average of min/max duration from GP.STAGE_DURATIONS
+        # Calculate average duration from GP.STAGE_DURATIONS
         stage_progression = {
-            'egg': ('alevin', int(sum(GP.STAGE_DURATIONS['alevin']) / 2)),  # ~90 days
-            'alevin': ('fry', int(sum(GP.STAGE_DURATIONS['fry']) / 2)),   # ~90 days
-            'fry': ('parr', int(sum(GP.STAGE_DURATIONS['parr']) / 2)),     # ~90 days
-            'parr': ('smolt', int(sum(GP.STAGE_DURATIONS['smolt']) / 2)),   # ~90 days
-            'smolt': ('post_smolt', int(sum(GP.STAGE_DURATIONS['post_smolt']) / 2)),  # ~90 days
-            'post_smolt': ('grow_out', int(sum(GP.STAGE_DURATIONS['grow_out']) / 2)),  # ~450 days
+            'egg': ('alevin', (GP.STAGE_DURATIONS['egg'][0] + GP.STAGE_DURATIONS['egg'][1]) // 2),
+            'alevin': ('fry', (GP.STAGE_DURATIONS['alevin'][0] + GP.STAGE_DURATIONS['alevin'][1]) // 2),
+            'fry': ('parr', (GP.STAGE_DURATIONS['fry'][0] + GP.STAGE_DURATIONS['fry'][1]) // 2),
+            'parr': ('smolt', (GP.STAGE_DURATIONS['smolt'][0] + GP.STAGE_DURATIONS['smolt'][1]) // 2),
+            'smolt': ('post_smolt', (GP.STAGE_DURATIONS['post_smolt'][0] + GP.STAGE_DURATIONS['post_smolt'][1]) // 2),
+            'post_smolt': ('grow_out', (GP.STAGE_DURATIONS['grow_out'][0] + GP.STAGE_DURATIONS['grow_out'][1]) // 2),
             # grow_out ends with harvest, not progression
         }
         
@@ -378,12 +384,12 @@ class BatchGenerator:
         
         # Determine new container type based on next stage
         container_type_map = {
-            'alevin': 'Start Tank',
-            'fry': 'Circular Tank Small',
-            'parr': 'Circular Tank Large',
-            'smolt': 'Pre-Transfer Tank',
-            'post_smolt': 'Sea Cage Small',
-            'grow_out': 'Sea Cage Standard'
+            'alevin': 'start tank',
+            'fry': 'circular tank small',
+            'parr': 'circular tank large',
+            'smolt': 'pre-transfer tank',
+            'post_smolt': 'pre-transfer tank',  # Fixed - post-smolt stays in freshwater
+            'grow_out': 'sea cage standard'
         }
         
         new_container_type_name = container_type_map.get(next_stage)
@@ -414,13 +420,46 @@ class BatchGenerator:
         
         if not free_containers.exists():
             logger.warning(f"No free containers of type {new_container_type_name} for batch {batch.batch_number}")
-            # Skip transfer if no free containers available
-            return False
+            if new_container_type_name == 'Start Tank':
+                logger.info("Falling back to Circular Tank Small")
+                alternative_type_name = 'Circular Tank Small'
+                try:
+                    alternative_type = ContainerType.objects.get(name=alternative_type_name)
+                    available_containers = Container.objects.filter(
+                        container_type=alternative_type,
+                        active=True
+                    )
+                    occupied = BatchContainerAssignment.objects.filter(
+                        departure_date__isnull=True,
+                        is_active=True,
+                        container__in=available_containers
+                    ).values_list('container_id', flat=True)
+                    free_containers = available_containers.exclude(id__in=occupied)
+                except ContainerType.DoesNotExist:
+                    logger.error(f"Alternative container type {alternative_type_name} not found")
+                    return False
+            if not free_containers.exists():
+                logger.warning(f"No free containers (including fallback) for batch {batch.batch_number}")
+                return False
         
         selected_container = free_containers.first()
         if not selected_container:
             return False
         
+        # Add grace period check before selecting container
+        last_assignment = BatchContainerAssignment.objects.filter(
+            container=selected_container
+        ).order_by('-departure_date').first()
+
+        if last_assignment and last_assignment.departure_date:
+            days_since = (transition_date - last_assignment.departure_date).days
+            # Convert display name to grace period key format
+            grace_key = new_container_type_name.lower().replace(' ', '_')
+            grace = GP.GRACE_PERIODS.get(grace_key, 0)
+            if days_since < grace:
+                logger.warning(f"Grace period violation for {selected_container}")
+                return False
+
         with transaction.atomic():
             # End current assignment
             current_assignment.departure_date = transition_date
@@ -428,7 +467,7 @@ class BatchGenerator:
             current_assignment.save()
             
             # Calculate new metrics (some mortality during transfer)
-            transfer_mortality_rate = 0.01  # 1% transfer mortality
+            transfer_mortality_rate = random.uniform(0.01, 0.02) # 1-2% transfer mortality
             new_count = int(current_assignment.population_count * (1 - transfer_mortality_rate))
             
             # Update average weight based on stage
@@ -463,6 +502,16 @@ class BatchGenerator:
             
             logger.debug(f"Progressed batch {batch.batch_number} from {current_assignment.lifecycle_stage.name} to {next_stage}")
             
+        if next_stage == 'grow_out':
+            if (transition_date - batch.start_date) > timedelta(days=18*30):  # ~18 months
+                batch.harvest_date = transition_date
+                batch.save()
+                current_assignment.departure_date = transition_date
+                current_assignment.is_active = False
+                current_assignment.save()
+                logger.info(f"Auto-harvested batch {batch.batch_number} after prolonged grower stage")
+                return True
+        
         return True
     
     def get_summary(self) -> str:
@@ -498,3 +547,126 @@ class BatchGenerator:
             summary += f"Total Initial Eggs: {total_eggs:,}\n"
         
         return summary
+
+    def process_container_transfers(self, current_date: date) -> int:
+        """
+        Process container transfers for batches that need to move to different facilities.
+
+        Args:
+            current_date: Current date for processing
+
+        Returns:
+            Number of transfers processed
+        """
+        if self.dry_run:
+            return 0
+
+        transfers_count = 0
+
+        try:
+            # Get batches that might need transfers
+            active_assignments = BatchContainerAssignment.objects.filter(
+                departure_date__isnull=True,
+                is_active=True,
+                batch__status='ACTIVE'
+            ).select_related('batch', 'container', 'lifecycle_stage')
+
+            for assignment in active_assignments:
+                batch = assignment.batch
+                current_stage = assignment.lifecycle_stage.name if assignment.lifecycle_stage else None
+
+                if not current_stage:
+                    continue
+
+                # Check if batch needs to transfer to different facility type
+                target_facility_type = self._get_target_facility_for_stage(current_stage)
+
+                if target_facility_type and target_facility_type != assignment.container.container_type.name:
+                    # Check if enough time has passed since last transfer
+                    days_since_assignment = (current_date - assignment.assignment_date).days
+                    min_days_in_facility = self._get_minimum_days_in_facility(current_stage)
+
+                    if days_since_assignment >= min_days_in_facility:
+                        # Attempt transfer
+                        if self._transfer_batch_to_facility(batch, assignment, target_facility_type, current_date):
+                            transfers_count += 1
+
+        except Exception as e:
+            logger.error(f"Error processing container transfers: {e}")
+
+        if transfers_count > 0:
+            logger.info(f"Processed {transfers_count} container transfers")
+
+        return transfers_count
+
+    def _get_target_facility_for_stage(self, stage: str) -> str:
+        """Get the target facility type for a given lifecycle stage."""
+        facility_mapping = {
+            'egg': 'incubation_tray',
+            'alevin': 'start_tank',
+            'fry': 'circular_tank_small',
+            'parr': 'circular_tank_large',
+            'smolt': 'pre_transfer_tank',
+            'post_smolt': 'pre_transfer_tank',  # Post-smolt stays in freshwater
+            'grow_out': 'sea_cage_standard'
+        }
+        return facility_mapping.get(stage)
+
+    def _get_minimum_days_in_facility(self, stage: str) -> int:
+        """Get minimum days a batch should stay in current facility type."""
+        # Use stage durations as minimum time in facility
+        return GP.STAGE_DURATIONS.get(stage, (90, 90))[0]  # Use minimum duration
+
+    def _transfer_batch_to_facility(self, batch: Batch, current_assignment: BatchContainerAssignment,
+                                  target_facility_type: str, transfer_date: date) -> bool:
+        """Transfer a batch to a new facility type."""
+        try:
+            # End current assignment
+            current_assignment.departure_date = transfer_date
+            current_assignment.is_active = False
+            current_assignment.save()
+
+            # Find available container of target type
+            target_containers = Container.objects.filter(
+                container_type__name=target_facility_type,
+                active=True
+            )
+
+            # Exclude occupied containers
+            occupied_container_ids = BatchContainerAssignment.objects.filter(
+                departure_date__isnull=True,
+                container__in=target_containers
+            ).values_list('container_id', flat=True)
+
+            available_containers = target_containers.exclude(id__in=occupied_container_ids)
+
+            if not available_containers.exists():
+                logger.warning(f"No available {target_facility_type} containers for batch {batch.batch_number}")
+                return False
+
+            # Get the lifecycle stage for the target
+            try:
+                lifecycle_stage = LifeCycleStage.objects.get(name=batch.lifecycle_stage.name)
+            except LifeCycleStage.DoesNotExist:
+                logger.error(f"Lifecycle stage {batch.lifecycle_stage.name} not found")
+                return False
+
+            # Create new assignment
+            new_container = available_containers.first()  # Use first available
+
+            new_assignment = BatchContainerAssignment.objects.create(
+                batch=batch,
+                container=new_container,
+                lifecycle_stage=lifecycle_stage,
+                assignment_date=transfer_date,
+                population_count=batch.current_count or 0,
+                is_active=True,
+                notes=f"Transfer from {current_assignment.container.container_type.name} to {target_facility_type}"
+            )
+
+            logger.info(f"Transferred batch {batch.batch_number} to {target_facility_type}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error transferring batch {batch.batch_number}: {e}")
+            return False

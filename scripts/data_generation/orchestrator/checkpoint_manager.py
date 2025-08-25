@@ -263,3 +263,4 @@ class CheckpointManager:
         
         with open(self.main_checkpoint_file, 'w') as f:
             json.dump(main_checkpoint, f, indent=2, cls=DateTimeEncoder)
+

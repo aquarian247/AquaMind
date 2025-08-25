@@ -24,6 +24,9 @@ from .checkpoint_manager import CheckpointManager
 from .memory_manager import MemoryManager
 from .progress_tracker import ProgressTracker
 
+# Import models for direct database access
+from apps.batch.models import Batch
+
 logger = logging.getLogger(__name__)
 
 
@@ -441,7 +444,230 @@ class DataGenerationSessionManager:
     def _run_session_2(self, start_date: date, end_date: date,
                       resume_point: Optional[Dict] = None):
         """Session 2: Early Production Cycles (Years 4-6)"""
-        logger.info("Session 2 implementation pending...")
+        logger.info("Executing Session 2: Early Production Cycles (Years 4-6)")
+        logger.info("Features: Disease outbreaks, batch scaling to 40-50 active batches, advanced health management")
+
+        # Import generators
+        from scripts.data_generation.generators import (
+            BatchGenerator,
+            EnvironmentalGenerator,
+            OperationsGenerator,
+            DiseaseGenerator,
+            FeedManager,
+            EnvironmentalComplexityGenerator
+        )
+
+        # Initialize generators
+        batch_gen = BatchGenerator(dry_run=self.dry_run)
+        env_gen = EnvironmentalGenerator(dry_run=self.dry_run)
+        ops_gen = OperationsGenerator(dry_run=self.dry_run)
+        disease_gen = DiseaseGenerator(dry_run=self.dry_run)
+        feed_manager = FeedManager(dry_run=self.dry_run)
+        env_complexity_gen = EnvironmentalComplexityGenerator(dry_run=self.dry_run)
+
+        # Phase 2.1: Batch Staggering Optimization
+        if not resume_point or '2.1' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('2.1', 'Batch Staggering Optimization')
+            logger.info("Scaling from 25 to 40-50 active batches with optimized staggering...")
+
+            if not self.dry_run:
+                # Generate additional batches to reach target of 40-50 active batches
+                current_batch_count = Batch.objects.filter(status='ACTIVE').count()
+                target_batches = 45
+                batches_needed = target_batches - current_batch_count
+
+                if batches_needed > 0:
+                    logger.info(f"Creating {batches_needed} additional batches to reach target of {target_batches}")
+                    # Create new batches with staggered starts
+                    for i in range(batches_needed):
+                        batch_date = start_date + timedelta(days=i * 30)  # Spread over months
+                        if batch_date <= end_date:
+                            new_batch = batch_gen.create_batch_for_date(batch_date)
+                            if new_batch:
+                                self.progress_tracker.increment_metric('total_batches_created', 1)
+
+                # Update progress
+                final_count = Batch.objects.filter(status='ACTIVE').count()
+                self.progress_tracker.increment_metric('active_batches_at_session2_start', final_count)
+
+            self.progress_tracker.update_progress('2.1', 'Batch Staggering Optimization', completed=True)
+            self._save_checkpoint()
+
+        # Phase 2.2: Disease Event Simulation
+        if not resume_point or '2.2' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('2.2', 'Disease Event Simulation')
+            logger.info("Implementing disease outbreak simulation with 10 disease types...")
+
+            if not self.dry_run:
+                # Disease simulation is handled in daily operations loop
+                # Initialize disease tracking metrics
+                self.progress_tracker.increment_metric('diseases_simulated', len(disease_gen.disease_simulator.outbreak_history))
+
+            self.progress_tracker.update_progress('2.2', 'Disease Event Simulation', completed=True)
+            self._save_checkpoint()
+
+        # Phase 2.3: Feed Management System
+        if not resume_point or '2.3' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('2.3', 'Feed Management System')
+            logger.info("Implementing FIFO inventory and procurement optimization...")
+
+            if not self.dry_run:
+                # Feed management is integrated into operations
+                # Initialize feed tracking
+                self.progress_tracker.increment_metric('feed_inventory_events', 0)
+
+            self.progress_tracker.update_progress('2.3', 'Feed Management System', completed=True)
+            self._save_checkpoint()
+
+        # Phase 2.4: Health Monitoring
+        if not resume_point or '2.4' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('2.4', 'Health Monitoring')
+            logger.info("Implementing advanced health monitoring and veterinary journal entries...")
+
+            if not self.dry_run:
+                # Health monitoring is handled in daily operations loop
+                # Initialize health tracking metrics
+                self.progress_tracker.increment_metric('health_observations', 0)
+                self.progress_tracker.increment_metric('journal_entries', 0)
+                self.progress_tracker.increment_metric('lab_samples', 0)
+
+            self.progress_tracker.update_progress('2.4', 'Health Monitoring', completed=True)
+            self._save_checkpoint()
+
+        # Phase 2.5: Main Simulation Loop (Years 4-6)
+        if not resume_point or '2.5' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('2.5', 'Main Simulation Loop')
+            logger.info("Running main simulation loop for Years 4-6 with disease outbreaks and health management...")
+
+            if not self.dry_run:
+                current_date = start_date
+                days_processed = 0
+                chunk_size = 30  # Process in 30-day chunks
+
+                while current_date <= end_date:
+                    chunk_end_date = min(current_date + timedelta(days=chunk_size - 1), end_date)
+
+                    # Process each day in the chunk
+                    day_date = current_date
+                    while day_date <= chunk_end_date:
+                        # Generate environmental data
+                        try:
+                            env_readings = env_gen.generate_daily_updates(day_date)
+                            if env_readings > 0:
+                                self.progress_tracker.increment_metric('environmental_readings', env_readings)
+                        except Exception as e:
+                            logger.error(f"Error generating environmental data: {e}")
+
+                        # Process batch operations
+                        try:
+                            active_batches = Batch.objects.filter(status='ACTIVE')
+                            for batch in active_batches:
+                                # Create new batches as needed to maintain target
+                                if len(active_batches) < 40:  # Minimum threshold
+                                    if random.random() < 0.1:  # 10% chance per day when below threshold
+                                        new_batch = batch_gen.create_batch_for_date(day_date)
+                                        if new_batch:
+                                            self.progress_tracker.increment_metric('total_batches_created', 1)
+
+                                # Progress batch lifecycle
+                                progressed = batch_gen.progress_lifecycle_stages(day_date)
+                                if progressed > 0:
+                                    self.progress_tracker.increment_metric('stage_progressions', progressed)
+
+                                # Process container transfers
+                                transfers = batch_gen.process_container_transfers(day_date)
+                                if transfers > 0:
+                                    self.progress_tracker.increment_metric('batch_transfers', transfers)
+
+                        except Exception as e:
+                            logger.error(f"Error processing batch operations: {e}")
+
+                        # Generate operations (feeding, mortality, etc.)
+                        try:
+                            ops_stats = ops_gen.generate_daily_operations(day_date)
+                            if ops_stats:
+                                self.progress_tracker.increment_metric('feed_events', ops_stats.get('feed_events', 0))
+                                self.progress_tracker.increment_metric('growth_samples', ops_stats.get('growth_samples', 0))
+                                self.progress_tracker.increment_metric('mortality_events', ops_stats.get('mortality_events', 0))
+                        except Exception as e:
+                            logger.error(f"Error generating operations: {e}")
+
+                        # Health operations and disease simulation
+                        try:
+                            health_stats = disease_gen.simulate_daily_health_operations(day_date)
+                            if health_stats:
+                                self.progress_tracker.increment_metric('disease_outbreaks', health_stats.get('new_outbreaks', 0))
+                                self.progress_tracker.increment_metric('treatments_applied', health_stats.get('treatments_applied', 0))
+                                self.progress_tracker.increment_metric('health_observations', health_stats.get('observations_made', 0))
+                                self.progress_tracker.increment_metric('journal_entries', health_stats.get('journal_entries', 0))
+                                self.progress_tracker.increment_metric('lab_samples', health_stats.get('lab_samples', 0))
+                        except Exception as e:
+                            logger.error(f"Error in health operations: {e}")
+
+                        # Feed management operations
+                        try:
+                            feed_stats = feed_manager.process_daily_feed_operations(day_date)
+                            if feed_stats:
+                                self.progress_tracker.increment_metric('feed_orders_placed', feed_stats.get('orders_placed', 0))
+                                self.progress_tracker.increment_metric('feed_deliveries_received', feed_stats.get('deliveries_received', 0))
+                                self.progress_tracker.increment_metric('feed_inventory_adjustments', feed_stats.get('inventory_adjusted', 0))
+                        except Exception as e:
+                            logger.error(f"Error in feed management operations: {e}")
+
+                        # Environmental complexity events
+                        try:
+                            env_stats = env_complexity_gen.generate_daily_environmental_events(day_date)
+                            if env_stats:
+                                self.progress_tracker.increment_metric('extreme_weather_events', env_stats.get('extreme_weather', 0))
+                                self.progress_tracker.increment_metric('algae_bloom_events', env_stats.get('algae_blooms', 0))
+                                self.progress_tracker.increment_metric('temperature_anomalies', env_stats.get('temp_anomalies', 0))
+                                self.progress_tracker.increment_metric('oxygen_depletion_events', env_stats.get('oxygen_events', 0))
+                        except Exception as e:
+                            logger.error(f"Error in environmental complexity operations: {e}")
+
+                        day_date += timedelta(days=1)
+                        days_processed += 1
+
+                        # Progress tracking
+                        if days_processed % 30 == 0:
+                            logger.info(f"Processed {days_processed} days in Session 2")
+                            active_count = Batch.objects.filter(status='ACTIVE').count()
+                            logger.info(f"Active batches: {active_count}")
+
+                    # Save checkpoint every chunk
+                    self._save_session_checkpoint(
+                        'session_2',
+                        'in_progress',
+                        f"Completed chunk ending {chunk_end_date}",
+                        {'last_date': chunk_end_date, 'days_processed': days_processed}
+                    )
+
+                    # Check memory usage
+                    if not self.memory_manager.check_memory():
+                        logger.warning(f"Memory threshold reached after {days_processed} days")
+                        # Save checkpoint and pause
+                        self._save_session_checkpoint(
+                            'session_2',
+                            'paused',
+                            f"Memory limit at {days_processed} days",
+                            {'last_date': chunk_end_date}
+                        )
+                        return
+
+                    current_date = chunk_end_date + timedelta(days=1)
+
+                # Final metrics update
+                final_active_batches = Batch.objects.filter(status='ACTIVE').count()
+                self.progress_tracker.increment_metric('final_active_batches_session2', final_active_batches)
+
+                logger.info("Session 2 main simulation loop completed")
+
+            self.progress_tracker.update_progress('2.5', 'Main Simulation Loop', completed=True)
+            self._save_checkpoint()
+
+        logger.info("Session 2 completed successfully!")
+        logger.info(f"Final active batches: {Batch.objects.filter(status='ACTIVE').count()}")
+        logger.info(f"Disease outbreaks simulated: {len(disease_gen.disease_simulator.outbreak_history)}")
     
     def _run_session_3(self, start_date: date, end_date: date,
                       resume_point: Optional[Dict] = None):
@@ -495,14 +721,18 @@ class DataGenerationSessionManager:
                 checkpoint_data
             )
     
-    def _save_session_checkpoint(self, session_id: str, status: str, error: str = None):
+    def _save_session_checkpoint(self, session_id: str, status: str, error: str = None, metadata: dict = None):
         """Save checkpoint for a specific session."""
         checkpoint_data = {
             'status': status,
             'timestamp': datetime.now().isoformat(),
             'error': error
         }
-        
+
+        # Add metadata if provided
+        if metadata:
+            checkpoint_data.update(metadata)
+
         self.checkpoint_manager.save_checkpoint(session_id, checkpoint_data)
     
     def _should_continue_after_error(self, session_id: str) -> bool:

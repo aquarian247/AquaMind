@@ -9,10 +9,16 @@ from .infrastructure import InfrastructureGenerator
 from .batch import BatchGenerator
 from .environmental import EnvironmentalGenerator
 from .operations import OperationsGenerator
+from .disease import DiseaseGenerator
+from .feed_manager import FeedManager
+from .environmental_complexity import EnvironmentalComplexityGenerator
 
 __all__ = [
     'InfrastructureGenerator',
-    'BatchGenerator', 
+    'BatchGenerator',
     'EnvironmentalGenerator',
-    'OperationsGenerator'
+    'OperationsGenerator',
+    'DiseaseGenerator',
+    'FeedManager',
+    'EnvironmentalComplexityGenerator'
 ]

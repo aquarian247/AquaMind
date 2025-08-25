@@ -50,6 +50,7 @@ class InfrastructureGenerator:
             'containers': [],
             'sensors': []
         }
+        logger.setLevel(logging.WARNING)  # Reduce verbosity for speed
         
         # Get or create system user for audit trails
         if not self.dry_run:
@@ -166,6 +167,8 @@ class InfrastructureGenerator:
                     defaults=data
                 )
         
+        self.name_to_type = {ct.name.lower(): ct for ct in ContainerType.objects.all()}
+        
         logger.info(f"Created {len(container_types_data)} container types")
     
     def _create_geographies(self):
@@ -264,19 +267,20 @@ class InfrastructureGenerator:
         faroe_areas = Area.objects.filter(geography__name='Faroe Islands')
         scotland_areas = Area.objects.filter(geography__name='Scotland')
         
-        station_configs = [
-            # Faroe Islands stations
-            {'area': faroe_areas.get(name='Streymoy'), 'name': 'Streymoy Hatchery', 'type': 'hatchery', 'halls': 4},
-            {'area': faroe_areas.get(name='Streymoy'), 'name': 'Streymoy Nursery', 'type': 'nursery', 'halls': 6},
-            {'area': faroe_areas.get(name='Eysturoy'), 'name': 'Eysturoy Smolt', 'type': 'smolt', 'halls': 8},
-            {'area': faroe_areas.get(name='Vágar'), 'name': 'Vágar Hatchery', 'type': 'hatchery', 'halls': 3},
-            {'area': faroe_areas.get(name='Sandoy'), 'name': 'Sandoy Nursery', 'type': 'nursery', 'halls': 4},
-            # Scotland stations
-            {'area': scotland_areas.get(name='Shetland'), 'name': 'Shetland Hatchery', 'type': 'hatchery', 'halls': 3},
-            {'area': scotland_areas.get(name='Orkney'), 'name': 'Orkney Smolt', 'type': 'smolt', 'halls': 6},
-            {'area': scotland_areas.get(name='Western Isles'), 'name': 'Western Isles Nursery', 'type': 'nursery', 'halls': 5}
-        ]
-        
+        # Scale up to Bakkafrost levels: 10 freshwater stations per geography
+        station_types = ['hatchery', 'nursery', 'smolt', 'post_smolt']
+        station_configs = []
+        for geo in Geography.objects.all():
+            for i in range(GP.FRESHWATER_STATIONS_PER_GEOGRAPHY):
+                # Distribute station types evenly across the 10 stations
+                st_type = station_types[i % len(station_types)]
+                station_configs.append({
+                    'area': random.choice(Area.objects.filter(geography=geo)),
+                    'name': f'{geo.name} {st_type.capitalize()} Station {i+1}',
+                    'type': st_type,
+                    'halls': GP.HALLS_PER_STATION
+                })
+
         for config in station_configs:
             # Create station
             station, created = FreshwaterStation.objects.get_or_create(
@@ -302,18 +306,44 @@ class InfrastructureGenerator:
     def _create_halls_for_station(self, station: FreshwaterStation, num_halls: int, station_type: str):
         """Create halls and containers for a freshwater station."""
         
-        # Determine container types based on station type
-        # Increased capacity to handle realistic batch throughput
-        if station_type == 'hatchery':
-            container_types = ['Incubation Tray', 'Start Tank']
-            containers_per_hall = 30  # Increased from 20
-        elif station_type == 'nursery':
-            container_types = ['Circular Tank Small', 'Circular Tank Large']
-            containers_per_hall = 20  # Increased from 10
-        else:  # smolt
-            container_types = ['Circular Tank Large', 'Pre-Transfer Tank']
-            containers_per_hall = 15  # Increased from 8
+        # Scale up to Bakkafrost levels: ~10 containers per hall for 10 stations × 5 halls = 50 halls per geography
+        containers_per_hall_map = {
+            'hatchery': 10,   # 10 stations × 5 halls × 10 = 500 trays (matches Bakkafrost scale)
+            'nursery': 8,     # 10×5×8=400 fry tanks
+            'smolt': 6,       # 10×5×6=300 parr tanks
+            'post_smolt': 5   # 10×5×5=250 post-smolt tanks
+        }
         
+        # Update container_type_map to use names.lower()
+        container_type_map = {
+            'hatchery': ['incubation tray', 'start tank'],
+            'nursery': ['circular tank small', 'circular tank large'],
+            'smolt': ['circular tank large', 'pre-transfer tank'],
+            'post_smolt': ['pre-transfer tank']
+        }
+
+        station_type = station_type.lower()
+        print(f"Checking mapped for station_type: '{station_type}'")
+        print(f"container_type_map keys: {list(container_type_map.keys())}")
+        print(f"Is '{station_type}' in map: {station_type in container_type_map}")
+
+        if station_type not in container_type_map:
+            logger.warning(f"Unmapped station_type {station_type}, using default")
+            container_types = [self.name_to_type.get('circular tank large')]
+        else:
+            container_types = []
+            for type_name in container_type_map[station_type]:
+                ct = self.name_to_type.get(type_name)
+                if ct:
+                    container_types.append(ct)
+                else:
+                    logger.warning(f"ContainerType {type_name} not found in cache")
+        
+        logger.debug(f"Station type: {station_type}, Container types found: {len(container_types)}")
+        if not container_types:
+            logger.warning(f"No container types for {station_type}, skipping halls for station {station.name}")
+            return  # or pass, to skip creation for this station
+
         for hall_num in range(1, num_halls + 1):
             hall_name = f"{station.name} Hall {hall_num}"
             hall, created = Hall.objects.get_or_create(
@@ -330,16 +360,23 @@ class InfrastructureGenerator:
                 self.created_objects['halls'].append(hall)
                 
                 # Create containers in the hall
-                self._create_containers_for_hall(hall, container_types, containers_per_hall)
+                if not container_types:
+                    logger.warning(f"No container types for {station_type}, skipping containers for hall {hall.name}")
+                    continue
+
+                self._create_containers_for_hall(hall, container_types, containers_per_hall_map[station_type])
     
-    def _create_containers_for_hall(self, hall: Hall, container_type_names: List[str], num_containers: int):
+    def _create_containers_for_hall(self, hall: Hall, container_types: List[ContainerType], num_containers: int):
         """Create containers for a hall."""
         
-        container_types = ContainerType.objects.filter(name__in=container_type_names)
-        
+        if not container_types:
+            logger.warning(f"No container types for hall {hall.name}, using default")
+            default_type = self.name_to_type.get('circular tank large')
+            container_types = [default_type] * num_containers
+
         for cont_num in range(1, num_containers + 1):
             # Select a container type (weighted towards larger containers)
-            container_type = random.choice(list(container_types))
+            container_type = random.choice(container_types)
             
             container_name = f"{hall.name} Container {cont_num}"
             # Set volume based on container type max
@@ -369,29 +406,24 @@ class InfrastructureGenerator:
             return
         
         # Get container types for sea cages
-        sea_cage_types = ContainerType.objects.filter(name__in=['Sea Cage Small', 'Sea Cage Standard', 'Sea Cage Large'])
+        container_type = ContainerType.objects.get(name='Sea Cage Large')  # Single type
         
         # Get areas for sea sites
         all_areas = Area.objects.all()
         
-        sea_site_configs = [
-            # Major sites with many pens
-            {'area': 'Streymoy', 'name': 'Streymoy North', 'pens': 12, 'type': 'Sea Cage Standard'},
-            {'area': 'Streymoy', 'name': 'Streymoy South', 'pens': 10, 'type': 'Sea Cage Standard'},
-            {'area': 'Eysturoy', 'name': 'Eysturoy East', 'pens': 8, 'type': 'Sea Cage Large'},
-            {'area': 'Vágar', 'name': 'Vágar West', 'pens': 6, 'type': 'Sea Cage Standard'},
-            {'area': 'Sandoy', 'name': 'Sandoy Bay', 'pens': 8, 'type': 'Sea Cage Standard'},
-            {'area': 'Suðuroy', 'name': 'Suðuroy Fjord', 'pens': 10, 'type': 'Sea Cage Large'},
-            # Scotland sites
-            {'area': 'Shetland', 'name': 'Shetland North', 'pens': 8, 'type': 'Sea Cage Standard'},
-            {'area': 'Orkney', 'name': 'Orkney Bay', 'pens': 6, 'type': 'Sea Cage Standard'},
-            {'area': 'Western Isles', 'name': 'Lewis Site', 'pens': 10, 'type': 'Sea Cage Large'},
-            {'area': 'Highland West', 'name': 'Skye Sound', 'pens': 8, 'type': 'Sea Cage Standard'}
-        ]
-        
+        sea_site_configs = []
+        for geo in Geography.objects.all():
+            for i in range(GP.SEA_AREAS_PER_GEOGRAPHY):
+                sea_site_configs.append({
+                    'area': random.choice(Area.objects.filter(geography=geo)),
+                    'name': f'{geo.name} Sea Area {i+1}',
+                    'pens': GP.CAGES_PER_SEA_AREA,
+                    'type': 'Sea Cage Large' # Fixed type
+                })
+
         for config in sea_site_configs:
-            area = all_areas.get(name=config['area'])
-            container_type = sea_cage_types.get(name=config['type'])
+            area = config['area']  # Already the object
+            # container_type = sea_cage_types.get(name=config['type']) # This line is no longer needed
             
             # Create containers (sea cages) directly for sea sites
             # Sea sites don't have stations or halls in our current model
@@ -429,14 +461,11 @@ class InfrastructureGenerator:
             return
         
         # Get all containers to add sensors to
-        freshwater_containers = Container.objects.filter(hall__isnull=False)[:20]  # First 20 freshwater containers
-        sea_containers = Container.objects.filter(area__isnull=False)[:20]  # First 20 sea containers
-        
-        # Create sensors for freshwater containers
-        for container in freshwater_containers:
-            # Freshwater containers get temperature, oxygen, pH sensors
-            sensor_types = ['TEMPERATURE', 'OXYGEN', 'PH']
-            
+        all_containers = Container.objects.filter(active=True)
+        for container in all_containers:
+            is_seawater = container.area is not None
+            sensor_types = ['TEMPERATURE', 'OXYGEN', 'PH', 'CO2', 'NO2', 'NO3', 'NH4', 'NH3', 'TURBIDITY'] if not is_seawater else ['TEMPERATURE', 'OXYGEN', 'PH', 'SALINITY', 'CO2', 'TURBIDITY']
+            # Create all types for each container
             for sensor_type in sensor_types:
                 sensor_name = f"{container.name} {sensor_type.title().replace('_', ' ')} Sensor"
                 
@@ -452,33 +481,13 @@ class InfrastructureGenerator:
                         'active': True
                     }
                 )
-                
+                sensor.active = True
+                sensor.save()
                 if created:
                     self.created_objects['sensors'].append(sensor)
-        
-        # Create sensors for sea containers
-        for container in sea_containers:
-            # Sea containers get temperature, oxygen, pH, salinity sensors
-            sensor_types = ['TEMPERATURE', 'OXYGEN', 'PH', 'SALINITY']
-            
-            for sensor_type in sensor_types:
-                sensor_name = f"{container.name} {sensor_type.title().replace('_', ' ')} Sensor"
-                
-                sensor, created = Sensor.objects.get_or_create(
-                    name=sensor_name,
-                    container=container,
-                    defaults={
-                        'sensor_type': sensor_type,
-                        'serial_number': f"SN{random.randint(100000, 999999)}",
-                        'manufacturer': random.choice(['AquaSense', 'OceanTech', 'MarineMonitor']),
-                        'installation_date': date.today() - timedelta(days=random.randint(30, 365)),
-                        'last_calibration_date': date.today() - timedelta(days=random.randint(1, 30)),
-                        'active': True
-                    }
-                )
-                
-                if created:
-                    self.created_objects['sensors'].append(sensor)
+                    logger.info(f"Created new sensor {sensor.name}")
+                else:
+                    logger.info(f"Updated existing sensor {sensor.name} to active=True")
         
         logger.info(f"Created {len(self.created_objects['sensors'])} sensors")
     
