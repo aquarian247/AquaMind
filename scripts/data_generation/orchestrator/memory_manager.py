@@ -270,3 +270,4 @@ class MemoryManager:
         logger.info(f"Memory Manager Report: Peak usage {report['peak_memory_mb']:.1f} MB")
         
         return False
+

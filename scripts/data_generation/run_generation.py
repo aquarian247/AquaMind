@@ -47,6 +47,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# Set logging level to WARNING to reduce noise
+logging.getLogger().setLevel(logging.WARNING)
+
 
 def main():
     """Main entry point."""
@@ -208,3 +211,4 @@ def print_footer(success: bool = True, interrupted: bool = False):
 
 if __name__ == '__main__':
     main()
+

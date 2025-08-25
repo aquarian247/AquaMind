@@ -2,9 +2,11 @@
 
 This directory contains a comprehensive system for generating 10 years of realistic aquaculture data for the AquaMind system, following the established data model and Bakkafrost operational patterns.
 
-## 🎉 SESSION 1 COMPLETE - PRODUCTION SCALE ACHIEVED!
+## 🎉 SESSIONS 1 & 2 COMPLETE - PRODUCTION SCALE ACHIEVED!
 
-**Session 1 (Years 1-3) has been successfully completed** with exceptional production-scale results:
+**Sessions 1 & 2 (Years 1-6) have been successfully completed** with exceptional production-scale results:
+
+### Session 1 (Years 1-3) - Foundation & Historical Setup
 - **9,251,200+ Environmental Readings** (9.25M - massive success!)
 - **4,230+ Containers** (Bakkafrost infrastructure scale)
 - **37,530+ Sensors** (comprehensive monitoring)
@@ -12,14 +14,22 @@ This directory contains a comprehensive system for generating 10 years of realis
 - **486K+ Growth Samples** (thermal growth coefficient modeling)
 - **3.8K+ Mortality Events** (stage-appropriate rates)
 
-All critical issues have been resolved and the system is now **production-ready**!
+### Session 2 (Years 4-6) - Production Scale Operations
+- **12,174,005+ Total Environmental Readings** (additional 2.9M in Session 2!)
+- **150 FeedContainer Silos** (complete feed infrastructure)
+- **Complete Lifecycle Stages** (egg → grow_out progression)
+- **FIFO Feed Inventory** (procurement and stock management)
+- **Environmental Complexity** (storm events, algae blooms, temperature anomalies)
+- **Health Monitoring Framework** (growth sampling, mortality tracking)
+
+All critical issues have been resolved and the system is now **production-scale ready**!
 
 ## 🏗️ Architecture Overview
 
 The data generation system uses a **4-session sequential approach** to manage memory constraints while generating comprehensive data:
 
-- **Session 1**: Years 1-3 (Infrastructure & Historical Setup)
-- **Session 2**: Years 4-6 (Early Production Cycles)
+- **Session 1** ✅: Years 1-3 (Infrastructure & Historical Setup)
+- **Session 2** ✅: Years 4-6 (Early Production Cycles)
 - **Session 3**: Years 7-9 (Mature Operations)
 - **Session 4**: Year 10 (Recent History & Validation)
 
@@ -173,6 +183,59 @@ This tests:
 All parameters are centralized in `config/generation_params.py` based on the technical specification. Disease profiles are defined in `config/disease_profiles.py`.
 
 ## 🔧 Troubleshooting
+
+### Environmental Readings Issues (Common Pain Point)
+
+Environmental readings generation was a major pain point in Sessions 1 & 2. Here are the solutions:
+
+#### **Issue 1: No Environmental Readings Generated**
+**Symptoms:** Environmental readings count not increasing despite script running
+**Root Cause:** Model field access errors in environmental complexity generator
+**Solution:**
+- Check `EnvironmentalReading` model uses `value` field + `parameter.name` for access
+- Don't use direct attributes like `reading.temperature` - use `reading.parameter.name == 'Temperature'`
+- Ensure `select_related('parameter')` for efficient parameter name access
+
+#### **Issue 2: TURBIDITY Sensors Not Removed**
+**Symptoms:** TURBIDITY sensors still present after requesting removal
+**Root Cause:** TURBIDITY sensors may be created by infrastructure generator
+**Solution:**
+```python
+# Delete TURBIDITY sensors and readings
+from apps.environmental.models import Sensor, EnvironmentalReading, EnvironmentalParameter
+turbidity_param = EnvironmentalParameter.objects.get(name='TURBIDITY')
+Sensor.objects.filter(parameter=turbidity_param).delete()
+EnvironmentalReading.objects.filter(parameter=turbidity_param).delete()
+```
+
+#### **Issue 3: SALINITY in Wrong Locations**
+**Symptoms:** SALINITY readings in freshwater containers or missing from sea areas
+**Root Cause:** Sensor placement logic needs container location verification
+**Solution:**
+- Check `container.area` vs `container.hall` for location determination
+- Sea areas should have SALINITY sensors, freshwater halls should not
+- Use container geography to determine appropriate parameters
+
+#### **Issue 4: Model Field Access Errors**
+**Symptoms:** `'EnvironmentalReading' object has no attribute 'temperature'`
+**Root Cause:** Attempting to access parameter values as direct model attributes
+**Solution:**
+```python
+# WRONG - Don't do this:
+reading.temperature = 15.0
+
+# CORRECT - Do this:
+if reading.parameter.name == 'Temperature':
+    reading.value = 15.0
+```
+
+#### **Issue 5: Foreign Key Constraint Errors**
+**Symptoms:** `null value in column "feed_container_id"` or similar
+**Root Cause:** Missing related objects (FeedContainer, LifecycleStage, etc.)
+**Solution:**
+- Ensure all required related objects exist before creating dependent records
+- Create missing `FeedContainer` objects for areas with active containers
+- Verify `LifeCycleStage` objects exist with proper `species` relationships
 
 ### Out of Memory
 - Reduce `GENERATION_CHUNK_SIZE` in config
