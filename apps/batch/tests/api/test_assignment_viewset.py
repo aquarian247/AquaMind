@@ -235,3 +235,134 @@ class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
         self.assertEqual(len(response.data['results']), 2)
         self.assertEqual(response.data['results'][0]['is_active'], True)
         self.assertEqual(response.data['results'][1]['is_active'], True)
+
+    def test_summary_endpoint_active_assignments(self):
+        """Test the summary endpoint with active assignments (default)."""
+        # Create another active assignment
+        batch2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH003"
+        )
+        container2 = create_test_container(name="Tank 3")
+        create_test_batch_container_assignment(
+            batch=batch2,
+            container=container2,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=800,
+            avg_weight_g=Decimal("15.0")
+        )
+        
+        # Get summary for active assignments (default)
+        url = self.get_api_url('batch', 'container-assignments/summary')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('active_biomass_kg', response.data)
+        self.assertIn('count', response.data)
+        
+        # Verify calculations:
+        # Assignment 1: 600 fish * 10g = 6.0 kg (from partial_update test)
+        # Assignment 2: 800 fish * 15g = 12.0 kg
+        # Total: 18.0 kg, 2 assignments
+        self.assertEqual(response.data['active_biomass_kg'], 18.0)
+        self.assertEqual(response.data['count'], 2)
+
+    def test_summary_endpoint_inactive_assignments(self):
+        """Test the summary endpoint with inactive assignments."""
+        # Create an inactive assignment
+        batch2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH004"
+        )
+        container2 = create_test_container(name="Tank 4")
+        inactive_assignment = create_test_batch_container_assignment(
+            batch=batch2,
+            container=container2,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1500,
+            avg_weight_g=Decimal("25.0")
+        )
+        # Mark it inactive after creation
+        inactive_assignment.is_active = False
+        inactive_assignment.save(update_fields=["is_active"])
+        
+        # Get summary for inactive assignments
+        url = self.get_api_url('batch', 'container-assignments/summary') + '?is_active=false'
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('active_biomass_kg', response.data)
+        self.assertIn('count', response.data)
+        
+        # Verify calculations: 1500 fish * 25g = 37.5 kg, 1 assignment
+        self.assertEqual(response.data['active_biomass_kg'], 37.5)
+        self.assertEqual(response.data['count'], 1)
+
+    def test_summary_endpoint_authentication(self):
+        """Test that authentication is required for the summary endpoint."""
+        # Log out
+        self.client.force_authenticate(user=None)
+        
+        # Try to access the summary endpoint
+        url = self.get_api_url('batch', 'container-assignments/summary')
+        response = self.client.get(url)
+        
+        # Should require authentication
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_summary_endpoint_empty_database(self):
+        """Test the summary endpoint with an empty database."""
+        # Delete all assignments
+        BatchContainerAssignment.objects.all().delete()
+        
+        # Get summary for active assignments
+        url = self.get_api_url('batch', 'container-assignments/summary')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('active_biomass_kg', response.data)
+        self.assertIn('count', response.data)
+        
+        # With no assignments, values should be zero
+        self.assertEqual(response.data['active_biomass_kg'], 0.0)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_summary_endpoint_multiple_assignments(self):
+        """Test the summary endpoint with multiple assignments."""
+        # Create multiple additional assignments with different biomass values
+        for i in range(5):
+            batch = create_test_batch(
+                species=self.species,
+                lifecycle_stage=self.lifecycle_stage,
+                batch_number=f"BATCH{100+i}"
+            )
+            container = create_test_container(name=f"Tank {100+i}")
+            create_test_batch_container_assignment(
+                batch=batch,
+                container=container,
+                lifecycle_stage=self.lifecycle_stage,
+                population_count=500 + i * 100,
+                avg_weight_g=Decimal(str(5.0 + i * 2.5))
+            )
+        
+        # Get summary for all active assignments
+        url = self.get_api_url('batch', 'container-assignments/summary')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Calculate expected values:
+        # Original assignment: 600 fish * 10g = 6.0 kg (from partial_update test)
+        # New assignments:
+        # 500 * 5.0g = 2.5 kg
+        # 600 * 7.5g = 4.5 kg
+        # 700 * 10.0g = 7.0 kg
+        # 800 * 12.5g = 10.0 kg
+        # 900 * 15.0g = 13.5 kg
+        # Total: 6.0 + 2.5 + 4.5 + 7.0 + 10.0 + 13.5 = 43.5 kg, 6 assignments
+        
+        # Allow small floating point differences
+        self.assertAlmostEqual(response.data['active_biomass_kg'], 43.5, places=1)
+        self.assertEqual(response.data['count'], 6)

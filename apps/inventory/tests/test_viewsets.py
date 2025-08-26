@@ -447,4 +447,196 @@ class FeedingEventViewSetTest(TestCase):
         self.assertEqual(response.data['method'], new_feeding_data['method'])
 
 
+# --------------------------------------------------------------------------- #
+#                        Feeding Event Summary  Tests                         #
+# --------------------------------------------------------------------------- #
+
+
+class FeedingEventSummaryTest(TestCase):
+    """
+    Tests for the `/inventory/feeding-events/summary/` aggregation endpoint.
+    """
+
+    def setUp(self):
+        """Create minimal fixture data that the summary endpoint requires."""
+        self.client = APIClient()
+        self.user = User.objects.create_user(username="summary_user", password="p@ssword")
+        self.client.force_authenticate(user=self.user)
+
+        # Geography → Area
+        self.geography = Geography.objects.create(name="Geo")
+        self.area = Area.objects.create(
+            name="Area-1",
+            geography=self.geography,
+            latitude=0,
+            longitude=0,
+            max_biomass=Decimal("5000.0"),
+        )
+
+        # ContainerType → Container
+        self.container_type = ContainerType.objects.create(
+            name="Tank-Type",
+            category="TANK",
+            max_volume_m3=Decimal("100.0"),
+        )
+        self.container = Container.objects.create(
+            name="Tank-1",
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=Decimal("50.0"),
+            max_biomass_kg=Decimal("800.0"),
+        )
+
+        # Species / Stage / Batch
+        self.species = Species.objects.create(name="Salmon", scientific_name="Salmo salar")
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name="Smolt", species=self.species, order=1
+        )
+        self.batch = Batch.objects.create(
+            batch_number="B-001",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            start_date=timezone.now().date() - timedelta(days=10),
+        )
+
+        # Feed / FeedContainer / FeedStock
+        self.feed = Feed.objects.create(name="Feed-A", brand="Brand", size_category="SMALL")
+        self.feed_container = FeedContainer.objects.create(
+            name="Feeder-1", area=self.area, capacity_kg=Decimal("200.0")
+        )
+        self.feed_stock = FeedStock.objects.create(
+            feed=self.feed,
+            feed_container=self.feed_container,
+            current_quantity_kg=Decimal("100.0"),
+            reorder_threshold_kg=Decimal("10.0"),
+        )
+
+        # URL helper
+        # The aggregation endpoint is exposed under `/inventory/feeding-events/summary/`
+        self.summary_url = get_api_url("inventory", "feeding-events/summary")
+
+    # --------------------------------------------------------------------- #
+    #                           Helper utilities                            #
+    # --------------------------------------------------------------------- #
+    def _create_feeding_event(
+        self,
+        date,
+        amount_kg,
+        batch=None,
+        container=None,
+    ):
+        """Utility to create a FeedingEvent."""
+        return FeedingEvent.objects.create(
+            batch=batch or self.batch,
+            container=container or self.container,
+            feed=self.feed,
+            feed_stock=self.feed_stock,
+            feeding_date=date,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal(str(amount_kg)),
+            batch_biomass_kg=Decimal("300.0"),
+            method="MANUAL",
+        )
+
+    # --------------------------------------------------------------------- #
+    #                              Test cases                               #
+    # --------------------------------------------------------------------- #
+    def test_authentication_required(self):
+        """Endpoint must reject unauthenticated requests."""
+        self.client.force_authenticate(user=None)
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_empty_database(self):
+        """With no FeedingEvent records, should return 0 totals."""
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 0)
+        self.assertEqual(resp.data["total_amount_kg"], 0.0)
+
+    def test_default_today_filter(self):
+        """Without query params, endpoint aggregates only today's events."""
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+        self._create_feeding_event(date=today, amount_kg=5)
+        # yesterday should be ignored
+        self._create_feeding_event(date=yesterday, amount_kg=7)
+
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["total_amount_kg"], 5.0)
+
+    def test_custom_date_range(self):
+        """Aggregates events within an explicit date range."""
+        today = timezone.now().date()
+        in_range = today - timedelta(days=3)
+        out_range = today - timedelta(days=10)
+        self._create_feeding_event(date=in_range, amount_kg=4)
+        self._create_feeding_event(date=out_range, amount_kg=9)
+
+        url = f"{self.summary_url}?start_date={in_range.isoformat()}&end_date={today.isoformat()}"
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["total_amount_kg"], 4.0)
+
+    def test_filter_by_batch(self):
+        """Only events matching the given batch should be included."""
+        other_batch = Batch.objects.create(
+            batch_number="B-002",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            start_date=timezone.now().date() - timedelta(days=5),
+        )
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=5, batch=other_batch)
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=2)  # default batch
+
+        url = f"{self.summary_url}?batch={other_batch.id}"
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["total_amount_kg"], 5.0)
+
+    def test_filter_by_container(self):
+        """Only events for the specified container are counted."""
+        other_container = Container.objects.create(
+            name="Tank-2",
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=Decimal("60.0"),
+            max_biomass_kg=Decimal("900.0"),
+        )
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=3, container=other_container)
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=7)  # default container
+
+        url = f"{self.summary_url}?container={other_container.id}"
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["total_amount_kg"], 3.0)
+
+    def test_multiple_events_aggregation(self):
+        """Verify correct aggregation math over several events."""
+        today = timezone.now().date()
+        for kg in [1, 2.5, 4]:
+            self._create_feeding_event(date=today, amount_kg=kg)
+
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 3)
+        self.assertAlmostEqual(resp.data["total_amount_kg"], 7.5, places=2)
+
+    def test_response_structure(self):
+        """Ensure expected keys & data types are present."""
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=2)
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        expected_keys = {"count", "total_amount_kg"}
+        self.assertTrue(expected_keys.issubset(resp.data.keys()))
+        self.assertIsInstance(resp.data["count"], int)
+        # DRF casts Decimal to float in JSON renderer
+        self.assertIsInstance(resp.data["total_amount_kg"], float)
+
 
