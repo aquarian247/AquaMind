@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.inventory.models.feeding import FeedingEvent
@@ -37,6 +38,35 @@ class InfrastructureOverviewView(APIView):
     permission_classes = [IsAuthenticated]
     
     @method_decorator(cache_page(60))  # Cache for 60 seconds
+    @extend_schema(
+        operation_id="infrastructure_overview",
+        description="Retrieve aggregated infrastructure overview metrics. "
+        "Returns totals for containers, capacity, active biomass, a placeholder "
+        "sensor alert count, and the number of feeding events in the last 24 hours.",
+        tags=["Infrastructure"],
+        responses={
+            200: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "total_containers": {"type": "integer"},
+                        "capacity_kg": {"type": "number"},
+                        "active_biomass_kg": {"type": "number"},
+                        "sensor_alerts": {"type": "integer"},
+                        "feeding_events_today": {"type": "integer"},
+                    },
+                    "required": [
+                        "total_containers",
+                        "capacity_kg",
+                        "active_biomass_kg",
+                        "sensor_alerts",
+                        "feeding_events_today",
+                    ],
+                },
+                description="Aggregated overview metrics",
+            )
+        },
+    )
     def get(self, request):
         """
         Get aggregated infrastructure overview metrics.
