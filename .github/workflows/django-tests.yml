@@ -48,6 +48,16 @@ jobs:
         # Only run tests for implemented features
         # As we complete more features from the implementation plan, we'll add their tests here
         python manage.py test --settings=aquamind.settings_ci --noinput
+
+    # ------------------------------------------------------------------
+    # OpenAPI Spec Completeness – validate schema & post-processing hooks
+    # ------------------------------------------------------------------
+    - name: Run OpenAPI spec completeness tests
+      run: |
+        # Focused suite that validates the generated OpenAPI schema
+        # (presence of standard responses, hook configuration, integer bounds, etc.)
+        python manage.py test apps.infrastructure.tests.test_openapi_spec \
+          --settings=aquamind.settings_ci --noinput
     
     - name: Generate test coverage report
       run: |
