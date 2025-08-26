@@ -97,8 +97,9 @@ class OpenAPISpecTestCase(TestCase):
                             f"for {method.upper()} {path}"
                         )
                     
-                    # Non-GET methods should have validation error responses
-                    if method != 'get':
+                    # Methods that carry a request body must document validation error responses
+                    # (DELETE & GET typically have no body, so 400 is not required)
+                    if method in ['post', 'put', 'patch']:
                         self.assertIn('400', responses, f"Missing 400 response for {method.upper()} {path}")
                     
                     # All authenticated endpoints should have auth error responses
