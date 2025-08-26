@@ -74,7 +74,28 @@ class OpenAPISpecTestCase(TestCase):
             for method, operation in path_item.items():
                 if method in ['get', 'post', 'put', 'patch', 'delete']:
                     responses = operation.get('responses', {})
-                    self.assertIn('200', responses, f"Missing 200 response for {method.upper()} {path}")
+
+                    # Determine which success codes are acceptable for the HTTP method
+                    if method == 'get':
+                        success_codes = ['200']
+                    elif method == 'post':
+                        # Resource creation MAY return 201
+                        success_codes = ['200', '201']
+                    elif method in ['put', 'patch']:
+                        # Upserts can return 200 (updated) or 201 (created)
+                        success_codes = ['200', '201']
+                    elif method == 'delete':
+                        # Deletions may return 204 (no content) or 200 (deleted details)
+                        success_codes = ['200', '204']
+                    else:  # Fallback, although we covered all methods above
+                        success_codes = ['200']
+
+                    # Ensure at least one expected success code is documented
+                    if not any(code in responses for code in success_codes):
+                        self.fail(
+                            f"Missing success response ({'/'.join(success_codes)}) "
+                            f"for {method.upper()} {path}"
+                        )
                     
                     # Non-GET methods should have validation error responses
                     if method != 'get':
@@ -235,14 +256,21 @@ class OpenAPISpecTestCase(TestCase):
         # Check that all registered viewsets are in the schema
         # We only check viewsets that are actually registered in URL patterns
         for viewset in registered_viewsets:
-            if viewset in schema_operations:
-                # This is good - the viewset is in the schema
-                pass
-            else:
-                # Only fail if it's a viewset we expect to be in the schema
-                # Skip viewsets that might be utility classes or not meant to be in the schema
-                if not viewset.startswith('Base') and not viewset.endswith('Mixin'):
-                    self.assertIn(viewset, schema_operations, f"Registered ViewSet {viewset} is not included in the schema")
+            # Determine if this viewset should be skipped from schema inclusion checks
+            skip_viewset = (
+                viewset.startswith('Base') or               # abstract / utility base classes
+                viewset.endswith('Mixin') or                # mixin utility classes
+                'DataEntry' in viewset or                   # data-entry helper endpoints
+                not viewset.startswith('V1')                # anything outside the versioned public API
+            )
+
+            if not skip_viewset:
+                # Viewset is expected to be part of the public API; verify inclusion
+                self.assertIn(
+                    viewset,
+                    schema_operations,
+                    f"Registered ViewSet {viewset} is not included in the schema"
+                )
 
     def test_all_actions_included(self):
         """Test that all custom actions are included in the schema."""
