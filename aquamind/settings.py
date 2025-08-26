@@ -122,7 +122,6 @@ WSGI_APPLICATION = "aquamind.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# PostgreSQL configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -310,6 +309,30 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
+# ------------------------------------------------------------------
+# Caching configuration
+# ------------------------------------------------------------------
+# Local-memory cache provides a zero-config, thread-safe cache that is
+# perfectly adequate for development and small deployments.  In larger
+# environments you can switch BACKEND to a shared cache (e.g. Redis or
+# Memcached) via environment-specific settings without touching code.
+#
+# Aggregated endpoints (infrastructure overview, assignment summary,
+# feeding events summary) use django.views.decorators.cache `cache_page`
+# with short TTLs (≈30-60 s).  A dedicated cache section centralises
+# those defaults and keeps LOCMEM fallback explicit.
+#
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',   # Distinct per-process namespace
+        'TIMEOUT': 60,                    # Global fallback TTL (seconds)
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        },
+    }
+}
+
 # Using Django's default User model with extended profiles
 
 # Media files settings for user profile pictures
@@ -329,4 +352,4 @@ BROODSTOCK_DEFAULTS = {
 # “database is being accessed by other users” error seen when running the
 # Django parallel test runner.
 TEST_RUNNER = 'aquamind.test_runner.CleanupTestRunner'
-
+
