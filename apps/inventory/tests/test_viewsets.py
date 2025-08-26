@@ -551,8 +551,8 @@ class FeedingEventSummaryTest(TestCase):
         """With no FeedingEvent records, should return 0 totals."""
         resp = self.client.get(self.summary_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 0)
-        self.assertEqual(resp.data["total_amount_kg"], 0.0)
+        self.assertEqual(resp.data["events_count"], 0)
+        self.assertEqual(resp.data["total_feed_kg"], 0.0)
 
     def test_default_today_filter(self):
         """Without query params, endpoint aggregates only today's events."""
@@ -564,8 +564,8 @@ class FeedingEventSummaryTest(TestCase):
 
         resp = self.client.get(self.summary_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["total_amount_kg"], 5.0)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 5.0)
 
     def test_custom_date_range(self):
         """Aggregates events within an explicit date range."""
@@ -578,8 +578,8 @@ class FeedingEventSummaryTest(TestCase):
         url = f"{self.summary_url}?start_date={in_range.isoformat()}&end_date={today.isoformat()}"
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["total_amount_kg"], 4.0)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 4.0)
 
     def test_filter_by_batch(self):
         """Only events matching the given batch should be included."""
@@ -595,8 +595,8 @@ class FeedingEventSummaryTest(TestCase):
         url = f"{self.summary_url}?batch={other_batch.id}"
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["total_amount_kg"], 5.0)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 5.0)
 
     def test_filter_by_container(self):
         """Only events for the specified container are counted."""
@@ -613,8 +613,8 @@ class FeedingEventSummaryTest(TestCase):
         url = f"{self.summary_url}?container={other_container.id}"
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["total_amount_kg"], 3.0)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 3.0)
 
     def test_multiple_events_aggregation(self):
         """Verify correct aggregation math over several events."""
@@ -624,8 +624,8 @@ class FeedingEventSummaryTest(TestCase):
 
         resp = self.client.get(self.summary_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["count"], 3)
-        self.assertAlmostEqual(resp.data["total_amount_kg"], 7.5, places=2)
+        self.assertEqual(resp.data["events_count"], 3)
+        self.assertAlmostEqual(resp.data["total_feed_kg"], 7.5, places=2)
 
     def test_response_structure(self):
         """Ensure expected keys & data types are present."""
@@ -633,10 +633,10 @@ class FeedingEventSummaryTest(TestCase):
         resp = self.client.get(self.summary_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        expected_keys = {"count", "total_amount_kg"}
+        expected_keys = {"events_count", "total_feed_kg"}
         self.assertTrue(expected_keys.issubset(resp.data.keys()))
-        self.assertIsInstance(resp.data["count"], int)
+        self.assertIsInstance(resp.data["events_count"], int)
         # DRF casts Decimal to float in JSON renderer
-        self.assertIsInstance(resp.data["total_amount_kg"], float)
+        self.assertIsInstance(resp.data["total_feed_kg"], float)
 
 
