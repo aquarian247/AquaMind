@@ -92,9 +92,10 @@ class InfrastructureOverviewView(APIView):
         active_biomass_kg = float(active_biomass_result['sum'] or 0)
         
         # Count feeding events in the last 24 hours
-        yesterday = timezone.now() - timedelta(days=1)
+        # Only count events whose ``feeding_date`` equals *today* (not last 24 h).
+        today = timezone.now().date()
         feeding_events_today = FeedingEvent.objects.filter(
-            feeding_date__gte=yesterday.date()
+            feeding_date=today
         ).count()
         
         # Return aggregated metrics
