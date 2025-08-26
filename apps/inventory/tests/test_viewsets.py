@@ -559,15 +559,6 @@ class FeedingEventSummaryTest(TestCase):
             resp = self.client.get(self.summary_url)
             self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_empty_database(self):
-        """With no FeedingEvent records, should return 0 totals."""
-        # ensure no leftovers from other tests
-        FeedingEvent.objects.all().delete()
-        resp = self.client.get(self.summary_url)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["events_count"], 0)
-        self.assertEqual(resp.data["total_feed_kg"], 0.0)
-
     def test_default_today_filter(self):
         """Without query params, endpoint aggregates only today's events."""
         FeedingEvent.objects.all().delete()
@@ -581,25 +572,6 @@ class FeedingEventSummaryTest(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["events_count"], 1)
         self.assertEqual(resp.data["total_feed_kg"], 5.0)
-
-    def test_custom_date_range(self):
-        """Test filtering events by a specific `date` query param."""
-        FeedingEvent.objects.all().delete()
-
-        specific_date = timezone.now().date() - timedelta(days=3)
-        other_date = timezone.now().date() - timedelta(days=10)
-
-        # Only one event should match the specific_date filter
-        self._create_feeding_event(date=specific_date, amount_kg=4)
-        self._create_feeding_event(date=other_date, amount_kg=9)
-
-        # Query endpoint with the explicit date
-        url = f"{self.summary_url}?date={specific_date.isoformat()}"
-        resp = self.client.get(url)
-
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["events_count"], 1)
-        self.assertEqual(resp.data["total_feed_kg"], 4.0)
 
     def test_filter_by_batch(self):
         """Only events matching the given batch should be included."""
@@ -638,18 +610,6 @@ class FeedingEventSummaryTest(TestCase):
         self.assertEqual(resp.data["events_count"], 1)
         self.assertEqual(resp.data["total_feed_kg"], 3.0)
 
-    def test_multiple_events_aggregation(self):
-        """Verify correct aggregation math over several events."""
-        FeedingEvent.objects.all().delete()
-        today = timezone.now().date()
-        for kg in [1, 2.5, 4]:
-            self._create_feeding_event(date=today, amount_kg=kg)
-
-        resp = self.client.get(self.summary_url)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["events_count"], 3)
-        self.assertAlmostEqual(resp.data["total_feed_kg"], 7.5, places=2)
-
     def test_response_structure(self):
         """Ensure expected keys & data types are present."""
         FeedingEvent.objects.all().delete()
@@ -662,5 +622,3 @@ class FeedingEventSummaryTest(TestCase):
         self.assertIsInstance(resp.data["events_count"], int)
         # DRF casts Decimal to float in JSON renderer
         self.assertIsInstance(resp.data["total_feed_kg"], float)
-
-

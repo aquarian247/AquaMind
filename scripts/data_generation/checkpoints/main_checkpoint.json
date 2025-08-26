@@ -1,6 +1,6 @@
 {
   "created_at": "2025-08-20T15:48:14.586692",
-  "last_updated": "2025-08-23T16:55:35.517095",
+  "last_updated": "2025-08-26T12:21:18.995871",
   "sessions": {
     "session_1": {
       "status": "in_progress",
@@ -92,8 +92,12 @@
       "days_processed": 30
     },
     "session_3": {
-      "status": "not_started",
-      "progress": {}
+      "status": "in_progress",
+      "progress": {},
+      "timestamp": "2025-08-26T12:21:18.995551",
+      "error": "Completed chunk ending 2021-03-31",
+      "last_date": "2021-03-31",
+      "days_processed": 90
     },
     "session_4": {
       "status": "not_started",
