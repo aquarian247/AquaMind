@@ -104,11 +104,17 @@ class OpenAPISpecTestCase(TestCase):
                     
                     # All authenticated endpoints should have auth error responses
                     # Exclude schema endpoints and the root API endpoint
-                    if not path.startswith('/api/v1/schema') and path != '/api/':
+                    is_public_endpoint = (
+                        path == '/api/' or
+                        path.startswith('/api/v1/schema') or
+                        path.startswith('/api/v1/auth/') or
+                        path.startswith('/api/auth/')
+                    )
+
+                    if not is_public_endpoint:
                         self.assertIn('401', responses, f"Missing 401 response for {method.upper()} {path}")
-                        # Auth endpoints don't require 403 (authorization) response
-                        if not path.startswith('/api/v1/auth/'):
-                            self.assertIn('403', responses, f"Missing 403 response for {method.upper()} {path}")
+                        # Non-public endpoints must document authorization error
+                        self.assertIn('403', responses, f"Missing 403 response for {method.upper()} {path}")
                     
                     # All endpoints should have server error response
                     self.assertIn('500', responses, f"Missing 500 response for {method.upper()} {path}")

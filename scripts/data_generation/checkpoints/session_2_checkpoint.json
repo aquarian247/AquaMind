@@ -1,7 +1,8 @@
 {
-  "status": "in_progress",
+  "status": "completed",
   "timestamp": "2025-08-23T16:55:35.511584",
   "error": "Completed chunk ending 2018-01-30",
   "last_date": "2018-01-30",
-  "days_processed": 30
+  "days_processed": 30,
+  "completed_at": "2025-08-26T15:28:00.731341"
 }

@@ -20,6 +20,10 @@ class APIRootView(APIView):
     This view is designed to help developers discover and navigate the API
     structure easily.
     """
+    # Explicitly set a serializer_class so that drf-spectacular does not attempt
+    # to auto-detect one and raise a warning. Since this view only returns a
+    # plain dictionary structure, no serializer is required.
+    serializer_class = None
     permission_classes = [AllowAny]
     
     def get(self, request, format=None):

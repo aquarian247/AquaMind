@@ -202,6 +202,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_environmental_parameters_destroy
+      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this environmental parameter.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_environmental_parameters_partial_update
       description: ViewSet for viewing and editing EnvironmentalParameter instances.
@@ -293,34 +321,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_environmental_parameters_destroy
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this environmental parameter.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/environmental/readings/:
     get:
       operationId: v1_environmental_readings_list
@@ -519,6 +519,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_environmental_readings_destroy
+      description: |-
+        ViewSet for viewing and editing EnvironmentalReading instances.
+
+        Includes special filtering and aggregation methods for time-series data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this environmental reading.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_environmental_readings_partial_update
       description: |-
@@ -616,37 +647,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_environmental_readings_destroy
-      description: |-
-        ViewSet for viewing and editing EnvironmentalReading instances.
-
-        Includes special filtering and aggregation methods for time-series data.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this environmental reading.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/environmental/photoperiod/:
     get:
       operationId: v1_environmental_photoperiod_list
@@ -775,6 +775,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_environmental_photoperiod_destroy
+      description: ViewSet for viewing and editing PhotoperiodData instances.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this photoperiod data.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_environmental_photoperiod_partial_update
       description: ViewSet for viewing and editing PhotoperiodData instances.
@@ -866,34 +894,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_environmental_photoperiod_destroy
-      description: ViewSet for viewing and editing PhotoperiodData instances.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this photoperiod data.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/environmental/weather/:
     get:
       operationId: v1_environmental_weather_list
@@ -1046,6 +1046,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_environmental_weather_destroy
+      description: |-
+        ViewSet for viewing and editing WeatherData instances.
+
+        Includes special filtering and aggregation methods for time-series data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this weather data.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_environmental_weather_partial_update
       description: |-
@@ -1143,37 +1174,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_environmental_weather_destroy
-      description: |-
-        ViewSet for viewing and editing WeatherData instances.
-
-        Includes special filtering and aggregation methods for time-series data.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this weather data.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/environmental/stage-transitions/:
     get:
       operationId: v1_environmental_stage_transitions_list
@@ -1293,6 +1293,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_environmental_stage_transitions_destroy
+      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this stage transition environmental.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_environmental_stage_transitions_partial_update
       description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
@@ -1384,34 +1412,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_environmental_stage_transitions_destroy
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this stage transition environmental.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/batch/species/:
     get:
       operationId: v1_batch_species_list
@@ -1462,6 +1462,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSpeciesList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1498,6 +1502,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Species'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1534,6 +1542,43 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_species_destroy
+      description: |-
+        API endpoint for managing aquaculture Species.
+
+        Provides CRUD operations for species, including filtering by name
+        and scientific name, searching across name, scientific name, and description,
+        and ordering by name, scientific name, or creation date.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this species.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -1578,6 +1623,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1625,39 +1674,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_species_destroy
-      description: |-
-        API endpoint for managing aquaculture Species.
-
-        Provides CRUD operations for species, including filtering by name
-        and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this species.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/lifecycle-stages/:
     get:
       operationId: v1_batch_lifecycle_stages_list
@@ -1717,6 +1741,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedLifeCycleStageList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1754,6 +1782,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/LifeCycleStage'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1791,6 +1823,44 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_lifecycle_stages_destroy
+      description: |-
+        API endpoint for managing Species Life Cycle Stages.
+
+        Provides CRUD operations for life cycle stages, specific to a species.
+        Allows filtering by name, species, and order.
+        Supports searching across name, description, and species name.
+        Ordering can be done by species name, order, name, or creation date.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this life cycle stage.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -1836,6 +1906,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -1884,40 +1958,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_lifecycle_stages_destroy
-      description: |-
-        API endpoint for managing Species Life Cycle Stages.
-
-        Provides CRUD operations for life cycle stages, specific to a species.
-        Allows filtering by name, species, and order.
-        Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this life cycle stage.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/batches/:
     get:
       operationId: v1_batch_batches_list
@@ -2000,6 +2048,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2035,6 +2087,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Batch'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2065,6 +2121,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/Batch'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/batch/batches/{id}/:
@@ -2120,6 +2180,64 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_batches_destroy
+      description: |-
+        API endpoint for comprehensive management of aquaculture Batches.
+
+        Provides full CRUD operations for batches, including detailed filtering,
+        searching, and ordering capabilities. Batches represent groups of aquatic
+        organisms managed together through their lifecycle.
+
+        **Filtering:**
+        - `batch_number`: Exact match.
+        - `species`: Exact match by Species ID.
+        - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+        - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
+        - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
+
+        **Searching:**
+        - `batch_number`: Partial match.
+        - `species__name`: Partial match on the related Species name.
+        - `lifecycle_stage__name`: Partial match on the related LifeCycleStage name.
+        - `notes`: Partial match on the batch notes.
+        - `batch_type`: Partial match on the batch type.
+
+        **Ordering:**
+        - `batch_number`
+        - `start_date`
+        - `species__name`
+        - `lifecycle_stage__name`
+        - `created_at` (default: descending)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -2185,6 +2303,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2253,60 +2375,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_batches_destroy
-      description: |-
-        API endpoint for comprehensive management of aquaculture Batches.
-
-        Provides full CRUD operations for batches, including detailed filtering,
-        searching, and ordering capabilities. Batches represent groups of aquatic
-        organisms managed together through their lifecycle.
-
-        **Filtering:**
-        - `batch_number`: Exact match.
-        - `species`: Exact match by Species ID.
-        - `lifecycle_stage`: Exact match by LifeCycleStage ID.
-        - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
-        - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
-
-        **Searching:**
-        - `batch_number`: Partial match.
-        - `species__name`: Partial match on the related Species name.
-        - `lifecycle_stage__name`: Partial match on the related LifeCycleStage name.
-        - `notes`: Partial match on the batch notes.
-        - `batch_type`: Partial match on the batch type.
-
-        **Ordering:**
-        - `batch_number`
-        - `start_date`
-        - `species__name`
-        - `lifecycle_stage__name`
-        - `created_at` (default: descending)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/batches/{id}/growth_analysis/:
     get:
       operationId: v1_batch_batches_growth_analysis_retrieve
@@ -2343,6 +2419,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/batch/batches/{id}/performance_metrics/:
@@ -2381,6 +2461,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/batch/container-assignments/:
@@ -2466,6 +2550,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchContainerAssignmentList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2522,6 +2610,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignment'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2556,6 +2648,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignment'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/batch/container-assignments/{id}/:
@@ -2610,6 +2706,63 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_container_assignments_destroy
+      description: |-
+        API endpoint for managing Batch Container Assignments.
+
+        This endpoint handles the assignment of batches (or parts of batches)
+        to specific containers (e.g., tanks, ponds, cages) at a given point in time.
+        It records the population count and biomass within that container.
+        Provides full CRUD operations for these assignments.
+
+        An assignment can be marked as inactive when a batch is moved out of a container.
+
+        **Filtering:**
+        - `batch`: ID of the assigned batch.
+        - `container`: ID of the assigned container.
+        - `is_active`: Boolean indicating if the assignment is currently active.
+        - `assignment_date`: Exact date of the assignment.
+
+        **Searching:**
+        - `batch__batch_number`: Batch number of the assigned batch.
+        - `container__name`: Name of the assigned container.
+
+        **Ordering:**
+        - `assignment_date` (default: descending)
+        - `batch__batch_number`
+        - `container__name`
+        - `population_count`
+        - `biomass_kg`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch container assignment.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -2674,6 +2827,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2741,59 +2898,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_container_assignments_destroy
-      description: |-
-        API endpoint for managing Batch Container Assignments.
-
-        This endpoint handles the assignment of batches (or parts of batches)
-        to specific containers (e.g., tanks, ponds, cages) at a given point in time.
-        It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
-
-        An assignment can be marked as inactive when a batch is moved out of a container.
-
-        **Filtering:**
-        - `batch`: ID of the assigned batch.
-        - `container`: ID of the assigned container.
-        - `is_active`: Boolean indicating if the assignment is currently active.
-        - `assignment_date`: Exact date of the assignment.
-
-        **Searching:**
-        - `batch__batch_number`: Batch number of the assigned batch.
-        - `container__name`: Name of the assigned container.
-
-        **Ordering:**
-        - `assignment_date` (default: descending)
-        - `batch__batch_number`
-        - `container__name`
-        - `population_count`
-        - `biomass_kg`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch container assignment.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/batch-compositions/:
     get:
       operationId: v1_batch_batch_compositions_list
@@ -2864,6 +2976,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchCompositionList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2916,6 +3032,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchComposition'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -2968,6 +3088,59 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_batch_compositions_destroy
+      description: |-
+        API endpoint for managing Batch Compositions.
+
+        This endpoint defines the composition of a 'mixed' batch, detailing what
+        percentage and quantity (population/biomass) of it comes from various
+        'source' batches. This is crucial for traceability when batches are merged.
+        Provides full CRUD operations for batch composition records.
+
+        **Filtering:**
+        - `mixed_batch`: ID of the resulting mixed batch.
+        - `source_batch`: ID of a source batch contributing to the mixed batch.
+
+        **Searching:**
+        - `mixed_batch__batch_number`: Batch number of the mixed batch.
+        - `source_batch__batch_number`: Batch number of the source batch.
+
+        **Ordering:**
+        - `mixed_batch__batch_number` (default)
+        - `source_batch__batch_number`
+        - `percentage` (default)
+        - `population_count`
+        - `biomass_kg`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch composition.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -3028,6 +3201,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3091,55 +3268,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_batch_compositions_destroy
-      description: |-
-        API endpoint for managing Batch Compositions.
-
-        This endpoint defines the composition of a 'mixed' batch, detailing what
-        percentage and quantity (population/biomass) of it comes from various
-        'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
-
-        **Filtering:**
-        - `mixed_batch`: ID of the resulting mixed batch.
-        - `source_batch`: ID of a source batch contributing to the mixed batch.
-
-        **Searching:**
-        - `mixed_batch__batch_number`: Batch number of the mixed batch.
-        - `source_batch__batch_number`: Batch number of the source batch.
-
-        **Ordering:**
-        - `mixed_batch__batch_number` (default)
-        - `source_batch__batch_number`
-        - `percentage` (default)
-        - `population_count`
-        - `biomass_kg`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch composition.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/transfers/:
     get:
       operationId: v1_batch_transfers_list
@@ -3255,6 +3391,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchTransferList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3311,6 +3451,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchTransfer'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3367,6 +3511,63 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_transfers_destroy
+      description: |-
+        API endpoint for managing Batch Transfers.
+
+        Batch transfers record the movement of organisms between batches or changes
+        in their lifecycle stage or container assignment within the same batch.
+        This endpoint provides full CRUD operations for batch transfers.
+
+        **Filtering:**
+        - `source_batch`: ID of the source batch.
+        - `destination_batch`: ID of the destination batch.
+        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
+        - `source_lifecycle_stage`: ID of the source lifecycle stage.
+        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
+        - `source_assignment`: ID of the source batch container assignment.
+        - `destination_assignment`: ID of the destination batch container assignment.
+
+        **Searching:**
+        - `source_batch__batch_number`: Batch number of the source batch.
+        - `destination_batch__batch_number`: Batch number of the destination batch.
+        - `notes`: Notes associated with the transfer.
+
+        **Ordering:**
+        - `transfer_date` (default: descending)
+        - `source_batch__batch_number`
+        - `transfer_type`
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch transfer.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -3431,6 +3632,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3498,59 +3703,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_transfers_destroy
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch transfer.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/mortality-events/:
     get:
       operationId: v1_batch_mortality_events_list
@@ -3638,6 +3798,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedMortalityEventList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3689,6 +3853,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/MortalityEvent'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3740,6 +3908,58 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_batch_mortality_events_destroy
+      description: |-
+        API endpoint for managing Mortality Events in aquaculture batches.
+
+        Mortality events record the number of deaths in a batch on a specific date,
+        along with the suspected cause and any relevant notes. This endpoint
+        provides full CRUD operations for mortality events.
+
+        **Filtering:**
+        - `batch`: ID of the batch associated with the mortality event.
+        - `event_date`: Exact date of the mortality event.
+        - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
+
+        **Searching:**
+        - `batch__batch_number`: Batch number of the associated batch.
+        - `notes`: Notes associated with the mortality event.
+
+        **Ordering:**
+        - `event_date` (default: descending)
+        - `batch__batch_number`
+        - `count` (number of mortalities)
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this mortality event.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -3799,6 +4019,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -3861,54 +4085,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_mortality_events_destroy
-      description: |-
-        API endpoint for managing Mortality Events in aquaculture batches.
-
-        Mortality events record the number of deaths in a batch on a specific date,
-        along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
-
-        **Filtering:**
-        - `batch`: ID of the batch associated with the mortality event.
-        - `event_date`: Exact date of the mortality event.
-        - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
-
-        **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch.
-        - `notes`: Notes associated with the mortality event.
-
-        **Ordering:**
-        - `event_date` (default: descending)
-        - `batch__batch_number`
-        - `count` (number of mortalities)
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this mortality event.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/batch/growth-samples/:
     get:
       operationId: v1_batch_growth_samples_list
@@ -4093,6 +4277,54 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_batch_growth_samples_destroy
+      description: |-
+        API endpoint for managing Growth Samples from aquaculture batches.
+
+        Growth samples record the average weight of organisms in a batch (or a specific
+        container assignment of a batch) on a particular date. This data is essential
+        for tracking growth, calculating feed conversion ratios, and making management decisions.
+        This endpoint provides full CRUD operations for growth samples.
+
+        **Filtering:**
+        - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `sample_date`: Exact date of the sample.
+
+        **Searching:**
+        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `notes`: Notes associated with the growth sample.
+
+        **Ordering:**
+        - `sample_date` (default: descending)
+        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `avg_weight_g`: Average weight in grams.
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this growth sample.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_batch_growth_samples_partial_update
       description: |-
@@ -4224,54 +4456,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_batch_growth_samples_destroy
-      description: |-
-        API endpoint for managing Growth Samples from aquaculture batches.
-
-        Growth samples record the average weight of organisms in a batch (or a specific
-        container assignment of a batch) on a particular date. This data is essential
-        for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
-
-        **Filtering:**
-        - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
-        - `sample_date`: Exact date of the sample.
-
-        **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
-        - `notes`: Notes associated with the growth sample.
-
-        **Ordering:**
-        - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
-        - `avg_weight_g`: Average weight in grams.
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this growth sample.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/feeds/:
     get:
       operationId: v1_inventory_feeds_list
@@ -4320,6 +4504,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4354,6 +4542,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Feed'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4388,6 +4580,41 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_inventory_feeds_destroy
+      description: |-
+        ViewSet for Feed model.
+
+        Provides CRUD operations for feed types used in aquaculture operations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this feed.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -4430,6 +4657,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4475,37 +4706,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_inventory_feeds_destroy
-      description: |-
-        ViewSet for Feed model.
-
-        Provides CRUD operations for feed types used in aquaculture operations.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/feed-purchases/:
     get:
       operationId: v1_inventory_feed_purchases_list
@@ -4561,6 +4769,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedPurchaseList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4595,6 +4807,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedPurchase'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4629,6 +4845,41 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_inventory_feed_purchases_destroy
+      description: |-
+        ViewSet for FeedPurchase model.
+
+        Provides CRUD operations for feed purchase records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this feed purchase.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -4671,6 +4922,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4716,37 +4971,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_inventory_feed_purchases_destroy
-      description: |-
-        ViewSet for FeedPurchase model.
-
-        Provides CRUD operations for feed purchase records.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed purchase.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/feed-stocks/:
     get:
       operationId: v1_inventory_feed_stocks_list
@@ -4793,6 +5025,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedStockList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4827,6 +5063,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedStock'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4849,6 +5089,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/FeedStock'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/inventory/feed-stocks/{id}/:
@@ -4881,6 +5125,41 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_inventory_feed_stocks_destroy
+      description: |-
+        ViewSet for FeedStock model.
+
+        Provides CRUD operations for feed stock levels in feed containers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this feed stock.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -4923,6 +5202,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -4968,37 +5251,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_inventory_feed_stocks_destroy
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed stock.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/feeding-events/:
     get:
       operationId: v1_inventory_feeding_events_list
@@ -5076,6 +5336,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedingEventList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -5111,6 +5375,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -5133,6 +5401,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/inventory/feeding-events/summary/:
@@ -5165,6 +5437,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedingEvent'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/inventory/feeding-events/{id}/:
@@ -5198,6 +5474,42 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_inventory_feeding_events_destroy
+      description: |-
+        ViewSet for FeedingEvent model.
+
+        Provides CRUD operations for feeding events with additional filtering
+        capabilities.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this feeding event.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -5241,6 +5553,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -5287,38 +5603,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_inventory_feeding_events_destroy
-      description: |-
-        ViewSet for FeedingEvent model.
-
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feeding event.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/batch-feeding-summaries/:
     get:
       operationId: v1_inventory_batch_feeding_summaries_list
@@ -5370,6 +5662,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedBatchFeedingSummaryList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -5392,6 +5688,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/BatchFeedingSummary'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/inventory/batch-feeding-summaries/generate/:
@@ -5422,6 +5722,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchFeedingSummary'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -5457,6 +5761,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
   /api/v1/inventory/feed-container-stock/:
@@ -5723,6 +6031,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_inventory_feed_container_stock_destroy
+      description: |-
+        API endpoint for managing Feed Container Stock.
+
+        Provides CRUD operations for feed container stock entries,
+        supporting FIFO inventory tracking.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Feed Container Stock.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_inventory_feed_container_stock_partial_update
       description: |-
@@ -5822,38 +6162,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_inventory_feed_container_stock_destroy
-      description: |-
-        API endpoint for managing Feed Container Stock.
-
-        Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Feed Container Stock.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/journal-entries/:
     get:
       operationId: v1_health_journal_entries_list
@@ -6027,6 +6335,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_journal_entries_destroy
+      description: |-
+        API endpoint for managing Journal Entries.
+
+        Provides CRUD operations for journal entries, which track observations
+        and notes about fish health.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this journal entry.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_journal_entries_partial_update
       description: |-
@@ -6126,38 +6466,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_journal_entries_destroy
-      description: |-
-        API endpoint for managing Journal Entries.
-
-        Provides CRUD operations for journal entries, which track observations
-        and notes about fish health.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this journal entry.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/mortality-reasons/:
     get:
       operationId: v1_health_mortality_reasons_list
@@ -6282,6 +6590,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_mortality_reasons_destroy
+      description: |-
+        API endpoint for managing Mortality Reasons.
+
+        Provides CRUD operations for mortality reasons used in mortality records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this mortality reason.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_mortality_reasons_partial_update
       description: |-
@@ -6379,37 +6718,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_mortality_reasons_destroy
-      description: |-
-        API endpoint for managing Mortality Reasons.
-
-        Provides CRUD operations for mortality reasons used in mortality records.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this mortality reason.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/mortality-records/:
     get:
       operationId: v1_health_mortality_records_list
@@ -6553,6 +6861,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_mortality_records_destroy
+      description: |-
+        API endpoint for managing Mortality Records.
+
+        Provides CRUD operations for mortality records, which track fish deaths
+        and their causes.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this mortality record.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_mortality_records_partial_update
       description: |-
@@ -6652,38 +6992,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_mortality_records_destroy
-      description: |-
-        API endpoint for managing Mortality Records.
-
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this mortality record.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/lice-counts/:
     get:
       operationId: v1_health_lice_counts_list
@@ -6824,6 +7132,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_lice_counts_destroy
+      description: |-
+        API endpoint for managing Lice Counts.
+
+        Provides CRUD operations for lice counts, which track sea lice infestations
+        in fish populations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this lice count.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_lice_counts_partial_update
       description: |-
@@ -6923,38 +7263,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_lice_counts_destroy
-      description: |-
-        API endpoint for managing Lice Counts.
-
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this lice count.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/vaccination-types/:
     get:
       operationId: v1_health_vaccination_types_list
@@ -7087,6 +7395,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_vaccination_types_destroy
+      description: |-
+        API endpoint for managing Vaccination Types.
+
+        Provides CRUD operations for vaccination types used in treatments.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this vaccination type.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_vaccination_types_partial_update
       description: |-
@@ -7184,37 +7523,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_vaccination_types_destroy
-      description: |-
-        API endpoint for managing Vaccination Types.
-
-        Provides CRUD operations for vaccination types used in treatments.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this vaccination type.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/treatments/:
     get:
       operationId: v1_health_treatments_list
@@ -7435,6 +7743,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_treatments_destroy
+      description: |-
+        API endpoint for managing Treatments.
+
+        Provides CRUD operations for treatments, which track medical interventions
+        for fish populations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this treatment.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_treatments_partial_update
       description: |-
@@ -7534,38 +7874,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_treatments_destroy
-      description: |-
-        API endpoint for managing Treatments.
-
-        Provides CRUD operations for treatments, which track medical interventions
-        for fish populations.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this treatment.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/sample-types/:
     get:
       operationId: v1_health_sample_types_list
@@ -7690,6 +7998,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_sample_types_destroy
+      description: |-
+        API endpoint for managing Sample Types.
+
+        Provides CRUD operations for sample types used in lab testing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this sample type.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_sample_types_partial_update
       description: |-
@@ -7787,37 +8126,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_sample_types_destroy
-      description: |-
-        API endpoint for managing Sample Types.
-
-        Provides CRUD operations for sample types used in lab testing.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this sample type.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/health-parameters/:
     get:
       operationId: v1_health_health_parameters_list
@@ -7946,6 +8254,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_health_parameters_destroy
+      description: |-
+        API endpoint for managing Health Parameters.
+
+        Provides CRUD operations for health parameters used in fish health assessments.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this health parameter.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_health_parameters_partial_update
       description: |-
@@ -8043,37 +8382,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_health_parameters_destroy
-      description: |-
-        API endpoint for managing Health Parameters.
-
-        Provides CRUD operations for health parameters used in fish health assessments.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this health parameter.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/health-sampling-events/:
     get:
       operationId: v1_health_health_sampling_events_list
@@ -8229,6 +8537,39 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_health_sampling_events_destroy
+      description: |-
+        API endpoint for managing Health Sampling Events.
+
+        Provides CRUD operations for health sampling events, including nested
+        individual fish observations and parameter scores. Also provides an
+        action to calculate aggregate metrics.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Health Sampling Event.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_health_sampling_events_partial_update
       description: |-
@@ -8330,39 +8671,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_health_sampling_events_destroy
-      description: |-
-        API endpoint for managing Health Sampling Events.
-
-        Provides CRUD operations for health sampling events, including nested
-        individual fish observations and parameter scores. Also provides an
-        action to calculate aggregate metrics.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Health Sampling Event.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/health-sampling-events/{id}/calculate-aggregates/:
     post:
       operationId: v1_health_health_sampling_events_calculate_aggregates_create
@@ -8548,6 +8856,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_individual_fish_observations_destroy
+      description: |-
+        API endpoint for managing Individual Fish Observations.
+
+        Provides CRUD operations for individual fish observations within a health sampling event.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Individual Fish Observation.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_individual_fish_observations_partial_update
       description: |-
@@ -8645,37 +8984,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_individual_fish_observations_destroy
-      description: |-
-        API endpoint for managing Individual Fish Observations.
-
-        Provides CRUD operations for individual fish observations within a health sampling event.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Individual Fish Observation.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/fish-parameter-scores/:
     get:
       operationId: v1_health_fish_parameter_scores_list
@@ -8822,6 +9130,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_fish_parameter_scores_destroy
+      description: |-
+        API endpoint for managing Fish Parameter Scores.
+
+        Provides CRUD operations for parameter scores assigned to individual fish observations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Fish Parameter Score.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_fish_parameter_scores_partial_update
       description: |-
@@ -8919,37 +9258,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_fish_parameter_scores_destroy
-      description: |-
-        API endpoint for managing Fish Parameter Scores.
-
-        Provides CRUD operations for parameter scores assigned to individual fish observations.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Fish Parameter Score.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/health/health-lab-samples/:
     get:
       operationId: v1_health_health_lab_samples_list
@@ -9116,6 +9424,38 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_health_health_lab_samples_destroy
+      description: |-
+        API endpoint for managing Health Lab Samples.
+
+        Provides CRUD operations and filtering for lab samples. Handles creation
+        with historical batch-container assignment lookup based on the sample date.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Health Lab Sample.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_health_health_lab_samples_partial_update
       description: |-
@@ -9215,38 +9555,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_health_health_lab_samples_destroy
-      description: |-
-        API endpoint for managing Health Lab Samples.
-
-        Provides CRUD operations and filtering for lab samples. Handles creation
-        with historical batch-container assignment lookup based on the sample date.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Health Lab Sample.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/maintenance-tasks/:
     get:
       operationId: v1_broodstock_maintenance_tasks_list
@@ -9412,6 +9720,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_maintenance_tasks_destroy
+      description: ViewSet for maintenance tasks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Maintenance Task.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_maintenance_tasks_partial_update
       description: ViewSet for maintenance tasks.
@@ -9503,34 +9839,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_maintenance_tasks_destroy
-      description: ViewSet for maintenance tasks.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Maintenance Task.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/maintenance-tasks/{id}/complete/:
     post:
       operationId: v1_broodstock_maintenance_tasks_complete_create
@@ -9760,6 +10068,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_fish_destroy
+      description: ViewSet for broodstock fish.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Broodstock Fish.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_fish_partial_update
       description: ViewSet for broodstock fish.
@@ -9851,34 +10187,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_fish_destroy
-      description: ViewSet for broodstock fish.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Broodstock Fish.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/fish-movements/:
     get:
       operationId: v1_broodstock_fish_movements_list
@@ -10051,6 +10359,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_fish_movements_destroy
+      description: ViewSet for fish movements.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Fish Movement.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_fish_movements_partial_update
       description: ViewSet for fish movements.
@@ -10142,34 +10478,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_fish_movements_destroy
-      description: ViewSet for fish movements.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Fish Movement.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/breeding-plans/:
     get:
       operationId: v1_broodstock_breeding_plans_list
@@ -10317,6 +10625,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_breeding_plans_destroy
+      description: ViewSet for breeding plans.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Breeding Plan.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_breeding_plans_partial_update
       description: ViewSet for breeding plans.
@@ -10408,34 +10744,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_breeding_plans_destroy
-      description: ViewSet for breeding plans.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Breeding Plan.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/trait-priorities/:
     get:
       operationId: v1_broodstock_trait_priorities_list
@@ -10566,6 +10874,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_trait_priorities_destroy
+      description: ViewSet for breeding trait priorities.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Breeding Trait Priority.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_trait_priorities_partial_update
       description: ViewSet for breeding trait priorities.
@@ -10657,34 +10993,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_trait_priorities_destroy
-      description: ViewSet for breeding trait priorities.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Breeding Trait Priority.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/breeding-pairs/:
     get:
       operationId: v1_broodstock_breeding_pairs_list
@@ -10821,6 +11129,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_breeding_pairs_destroy
+      description: ViewSet for breeding pairs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Breeding Pair.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_breeding_pairs_partial_update
       description: ViewSet for breeding pairs.
@@ -10912,34 +11248,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_breeding_pairs_destroy
-      description: ViewSet for breeding pairs.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Breeding Pair.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/breeding-pairs/{id}/record_progeny/:
     post:
       operationId: v1_broodstock_breeding_pairs_record_progeny_create
@@ -11100,6 +11408,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_egg_suppliers_destroy
+      description: ViewSet for egg suppliers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Egg Supplier.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_egg_suppliers_partial_update
       description: ViewSet for egg suppliers.
@@ -11191,34 +11527,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_egg_suppliers_destroy
-      description: ViewSet for egg suppliers.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Egg Supplier.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/egg-productions/:
     get:
       operationId: v1_broodstock_egg_productions_list
@@ -11434,6 +11742,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_egg_productions_destroy
+      description: ViewSet for egg production.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Egg Production.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_egg_productions_partial_update
       description: ViewSet for egg production.
@@ -11525,34 +11861,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_egg_productions_destroy
-      description: ViewSet for egg production.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Egg Production.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/external-egg-batches/:
     get:
       operationId: v1_broodstock_external_egg_batches_list
@@ -11678,6 +11986,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_external_egg_batches_destroy
+      description: ViewSet for external egg batches.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this External Egg Batch.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_external_egg_batches_partial_update
       description: ViewSet for external egg batches.
@@ -11769,34 +12105,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_external_egg_batches_destroy
-      description: ViewSet for external egg batches.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this External Egg Batch.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/broodstock/batch-parentages/:
     get:
       operationId: v1_broodstock_batch_parentages_list
@@ -11945,6 +12253,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_broodstock_batch_parentages_destroy
+      description: ViewSet for batch parentage.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Batch Parentage.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_broodstock_batch_parentages_partial_update
       description: ViewSet for batch parentage.
@@ -12036,34 +12372,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_broodstock_batch_parentages_destroy
-      description: ViewSet for batch parentage.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Batch Parentage.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/geographies/:
     get:
       operationId: v1_infrastructure_geographies_list
@@ -12235,6 +12543,52 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_geographies_destroy
+      description: |-
+        API endpoint for managing Geographical locations or zones.
+
+        Geographies represent defined geographical areas relevant to the aquaculture
+        operations, such as countries, regions, specific water bodies, or custom zones.
+        These can be used to associate other entities (like facilities or environmental
+        readings) with a spatial context.
+        This endpoint allows for full CRUD operations on Geography instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the geography.
+
+        **Searching:**
+        - `name`: Search by geography name (partial matches).
+        - `description`: Search within the description of the geography.
+
+        **Ordering:**
+        - `name` (default)
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this geography.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_infrastructure_geographies_partial_update
       description: |-
@@ -12362,52 +12716,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_geographies_destroy
-      description: |-
-        API endpoint for managing Geographical locations or zones.
-
-        Geographies represent defined geographical areas relevant to the aquaculture
-        operations, such as countries, regions, specific water bodies, or custom zones.
-        These can be used to associate other entities (like facilities or environmental
-        readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the geography.
-
-        **Searching:**
-        - `name`: Search by geography name (partial matches).
-        - `description`: Search within the description of the geography.
-
-        **Ordering:**
-        - `name` (default)
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this geography.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/areas/:
     get:
       operationId: v1_infrastructure_areas_list
@@ -12592,6 +12900,53 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_areas_destroy
+      description: |-
+        API endpoint for managing Areas within the aquaculture facility.
+
+        Areas represent distinct geographical or functional zones within a larger geography
+        (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
+        on Area instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the area.
+        - `geography`: Filter by the ID of the parent Geography.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by area name (partial matches).
+        - `geography__name`: Search by the name of the parent Geography (partial matches).
+
+        **Ordering:**
+        - `name` (default)
+        - `geography__name`
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this area.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_infrastructure_areas_partial_update
       description: |-
@@ -12721,53 +13076,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_areas_destroy
-      description: |-
-        API endpoint for managing Areas within the aquaculture facility.
-
-        Areas represent distinct geographical or functional zones within a larger geography
-        (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the area.
-        - `geography`: Filter by the ID of the parent Geography.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by area name (partial matches).
-        - `geography__name`: Search by the name of the parent Geography (partial matches).
-
-        **Ordering:**
-        - `name` (default)
-        - `geography__name`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this area.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/freshwater-stations/:
     get:
       operationId: v1_infrastructure_freshwater_stations_list
@@ -12853,6 +13161,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFreshwaterStationList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -12907,6 +13219,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FreshwaterStation'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -12961,6 +13277,61 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_freshwater_stations_destroy
+      description: |-
+        API endpoint for managing Freshwater Stations.
+
+        Freshwater Stations represent sources of freshwater for the aquaculture facility,
+        such as wells, boreholes, or municipal supplies. They can be categorized by type
+        and associated with a specific geographical location.
+        This endpoint allows for full CRUD operations on FreshwaterStation instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the freshwater station.
+        - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
+        - `geography`: Filter by the ID of the associated Geography.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by station name (partial matches).
+        - `description`: Search within the description of the station.
+        - `geography__name`: Search by the name of the associated Geography.
+
+        **Ordering:**
+        - `name` (default)
+        - `station_type`
+        - `geography__name`: Order by the name of the associated Geography.
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this freshwater station.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -13023,6 +13394,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -13088,57 +13463,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_freshwater_stations_destroy
-      description: |-
-        API endpoint for managing Freshwater Stations.
-
-        Freshwater Stations represent sources of freshwater for the aquaculture facility,
-        such as wells, boreholes, or municipal supplies. They can be categorized by type
-        and associated with a specific geographical location.
-        This endpoint allows for full CRUD operations on FreshwaterStation instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the freshwater station.
-        - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
-        - `geography`: Filter by the ID of the associated Geography.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by station name (partial matches).
-        - `description`: Search within the description of the station.
-        - `geography__name`: Search by the name of the associated Geography.
-
-        **Ordering:**
-        - `name` (default)
-        - `station_type`
-        - `geography__name`: Order by the name of the associated Geography.
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this freshwater station.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/halls/:
     get:
       operationId: v1_infrastructure_halls_list
@@ -13329,6 +13661,55 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_halls_destroy
+      description: |-
+        API endpoint for managing Halls within the aquaculture facility.
+
+        Halls represent distinct buildings or sections within the facility,
+        often containing multiple containers or systems. They can be associated
+        with a Freshwater Station.
+        This endpoint allows for full CRUD operations on Hall instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the hall.
+        - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by hall name (partial matches).
+        - `description`: Search within the description of the hall.
+        - `freshwater_station__name`: Search by the name of the associated Freshwater Station.
+
+        **Ordering:**
+        - `name` (default)
+        - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this hall.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_infrastructure_halls_partial_update
       description: |-
@@ -13462,55 +13843,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_halls_destroy
-      description: |-
-        API endpoint for managing Halls within the aquaculture facility.
-
-        Halls represent distinct buildings or sections within the facility,
-        often containing multiple containers or systems. They can be associated
-        with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the hall.
-        - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by hall name (partial matches).
-        - `description`: Search within the description of the hall.
-        - `freshwater_station__name`: Search by the name of the associated Freshwater Station.
-
-        **Ordering:**
-        - `name` (default)
-        - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this hall.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/container-types/:
     get:
       operationId: v1_infrastructure_container_types_list
@@ -13585,6 +13917,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedContainerTypeList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -13634,6 +13970,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ContainerType'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -13683,6 +14023,56 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_container_types_destroy
+      description: |-
+        API endpoint for managing Container Types.
+
+        Container Types define the characteristics and categories of different containers
+        used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
+        This endpoint allows for full CRUD operations on ContainerType instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the container type.
+        - `category`: Filter by the category of the container type (e.g., TANK, POND, CAGE).
+
+        **Searching:**
+        - `name`: Search by container type name (partial matches).
+        - `description`: Search within the description of the container type.
+
+        **Ordering:**
+        - `name` (default)
+        - `category`
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this container type.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -13740,6 +14130,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -13800,52 +14194,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_container_types_destroy
-      description: |-
-        API endpoint for managing Container Types.
-
-        Container Types define the characteristics and categories of different containers
-        used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the container type.
-        - `category`: Filter by the category of the container type (e.g., TANK, POND, CAGE).
-
-        **Searching:**
-        - `name`: Search by container type name (partial matches).
-        - `description`: Search within the description of the container type.
-
-        **Ordering:**
-        - `name` (default)
-        - `category`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this container type.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/containers/:
     get:
       operationId: v1_infrastructure_containers_list
@@ -14057,6 +14413,58 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_containers_destroy
+      description: |-
+        API endpoint for managing Containers within the aquaculture facility.
+
+        Containers represent physical units (e.g., tanks, ponds, cages) used for
+        holding aquatic organisms. They are associated with a specific container type,
+        and can be located within a Hall and an Area. This endpoint allows for
+        full CRUD operations on Container instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the container.
+        - `container_type`: Filter by the ID of the ContainerType.
+        - `hall`: Filter by the ID of the parent Hall.
+        - `area`: Filter by the ID of the parent Area.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by container name (partial matches).
+        - `container_type__name`: Search by the name of the ContainerType.
+        - `hall__name`: Search by the name of the parent Hall.
+        - `area__name`: Search by the name of the parent Area.
+
+        **Ordering:**
+        - `name` (default)
+        - `container_type__name`
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this container.
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_infrastructure_containers_partial_update
       description: |-
@@ -14196,58 +14604,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_containers_destroy
-      description: |-
-        API endpoint for managing Containers within the aquaculture facility.
-
-        Containers represent physical units (e.g., tanks, ponds, cages) used for
-        holding aquatic organisms. They are associated with a specific container type,
-        and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the container.
-        - `container_type`: Filter by the ID of the ContainerType.
-        - `hall`: Filter by the ID of the parent Hall.
-        - `area`: Filter by the ID of the parent Area.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by container name (partial matches).
-        - `container_type__name`: Search by the name of the ContainerType.
-        - `hall__name`: Search by the name of the parent Hall.
-        - `area__name`: Search by the name of the parent Area.
-
-        **Ordering:**
-        - `name` (default)
-        - `container_type__name`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this container.
-        required: true
-      tags:
-      - v1
-      security:
-      - tokenAuth: []
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/sensors/:
     get:
       operationId: v1_infrastructure_sensors_list
@@ -14342,6 +14698,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedSensorList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14397,6 +14757,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Sensor'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14452,6 +14816,62 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_sensors_destroy
+      description: |-
+        API endpoint for managing Sensors within the aquaculture facility.
+
+        Sensors are devices used to monitor various environmental parameters (e.g., temperature,
+        pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
+        type, have a unique serial number, and be associated with a manufacturer.
+        This endpoint allows for full CRUD operations on Sensor instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the sensor.
+        - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
+        - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by sensor name (partial matches).
+        - `serial_number`: Search by the sensor's serial number.
+        - `manufacturer`: Search by the sensor's manufacturer.
+        - `container__name`: Search by the name of the Container where the sensor is installed.
+
+        **Ordering:**
+        - `name` (default)
+        - `sensor_type`
+        - `container__name`: Order by the name of the associated Container.
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this sensor.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -14515,6 +14935,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14581,58 +15005,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_sensors_destroy
-      description: |-
-        API endpoint for managing Sensors within the aquaculture facility.
-
-        Sensors are devices used to monitor various environmental parameters (e.g., temperature,
-        pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
-        type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the sensor.
-        - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
-        - `container`: Filter by the ID of the Container where the sensor is installed.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by sensor name (partial matches).
-        - `serial_number`: Search by the sensor's serial number.
-        - `manufacturer`: Search by the sensor's manufacturer.
-        - `container__name`: Search by the name of the Container where the sensor is installed.
-
-        **Ordering:**
-        - `name` (default)
-        - `sensor_type`
-        - `container__name`: Order by the name of the associated Container.
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this sensor.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/feed-containers/:
     get:
       operationId: v1_infrastructure_feed_containers_list
@@ -14728,6 +15108,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFeedContainerList'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14782,6 +15166,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FeedContainer'
           description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14836,6 +15224,61 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    delete:
+      operationId: v1_infrastructure_feed_containers_destroy
+      description: |-
+        API endpoint for managing Feed Containers within the aquaculture facility.
+
+        Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
+        storing feed. They can be associated with a specific container type (defining
+        its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
+        This endpoint allows for full CRUD operations on FeedContainer instances.
+
+        **Filtering:**
+        - `name`: Filter by the exact name of the feed container.
+        - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `active`: Filter by active status (boolean).
+
+        **Searching:**
+        - `name`: Search by feed container name (partial matches).
+        - `hall__name`: Search by the name of the parent Hall.
+        - `area__name`: Search by the name of the parent Area.
+
+        **Ordering:**
+        - `name` (default)
+        - `container_type`: Order by the type of the feed container.
+        - `created_at`
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this feed container.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
     patch:
@@ -14898,6 +15341,10 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -14963,57 +15410,14 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_infrastructure_feed_containers_destroy
-      description: |-
-        API endpoint for managing Feed Containers within the aquaculture facility.
-
-        Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
-        storing feed. They can be associated with a specific container type (defining
-        its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
-
-        **Filtering:**
-        - `name`: Filter by the exact name of the feed container.
-        - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
-        - `hall`: Filter by the ID of the parent Hall where the feed container is located.
-        - `area`: Filter by the ID of the parent Area where the feed container is located.
-        - `active`: Filter by active status (boolean).
-
-        **Searching:**
-        - `name`: Search by feed container name (partial matches).
-        - `hall__name`: Search by the name of the parent Hall.
-        - `area__name`: Search by the name of the parent Area.
-
-        **Ordering:**
-        - `name` (default)
-        - `container_type`: Order by the type of the feed container.
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed container.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '500':
-          description: Internal Server Error
   /api/v1/infrastructure/overview/:
     get:
       operationId: infrastructure_overview
@@ -15284,6 +15688,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_temperature_profiles_destroy
+      description: ViewSet for temperature profiles.
+      parameters:
+      - in: path
+        name: profile_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Temperature Profile.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_temperature_profiles_partial_update
       description: ViewSet for temperature profiles.
@@ -15375,34 +15807,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_temperature_profiles_destroy
-      description: ViewSet for temperature profiles.
-      parameters:
-      - in: path
-        name: profile_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Temperature Profile.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/temperature-profiles/{profile_id}/statistics/:
     get:
       operationId: v1_scenario_temperature_profiles_statistics_retrieve
@@ -15579,6 +15983,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_tgc_models_destroy
+      description: Enhanced ViewSet for TGC models.
+      parameters:
+      - in: path
+        name: model_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this TGC Model.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_tgc_models_partial_update
       description: Enhanced ViewSet for TGC models.
@@ -15670,34 +16102,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_tgc_models_destroy
-      description: Enhanced ViewSet for TGC models.
-      parameters:
-      - in: path
-        name: model_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this TGC Model.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/tgc-models/{model_id}/duplicate/:
     post:
       operationId: v1_scenario_tgc_models_duplicate_create
@@ -15880,6 +16284,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_fcr_models_destroy
+      description: Enhanced ViewSet for FCR models.
+      parameters:
+      - in: path
+        name: model_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this FCR Model.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_fcr_models_partial_update
       description: Enhanced ViewSet for FCR models.
@@ -15971,34 +16403,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_fcr_models_destroy
-      description: Enhanced ViewSet for FCR models.
-      parameters:
-      - in: path
-        name: model_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this FCR Model.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/fcr-models/{model_id}/stage_summary/:
     get:
       operationId: v1_scenario_fcr_models_stage_summary_retrieve
@@ -16180,6 +16584,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_mortality_models_destroy
+      description: Enhanced ViewSet for mortality models.
+      parameters:
+      - in: path
+        name: model_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Mortality Model.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_mortality_models_partial_update
       description: Enhanced ViewSet for mortality models.
@@ -16271,34 +16703,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_mortality_models_destroy
-      description: Enhanced ViewSet for mortality models.
-      parameters:
-      - in: path
-        name: model_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Mortality Model.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: v1_scenario_biological_constraints_list
@@ -16435,6 +16839,35 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_biological_constraints_destroy
+      description: ViewSet for biological constraints.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Biological Constraint
+          Set.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_biological_constraints_partial_update
       description: ViewSet for biological constraints.
@@ -16528,35 +16961,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_biological_constraints_destroy
-      description: ViewSet for biological constraints.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Biological Constraint
-          Set.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/scenarios/:
     get:
       operationId: v1_scenario_scenarios_list
@@ -16795,6 +17199,34 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_scenario_scenarios_destroy
+      description: Enhanced ViewSet for scenarios.
+      parameters:
+      - in: path
+        name: scenario_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Scenario.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_scenario_scenarios_partial_update
       description: Enhanced ViewSet for scenarios.
@@ -16886,34 +17318,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_scenario_scenarios_destroy
-      description: Enhanced ViewSet for scenarios.
-      parameters:
-      - in: path
-        name: scenario_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this Scenario.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/scenario/scenarios/{scenario_id}/chart_data/:
     get:
       operationId: v1_scenario_scenarios_chart_data_retrieve
@@ -17625,6 +18029,37 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+    delete:
+      operationId: v1_users_users_destroy
+      description: |-
+        API endpoint that allows users to be viewed, created, edited or deleted.
+
+        Provides CRUD operations for users with appropriate permission checks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
     patch:
       operationId: v1_users_users_partial_update
       description: |-
@@ -17722,37 +18157,6 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    delete:
-      operationId: v1_users_users_destroy
-      description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
-
-        Provides CRUD operations for users with appropriate permission checks.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this user.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/token/:
     post:
       operationId: token_create
@@ -17900,10 +18304,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenObtainPair'
           description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
         '500':
           description: Internal Server Error
         '400':
@@ -17937,10 +18337,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
         '500':
           description: Internal Server Error
         '400':

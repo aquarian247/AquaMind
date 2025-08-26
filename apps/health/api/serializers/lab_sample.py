@@ -16,6 +16,7 @@ from ..utils import (
     HealthDecimalFieldsMixin, UserAssignmentMixin
 )
 from .base import HealthBaseSerializer
+from drf_spectacular.utils import extend_schema_field, OpenApiTypes
 
 
 class SampleTypeSerializer(HealthBaseSerializer):
@@ -133,6 +134,11 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             'batch_container_assignment_details'
         ]
 
+    # ------------------------------------------------------------------
+    # SerializerMethodField helpers with explicit OpenAPI type hints
+    # ------------------------------------------------------------------
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_batch_number(self, obj) -> Optional[str]:
         """Get the batch number from the assignment.
 
@@ -146,6 +152,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.batch_container_assignment.batch.batch_number
         return None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_container_name(self, obj) -> Optional[str]:
         """Get the container name from the assignment.
 
@@ -159,6 +166,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.batch_container_assignment.container.name
         return None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_sample_type_name(self, obj) -> Optional[str]:
         """Get the sample type name.
 
@@ -172,6 +180,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.sample_type.name
         return None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_recorded_by_username(self, obj) -> Optional[str]:
         """Get the username of the user who recorded the sample.
 
@@ -185,6 +194,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.recorded_by.username
         return None
         
+    @extend_schema_field(OpenApiTypes.OBJECT)
     def get_batch_container_assignment_details(self, obj) -> Optional[Dict[str, Any]]:
         """Get details of the batch container assignment.
 

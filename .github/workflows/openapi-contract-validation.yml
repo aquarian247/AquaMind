@@ -1,0 +1,121 @@
+name: OpenAPI Contract Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/**/api/**/*.py'
+      - 'apps/**/viewsets/**/*.py'
+      - 'apps/**/serializers/**/*.py'
+      - 'apps/**/routers/**/*.py'
+      - 'aquamind/api/**/*.py'
+      - 'aquamind/utils/openapi_utils.py'
+      - 'api/openapi.yaml'
+      - 'apps/infrastructure/tests/test_openapi_contract.py'
+
+jobs:
+  validate-openapi-contract:
+    name: Validate OpenAPI Contract
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_aquamind_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run contract validation tests
+      run: |
+        echo "Running OpenAPI contract validation tests"
+        python manage.py test apps.infrastructure.tests.test_openapi_contract --settings=aquamind.settings_ci
+        
+    - name: Validate OpenAPI schema semantics
+      run: |
+        echo "Validating OpenAPI schema semantics"
+        python manage.py spectacular --validate --file /tmp/validated-openapi.yaml --settings=aquamind.settings_ci
+        if [ $? -ne 0 ]; then
+          echo "::error::OpenAPI schema validation failed!"
+          exit 1
+        fi
+        echo "✅ OpenAPI schema is semantically valid"
+    
+    - name: Check authentication requirements
+      run: |
+        echo "Checking authentication requirements in OpenAPI schema"
+        # Generate a fresh schema
+        python manage.py spectacular --file /tmp/fresh-openapi.yaml --settings=aquamind.settings_ci
+        
+        # Check that tokenAuth security scheme is present
+        if ! grep -q "tokenAuth:" /tmp/fresh-openapi.yaml; then
+          echo "::error::OpenAPI schema is missing tokenAuth security scheme!"
+          exit 1
+        fi
+        
+        # Check that security requirements are present for non-public endpoints
+        AUTH_ENDPOINTS=$(grep -c "security:" /tmp/fresh-openapi.yaml || echo "0")
+        if [ "$AUTH_ENDPOINTS" -lt 10 ]; then
+          echo "::error::OpenAPI schema has too few security requirements defined!"
+          exit 1
+        fi
+        
+        echo "✅ Authentication requirements are properly documented"
+    
+    - name: Verify standard responses
+      run: |
+        echo "Verifying standard responses in OpenAPI schema"
+        # Check for standard error responses (401, 403, 404, 500)
+        RESPONSE_401=$(grep -c '"401"' /tmp/fresh-openapi.yaml || echo "0")
+        RESPONSE_403=$(grep -c '"403"' /tmp/fresh-openapi.yaml || echo "0")
+        RESPONSE_404=$(grep -c '"404"' /tmp/fresh-openapi.yaml || echo "0")
+        RESPONSE_500=$(grep -c '"500"' /tmp/fresh-openapi.yaml || echo "0")
+        
+        echo "Found $RESPONSE_401 401 responses"
+        echo "Found $RESPONSE_403 403 responses"
+        echo "Found $RESPONSE_404 404 responses"
+        echo "Found $RESPONSE_500 500 responses"
+        
+        # Ensure minimum number of standard responses
+        if [ "$RESPONSE_401" -lt 100 ] || [ "$RESPONSE_403" -lt 100 ] || [ "$RESPONSE_404" -lt 50 ] || [ "$RESPONSE_500" -lt 100 ]; then
+          echo "::error::OpenAPI schema is missing standard error responses!"
+          exit 1
+        fi
+        
+        echo "✅ Standard responses are properly documented"
+    
+    - name: Generate contract validation summary
+      run: |
+        echo "## ✅ OpenAPI Contract Validation Passed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The OpenAPI contract validation has passed successfully." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Validation Steps" >> $GITHUB_STEP_SUMMARY
+        echo "1. ✅ Contract validation tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "2. ✅ OpenAPI schema is semantically valid" >> $GITHUB_STEP_SUMMARY
+        echo "3. ✅ Authentication requirements are properly documented" >> $GITHUB_STEP_SUMMARY
+        echo "4. ✅ Standard responses are properly documented" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "This validation ensures that the API contract is correct and consistent," >> $GITHUB_STEP_SUMMARY
+        echo "while being resilient to minor schema generation differences between environments." >> $GITHUB_STEP_SUMMARY

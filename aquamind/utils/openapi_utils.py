@@ -154,10 +154,24 @@ def add_standard_responses(
             if "{" in path and "}" in path:
                 _ensure_response(responses, "404", "Not Found")
 
-            # --- 401 / 403 for secured endpoints -------------------------------
-            sec = operation.get("security", [])  # may be list or missing
-            is_anonymous_allowed = any(not entry for entry in sec)  # contains {}
-            if sec and not is_anonymous_allowed:
+            # ------------------------------------------------------------------
+            # 401 / 403 for *all* non-public endpoints
+            # ------------------------------------------------------------------
+            # Public endpoints are:
+            #   • the API root (/api/)
+            #   • schema endpoints (/api/v1/schema …)
+            #   • authentication endpoints (/api/auth/… or /api/v1/auth/…)
+            #
+            # Everything else should advertise that unauthenticated /
+            # unauthorised access is possible (401, 403).
+            is_public_endpoint = (
+                path == "/api/"
+                or path.startswith("/api/v1/schema")
+                or path.startswith("/api/auth/")
+                or path.startswith("/api/v1/auth/")
+            )
+
+            if not is_public_endpoint:
                 _ensure_response(responses, "401", "Unauthorized")
                 _ensure_response(responses, "403", "Forbidden")
 
