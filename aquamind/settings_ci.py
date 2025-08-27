@@ -3,6 +3,7 @@
 This file extends the base settings and overrides database configuration for CI environments.
 """
 
+import sys
 from .settings import *  # noqa
 
 # Override database settings for CI environment
