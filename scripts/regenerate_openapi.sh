@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Define paths
 SPEC_FILE="api/openapi.yaml"
-SETTINGS="aquamind.settings"
+SETTINGS="aquamind.settings_ci"
 
 echo -e "${YELLOW}Regenerating OpenAPI specification...${NC}"
 

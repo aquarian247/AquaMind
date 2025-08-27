@@ -19,6 +19,7 @@ from apps.batch.api.serializers.validation import (
     validate_sample_size_against_population,
     validate_min_max_weight
 )
+from drf_spectacular.utils import extend_schema_field, extend_schema
 
 
 class GrowthSampleSerializer(
@@ -106,97 +107,129 @@ class GrowthSampleSerializer(
         """Validate sample data, including individual measurements."""
         errors = {}
 
-        validated_data = dict(data)  # Make a mutable copy
+        try:
+            validated_data = dict(data)  # Make a mutable copy
 
-        assignment = validated_data.get(
-            'assignment', getattr(self.instance, 'assignment', None)
-        )
-        if not assignment:
-            if not self.instance:  # Create operation
-                errors['assignment'] = 'This field is required for new samples.'
-            # For updates, assignment is usually fixed or not part of payload.
+            assignment = validated_data.get(
+                'assignment', getattr(self.instance, 'assignment', None)
+            )
+            if not assignment:
+                if not self.instance:  # Create operation
+                    errors['assignment'] = 'This field is required for new samples.'
+                # For updates, assignment is usually fixed or not part of payload.
+        except Exception as e:
+            errors['general'] = f'Error processing request data: {str(e)}'
+            return errors
 
-        measurement_errors = validate_individual_measurements(
-            validated_data.get('individual_weights', []),
-            validated_data.get('individual_lengths', [])
-        )
-        if measurement_errors:
-            errors.update(measurement_errors)
+        try:
+            measurement_errors = validate_individual_measurements(
+                validated_data.get('individual_weights', []),
+                validated_data.get('individual_lengths', [])
+            )
+            if measurement_errors:
+                errors.update(measurement_errors)
+        except Exception as e:
+            errors['individual_measurements'] = f'Error validating individual measurements: {str(e)}'
 
         sample_size = validated_data.get('sample_size')
         if sample_size is not None and assignment:
-            pop_errors = validate_sample_size_against_population(
-                sample_size, assignment
-            )
-            if pop_errors:
-                errors.update(pop_errors)
+            try:
+                pop_errors = validate_sample_size_against_population(
+                    sample_size, assignment
+                )
+                if pop_errors:
+                    errors['sample_size'] = pop_errors
+            except Exception as e:
+                # Handle any unexpected errors in population validation
+                errors['sample_size'] = f"Error validating sample size: {str(e)}"
 
         if not validated_data.get('individual_weights'):
-            min_max_errors = validate_min_max_weight(
-                validated_data.get('min_weight_g'),
-                validated_data.get('max_weight_g'),
-                validated_data.get('avg_weight_g')
-            )
-            if min_max_errors:
-                errors.update(min_max_errors)
+            try:
+                min_max_errors = validate_min_max_weight(
+                    validated_data.get('min_weight_g'),
+                    validated_data.get('max_weight_g'),
+                    validated_data.get('avg_weight_g')
+                )
+                if min_max_errors:
+                    errors.update(min_max_errors)
+            except Exception as e:
+                errors['weight_validation'] = f'Error validating weight ranges: {str(e)}'
 
         if errors:
             raise serializers.ValidationError(errors)
 
         # Process individual measurements after initial validation passes
         # This modifies validated_data in place with calculated stats
-        if validated_data.get('individual_weights') or \
-           validated_data.get('individual_lengths'):
-            self._process_individual_measurements(validated_data)
+        try:
+            if validated_data.get('individual_weights') or \
+               validated_data.get('individual_lengths'):
+                self._process_individual_measurements(validated_data)
+        except Exception as e:
+            errors['measurement_processing'] = f'Error processing individual measurements: {str(e)}'
+            raise serializers.ValidationError(errors)
 
         return validated_data
 
     def _process_individual_measurements(self, validated_data):
         """Calculate stats from individual lists and update validated_data."""
-        individual_weights = validated_data.get('individual_weights', [])
-        individual_lengths = validated_data.get('individual_lengths', [])
+        try:
+            individual_weights = validated_data.get('individual_weights', [])
+            individual_lengths = validated_data.get('individual_lengths', [])
 
-        if individual_weights or individual_lengths:
-            num_weights = len(individual_weights) if individual_weights else 0
-            num_lengths = len(individual_lengths) if individual_lengths else 0
+            if individual_weights or individual_lengths:
+                num_weights = len(individual_weights) if individual_weights else 0
+                num_lengths = len(individual_lengths) if individual_lengths else 0
 
-            if num_weights > 0 and num_lengths > 0 and num_weights != num_lengths:
-                # This should be caught by validate_individual_measurements
-                pass
-            elif num_weights > 0:
-                validated_data['sample_size'] = num_weights
-            elif num_lengths > 0:
-                validated_data['sample_size'] = num_lengths
+                if num_weights > 0 and num_lengths > 0 and num_weights != num_lengths:
+                    # This should be caught by validate_individual_measurements
+                    pass
+                elif num_weights > 0:
+                    validated_data['sample_size'] = num_weights
+                elif num_lengths > 0:
+                    validated_data['sample_size'] = num_lengths
 
-        if individual_weights:
-            avg_w, std_dev_w = self._calculate_stats(
-                individual_weights, 'individual_weights'
-            )
-            validated_data['avg_weight_g'] = avg_w
-            validated_data['std_deviation_weight'] = std_dev_w
-            validated_data['min_weight_g'] = (
-                min(individual_weights) if individual_weights else None
-            )
-            validated_data['max_weight_g'] = (
-                max(individual_weights) if individual_weights else None
-            )
+            if individual_weights:
+                try:
+                    avg_w, std_dev_w = self._calculate_stats(
+                        individual_weights, 'individual_weights'
+                    )
+                    validated_data['avg_weight_g'] = avg_w
+                    validated_data['std_deviation_weight'] = std_dev_w
+                    validated_data['min_weight_g'] = (
+                        min(individual_weights) if individual_weights else None
+                    )
+                    validated_data['max_weight_g'] = (
+                        max(individual_weights) if individual_weights else None
+                    )
+                except Exception as e:
+                    raise serializers.ValidationError({'individual_weights': f'Error calculating weight statistics: {str(e)}'})
 
-        if individual_lengths:
-            avg_l, std_dev_l = self._calculate_stats(
-                individual_lengths, 'individual_lengths'
-            )
-            validated_data['avg_length_cm'] = avg_l
-            validated_data['std_deviation_length'] = std_dev_l
+            if individual_lengths:
+                try:
+                    avg_l, std_dev_l = self._calculate_stats(
+                        individual_lengths, 'individual_lengths'
+                    )
+                    validated_data['avg_length_cm'] = avg_l
+                    validated_data['std_deviation_length'] = std_dev_l
+                except Exception as e:
+                    raise serializers.ValidationError({'individual_lengths': f'Error calculating length statistics: {str(e)}'})
 
-        if individual_weights and individual_lengths and \
-           len(individual_weights) == len(individual_lengths):
-            validated_data['condition_factor'] = (
-                self._calculate_condition_factor_from_individuals(
-                    individual_weights, individual_lengths
-                )
-            )
-        elif individual_lengths or individual_weights:
-            validated_data['condition_factor'] = None
+            if individual_weights and individual_lengths and \
+               len(individual_weights) == len(individual_lengths):
+                try:
+                    validated_data['condition_factor'] = (
+                        self._calculate_condition_factor_from_individuals(
+                            individual_weights, individual_lengths
+                        )
+                    )
+                except Exception as e:
+                    raise serializers.ValidationError({'condition_factor': f'Error calculating condition factor: {str(e)}'})
+            elif individual_lengths or individual_weights:
+                validated_data['condition_factor'] = None
+        except serializers.ValidationError:
+            raise  # Re-raise validation errors
+        except Exception as e:
+            raise serializers.ValidationError({'measurement_processing': f'Unexpected error processing measurements: {str(e)}'})
 
         return validated_data
 

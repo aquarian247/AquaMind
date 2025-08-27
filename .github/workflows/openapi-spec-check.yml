@@ -83,7 +83,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### How to fix this" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "1. Run `python manage.py spectacular --file api/openapi.yaml` locally" >> $GITHUB_STEP_SUMMARY
+        echo "1. Run `python manage.py spectacular --file api/openapi.yaml --settings=aquamind.settings_ci` locally" >> $GITHUB_STEP_SUMMARY
         echo "2. Commit the updated spec file" >> $GITHUB_STEP_SUMMARY
         echo "3. Push the changes to your branch" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY

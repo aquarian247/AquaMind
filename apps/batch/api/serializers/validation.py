@@ -132,12 +132,25 @@ def validate_sample_size_against_population(sample_size, assignment):
             assignment = BatchContainerAssignment.objects.get(id=assignment)
         except BatchContainerAssignment.DoesNotExist:
             return "Assignment does not exist."
-    
+        except Exception as e:
+            return f"Error fetching assignment: {str(e)}"
+
     # Check against current population count
-    current_population_count = assignment.population_count
-    
-    if sample_size > current_population_count:
-        return f"Sample size ({sample_size}) exceeds assignment population ({current_population_count})."
+    try:
+        current_population_count = assignment.population_count
+    except AttributeError:
+        return "Assignment does not have a valid population count."
+    except Exception as e:
+        return f"Error getting population count: {str(e)}"
+
+    # Validate sample size
+    try:
+        if sample_size < 0:
+            return "Sample size cannot be negative."
+        if sample_size > current_population_count:
+            return f"Sample size ({sample_size}) exceeds assignment population ({current_population_count})."
+    except (TypeError, ValueError) as e:
+        return f"Invalid sample size value: {str(e)}"
     
     return None
 
