@@ -150,20 +150,13 @@ AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 # This significantly simplifies the testing infrastructure while keeping
 # JWT for production use.
 
-# Override authentication classes to use Token auth for CI
+# Override authentication classes to use BOTH Token and JWT for CI
+# This allows us to test all endpoints including JWT-specific ones
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
-
-# Disable JWT settings for CI to avoid complexity
-if 'rest_framework_simplejwt' in INSTALLED_APPS:
-    INSTALLED_APPS.remove('rest_framework_simplejwt')
-
-# Remove JWT settings that would cause errors in CI
-# Use globals() to safely delete SIMPLE_JWT if it exists
-if 'SIMPLE_JWT' in globals():
-    del SIMPLE_JWT
