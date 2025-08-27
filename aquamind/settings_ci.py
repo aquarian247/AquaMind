@@ -147,7 +147,7 @@ AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 # ------------------------------------------------------------------
 # CONDITIONAL AUTHENTICATION FOR CI ENVIRONMENT
 # ------------------------------------------------------------------
-# Use normal authentication for unit tests, disable for Schemathesis
+# Dynamic authentication that checks environment at request time
 
 import os
 from rest_framework.authentication import BaseAuthentication
@@ -175,40 +175,38 @@ class CIMockUser:
     def is_authenticated(self):
         return True
 
-class CISchemathesisAuthentication(BaseAuthentication):
-    """Authentication class that provides mock user when Schemathesis is running"""
+class CIDynamicAuthentication(BaseAuthentication):
+    """Authentication class that dynamically checks for Schemathesis token"""
 
     def authenticate(self, request):
+        # Check environment variable at request time (not settings load time)
         if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+            print(f"🔑 CIDynamicAuthentication: Providing mock user for Schemathesis", file=sys.stderr)
             return (CIMockUser(), None)
         return None
 
-class CISchemathesisPermission(BasePermission):
-    """Permission class that always allows when Schemathesis is running"""
+class CIDynamicPermission(BasePermission):
+    """Permission class that dynamically allows access for Schemathesis"""
 
     def has_permission(self, request, view):
+        # Check environment variable at request time (not settings load time)
         if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+            print(f"🔓 CIDynamicPermission: Allowing access for Schemathesis", file=sys.stderr)
             return True
         return False  # Let normal permission classes handle unit tests
 
     def has_object_permission(self, request, view, obj):
+        # Check environment variable at request time (not settings load time)
         if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+            print(f"🔓 CIDynamicPermission: Allowing object access for Schemathesis", file=sys.stderr)
             return True
         return False  # Let normal permission classes handle unit tests
 
-# Configure REST Framework based on environment
-if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
-    # Schemathesis is running - disable all auth and permissions
-    REST_FRAMEWORK = {
-        **REST_FRAMEWORK,
-        'DEFAULT_AUTHENTICATION_CLASSES': [CISchemathesisAuthentication],
-        'DEFAULT_PERMISSION_CLASSES': [CISchemathesisPermission],
-    }
-else:
-    # Unit tests - use normal authentication
-    REST_FRAMEWORK = {
-        **REST_FRAMEWORK,
-        # Keep default authentication and permissions for unit tests
-    }
+# Always use dynamic classes - they check environment at request time
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    'DEFAULT_AUTHENTICATION_CLASSES': [CIDynamicAuthentication],
+    'DEFAULT_PERMISSION_CLASSES': [CIDynamicPermission],
+}
 
 
