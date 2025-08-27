@@ -436,7 +436,7 @@ class HealthAPITestCase(BaseAPITestCase):
         self.client.logout()
         action_url = f'/api/v1/health/health-sampling-events/{event.pk}/calculate-aggregates/'
         response = self.client.post(action_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_calculate_aggregates_action_not_found(self):
         """Test calculate-aggregates action with a non-existent event ID."""

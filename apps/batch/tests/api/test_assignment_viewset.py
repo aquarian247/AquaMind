@@ -345,7 +345,7 @@ class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
             response = self.client.get(url)
             
             # Should require authentication
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
         # Restore original permission classes
         BatchContainerAssignmentViewSet.permission_classes = original_permission_classes

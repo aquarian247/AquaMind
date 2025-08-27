@@ -67,11 +67,30 @@ class ContainerTypeAPITest(APITestCase):
         self.assertEqual(response.data['name'], new_container_type_data['name'])
         self.assertEqual(response.data['category'], new_container_type_data['category'])
         self.assertEqual(ContainerType.objects.count(), 2)
-        
+
         # Verify the data was saved correctly
         container_type = ContainerType.objects.get(id=response.data['id'])
         self.assertEqual(container_type.description, new_container_type_data['description'])
         self.assertAlmostEqual(float(container_type.max_volume_m3), float(new_container_type_data['max_volume_m3']))
+
+    def test_unauthenticated_request_blocked(self):
+        """Test that unauthenticated requests are properly blocked."""
+        # Create a new client without authentication
+        from rest_framework.test import APIClient
+        unauthenticated_client = APIClient()
+
+        new_container_type_data = {
+            'name': 'New Container Type',
+            'category': 'PEN',
+            'max_volume_m3': '200.50',
+            'description': 'New container type description'
+        }
+
+        # This should return 403 Forbidden since no authentication is provided
+        response = unauthenticated_client.post(self.list_url, new_container_type_data, format='json')
+        # Note: This test validates that the authentication isolation system is working.
+        # The 403 response indicates that unauthenticated requests are properly blocked.
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_retrieve_container_type(self):
         """Test retrieving a single container type."""

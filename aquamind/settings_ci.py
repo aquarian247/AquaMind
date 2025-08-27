@@ -4,7 +4,13 @@ This file extends the base settings and overrides database configuration for CI 
 """
 
 import sys
+import warnings
 from .settings import *  # noqa
+
+# Suppress expected warnings during CI/test runs
+warnings.filterwarnings('ignore', message='.*Bad Request.*', category=UserWarning)
+warnings.filterwarnings('ignore', message='.*Forbidden.*', category=UserWarning)
+warnings.filterwarnings('ignore', message='.*Not Found.*', category=UserWarning)
 
 # Override database settings for CI environment
 DATABASES = {
@@ -145,132 +151,27 @@ else:
 AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 
 # ------------------------------------------------------------------
-# CONDITIONAL AUTHENTICATION FOR CI ENVIRONMENT
+# ROBUST AUTHENTICATION ISOLATION FOR CI ENVIRONMENT
 # ------------------------------------------------------------------
-# Dynamic authentication that checks environment at request time
+# Uses thread-safe context tracking to reliably distinguish between
+# unit tests and Schemathesis contract testing runs
 
-import os
-from rest_framework.authentication import BaseAuthentication
-from rest_framework.permissions import BasePermission
+# Import the robust authentication isolation system
+from aquamind.utils.auth_isolation import CIAuthentication, CIPermission
 
-class CIMockUser:
-    """Mock user that behaves like an authenticated user for Schemathesis"""
-
-    def __init__(self):
-        from django.contrib.auth.models import User
-        # Create a real user in the database to avoid UserProfile.DoesNotExist errors
-        user, created = User.objects.get_or_create(
-            username='schemathesis_user',
-            defaults={
-                'email': 'schemathesis@test.com',
-                'first_name': 'Schema',
-                'last_name': 'Thesis',
-                'is_active': True,
-                'is_staff': True,
-                'is_superuser': True
-            }
-        )
-        # Copy all attributes from the real user
-        self.id = user.id
-        self.username = user.username
-        self.email = user.email
-        self.first_name = user.first_name
-        self.last_name = user.last_name
-        self.is_active = user.is_active
-        self.is_staff = user.is_staff
-        self.is_superuser = user.is_superuser
-        self.date_joined = user.date_joined
-
-    def __int__(self):
-        return self.id
-
-    def __str__(self):
-        return self.username
-
-    def is_authenticated(self):
-        return True
-
-    def get_full_name(self):
-        return f"{self.first_name} {self.last_name}"
-
-    def get_short_name(self):
-        return self.first_name
-
-class CIDynamicAuthentication(BaseAuthentication):
-    """Authentication class that dynamically checks for Schemathesis token"""
-
-    def authenticate(self, request):
-        # Only provide mock user when Schemathesis is actually running
-        # NOT when unit tests are running (even if SCHEMATHESIS_AUTH_TOKEN is set)
-        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-        if token:
-            # Check if we're running tests by looking for test-related patterns
-            import sys
-            is_test_run = (
-                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in sys.argv) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None or
-                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
-            )
-
-            if not is_test_run:
-                print(f"🔑 CIDynamicAuthentication: Providing mock user for Schemathesis", file=sys.stderr)
-                return (CIMockUser(), None)
-            else:
-                print(f"🔍 CIDynamicAuthentication: Test run detected, using normal auth", file=sys.stderr)
-
-        return None
-
-class CIDynamicPermission(BasePermission):
-    """Permission class that dynamically allows access for Schemathesis"""
-
-    def has_permission(self, request, view):
-        # Only allow when Schemathesis is actually running, NOT during unit tests
-        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-        if token:
-            # Check if we're running tests by looking for test-related patterns
-            import sys
-            is_test_run = (
-                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in sys.argv) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None or
-                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
-            )
-
-            if not is_test_run:
-                print(f"🔓 CIDynamicPermission: Allowing access for Schemathesis", file=sys.stderr)
-                return True
-            else:
-                print(f"🔍 CIDynamicPermission: Test run detected, using normal permissions", file=sys.stderr)
-
-        return False  # Let normal permission classes handle unit tests
-
-    def has_object_permission(self, request, view, obj):
-        # Only allow when Schemathesis is actually running, NOT during unit tests
-        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-        if token:
-            # Check if we're running tests by looking for test-related patterns
-            import sys
-            is_test_run = (
-                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in sys.argv) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None or
-                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
-            )
-
-            if not is_test_run:
-                print(f"🔓 CIDynamicPermission: Allowing object access for Schemathesis", file=sys.stderr)
-                return True
-            else:
-                print(f"🔍 CIDynamicPermission: Test run detected, using normal permissions", file=sys.stderr)
-
-        return False  # Let normal permission classes handle unit tests
-
-# Always use dynamic classes - they check environment at request time
+# Configure DRF to use the robust authentication system
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
-    'DEFAULT_AUTHENTICATION_CLASSES': ['aquamind.settings_ci.CIDynamicAuthentication'],
-    'DEFAULT_PERMISSION_CLASSES': ['aquamind.settings_ci.CIDynamicPermission'],
+    # Use robust authentication that checks execution context
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'aquamind.utils.auth_isolation.CIAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    # Use robust permissions that check execution context
+    'DEFAULT_PERMISSION_CLASSES': [
+        'aquamind.utils.auth_isolation.CIPermission',
+    ],
 }
 
 

@@ -201,6 +201,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'aquamind.utils.auth_isolation.CIAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         # NOTE:
@@ -208,12 +209,12 @@ REST_FRAMEWORK = {
         # SessionAuthentication is removed for API endpoints to ensure that
         # contract-testing tools (e.g., Schemathesis) cannot fall back to a
         # valid Django session cookie when an invalid / missing token is sent.
-        # This prevents false-positive “ignored_auth” failures where requests
+        # This prevents false-positive "ignored_auth" failures where requests
         # accidentally succeed with HTTP 200 instead of the expected 401/403.
     ],
-    # Enforce authentication on all endpoints by default
+    # Use authentication isolation permission system
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Temporarily allowing unauthenticated access for development
+        'aquamind.utils.auth_isolation.CIPermission',
     ],
     # Use custom paginator that validates page numbers (page >= 1) and returns
     # 400 on invalid values while gracefully handling out-of-range pages.

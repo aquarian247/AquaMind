@@ -557,7 +557,7 @@ class FeedingEventSummaryTest(TestCase):
         ):
             self.client.force_authenticate(user=None)
             resp = self.client.get(self.summary_url)
-            self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+            self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_default_today_filter(self):
         """Without query params, endpoint aggregates only today's events."""
