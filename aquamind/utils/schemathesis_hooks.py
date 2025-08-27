@@ -26,6 +26,11 @@ logger = logging.getLogger("schemathesis.hooks")
 print("🔌 AquaMind Schemathesis hooks loaded!", file=sys.stderr)
 logger.info("AquaMind Schemathesis hooks initialized")
 
+# Debug environment variables
+auth_token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+print(f"🔧 SCHEMATHESIS_AUTH_TOKEN: {'SET' if auth_token else 'NOT SET'} (length: {len(auth_token) if auth_token else 0})", file=sys.stderr)
+logger.info(f"Auth token available: {bool(auth_token)}")
+
 # --------------------------------------------------------------------------- #
 # Runtime helpers                                                             #
 # --------------------------------------------------------------------------- #
@@ -58,6 +63,10 @@ def before_call(context, case, **kwargs):  # noqa: D401,D202
     2. For JWT refresh endpoints, also inject a refresh token in the request body.
     3. Remove all ``Cookie`` headers to ensure no stale session is transmitted.
     """
+
+    # Debug: Log that hook is being called
+    print(f"🎯 before_call hook triggered for {case.method} {case.path}", file=sys.stderr)
+    logger.debug(f"Processing request to {case.method} {case.path}")
 
     # ``headers`` may be absent if the test does not specify any – normalise.
     headers: Dict[str, str] = kwargs.setdefault("headers", {})
