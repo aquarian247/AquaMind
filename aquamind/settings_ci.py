@@ -164,7 +164,6 @@ if 'rest_framework_simplejwt' in INSTALLED_APPS:
     INSTALLED_APPS.remove('rest_framework_simplejwt')
 
 # Remove JWT settings that would cause errors in CI
-try:
+# Use globals() to safely delete SIMPLE_JWT if it exists
+if 'SIMPLE_JWT' in globals():
     del SIMPLE_JWT
-except NameError:
-    pass  # SIMPLE_JWT not defined in base settings
