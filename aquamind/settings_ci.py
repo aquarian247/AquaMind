@@ -205,8 +205,8 @@ class CIDynamicPermission(BasePermission):
 # Always use dynamic classes - they check environment at request time
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
-    'DEFAULT_AUTHENTICATION_CLASSES': [CIDynamicAuthentication],
-    'DEFAULT_PERMISSION_CLASSES': [CIDynamicPermission],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['aquamind.settings_ci.CIDynamicAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES': ['aquamind.settings_ci.CIDynamicPermission'],
 }
 
 
