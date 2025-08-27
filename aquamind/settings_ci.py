@@ -150,23 +150,38 @@ AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 # Radical simplification: Disable authentication entirely for CI/testing
 # This eliminates all auth complexity while still testing API functionality
 
-from rest_framework.permissions import IsAuthenticated
-
-# Override IsAuthenticated to always return True in CI
-def ci_has_permission(self, request, view):
-    return True
-
-def ci_has_object_permission(self, request, view, obj):
-    return True
-
-# Monkey patch IsAuthenticated to always allow in CI
-IsAuthenticated.has_permission = ci_has_permission
-IsAuthenticated.has_object_permission = ci_has_object_permission
-
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
     'DEFAULT_AUTHENTICATION_CLASSES': [],  # No authentication required
     'DEFAULT_PERMISSION_CLASSES': [],      # No permissions required
 }
 
-print("🔓 CI Authentication disabled - IsAuthenticated always returns True", file=sys.stderr)
+# ------------------------------------------------------------------
+# LAZY AUTHENTICATION DISABLE FOR SCHEMATHESIS ONLY
+# ------------------------------------------------------------------
+# Only disable authentication when Schemathesis is actually running
+# This avoids interfering with unit tests and migrations
+
+def disable_auth_for_schemathesis():
+    """Disable authentication only when Schemathesis is running"""
+    import os
+    from rest_framework.permissions import IsAuthenticated
+
+    # Only apply monkey patch if SCHEMATHESIS_AUTH_TOKEN is set
+    # This indicates we're running Schemathesis, not regular tests
+    if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+        # Override IsAuthenticated to always return True for Schemathesis
+        def ci_has_permission(self, request, view):
+            return True
+
+        def ci_has_object_permission(self, request, view, obj):
+            return True
+
+        # Monkey patch IsAuthenticated to always allow for Schemathesis
+        IsAuthenticated.has_permission = ci_has_permission
+        IsAuthenticated.has_object_permission = ci_has_object_permission
+
+        print("🔓 CI Authentication disabled for Schemathesis", file=sys.stderr)
+
+# This will be called by Schemathesis hooks when they load
+# Not during Django settings initialization

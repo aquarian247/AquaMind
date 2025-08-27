@@ -26,9 +26,16 @@ logger = logging.getLogger("schemathesis.hooks")
 print("🔌 AquaMind Schemathesis hooks loaded!", file=sys.stderr)
 logger.info("AquaMind Schemathesis hooks initialized")
 
-# Debug environment variables
-print(f"🔓 CI Environment: Authentication DISABLED", file=sys.stderr)
-logger.info("CI testing mode - no authentication required")
+# Disable authentication only for Schemathesis (not for regular Django operations)
+try:
+    from aquamind.settings_ci import disable_auth_for_schemathesis
+    disable_auth_for_schemathesis()
+except ImportError:
+    # Not in CI environment, continue normally
+    print("🔐 Production environment - using normal authentication", file=sys.stderr)
+    logger.info("Production mode - authentication enabled")
+
+print("🎯 Schemathesis hooks ready", file=sys.stderr)
 
 # --------------------------------------------------------------------------- #
 # Runtime helpers                                                             #
