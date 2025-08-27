@@ -80,11 +80,11 @@ def is_schemathesis_mode() -> bool:
 
 def is_test_mode() -> bool:
     """Check if current execution is in test mode"""
-    context = get_execution_context()
-
-    # If we explicitly set schemathesis mode, we're not in test mode
-    if context.is_schemathesis_mode:
+    # If we explicitly set schemathesis mode (via env var or context), we're not in test mode
+    if is_schemathesis_mode():
         return False
+
+    context = get_execution_context()
 
     # Check thread-local context
     if context.is_test_mode:
