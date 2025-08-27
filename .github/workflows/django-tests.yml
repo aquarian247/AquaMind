@@ -91,51 +91,37 @@ jobs:
         python manage.py migrate --settings=aquamind.settings_ci --noinput
 
         # ------------------------------------------------------------------
-        # Obtain / create the CI JWT tokens using a dedicated management command
+        # Obtain / create the CI auth token using a dedicated management command
         # ------------------------------------------------------------------
-        echo "🔑 Generating CI JWT tokens..."
+        echo "🔑 Generating CI auth token..."
 
-        # Generate JWT tokens with debug output to see what's happening
-        TOKENS_JSON=$(python manage.py get_ci_token --settings=aquamind.settings_ci --debug)
+        # Generate token with debug output to see what's happening
+        TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci --debug)
 
         # Check if token generation succeeded
         if [ $? -ne 0 ]; then
-          echo "❌ JWT token generation command failed"
+          echo "❌ Token generation command failed"
           exit 1
         fi
 
-        # Check if tokens are empty
-        if [ -z "$TOKENS_JSON" ]; then
-          echo "❌ Failed to obtain CI JWT tokens - empty response"
+        # Check if token is empty
+        if [ -z "$TOKEN" ]; then
+          echo "❌ Failed to obtain CI auth token - empty token"
           exit 1
         fi
 
-        # Parse JSON tokens and extract access/refresh tokens
-        ACCESS_TOKEN=$(echo "$TOKENS_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('access', ''))")
-        REFRESH_TOKEN=$(echo "$TOKENS_JSON" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('refresh', ''))")
+        # Debug: Print token info (without exposing the actual token)
+        echo "TOKEN length = ${#TOKEN}"
+        echo "✅ CI auth token ready"
 
-        # Validate tokens
-        if [ -z "$ACCESS_TOKEN" ] || [ -z "$REFRESH_TOKEN" ]; then
-          echo "❌ Failed to parse JWT tokens from response"
-          echo "Response: $TOKENS_JSON"
-          exit 1
-        fi
-
-        # Debug: Print token info (without exposing the actual tokens)
-        echo "ACCESS_TOKEN length = ${#ACCESS_TOKEN}"
-        echo "REFRESH_TOKEN length = ${#REFRESH_TOKEN}"
-        echo "✅ CI JWT tokens ready"
-
-        # Mask the tokens for security
-        echo "::add-mask::$ACCESS_TOKEN"
-        echo "::add-mask::$REFRESH_TOKEN"
+        # Mask the token for security
+        echo "::add-mask::$TOKEN"
 
         # ------------------------------------------------------------------
-        # Export tokens for Schemathesis hooks - ensure they're available in next step
+        # Export token for Schemathesis hooks - ensure it's available in next step
         # ------------------------------------------------------------------
-        echo "SCHEMATHESIS_ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
-        echo "SCHEMATHESIS_REFRESH_TOKEN=$REFRESH_TOKEN" >> $GITHUB_ENV
-        echo "🔧 JWT tokens exported to environment"
+        echo "SCHEMATHESIS_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
+        echo "🔧 Auth token exported to environment"
 
     - name: Run Schemathesis contract tests
       run: |

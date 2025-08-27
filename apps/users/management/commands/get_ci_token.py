@@ -1,12 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.authtoken.models import Token
 import sys
-import json
 
 
 class Command(BaseCommand):
-    help = 'Gets or creates CI test JWT tokens'
+    help = 'Gets or creates CI test user token'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -45,23 +44,28 @@ class Command(BaseCommand):
             user.is_superuser = True
             user.save()
 
-            # Generate JWT refresh token
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+            # Get or create token
+            token, token_created = Token.objects.get_or_create(user=user)
 
             if debug:
-                self.stderr.write(f'JWT Access token length: {len(access_token)}')
-                self.stderr.write(f'JWT Refresh token length: {len(refresh_token)}')
+                self.stderr.write(f'Token created: {token_created}')
+                self.stderr.write(f'Token key: {token.key}')
 
-            # Output both tokens as JSON for the CI environment
-            tokens = {
-                'access': access_token,
-                'refresh': refresh_token
-            }
+            # ------------------------------------------------------------------
+            # Some edge cases (observed on CI) resulted in a Token row with an
+            # *empty* key string. That breaks authentication because DRF expects
+            # a 40-char key. Guard against that by recreating the token when
+            # its key is falsy or empty.
+            # ------------------------------------------------------------------
+            if not token.key:
+                if debug:
+                    self.stderr.write('Empty token key detected – recreating token')
+                token.delete()
+                token = Token.objects.create(user=user)
 
-            # Print tokens as JSON for better CI compatibility
-            print(json.dumps(tokens), flush=True)
+            # Print token using print() for better CI compatibility
+            # This ensures the output is properly captured in bash
+            print(token.key, flush=True)
 
             # Also flush stdout to ensure output is captured
             sys.stdout.flush()
