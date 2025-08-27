@@ -150,20 +150,10 @@ AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 # Radical simplification: Disable authentication entirely for CI/testing
 # This eliminates all auth complexity while still testing API functionality
 
-from rest_framework.permissions import BasePermission
-
-class CIPermission(BasePermission):
-    """Permission class that always allows access in CI environment"""
-    def has_permission(self, request, view):
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        return True
-
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
     'DEFAULT_AUTHENTICATION_CLASSES': [],  # No authentication required
-    'DEFAULT_PERMISSION_CLASSES': [CIPermission],  # Always allow in CI
+    'DEFAULT_PERMISSION_CLASSES': [],      # No permissions required (overridden by monkey patch)
 }
 
 # ------------------------------------------------------------------
