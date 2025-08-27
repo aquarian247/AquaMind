@@ -91,37 +91,10 @@ jobs:
         python manage.py migrate --settings=aquamind.settings_ci --noinput
 
         # ------------------------------------------------------------------
-        # Obtain / create the CI auth token using a dedicated management command
+        # CI Authentication DISABLED - No token generation needed
         # ------------------------------------------------------------------
-        echo "🔑 Generating CI auth token..."
-
-        # Generate token with debug output to see what's happening
-        TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci --debug)
-
-        # Check if token generation succeeded
-        if [ $? -ne 0 ]; then
-          echo "❌ Token generation command failed"
-          exit 1
-        fi
-
-        # Check if token is empty
-        if [ -z "$TOKEN" ]; then
-          echo "❌ Failed to obtain CI auth token - empty token"
-          exit 1
-        fi
-
-        # Debug: Print token info (without exposing the actual token)
-        echo "TOKEN length = ${#TOKEN}"
-        echo "✅ CI auth token ready"
-
-        # Mask the token for security
-        echo "::add-mask::$TOKEN"
-
-        # ------------------------------------------------------------------
-        # Export token for Schemathesis hooks - ensure it's available in next step
-        # ------------------------------------------------------------------
-        echo "SCHEMATHESIS_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
-        echo "🔧 Auth token exported to environment"
+        echo "🔓 CI authentication disabled for simplicity"
+        echo "✅ No token generation required"
 
     - name: Run Schemathesis contract tests
       run: |

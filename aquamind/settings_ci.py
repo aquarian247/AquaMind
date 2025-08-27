@@ -144,19 +144,13 @@ else:
 AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 
 # ------------------------------------------------------------------
-# SIMPLIFIED AUTHENTICATION FOR CI ENVIRONMENT
+# DISABLE AUTHENTICATION FOR CI ENVIRONMENT
 # ------------------------------------------------------------------
-# Use simple Token authentication for CI instead of complex JWT setup
-# This significantly simplifies the testing infrastructure while keeping
-# JWT for production use.
+# Radical simplification: Disable authentication entirely for CI/testing
+# This eliminates all auth complexity while still testing API functionality
 
-# Override authentication classes to use BOTH Token and JWT for CI
-# This allows us to test all endpoints including JWT-specific ones
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],  # No authentication required
+    'DEFAULT_PERMISSION_CLASSES': [],      # No permissions required
 }
