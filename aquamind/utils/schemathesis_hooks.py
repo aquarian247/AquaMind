@@ -26,10 +26,12 @@ logger = logging.getLogger("schemathesis.hooks")
 print("🔌 AquaMind Schemathesis hooks loaded!", file=sys.stderr)
 logger.info("AquaMind Schemathesis hooks initialized")
 
-# Disable permissions only for Schemathesis (not for regular Django operations)
+# Note: Permissions are already disabled during Django settings initialization
+# This is just a confirmation that the CI environment is properly configured
 try:
-    from aquamind.settings_ci import disable_permissions_for_schemathesis
-    disable_permissions_for_schemathesis()
+    from aquamind.settings_ci import disable_permissions_for_ci
+    # Function already called during settings init, but we can call it again if needed
+    # disable_permissions_for_ci()  # Commented out since already called in settings_ci.py
     print("🎯 Schemathesis hooks ready with disabled permissions", file=sys.stderr)
 except ImportError:
     # Not in CI environment, continue normally
