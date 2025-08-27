@@ -123,7 +123,11 @@ jobs:
         echo "SCHEMATHESIS_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
         echo "🔧 Auth token exported to environment"
 
+    - name: Run Schemathesis contract tests
+      run: |
+        # ------------------------------------------------------------------
         # Start Django dev server in background
+        # ------------------------------------------------------------------
         python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &
         SERVER_PID=$!
 
@@ -139,13 +143,12 @@ jobs:
         done
         echo "✅ Django server is up – running Schemathesis"
 
-        # Install schemathesis (already in requirements but ensure CLI present)
+        # ------------------------------------------------------------------
+        # Install schemathesis and run contract tests
+        # ------------------------------------------------------------------
         pip install --quiet schemathesis
 
-        # Run contract checks and capture the full output for later inspection
-        # ------------------------------------------------------------------
         # Set up Schemathesis environment and hooks
-        # ------------------------------------------------------------------
         echo "🔌 Setting up Schemathesis hooks..."
         export SCHEMATHESIS_HOOKS="aquamind.utils.schemathesis_hooks"
 
@@ -160,9 +163,7 @@ jobs:
 
         echo "✅ Schemathesis environment ready"
 
-        # ------------------------------------------------------------------
         # Run Schemathesis contract tests
-        # ------------------------------------------------------------------
         schemathesis run \
           --base-url=http://127.0.0.1:8000 \
           --checks all \
@@ -172,6 +173,7 @@ jobs:
           --show-errors-tracebacks \
           api/openapi.yaml \
           > schemathesis-output.txt 2>&1
+
         STATUS=$?
 
         # Show quick preview of the log for easier debugging
