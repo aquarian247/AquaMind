@@ -179,27 +179,58 @@ class CIDynamicAuthentication(BaseAuthentication):
     """Authentication class that dynamically checks for Schemathesis token"""
 
     def authenticate(self, request):
-        # Check environment variable at request time (not settings load time)
-        if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
-            print(f"🔑 CIDynamicAuthentication: Providing mock user for Schemathesis", file=sys.stderr)
-            return (CIMockUser(), None)
+        # Only provide mock user when Schemathesis is actually running
+        # NOT when unit tests are running (even if SCHEMATHESIS_AUTH_TOKEN is set)
+        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+        if token:
+            # Check if we're running tests by looking for test-related patterns
+            is_test_run = (
+                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
+                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None
+            )
+
+            if not is_test_run:
+                print(f"🔑 CIDynamicAuthentication: Providing mock user for Schemathesis", file=sys.stderr)
+                return (CIMockUser(), None)
+
         return None
 
 class CIDynamicPermission(BasePermission):
     """Permission class that dynamically allows access for Schemathesis"""
 
     def has_permission(self, request, view):
-        # Check environment variable at request time (not settings load time)
-        if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
-            print(f"🔓 CIDynamicPermission: Allowing access for Schemathesis", file=sys.stderr)
-            return True
+        # Only allow when Schemathesis is actually running, NOT during unit tests
+        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+        if token:
+            # Check if we're running tests by looking for test-related patterns
+            is_test_run = (
+                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
+                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None
+            )
+
+            if not is_test_run:
+                print(f"🔓 CIDynamicPermission: Allowing access for Schemathesis", file=sys.stderr)
+                return True
+
         return False  # Let normal permission classes handle unit tests
 
     def has_object_permission(self, request, view, obj):
-        # Check environment variable at request time (not settings load time)
-        if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
-            print(f"🔓 CIDynamicPermission: Allowing object access for Schemathesis", file=sys.stderr)
-            return True
+        # Only allow when Schemathesis is actually running, NOT during unit tests
+        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+        if token:
+            # Check if we're running tests by looking for test-related patterns
+            is_test_run = (
+                'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
+                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None
+            )
+
+            if not is_test_run:
+                print(f"🔓 CIDynamicPermission: Allowing object access for Schemathesis", file=sys.stderr)
+                return True
+
         return False  # Let normal permission classes handle unit tests
 
 # Always use dynamic classes - they check environment at request time
