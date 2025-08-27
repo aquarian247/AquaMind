@@ -27,9 +27,12 @@ print("🔌 AquaMind Schemathesis hooks loaded!", file=sys.stderr)
 logger.info("AquaMind Schemathesis hooks initialized")
 
 # Debug environment variables
-auth_token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-print(f"🔧 SCHEMATHESIS_AUTH_TOKEN: {'SET' if auth_token else 'NOT SET'} (length: {len(auth_token) if auth_token else 0})", file=sys.stderr)
-logger.info(f"Auth token available: {bool(auth_token)}")
+access_token = os.getenv("SCHEMATHESIS_ACCESS_TOKEN")
+refresh_token = os.getenv("SCHEMATHESIS_REFRESH_TOKEN")
+print(f"🔧 SCHEMATHESIS_ACCESS_TOKEN: {'SET' if access_token else 'NOT SET'} (length: {len(access_token) if access_token else 0})", file=sys.stderr)
+print(f"🔧 SCHEMATHESIS_REFRESH_TOKEN: {'SET' if refresh_token else 'NOT SET'} (length: {len(refresh_token) if refresh_token else 0})", file=sys.stderr)
+logger.info(f"Access token available: {bool(access_token)}")
+logger.info(f"Refresh token available: {bool(refresh_token)}")
 
 # --------------------------------------------------------------------------- #
 # Runtime helpers                                                             #
@@ -74,35 +77,34 @@ def before_call(context, case, **kwargs):  # noqa: D401,D202
     # Strip session cookies first – they should never be sent.
     _strip_cookies(headers)
 
-    # Inject token if available & not already provided.
+    # Inject JWT access token if available & not already provided.
     if "Authorization" not in headers:
-        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-        if token:
-            headers["Authorization"] = f"Token {token}"
+        access_token = os.getenv("SCHEMATHESIS_ACCESS_TOKEN")
+        if access_token:
+            headers["Authorization"] = f"Bearer {access_token}"
             logger.debug(
                 "Injected Authorization header for %s %s", case.method, case.path
             )
         else:
             logger.warning(
-                "SCHEMATHESIS_AUTH_TOKEN not set – request may be unauthenticated"
+                "SCHEMATHESIS_ACCESS_TOKEN not set – request may be unauthenticated"
             )
 
     # Special handling for JWT refresh endpoint
     if case.path == "/api/auth/jwt/refresh/" and case.method == "POST":
         logger.info("Applying special handling for JWT refresh endpoint")
 
-        # Get the token (same one used for Authorization header)
-        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
-        if token:
+        # Get the refresh token (different from access token)
+        refresh_token = os.getenv("SCHEMATHESIS_REFRESH_TOKEN")
+        if refresh_token:
             # For JWT refresh, we need to provide a refresh token in the request body
-            # We'll use the same token as the access token for simplicity in testing
             body_data = kwargs.get("json", {})
             if not body_data.get("refresh"):
-                body_data["refresh"] = token
+                body_data["refresh"] = refresh_token
                 kwargs["json"] = body_data
                 logger.debug("Injected refresh token in request body for JWT refresh")
         else:
-            logger.warning("No token available for JWT refresh request body")
+            logger.warning("SCHEMATHESIS_REFRESH_TOKEN not set for JWT refresh endpoint")
 
     # Nothing else to mutate; Schemathesis will use the modified kwargs.
     return kwargs
