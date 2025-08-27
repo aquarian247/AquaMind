@@ -55,7 +55,8 @@ def before_call(context, case, **kwargs):  # noqa: D401,D202
        The header value is taken from the ``SCHEMATHESIS_AUTH_TOKEN`` env var
        which should be exported by the CI workflow after running the
        ``get_ci_token`` management command.
-    2. Remove all ``Cookie`` headers to ensure no stale session is transmitted.
+    2. For JWT refresh endpoints, also inject a refresh token in the request body.
+    3. Remove all ``Cookie`` headers to ensure no stale session is transmitted.
     """
 
     # ``headers`` may be absent if the test does not specify any – normalise.
@@ -76,6 +77,23 @@ def before_call(context, case, **kwargs):  # noqa: D401,D202
             logger.warning(
                 "SCHEMATHESIS_AUTH_TOKEN not set – request may be unauthenticated"
             )
+
+    # Special handling for JWT refresh endpoint
+    if case.path == "/api/auth/jwt/refresh/" and case.method == "POST":
+        logger.info("Applying special handling for JWT refresh endpoint")
+
+        # Get the token (same one used for Authorization header)
+        token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
+        if token:
+            # For JWT refresh, we need to provide a refresh token in the request body
+            # We'll use the same token as the access token for simplicity in testing
+            body_data = kwargs.get("json", {})
+            if not body_data.get("refresh"):
+                body_data["refresh"] = token
+                kwargs["json"] = body_data
+                logger.debug("Injected refresh token in request body for JWT refresh")
+        else:
+            logger.warning("No token available for JWT refresh request body")
 
     # Nothing else to mutate; Schemathesis will use the modified kwargs.
     return kwargs
