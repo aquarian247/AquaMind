@@ -96,6 +96,12 @@ jobs:
         echo "🔓 CI authentication disabled for simplicity"
         echo "✅ No token generation required"
 
+        # ------------------------------------------------------------------
+        # IMPORTANT: Clear SCHEMATHESIS_AUTH_TOKEN to prevent interference with unit tests
+        # ------------------------------------------------------------------
+        unset SCHEMATHESIS_AUTH_TOKEN
+        echo "🧹 Cleared SCHEMATHESIS_AUTH_TOKEN for unit tests"
+
     - name: Run Schemathesis contract tests
       run: |
         # ------------------------------------------------------------------
@@ -124,6 +130,13 @@ jobs:
         # Set up Schemathesis environment and hooks
         echo "🔌 Setting up Schemathesis hooks..."
         export SCHEMATHESIS_HOOKS="aquamind.utils.schemathesis_hooks"
+
+        # ------------------------------------------------------------------
+        # Generate and set SCHEMATHESIS_AUTH_TOKEN for Schemathesis only
+        # ------------------------------------------------------------------
+        TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci 2>/dev/null || echo "test_token")
+        export SCHEMATHESIS_AUTH_TOKEN="$TOKEN"
+        echo "🔑 Generated SCHEMATHESIS_AUTH_TOKEN for Schemathesis"
 
         # Verify environment variables are set correctly
         echo "SCHEMATHESIS_HOOKS = $SCHEMATHESIS_HOOKS"
