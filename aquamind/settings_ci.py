@@ -157,14 +157,29 @@ class CIMockUser:
     """Mock user that behaves like an authenticated user for Schemathesis"""
 
     def __init__(self):
-        self.id = 1
-        self.username = 'schemathesis_user'
-        self.email = 'schemathesis@test.com'
-        self.first_name = 'Schema'
-        self.last_name = 'Thesis'
-        self.is_active = True
-        self.is_staff = True
-        self.is_superuser = True
+        from django.contrib.auth.models import User
+        # Create a real user in the database to avoid UserProfile.DoesNotExist errors
+        user, created = User.objects.get_or_create(
+            username='schemathesis_user',
+            defaults={
+                'email': 'schemathesis@test.com',
+                'first_name': 'Schema',
+                'last_name': 'Thesis',
+                'is_active': True,
+                'is_staff': True,
+                'is_superuser': True
+            }
+        )
+        # Copy all attributes from the real user
+        self.id = user.id
+        self.username = user.username
+        self.email = user.email
+        self.first_name = user.first_name
+        self.last_name = user.last_name
+        self.is_active = user.is_active
+        self.is_staff = user.is_staff
+        self.is_superuser = user.is_superuser
+        self.date_joined = user.date_joined
 
     def __int__(self):
         return self.id
@@ -175,6 +190,12 @@ class CIMockUser:
     def is_authenticated(self):
         return True
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    def get_short_name(self):
+        return self.first_name
+
 class CIDynamicAuthentication(BaseAuthentication):
     """Authentication class that dynamically checks for Schemathesis token"""
 
@@ -184,15 +205,19 @@ class CIDynamicAuthentication(BaseAuthentication):
         token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
         if token:
             # Check if we're running tests by looking for test-related patterns
+            import sys
             is_test_run = (
                 'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None
+                any('test' in arg.lower() for arg in sys.argv) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None or
+                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
             )
 
             if not is_test_run:
                 print(f"🔑 CIDynamicAuthentication: Providing mock user for Schemathesis", file=sys.stderr)
                 return (CIMockUser(), None)
+            else:
+                print(f"🔍 CIDynamicAuthentication: Test run detected, using normal auth", file=sys.stderr)
 
         return None
 
@@ -204,15 +229,19 @@ class CIDynamicPermission(BasePermission):
         token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
         if token:
             # Check if we're running tests by looking for test-related patterns
+            import sys
             is_test_run = (
                 'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None
+                any('test' in arg.lower() for arg in sys.argv) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None or
+                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
             )
 
             if not is_test_run:
                 print(f"🔓 CIDynamicPermission: Allowing access for Schemathesis", file=sys.stderr)
                 return True
+            else:
+                print(f"🔍 CIDynamicPermission: Test run detected, using normal permissions", file=sys.stderr)
 
         return False  # Let normal permission classes handle unit tests
 
@@ -221,15 +250,19 @@ class CIDynamicPermission(BasePermission):
         token = os.getenv("SCHEMATHESIS_AUTH_TOKEN")
         if token:
             # Check if we're running tests by looking for test-related patterns
+            import sys
             is_test_run = (
                 'test' in os.getenv('DJANGO_SETTINGS_MODULE', '') or
-                any('test' in arg.lower() for arg in os.sys.argv if hasattr(os.sys, 'argv')) or
-                os.getenv('PYTEST_CURRENT_TEST') is not None
+                any('test' in arg.lower() for arg in sys.argv) or
+                os.getenv('PYTEST_CURRENT_TEST') is not None or
+                'manage.py' in sys.argv[0] and len(sys.argv) > 1 and sys.argv[1] == 'test'
             )
 
             if not is_test_run:
                 print(f"🔓 CIDynamicPermission: Allowing object access for Schemathesis", file=sys.stderr)
                 return True
+            else:
+                print(f"🔍 CIDynamicPermission: Test run detected, using normal permissions", file=sys.stderr)
 
         return False  # Let normal permission classes handle unit tests
 
