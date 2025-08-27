@@ -145,61 +145,70 @@ else:
 AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 
 # ------------------------------------------------------------------
-# DISABLE AUTHENTICATION FOR CI ENVIRONMENT
+# CONDITIONAL AUTHENTICATION FOR CI ENVIRONMENT
 # ------------------------------------------------------------------
-# Radical simplification: Disable authentication entirely for CI/testing
-# This eliminates all auth complexity while still testing API functionality
+# Use normal authentication for unit tests, disable for Schemathesis
 
-REST_FRAMEWORK = {
-    **REST_FRAMEWORK,
-    'DEFAULT_AUTHENTICATION_CLASSES': [],  # No authentication required
-    'DEFAULT_PERMISSION_CLASSES': [],      # No permissions required (overridden by monkey patch)
-}
+import os
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.permissions import BasePermission
 
-# ------------------------------------------------------------------
-# FORCE DISABLE PERMISSIONS FOR SCHEMATHESIS AND UNIT TESTS
-# ------------------------------------------------------------------
-# Aggressive approach: Monkey patch permission checking to handle CI scenarios
-# This overrides permission classes when authentication is disabled globally
+class CIMockUser:
+    """Mock user that behaves like an authenticated user for Schemathesis"""
 
-def disable_permissions_for_ci():
-    """Handle permissions for CI environment (both unit tests and Schemathesis)"""
-    import os
-    from rest_framework.permissions import IsAuthenticated, IsAdminUser
+    def __init__(self):
+        self.id = 1
+        self.username = 'schemathesis_user'
+        self.email = 'schemathesis@test.com'
+        self.first_name = 'Schema'
+        self.last_name = 'Thesis'
+        self.is_active = True
+        self.is_staff = True
+        self.is_superuser = True
 
-    # Store original methods
-    original_has_permission = IsAuthenticated.has_permission
-    original_has_object_permission = IsAuthenticated.has_object_permission
+    def __int__(self):
+        return self.id
 
-    def patched_has_permission(self, request, view):
-        # If running Schemathesis, always allow
+    def __str__(self):
+        return self.username
+
+    def is_authenticated(self):
+        return True
+
+class CISchemathesisAuthentication(BaseAuthentication):
+    """Authentication class that provides mock user when Schemathesis is running"""
+
+    def authenticate(self, request):
+        if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+            return (CIMockUser(), None)
+        return None
+
+class CISchemathesisPermission(BasePermission):
+    """Permission class that always allows when Schemathesis is running"""
+
+    def has_permission(self, request, view):
         if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
             return True
-        # If authentication is disabled globally, allow access (prevent 403 errors)
-        if not REST_FRAMEWORK.get('DEFAULT_AUTHENTICATION_CLASSES'):
-            return True
-        # Otherwise use original logic
-        return original_has_permission(self, request, view)
+        return False  # Let normal permission classes handle unit tests
 
-    def patched_has_object_permission(self, request, view, obj):
-        # If running Schemathesis, always allow
+    def has_object_permission(self, request, view, obj):
         if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
             return True
-        # If authentication is disabled globally, allow access (prevent 403 errors)
-        if not REST_FRAMEWORK.get('DEFAULT_AUTHENTICATION_CLASSES'):
-            return True
-        # Otherwise use original logic
-        return original_has_object_permission(self, request, view, obj)
+        return False  # Let normal permission classes handle unit tests
 
-    # Apply monkey patch
-    IsAuthenticated.has_permission = patched_has_permission
-    IsAuthenticated.has_object_permission = patched_has_object_permission
+# Configure REST Framework based on environment
+if os.getenv("SCHEMATHESIS_AUTH_TOKEN"):
+    # Schemathesis is running - disable all auth and permissions
+    REST_FRAMEWORK = {
+        **REST_FRAMEWORK,
+        'DEFAULT_AUTHENTICATION_CLASSES': [CISchemathesisAuthentication],
+        'DEFAULT_PERMISSION_CLASSES': [CISchemathesisPermission],
+    }
+else:
+    # Unit tests - use normal authentication
+    REST_FRAMEWORK = {
+        **REST_FRAMEWORK,
+        # Keep default authentication and permissions for unit tests
+    }
 
-    # Also patch IsAdminUser for consistency
-    IsAdminUser.has_permission = patched_has_permission
-    IsAdminUser.has_object_permission = patched_has_object_permission
 
-    print("🔧 CI Permission monkey patch applied", file=sys.stderr)
-
-# Apply the monkey patch during Django settings initialization
-disable_permissions_for_ci()
