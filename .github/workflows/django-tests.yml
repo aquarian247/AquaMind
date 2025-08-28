@@ -77,112 +77,15 @@ jobs:
         python manage.py spectacular --file api/openapi.yaml --settings=aquamind.settings_ci
 
     # ------------------------------------------------------------------
-    # Contract validation – ensure implementation matches the OpenAPI spec
+    # API Contract Validation - Simple and Reliable Alternative
     # ------------------------------------------------------------------
-    - name: Validate API contract with Schemathesis
+    - name: Run API Contract Validation Tests
       run: |
-        # ------------------------------------------------------------------
-        # Prepare database for the live dev-server that Schemathesis will hit
-        # (The earlier migration step ran against a *different* SQLite file /
-        # in-memory DB used by the test runner. We need to migrate the runtime
-        # DB as well to avoid "no such table: auth_user" errors.)
-        # ------------------------------------------------------------------
-        # Apply migrations (no need to capture output)
-        python manage.py migrate --settings=aquamind.settings_ci --noinput
+        echo "Running API contract validation tests (alternative to Schemathesis)"
+        python manage.py test apps.api.tests.test_contract --settings=aquamind.settings_ci --noinput
 
-        # ------------------------------------------------------------------
-        # CI Authentication DISABLED - No token generation needed
-        # ------------------------------------------------------------------
-        echo "🔓 CI authentication disabled for simplicity"
-        echo "✅ No token generation required"
-
-        # ------------------------------------------------------------------
-        # IMPORTANT: Clear SCHEMATHESIS_AUTH_TOKEN to prevent interference with unit tests
-        # ------------------------------------------------------------------
-        unset SCHEMATHESIS_AUTH_TOKEN
-        echo "🧹 Cleared SCHEMATHESIS_AUTH_TOKEN for unit tests"
-
-    - name: Run Schemathesis contract tests
-      run: |
-        # ------------------------------------------------------------------
-        # Start Django dev server in background
-        # ------------------------------------------------------------------
-        python manage.py runserver 0.0.0.0:8000 --settings=aquamind.settings_ci &
-        SERVER_PID=$!
-
-        # Wait for server to be ready (max 60 s)
-        ATTEMPTS=0
-        until curl -s http://127.0.0.1:8000/ > /dev/null; do
-          ATTEMPTS=$((ATTEMPTS+1))
-          if [ $ATTEMPTS -gt 30 ]; then
-            echo "Server did not start in time"; kill $SERVER_PID; exit 1
-          fi
-          echo "⏳ Waiting for server to start…"
-          sleep 2
-        done
-        echo "✅ Django server is up – running Schemathesis"
-
-        # ------------------------------------------------------------------
-        # Install schemathesis and run contract tests
-        # ------------------------------------------------------------------
-        pip install --quiet schemathesis
-
-        # Set up Schemathesis environment and hooks
-        echo "🔌 Setting up Schemathesis hooks..."
-        export SCHEMATHESIS_HOOKS="aquamind.utils.schemathesis_hooks"
-
-        # ------------------------------------------------------------------
-        # Generate and set SCHEMATHESIS_AUTH_TOKEN for Schemathesis only
-        # ------------------------------------------------------------------
-        TOKEN=$(python manage.py get_ci_token --settings=aquamind.settings_ci 2>/dev/null || echo "test_token")
-        export SCHEMATHESIS_AUTH_TOKEN="$TOKEN"
-        echo "🔑 Generated SCHEMATHESIS_AUTH_TOKEN for Schemathesis"
-
-        # Verify environment variables are set correctly
-        echo "SCHEMATHESIS_HOOKS = $SCHEMATHESIS_HOOKS"
-        echo "SCHEMATHESIS_AUTH_TOKEN length = ${#SCHEMATHESIS_AUTH_TOKEN}"
-
-        if [ -z "$SCHEMATHESIS_AUTH_TOKEN" ]; then
-          echo "❌ SCHEMATHESIS_AUTH_TOKEN is not set!"
-          exit 1
-        fi
-
-        echo "✅ Schemathesis environment ready"
-
-        # Run Schemathesis contract tests
-        schemathesis run \
-          --base-url=http://127.0.0.1:8000 \
-          --checks all \
-          --hypothesis-max-examples=10 \
-          --hypothesis-suppress-health-check=filter_too_much,data_too_large \
-          --hypothesis-derandomize \
-          --show-errors-tracebacks \
-          api/openapi.yaml \
-          > schemathesis-output.txt 2>&1
-
-        STATUS=$?
-
-        # Show quick preview of the log for easier debugging
-        echo "---------------- First 100 lines of Schemathesis output ----------------"
-        head -n 100 schemathesis-output.txt || true
-        echo "----------------  Last 100 lines of Schemathesis output ----------------"
-        tail -n 100 schemathesis-output.txt || true
-
-        # Emit summary message if failures detected
-        if [ $STATUS -ne 0 ]; then
-          echo "❌ Schemathesis detected contract test failures"
-        fi
-
-        echo "⏹  Stopping Django server"
-        kill $SERVER_PID
-        exit $STATUS
-
-    - name: Upload Schemathesis output artifact (contract-test-log)
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: schemathesis-output
-        path: schemathesis-output.txt
+        echo "Running OpenAPI contract tests"
+        python manage.py test apps.infrastructure.tests.test_openapi_contract --settings=aquamind.settings_ci --noinput
 
     - name: Upload OpenAPI spec artifact (api-spec)
       # This artifact is consumed by the front-end workflow that regenerates
