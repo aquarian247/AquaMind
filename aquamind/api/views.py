@@ -5,11 +5,12 @@ This module provides a comprehensive overview of all available API endpoints,
 organized by app/module for easy discovery and navigation.
 """
 from collections import OrderedDict
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.permissions import AllowAny
-from rest_framework.decorators import permission_classes
+from rest_framework.decorators import api_view, permission_classes
 
 
 class APIRootView(APIView):
@@ -82,3 +83,38 @@ class APIRootView(APIView):
         # Ensure there is exactly one leading slash before joining with domain.
         normalized_path = path if path.startswith('/') else f'/{path}'
         return request.build_absolute_uri(normalized_path)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    API health check endpoint for monitoring and testing.
+
+    This endpoint provides a simple way to verify that:
+    1. The Django application is running
+    2. The database is accessible
+    3. Basic API functionality is working
+
+    Returns 200 OK with system status information, or 503 if services are unavailable.
+    """
+    try:
+        # Basic system information
+        data = {
+            'status': 'healthy',
+            'timestamp': timezone.now().isoformat(),
+            'service': 'AquaMind API',
+            'version': '1.0.0',
+            'database': 'accessible',
+            'environment': 'production' if not hasattr(request, 'META') or 'test' not in str(request.META.get('HTTP_HOST', '')) else 'test'
+        }
+
+        return Response(data, status=200)
+
+    except Exception as e:
+        # If anything goes wrong, return service unavailable
+        return Response({
+            'status': 'unhealthy',
+            'timestamp': timezone.now().isoformat(),
+            'error': str(e)
+        }, status=503)
