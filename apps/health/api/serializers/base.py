@@ -6,6 +6,7 @@ focusing on consistent error handling, field definition, and validation patterns
 """
 
 from rest_framework import serializers
+from typing import Optional, Dict, Any
 
 
 class StandardErrorMixin:
@@ -110,15 +111,18 @@ class ReadWriteFieldsMixin:
             """Retrieve and format the related object's ID and string representation."""
             # Get the related object through the foreign key
             related_obj = getattr(obj, base_name, None)
-            
+
             # If the related object exists, return a dict with its ID and str representation
             if related_obj:
                 return {
-                    'id': related_obj.id,
+                    'id': getattr(related_obj, 'id', None),
                     'name': str(related_obj)
                 }
-            
+
             return None
+
+        # Add type annotation for drf-spectacular
+        getter.__annotations__ = {'obj': object, 'return': Optional[Dict[str, Any]]}
         
         return getter
 
