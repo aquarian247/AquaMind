@@ -92,11 +92,25 @@ def ensure_global_security(
 
     If a different or more specific set of schemes is already present, the hook
     leaves it untouched.
+
+    Note: Public endpoints (like health-check) will still be marked as requiring
+    auth in the global security block, but their individual view permissions
+    take precedence at runtime.
     """
     schema = result  # alias
     if not schema.get("security"):
         logger.info("Adding global tokenAuth security requirement to OpenAPI schema")
         schema["security"] = [{"tokenAuth": []}]
+
+        # Remove security requirements from explicitly public endpoints
+        public_endpoints = ['/health-check/']
+        for endpoint_path in public_endpoints:
+            if endpoint_path in schema.get("paths", {}):
+                for method, operation in schema["paths"][endpoint_path].items():
+                    if isinstance(operation, dict) and "security" in operation:
+                        logger.info(f"Removing security requirement from public endpoint: {endpoint_path}")
+                        del operation["security"]
+
     return schema
 
 
@@ -154,10 +168,24 @@ def add_standard_responses(
             if "{" in path and "}" in path:
                 _ensure_response(responses, "404", "Not Found")
 
-            # --- 401 / 403 for secured endpoints -------------------------------
-            sec = operation.get("security", [])  # may be list or missing
-            is_anonymous_allowed = any(not entry for entry in sec)  # contains {}
-            if sec and not is_anonymous_allowed:
+            # ------------------------------------------------------------------
+            # 401 / 403 for *all* non-public endpoints
+            # ------------------------------------------------------------------
+            # Public endpoints are:
+            #   • the API root (/api/)
+            #   • schema endpoints (/api/v1/schema …)
+            #   • authentication endpoints (/api/auth/… or /api/v1/auth/…)
+            #
+            # Everything else should advertise that unauthenticated /
+            # unauthorised access is possible (401, 403).
+            is_public_endpoint = (
+                path == "/api/"
+                or path.startswith("/api/v1/schema")
+                or path.startswith("/api/auth/")
+                or path.startswith("/api/v1/auth/")
+            )
+
+            if not is_public_endpoint:
                 _ensure_response(responses, "401", "Unauthorized")
                 _ensure_response(responses, "403", "Forbidden")
 

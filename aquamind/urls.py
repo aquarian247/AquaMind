@@ -23,7 +23,7 @@ from django.views.generic import RedirectView
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.api.views import CustomObtainAuthToken
-from aquamind.api.views import APIRootView
+from aquamind.api.views import APIRootView, health_check
 # from apps.core.views import CSRFTokenView  # Temporarily disabled
 # drf-spectacular (OpenAPI 3.1) views – single source of truth
 from drf_spectacular.views import (
@@ -52,7 +52,10 @@ urlpatterns = [
     
     # API Root discovery view
     path("api/", APIRootView.as_view(), name="api-root"),
-    
+
+    # Health check endpoint
+    path("health-check/", health_check, name="health-check"),
+
     # Redirect root URL to admin for now
     path('', RedirectView.as_view(url='/admin/'), name='index'),
     

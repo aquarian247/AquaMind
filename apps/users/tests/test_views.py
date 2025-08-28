@@ -146,7 +146,7 @@ class UserViewSetTest(TestCase):
         Test the 'me' endpoint that retrieves authenticated user.
         """
         url = reverse('user-me')
-        
+
         # Try without authentication
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

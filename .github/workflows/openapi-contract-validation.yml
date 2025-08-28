@@ -1,0 +1,76 @@
+name: OpenAPI Schema Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/**/api/**/*.py'
+      - 'apps/**/viewsets/**/*.py'
+      - 'apps/**/serializers/**/*.py'
+      - 'apps/**/routers/**/*.py'
+      - 'aquamind/api/**/*.py'
+      - 'aquamind/utils/openapi_utils.py'
+      - 'api/openapi.yaml'
+      - 'apps/infrastructure/tests/test_openapi_spec.py'
+
+jobs:
+  validate-openapi-schema:
+    name: Validate OpenAPI Schema
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_aquamind_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run schema validation tests
+      run: |
+        echo "Running OpenAPI schema validation tests"
+        python manage.py test apps.infrastructure.tests.test_openapi_spec --settings=aquamind.settings_ci
+        
+    - name: Validate OpenAPI schema semantics
+      run: |
+        echo "Validating OpenAPI schema semantics"
+        python manage.py spectacular --validate --file /tmp/validated-openapi.yaml --settings=aquamind.settings_ci
+        if [ $? -ne 0 ]; then
+          echo "::error::OpenAPI schema validation failed!"
+          exit 1
+        fi
+        echo "✅ OpenAPI schema is semantically valid"
+    
+    - name: Generate schema validation summary
+      run: |
+        echo "## ✅ OpenAPI Schema Validation Passed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The OpenAPI schema validation has passed successfully." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Validation Steps" >> $GITHUB_STEP_SUMMARY
+        echo "1. ✅ Schema validation tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "2. ✅ OpenAPI schema is semantically valid" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "This validation ensures that the OpenAPI schema is well-formed and follows" >> $GITHUB_STEP_SUMMARY
+        echo "our established standards for API documentation." >> $GITHUB_STEP_SUMMARY

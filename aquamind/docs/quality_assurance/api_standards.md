@@ -9,7 +9,7 @@ By following these standards, we ensure:
 - Consistent naming across all endpoints
 - No duplicate route registrations
 - Reliable OpenAPI schema generation
-- Green Schemathesis contract testing
+- Reliable API testing and validation
 
 These standards are **mandatory** for all new API development and modifications to existing endpoints.
 

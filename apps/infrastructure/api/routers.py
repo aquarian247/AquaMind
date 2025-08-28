@@ -4,6 +4,11 @@ Router registration for the infrastructure app API.
 This module sets up the DRF router with all viewsets for the infrastructure app.
 """
 from rest_framework.routers import DefaultRouter
+from django.urls import path
+
+from apps.infrastructure.api.viewsets.overview import (
+    InfrastructureOverviewView,
+)
 
 from apps.infrastructure.api.viewsets import (
     GeographyViewSet,
@@ -29,3 +34,14 @@ router.register(r'feed-containers', FeedContainerViewSet, basename='feed-contain
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls
+
+# ------------------------------------------------------------------
+# Custom aggregated overview endpoint (non-model, not suited for router)
+# ------------------------------------------------------------------
+urlpatterns += [
+    path(
+        "overview/",
+        InfrastructureOverviewView.as_view(),
+        name="infrastructure-overview",
+    ),
+]

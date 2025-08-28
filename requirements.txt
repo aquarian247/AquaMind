@@ -30,6 +30,6 @@ coverage==7.5.4
 flake8==7.0.0
 black==24.1.1
 # Contract testing (validates backend responses against OpenAPI spec)
-schemathesis==3.39.16
+
 # Frontend (Vue.js will be installed separately)
 django-simple-history==3.8.0

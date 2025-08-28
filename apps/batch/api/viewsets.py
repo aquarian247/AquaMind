@@ -15,6 +15,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from apps.batch.models import (
     Species,
     LifeCycleStage,
@@ -725,6 +728,45 @@ class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    # ------------------------------------------------------------------ #
+    # Aggregated summary endpoint                                        #
+    # ------------------------------------------------------------------ #
+    @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(30))
+    def summary(self, request):
+        """
+        Return aggregated metrics about batch-container assignments.
+
+        Query Parameters
+        ----------------
+        is_active : bool (default ``true``)
+            If ``true`` (default) aggregates only active assignments.
+            If ``false`` aggregates inactive assignments.
+
+        Response Schema
+        ---------------
+        {
+            "active_biomass_kg": number,
+            "count": integer
+        }
+        """
+        is_active_param = request.query_params.get("is_active", "true").lower()
+        is_active = is_active_param != "false"
+
+        assignments = self.get_queryset().filter(is_active=is_active)
+
+        aggregates = assignments.aggregate(
+            active_biomass_kg=Sum("biomass_kg"),
+            count=Count("id"),
+        )
+
+        return Response(
+            {
+                "active_biomass_kg": float(aggregates["active_biomass_kg"] or 0),
+                "count": aggregates["count"] or 0,
+            }
+        )
 
 class BatchCompositionViewSet(viewsets.ModelViewSet):
     """

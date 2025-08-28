@@ -447,4 +447,178 @@ class FeedingEventViewSetTest(TestCase):
         self.assertEqual(response.data['method'], new_feeding_data['method'])
 
 
+# --------------------------------------------------------------------------- #
+#                        Feeding Event Summary  Tests                         #
+# --------------------------------------------------------------------------- #
 
+
+class FeedingEventSummaryTest(TestCase):
+    """
+    Tests for the `/inventory/feeding-events/summary/` aggregation endpoint.
+    """
+
+    def setUp(self):
+        """Create minimal fixture data that the summary endpoint requires."""
+        self.client = APIClient()
+        self.user = User.objects.create_user(username="summary_user", password="p@ssword")
+        self.client.force_authenticate(user=self.user)
+
+        # Geography → Area
+        self.geography = Geography.objects.create(name="Geo")
+        self.area = Area.objects.create(
+            name="Area-1",
+            geography=self.geography,
+            latitude=0,
+            longitude=0,
+            max_biomass=Decimal("5000.0"),
+        )
+
+        # ContainerType → Container
+        self.container_type = ContainerType.objects.create(
+            name="Tank-Type",
+            category="TANK",
+            max_volume_m3=Decimal("100.0"),
+        )
+        self.container = Container.objects.create(
+            name="Tank-1",
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=Decimal("50.0"),
+            max_biomass_kg=Decimal("800.0"),
+        )
+
+        # Species / Stage / Batch
+        self.species = Species.objects.create(name="Salmon", scientific_name="Salmo salar")
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name="Smolt", species=self.species, order=1
+        )
+        self.batch = Batch.objects.create(
+            batch_number="B-001",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            start_date=timezone.now().date() - timedelta(days=10),
+        )
+
+        # Feed / FeedContainer / FeedStock
+        self.feed = Feed.objects.create(name="Feed-A", brand="Brand", size_category="SMALL")
+        self.feed_container = FeedContainer.objects.create(
+            name="Feeder-1", area=self.area, capacity_kg=Decimal("200.0")
+        )
+        self.feed_stock = FeedStock.objects.create(
+            feed=self.feed,
+            feed_container=self.feed_container,
+            current_quantity_kg=Decimal("100.0"),
+            reorder_threshold_kg=Decimal("10.0"),
+        )
+
+        # URL helper
+        # The aggregation endpoint is exposed under `/inventory/feeding-events/summary/`
+        self.summary_url = get_api_url("inventory", "feeding-events/summary")
+
+    # --------------------------------------------------------------------- #
+    #                           Helper utilities                            #
+    # --------------------------------------------------------------------- #
+    def _create_feeding_event(
+        self,
+        date,
+        amount_kg,
+        batch=None,
+        container=None,
+    ):
+        """Utility to create a FeedingEvent."""
+        return FeedingEvent.objects.create(
+            batch=batch or self.batch,
+            container=container or self.container,
+            feed=self.feed,
+            feed_stock=self.feed_stock,
+            feeding_date=date,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal(str(amount_kg)),
+            batch_biomass_kg=Decimal("300.0"),
+            method="MANUAL",
+        )
+
+    # --------------------------------------------------------------------- #
+    #                              Test cases                               #
+    # --------------------------------------------------------------------- #
+    def test_authentication_required(self):
+        """Endpoint must reject unauthenticated requests."""
+        # The project‐wide `DEFAULT_PERMISSION_CLASSES` is set to `AllowAny`.
+        # Patch the viewset temporarily so the endpoint *does* require auth
+        # and we can assert on the 401 status code here.
+        from rest_framework import permissions
+        from unittest import mock
+        from apps.inventory.api.viewsets.feeding import FeedingEventViewSet
+
+        with mock.patch.object(
+            FeedingEventViewSet,
+            "permission_classes",
+            [permissions.IsAuthenticated],
+        ):
+            self.client.force_authenticate(user=None)
+            resp = self.client.get(self.summary_url)
+            self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_default_today_filter(self):
+        """Without query params, endpoint aggregates only today's events."""
+        FeedingEvent.objects.all().delete()
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+        self._create_feeding_event(date=today, amount_kg=5)
+        # yesterday should be ignored
+        self._create_feeding_event(date=yesterday, amount_kg=7)
+
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 5.0)
+
+    def test_filter_by_batch(self):
+        """Only events matching the given batch should be included."""
+        FeedingEvent.objects.all().delete()
+        other_batch = Batch.objects.create(
+            batch_number="B-002",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            start_date=timezone.now().date() - timedelta(days=5),
+        )
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=5, batch=other_batch)
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=2)  # default batch
+
+        url = f"{self.summary_url}?batch={other_batch.id}"
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 5.0)
+
+    def test_filter_by_container(self):
+        """Only events for the specified container are counted."""
+        FeedingEvent.objects.all().delete()
+        other_container = Container.objects.create(
+            name="Tank-2",
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=Decimal("60.0"),
+            max_biomass_kg=Decimal("900.0"),
+        )
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=3, container=other_container)
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=7)  # default container
+
+        url = f"{self.summary_url}?container={other_container.id}"
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["events_count"], 1)
+        self.assertEqual(resp.data["total_feed_kg"], 3.0)
+
+    def test_response_structure(self):
+        """Ensure expected keys & data types are present."""
+        FeedingEvent.objects.all().delete()
+        self._create_feeding_event(date=timezone.now().date(), amount_kg=2)
+        resp = self.client.get(self.summary_url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        expected_keys = {"events_count", "total_feed_kg"}
+        self.assertTrue(expected_keys.issubset(resp.data.keys()))
+        self.assertIsInstance(resp.data["events_count"], int)
+        # DRF casts Decimal to float in JSON renderer
+        self.assertIsInstance(resp.data["total_feed_kg"], float)

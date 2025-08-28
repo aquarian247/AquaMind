@@ -1,0 +1,47 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-docstrings]
+        args: ["--max-line-length=127"]
+
+  # Custom hook to regenerate OpenAPI spec
+  - repo: local
+    hooks:
+      - id: regenerate-openapi-spec
+        name: Regenerate OpenAPI Spec
+        entry: python manage.py spectacular --file api/openapi.yaml --settings=aquamind.settings
+        language: system
+        pass_filenames: false
+        files: >
+          (apps/.+/(api|viewsets|serializers|routers)/.+\.py)|
+          (aquamind/api/.+\.py)|
+          (aquamind/utils/openapi_utils\.py)
+        types: [python]
+        # This hook needs to run after code formatting but before commit
+        stages: [commit]
+        # Add verbose output for debugging
+        verbose: true
