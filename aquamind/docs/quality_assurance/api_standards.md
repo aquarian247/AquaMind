@@ -345,10 +345,6 @@ python -m coverage run --source='.' manage.py test
 # Verify no duplicate URLs
 python manage.py show_urls | sort | uniq -d
 
-# Run Schemathesis
-schemathesis run --base-url=http://127.0.0.1:8000 --checks all --hypothesis-max-examples=10 api/openapi.yaml
-```
-
 ## 8. Enforcement
 
 These standards are enforced through:
@@ -473,13 +469,3 @@ cannot be merged unless **all contract tests pass**.  This ensures:
 * New endpoints are documented
 * No broken router registrations reach main
 * The generated `openapi.yaml` remains valid
-
-### 10.4 Relationship to Schemathesis
-
-* **Contract tests** – static, introspective, catch obvious structural /
-  documentation mistakes.
-* **Schemathesis** – dynamic, property-based HTTP calls derived from the schema;
-  catches behavioural and edge-case issues.
-
-Both layers together provide high confidence in API quality and backwards
-compatibility guarantees.
