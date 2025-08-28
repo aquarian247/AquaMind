@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
+from drf_spectacular.utils import extend_schema
+from rest_framework import serializers
 
 
 class APIRootView(APIView):
@@ -85,6 +87,25 @@ class APIRootView(APIView):
         return request.build_absolute_uri(normalized_path)
 
 
+class HealthCheckResponseSerializer(serializers.Serializer):
+    """Serializer for health check API response."""
+    status = serializers.CharField(help_text="Current service status")
+    timestamp = serializers.DateTimeField(help_text="Timestamp of the health check")
+    service = serializers.CharField(help_text="Service name")
+    version = serializers.CharField(help_text="Service version")
+    database = serializers.CharField(help_text="Database status")
+    environment = serializers.CharField(help_text="Environment type")
+
+
+@extend_schema(
+    summary="API Health Check",
+    description="Health check endpoint for monitoring API availability and basic system status.",
+    responses={
+        200: HealthCheckResponseSerializer,
+        503: HealthCheckResponseSerializer,
+    },
+    tags=["System"]
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health_check(request):

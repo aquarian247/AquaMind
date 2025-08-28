@@ -10,7 +10,7 @@ from rest_framework import serializers
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
 from ...models import SampleType, HealthLabSample
-from typing import Dict, Any, Optional
+
 from ..utils import (
     validate_date_order,
     HealthDecimalFieldsMixin, UserAssignmentMixin
@@ -139,7 +139,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
     # ------------------------------------------------------------------
 
     @extend_schema_field(serializers.CharField(allow_null=True))
-    def get_batch_number(self, obj) -> Optional[str]:
+    def get_batch_number(self, obj):
         """Get the batch number from the assignment.
 
         Args:
@@ -153,7 +153,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         return None
 
     @extend_schema_field(serializers.CharField(allow_null=True))
-    def get_container_name(self, obj) -> Optional[str]:
+    def get_container_name(self, obj):
         """Get the container name from the assignment.
 
         Args:
@@ -167,7 +167,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         return None
 
     @extend_schema_field(serializers.CharField(allow_null=True))
-    def get_sample_type_name(self, obj) -> Optional[str]:
+    def get_sample_type_name(self, obj):
         """Get the sample type name.
 
         Args:
@@ -181,7 +181,7 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         return None
 
     @extend_schema_field(serializers.CharField(allow_null=True))
-    def get_recorded_by_username(self, obj) -> Optional[str]:
+    def get_recorded_by_username(self, obj):
         """Get the username of the user who recorded the sample.
 
         Args:
@@ -194,8 +194,17 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
             return obj.recorded_by.username
         return None
         
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get_batch_container_assignment_details(self, obj) -> Optional[Dict[str, Any]]:
+    @extend_schema_field({
+        'type': 'object',
+        'properties': {
+            'assignment_id': {'type': 'integer'},
+            'batch_id': {'type': 'integer'},
+            'container_id': {'type': 'integer'},
+            'assignment_date': {'type': 'string', 'format': 'date'},
+            'is_active': {'type': 'boolean'}
+        }
+    })
+    def get_batch_container_assignment_details(self, obj):
         """Get details of the batch container assignment.
 
         Args:
