@@ -74,7 +74,7 @@ class UserViewSetTest(TestCase):
         # Try creating user as regular user
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.post(url, self.new_user_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
         # Try creating user as admin
         self.client.force_authenticate(user=self.admin_user)
@@ -97,7 +97,7 @@ class UserViewSetTest(TestCase):
         # Try listing users as regular user
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         
         # List users as admin
         self.client.force_authenticate(user=self.admin_user)
