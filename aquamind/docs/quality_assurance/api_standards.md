@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This document defines the API standards established during the API Consolidation Project (August 2025) to ensure consistency, maintainability, and proper contract synchronization across the AquaMind platform. These standards address the root causes of URL conflicts, duplicate endpoints, and inconsistent naming conventions that previously complicated API development and testing.
+This document defines the API standards established during the API Consolidation Project to ensure consistency, maintainability, and proper API testing and validation across the AquaMind platform. These standards address the root causes of URL conflicts, duplicate endpoints, and inconsistent naming conventions that previously complicated API development and testing.
 
 By following these standards, we ensure:
 - Clean, predictable URL structures
@@ -345,8 +345,8 @@ python -m coverage run --source='.' manage.py test
 # Verify no duplicate URLs
 python manage.py show_urls | sort | uniq -d
 
-# Run Schemathesis
-schemathesis run --base-url=http://127.0.0.1:8000 --checks all --hypothesis-max-examples=10 api/openapi.yaml
+# Validate OpenAPI schema
+python manage.py spectacular --validate --file /tmp/validate-schema.yaml --settings=aquamind.settings_ci
 ```
 
 ## 8. Enforcement
@@ -375,14 +375,14 @@ These standards are enforced through:
   ```
   This command identifies duplicate URL patterns
 
-- **Schemathesis contract testing**:
-  Detects 404 errors and duplicate endpoints
+- **OpenAPI schema validation**:
+  Validates schema structure and detects documentation issues
 
 ### Documentation
 
 - This standards document
 - Code organization guidelines
-- API contract synchronization guide
+- Testing guide (quality_assurance/testing_guide.md)
 
 ## 9. Appendix: Complete Router Example
 
@@ -441,45 +441,111 @@ urlpatterns = [
 
 By following these standards, we ensure a clean, consistent, and maintainable API structure across the entire AquaMind platform.
 
-## 10. Contract Testing and Validation
+## 10. API Testing and Validation
 
-The static **contract test** layer (located in `tests/contract/`) guarantees that
-our implementation and documentation never drift apart.  These tests are fast,
-pure-Python checks that run **before** Schemathesis in CI.
+The AquaMind API testing strategy combines **static contract tests** and **semantic OpenAPI validation** to ensure API quality and consistency. This approach provides comprehensive coverage without the brittleness of dynamic property-based testing.
 
-### 10.1 What They Validate
+### 10.1 Contract Testing Layer
+
+The static **contract test** layer (located in `apps/api/tests/test_contract.py`) validates core API structure and documentation. These tests run as part of the standard Django test suite.
+
+#### What They Validate
 
 | Area                         | Assertion                                                                    |
 |------------------------------|-------------------------------------------------------------------------------|
 | ViewSet registration         | Every `ViewSet` class is registered in at least one DRF router               |
-| Serializer presence          | `serializer_class` (or `get_serializer_class`) is defined                    |
-| Authentication               | `permission_classes` are explicitly declared *(defaulting to IsAuthenticated)*|
-| URL versioning               | All paths begin with `/api/v1/`                                              |
-| OpenAPI schema               | Schema generation succeeds and passes OpenAPI 3.1 validation                 |
-| Security schemes             | Token / JWT auth schemes appear in the schema                                |
+| Router structure             | API routers include expected app endpoints                                   |
+| Authentication endpoints     | Critical auth endpoints (login, refresh, etc.) are accessible                |
+| OpenAPI schema               | Schema generation succeeds and contains valid endpoints                      |
+| Documentation endpoints      | Swagger UI, ReDoc, and raw schema endpoints work                             |
+| URL patterns                 | All API paths follow `/api/v1/` versioning convention                        |
 
-### 10.2 Running Contract Tests Locally
+### 10.2 OpenAPI Schema Validation
+
+The **OpenAPI contract validation** workflow (`openapi-contract-validation.yml`) ensures semantic consistency of the generated API schema.
+
+#### Validation Checks
+
+- **Schema structure**: Validates OpenAPI 3.1 compliance
+- **Endpoint coverage**: Ensures all registered ViewSets appear in schema
+- **Response formats**: Validates consistent response structures
+- **Authentication schemes**: Confirms proper security scheme definitions
+- **Schema generation**: Verifies clean generation without drf-spectacular warnings
+
+### 10.3 Running Tests Locally
 
 ```bash
-# Quick run – fails fast on structural issues
-python manage.py test tests.contract
+# Run all API contract tests
+python manage.py test apps.api.tests.test_contract --settings=aquamind.settings_ci
+
+# Validate OpenAPI schema generation
+python manage.py spectacular --validate --file /tmp/schema.yaml --settings=aquamind.settings_ci
+
+# Check for schema generation warnings
+python manage.py spectacular --settings=aquamind.settings_ci 2>&1 | grep -i warning
 ```
 
-### 10.3 CI Enforcement
+### 10.4 CI/CD Integration
 
-The GitHub Action executes the contract suite automatically; a pull-request
-cannot be merged unless **all contract tests pass**.  This ensures:
+#### Django Tests Workflow
+- Runs all Django unit tests including API contract tests
+- Validates core functionality and API structure
+- Ensures no regressions in existing endpoints
 
-* New endpoints are documented
-* No broken router registrations reach main
-* The generated `openapi.yaml` remains valid
+#### OpenAPI Contract Validation Workflow
+- Validates OpenAPI schema semantic correctness
+- Runs on `push` to main/develop branches
+- Provides detailed validation reports
+- Fails CI if schema issues are detected
 
-### 10.4 Relationship to Schemathesis
+### 10.5 API Health Monitoring
 
-* **Contract tests** – static, introspective, catch obvious structural /
-  documentation mistakes.
-* **Schemathesis** – dynamic, property-based HTTP calls derived from the schema;
-  catches behavioural and edge-case issues.
+The `/health-check/` endpoint provides real-time API health validation:
 
-Both layers together provide high confidence in API quality and backwards
-compatibility guarantees.
+```python
+# Simple health check - no authentication required
+GET /health-check/
+
+# Response includes:
+{
+    "status": "healthy",
+    "timestamp": "2025-01-XX...",
+    "service": "AquaMind API",
+    "database": "accessible",
+    "environment": "production"
+}
+```
+
+### 10.6 Testing Strategy Benefits
+
+This approach provides several advantages over dynamic property-based testing:
+
+#### ✅ **Reliability**
+- No false positives from edge cases
+- Consistent results across test runs
+- No dependency on external testing tools
+
+#### ✅ **Maintainability**
+- Django-native testing patterns
+- Clear, readable test code
+- Easy to debug and extend
+
+#### ✅ **Performance**
+- Fast execution (no network calls to test)
+- Runs as part of standard test suite
+- Minimal CI resource usage
+
+#### ✅ **Coverage**
+- Validates all critical API components
+- Ensures documentation accuracy
+- Catches structural issues early
+
+### 10.7 Quality Gates
+
+**Cannot merge to main unless:**
+- ✅ All Django tests pass (including contract tests)
+- ✅ OpenAPI schema validates successfully
+- ✅ No drf-spectacular warnings in schema generation
+- ✅ API health check endpoint responds correctly
+
+This multi-layered approach ensures API quality, consistency, and reliable documentation while avoiding the brittleness of dynamic testing tools.
