@@ -69,12 +69,12 @@ class UserViewSetTest(TestCase):
         
         # Try creating user without authentication
         response = self.client.post(url, self.new_user_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # Try creating user as regular user
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.post(url, self.new_user_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # Try creating user as admin
         self.client.force_authenticate(user=self.admin_user)
@@ -92,12 +92,12 @@ class UserViewSetTest(TestCase):
         
         # Try listing users without authentication
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # Try listing users as regular user
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # List users as admin
         self.client.force_authenticate(user=self.admin_user)
@@ -149,7 +149,7 @@ class UserViewSetTest(TestCase):
 
         # Try without authentication
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # Get authenticated user details using admin user
         self.client.force_authenticate(user=self.admin_user)  # Using admin user for permission
@@ -232,7 +232,7 @@ class UserProfileViewTest(TestCase):
         
         # Try without authentication
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         
         # Get authenticated user's profile
         self.client.force_authenticate(user=self.user)

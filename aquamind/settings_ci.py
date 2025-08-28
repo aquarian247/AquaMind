@@ -151,26 +151,19 @@ else:
 AUTH_DEBUG_LOG_FILE = BASE_DIR / 'auth-debug.log'
 
 # ------------------------------------------------------------------
-# ROBUST AUTHENTICATION ISOLATION FOR CI ENVIRONMENT
+# CI ENVIRONMENT AUTHENTICATION
 # ------------------------------------------------------------------
-# Uses thread-safe context tracking to reliably distinguish between
-# unit tests and Schemathesis contract testing runs
-
-# Import the robust authentication isolation system
-from aquamind.utils.auth_isolation import CIAuthentication, CIPermission
-
-# Configure DRF to use the robust authentication system
+# CI environment uses standard Django REST Framework authentication
+# No special authentication isolation needed (Schemathesis removed)
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
     # Use robust authentication that checks execution context
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'aquamind.utils.auth_isolation.CIAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
-    # Use robust permissions that check execution context
     'DEFAULT_PERMISSION_CLASSES': [
-        'aquamind.utils.auth_isolation.CIPermission',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 

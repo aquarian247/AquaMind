@@ -1,8 +1,8 @@
 """
-TEMPORARY DEBUGGING MIDDLEWARE – API Contract Unification Project.
+TEMPORARY DEBUGGING MIDDLEWARE – API Authentication Diagnostics.
 
-This middleware is part of Phase 1: Enhanced Diagnostics for the API contract unification project.
-It logs the Authorization header for every request to help debug Schemathesis authentication failures.
+This middleware logs Authorization headers for every request to help debug
+authentication issues during API testing and development.
 This is TEMPORARY CODE and should be removed after debugging is complete.
 
 Usage:
@@ -12,10 +12,11 @@ Usage:
        'aquamind.middleware.AuthHeaderDebugMiddleware',
        ...
    ]
-2. Run Schemathesis tests to capture header information
+2. Run API tests to capture header information
 3. Check console output or log file for missing/malformed headers
 
 Created: July 18, 2025
+Updated: August 2025 (removed Schemathesis-specific references)
 """
 
 import logging
@@ -46,10 +47,10 @@ if getattr(settings, 'AUTH_DEBUG_LOG_FILE', None):
 
 class AuthHeaderDebugMiddleware:
     """
-    Temporary middleware to log Authorization headers for debugging Schemathesis auth failures.
-    
+    Temporary middleware to log Authorization headers for debugging API authentication.
+
     This middleware logs every request's path, method, timestamp, and Authorization header
-    to help identify why Schemathesis might be failing with ignored_auth errors.
+    to help identify authentication issues during API testing and development.
     """
     
     def __init__(self, get_response):

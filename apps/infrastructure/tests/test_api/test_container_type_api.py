@@ -88,9 +88,9 @@ class ContainerTypeAPITest(APITestCase):
 
         # This should return 403 Forbidden since no authentication is provided
         response = unauthenticated_client.post(self.list_url, new_container_type_data, format='json')
-        # Note: This test validates that the authentication isolation system is working.
-        # The 403 response indicates that unauthenticated requests are properly blocked.
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # Note: This test validates that authentication is properly enforced.
+        # The 401 response indicates that unauthenticated requests are properly blocked.
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_retrieve_container_type(self):
         """Test retrieving a single container type."""

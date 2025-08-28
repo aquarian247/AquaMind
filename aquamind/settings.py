@@ -201,7 +201,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'aquamind.utils.auth_isolation.CIAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         # NOTE:
@@ -214,7 +213,7 @@ REST_FRAMEWORK = {
     ],
     # Use authentication isolation permission system
     'DEFAULT_PERMISSION_CLASSES': [
-        'aquamind.utils.auth_isolation.CIPermission',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     # Use custom paginator that validates page numbers (page >= 1) and returns
     # 400 on invalid values while gracefully handling out-of-range pages.

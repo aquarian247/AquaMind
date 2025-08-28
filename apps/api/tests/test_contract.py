@@ -34,7 +34,7 @@ class APIContractTest(APITestCase):
         response = self.client.get(url)
 
         # API root should always be accessible (may require auth in CI mode)
-        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN])
+        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED])
 
         if response.status_code == status.HTTP_200_OK:
             data = response.json()

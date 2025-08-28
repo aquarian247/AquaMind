@@ -49,4 +49,4 @@ class BroodstockAPITestCase(TestCase):
         """Test that authentication is required for API access."""
         self.client.logout()
         response = self.client.get('/api/v1/broodstock/fish/')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN) 
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED) 
