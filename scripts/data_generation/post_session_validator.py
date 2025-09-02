@@ -101,14 +101,14 @@ class PostSessionValidator:
 
     def print_validation_results(self):
         """Print validation results to console."""
-        print("
-📊 VALIDATION RESULTS:"        print(f"   Errors: {len(self.verifier.errors)}")
+        print("\n📊 VALIDATION RESULTS:")
+        print(f"   Errors: {len(self.verifier.errors)}")
         print(f"   Warnings: {len(self.verifier.warnings)}")
 
         if len(self.verifier.errors) == 0:
             print("   Status: ✅ PASS - All checks passed!")
         else:
-            print("   Status: ❌ FAIL - Issues found"
+            print("   Status: ❌ FAIL - Issues found")
             # Show top errors
             print("\n🚨 TOP ERRORS:")
             for i, error in enumerate(self.verifier.errors[:3], 1):
