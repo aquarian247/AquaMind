@@ -185,7 +185,7 @@ class MortalityManager:
                         logger.debug(f"Daily mortality rate: {daily_rate}%")
                         
                         # Calculate mortality count
-                        population = assignment.batch.population_count
+                        population = assignment.batch.calculated_population_count or 0
                         mortality_count = int(population * daily_rate / 100)
                         
                         # Ensure at least 1 mortality if population > 100
@@ -197,8 +197,12 @@ class MortalityManager:
                             logger.debug("No mortality calculated for this day, skipping")
                             continue
                         
-                        # Calculate biomass lost - assuming average fish weight
-                        avg_weight_g = assignment.batch.biomass_kg * 1000 / assignment.batch.population_count if assignment.batch.population_count > 0 else 0
+                        # Calculate biomass lost - using assignment data
+                        batch_population = assignment.batch.calculated_population_count or 0
+                        if batch_population and batch_population > 0 and assignment.batch.calculated_biomass_kg:
+                            avg_weight_g = float(assignment.batch.calculated_biomass_kg) * 1000 / float(batch_population)
+                        else:
+                            avg_weight_g = assignment.avg_weight_g or 100  # Default weight
                         biomass_kg = Decimal(str(mortality_count * avg_weight_g / 1000))
                         logger.debug(f"Calculated mortality: {mortality_count} fish, {biomass_kg}kg biomass")
                         
@@ -218,16 +222,13 @@ class MortalityManager:
                             )
                             logger.debug(f"Created mortality event: {event}")
                             
-                            # Update batch population and biomass
-                            assignment.batch.population_count -= mortality_count
-                            assignment.batch.biomass_kg -= biomass_kg
-                            assignment.batch.save()
-                            logger.debug(f"Updated batch: {assignment.batch.population_count} fish remaining")
-                            
-                            # Update assignment population
+                            # Update assignment population and batch biomass
                             assignment.population_count -= mortality_count
-                            assignment.biomass_kg -= biomass_kg
+                            if assignment.biomass_kg:
+                                assignment.biomass_kg -= biomass_kg
                             assignment.save()
+
+                            # Note: We don't directly update batch biomass here as it's calculated from assignments
                             logger.debug(f"Updated assignment: {assignment.population_count} fish remaining")
                             
                             total_events += 1

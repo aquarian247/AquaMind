@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from decimal import Decimal
 from datetime import date, datetime, timedelta
 
-from django.db import transaction
+from django.db import transaction, models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -19,7 +19,8 @@ from apps.environmental.models import (
     EnvironmentalParameter, EnvironmentalReading
 )
 from apps.infrastructure.models import Sensor, Container, FreshwaterStation
-from scripts.data_generation.config.generation_params import GenerationParameters as GP
+from apps.batch.models.assignment import BatchContainerAssignment
+from scripts.data_generation.config.generation_params import GenerationParameters
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -46,7 +47,7 @@ class EnvironmentalGenerator:
         self.dry_run = dry_run
         self.created_readings = 0
         self.batch_buffer = []
-        self.BATCH_SIZE = 5000  # Larger for fewer commits
+        self.BATCH_SIZE = GenerationParameters.DB_BATCH_SIZE  # Larger for fewer commits
         
         # Previous day's data for persistence
         self.previous_data = {}
@@ -390,11 +391,27 @@ class EnvironmentalGenerator:
         # Sensors are always attached to containers
         location_type = 'container'
         location_id = sensor.container.id
-        
-        # Create reading object
+
+        # Find the active batch-container assignment for this container at the reading time
+        # This provides the direct linkage needed for salmon CV tracking
+        assignment = None
+        try:
+            assignment = BatchContainerAssignment.objects.filter(
+                container=sensor.container,
+                assignment_date__lte=reading_time.date(),
+                is_active=True
+            ).filter(
+                # Assignment should not have ended before reading time, or not ended at all
+                models.Q(departure_date__isnull=True) | models.Q(departure_date__gte=reading_time.date())
+            ).first()
+        except Exception as e:
+            logger.debug(f"Could not find assignment for container {sensor.container.id} at {reading_time}: {e}")
+
+        # Create reading object with the new batch_container_assignment field
         reading = {
             'parameter': parameter,
             'sensor': sensor,
+            'batch_container_assignment': assignment,
             'value': Decimal(value),
             'reading_time': reading_time,
             'container': sensor.container,
@@ -414,8 +431,11 @@ class EnvironmentalGenerator:
             logger.error(f"Failed to create/append reading: {str(e)}")
         
         # Flush buffer if it reaches batch size
-        if len(self.batch_buffer) >= self.BATCH_SIZE:
-            self._flush_buffer()
+        batch_size = GenerationParameters.DB_BATCH_SIZE
+        if len(self.batch_buffer) >= batch_size:
+            EnvironmentalReading.objects.bulk_create(self.batch_buffer)
+            print(f"Flushed {len(self.batch_buffer)} readings")
+            self.batch_buffer = []
     
     def _flush_buffer(self):
         """Flush the buffer and bulk create readings."""

@@ -22,12 +22,13 @@ from apps.environmental.models import (
     WeatherData
 )
 from apps.infrastructure.models import (
-    Area, 
-    Container, 
-    Sensor, 
+    Area,
+    Container,
+    Sensor,
     Geography,
     ContainerType
 )
+from apps.batch.models.assignment import BatchContainerAssignment
 
 
 class EnvironmentalParameterTests(TestCase):
@@ -167,6 +168,64 @@ class EnvironmentalReadingTests(TestCase):
         )
         self.assertTrue(reading.is_manual)
         self.assertEqual(reading.notes, "Manual reading")
+
+    def test_reading_with_batch_container_assignment(self):
+        """Test creating a reading with batch_container_assignment field."""
+        # Create a batch for testing
+        from apps.batch.models.species import Species, LifeCycleStage
+        species = Species.objects.create(name="Atlantic Salmon", scientific_name="Salmo salar")
+        lifecycle_stage = LifeCycleStage.objects.create(
+            name="Smolt",
+            species=species,
+            order=3
+        )
+
+        from apps.batch.models.batch import Batch
+        batch = Batch.objects.create(
+            batch_number="TEST-001",
+            species=species,
+            lifecycle_stage=lifecycle_stage,
+            status="ACTIVE",
+            batch_type="STANDARD",
+            start_date=timezone.now().date()
+        )
+
+        # Create batch-container assignment
+        assignment = BatchContainerAssignment.objects.create(
+            batch=batch,
+            container=self.container,
+            lifecycle_stage=lifecycle_stage,
+            population_count=1000,
+            biomass_kg=Decimal('50.0'),
+            assignment_date=timezone.now().date()
+        )
+
+        # Create reading with assignment
+        reading = EnvironmentalReading.objects.create(
+            parameter=self.parameter,
+            container=self.container,
+            batch=batch,
+            batch_container_assignment=assignment,
+            value=Decimal('16.5'),
+            reading_time=timezone.now()
+        )
+
+        self.assertEqual(reading.batch_container_assignment, assignment)
+        self.assertEqual(reading.batch, batch)
+        self.assertEqual(reading.container, self.container)
+
+    def test_reading_batch_container_assignment_nullable(self):
+        """Test that batch_container_assignment field can be null."""
+        reading = EnvironmentalReading.objects.create(
+            parameter=self.parameter,
+            container=self.container,
+            value=Decimal('14.0'),
+            reading_time=timezone.now()
+        )
+
+        self.assertIsNone(reading.batch_container_assignment)
+        # Reading should still be valid without assignment
+        self.assertEqual(reading.value, Decimal('14.0'))
 
     @unittest.skipIf(
         'timescale' not in settings.DATABASES['default']['ENGINE'],

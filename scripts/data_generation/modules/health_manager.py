@@ -5,10 +5,10 @@ This module handles health data generation including journal entries, health sam
 lab samples, lice counts, and treatments for the AquaMind test data generation system.
 """
 import random
-import datetime
 import logging
 import traceback
 import json
+from datetime import datetime, date, timedelta, time
 from decimal import Decimal
 from django.utils import timezone
 from django.db import transaction
@@ -275,9 +275,9 @@ class HealthManager:
             if batch_assignments is None:
                 batch_assignments = list(BatchContainerAssignment.objects.filter(
                     batch=batch,
-                    start_date__lte=end_date,
-                    end_date__gte=start_date
-                ).order_by('start_date'))
+                    assignment_date__lte=end_date,
+                    departure_date__gte=start_date
+                ).order_by('assignment_date'))
             
             if not batch_assignments:
                 logger.warning(f"No batch assignments found for batch {batch.id} in the specified period")
@@ -303,6 +303,18 @@ class HealthManager:
             logger.error(f"Error generating health data for batch {batch.id}: {str(e)}")
             logger.error(traceback.format_exc())
     
+    def generate_current_health(self, start_date: date, end_date: date):
+        """Generate current health status records for active batches."""
+        active_batches = Batch.objects.filter(status='ACTIVE')
+        records = 0
+        for batch in active_batches:
+            assignments = list(BatchContainerAssignment.objects.filter(batch=batch, is_active=True))
+            if assignments:
+                self.generate_health_data(batch, start_date, end_date, assignments)
+                records += 1
+        logger.info(f"Generated health data for {records} active batches")
+        return records
+    
     def _generate_journal_entries(self, batch, start_date, end_date, batch_assignments):
         """Generate weekly journal entries for a batch.
         
@@ -318,8 +330,8 @@ class HealthManager:
         current_date = start_date
         while current_date <= end_date:
             # Find the active assignment for this date
-            assignment = next((a for a in batch_assignments if a.start_date <= current_date and 
-                              (a.end_date is None or a.end_date >= current_date)), None)
+            assignment = next((a for a in batch_assignments if a.assignment_date <= current_date and 
+                              (a.departure_date is None or a.departure_date >= current_date)), None)
             
             if assignment:
                 # Determine if this is a regular entry or an issue-based entry
@@ -327,28 +339,33 @@ class HealthManager:
                 
                 severity = None
                 if is_issue:
-                    severity = random.choice([1, 2, 3])  # Minor to moderate issues
+                    severity_level = random.choice([1, 2, 3])  # Minor to moderate issues
                     if random.random() < 0.1:  # 10% chance of severe issue
-                        severity = random.choice([4, 5])
+                        severity_level = random.choice([4, 5])
+
+                    # Map numeric severity to string values expected by model
+                    severity_map = {1: 'low', 2: 'medium', 3: 'medium', 4: 'high', 5: 'high'}
+                    severity = severity_map.get(severity_level, 'low')
                 
                 entry_text = self._generate_journal_entry_text(batch, assignment, is_issue, severity)
                 
                 # Create the journal entry
+                category = 'issue' if is_issue else 'observation'
                 JournalEntry.objects.create(
                     batch=batch,
                     container=assignment.container,
                     user=random.choice(self.users),
-                    entry_date=current_date,
-                    entry_text=entry_text,
+                    entry_date=timezone.make_aware(datetime.combine(current_date, time(random.randint(8,17), random.randint(0,59)))),
+                    category=category,
+                    description=entry_text,  # Changed from entry_text to description
                     severity=severity,
-                    tags=self._generate_entry_tags(is_issue, severity)
                 )
                 
                 logger.debug(f"Created journal entry for batch {batch.id} on {current_date}")
             
             # Move to next week (with some randomness in the exact day)
             days_to_add = 7 + random.randint(-1, 1)
-            current_date += datetime.timedelta(days=days_to_add)
+            current_date += timedelta(days=days_to_add)
     
     def _generate_entry_tags(self, is_issue, severity):
         """Generate appropriate tags for a journal entry."""
@@ -356,7 +373,7 @@ class HealthManager:
         
         if is_issue:
             tags = ["issue"]
-            if severity and severity >= 4:
+            if severity and severity == 'high':
                 tags.append("urgent")
             
             # Add specific issue tags
@@ -381,7 +398,7 @@ class HealthManager:
             return random.choice(templates)
         
         # Issue-based entries
-        if severity and severity >= 4:
+        if severity and severity in ['high', 'medium']:
             templates = [
                 f"URGENT: Abnormal mortality observed in {container_name}. Immediate investigation required.",
                 f"ALERT: Multiple fish in {batch.batch_number} showing severe lethargy and loss of appetite.",
@@ -415,8 +432,8 @@ class HealthManager:
         current_date = start_date
         while current_date <= end_date:
             # Find the active assignment for this date
-            assignment = next((a for a in batch_assignments if a.start_date <= current_date and 
-                              (a.end_date is None or a.end_date >= current_date)), None)
+            assignment = next((a for a in batch_assignments if a.assignment_date <= current_date and 
+                              (a.departure_date is None or a.departure_date >= current_date)), None)
             
             if assignment:
                 # Create the sampling event
@@ -455,7 +472,7 @@ class HealthManager:
             
             # Move to next month (with some randomness in the exact day)
             days_to_add = 30 + random.randint(-3, 3)
-            current_date += datetime.timedelta(days=days_to_add)
+            current_date += timedelta(days=days_to_add)
     
     def _estimate_length_from_weight(self, weight_g):
         """Estimate fish length based on weight using a simplified formula."""
@@ -469,10 +486,9 @@ class HealthManager:
             # Create individual fish observation
             fish_obs = IndividualFishObservation.objects.create(
                 sampling_event=sampling_event,
-                fish_number=i + 1,
-                weight_g=sampling_event.avg_weight_g * random.uniform(0.8, 1.2),
-                length_cm=sampling_event.avg_length_cm * random.uniform(0.9, 1.1),
-                notes=self._generate_individual_fish_notes()
+                fish_identifier=f"FISH_{i + 1:03d}",
+                weight_g=sampling_event.avg_weight_g * random.uniform(0.8, 1.2) if sampling_event.avg_weight_g else None,
+                length_cm=sampling_event.avg_length_cm * random.uniform(0.9, 1.1) if sampling_event.avg_length_cm else None
             )
             
             # Add parameter scores for this fish
@@ -482,12 +498,11 @@ class HealthManager:
                     score = random.randint(4, 5)
                 else:
                     score = random.randint(1, 3)
-                
+
                 FishParameterScore.objects.create(
                     individual_fish_observation=fish_obs,
                     parameter=param,
-                    score=score,
-                    notes=self._generate_parameter_score_notes(param, score)
+                    score=score
                 )
     
     def _generate_individual_fish_notes(self):
@@ -554,8 +569,8 @@ class HealthManager:
         
         # Generate bi-weekly lice counts
         for assignment in sea_assignments:
-            current_date = max(start_date, assignment.start_date)
-            end_assignment = assignment.end_date or end_date
+            current_date = max(start_date, assignment.assignment_date)
+            end_assignment = assignment.departure_date or end_date
             end_assignment = min(end_assignment, end_date)
             
             while current_date <= end_assignment:
@@ -595,7 +610,7 @@ class HealthManager:
                 
                 # Move to next count (approximately bi-weekly)
                 days_to_add = 14 + random.randint(-2, 2)
-                current_date += datetime.timedelta(days=days_to_add)
+                current_date += timedelta(days=days_to_add)
     
     def _generate_lice_count_notes(self, chalimus, preadult, adult_female, adult_male):
         """Generate notes for lice counts based on the counts."""
@@ -625,8 +640,8 @@ class HealthManager:
         current_date = start_date
         while current_date <= end_date:
             # Find the active assignment for this date
-            assignment = next((a for a in batch_assignments if a.start_date <= current_date and 
-                              (a.end_date is None or a.end_date >= current_date)), None)
+            assignment = next((a for a in batch_assignments if a.assignment_date <= current_date and 
+                              (a.departure_date is None or a.departure_date >= current_date)), None)
             
             if assignment:
                 # Determine if this is a routine sample or triggered by an issue
@@ -640,20 +655,19 @@ class HealthManager:
                 
                 # Create the lab sample
                 HealthLabSample.objects.create(
-                    batch=batch,
-                    container=assignment.container,
+                    batch_container_assignment=assignment,
                     sample_type=sample_type,
                     sample_date=current_date,
-                    lab_id=f"LAB-{batch.batch_number}-{current_date.strftime('%Y%m%d')}",
-                    results=results,
-                    notes=self._generate_lab_sample_notes(sample_type.name, is_routine, results)
+                    lab_reference_id=f"LAB-{batch.batch_number}-{current_date.strftime('%Y%m%d')}",
+                    quantitative_results=results,
+                    findings_summary=self._generate_lab_sample_notes(sample_type.name, is_routine, results)
                 )
                 
                 logger.debug(f"Created lab sample for batch {batch.id} on {current_date}")
             
             # Move to next quarter (with some randomness)
             days_to_add = 90 + random.randint(-10, 10)
-            current_date += datetime.timedelta(days=days_to_add)
+            current_date += timedelta(days=days_to_add)
     
     def _generate_lab_sample_results(self, sample_type, is_routine):
         """Generate realistic lab sample results based on sample type."""
@@ -782,7 +796,7 @@ class HealthManager:
         assignment = vaccination_assignments[0]  # Use the first suitable assignment
         
         # Calculate vaccination date (typically early in the stage)
-        vaccination_date = assignment.start_date + datetime.timedelta(days=random.randint(7, 21))
+        vaccination_date = assignment.assignment_date + timedelta(days=random.randint(7, 21))
         
         # Generate vaccinations for common diseases
         for vacc_type in self.vaccination_types[:4]:  # Limit to 4 vaccination types
@@ -804,7 +818,7 @@ class HealthManager:
             logger.debug(f"Created vaccination ({vacc_type.name}) for batch {batch.id} on {vaccination_date}")
             
             # Space out vaccinations by a few days
-            vaccination_date += datetime.timedelta(days=random.randint(1, 3))
+            vaccination_date += timedelta(days=random.randint(1, 3))
     
     def _generate_lice_treatments(self, batch, start_date, end_date, batch_assignments):
         """Generate lice treatments based on lice counts."""
@@ -830,8 +844,8 @@ class HealthManager:
                     continue
                 
                 # Find the active assignment for this date
-                assignment = next((a for a in batch_assignments if a.start_date <= lice_count.count_date and 
-                                  (a.end_date is None or a.end_date >= lice_count.count_date)), None)
+                assignment = next((a for a in batch_assignments if a.assignment_date <= lice_count.count_date and 
+                                  (a.departure_date is None or a.departure_date >= lice_count.count_date)), None)
                 
                 if not assignment:
                     continue
@@ -858,7 +872,7 @@ class HealthManager:
                     withholding_period_days = 14
                 
                 # Create treatment record
-                treatment_date = lice_count.count_date + datetime.timedelta(days=random.randint(1, 3))
+                treatment_date = lice_count.count_date + timedelta(days=random.randint(1, 3))
                 
                 Treatment.objects.create(
                     batch=batch,
@@ -881,12 +895,12 @@ class HealthManager:
     
     def _generate_health_issue_treatments(self, batch, start_date, end_date, batch_assignments):
         """Generate treatments based on health issues recorded in journal entries."""
-        # Get journal entries with severity >= 3 (moderate to severe issues)
+        # Get journal entries with moderate to severe issues (medium/high severity)
         issue_entries = JournalEntry.objects.filter(
             batch=batch,
             entry_date__gte=start_date,
             entry_date__lte=end_date,
-            severity__gte=3
+            severity__in=['medium', 'high']
         ).order_by('entry_date')
         
         if not issue_entries:
@@ -902,7 +916,7 @@ class HealthManager:
                 continue
             
             # Determine treatment type based on issue
-            if "gill" in entry.entry_text.lower() or "respiratory" in entry.entry_text.lower():
+            if "gill" in entry.description.lower() or "respiratory" in entry.description.lower():
                 treatment_type = "medication"
                 description = random.choice([
                     "Hydrogen peroxide bath for gill health",
@@ -911,7 +925,7 @@ class HealthManager:
                 ])
                 duration_days = 1
                 withholding_period_days = random.randint(3, 7)
-            elif "lesion" in entry.entry_text.lower() or "wound" in entry.entry_text.lower():
+            elif "lesion" in entry.description.lower() or "wound" in entry.description.lower():
                 treatment_type = "medication"
                 description = random.choice([
                     "Topical antiseptic application",
@@ -920,7 +934,7 @@ class HealthManager:
                 ])
                 duration_days = 1
                 withholding_period_days = random.randint(2, 5)
-            elif "appetite" in entry.entry_text.lower() or "feeding" in entry.entry_text.lower():
+            elif "appetite" in entry.description.lower() or "feeding" in entry.description.lower():
                 treatment_type = "medication"
                 description = random.choice([
                     "Medicated feed with appetite stimulant",
@@ -929,7 +943,7 @@ class HealthManager:
                 ])
                 duration_days = random.randint(3, 7)
                 withholding_period_days = 0
-            elif "bacteria" in entry.entry_text.lower() or "infection" in entry.entry_text.lower():
+            elif "bacteria" in entry.description.lower() or "infection" in entry.description.lower():
                 treatment_type = "medication"
                 description = random.choice(self.TREATMENT_TYPES["antibiotic"])
                 duration_days = random.randint(5, 10)
@@ -941,7 +955,7 @@ class HealthManager:
                 withholding_period_days = 0
             
             # Create treatment record
-            treatment_date = entry.entry_date + datetime.timedelta(days=random.randint(0, 2))
+            treatment_date = entry.entry_date + timedelta(days=random.randint(0, 2))
             
             Treatment.objects.create(
                 batch=batch,

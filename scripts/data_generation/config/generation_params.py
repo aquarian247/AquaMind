@@ -8,6 +8,7 @@ the technical specification and Bakkafrost operational patterns.
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 from decimal import Decimal
+from datetime import date
 
 
 @dataclass
@@ -311,16 +312,19 @@ class GenerationParameters:
     # ==================== DATA GENERATION SETTINGS ====================
     
     # Chunk size for batch processing (days)
-    GENERATION_CHUNK_SIZE = 30
-    
-    # Database batch insert size
-    DB_BATCH_SIZE = 5000
-    
-    # Memory check interval (number of records)
-    MEMORY_CHECK_INTERVAL = 10000
+    GENERATION_CHUNK_SIZE = 90  # Optimized for M4 Max
+    DB_BATCH_SIZE = 25000      # Optimized for M4 Max
+    MEMORY_CHECK_INTERVAL = 50000  # Optimized for M4 Max
+    MAX_MEMORY_PERCENT = 95.0  # Optimized for M4 Max
     
     # Random seed for reproducibility
     RANDOM_SEED = 42
+    
+    # Session 4 Parameters
+    SESSION_4_START_DATE = date(2024, 1, 1)
+    SESSION_4_END_DATE = date(2024, 12, 31)
+    CURRENT_YEAR_BATCH_TARGET = 10  # Number of new batches for 2024
+    INVENTORY_LEVEL_MULTIPLIER = 1.05  # Slight increase for current year
     
     @classmethod
     def get_stage_duration(cls, stage: str) -> Tuple[int, int]:

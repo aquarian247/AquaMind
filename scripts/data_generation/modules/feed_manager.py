@@ -9,10 +9,14 @@ import datetime
 from decimal import Decimal
 from django.utils import timezone
 from django.db import transaction
+from datetime import date
+import logging
 
 from apps.inventory.models import Feed, FeedStock, FeedingEvent
 from apps.infrastructure.models import FeedContainer
 from apps.batch.models import BatchContainerAssignment, LifeCycleStage
+
+logger = logging.getLogger(__name__)
 
 
 class FeedManager:
@@ -186,13 +190,13 @@ class FeedManager:
         # Get all active container assignments within the date range
         assignments = BatchContainerAssignment.objects.filter(
             assignment_date__lte=end_date,
-            removal_date__isnull=True
+            departure_date__isnull=True
         ).select_related('batch', 'container', 'batch__lifecycle_stage')
-        
+
         # Also get assignments that ended within the date range
         ended_assignments = BatchContainerAssignment.objects.filter(
             assignment_date__lte=end_date,
-            removal_date__gte=start_date
+            departure_date__gte=start_date
         ).select_related('batch', 'container', 'batch__lifecycle_stage')
         
         # Combine all assignments for processing
@@ -209,7 +213,7 @@ class FeedManager:
             for assignment in all_assignments:
                 # Check if this assignment was active on this date
                 if (assignment.assignment_date <= current_date and 
-                    (assignment.removal_date is None or assignment.removal_date >= current_date)):
+                    (assignment.departure_date is None or assignment.departure_date >= current_date)):
                     
                     stage_name = assignment.batch.lifecycle_stage.name
                     
@@ -305,3 +309,18 @@ class FeedManager:
         
         print(f"Generated {total_feedings:,} feeding events from {start_date} to {end_date}")
         return total_feedings
+
+    @transaction.atomic
+    def update_current_inventory(self, as_of_date: date):
+        """Update inventory levels for current year."""
+        stocks = FeedStock.objects.all()
+        updates = 0
+        for stock in stocks:
+            # Simulate inventory adjustment
+            adjustment = Decimal(random.uniform(1000, 5000)) * Decimal('1.05')  # Using multiplier
+            stock.current_quantity_kg += adjustment
+            stock.last_updated = as_of_date
+            stock.save()
+            updates += 1
+        logger.info(f"Updated {updates} inventory records")
+        return updates

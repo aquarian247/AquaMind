@@ -26,6 +26,8 @@ from .progress_tracker import ProgressTracker
 
 # Import models for direct database access
 from apps.batch.models import Batch
+from apps.health.models import MortalityRecord
+from scripts.data_generation.config.generation_params import GenerationParameters
 
 logger = logging.getLogger(__name__)
 
@@ -222,22 +224,30 @@ class DataGenerationSessionManager:
             with self.memory_manager:
                 self._execute_session(session_id, session_config, resume_point)
             
+            # Run data integrity validation
+            logger.info(f"Running data integrity validation for {session_id}")
+            validation_success = self._run_data_integrity_validation(session_id)
+
             # Mark session complete
             memory_report = self.memory_manager.create_memory_report()
             self.checkpoint_manager.mark_session_complete(
                 session_id,
                 {
                     'peak_memory_mb': memory_report['peak_memory_mb'],
-                    'metrics': self.progress_tracker.metrics
+                    'metrics': self.progress_tracker.metrics,
+                    'data_integrity_passed': validation_success
                 }
             )
-            
+
             self.progress_tracker.end_session(
                 session_id,
                 memory_report['peak_memory_mb']
             )
-            
-            logger.info(f"Successfully completed {session_id}")
+
+            if validation_success:
+                logger.info(f"Successfully completed {session_id} with data integrity validation ✅")
+            else:
+                logger.warning(f"Completed {session_id} but data integrity validation found issues ⚠️")
             
         except Exception as e:
             logger.error(f"Error in session {session_id}: {e}")
@@ -248,6 +258,39 @@ class DataGenerationSessionManager:
         
         finally:
             self.current_session = None
+
+    def _run_data_integrity_validation(self, session_id: str) -> bool:
+        """
+        Run comprehensive data integrity validation after session completion.
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            bool: True if validation passes, False if issues found
+        """
+        try:
+            logger.info(f"Starting data integrity validation for {session_id}")
+
+            # Import the validator
+            from scripts.data_generation.post_session_validator import validate_session
+
+            # Extract session number (e.g., 'session_4' -> 4)
+            session_number = int(session_id.split('_')[1])
+
+            # Run validation
+            success = validate_session(session_number)
+
+            if success:
+                logger.info(f"Data integrity validation passed for {session_id}")
+            else:
+                logger.warning(f"Data integrity validation found issues for {session_id}")
+
+            return success
+
+        except Exception as e:
+            logger.error(f"Error running data integrity validation for {session_id}: {e}")
+            return False
     
     def _execute_session(self, session_id: str, config: Dict[str, Any], 
                         resume_point: Optional[Dict] = None):
@@ -286,8 +329,8 @@ class DataGenerationSessionManager:
         logger.info("Executing Session 1: Infrastructure & Historical Setup")
         
         # Import generators
+        from scripts.data_generation.generators.infrastructure import InfrastructureGenerator
         from scripts.data_generation.generators import (
-            InfrastructureGenerator,
             BatchGenerator,
             EnvironmentalGenerator,
             OperationsGenerator
@@ -298,6 +341,10 @@ class DataGenerationSessionManager:
         batch_gen = BatchGenerator(dry_run=self.dry_run)
         env_gen = EnvironmentalGenerator(dry_run=self.dry_run)
         ops_gen = OperationsGenerator(dry_run=self.dry_run)
+        
+        # Add at the beginning:
+        infra_stats = infra_gen.generate_all()
+        logger.info(f"Infrastructure created: {infra_stats}")
         
         # Phase 1.1: Infrastructure Initialization
         if not resume_point or '1.1' not in resume_point.get('completed_steps', []):
@@ -316,6 +363,7 @@ class DataGenerationSessionManager:
                 self.progress_tracker.increment_metric('sensors_created', infra_stats['sensors'])
                 
                 logger.info(infra_gen.get_summary())
+                logger.info(f"Created infrastructure: {infra_stats}")
             
             self.progress_tracker.update_progress('1.1', 'Infrastructure Initialization', completed=True)
             self._save_checkpoint()
@@ -383,6 +431,8 @@ class DataGenerationSessionManager:
                 current_date = start_date
                 days_processed = 0
                 
+                ops_stats = {'feed_events': 0, 'growth_samples': 0, 'mortality_events': 0, 'vaccinations': 0}
+
                 while current_date <= end_date:
                     # Generate new batches as needed
                     new_batch = batch_gen.create_batch_for_date(current_date)
@@ -677,7 +727,135 @@ class DataGenerationSessionManager:
     def _run_session_4(self, start_date: date, end_date: date,
                       resume_point: Optional[Dict] = None):
         """Session 4: Recent History & Validation (Year 10)"""
-        logger.info("Session 4 implementation pending...")
+        logger.info("Executing Session 4: Recent History & Validation")
+        
+        # Import necessary generators and validators
+        from scripts.data_generation.modules.batch_manager import BatchManager
+        from scripts.data_generation.modules.environmental_manager import EnvironmentalManager
+        from scripts.data_generation.modules.feed_manager import FeedManager
+        from scripts.data_generation.modules.health_manager import HealthManager
+        from scripts.data_generation.validators.data_validator import DataValidator
+        from scripts.data_generation.validators.statistical_validator import StatisticalValidator
+        from scripts.data_generation.reports.summary_generator import SummaryGenerator
+        
+        # Initialize managers
+        batch_mgr = BatchManager()
+        env_mgr = EnvironmentalManager()
+        feed_mgr = FeedManager()
+        health_mgr = HealthManager()
+        validator = DataValidator()
+        stat_validator = StatisticalValidator()
+        summarizer = SummaryGenerator()
+        
+        # 4.1 Current Operations (Create Batches First)
+        if not resume_point or '4.1' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('4.1', 'Current Operations')
+            logger.info("Generating current year operations...")
+
+            if not self.dry_run:
+                # Generate new batches first
+                logger.info(f"Starting batch generation for {GenerationParameters.CURRENT_YEAR_BATCH_TARGET} batches")
+                new_batches = batch_mgr.generate_current_batches(start_date, end_date, num_batches=GenerationParameters.CURRENT_YEAR_BATCH_TARGET)
+                logger.info(f"Generated {len(new_batches)} new batches")
+                self.progress_tracker.increment_metric('new_batches', len(new_batches))
+
+                # Process lifecycle progression for existing batches
+                logger.info("Processing lifecycle progression for existing batches...")
+                from apps.batch.models import Batch
+                existing_batches = Batch.objects.filter(status='ACTIVE')
+                lifecycle_processed = 0
+
+                for batch in existing_batches:
+                    try:
+                        batch_mgr.process_lifecycle(batch, end_date)
+                        lifecycle_processed += 1
+                        if lifecycle_processed % 10 == 0:
+                            logger.info(f"Processed lifecycle for {lifecycle_processed}/{len(existing_batches)} batches")
+                    except Exception as e:
+                        logger.error(f"Error processing lifecycle for batch {batch.batch_number}: {str(e)}")
+
+                logger.info(f"Completed lifecycle processing for {lifecycle_processed} existing batches")
+                self.progress_tracker.increment_metric('batches_lifecycle_processed', lifecycle_processed)
+
+                # Update inventory
+                inventory_updated = feed_mgr.update_current_inventory(end_date)
+                self.progress_tracker.increment_metric('inventory_updates', inventory_updated)
+
+                # Process harvests
+                harvests = batch_mgr.process_recent_harvests(start_date, end_date)
+                self.progress_tracker.increment_metric('harvests', len(harvests))
+
+                # Generate health status
+                health_records = health_mgr.generate_current_health(start_date, end_date)
+                self.progress_tracker.increment_metric('health_records', health_records)
+
+            self.progress_tracker.update_progress('4.1', 'Current Operations', completed=True)
+            self._save_checkpoint()
+
+        # 4.2 Generate Year 10 Environmental Data
+        if not resume_point or '4.2' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('4.2', 'Year 10 Environmental Data')
+            logger.info("Generating Year 10 environmental data...")
+
+            if not self.dry_run:
+                # Generate environmental readings for Year 10
+                logger.info(f"Starting environmental data generation from {start_date} to {end_date}")
+                env_readings = env_mgr.generate_readings(start_date, end_date, reading_count=16)  # 16 readings per day (every hour from 6AM-9PM)
+                logger.info(f"Generated {env_readings} environmental readings")
+                self.progress_tracker.increment_metric('environmental_readings_created', env_readings)
+
+                # Generate feeding events for Year 10
+                feed_events = feed_mgr.generate_feeding_events(start_date, end_date)
+                self.progress_tracker.increment_metric('feed_events_processed', feed_events)
+
+                # Import growth manager for growth samples
+                from scripts.data_generation.modules.growth_manager import GrowthManager
+                growth_mgr = GrowthManager()
+                growth_samples = growth_mgr.generate_growth_samples(start_date, end_date)
+                self.progress_tracker.increment_metric('growth_samples', growth_samples)
+
+                # Generate mortality events for Year 10
+                from scripts.data_generation.modules.mortality_manager import MortalityManager
+                mortality_mgr = MortalityManager()
+                mortality_events = mortality_mgr.generate_mortality_events(start_date, end_date)
+                self.progress_tracker.increment_metric('mortality_events_recorded', mortality_events)
+
+            self.progress_tracker.update_progress('4.2', 'Year 10 Environmental Data', completed=True)
+            self._save_checkpoint()
+
+        # 4.3 Data Validation
+        if not resume_point or '4.3' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('4.3', 'Data Validation')
+            logger.info("Performing data validation...")
+
+            validation_results = validator.validate_full_dataset()
+            self.progress_tracker.metrics['validation_score'] = validation_results['score']
+
+            self.progress_tracker.update_progress('4.3', 'Data Validation', completed=True)
+            self._save_checkpoint()
+
+        # 4.4 Statistical Validation
+        if not resume_point or '4.4' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('4.4', 'Statistical Validation')
+            logger.info("Performing statistical validation...")
+
+            stat_results = stat_validator.validate_statistics()
+            self.progress_tracker.metrics['stat_validation_score'] = stat_results['score']
+
+            self.progress_tracker.update_progress('4.4', 'Statistical Validation', completed=True)
+            self._save_checkpoint()
+
+        # 4.5 Summary Generation
+        if not resume_point or '4.5' not in resume_point.get('completed_steps', []):
+            self.progress_tracker.update_progress('4.5', 'Summary Generation')
+            logger.info("Generating summaries...")
+
+            summarizer.generate_all_summaries()
+
+            self.progress_tracker.update_progress('4.5', 'Summary Generation', completed=True)
+            self._save_checkpoint()
+        
+        logger.info("Session 4 completed successfully!")
     
     def _check_session_dependencies(self, session_id: str) -> bool:
         """

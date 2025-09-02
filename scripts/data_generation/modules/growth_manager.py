@@ -19,11 +19,23 @@ from apps.batch.models import BatchContainerAssignment, GrowthSample
 logger = logging.getLogger('growth_manager')
 
 class GrowthManager:
-    """Manages growth-related data generation."""
-    
+    """Manages growth-related data generation with TGC-based calculations."""
+
     def __init__(self):
         """Initialize the growth manager."""
         logger.info("Initializing GrowthManager")
+        # TGC values by lifecycle stage (precisely calibrated for Atlantic Salmon)
+        # Calculated to achieve exact growth curve requirements provided by user
+        self.tgc_values = {
+            "egg": 0.000500,       # Egg: 0.001g → 0.166g in 90 days
+            "alevin": 0.001001,    # Alevin: 0.166g → 3.05g in 90 days
+            "fry": 0.001999,       # Fry: 3.05g → 34.3g in 90 days
+            "parr": 0.001870,      # Parr: 34.3g → 120g in 90 days
+            "smolt": 0.001519,     # Smolt: 120g → 250g in 90 days
+            "post_smolt": 0.001187, # Post-Smolt: 250g → 400g in 90 days
+            "adult": 0.002401      # Adult: 400g → 6000g in 450 days
+        }
+
         # Growth parameters by lifecycle stage
         self.stage_growth_ranges = {
             "Egg&Alevin": {
@@ -52,6 +64,8 @@ class GrowthManager:
             }
         }
         
+
+
         # Growth patterns by lifecycle stage
         self.growth_patterns = {
             "Egg&Alevin": "minimal",    # Minimal growth
@@ -377,3 +391,35 @@ class GrowthManager:
         except Exception as e:
             logger.error(f"Error calculating condition factor: {str(e)}")
             return None
+
+    def calculate_tgc_growth(self, initial_weight_g, days, avg_temp_c, stage_name):
+        """
+        Calculate fish weight using TGC (Thermal Growth Coefficient) model.
+
+        Args:
+            initial_weight_g: Starting weight in grams
+            days: Number of days
+            avg_temp_c: Average temperature in Celsius
+            stage_name: Lifecycle stage name
+
+        Returns:
+            Final weight in grams
+        """
+        if avg_temp_c <= 0 or initial_weight_g <= 0:
+            return initial_weight_g
+
+        # Get TGC value for the stage
+        tgc = self.tgc_values.get(stage_name, 1.0)
+
+        # Calculate temperature sum (temperature above 0°C)
+        temp_sum = avg_temp_c * days
+
+        # TGC formula: W_final^(1/3) = W_initial^(1/3) + TGC * temp_sum
+        initial_cube_root = initial_weight_g ** (1/3)
+        growth_increment = tgc * temp_sum
+        final_cube_root = initial_cube_root + growth_increment
+
+        # Ensure we don't get unrealistic results
+        final_cube_root = max(final_cube_root, initial_cube_root)
+
+        return final_cube_root ** 3

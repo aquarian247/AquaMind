@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from apps.infrastructure.models import Container, Area, Sensor
 from apps.batch.models import Batch
+from apps.batch.models.assignment import BatchContainerAssignment
 
 
 class EnvironmentalParameter(models.Model):
@@ -62,12 +63,20 @@ class EnvironmentalReading(models.Model):
     # In Django model we keep id as primary_key, but in the migration we'll create a composite primary key
     id = models.BigAutoField(primary_key=True)
     parameter = models.ForeignKey(EnvironmentalParameter, on_delete=models.PROTECT)
-    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name='environmental_readings')
+    container = models.ForeignKey(Container, on_delete=models.SET_NULL, null=True, blank=True, related_name='environmental_readings')
     batch = models.ForeignKey(Batch, on_delete=models.SET_NULL, null=True, blank=True, related_name='environmental_readings')
     sensor = models.ForeignKey(Sensor, on_delete=models.SET_NULL, null=True, blank=True, related_name='readings')
+    batch_container_assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='environmental_readings',
+        help_text="Direct link to the batch-container assignment for precise salmon CV tracking"
+    )
     value = models.DecimalField(max_digits=10, decimal_places=4)
     # TimescaleDB partitioning column - must be part of the primary key
-    reading_time = models.DateTimeField()  
+    reading_time = models.DateTimeField()
     is_manual = models.BooleanField(default=False, help_text="Whether this reading was entered manually")
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True)
@@ -77,6 +86,7 @@ class EnvironmentalReading(models.Model):
         indexes = [
             models.Index(fields=['container', 'parameter', 'reading_time']),
             models.Index(fields=['batch', 'parameter', 'reading_time']),
+            models.Index(fields=['batch_container_assignment', 'parameter', 'reading_time']),
         ]
         # TimescaleDB requires the partitioning column (reading_time) to be part of the primary key
         # This is handled via a migration to maintain both Django and TimescaleDB compatibility

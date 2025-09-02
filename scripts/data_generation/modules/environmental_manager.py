@@ -14,6 +14,7 @@ from django.db import transaction
 from apps.environmental.models import EnvironmentalParameter, EnvironmentalReading, Sensor
 from apps.batch.models import BatchContainerAssignment, LifeCycleStage
 from apps.infrastructure.models import Container
+from scripts.data_generation.config.generation_params import GenerationParameters
 
 
 class EnvironmentalManager:
@@ -223,6 +224,9 @@ class EnvironmentalManager:
         current_date = start_date
         total_readings = 0
         
+        readings_list = []
+        batch_size = GenerationParameters.DB_BATCH_SIZE
+
         while current_date <= end_date:
             # Generate multiple readings per day at different hours
             hours = sorted(random.sample(range(6, 22), reading_count))
@@ -280,21 +284,32 @@ class EnvironmentalManager:
                         # Get or create a sensor for this container and parameter
                         sensor = self._get_or_create_sensor(container_id, param_name)
                             
-                        # Create the reading
-                        EnvironmentalReading.objects.create(
+                        # Create the reading with direct assignment linkage for salmon CV tracking
+                        reading = EnvironmentalReading(
                             parameter=parameter,
                             container_id=container_id,
                             batch=active_assignment.batch,
+                            batch_container_assignment=active_assignment,  # Direct linkage to assignment
                             sensor=sensor,
                             value=value,
                             reading_time=reading_time.replace(tzinfo=timezone.utc),
                             is_manual=False
                         )
+                        readings_list.append(reading)
                         total_readings += 1
+
+                    if len(readings_list) >= batch_size:
+                        EnvironmentalReading.objects.bulk_create(readings_list)
+                        readings_list = []
+                        print(f"Flushed {batch_size} readings")
             
             # Move to next day
             current_date += datetime.timedelta(days=1)
         
+        if readings_list:
+            EnvironmentalReading.objects.bulk_create(readings_list)
+            print(f"Flushed final {len(readings_list)} readings")
+
         print(f"Generated {total_readings:,} environmental readings from {start_date} to {end_date}")
         return total_readings
             

@@ -12,6 +12,8 @@ from decimal import Decimal
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from datetime import timedelta
+from datetime import date
 
 from apps.batch.models import (
     Species, LifeCycleStage, Batch, BatchContainerAssignment, BatchTransfer,
@@ -51,15 +53,16 @@ class BatchManager:
         logger.info("Getting containers by lifecycle stage")
         try:
             containers_by_stage = {
-                "Egg&Alevin": list(Container.objects.filter(container_type__name__icontains="Egg")),
-                "Fry": list(Container.objects.filter(container_type__name__icontains="Fry")),
-                "Parr": list(Container.objects.filter(container_type__name__icontains="Parr")),
-                "Smolt": list(Container.objects.filter(container_type__name__icontains="Smolt")),
-                "Post-Smolt": list(Container.objects.filter(container_type__name__icontains="Post-Smolt")),
-                "Adult": list(Container.objects.filter(container_type__name__icontains="Sea Pen"))
+                "egg": list(Container.objects.filter(container_type__name='Incubation Tray')),
+                "alevin": list(Container.objects.filter(container_type__name='Incubation Tray')),
+                "fry": list(Container.objects.filter(container_type__name='Circular Tank Small')),
+                "parr": list(Container.objects.filter(container_type__name='Circular Tank Large')),
+                "smolt": list(Container.objects.filter(container_type__name='Pre-Transfer Tank')),
+                "post_smolt": list(Container.objects.filter(container_type__name='Post-Smolt Tank')),  # Freshwater post-smolt containers
+                "adult": list(Container.objects.filter(container_type__name='Sea Cage Large'))
             }
             
-            # Log container counts for each stage
+            # Log container counts
             for stage, containers in containers_by_stage.items():
                 logger.info(f"Found {len(containers)} containers for stage '{stage}'")
             
@@ -114,8 +117,19 @@ class BatchManager:
             target_harvest_date = start_date + datetime.timedelta(days=random.randint(850, 900))
             logger.info(f"Batch period: {start_date} to {target_harvest_date}")
             
-            # Create the batch
-            batch_number = f"B{start_date.year}-{random.randint(1, 999):03d}"
+            # Create unique batch number
+            year = start_date.year
+            # Find the next available batch number
+            next_num = 1
+            while True:
+                candidate = f"B{year}-{next_num:03d}"
+                if not Batch.objects.filter(batch_number=candidate).exists():
+                    break
+                next_num += 1
+                if next_num > 9999:  # Safety limit
+                    raise ValueError(f"Too many batches for year {year}")
+
+            batch_number = candidate
             logger.info(f"Creating batch with number: {batch_number}")
             
             batch = Batch.objects.create(
@@ -129,7 +143,7 @@ class BatchManager:
             logger.info(f"Created batch: {batch}")
             
             # Assign to an egg container
-            container = random.choice(self.containers_by_stage["Egg&Alevin"])
+            container = random.choice(self.containers_by_stage["egg"])
             logger.info(f"Assigning batch to container: {container.name}")
             self._create_container_assignment(batch, container, initial_population, start_date)
             
@@ -145,8 +159,8 @@ class BatchManager:
         """Create a container assignment for a batch."""
         logger.info(f"Creating container assignment for batch {batch.batch_number} to container {container.name}")
         try:
-            # Calculate biomass based on typical weight at lifecycle stage
-            avg_weight_g = self._get_avg_weight_for_stage(batch.lifecycle_stage.name)
+            # Calculate realistic weight using TGC-based growth
+            avg_weight_g = self._calculate_realistic_weight(batch, assignment_date)
             biomass_kg = Decimal(str(population_count * avg_weight_g / 1000))
             logger.debug(f"Container assignment details: population={population_count:,}, avg_weight={avg_weight_g}g, biomass={biomass_kg}kg")
             
@@ -156,7 +170,7 @@ class BatchManager:
                 container=container,
                 lifecycle_stage=batch.lifecycle_stage,
                 population_count=population_count,
-                biomass_kg=biomass_kg,
+                avg_weight_g=avg_weight_g,
                 assignment_date=assignment_date
             )
             logger.info(f"Created container assignment: {assignment}")
@@ -171,16 +185,87 @@ class BatchManager:
     def _get_avg_weight_for_stage(self, stage_name):
         """Get the average weight (in grams) for a given lifecycle stage."""
         avg_weights = {
-            "Egg&Alevin": 0.001,  # 1g per 1000 eggs
-            "Fry": 10,            # 10g
-            "Parr": 30,           # 30g
-            "Smolt": 80,          # 80g
-            "Post-Smolt": 500,    # 500g
-            "Adult": 5000,        # 5kg
+            "egg": 0.001,         # 1g per 1000 eggs (eggs are ~1g total per 1000)
+            "alevin": 0.005,      # 5g (alevin are larger than eggs)
+            "fry": 10,            # 10g (corrected: 0.5-30g range, target ~10g)
+            "parr": 120,          # 120g (corrected: 30-120g range, target ~120g)
+            "smolt": 250,         # 250g (corrected: 120-250g range, target ~250g)
+            "post_smolt": 400,    # 400g (corrected: 250-400g range, freshwater phase)
+            "adult": 6000,        # 6kg (corrected: 400g-6kg range, harvest weight)
         }
         weight = avg_weights.get(stage_name, 1)
         logger.debug(f"Average weight for stage '{stage_name}': {weight}g")
         return weight
+
+    def _calculate_realistic_weight(self, batch, assignment_date, current_date=None):
+        """
+        Calculate realistic fish weight using TGC-based growth from egg stage.
+
+        Args:
+            batch: Batch object
+            assignment_date: When this assignment was created
+            current_date: Current date for calculation (defaults to today)
+
+        Returns:
+            Realistic weight in grams based on growth from egg stage
+        """
+        if current_date is None:
+            from datetime import date
+            current_date = date.today()
+
+        try:
+            from scripts.data_generation.modules.growth_manager import GrowthManager
+            growth_mgr = GrowthManager()
+
+            # Start with egg weight
+            current_weight = 0.001  # 1g per 1000 eggs = 0.001g per egg
+
+            start_date = batch.start_date
+            total_days = (current_date - start_date).days
+            if total_days <= 0:
+                return current_weight
+
+            # Find which stage the batch should be in based on age
+            days_accumulated = 0
+            target_stage = None
+            days_in_target_stage = 0
+
+            for stage in self.lifecycle_stages:
+                # Adult stage is much longer (450 days vs 90 days for others)
+                if stage.name == 'adult':
+                    stage_days = 450  # 15 months for adult growth phase
+                else:
+                    stage_days = 90   # 3 months for other stages
+
+                if days_accumulated + stage_days >= total_days:
+                    # This is the current stage
+                    target_stage = stage
+                    days_in_target_stage = total_days - days_accumulated
+                    break
+                else:
+                    # This stage is complete
+                    current_weight = growth_mgr.calculate_tgc_growth(
+                        current_weight, stage_days, 10.0, stage.name
+                    )
+                    days_accumulated += stage_days
+
+            # If we found the target stage, calculate growth in that stage
+            if target_stage:
+                if days_in_target_stage > 0:
+                    current_weight = growth_mgr.calculate_tgc_growth(
+                        current_weight, days_in_target_stage, 10.0, target_stage.name
+                    )
+
+                # Safety check
+                if current_weight > 10000:
+                    current_weight = 10000
+
+            return current_weight
+
+        except Exception as e:
+            logger.error(f"Error calculating realistic weight: {str(e)}")
+            # Fallback to stage-based weight
+            return self._get_avg_weight_for_stage(batch.lifecycle_stage.name)
     
     @transaction.atomic
     def process_lifecycle(self, batch, end_date=None):
@@ -393,3 +478,39 @@ class BatchManager:
             logger.error(f"Error distributing population: {str(e)}")
             logger.error(traceback.format_exc())
             raise
+
+    @transaction.atomic
+    def generate_current_batches(self, start_date: date, end_date: date, num_batches: int = 10):
+        """Generate new batches for the current year."""
+        batches = []
+        interval = (end_date - start_date).days // num_batches
+        current_date = start_date
+        
+        for i in range(num_batches):
+            batch_date = current_date + timedelta(days=i * interval)
+            new_batch = self.create_batch(batch_date)
+            if new_batch:
+                batches.append(new_batch)
+        
+        logger.info(f"Generated {len(batches)} new batches for current year")
+        return batches
+
+    @transaction.atomic
+    def process_recent_harvests(self, start_date: date, end_date: date):
+        """Process recent harvests for mature batches."""
+        harvests = []
+        mature_batches = Batch.objects.filter(
+            lifecycle_stage__name='Adult',
+            expected_end_date__range=(start_date, end_date),
+            actual_end_date__isnull=True
+        )
+        
+        for batch in mature_batches:
+            # Simulate harvest
+            batch.actual_end_date = batch.expected_end_date
+            batch.status = 'HARVESTED'
+            batch.save()
+            harvests.append(batch)
+            logger.info(f"Processed harvest for batch {batch.batch_number}")
+        
+        return harvests

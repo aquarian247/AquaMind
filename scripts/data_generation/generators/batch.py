@@ -384,12 +384,12 @@ class BatchGenerator:
         
         # Determine new container type based on next stage
         container_type_map = {
-            'alevin': 'start tank',
-            'fry': 'circular tank small',
-            'parr': 'circular tank large',
-            'smolt': 'pre-transfer tank',
-            'post_smolt': 'pre-transfer tank',  # Fixed - post-smolt stays in freshwater
-            'grow_out': 'sea cage standard'
+            'alevin': 'Start Tank',
+            'fry': 'Circular Tank Small',
+            'parr': 'Circular Tank Large',
+            'smolt': 'Pre-Transfer Tank',
+            'post_smolt': 'Pre-Transfer Tank',
+            'grow_out': 'Sea Cage Standard'
         }
         
         new_container_type_name = container_type_map.get(next_stage)
@@ -602,13 +602,13 @@ class BatchGenerator:
     def _get_target_facility_for_stage(self, stage: str) -> str:
         """Get the target facility type for a given lifecycle stage."""
         facility_mapping = {
-            'egg': 'incubation_tray',
-            'alevin': 'start_tank',
-            'fry': 'circular_tank_small',
-            'parr': 'circular_tank_large',
-            'smolt': 'pre_transfer_tank',
-            'post_smolt': 'pre_transfer_tank',  # Post-smolt stays in freshwater
-            'grow_out': 'sea_cage_standard'
+            'egg': 'Incubation Tray',
+            'alevin': 'Start Tank',
+            'fry': 'Circular Tank Small',
+            'parr': 'Circular Tank Large',
+            'smolt': 'Pre-Transfer Tank',
+            'post_smolt': 'Pre-Transfer Tank',
+            'grow_out': 'Sea Cage Standard'
         }
         return facility_mapping.get(stage)
 
