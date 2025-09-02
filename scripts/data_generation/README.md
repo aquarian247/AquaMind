@@ -51,29 +51,79 @@ Every piece of data must enable reconstruction of individual fish lifecycles:
 - **Assignment Linking**: Every record links to the specific BCA where fish existed
 - **Lifecycle Continuity**: Data flows seamlessly as fish move between containers
 
+## 📊 **PRODUCTION SCALE OVERVIEW**
+
+### **Annual Production Targets**
+- **Faroe Islands:** 60,000 tonnes filleted salmon/year
+- **Scotland:** 40,000 tonnes filleted salmon/year
+- **Average Salmon Weight:** 6kg at harvest
+- **Total Annual Production:** ~16.7 million salmon
+- **Batch Size:** ~3.5 million eggs (initial)
+- **Survival Rate:** ~80% at harvest (~900 days)
+- **Total Lifecycle:** 900 days (2.5 years)
+
+### **Infrastructure Scale**
+- **Freshwater Stations:** 15 (Faroe) + 10 (Scotland) = 30 total
+- **Sea Areas:** 30 (Faroe) + 30 (Scotland) = 60 total
+- **Rings per Area:** 20 rings × 60 areas = 1,200 sea rings
+- **Containers per Freshwater Hall:** 12 containers
+- **Halls per Station:** 5 halls (Egg/Alevin, Fry, Parr, Smolt, Post-Smolt)
+- **Total Freshwater Containers:** 30 stations × 5 halls × 12 containers = 1,800
+
+### **Daily Data Generation Scale**
+- **Active BCAs:** 2,500-3,500 simultaneously active
+- **Environmental Readings:** 10,000+ per day (4-8 per BCA)
+- **Feeding Events:** 4,000+ per day (4 per feeding BCA)
+- **Health Records:** ~125 per day (every 20 days per BCA)
+- **Mortality Events:** Daily per BCA
+
 ## 📋 **Implementation Roadmap**
 
-### **Phase 1: Clean Foundation (Current)**
+### **Phase 1: BCA Infrastructure & Core Models (Current)**
 - ✅ Cleaned directory structure
 - ✅ Removed flawed legacy code
-- ⏳ Create BCA-centric technical specification
-- ⏳ Design modular generators
+- ⏳ **BCA Manager Module**: Core BCA lifecycle management
+- ⏳ **Temporal Validation Framework**: Ensure all data aligns with BCA periods
+- ⏳ **Infrastructure Setup**: Create 1,800 freshwater containers + 1,200 sea rings
+- ⏳ **Batch Lifecycle Management**: BCA chain creation/closure for stage transitions
 
-### **Phase 2: Core Generators**
-- ⏳ **BCA Manager**: Create and manage active assignments
-- ⏳ **Environmental Generator**: BCA-linked environmental readings
-- ⏳ **Feed Manager**: Assignment-aware feeding events
-- ⏳ **Health Generator**: BCA-specific health monitoring
+### **Phase 2: Environmental Data Generation**
+- ⏳ **Sensor Infrastructure**: Create sensors for each container (O₂, CO₂, Temp, pH, NO₂, NO₃, NH₄, Salinity)
+- ⏳ **Environmental Reading Generator**: BCA-linked readings with correct frequencies
+  - 4× daily: O₂, CO₂, Temperature, Salinity (rings only)
+  - 1× daily: pH, NO₂, NO₃, NH₄
+- ⏳ **Environmental Parameter Validation**: Realistic ranges by geography and season
 
-### **Phase 3: Temporal Integration**
-- ⏳ **Timestamp Validation**: Ensure all data aligns with BCA periods
-- ⏳ **Lifecycle Transitions**: Handle fish movement between containers
-- ⏳ **Historical Reconstruction**: Enable salmon CV generation
+### **Phase 3: Health & Mortality Systems**
+- ⏳ **Mortality Generator**: Daily mortality per BCA with stage-specific rates
+- ⏳ **Health Monitoring Generator**: Every 20 days per BCA
+- ⏳ **Disease Simulation**: Stage-appropriate disease outbreaks
+- ⏳ **Treatment Integration**: Medication and intervention tracking
 
-### **Phase 4: Orchestration & Testing**
-- ⏳ **Daily Cycle Generator**: Coordinate all generators per date
-- ⏳ **Data Validation**: Verify BCA linkages and temporal consistency
-- ⏳ **Performance Optimization**: Efficient bulk operations
+### **Phase 4: Feed Management & Supply Chain**
+- ⏳ **Feed Inventory Integration**: Purchase orders, container refills, barge management
+- ⏳ **Feeding Event Generator**: 4× daily for feeding BCAs with FCR calculations
+- ⏳ **Feed Consumption Tracking**: Real-time inventory updates
+- ⏳ **Supply Chain Orchestration**: Procurement triggered by low inventory
+
+### **Phase 5: Growth & Production Modeling**
+- ⏳ **TGC Calculator**: Stage-specific thermal growth coefficients
+- ⏳ **Sigmoid Growth Curves**: Slow start → rapid growth in rings → flattening
+- ⏳ **Biomass Tracking**: Population × average weight calculations
+- ⏳ **Production Forecasting**: Yield predictions based on growth curves
+
+### **Phase 6: Orchestration & Performance**
+- ⏳ **Daily Cycle Coordinator**: Coordinate all generators for ~3,000 active BCAs
+- ⏳ **Performance Optimization**: Bulk operations for 10,000+ daily data points
+- ⏳ **Memory Management**: Handle large datasets efficiently
+- ⏳ **Progress Tracking**: Real-time generation monitoring
+
+### **Phase 7: Validation & Quality Assurance**
+- ⏳ **Scale Validation**: Verify 1,800 containers + 1,200 rings infrastructure
+- ⏳ **Data Volume Validation**: Confirm realistic daily data generation
+- ⏳ **BCA Linkage Validation**: 100% data-to-BCA linkage integrity
+- ⏳ **Temporal Alignment**: All data within BCA active periods
+- ⏳ **Salmon CV Reconstruction**: End-to-end lifecycle traceability
 
 ## 🎯 **Success Criteria**
 
