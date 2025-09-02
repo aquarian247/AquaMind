@@ -353,52 +353,47 @@ def validate_temporal_alignment():
     assert len(orphaned_dates) == 0, f"Orphaned data exists for dates: {list(orphaned_dates)}"
 ```
 
-## 🏗️ **Implementation Roadmap**
+## 🏗️ **Implementation Roadmap - CHRONOLOGICAL APPROACH**
 
-### **Phase 1: BCA Infrastructure & Core Models**
+### **Phase 1: Infrastructure & BCA Foundation** ✅ **START HERE**
 - ✅ Clean directory structure
-- ⏳ **BCA Manager Module**: Core BCA lifecycle management
-- ⏳ **Temporal Validation Framework**: Ensure all data aligns with BCA periods
+- ⏳ **BCA Manager Module**: Core BCA lifecycle management (create/close BCAs)
 - ⏳ **Infrastructure Setup**: Create 1,800 freshwater containers + 1,200 sea rings
-- ⏳ **Batch Lifecycle Management**: BCA chain creation/closure for stage transitions
+- ⏳ **Sensor Infrastructure**: Create sensors for environmental monitoring
+- ⏳ **Temporal Validation Framework**: Ensure all data aligns with BCA periods
 
-### **Phase 2: Environmental Data Generation**
-- ⏳ **Sensor Infrastructure**: Create sensors for each container (O₂, CO₂, Temp, pH, NO₂, NO₃, NH₄, Salinity)
-- ⏳ **Environmental Reading Generator**: BCA-linked readings with correct frequencies
-  - 4× daily: O₂, CO₂, Temperature, Salinity (rings only)
-  - 1× daily: pH, NO₂, NO₃, NH₄
-- ⏳ **Environmental Parameter Validation**: Realistic ranges by geography and season
+### **Phase 2: Daily Cycle Orchestration** ⭐ **MAIN GENERATION PHASE**
+**Generate ALL data chronologically, day by day, with full temporal dependencies:**
 
-### **Phase 3: Health & Mortality Systems**
-- ⏳ **Mortality Generator**: Daily mortality per BCA with stage-specific rates
-- ⏳ **Health Monitoring Generator**: Every 20 days per BCA
-- ⏳ **Disease Simulation**: Stage-appropriate disease outbreaks
-- ⏳ **Treatment Integration**: Medication and intervention tracking
+- ⏳ **Daily Environmental Generation**: 4-8 readings per BCA (O₂, CO₂, Temp, pH, NO₂, NO₃, NH₄, Salinity)
+- ⏳ **Health & Mortality Integration**: Daily mortality based on environmental conditions
+- ⏳ **Feed Management**: 4× daily feeding events with inventory tracking
+- ⏳ **Growth Calculations**: TGC-based growth with environmental factors
+- ⏳ **Biomass Updates**: Population × weight calculations for each BCA
+- ⏳ **Supply Chain Events**: Purchase orders triggered by low inventory
+- ⏳ **BCA Lifecycle Transitions**: Move fish between containers when stage complete
 
-### **Phase 4: Feed Management & Supply Chain**
-- ⏳ **Feed Inventory Integration**: Purchase orders, container refills, barge management
-- ⏳ **Feeding Event Generator**: 4× daily for feeding BCAs with FCR calculations
-- ⏳ **Feed Consumption Tracking**: Real-time inventory updates
-- ⏳ **Supply Chain Orchestration**: Procurement triggered by low inventory
+**Critical: All systems run together each day to maintain temporal dependencies!**
 
-### **Phase 5: Growth & Production Modeling**
-- ⏳ **TGC Calculator**: Stage-specific thermal growth coefficients
-- ⏳ **Sigmoid Growth Curves**: Slow start → rapid growth in rings → flattening
-- ⏳ **Biomass Tracking**: Population × average weight calculations
-- ⏳ **Production Forecasting**: Yield predictions based on growth curves
-
-### **Phase 6: Orchestration & Performance**
-- ⏳ **Daily Cycle Coordinator**: Coordinate all generators for ~3,000 active BCAs
+### **Phase 3: Optimization & Scaling**
 - ⏳ **Performance Optimization**: Bulk operations for 10,000+ daily data points
-- ⏳ **Memory Management**: Handle large datasets efficiently
-- ⏳ **Progress Tracking**: Real-time generation monitoring
+- ⏳ **Memory Management**: Handle 3,000+ active BCAs efficiently
+- ⏳ **Database Optimization**: Efficient queries for temporal data
+- ⏳ **Progress Monitoring**: Real-time generation tracking
 
-### **Phase 7: Validation & Quality Assurance**
-- ⏳ **Scale Validation**: Verify 1,800 containers + 1,200 rings infrastructure
-- ⏳ **Data Volume Validation**: Confirm realistic daily data generation
+### **Phase 4: Validation & Quality Assurance**
+- ⏳ **Temporal Integrity Validation**: All data within BCA active periods
 - ⏳ **BCA Linkage Validation**: 100% data-to-BCA linkage integrity
-- ⏳ **Temporal Alignment**: All data within BCA active periods
+- ⏳ **Production Scale Validation**: Verify infrastructure and data volumes
 - ⏳ **Salmon CV Reconstruction**: End-to-end lifecycle traceability
+- ⏳ **Supply Chain Continuity**: No negative inventory states
+
+### **Phase 5: Advanced Features & Extensions**
+- ⏳ **Disease Outbreak Simulation**: Stage-appropriate disease modeling
+- ⏳ **Treatment Integration**: Medication and intervention tracking
+- ⏳ **Environmental Anomaly Generation**: Storms, algae blooms, temperature spikes
+- ⏳ **Geographic Variation**: Different patterns for Faroe vs Scotland
+- ⏳ **Seasonal Effects**: Weather and production cycle variations
 
 ## ⚠️ **Critical Complexity Considerations**
 
