@@ -12,7 +12,8 @@ from typing import List, Dict, Optional, Tuple, Any
 from datetime import date, timedelta
 from enum import Enum
 
-from apps.inventory.models import BatchFeedingSummary
+from apps.inventory.models import BatchFeedingSummary, ContainerFeedingSummary
+from apps.inventory.services.fcr_service import FCRCalculationService
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.scenario.models import Scenario, FCRModelStage
 from apps.infrastructure.models import Geography
@@ -119,70 +120,226 @@ class FCRTrendsService:
         geography_id: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
-        Get actual FCR series from BatchFeedingSummary data.
+        Get actual FCR series using container-first approach.
 
-        Uses TimescaleDB time_bucket function for efficient aggregation.
+        Ensures container-level calculations exist before aggregating to batch level.
         """
-        # Base queryset
-        queryset = BatchFeedingSummary.objects.filter(
+        # Ensure container summaries exist for the period
+        cls._ensure_container_summaries_exist(
+            start_date, end_date, batch_id, assignment_id, geography_id
+        )
+
+        # Get data based on aggregation level
+        if aggregation_level == AggregationLevel.CONTAINER_ASSIGNMENT and assignment_id:
+            return cls._get_container_assignment_series(
+                start_date, end_date, interval, assignment_id
+            )
+        elif aggregation_level == AggregationLevel.BATCH and batch_id:
+            return cls._get_batch_aggregated_series(
+                start_date, end_date, interval, batch_id
+            )
+        elif aggregation_level == AggregationLevel.GEOGRAPHY and geography_id:
+            return cls._get_geography_aggregated_series(
+                start_date, end_date, interval, geography_id
+            )
+        else:
+            # Default to geography level
+            return cls._get_geography_aggregated_series(
+                start_date, end_date, interval, geography_id
+            )
+
+    @classmethod
+    def _ensure_container_summaries_exist(
+        cls,
+        start_date: date,
+        end_date: date,
+        batch_id: Optional[int] = None,
+        assignment_id: Optional[int] = None,
+        geography_id: Optional[int] = None
+    ) -> None:
+        """
+        Ensure container feeding summaries exist for the requested period.
+
+        This implements the container-first approach by calculating
+        container-level FCRs before aggregating.
+        """
+        # Get relevant container assignments
+        assignments = cls._get_relevant_assignments(
+            batch_id, assignment_id, geography_id
+        )
+
+        # Generate time periods
+        periods = cls._generate_time_periods(start_date, end_date)
+
+        # Create container summaries for each assignment and period
+        for assignment in assignments:
+            for period_start, period_end in periods:
+                FCRCalculationService.create_container_feeding_summary(
+                    assignment, period_start, period_end
+                )
+
+        # Aggregate container summaries to batch level
+        if batch_id:
+            batch = Batch.objects.get(id=batch_id)
+            for period_start, period_end in periods:
+                FCRCalculationService.aggregate_container_fcr_to_batch(
+                    batch, period_start, period_end
+                )
+
+    @classmethod
+    def _get_relevant_assignments(
+        cls,
+        batch_id: Optional[int] = None,
+        assignment_id: Optional[int] = None,
+        geography_id: Optional[int] = None
+    ) -> models.QuerySet:
+        """Get container assignments relevant to the query."""
+        queryset = BatchContainerAssignment.objects.filter(is_active=True)
+
+        if assignment_id:
+            queryset = queryset.filter(id=assignment_id)
+        elif batch_id:
+            queryset = queryset.filter(batch_id=batch_id)
+        elif geography_id:
+            queryset = queryset.filter(
+                container__station__area__geography_id=geography_id
+            )
+
+        return queryset.distinct()
+
+    @classmethod
+    def _generate_time_periods(
+        cls,
+        start_date: date,
+        end_date: date
+    ) -> List[Tuple[date, date]]:
+        """Generate time periods for summary calculation."""
+        # For now, create weekly periods
+        # In practice, this could be configurable based on the interval
+        periods = []
+        current = start_date
+        while current <= end_date:
+            period_end = min(current + timedelta(days=6), end_date)
+            periods.append((current, period_end))
+            current = period_end + timedelta(days=1)
+        return periods
+
+    @classmethod
+    def _get_container_assignment_series(
+        cls,
+        start_date: date,
+        end_date: date,
+        interval: TimeInterval,
+        assignment_id: int
+    ) -> List[Dict[str, Any]]:
+        """Get FCR series for a specific container assignment."""
+        queryset = ContainerFeedingSummary.objects.filter(
+            container_assignment_id=assignment_id,
             period_start__gte=start_date,
             period_end__lte=end_date,
             fcr__isnull=False
-        )
+        ).order_by('period_start')
 
-        # Apply filters based on aggregation level
-        if aggregation_level == AggregationLevel.CONTAINER_ASSIGNMENT and assignment_id:
-            # Filter by specific container assignment
-            queryset = queryset.filter(batch__batch_assignments__id=assignment_id)
-        elif aggregation_level == AggregationLevel.BATCH and batch_id:
-            # Filter by specific batch
-            queryset = queryset.filter(batch_id=batch_id)
-        elif aggregation_level == AggregationLevel.GEOGRAPHY and geography_id:
-            # Filter by geography through container assignments
-            queryset = queryset.filter(
-                batch__batch_assignments__container__station__area__geography_id=geography_id
+        series = []
+        for summary in queryset:
+            series.append({
+                "period_start": summary.period_start.isoformat(),
+                "period_end": summary.period_end.isoformat(),
+                "actual_fcr": float(summary.fcr) if summary.fcr else None,
+                "confidence": summary.confidence_level,
+                "data_points": summary.data_points,
+                "container_name": summary.container_name,
+            })
+
+        return series
+
+    @classmethod
+    def _get_batch_aggregated_series(
+        cls,
+        start_date: date,
+        end_date: date,
+        interval: TimeInterval,
+        batch_id: int
+    ) -> List[Dict[str, Any]]:
+        """Get aggregated FCR series for a batch."""
+        queryset = BatchFeedingSummary.objects.filter(
+            batch_id=batch_id,
+            period_start__gte=start_date,
+            period_end__lte=end_date,
+            weighted_avg_fcr__isnull=False
+        ).order_by('period_start')
+
+        series = []
+        for summary in queryset:
+            series.append({
+                "period_start": summary.period_start.isoformat(),
+                "period_end": summary.period_end.isoformat(),
+                "actual_fcr": float(summary.weighted_avg_fcr) if summary.weighted_avg_fcr else None,
+                "confidence": summary.overall_confidence_level,
+                "data_points": summary.container_count,
+                "container_count": summary.container_count,
+            })
+
+        return series
+
+    @classmethod
+    def _get_geography_aggregated_series(
+        cls,
+        start_date: date,
+        end_date: date,
+        interval: TimeInterval,
+        geography_id: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """Get aggregated FCR series for a geography."""
+        # Group by time periods and calculate weighted averages across batches
+        periods = cls._generate_time_periods(start_date, end_date)
+
+        series = []
+        for period_start, period_end in periods:
+            # Get all batch summaries for this period and geography
+            queryset = BatchFeedingSummary.objects.filter(
+                period_start=period_start,
+                period_end=period_end,
+                weighted_avg_fcr__isnull=False
             )
 
-        # Apply time bucketing based on interval
-        if interval == TimeInterval.WEEKLY:
-            bucket_func = TruncWeek('period_start')
-            bucket_format = 'period_start'
-        elif interval == TimeInterval.MONTHLY:
-            bucket_func = TruncMonth('period_start')
-            bucket_format = 'period_start'
-        else:  # DAILY
-            bucket_func = TruncDay('period_start')
-            bucket_format = 'period_start'
-
-        # Aggregate by time bucket
-        aggregated = queryset.annotate(
-            bucket=bucket_func
-        ).values('bucket').annotate(
-            avg_fcr=Avg('fcr'),
-            avg_confidence=Avg(
-                Case(
-                    When(confidence_level='VERY_HIGH', then=Value(4)),
-                    When(confidence_level='HIGH', then=Value(3)),
-                    When(confidence_level='MEDIUM', then=Value(2)),
-                    When(confidence_level='LOW', then=Value(1)),
-                    default=Value(2)
+            if geography_id:
+                queryset = queryset.filter(
+                    batch__batch_assignments__container__station__area__geography_id=geography_id
                 )
-            ),
-            count=Sum(1)
-        ).order_by('bucket')
 
-        # Convert to series format
-        series = []
-        for item in aggregated:
-            confidence_level = cls._numeric_to_confidence_level(item['avg_confidence'])
+            # Calculate weighted average across batches
+            summaries = list(queryset)
+            if summaries:
+                # Weight by total feed consumption
+                total_weighted_fcr = 0
+                total_weight = 0
+                worst_confidence = 'VERY_HIGH'
+                total_containers = 0
 
-            series.append({
-                "period_start": item['bucket'].isoformat(),
-                "period_end": cls._calculate_period_end(item['bucket'], interval),
-                "actual_fcr": float(item['avg_fcr']) if item['avg_fcr'] else None,
-                "confidence": confidence_level,
-                "data_points": item['count']
-            })
+                for summary in summaries:
+                    weight = float(summary.total_feed_kg or 0)
+                    if weight > 0 and summary.weighted_avg_fcr:
+                        total_weighted_fcr += float(summary.weighted_avg_fcr) * weight
+                        total_weight += weight
+
+                    total_containers += summary.container_count or 0
+
+                    # Track worst confidence
+                    confidence_levels = ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
+                    if confidence_levels.index(summary.overall_confidence_level) > confidence_levels.index(worst_confidence):
+                        worst_confidence = summary.overall_confidence_level
+
+                avg_fcr = total_weighted_fcr / total_weight if total_weight > 0 else None
+
+                series.append({
+                    "period_start": period_start.isoformat(),
+                    "period_end": period_end.isoformat(),
+                    "actual_fcr": avg_fcr,
+                    "confidence": worst_confidence,
+                    "data_points": len(summaries),
+                    "total_containers": total_containers,
+                })
 
         return series
 
@@ -315,11 +472,11 @@ class FCRTrendsService:
         actual_series: List[Dict[str, Any]],
         predicted_series: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Merge actual and predicted FCR series."""
+        """Merge actual and predicted FCR series with enhanced metadata."""
         # Create a dictionary keyed by period_start for easy merging
         merged = {}
 
-        # Add actual data
+        # Add actual data with all available metadata
         for item in actual_series:
             key = item['period_start']
             merged[key] = {
@@ -329,14 +486,19 @@ class FCRTrendsService:
                 "confidence": item.get('confidence'),
                 "data_points": item.get('data_points', 0),
                 "predicted_fcr": None,
-                "deviation": None
+                "deviation": None,
+                # Include container-specific metadata
+                "container_name": item.get('container_name'),
+                "container_count": item.get('container_count'),
+                "total_containers": item.get('total_containers'),
             }
 
-        # Add predicted data
+        # Add predicted data (batch-level predictions)
         for item in predicted_series:
             key = item['period_start']
             if key in merged:
                 merged[key]["predicted_fcr"] = item.get('predicted_fcr')
+                merged[key]["scenarios_used"] = item.get('scenarios_used', 0)
             else:
                 merged[key] = {
                     "period_start": item['period_start'],
@@ -345,16 +507,23 @@ class FCRTrendsService:
                     "confidence": None,
                     "data_points": 0,
                     "predicted_fcr": item.get('predicted_fcr'),
-                    "deviation": None
+                    "scenarios_used": item.get('scenarios_used', 0),
+                    "deviation": None,
+                    "container_name": None,
+                    "container_count": None,
+                    "total_containers": None,
                 }
 
         # Calculate deviations where both actual and predicted exist
         for item in merged.values():
             if item["actual_fcr"] and item["predicted_fcr"]:
-                item["deviation"] = round(
-                    (item["actual_fcr"] - item["predicted_fcr"]) / item["predicted_fcr"] * 100,
-                    2
-                )
+                try:
+                    item["deviation"] = round(
+                        (item["actual_fcr"] - item["predicted_fcr"]) / item["predicted_fcr"] * 100,
+                        2
+                    )
+                except (ZeroDivisionError, TypeError):
+                    item["deviation"] = None
 
         # Convert back to list and sort
         return sorted(merged.values(), key=lambda x: x['period_start'])

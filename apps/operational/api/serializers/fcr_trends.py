@@ -10,6 +10,8 @@ from typing import Dict, Any
 class FCRDataPointSerializer(serializers.Serializer):
     """
     Serializer for individual FCR data points in the trends series.
+
+    Supports container-level granularity with operational metadata.
     """
     period_start = serializers.DateField()
     period_end = serializers.DateField()
@@ -35,6 +37,10 @@ class FCRDataPointSerializer(serializers.Serializer):
         allow_null=True,
         help_text="Percentage deviation of actual from predicted FCR"
     )
+    # Container-specific metadata
+    container_name = serializers.CharField(required=False, allow_null=True)
+    container_count = serializers.IntegerField(required=False, allow_null=True)
+    total_containers = serializers.IntegerField(required=False, allow_null=True)
 
 
 class FCRTrendsSerializer(serializers.Serializer):
@@ -79,7 +85,11 @@ class FCRTrendsSerializer(serializers.Serializer):
                     'data_points': item.get('data_points', 0),
                     'predicted_fcr': item.get('predicted_fcr'),
                     'scenarios_used': item.get('scenarios_used', 0),
-                    'deviation': item.get('deviation')
+                    'deviation': item.get('deviation'),
+                    # Include container metadata
+                    'container_name': item.get('container_name'),
+                    'container_count': item.get('container_count'),
+                    'total_containers': item.get('total_containers')
                 }
                 for item in instance.get('series', [])
             ]
