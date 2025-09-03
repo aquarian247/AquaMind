@@ -1,0 +1,3 @@
+"""
+FCR Trends API Tests
+"""

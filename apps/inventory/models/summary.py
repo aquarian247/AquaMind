@@ -9,53 +9,205 @@ from .feeding import FeedingEvent
 from apps.inventory.utils import TimestampedModelMixin, DecimalFieldMixin
 
 
-class BatchFeedingSummary(TimestampedModelMixin, models.Model):
+class ContainerFeedingSummary(TimestampedModelMixin, models.Model):
     """
-    Aggregated feeding data for batches over specific periods.
-    Helps track FCR and total feed usage over time.
+    Container-level feeding data and FCR calculations.
+
+    Tracks individual container performance for operational intelligence.
+    Container FCRs are aggregated to batch level for management reporting.
     """
     batch = models.ForeignKey(
-        Batch, 
-        on_delete=models.CASCADE, 
+        Batch,
+        on_delete=models.CASCADE,
+        related_name='container_feeding_summaries'
+    )
+    container_assignment = models.ForeignKey(
+        'batch.BatchContainerAssignment',
+        on_delete=models.CASCADE,
         related_name='feeding_summaries'
     )
     period_start = models.DateField(help_text="Start date of the summary period")
     period_end = models.DateField(help_text="End date of the summary period")
+
+    # Feed data
     total_feed_kg = DecimalFieldMixin.positive_decimal_field(
-        help_text="Total feed used in kg during the period"
+        help_text="Total feed used in this container during the period (kg)"
     )
-    average_biomass_kg = DecimalFieldMixin.positive_decimal_field(
+
+    # Biomass and growth data
+    starting_biomass_kg = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
-        help_text="Average batch biomass during the period (kg)"
+        help_text="Biomass at start of period (kg)"
     )
-    average_feeding_percentage = DecimalFieldMixin.percentage_field(
+    ending_biomass_kg = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
-        help_text="Average feeding percentage during the period"
+        help_text="Biomass at end of period (kg)"
     )
     growth_kg = DecimalFieldMixin.positive_decimal_field(
         null=True,
         blank=True,
         help_text="Growth during the period (kg)"
     )
-    # FIFO and FCR fields
-    total_feed_consumed_kg = DecimalFieldMixin.positive_decimal_field(
-        null=True,
-        blank=True,
-        help_text="Total feed consumed by the batch during this period (kg)"
-    )
-    total_biomass_gain_kg = DecimalFieldMixin.positive_decimal_field(
-        null=True,
-        blank=True,
-        help_text="Total biomass gain during this period (kg)"
-    )
+
+    # FCR calculation
     fcr = DecimalFieldMixin.positive_decimal_field(
         max_digits=5,
         decimal_places=3,
         null=True,
         blank=True,
-        help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)"
+        help_text="Feed Conversion Ratio for this container (total_feed_kg / growth_kg)"
+    )
+
+    # Confidence and quality indicators
+    confidence_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('VERY_HIGH', 'Very High (< 10 days since weighing)'),
+            ('HIGH', 'High (10-20 days since weighing)'),
+            ('MEDIUM', 'Medium (20-40 days since weighing)'),
+            ('LOW', 'Low (> 40 days since weighing)'),
+        ],
+        default='MEDIUM',
+        help_text="Confidence level based on time since last weighing"
+    )
+    estimation_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('MEASURED', 'Direct measurement from weighing events'),
+            ('INTERPOLATED', 'Estimated from growth trends between weighings'),
+        ],
+        null=True,
+        blank=True,
+        help_text="How the FCR value was calculated"
+    )
+
+    # Metadata
+    data_points = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of feeding events contributing to this summary"
+    )
+
+    class Meta:
+        ordering = ['container_assignment', '-period_end']
+        verbose_name_plural = "Container feeding summaries"
+        unique_together = ['container_assignment', 'period_start', 'period_end']
+        indexes = [
+            models.Index(fields=['batch', 'period_start', 'period_end']),
+            models.Index(fields=['container_assignment', 'period_start']),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.container_assignment} feeding summary: "
+            f"{self.period_start} to {self.period_end}"
+        )
+
+    @property
+    def container_name(self):
+        """Get container name for display purposes."""
+        return self.container_assignment.container.name
+
+
+class BatchFeedingSummary(TimestampedModelMixin, models.Model):
+    """
+    Aggregated feeding data for batches over specific periods.
+
+    Now calculated as weighted average of container-level FCRs for operational intelligence.
+    This provides management-level summaries while enabling drill-down to container performance.
+    """
+    batch = models.ForeignKey(
+        Batch,
+        on_delete=models.CASCADE,
+        related_name='feeding_summaries'
+    )
+    period_start = models.DateField(help_text="Start date of the summary period")
+    period_end = models.DateField(help_text="End date of the summary period")
+
+    # Aggregated feed data
+    total_feed_kg = DecimalFieldMixin.positive_decimal_field(
+        help_text="Total feed used across all containers (kg)"
+    )
+    average_feeding_percentage = DecimalFieldMixin.percentage_field(
+        null=True,
+        blank=True,
+        help_text="Average feeding percentage across containers"
+    )
+
+    # Aggregated biomass and growth
+    total_starting_biomass_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Total batch biomass at start of period (kg)"
+    )
+    total_ending_biomass_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Total batch biomass at end of period (kg)"
+    )
+    total_growth_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Total batch growth during the period (kg)"
+    )
+
+    # Weighted FCR calculation
+    weighted_avg_fcr = DecimalFieldMixin.positive_decimal_field(
+        max_digits=5,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        help_text="Weighted average FCR across all containers"
+    )
+
+    # Legacy FCR field (kept for backward compatibility)
+    fcr = DecimalFieldMixin.positive_decimal_field(
+        max_digits=5,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        help_text="DEPRECATED: Use weighted_avg_fcr instead"
+    )
+
+    # Aggregation metadata
+    container_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of containers contributing to this summary"
+    )
+    total_feed_consumed_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Total feed consumed (same as total_feed_kg for consistency)"
+    )
+    total_biomass_gain_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Total biomass gain (same as total_growth_kg for consistency)"
+    )
+
+    # Overall confidence and quality indicators
+    overall_confidence_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('VERY_HIGH', 'Very High (< 10 days since weighing)'),
+            ('HIGH', 'High (10-20 days since weighing)'),
+            ('MEDIUM', 'Medium (20-40 days since weighing)'),
+            ('LOW', 'Low (> 40 days since weighing)'),
+        ],
+        default='MEDIUM',
+        help_text="Overall confidence level (worst case across containers)"
+    )
+    estimation_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('MEASURED', 'All containers have direct measurements'),
+            ('MIXED', 'Some containers use interpolation'),
+            ('INTERPOLATED', 'Most containers use interpolation'),
+        ],
+        null=True,
+        blank=True,
+        help_text="Overall estimation method across containers"
     )
 
     class Meta:
