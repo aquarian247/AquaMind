@@ -24,9 +24,9 @@ class GrowthSampleService:
         """
         # Update all active container assignments for this batch
         BatchContainerAssignment.objects.filter(
-            batch=growth_sample.batch,
+            batch=growth_sample.assignment.batch,
             is_active=True
-        ).update(last_weighing_date=growth_sample.date)
+        ).update(last_weighing_date=growth_sample.sample_date)
 
     @classmethod
     def get_latest_weighing_date(cls, batch) -> Optional[GrowthSample]:
@@ -40,8 +40,8 @@ class GrowthSampleService:
             GrowthSample or None: The most recent growth sample
         """
         return GrowthSample.objects.filter(
-            batch=batch
-        ).order_by('-date').first()
+            assignment__batch=batch
+        ).order_by('-sample_date').first()
 
 
 # Signal handlers
@@ -53,5 +53,5 @@ def update_assignment_on_growth_sample_save(sender, instance, created, **kwargs)
     This ensures that confidence calculations always have access to the most
     recent weighing date for each assignment.
     """
-    if created or instance.date:  # Only update if it's a new sample or has a date
+    if created or instance.sample_date:  # Only update if it's a new sample or has a date
         GrowthSampleService.update_assignment_weighing_dates(instance)

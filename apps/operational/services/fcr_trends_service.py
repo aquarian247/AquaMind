@@ -490,6 +490,7 @@ class FCRTrendsService:
                 "deviation": None,
                 # Include container-specific metadata
                 "container_name": item.get('container_name'),
+                "assignment_id": item.get('assignment_id'),
                 "container_count": item.get('container_count'),
                 "total_containers": item.get('total_containers'),
             }
@@ -511,6 +512,7 @@ class FCRTrendsService:
                     "scenarios_used": item.get('scenarios_used', 0),
                     "deviation": None,
                     "container_name": None,
+                    "assignment_id": None,
                     "container_count": None,
                     "total_containers": None,
                 }

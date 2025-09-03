@@ -8,7 +8,7 @@ from .feed import Feed
 from .purchase import FeedPurchase
 from .stock import FeedStock
 from .feeding import FeedingEvent
-from .summary import BatchFeedingSummary
+from .summary import BatchFeedingSummary, ContainerFeedingSummary
 from .container_stock import FeedContainerStock
 
 __all__ = [
@@ -17,5 +17,6 @@ __all__ = [
     'FeedStock',
     'FeedingEvent',
     'BatchFeedingSummary',
+    'ContainerFeedingSummary',
     'FeedContainerStock',
 ]

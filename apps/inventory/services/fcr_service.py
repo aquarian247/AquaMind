@@ -207,13 +207,25 @@ class FCRCalculationService:
             period_end=period_end,
             defaults={
                 'total_feed_consumed_kg': total_feed_consumed,
-                'total_biomass_gain_kg': biomass_gain_kg,
-                'fcr': fcr,
-                'average_biomass_kg': avg_biomass,
-                'average_feeding_percentage': avg_feeding_pct,
-                # Keep existing total_feed_kg for backward compatibility
+                # Core feed and growth data
                 'total_feed_kg': total_feed_consumed,
-                'growth_kg': biomass_gain_kg,
+                'total_feed_consumed_kg': total_feed_consumed,
+                'total_growth_kg': biomass_gain_kg,
+                'total_biomass_gain_kg': biomass_gain_kg,
+                'weighted_avg_fcr': fcr,
+                'fcr': fcr,  # Legacy field for backward compatibility
+
+                # Biomass tracking
+                'total_starting_biomass_kg': avg_biomass,
+                'total_ending_biomass_kg': (avg_biomass + biomass_gain_kg) if avg_biomass and biomass_gain_kg else avg_biomass,
+
+                # Quality indicators
+                'overall_confidence_level': confidence_level,
+                'estimation_method': estimation_method,
+
+                # Legacy fields for backward compatibility
+                'average_feeding_percentage': avg_feeding_pct,
+                'container_count': 1,  # Default for legacy method
             }
         )
         
@@ -333,11 +345,11 @@ class FCRCalculationService:
         if not last_weighing_date:
             # Try to find the most recent weighing date for this batch
             latest_growth_sample = GrowthSample.objects.filter(
-                batch=batch
-            ).order_by('-date').first()
+                assignment__batch=batch
+            ).order_by('-sample_date').first()
 
             if latest_growth_sample:
-                last_weighing_date = latest_growth_sample.date
+                last_weighing_date = latest_growth_sample.sample_date
 
         if not last_weighing_date:
             # No weighing data available
@@ -427,9 +439,9 @@ class FCRCalculationService:
 
         # Check for weighing events in the period
         has_weighing_events = GrowthSample.objects.filter(
-            batch=batch,
-            date__gte=period_start,
-            date__lte=period_end
+            assignment__batch=batch,
+            sample_date__gte=period_start,
+            sample_date__lte=period_end
         ).exists()
 
         # Calculate confidence level
@@ -463,17 +475,25 @@ class FCRCalculationService:
             period_start=period_start,
             period_end=period_end,
             defaults={
-                'total_feed_consumed_kg': total_feed_consumed,
-                'total_biomass_gain_kg': biomass_gain_kg,
-                'fcr': fcr,
-                'average_biomass_kg': avg_biomass,
-                'average_feeding_percentage': avg_feeding_pct,
-                # Keep existing total_feed_kg for backward compatibility
+                # Core feed and growth data
                 'total_feed_kg': total_feed_consumed,
-                'growth_kg': biomass_gain_kg,
-                # New confidence and estimation fields
-                'confidence_level': confidence_level,
+                'total_feed_consumed_kg': total_feed_consumed,
+                'total_growth_kg': biomass_gain_kg,
+                'total_biomass_gain_kg': biomass_gain_kg,
+                'weighted_avg_fcr': fcr,
+                'fcr': fcr,  # Legacy field for backward compatibility
+
+                # Biomass tracking
+                'total_starting_biomass_kg': avg_biomass,
+                'total_ending_biomass_kg': (avg_biomass + biomass_gain_kg) if avg_biomass and biomass_gain_kg else avg_biomass,
+
+                # Quality indicators
+                'overall_confidence_level': confidence_level,
                 'estimation_method': estimation_method,
+
+                # Legacy fields for backward compatibility
+                'average_feeding_percentage': avg_feeding_pct,
+                'container_count': 1,  # Default for legacy method
             }
         )
 
@@ -653,10 +673,10 @@ class FCRCalculationService:
         """
         # Look for container-specific growth samples
         growth_samples = GrowthSample.objects.filter(
-            batch=container_assignment.batch,
-            date__gte=period_start,
-            date__lte=period_end
-        ).order_by('date')
+            assignment__batch=container_assignment.batch,
+            sample_date__gte=period_start,
+            sample_date__lte=period_end
+        ).order_by('sample_date')
 
         if growth_samples.exists():
             # Calculate growth from container-specific samples
@@ -747,10 +767,10 @@ class FCRCalculationService:
         Get growth data for a batch (used as fallback for containers).
         """
         growth_samples = GrowthSample.objects.filter(
-            batch=batch,
-            date__gte=period_start,
-            date__lte=period_end
-        ).order_by('date')
+            assignment__batch=batch,
+            sample_date__gte=period_start,
+            sample_date__lte=period_end
+        ).order_by('sample_date')
 
         if not growth_samples.exists():
             return None

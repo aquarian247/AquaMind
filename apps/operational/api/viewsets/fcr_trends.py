@@ -7,6 +7,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
 from typing import Optional
@@ -18,8 +20,11 @@ from apps.operational.services.fcr_trends_service import (
 )
 from apps.operational.api.serializers.fcr_trends import FCRTrendsSerializer
 
+# Import a dummy model for queryset
+from django.contrib.auth.models import User
 
-class FCRTrendsViewSet(viewsets.ViewSet):
+
+class FCRTrendsViewSet(viewsets.GenericViewSet):
     """
     ViewSet for FCR trends data.
 
@@ -28,7 +33,76 @@ class FCRTrendsViewSet(viewsets.ViewSet):
     """
     permission_classes = [IsAuthenticated]
     serializer_class = FCRTrendsSerializer
+    queryset = User.objects.none()  # Empty queryset to avoid schema generation warnings
 
+    @extend_schema(
+        summary="Get FCR trends data",
+        description="Retrieve FCR (Feed Conversion Ratio) trend data with actual and predicted values across different time intervals and aggregation levels.",
+        parameters=[
+            OpenApiParameter(
+                name='start_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Start date for the trend analysis (ISO format, default: 1 year ago)',
+                required=False
+            ),
+            OpenApiParameter(
+                name='end_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='End date for the trend analysis (ISO format, default: today)',
+                required=False
+            ),
+            OpenApiParameter(
+                name='interval',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Time interval for aggregation',
+                enum=['DAILY', 'WEEKLY', 'MONTHLY'],
+                default='WEEKLY',
+                required=False
+            ),
+            OpenApiParameter(
+                name='batch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Optional batch ID for batch-level aggregation',
+                required=False
+            ),
+            OpenApiParameter(
+                name='assignment_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Optional assignment ID for container-level aggregation',
+                required=False
+            ),
+            OpenApiParameter(
+                name='geography_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Optional geography ID for geography-level aggregation',
+                required=False
+            ),
+            OpenApiParameter(
+                name='include_predicted',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Include predicted FCR values from scenarios',
+                default=True,
+                required=False
+            ),
+        ],
+        responses={
+            200: FCRTrendsSerializer,
+            400: {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'}
+                }
+            }
+        },
+        tags=['operational', 'fcr', 'trends']
+    )
     def list(self, request):
         """
         Get FCR trends data.
