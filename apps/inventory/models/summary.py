@@ -57,6 +57,28 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
         blank=True,
         help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)"
     )
+    # FCR confidence and estimation fields
+    confidence_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('VERY_HIGH', 'Very High (< 10 days since weighing)'),
+            ('HIGH', 'High (10-20 days since weighing)'),
+            ('MEDIUM', 'Medium (20-40 days since weighing)'),
+            ('LOW', 'Low (> 40 days since weighing)'),
+        ],
+        default='MEDIUM',
+        help_text="Confidence level based on time since last weighing"
+    )
+    estimation_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('MEASURED', 'Direct measurement from weighing events'),
+            ('INTERPOLATED', 'Estimated from growth trends between weighings'),
+        ],
+        null=True,
+        blank=True,
+        help_text="How the FCR value was calculated"
+    )
 
     class Meta:
         ordering = ['batch', '-period_end']
