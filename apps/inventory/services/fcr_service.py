@@ -199,7 +199,24 @@ class FCRCalculationService:
         avg_feeding_pct = feeding_events.aggregate(
             avg=Avg('feeding_percentage')
         )['avg']
-        
+
+        # Check for weighing events in the period
+        has_weighing_events = GrowthSample.objects.filter(
+            assignment__batch=batch,
+            sample_date__gte=period_start,
+            sample_date__lte=period_end
+        ).exists()
+
+        # Calculate confidence level
+        confidence_level = cls.calculate_confidence_level(
+            batch, period_end
+        )
+
+        # Determine estimation method
+        estimation_method = cls.determine_estimation_method(
+            biomass_gain_kg, has_weighing_events
+        )
+
         # Update or create summary
         summary, created = BatchFeedingSummary.objects.update_or_create(
             batch=batch,
