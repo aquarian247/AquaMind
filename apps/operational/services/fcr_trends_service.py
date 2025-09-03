@@ -249,6 +249,7 @@ class FCRTrendsService:
                 "confidence": summary.confidence_level,
                 "data_points": summary.data_points,
                 "container_name": summary.container_name,
+                "assignment_id": summary.container_assignment_id,
             })
 
         return series

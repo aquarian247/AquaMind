@@ -39,6 +39,7 @@ class FCRDataPointSerializer(serializers.Serializer):
     )
     # Container-specific metadata
     container_name = serializers.CharField(required=False, allow_null=True)
+    assignment_id = serializers.IntegerField(required=False, allow_null=True)
     container_count = serializers.IntegerField(required=False, allow_null=True)
     total_containers = serializers.IntegerField(required=False, allow_null=True)
 
@@ -88,6 +89,7 @@ class FCRTrendsSerializer(serializers.Serializer):
                     'deviation': item.get('deviation'),
                     # Include container metadata
                     'container_name': item.get('container_name'),
+                    'assignment_id': item.get('assignment_id'),
                     'container_count': item.get('container_count'),
                     'total_containers': item.get('total_containers')
                 }
