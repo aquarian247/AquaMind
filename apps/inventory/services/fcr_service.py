@@ -10,8 +10,9 @@ from django.db.models import Sum, Q, Avg
 from typing import Optional, Dict, List
 from datetime import date
 
-from apps.batch.models import Batch, BatchComposition
+from apps.batch.models import Batch, BatchComposition, GrowthSample, BatchContainerAssignment
 from apps.inventory.models import FeedingEvent, BatchFeedingSummary
+from apps.infrastructure.models import Geography
 
 class FCRCalculationError(ValueError):
     """Exception raised when FCR calculation fails."""
@@ -310,7 +311,181 @@ class FCRCalculationService:
                 total_prorated_cost += event.feed_cost
         
         return total_prorated_cost
-    
+
+    @classmethod
+    def calculate_confidence_level(
+        cls,
+        batch: Batch,
+        period_end: date,
+        last_weighing_date: Optional[date] = None
+    ) -> str:
+        """
+        Calculate confidence level based on time since last weighing.
+
+        Args:
+            batch: The batch to calculate confidence for
+            period_end: End date of the period
+            last_weighing_date: Date of last weighing (if known)
+
+        Returns:
+            str: Confidence level ('VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW')
+        """
+        if not last_weighing_date:
+            # Try to find the most recent weighing date for this batch
+            latest_growth_sample = GrowthSample.objects.filter(
+                batch=batch
+            ).order_by('-date').first()
+
+            if latest_growth_sample:
+                last_weighing_date = latest_growth_sample.date
+
+        if not last_weighing_date:
+            # No weighing data available
+            return 'LOW'
+
+        # Calculate days since last weighing
+        days_since_weighing = (period_end - last_weighing_date).days
+
+        if days_since_weighing < 0:
+            # Future weighing date (data issue)
+            return 'LOW'
+        elif days_since_weighing < 10:
+            return 'VERY_HIGH'
+        elif days_since_weighing < 20:
+            return 'HIGH'
+        elif days_since_weighing < 40:
+            return 'MEDIUM'
+        else:
+            return 'LOW'
+
+    @classmethod
+    def determine_estimation_method(
+        cls,
+        biomass_gain_kg: Optional[Decimal],
+        has_weighing_events: bool
+    ) -> Optional[str]:
+        """
+        Determine how the FCR was calculated.
+
+        Args:
+            biomass_gain_kg: The biomass gain value used in FCR calculation
+            has_weighing_events: Whether weighing events exist for the period
+
+        Returns:
+            str or None: 'MEASURED', 'INTERPOLATED', or None if no FCR
+        """
+        if not biomass_gain_kg:
+            return None
+
+        if has_weighing_events:
+            return 'MEASURED'
+        else:
+            return 'INTERPOLATED'
+
+    @classmethod
+    def update_batch_feeding_summary(
+        cls,
+        batch: Batch,
+        period_start: date,
+        period_end: date,
+        biomass_gain_kg: Optional[Decimal] = None,
+        starting_biomass_kg: Optional[Decimal] = None,
+        ending_biomass_kg: Optional[Decimal] = None,
+        last_weighing_date: Optional[date] = None
+    ) -> BatchFeedingSummary:
+        """
+        Update or create a BatchFeedingSummary with FCR calculation, confidence, and estimation method.
+
+        Args:
+            batch: The batch to update summary for
+            period_start: Start date of the period
+            period_end: End date of the period
+            biomass_gain_kg: Biomass gain from scenario modeling
+            starting_biomass_kg: Starting biomass for the period
+            ending_biomass_kg: Ending biomass for the period
+            last_weighing_date: Date of last weighing for confidence calculation
+
+        Returns:
+            BatchFeedingSummary: The updated summary
+        """
+        # Calculate total feed consumed
+        total_feed_consumed = cls.get_batch_feed_consumption(
+            batch, period_start, period_end
+        )
+
+        # Calculate total feed cost
+        total_feed_cost = cls.get_batch_feed_cost(
+            batch, period_start, period_end
+        )
+
+        # Calculate FCR
+        fcr = None
+        if biomass_gain_kg and biomass_gain_kg > 0:
+            fcr = cls.calculate_batch_fcr(
+                batch, period_start, period_end, biomass_gain_kg
+            )
+
+        # Check for weighing events in the period
+        has_weighing_events = GrowthSample.objects.filter(
+            batch=batch,
+            date__gte=period_start,
+            date__lte=period_end
+        ).exists()
+
+        # Calculate confidence level
+        confidence_level = cls.calculate_confidence_level(
+            batch, period_end, last_weighing_date
+        )
+
+        # Determine estimation method
+        estimation_method = cls.determine_estimation_method(
+            biomass_gain_kg, has_weighing_events
+        )
+
+        # Get average biomass and feeding percentage from feeding events
+        feeding_events = FeedingEvent.objects.filter(
+            batch=batch,
+            feeding_date__gte=period_start,
+            feeding_date__lte=period_end
+        )
+
+        avg_biomass = feeding_events.aggregate(
+            avg=Avg('batch_biomass_kg')
+        )['avg']
+
+        avg_feeding_pct = feeding_events.aggregate(
+            avg=Avg('feeding_percentage')
+        )['avg']
+
+        # Update or create summary
+        summary, created = BatchFeedingSummary.objects.update_or_create(
+            batch=batch,
+            period_start=period_start,
+            period_end=period_end,
+            defaults={
+                'total_feed_consumed_kg': total_feed_consumed,
+                'total_biomass_gain_kg': biomass_gain_kg,
+                'fcr': fcr,
+                'average_biomass_kg': avg_biomass,
+                'average_feeding_percentage': avg_feeding_pct,
+                # Keep existing total_feed_kg for backward compatibility
+                'total_feed_kg': total_feed_consumed,
+                'growth_kg': biomass_gain_kg,
+                # New confidence and estimation fields
+                'confidence_level': confidence_level,
+                'estimation_method': estimation_method,
+            }
+        )
+
+        # Add custom attributes for test compatibility
+        # (These aren't stored in the model but the tests expect them)
+        summary.total_feed_cost = total_feed_cost
+        summary.biomass_gain_kg = biomass_gain_kg
+        summary.starting_biomass_kg = starting_biomass_kg
+        summary.ending_biomass_kg = ending_biomass_kg
+
+        return summary
+
     @classmethod
     def get_mixed_batch_composition_percentages(
         cls,
@@ -319,22 +494,22 @@ class FCRCalculationService:
     ) -> Dict[int, Decimal]:
         """
         Get composition percentages for a mixed batch.
-        
+
         Args:
             batch: The batch to get composition for
             container_id: Optional container ID to filter by
-            
+
         Returns:
             Dict[int, Decimal]: Mapping of source batch IDs to percentages
         """
         if batch.batch_type != 'MIXED':
             # For non-mixed batches, return 100% for the batch itself
             return {batch.id: Decimal('100.0')}
-        
+
         compositions = BatchComposition.objects.filter(
             mixed_batch=batch
         )
-        
+
         return {
             comp.source_batch.id: comp.percentage
             for comp in compositions
