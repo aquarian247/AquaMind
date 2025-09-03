@@ -7,6 +7,7 @@ MortalityReason, MortalityRecord, and LiceCount.
 
 from rest_framework import serializers
 from django.core.validators import MinValueValidator
+from typing import Optional
 
 from apps.batch.models import Batch
 from apps.health.api.serializers.base import HealthBaseSerializer
@@ -32,10 +33,13 @@ class MortalityReasonSerializer(HealthBaseSerializer):
 
 class MortalityRecordSerializer(HealthBaseSerializer):
     """Serializer for the MortalityRecord model.
-    
+
     Uses HealthBaseSerializer for consistent error handling and field management.
     Records mortality events including count, reason, and associated batch/container.
     """
+    container_name = serializers.SerializerMethodField(
+        help_text="Name of the container where the mortality occurred."
+    )
     batch = serializers.PrimaryKeyRelatedField(
         queryset=Batch.objects.all(),
         help_text="The batch associated with this mortality record."
@@ -61,11 +65,15 @@ class MortalityRecordSerializer(HealthBaseSerializer):
         allow_null=True,
         help_text="Additional notes about the mortality event."
     )
-    
+
+    def get_container_name(self, obj) -> Optional[str]:
+        """Get the container name for the mortality record."""
+        return obj.container.name if obj.container else None
+
     class Meta:
         model = MortalityRecord
         fields = [
-            'id', 'batch', 'container', 'event_date',
+            'id', 'batch', 'container', 'container_name', 'event_date',
             'count', 'reason', 'notes'
         ]
         read_only_fields = ['event_date']  # Event date is auto-set
