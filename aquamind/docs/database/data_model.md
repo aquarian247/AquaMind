@@ -183,6 +183,7 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
   - `assignment_date`: date (NOT NULL)
   - `departure_date`: date (nullable) # Date when this specific assignment ended
   - `is_active`: boolean (default: True, NOT NULL) # Whether this assignment is current/active
+  - `last_weighing_date`: date (nullable) # Date of most recent growth sample for FCR confidence calculation
   - `notes`: text (NOT NULL)
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
@@ -322,6 +323,24 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['feed_container', 'purchase_date', 'created_at']`, `unique_together = ['feed_container', 'feed_purchase']`
+- **`inventory_containerfeedingsummary`** (New Table - Container-Level FCR)
+  - `id`: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, related_name='container_feeding_summaries')
+  - `container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=CASCADE, related_name='feeding_summaries')
+  - `period_start`: date
+  - `period_end`: date
+  - `total_feed_kg`: decimal(10,3) (validators: MinValueValidator(0), help_text="Total feed provided to this container in this period (kg)")
+  - `starting_biomass_kg`: decimal(10,2) (nullable, blank=True, help_text="Starting biomass for this container at period start")
+  - `ending_biomass_kg`: decimal(10,2) (nullable, blank=True, help_text="Ending biomass for this container at period end")
+  - `growth_kg`: decimal(8,2) (nullable, blank=True, help_text="Biomass growth for this container during the period")
+  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio for this container")
+  - `confidence_level`: varchar(20) (nullable, blank=True, choices=['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW'], help_text="Confidence level for this container's FCR")
+  - `estimation_method`: varchar(20) (nullable, blank=True, choices=['MEASURED', 'INTERPOLATED', 'MIXED'], help_text="Method used for FCR estimation")
+  - `data_points`: integer (default=0, help_text="Number of data points used in calculation")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = ['container_assignment', 'period_start', 'period_end']`, `ordering = ['container_assignment', '-period_end']`
+  - **Note**: Container-level FCR calculations that feed into batch-level aggregations
 - **`inventory_batchfeedingsummary`**
   - `id`: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, related_name='feeding_summaries')
@@ -333,11 +352,17 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
   - `growth_kg`: decimal(10,2) (nullable, blank=True, help_text="Total growth of the batch during this period (kg)")
   - `total_feed_consumed_kg`: decimal(12,3) (nullable, blank=True, help_text="Total feed consumed by the batch during this period (kg)")
   - `total_biomass_gain_kg`: decimal(10,2) (nullable, blank=True, help_text="Total biomass gain during this period (kg)")
-  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg) - standardized field with high precision")
+  - `weighted_avg_fcr`: decimal(5,3) (nullable, blank=True, help_text="Weighted average FCR across all containers in the batch")
+  - `total_starting_biomass_kg`: decimal(12,2) (nullable, blank=True, help_text="Total starting biomass for all containers in batch")
+  - `total_ending_biomass_kg`: decimal(12,2) (nullable, blank=True, help_text="Total ending biomass for all containers in batch")
+  - `container_count`: integer (default=0, help_text="Number of active containers in the batch during this period")
+  - `overall_confidence_level`: varchar(20) (nullable, blank=True, choices=['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW'], help_text="Overall confidence level for FCR calculation")
+  - `estimation_method`: varchar(20) (nullable, blank=True, choices=['MEASURED', 'INTERPOLATED', 'MIXED'], help_text="Method used for FCR estimation")
+  - `fcr`: decimal(5,3) (nullable, blank=True, help_text="Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg) - legacy field")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
-  - **Note**: Duplicate `feed_conversion_ratio` field was removed to maintain data integrity and use the more precise `fcr` field.
+  - **Note**: Updated to support container-first FCR calculations with weighted averages and confidence levels.
 
 #### Relationships
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
@@ -628,7 +653,24 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
 
-#### 4.7 Broodstock Management (broodstock app)
+#### 4.7 FCR Trend Aggregation (TimescaleDB)
+
+**Purpose**: Efficient time-series aggregation of FCR data for trend analysis and reporting.
+
+**Recommended TimescaleDB Hypertable**: `inventory_containerfeedingsummary`
+- **Partitioning**: By `period_start` (date) for optimal time-range queries
+- **Continuous Aggregates**:
+  - Daily FCR averages: `CREATE CONTINUOUS AGGREGATE fcr_daily AS SELECT time_bucket('1 day', period_start) AS bucket, container_assignment_id, AVG(fcr) AS avg_fcr, MIN(confidence_level) AS min_confidence FROM inventory_containerfeedingsummary GROUP BY bucket, container_assignment_id;`
+  - Weekly batch FCR: `CREATE CONTINUOUS AGGREGATE fcr_weekly_batch AS SELECT time_bucket('1 week', period_start) AS bucket, batch_id, AVG(fcr) AS avg_fcr, COUNT(*) AS data_points FROM inventory_containerfeedingsummary GROUP BY bucket, batch_id;`
+  - Monthly geography FCR: `CREATE CONTINUOUS AGGREGATE fcr_monthly_geography AS SELECT time_bucket('1 month', period_start) AS bucket, geography_id, AVG(fcr) AS avg_fcr FROM inventory_containerfeedingsummary JOIN batch_batchcontainerassignment ON container_assignment_id = batch_batchcontainerassignment.id JOIN infrastructure_container ON batch_batchcontainerassignment.container_id = infrastructure_container.id JOIN infrastructure_area ON infrastructure_container.area_id = infrastructure_area.id GROUP BY bucket, geography_id;`
+
+**Benefits**:
+- Sub-second query performance for trend analysis
+- Automatic data compression for historical data
+- Efficient storage of high-frequency time-series data
+- Built-in time-bucket aggregation functions
+
+#### 4.8 Broodstock Management (broodstock app)
 
 The Broodstock Management app’s data model supports comprehensive management of broodstock containers, fish populations, breeding operations, egg production/acquisition, environmental monitoring, and batch traceability. It reuses existing models like `infrastructure_container`, introduces normalized tables for better integrity and querying, and integrates with apps like `environmental` and `health`. The design ensures flexible traceability for internal eggs (broodstock to batch) and external eggs (supplier to batch), matching the implementation complexity of Scenario Planning. It also supports end-to-end traceability to harvest events, leveraging existing batch models and audit logging for regulatory compliance.
 

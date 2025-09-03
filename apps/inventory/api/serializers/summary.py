@@ -26,9 +26,9 @@ class BatchFeedingSummarySerializer(
         model = BatchFeedingSummary
         fields = [
             'id', 'batch', 'batch_name', 'period_start', 'period_end',
-            'total_feed_kg', 'average_biomass_kg', 'average_feeding_percentage', 
-            'growth_kg', 'total_feed_consumed_kg',
-            'total_biomass_gain_kg', 'fcr', 'created_at', 'updated_at'
+            'total_feed_kg', 'total_starting_biomass_kg', 'total_ending_biomass_kg',
+            'total_growth_kg', 'weighted_avg_fcr', 'container_count',
+            'overall_confidence_level', 'estimation_method', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 

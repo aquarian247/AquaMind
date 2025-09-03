@@ -46,6 +46,11 @@ class BatchContainerAssignment(models.Model):
         help_text="Date when this specific assignment ended (e.g., fish moved out or population became zero)"
     )
     is_active = models.BooleanField(default=True, help_text="Whether this assignment is current/active")
+    last_weighing_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date of the most recent growth sample (weighing) for this assignment"
+    )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
