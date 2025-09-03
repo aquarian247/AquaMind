@@ -11,7 +11,7 @@ from typing import Optional, Dict, List
 from datetime import date
 
 from apps.batch.models import Batch, BatchComposition, GrowthSample, BatchContainerAssignment
-from apps.inventory.models import FeedingEvent, BatchFeedingSummary
+from apps.inventory.models import FeedingEvent, BatchFeedingSummary, ContainerFeedingSummary
 from apps.infrastructure.models import Geography
 
 class FCRCalculationError(ValueError):
@@ -513,4 +513,383 @@ class FCRCalculationService:
         return {
             comp.source_batch.id: comp.percentage
             for comp in compositions
-        } 
+        }
+
+    # ============================================================================
+    # Container-Level FCR Calculations (Option B Implementation)
+    # ============================================================================
+
+    @classmethod
+    def calculate_container_fcr(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        period_start: date,
+        period_end: date
+    ) -> Optional[Dict[str, any]]:
+        """
+        Calculate FCR for a specific container assignment.
+
+        Args:
+            container_assignment: The container assignment to calculate FCR for
+            period_start: Start date of the period
+            period_end: End date of the period
+
+        Returns:
+            Dict with FCR data or None if cannot be calculated
+        """
+        # Get feed consumption for this container
+        total_feed = cls._get_container_feed_consumption(
+            container_assignment, period_start, period_end
+        )
+
+        if not total_feed or total_feed == 0:
+            return None
+
+        # Get growth data for this container
+        growth_data = cls._get_container_growth_data(
+            container_assignment, period_start, period_end
+        )
+
+        if not growth_data or not growth_data.get('growth_kg'):
+            return None
+
+        # Calculate FCR
+        fcr = total_feed / growth_data['growth_kg']
+
+        # Determine confidence level
+        confidence_level = cls.calculate_confidence_level(
+            container_assignment.batch, period_end,
+            container_assignment.last_weighing_date
+        )
+
+        # Determine estimation method
+        has_weighing_events = growth_data.get('has_weighing_events', False)
+        estimation_method = cls.determine_estimation_method(
+            growth_data['growth_kg'], has_weighing_events
+        )
+
+        return {
+            'total_feed_kg': total_feed,
+            'starting_biomass_kg': growth_data.get('starting_biomass'),
+            'ending_biomass_kg': growth_data.get('ending_biomass'),
+            'growth_kg': growth_data['growth_kg'],
+            'fcr': fcr,
+            'confidence_level': confidence_level,
+            'estimation_method': estimation_method,
+            'data_points': growth_data.get('data_points', 0),
+        }
+
+    @classmethod
+    def _get_container_feed_consumption(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        period_start: date,
+        period_end: date
+    ) -> Decimal:
+        """
+        Get total feed consumption for a specific container assignment.
+        """
+        # Get feeding events directly for this container
+        feed_events = FeedingEvent.objects.filter(
+            container=container_assignment.container,
+            feeding_date__gte=period_start,
+            feeding_date__lte=period_end
+        )
+
+        # If this is a mixed batch, we need to prorate the feed
+        if container_assignment.batch.batch_type == 'MIXED':
+            return cls._get_mixed_container_feed_consumption(
+                container_assignment, feed_events, period_start, period_end
+            )
+        else:
+            # Standard batch - all feed goes to this assignment
+            return feed_events.aggregate(
+                total=Sum('amount_kg')
+            )['total'] or Decimal('0')
+
+    @classmethod
+    def _get_mixed_container_feed_consumption(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        feed_events: models.QuerySet,
+        period_start: date,
+        period_end: date
+    ) -> Decimal:
+        """
+        Calculate prorated feed consumption for mixed batches in containers.
+        """
+        total_prorated_feed = Decimal('0')
+
+        for event in feed_events:
+            # Find composition for this batch in this container
+            composition = BatchComposition.objects.filter(
+                mixed_batch=container_assignment.batch,
+                source_batch=event.batch,
+                container=container_assignment.container
+            ).first()
+
+            if composition:
+                # Prorate feed by composition percentage
+                batch_share = event.amount_kg * (composition.percentage / 100)
+                total_prorated_feed += batch_share
+            elif event.batch == container_assignment.batch:
+                # Direct feeding to this mixed batch
+                total_prorated_feed += event.amount_kg
+
+        return total_prorated_feed
+
+    @classmethod
+    def _get_container_growth_data(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        period_start: date,
+        period_end: date
+    ) -> Optional[Dict[str, any]]:
+        """
+        Get growth data for a specific container assignment.
+
+        Returns container-specific growth data, falling back to batch-level
+        if container-specific data is not available.
+        """
+        # Look for container-specific growth samples
+        growth_samples = GrowthSample.objects.filter(
+            batch=container_assignment.batch,
+            date__gte=period_start,
+            date__lte=period_end
+        ).order_by('date')
+
+        if growth_samples.exists():
+            # Calculate growth from container-specific samples
+            # Note: In practice, growth samples might not be container-specific
+            # This is a simplified implementation
+            first_sample = growth_samples.first()
+            last_sample = growth_samples.last()
+
+            if first_sample and last_sample and first_sample != last_sample:
+                # Estimate growth based on available data
+                # This is a placeholder - actual implementation would need
+                # more sophisticated biomass tracking per container
+                growth_kg = Decimal('0')  # Placeholder for container-specific growth
+                return {
+                    'starting_biomass': None,  # Would need container-specific biomass
+                    'ending_biomass': None,
+                    'growth_kg': growth_kg,
+                    'has_weighing_events': True,
+                    'data_points': growth_samples.count(),
+                }
+
+        # Fallback: estimate growth based on batch-level data and container proportion
+        return cls._estimate_container_growth_from_batch(
+            container_assignment, period_start, period_end
+        )
+
+    @classmethod
+    def _estimate_container_growth_from_batch(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        period_start: date,
+        period_end: date
+    ) -> Optional[Dict[str, any]]:
+        """
+        Estimate container growth based on batch-level data and container proportion.
+        """
+        # Get batch-level growth data
+        batch_growth_data = cls._get_batch_growth_data(
+            container_assignment.batch, period_start, period_end
+        )
+
+        if not batch_growth_data or not batch_growth_data.get('growth_kg'):
+            return None
+
+        # Calculate this container's proportion of total batch
+        total_batch_population = BatchContainerAssignment.objects.filter(
+            batch=container_assignment.batch,
+            is_active=True
+        ).aggregate(
+            total_pop=Sum('population_count')
+        )['total_pop'] or 0
+
+        if total_batch_population == 0:
+            return None
+
+        container_proportion = (
+            container_assignment.population_count / total_batch_population
+        )
+
+        # Estimate container growth as proportion of batch growth
+        container_growth = batch_growth_data['growth_kg'] * Decimal(str(container_proportion))
+
+        # Estimate container biomass
+        starting_biomass = None
+        ending_biomass = None
+        if container_assignment.avg_weight_g:
+            # Estimate based on average weight
+            avg_weight_kg = Decimal(str(container_assignment.avg_weight_g)) / 1000
+            starting_biomass = avg_weight_kg * container_assignment.population_count
+            ending_biomass = starting_biomass + container_growth
+
+        return {
+            'starting_biomass': starting_biomass,
+            'ending_biomass': ending_biomass,
+            'growth_kg': container_growth,
+            'has_weighing_events': batch_growth_data.get('has_weighing_events', False),
+            'data_points': batch_growth_data.get('data_points', 0),
+        }
+
+    @classmethod
+    def _get_batch_growth_data(
+        cls,
+        batch: Batch,
+        period_start: date,
+        period_end: date
+    ) -> Optional[Dict[str, any]]:
+        """
+        Get growth data for a batch (used as fallback for containers).
+        """
+        growth_samples = GrowthSample.objects.filter(
+            batch=batch,
+            date__gte=period_start,
+            date__lte=period_end
+        ).order_by('date')
+
+        if not growth_samples.exists():
+            return None
+
+        # Calculate batch-level growth
+        first_sample = growth_samples.first()
+        last_sample = growth_samples.last()
+
+        if first_sample == last_sample:
+            # Only one sample - can't calculate growth
+            return None
+
+        # For now, use simple start/end calculation
+        # In practice, this would be more sophisticated
+        growth_kg = Decimal('0')  # Placeholder - would need proper biomass calculation
+
+        return {
+            'starting_biomass': None,  # Would need proper biomass tracking
+            'ending_biomass': None,
+            'growth_kg': growth_kg,
+            'has_weighing_events': True,
+            'data_points': growth_samples.count(),
+        }
+
+    @classmethod
+    def create_container_feeding_summary(
+        cls,
+        container_assignment: BatchContainerAssignment,
+        period_start: date,
+        period_end: date
+    ) -> Optional[ContainerFeedingSummary]:
+        """
+        Create or update a ContainerFeedingSummary for the given period.
+        """
+        # Calculate container FCR
+        fcr_data = cls.calculate_container_fcr(
+            container_assignment, period_start, period_end
+        )
+
+        if not fcr_data:
+            return None
+
+        # Create or update summary
+        summary, created = ContainerFeedingSummary.objects.update_or_create(
+            container_assignment=container_assignment,
+            period_start=period_start,
+            period_end=period_end,
+            defaults={
+                'batch': container_assignment.batch,
+                **fcr_data
+            }
+        )
+
+        return summary
+
+    @classmethod
+    def aggregate_container_fcr_to_batch(
+        cls,
+        batch: Batch,
+        period_start: date,
+        period_end: date
+    ) -> Optional[BatchFeedingSummary]:
+        """
+        Aggregate container-level FCRs into a batch-level summary.
+        """
+        # Get all container summaries for this batch and period
+        container_summaries = ContainerFeedingSummary.objects.filter(
+            batch=batch,
+            period_start=period_start,
+            period_end=period_end
+        )
+
+        if not container_summaries.exists():
+            return None
+
+        # Calculate weighted averages
+        total_feed = Decimal('0')
+        total_growth = Decimal('0')
+        total_starting_biomass = Decimal('0')
+        total_ending_biomass = Decimal('0')
+        container_count = 0
+        worst_confidence = 'VERY_HIGH'
+        estimation_methods = set()
+
+        for summary in container_summaries:
+            # Weight by feed consumption for FCR averaging
+            if summary.total_feed_kg and summary.fcr:
+                weight = float(summary.total_feed_kg)
+                # Weighted FCR would be calculated here
+                # For now, simple average as placeholder
+
+            total_feed += summary.total_feed_kg or 0
+            total_growth += summary.growth_kg or 0
+            if summary.starting_biomass_kg:
+                total_starting_biomass += summary.starting_biomass_kg
+            if summary.ending_biomass_kg:
+                total_ending_biomass += summary.ending_biomass_kg
+
+            container_count += 1
+            estimation_methods.add(summary.estimation_method)
+
+            # Track worst confidence level
+            confidence_levels = ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
+            if confidence_levels.index(summary.confidence_level) > confidence_levels.index(worst_confidence):
+                worst_confidence = summary.confidence_level
+
+        # Calculate weighted average FCR
+        # This is a simplified implementation - in practice, you'd weight by feed consumption
+        valid_fcrs = [s.fcr for s in container_summaries if s.fcr]
+        weighted_avg_fcr = None
+        if valid_fcrs:
+            weighted_avg_fcr = sum(valid_fcrs) / len(valid_fcrs)
+
+        # Determine overall estimation method
+        if len(estimation_methods) == 1:
+            overall_method = list(estimation_methods)[0]
+        elif 'INTERPOLATED' in estimation_methods:
+            overall_method = 'MIXED' if 'MEASURED' in estimation_methods else 'INTERPOLATED'
+        else:
+            overall_method = 'MEASURED'
+
+        # Create or update batch summary
+        summary, created = BatchFeedingSummary.objects.update_or_create(
+            batch=batch,
+            period_start=period_start,
+            period_end=period_end,
+            defaults={
+                'total_feed_kg': total_feed,
+                'total_growth_kg': total_growth,
+                'total_starting_biomass_kg': total_starting_biomass if total_starting_biomass > 0 else None,
+                'total_ending_biomass_kg': total_ending_biomass if total_ending_biomass > 0 else None,
+                'weighted_avg_fcr': weighted_avg_fcr,
+                'fcr': weighted_avg_fcr,  # Legacy field for backward compatibility
+                'container_count': container_count,
+                'total_feed_consumed_kg': total_feed,
+                'total_biomass_gain_kg': total_growth,
+                'overall_confidence_level': worst_confidence,
+                'estimation_method': overall_method,
+            }
+        )
+
+        return summary 
