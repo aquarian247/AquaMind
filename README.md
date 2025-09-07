@@ -23,13 +23,17 @@ AquaMind is built using modern technologies for reliability, scalability, and ma
 - **Database**: PostgreSQL with TimescaleDB extension for efficient time-series data management
 - **API**: Django REST Framework for robust API development
  - **Frontend**: React 18 + TypeScript, Vite build tool, Tailwind CSS (shadcn/ui) and TanStack Query for server-state management
-- **Authentication**: *Multi-tier authentication system*  
-  - **JWT Authentication** (`/users/auth/…`) – primary auth flow for the React frontend.  
-    • Endpoints: token obtain / refresh, user management, profile.  
-    • Designed for production use and future AD/LDAP integration.  
-  - **DRF Token Authentication** (`/auth/…`) – lightweight token & `dev-auth` helper endpoints used in development and automated API tests.  
-  - **Role-Based Access Control** – geography / subsidiary filtering with fine-grained permissions.  
-  - **Multi-Environment Support** – local dev, shared test, and production back-ends share a common strategy (see `AquaMind_Authentication_Architecture_Strategy.md`).
+- **Authentication**: *Clean, single-system authentication*
+  - **JWT Authentication** (`/api/token/…`) – primary auth flow for the React frontend.
+    • Endpoints: `POST /api/token/` (login), `POST /api/token/refresh/` (refresh)
+    • Returns: `{"access":"...","refresh":"..."}` format
+    • Designed for local dev, testing, and production environments
+  - **DRF Token Authentication** (`/api/auth/…`) – development-only endpoints
+    • Endpoints: `POST /api/auth/token/` (single token), `GET /api/auth/dev-auth/` (dev helper)
+    • Returns: `{"token":"...","user_id":7,"username":"test"}` format
+    • Used for API testing and development automation
+  - **Role-Based Access Control** – geography / subsidiary filtering with fine-grained permissions
+  - **Multi-Environment Support** – local dev, shared test, and production back-ends share JWT strategy
 - **Testing**: Django's testing framework for comprehensive test coverage
 
 ## 🏗️ Architecture

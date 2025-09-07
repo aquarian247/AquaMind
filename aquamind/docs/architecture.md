@@ -213,43 +213,33 @@ This architecture guarantees that:
 
 ### Authentication
 
-> **Design Goal:** provide a single, consistent _frontend_ login flow while
-> allowing the backend to operate in three very different environments  
-> (local‐dev, shared DEV / TEST in the cloud, and production behind the
-> corporate firewall).
+> **Design Goal:** provide a single, consistent _frontend_ login flow using JWT
+> authentication across all environments (local dev, testing, production).
 
-The authentication stack therefore exposes **two parallel mechanisms** that
-share the same `auth_user` table but are mounted at different URL prefixes.
+The authentication stack uses **JWT authentication** as the primary mechanism:
 
-| Purpose | URL prefix | Auth style | Typical environment |
-|---------|------------|-----------|----------------------|
-| **Primary / Production** – React frontend, mobile clients | `/users/auth/…` | **JWT** (*drf-simplejwt*) | All environments |
-| **Development / CI** – fast API scripting, Fixture loading, Schemathesis | `/auth/…` | **DRF Token** + `dev-auth` helper | Local & CI only |
+| Purpose | URL prefix | Auth style | Response Format |
+|---------|------------|-----------|-----------------|
+| **Primary / All Environments** – React frontend, API clients | `/api/token/…` | **JWT** (*drf-simplejwt*) | `{"access":"...","refresh":"..."}` |
+| **Development Only** – API testing, automation | `/api/auth/…` | **DRF Token** + `dev-auth` helper | `{"token":"...","user_id":7,"username":"test"}` |
 
-### 1. JWT Flow (`/users/auth/…`)
-*   Endpoints: `token/`, `token/refresh/`, user registration, profile, password
-    change.  
-*   Issued tokens include custom claims (`auth_source`, `full_name`).  
-*   Backed by **multibackend** Django auth:  
-    1. `django_auth_ldap.backend.LDAPBackend` (production)  
-    2. `django.contrib.auth.backends.ModelBackend` (local fallback)  
-*   Token lifetimes: **12 h access / 7 d refresh** (see `settings.py → SIMPLE_JWT`).  
-*   Front-end stores the *access* token in `localStorage.aquamine_token`
-    (configurable). Refresh handled transparently by TanStack Query hooks.
+### 1. JWT Flow (`/api/token/…`)
+*   Endpoints: `POST /api/token/` (obtain), `POST /api/token/refresh/` (refresh)
+*   Returns standard JWT tokens with access/refresh pair
+*   Backed by Django's `ModelBackend`
+*   Token lifetimes: **12 h access / 7 d refresh**
+*   Front-end stores the *access* token in `localStorage.auth_token`
+*   Refresh handled transparently by TanStack Query hooks
 
-### 2. DRF Token Flow (`/auth/…`)
-*   Endpoints: `token/` (obtain), `dev-auth/` (fetch token for anonymous dev).  
-*   **Not enabled in production** – guarded by `settings.DEBUG`.  
-*   Used heavily by unit tests and Schemathesis where a quick token without JWT
-    decoding overhead speeds up thousands of requests.
+### 2. DRF Token Flow (`/api/auth/…`)
+*   Endpoints: `POST /api/auth/token/` (obtain), `GET /api/auth/dev-auth/` (fetch token for anonymous dev)
+*   **Not enabled in production** – guarded by `settings.DEBUG`
+*   Used heavily by unit tests and Schemathesis where a quick token without JWT decoding overhead speeds up thousands of requests
 
 ### 3. Multi-Environment Strategy
-* **Local Dev / CI:** Uses DRF Token *or* JWT with local accounts. LDAP
-  libraries are not loaded.  
-* **Shared DEV / TEST:** Same as local but published on the Internet; testers
-  use JWT.  
-* **Production:** LDAP is enabled via env flag `USE_LDAP_AUTH=true`. If AD is
-  unavailable the chain silently falls back to local super-users (break-glass).
+* **Local Dev / CI:** Uses JWT with local accounts. No AD/LDAP integration required.
+* **Shared DEV / TEST:** Same as local but published on the Internet; testers use JWT.
+* **Production:** JWT with local accounts (AD/LDAP integration can be added later if needed)
 
 ### 4. Security Considerations
 * HTTPS enforced in all non-local environments.  
