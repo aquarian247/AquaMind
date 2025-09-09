@@ -64,14 +64,11 @@ urlpatterns = [
     # Include REST framework authentication URLs
     path("api-auth/", include("rest_framework.urls")),
     
-    # Auth endpoints
+    # JWT Authentication endpoints (production)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # DRF Token Authentication endpoints (development/testing only)
     path('api/auth/token/', CustomObtainAuthToken.as_view(), name='api-token-auth'),
-    
-    # Authentication endpoints
-    path("api/auth/token/", CustomObtainAuthToken.as_view(), name="api_token_auth"),
-    path("api/auth/jwt/", TokenObtainPairView.as_view(), name="jwt_obtain_pair"),
-    path("api/auth/jwt/refresh/", TokenRefreshView.as_view(), name="jwt_refresh"),
     # path("api/auth/csrf/", CSRFTokenView.as_view(), name="csrf_token"),  # Temporarily disabled
 ]
