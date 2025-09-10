@@ -30,7 +30,7 @@ AquaMind shall support Bakkafrost's organizational structure:
 ### 2.1 System Architecture
 AquaMind shall be a full-stack web application with:
 - **Backend**: Django (v4.2.11+), providing RESTful APIs via Django REST Framework for data management and business logic.
-- **Frontend**: Vue.js (v3+), offering an intuitive user interface with operational dashboards and interactive views.
+- **Frontend**: React + TypeScript, offering an intuitive user interface with operational dashboards and interactive views.
 - **Database**: PostgreSQL with TimescaleDB extension for efficient time-series data management (`environmental_environmentalreading`, `environmental_weatherdata`).
 - **Authentication**: JWT-based authentication for secure API access, integrated with `auth_user` and `users_userprofile` data.
 

@@ -44,9 +44,9 @@ class APIRootView(APIView):
         
         # Authentication endpoints
         data['authentication'] = OrderedDict([
-            ('token-auth', reverse('api_token_auth', request=request, format=format)),
-            ('jwt-obtain', reverse('jwt_obtain_pair', request=request, format=format)),
-            ('jwt-refresh', reverse('jwt_refresh', request=request, format=format)),
+            ('token-auth', reverse('api-token-auth', request=request, format=format)),
+            ('jwt-obtain', reverse('token_obtain_pair', request=request, format=format)),
+            ('jwt-refresh', reverse('token_refresh', request=request, format=format)),
         ])
         
         # App-specific endpoints
