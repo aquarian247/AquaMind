@@ -12,8 +12,9 @@ from apps.infrastructure.api.serializers.container import ContainerSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from aquamind.utils.history_mixins import HistoryReasonMixin
 
-class ContainerViewSet(viewsets.ModelViewSet):
+class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Containers within the aquaculture facility.
 

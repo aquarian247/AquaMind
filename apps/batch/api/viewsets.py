@@ -38,6 +38,7 @@ from apps.batch.api.serializers import (
     MortalityEventSerializer,
     GrowthSampleSerializer
 )
+from aquamind.utils.history_mixins import HistoryReasonMixin
 
 class SpeciesViewSet(viewsets.ModelViewSet):
     """
@@ -93,7 +94,7 @@ class LifeCycleStageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-class BatchViewSet(viewsets.ModelViewSet):
+class BatchViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 

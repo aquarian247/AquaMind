@@ -14,9 +14,10 @@ from django.utils import timezone
 
 from apps.inventory.models import FeedingEvent
 from apps.inventory.api.serializers.feeding import FeedingEventSerializer
+from aquamind.utils.history_mixins import HistoryReasonMixin
 
 
-class FeedingEventViewSet(viewsets.ModelViewSet):
+class FeedingEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     ViewSet for FeedingEvent model.
 
