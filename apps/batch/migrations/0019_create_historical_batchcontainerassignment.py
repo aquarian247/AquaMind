@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("batch", "0018_auto_20250910_1716"),
+        ("batch", "0017_add_last_weighing_date"),
     ]
 
     operations = [
