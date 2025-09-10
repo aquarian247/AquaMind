@@ -76,22 +76,22 @@ class BatchFeedingSummaryAdmin(SimpleHistoryAdmin):
 @admin.register(ContainerFeedingSummary)
 class ContainerFeedingSummaryAdmin(SimpleHistoryAdmin):
     list_display = [
-        'container', 'period_start', 'period_end', 'total_feed_kg',
-        'fcr', 'feeding_efficiency'
+        'container_assignment', 'period_start', 'period_end', 'total_feed_kg',
+        'fcr', 'growth_kg', 'confidence_level'
     ]
     list_filter = [
-        'container', 'period_start', 'period_end'
+        'container_assignment', 'period_start', 'period_end', 'confidence_level'
     ]
-    search_fields = ['container__name']
+    search_fields = ['container_assignment__container__name', 'batch__name']
 
 
 @admin.register(FeedContainerStock)
 class FeedContainerStockAdmin(SimpleHistoryAdmin):
     list_display = [
-        'feed_container', 'feed', 'current_quantity_kg',
-        'last_updated', 'updated_by'
+        'feed_container', 'feed_purchase', 'quantity_kg',
+        'entry_date', 'created_at'
     ]
     list_filter = [
-        'feed_container', 'feed', 'last_updated'
+        'feed_container', 'feed_purchase', 'entry_date'
     ]
-    search_fields = ['feed_container__name', 'feed__name']
+    search_fields = ['feed_container__name', 'feed_purchase__feed__name', 'feed_purchase__batch_number']
