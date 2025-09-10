@@ -4,6 +4,7 @@ Feeding event model for the inventory app.
 from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
@@ -100,6 +101,9 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
 
     class Meta:
         ordering = ['-feeding_date', '-feeding_time']
+
+    # History tracking
+    history = HistoricalRecords()
 
     def calculate_feeding_percentage(self):
         """

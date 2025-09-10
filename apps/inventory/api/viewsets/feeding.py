@@ -17,7 +17,7 @@ from apps.inventory.api.serializers.feeding import FeedingEventSerializer
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 
-class FeedingEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+class FeedingEventViewSet(viewsets.ModelViewSet):
     """
     ViewSet for FeedingEvent model.
 

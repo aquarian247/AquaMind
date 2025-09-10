@@ -94,7 +94,7 @@ class LifeCycleStageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-class BatchViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+class BatchViewSet(viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 

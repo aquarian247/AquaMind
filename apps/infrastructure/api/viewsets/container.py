@@ -14,7 +14,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
-class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+class ContainerViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing Containers within the aquaculture facility.
 

@@ -45,22 +45,33 @@ class HistoryReasonMixin:
         """
         Override perform_create to capture change reasons for create operations.
 
-        This method saves the instance and immediately updates the change reason
+        This method saves the instance and updates the change reason
         to indicate it was created via API by the current user.
         """
         instance = serializer.save()
-        update_change_reason(instance, self._reason("created"))
+        # For new instances, we need to refresh the instance to get the latest historical record
+        instance.refresh_from_db()
+        if hasattr(instance, 'history') and instance.history.exists():
+            latest_history = instance.history.latest()
+            if latest_history:
+                latest_history.history_change_reason = self._reason("created")
+                latest_history.save()
         return instance
 
     def perform_update(self, serializer):
         """
         Override perform_update to capture change reasons for update operations.
 
-        This method saves the instance and immediately updates the change reason
+        This method saves the instance and updates the change reason
         to indicate it was updated via API by the current user.
         """
         instance = serializer.save()
-        update_change_reason(instance, self._reason("updated"))
+        # For updates, the historical record should already exist
+        if hasattr(instance, 'history') and instance.history.exists():
+            latest_history = instance.history.latest()
+            if latest_history:
+                latest_history.history_change_reason = self._reason("updated")
+                latest_history.save()
         return instance
 
     def perform_destroy(self, instance):
@@ -70,5 +81,10 @@ class HistoryReasonMixin:
         This method updates the change reason to indicate the instance was deleted
         via API by the current user, then performs the actual deletion.
         """
-        update_change_reason(instance, self._reason("deleted"))
+        # For deletions, update the change reason on the latest historical record
+        if hasattr(instance, 'history') and instance.history.exists():
+            latest_history = instance.history.latest()
+            if latest_history:
+                latest_history.history_change_reason = self._reason("deleted")
+                latest_history.save()
         instance.delete()
