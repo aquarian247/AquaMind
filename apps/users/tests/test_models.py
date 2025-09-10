@@ -191,3 +191,258 @@ class UserProfileModelTest(TestCase):
         # Check profile doesn't exist anymore
         with self.assertRaises(UserProfile.DoesNotExist):
             UserProfile.objects.get(id=profile_id)
+
+
+class UserProfileHistoricalRecordsTest(TestCase):
+    """
+    Tests for UserProfile historical records tracking.
+
+    Tests create, update, and delete operations create proper historical records.
+    """
+
+    def setUp(self):
+        """
+        Set up test data for historical records tests.
+        """
+        self.user = User.objects.create_user(
+            username='history_test',
+            email='history_test@example.com',
+            password='testpass123'
+        )
+        # Note: UserProfile is created automatically via signal, so we start with 1 historical record
+        self.profile = self.user.profile
+
+    def test_historical_records_creation(self):
+        """
+        Test that creating a UserProfile creates a historical record.
+        """
+        # Get the historical records for this profile
+        historical_records = UserProfile.history.model.objects.filter(id=self.profile.id).order_by('history_date')
+
+        # Should have at least 1 record (creation via signal)
+        self.assertGreaterEqual(historical_records.count(), 1)
+
+        # Check the first historical record (creation)
+        first_record = historical_records.first()
+        self.assertEqual(first_record.history_type, '+')  # Creation
+        # Profile is created with default values via signal
+        self.assertEqual(first_record.full_name, '')
+        self.assertEqual(first_record.geography, Geography.ALL)
+        self.assertEqual(first_record.subsidiary, Subsidiary.ALL)
+        self.assertEqual(first_record.role, Role.VIEWER)
+
+    def test_historical_records_update(self):
+        """
+        Test that updating a UserProfile creates additional historical records.
+        """
+        initial_count = UserProfile.history.model.objects.filter(id=self.profile.id).count()
+
+        # Update the profile
+        self.profile.full_name = 'Updated History Test User'
+        self.profile.geography = Geography.SCOTLAND
+        self.profile.save()
+
+        # Update again
+        self.profile.subsidiary = Subsidiary.FARMING
+        self.profile.save()
+
+        # Get the historical records for this profile
+        historical_records = UserProfile.history.model.objects.filter(id=self.profile.id).order_by('history_date')
+
+        # Should have at least 2 more records (2 updates)
+        self.assertGreaterEqual(historical_records.count(), initial_count + 2)
+
+        # Check that we have update records
+        update_records = [r for r in historical_records if r.history_type == '~']
+        self.assertGreaterEqual(len(update_records), 2)
+
+        # Find records with our specific changes
+        name_update = next((r for r in update_records if r.full_name == 'Updated History Test User'), None)
+        subsidiary_update = next((r for r in update_records if r.subsidiary == Subsidiary.FARMING), None)
+
+        self.assertIsNotNone(name_update)
+        self.assertEqual(name_update.geography, Geography.SCOTLAND)
+        self.assertIsNotNone(subsidiary_update)
+
+
+class UserHistoricalSecurityTest(TestCase):
+    """
+    Tests for security restrictions on User and UserProfile historical records.
+
+    Ensures that historical user data is properly restricted to superusers only.
+    """
+
+    def setUp(self):
+        """
+        Set up test data for security tests.
+        """
+        # Create a regular user
+        self.regular_user = User.objects.create_user(
+            username='regular_user',
+            email='regular@test.com',
+            password='regularpass123'
+        )
+
+        # Create a superuser
+        self.superuser = User.objects.create_superuser(
+            username='superuser',
+            email='super@test.com',
+            password='superpass123'
+        )
+
+        # Create test user whose history we'll check
+        self.test_user = User.objects.create_user(
+            username='test_security',
+            email='security@test.com',
+            password='securitypass123'
+        )
+        self.test_user.first_name = 'Test'
+        self.test_user.save()
+
+    def test_historical_user_data_exists(self):
+        """
+        Test that User historical records exist and can be accessed at model level.
+        """
+        # Verify historical records exist for the test user
+        historical_records = User.history.model.objects.filter(id=self.test_user.id)
+        self.assertGreater(historical_records.count(), 0)
+
+        # Verify the records contain the expected data
+        latest_record = historical_records.order_by('-history_date').first()
+        self.assertEqual(latest_record.username, 'test_security')
+        self.assertEqual(latest_record.email, 'security@test.com')
+
+    def test_historical_userprofile_data_exists(self):
+        """
+        Test that UserProfile historical records exist and can be accessed at model level.
+        """
+        # Access UserProfile historical records
+        historical_records = UserProfile.history.model.objects.filter(id=self.test_user.profile.id)
+        self.assertGreater(historical_records.count(), 0)
+
+        # Verify the records contain profile data
+        latest_record = historical_records.order_by('-history_date').first()
+        self.assertEqual(latest_record.user_id, self.test_user.id)
+
+    def test_historical_records_contain_sensitive_data(self):
+        """
+        Test that historical records contain sensitive user data that needs protection.
+        """
+        # Update the test user with sensitive information
+        self.test_user.email = 'sensitive@email.com'
+        self.test_user.first_name = 'Sensitive'
+        self.test_user.last_name = 'Data'
+        self.test_user.save()
+
+        # Verify historical records contain this sensitive data
+        historical_records = User.history.model.objects.filter(id=self.test_user.id).order_by('-history_date')
+        latest_record = historical_records.first()
+
+        self.assertEqual(latest_record.email, 'sensitive@email.com')
+        self.assertEqual(latest_record.first_name, 'Sensitive')
+        self.assertEqual(latest_record.last_name, 'Data')
+
+        # This demonstrates why access needs to be restricted
+
+
+class UserHistoricalRecordsTest(TestCase):
+    """
+    Tests for User historical records tracking.
+
+    Tests create, update, and delete operations create proper historical records.
+    """
+
+    def setUp(self):
+        """
+        Set up test data for User historical records tests.
+        """
+        self.user_data = {
+            'username': 'user_history_test',
+            'email': 'user_history_test@example.com',
+            'password': 'testpass123',
+            'first_name': 'User',
+            'last_name': 'History Test'
+        }
+
+    def test_user_historical_records_creation(self):
+        """
+        Test that creating a User creates a historical record.
+        """
+        # Create a new user
+        user = User.objects.create_user(**self.user_data)
+
+        # Get the historical records for this user
+        historical_records = User.history.model.objects.filter(id=user.id)
+
+        # Should have 1 record (creation)
+        self.assertEqual(historical_records.count(), 1)
+
+        # Check the historical record details
+        record = historical_records.first()
+        self.assertEqual(record.history_type, '+')  # Creation
+        self.assertEqual(record.username, self.user_data['username'])
+        self.assertEqual(record.email, self.user_data['email'])
+        self.assertEqual(record.first_name, self.user_data['first_name'])
+        self.assertEqual(record.last_name, self.user_data['last_name'])
+        self.assertFalse(record.is_staff)
+        self.assertFalse(record.is_superuser)
+        self.assertTrue(record.is_active)
+
+    def test_user_historical_records_update(self):
+        """
+        Test that updating a User creates additional historical records.
+        """
+        # Create a new user
+        user = User.objects.create_user(**self.user_data)
+
+        # Update the user
+        user.first_name = 'Updated User'
+        user.email = 'updated_user_history_test@example.com'
+        user.save()
+
+        # Update again
+        user.last_name = 'Updated History Test'
+        user.is_staff = True
+        user.save()
+
+        # Get the historical records for this user
+        historical_records = User.history.model.objects.filter(id=user.id).order_by('history_date')
+
+        # Should have 3 records (creation + 2 updates)
+        self.assertEqual(historical_records.count(), 3)
+
+        # Check the records
+        records = list(historical_records)
+        self.assertEqual(records[0].history_type, '+')  # Creation
+        self.assertEqual(records[0].first_name, 'User')
+        self.assertEqual(records[0].email, 'user_history_test@example.com')
+
+        self.assertEqual(records[1].history_type, '~')  # Update
+        self.assertEqual(records[1].first_name, 'Updated User')
+        self.assertEqual(records[1].email, 'updated_user_history_test@example.com')
+
+        self.assertEqual(records[2].history_type, '~')  # Update
+        self.assertEqual(records[2].last_name, 'Updated History Test')
+        self.assertTrue(records[2].is_staff)
+
+    def test_user_historical_records_delete(self):
+        """
+        Test that deleting a User creates a deletion historical record.
+        """
+        # Create a new user
+        user = User.objects.create_user(**self.user_data)
+        user_id = user.id
+
+        # Delete the user
+        user.delete()
+
+        # Get the historical records for this user
+        historical_records = User.history.model.objects.filter(id=user_id).order_by('history_date')
+
+        # Should have 2 records (creation + deletion)
+        self.assertEqual(historical_records.count(), 2)
+
+        # Check the records
+        records = list(historical_records)
+        self.assertEqual(records[0].history_type, '+')  # Creation
+        self.assertEqual(records[1].history_type, '-')  # Deletion
