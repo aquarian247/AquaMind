@@ -8,6 +8,7 @@ and actions related to fish batches or containers.
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import Batch
 from apps.infrastructure.models import Container
@@ -64,6 +65,8 @@ class JournalEntry(models.Model):
     class Meta:
         verbose_name_plural = "Journal Entries"
         ordering = ['-entry_date']
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """Return a string representation of the journal entry."""

@@ -7,6 +7,7 @@ This module defines models related to mortality records and lice counts.
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import Batch
 from apps.infrastructure.models import Container
@@ -57,6 +58,8 @@ class MortalityRecord(models.Model):
         ordering = ['-event_date']
         verbose_name_plural = "Mortality Records"
 
+    history = HistoricalRecords()
+
     def __str__(self):
         """Return a string representation of the mortality record."""
         return f"Mortality of {self.count} on {self.event_date.strftime('%Y-%m-%d')}"
@@ -99,6 +102,8 @@ class LiceCount(models.Model):
     class Meta:
         ordering = ['-count_date']
         verbose_name_plural = "Lice Counts"
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """Return a string representation of the lice count."""
