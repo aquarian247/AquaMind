@@ -12,6 +12,7 @@ Classes:
     - HistoryViewSetMixin: Mixin for history viewsets
 """
 
+from rest_framework import serializers
 import django_filters as filters
 from django_filters import rest_framework as rest_filters
 
@@ -90,7 +91,7 @@ class HistoryPagination:
             setattr(self._pagination_class, name, value)
 
 
-class HistorySerializer:
+class HistorySerializer(serializers.ModelSerializer):
     """
     Base serializer for history records.
 
@@ -107,34 +108,11 @@ class HistorySerializer:
                 fields = '__all__'
     """
 
-    # Define history fields directly to avoid initialization issues with Spectacular
-    history_user = None
-    history_date = None
-    history_type = None
-    history_change_reason = None
-
-    def get_fields(self):
-        """
-        Override get_fields to dynamically add history fields.
-
-        This approach is more compatible with drf-spectacular schema generation.
-        """
-        fields = super().get_fields()
-
-        # Import here to avoid Django settings requirement at module level
-        from rest_framework import serializers
-
-        # Add history fields if they don't exist
-        if 'history_user' not in fields:
-            fields['history_user'] = serializers.StringRelatedField(read_only=True)
-        if 'history_date' not in fields:
-            fields['history_date'] = serializers.DateTimeField(read_only=True)
-        if 'history_type' not in fields:
-            fields['history_type'] = serializers.CharField(read_only=True)
-        if 'history_change_reason' not in fields:
-            fields['history_change_reason'] = serializers.CharField(read_only=True)
-
-        return fields
+    # Explicitly define history fields for Spectacular compatibility
+    history_user = serializers.StringRelatedField(read_only=True, help_text="User who made the change")
+    history_date = serializers.DateTimeField(read_only=True, help_text="When the change was made")
+    history_type = serializers.CharField(read_only=True, help_text="Type of change: + (Created), ~ (Updated), - (Deleted)")
+    history_change_reason = serializers.CharField(read_only=True, required=False, help_text="Reason for the change")
 
     class Meta:
         fields = [
@@ -428,12 +406,12 @@ def fix_history_operation_ids(result, generator, request, public):
         'api_v1_batch_history_mortality_events_list': 'listBatchMortalityEventHistory',
         'api_v1_batch_history_transfers_list': 'listBatchBatchTransferHistory',
 
-        # Batch app - RETRIEVE operations (detail endpoints)
-        'api_v1_batch_history_batches_retrieve': 'retrieveBatchBatchHistory',
-        'api_v1_batch_history_container_assignments_retrieve': 'retrieveBatchContainerAssignmentHistory',
-        'api_v1_batch_history_growth_samples_retrieve': 'retrieveBatchGrowthSampleHistory',
-        'api_v1_batch_history_mortality_events_retrieve': 'retrieveBatchMortalityEventHistory',
-        'api_v1_batch_history_transfers_retrieve': 'retrieveBatchBatchTransferHistory',
+        # Batch app - RETRIEVE operations (detail endpoints) - Fixed collision issue
+        'api_v1_batch_history_batches_retrieve': 'retrieveBatchBatchHistoryDetail',
+        'api_v1_batch_history_container_assignments_retrieve': 'retrieveBatchContainerAssignmentHistoryDetail',
+        'api_v1_batch_history_growth_samples_retrieve': 'retrieveBatchGrowthSampleHistoryDetail',
+        'api_v1_batch_history_mortality_events_retrieve': 'retrieveBatchMortalityEventHistoryDetail',
+        'api_v1_batch_history_transfers_retrieve': 'retrieveBatchBatchTransferHistoryDetail',
 
         # Broodstock app - LIST operations
         'api_v1_broodstock_history_batch_parentages_list': 'listBroodstockBatchParentageHistory',
@@ -443,11 +421,11 @@ def fix_history_operation_ids(result, generator, request, public):
         'api_v1_broodstock_history_fish_list': 'listBroodstockBroodstockFishHistory',
 
         # Broodstock app - RETRIEVE operations
-        'api_v1_broodstock_history_batch_parentages_retrieve': 'retrieveBroodstockBatchParentageHistory',
-        'api_v1_broodstock_history_breeding_pairs_retrieve': 'retrieveBroodstockBreedingPairHistory',
-        'api_v1_broodstock_history_egg_productions_retrieve': 'retrieveBroodstockEggProductionHistory',
-        'api_v1_broodstock_history_fish_movements_retrieve': 'retrieveBroodstockFishMovementHistory',
-        'api_v1_broodstock_history_fish_retrieve': 'retrieveBroodstockBroodstockFishHistory',
+        'api_v1_broodstock_history_batch_parentages_retrieve': 'retrieveBroodstockBatchParentageHistoryDetail',
+        'api_v1_broodstock_history_breeding_pairs_retrieve': 'retrieveBroodstockBreedingPairHistoryDetail',
+        'api_v1_broodstock_history_egg_productions_retrieve': 'retrieveBroodstockEggProductionHistoryDetail',
+        'api_v1_broodstock_history_fish_movements_retrieve': 'retrieveBroodstockFishMovementHistoryDetail',
+        'api_v1_broodstock_history_fish_retrieve': 'retrieveBroodstockBroodstockFishHistoryDetail',
 
         # Health app - LIST operations
         'api_v1_health_history_health_lab_samples_list': 'listHealthHealthLabSampleHistory',
@@ -457,11 +435,11 @@ def fix_history_operation_ids(result, generator, request, public):
         'api_v1_health_history_treatments_list': 'listHealthTreatmentHistory',
 
         # Health app - RETRIEVE operations
-        'api_v1_health_history_health_lab_samples_retrieve': 'retrieveHealthHealthLabSampleHistory',
-        'api_v1_health_history_journal_entries_retrieve': 'retrieveHealthJournalEntryHistory',
-        'api_v1_health_history_lice_counts_retrieve': 'retrieveHealthLiceCountHistory',
-        'api_v1_health_history_mortality_records_retrieve': 'retrieveHealthMortalityRecordHistory',
-        'api_v1_health_history_treatments_retrieve': 'retrieveHealthTreatmentHistory',
+        'api_v1_health_history_health_lab_samples_retrieve': 'retrieveHealthHealthLabSampleHistoryDetail',
+        'api_v1_health_history_journal_entries_retrieve': 'retrieveHealthJournalEntryHistoryDetail',
+        'api_v1_health_history_lice_counts_retrieve': 'retrieveHealthLiceCountHistoryDetail',
+        'api_v1_health_history_mortality_records_retrieve': 'retrieveHealthMortalityRecordHistoryDetail',
+        'api_v1_health_history_treatments_retrieve': 'retrieveHealthTreatmentHistoryDetail',
 
         # Infrastructure app - LIST operations
         'api_v1_infrastructure_history_areas_list': 'listInfrastructureAreaHistory',
@@ -474,22 +452,22 @@ def fix_history_operation_ids(result, generator, request, public):
         'api_v1_infrastructure_history_sensors_list': 'listInfrastructureSensorHistory',
 
         # Infrastructure app - RETRIEVE operations
-        'api_v1_infrastructure_history_areas_retrieve': 'retrieveInfrastructureAreaHistory',
-        'api_v1_infrastructure_history_container_types_retrieve': 'retrieveInfrastructureContainerTypeHistory',
-        'api_v1_infrastructure_history_containers_retrieve': 'retrieveInfrastructureContainerHistory',
-        'api_v1_infrastructure_history_feed_containers_retrieve': 'retrieveInfrastructureFeedContainerHistory',
-        'api_v1_infrastructure_history_freshwater_stations_retrieve': 'retrieveInfrastructureFreshwaterStationHistory',
-        'api_v1_infrastructure_history_geographies_retrieve': 'retrieveInfrastructureGeographyHistory',
-        'api_v1_infrastructure_history_halls_retrieve': 'retrieveInfrastructureHallHistory',
-        'api_v1_infrastructure_history_sensors_retrieve': 'retrieveInfrastructureSensorHistory',
+        'api_v1_infrastructure_history_areas_retrieve': 'retrieveInfrastructureAreaHistoryDetail',
+        'api_v1_infrastructure_history_container_types_retrieve': 'retrieveInfrastructureContainerTypeHistoryDetail',
+        'api_v1_infrastructure_history_containers_retrieve': 'retrieveInfrastructureContainerHistoryDetail',
+        'api_v1_infrastructure_history_feed_containers_retrieve': 'retrieveInfrastructureFeedContainerHistoryDetail',
+        'api_v1_infrastructure_history_freshwater_stations_retrieve': 'retrieveInfrastructureFreshwaterStationHistoryDetail',
+        'api_v1_infrastructure_history_geographies_retrieve': 'retrieveInfrastructureGeographyHistoryDetail',
+        'api_v1_infrastructure_history_halls_retrieve': 'retrieveInfrastructureHallHistoryDetail',
+        'api_v1_infrastructure_history_sensors_retrieve': 'retrieveInfrastructureSensorHistoryDetail',
 
         # Inventory app - LIST operations
         'api_v1_inventory_history_feed_stocks_list': 'listInventoryFeedStockHistory',
         'api_v1_inventory_history_feeding_events_list': 'listInventoryFeedingEventHistory',
 
         # Inventory app - RETRIEVE operations
-        'api_v1_inventory_history_feed_stocks_retrieve': 'retrieveInventoryFeedStockHistory',
-        'api_v1_inventory_history_feeding_events_retrieve': 'retrieveInventoryFeedingEventHistory',
+        'api_v1_inventory_history_feed_stocks_retrieve': 'retrieveInventoryFeedStockHistoryDetail',
+        'api_v1_inventory_history_feeding_events_retrieve': 'retrieveInventoryFeedingEventHistoryDetail',
 
         # Scenario app - LIST operations
         'api_v1_scenario_history_fcr_models_list': 'listScenarioFCRModelHistory',
@@ -499,17 +477,17 @@ def fix_history_operation_ids(result, generator, request, public):
         'api_v1_scenario_history_tgc_models_list': 'listScenarioTGCModelHistory',
 
         # Scenario app - RETRIEVE operations
-        'api_v1_scenario_history_fcr_models_retrieve': 'retrieveScenarioFCRModelHistory',
-        'api_v1_scenario_history_mortality_models_retrieve': 'retrieveScenarioMortalityModelHistory',
-        'api_v1_scenario_history_scenario_model_changes_retrieve': 'retrieveScenarioScenarioModelChangeHistory',
-        'api_v1_scenario_history_scenarios_retrieve': 'retrieveScenarioScenarioHistory',
-        'api_v1_scenario_history_tgc_models_retrieve': 'retrieveScenarioTGCModelHistory',
+        'api_v1_scenario_history_fcr_models_retrieve': 'retrieveScenarioFCRModelHistoryDetail',
+        'api_v1_scenario_history_mortality_models_retrieve': 'retrieveScenarioMortalityModelHistoryDetail',
+        'api_v1_scenario_history_scenario_model_changes_retrieve': 'retrieveScenarioScenarioModelChangeHistoryDetail',
+        'api_v1_scenario_history_scenarios_retrieve': 'retrieveScenarioScenarioHistoryDetail',
+        'api_v1_scenario_history_tgc_models_retrieve': 'retrieveScenarioTGCModelHistoryDetail',
 
         # Users app - LIST operations
         'api_v1_users_history_user_profiles_list': 'listUsersUserProfileHistory',
 
         # Users app - RETRIEVE operations
-        'api_v1_users_history_user_profiles_retrieve': 'retrieveUsersUserProfileHistory',
+        'api_v1_users_history_user_profiles_retrieve': 'retrieveUsersUserProfileHistoryDetail',
     }
 
     # Count changes made
