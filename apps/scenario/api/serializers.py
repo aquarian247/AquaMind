@@ -15,14 +15,14 @@ import csv
 from datetime import datetime, date
 from typing import Dict, Any, Optional, List  # added for explicit return typing
 
-from ..models import (
+from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
     FCRModelStage, MortalityModel, Scenario, ScenarioModelChange,
     ScenarioProjection, BiologicalConstraints, StageConstraint,
     TGCModelStage, FCRModelStageOverride, MortalityModelStage,
     LifecycleStageChoices
 )
-from ..services import BulkDataImportService, DateRangeInputService
+from apps.scenario.services import BulkDataImportService, DateRangeInputService
 from apps.batch.models import LifeCycleStage
 
 

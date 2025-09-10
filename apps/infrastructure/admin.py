@@ -48,10 +48,11 @@ from .models import (
 
 
 @admin.register(Geography)
-class GeographyAdmin(admin.ModelAdmin):
+class GeographyAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description', 'created_at', 'updated_at')
     search_fields = ('name', 'description')
     list_filter = ('created_at',)
+    readonly_fields = ('created_at', 'updated_at')
 
 
 class AreaAdminForm(forms.ModelForm):
@@ -71,7 +72,7 @@ class AreaAdminForm(forms.ModelForm):
         )
 
 @admin.register(Area)
-class AreaAdmin(admin.ModelAdmin):
+class AreaAdmin(SimpleHistoryAdmin):
     form = AreaAdminForm
     list_display = ('name', 'geography', 'latitude_display', 'longitude_display', 'max_biomass_display', 'active')
     
@@ -121,7 +122,7 @@ class FreshwaterStationAdminForm(forms.ModelForm):
         )
 
 @admin.register(FreshwaterStation)
-class FreshwaterStationAdmin(admin.ModelAdmin):
+class FreshwaterStationAdmin(SimpleHistoryAdmin):
     form = FreshwaterStationAdminForm
     list_display = ('name', 'station_type', 'geography', 'latitude_display', 'longitude_display', 'active')
     
@@ -151,7 +152,7 @@ class FreshwaterStationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Hall)
-class HallAdmin(admin.ModelAdmin):
+class HallAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'freshwater_station', 'area_sqm_display', 'active')
     
     def area_sqm_display(self, obj):
@@ -162,7 +163,7 @@ class HallAdmin(admin.ModelAdmin):
 
 
 @admin.register(ContainerType)
-class ContainerTypeAdmin(admin.ModelAdmin):
+class ContainerTypeAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'category', 'max_volume_m3_display')
     
     def max_volume_m3_display(self, obj):
@@ -192,15 +193,16 @@ class ContainerAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(Sensor)
-class SensorAdmin(admin.ModelAdmin):
+class SensorAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'sensor_type', 'container', 'installation_date', 'active')
     list_filter = ('sensor_type', 'active', 'installation_date')
     search_fields = ('name', 'serial_number', 'manufacturer')
     date_hierarchy = 'installation_date'
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(FeedContainer)
-class FeedContainerAdmin(admin.ModelAdmin):
+class FeedContainerAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'container_type', 'get_location', 'capacity_kg_display', 'active')
     
     def capacity_kg_display(self, obj):

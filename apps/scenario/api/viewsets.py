@@ -16,21 +16,38 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-from ..models import (
+from apps.scenario.models import (
     TemperatureProfile, TGCModel, FCRModel, MortalityModel,
     Scenario, ScenarioProjection, BiologicalConstraints,
     ScenarioModelChange
 )
-from ..services import BulkDataImportService, DateRangeInputService
-from ..services.calculations import ProjectionEngine
-from .serializers import (
-    TemperatureProfileSerializer, TGCModelSerializer, FCRModelSerializer,
-    MortalityModelSerializer, ScenarioSerializer, ScenarioProjectionSerializer,
-    CSVUploadSerializer, BulkDateRangeSerializer, DataValidationResultSerializer,
-    CSVTemplateRequestSerializer, ProjectionChartSerializer,
-    ScenarioComparisonSerializer, ScenarioDuplicateSerializer,
-    BatchInitializationSerializer, BiologicalConstraintsSerializer
-)
+from apps.scenario.services import BulkDataImportService, DateRangeInputService
+from apps.scenario.services.calculations import ProjectionEngine
+# Import serializers directly from the serializers.py file
+import importlib.util
+import os
+
+# Load the serializers.py file directly
+serializers_path = os.path.join(os.path.dirname(__file__), 'serializers.py')
+spec = importlib.util.spec_from_file_location("serializers_module", serializers_path)
+serializers_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(serializers_module)
+
+TemperatureProfileSerializer = serializers_module.TemperatureProfileSerializer
+TGCModelSerializer = serializers_module.TGCModelSerializer
+FCRModelSerializer = serializers_module.FCRModelSerializer
+MortalityModelSerializer = serializers_module.MortalityModelSerializer
+ScenarioSerializer = serializers_module.ScenarioSerializer
+ScenarioProjectionSerializer = serializers_module.ScenarioProjectionSerializer
+CSVUploadSerializer = serializers_module.CSVUploadSerializer
+BulkDateRangeSerializer = serializers_module.BulkDateRangeSerializer
+DataValidationResultSerializer = serializers_module.DataValidationResultSerializer
+CSVTemplateRequestSerializer = serializers_module.CSVTemplateRequestSerializer
+ProjectionChartSerializer = serializers_module.ProjectionChartSerializer
+ScenarioComparisonSerializer = serializers_module.ScenarioComparisonSerializer
+ScenarioDuplicateSerializer = serializers_module.ScenarioDuplicateSerializer
+BatchInitializationSerializer = serializers_module.BatchInitializationSerializer
+BiologicalConstraintsSerializer = serializers_module.BiologicalConstraintsSerializer
 
 
 class TemperatureProfileViewSet(viewsets.ModelViewSet):

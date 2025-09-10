@@ -20,10 +20,12 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import UserViewSet, CustomTokenObtainPairView, UserProfileView
+from .api.viewsets.history import UserProfileHistoryViewSet
 
 # Create a router for ViewSets
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
+router.register(r'history/user-profiles', UserProfileHistoryViewSet, basename='user-profile-history')
 
 urlpatterns = [
     # ------------------------------------------------------------------ #

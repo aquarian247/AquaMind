@@ -1,7 +1,8 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 from apps.inventory.models import (
-    Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary
+    Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary,
+    ContainerFeedingSummary, FeedContainerStock
 )
 
 
@@ -20,7 +21,7 @@ class FeedAdmin(admin.ModelAdmin):
 
 
 @admin.register(FeedPurchase)
-class FeedPurchaseAdmin(admin.ModelAdmin):
+class FeedPurchaseAdmin(SimpleHistoryAdmin):
     list_display = [
         'feed', 'quantity_kg', 'cost_per_kg', 
         'supplier', 'purchase_date', 'expiry_date'
@@ -48,7 +49,7 @@ class FeedStockAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(FeedingEvent)
-class FeedingEventAdmin(admin.ModelAdmin):
+class FeedingEventAdmin(SimpleHistoryAdmin):
     list_display = [
         'batch', 'feed', 'feeding_date', 'feeding_time', 'amount_kg', 'method'
     ]
@@ -61,7 +62,7 @@ class FeedingEventAdmin(admin.ModelAdmin):
 
 
 @admin.register(BatchFeedingSummary)
-class BatchFeedingSummaryAdmin(admin.ModelAdmin):
+class BatchFeedingSummaryAdmin(SimpleHistoryAdmin):
     list_display = [
         'batch', 'period_start', 'period_end', 'total_feed_kg',
         'fcr', 'average_feeding_percentage'
@@ -70,3 +71,27 @@ class BatchFeedingSummaryAdmin(admin.ModelAdmin):
         'batch', 'period_start', 'period_end'
     ]
     search_fields = ['batch__name']
+
+
+@admin.register(ContainerFeedingSummary)
+class ContainerFeedingSummaryAdmin(SimpleHistoryAdmin):
+    list_display = [
+        'container', 'period_start', 'period_end', 'total_feed_kg',
+        'fcr', 'feeding_efficiency'
+    ]
+    list_filter = [
+        'container', 'period_start', 'period_end'
+    ]
+    search_fields = ['container__name']
+
+
+@admin.register(FeedContainerStock)
+class FeedContainerStockAdmin(SimpleHistoryAdmin):
+    list_display = [
+        'feed_container', 'feed', 'current_quantity_kg',
+        'last_updated', 'updated_by'
+    ]
+    list_filter = [
+        'feed_container', 'feed', 'last_updated'
+    ]
+    search_fields = ['feed_container__name', 'feed__name']

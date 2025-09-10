@@ -17,7 +17,7 @@ from apps.broodstock.models import (
 
 
 @admin.register(MaintenanceTask)
-class MaintenanceTaskAdmin(admin.ModelAdmin):
+class MaintenanceTaskAdmin(SimpleHistoryAdmin):
     """Admin configuration for MaintenanceTask model."""
     
     list_display = [
@@ -120,7 +120,7 @@ class BreedingTraitPriorityInline(admin.TabularInline):
 
 
 @admin.register(BreedingPlan)
-class BreedingPlanAdmin(admin.ModelAdmin):
+class BreedingPlanAdmin(SimpleHistoryAdmin):
     """Admin configuration for BreedingPlan model."""
     
     list_display = [
@@ -187,7 +187,7 @@ class BreedingPairAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(EggSupplier)
-class EggSupplierAdmin(admin.ModelAdmin):
+class EggSupplierAdmin(SimpleHistoryAdmin):
     """Admin configuration for EggSupplier model."""
     
     list_display = ['name', 'created_at']
@@ -275,5 +275,26 @@ class BatchParentageAdmin(SimpleHistoryAdmin):
     egg_source_type_display.short_description = 'Egg Source Type'
 
 
-# Register the ExternalEggBatch model separately (not shown in list view)
-admin.site.register(ExternalEggBatch)
+# Register the ExternalEggBatch model with SimpleHistoryAdmin
+@admin.register(ExternalEggBatch)
+class ExternalEggBatchAdmin(SimpleHistoryAdmin):
+    """Admin configuration for ExternalEggBatch model with history tracking."""
+
+    list_display = ['supplier', 'batch_number', 'egg_production', 'created_at']
+    list_filter = ['supplier', 'created_at']
+    search_fields = ['batch_number', 'provenance_data']
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('Batch Information', {
+            'fields': ('supplier', 'batch_number', 'egg_production')
+        }),
+        ('Provenance', {
+            'fields': ('provenance_data',),
+            'classes': ('wide',)
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )

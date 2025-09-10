@@ -4,6 +4,7 @@ MortalityEvent model for the batch app.
 This model records mortality events within a batch, including count, cause, and description.
 """
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class MortalityEvent(models.Model):
@@ -30,7 +31,10 @@ class MortalityEvent(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    # Add history tracking
+    history = HistoricalRecords()
+
     class Meta:
         verbose_name_plural = "Mortality events"
     

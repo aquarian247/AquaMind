@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from simple_history.admin import SimpleHistoryAdmin
 from .models import UserProfile
 
 
@@ -30,7 +31,7 @@ class CustomUserAdmin(BaseUserAdmin):
 
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
+class UserProfileAdmin(SimpleHistoryAdmin):
     """
     Admin interface for the UserProfile model.
     

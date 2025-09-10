@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from .models import (
     JournalEntry, MortalityReason, LiceCount, MortalityRecord, Treatment,
@@ -15,7 +16,7 @@ from apps.batch.models import BatchContainerAssignment # Correct import
 from django import forms
 
 @admin.register(JournalEntry)
-class JournalEntryAdmin(admin.ModelAdmin):
+class JournalEntryAdmin(SimpleHistoryAdmin):
     list_display = ('entry_date', 'batch', 'container', 'category', 'severity', 'user', 'resolution_status', 'created_at')
     list_filter = ('category', 'severity', 'entry_date', 'batch', 'container', 'resolution_status')
     search_fields = ('description', 'resolution_notes', 'batch__batch_name', 'container__name', 'user__username')
@@ -36,44 +37,44 @@ class JournalEntryAdmin(admin.ModelAdmin):
     )
 
 @admin.register(MortalityReason)
-class MortalityReasonAdmin(admin.ModelAdmin):
+class MortalityReasonAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description')
     search_fields = ('reason', 'description')
 
 @admin.register(LiceCount)
-class LiceCountAdmin(admin.ModelAdmin):
+class LiceCountAdmin(SimpleHistoryAdmin):
     list_display = ('batch', 'container', 'count_date', 'average_per_fish', 'notes')
     list_filter = ('count_date',)
     search_fields = ('notes', 'batch__batch_number', 'container__name')
     autocomplete_fields = ['batch', 'container', 'user']
 
 @admin.register(MortalityRecord)
-class MortalityRecordAdmin(admin.ModelAdmin):
+class MortalityRecordAdmin(SimpleHistoryAdmin):
     list_display = ('batch', 'container', 'event_date', 'count', 'reason', 'notes')
     list_filter = ('event_date', 'reason')
     search_fields = ('notes', 'batch__batch_number', 'container__name', 'reason__reason')
     autocomplete_fields = ['batch', 'container', 'reason']
 
 @admin.register(Treatment)
-class TreatmentAdmin(admin.ModelAdmin):
+class TreatmentAdmin(SimpleHistoryAdmin):
     list_display = ('batch', 'container', 'treatment_date', 'treatment_type', 'description', 'dosage', 'outcome')
     list_filter = ('treatment_date', 'treatment_type')
     search_fields = ('treatment_type', 'description', 'dosage', 'outcome', 'batch__batch_number', 'container__name')
     autocomplete_fields = ['batch', 'container', 'vaccination_type']
 
 @admin.register(VaccinationType)
-class VaccinationTypeAdmin(admin.ModelAdmin):
+class VaccinationTypeAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
 
 @admin.register(SampleType)
-class SampleTypeAdmin(admin.ModelAdmin):
+class SampleTypeAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
 
 # Register HealthParameter
 @admin.register(HealthParameter)
-class HealthParameterAdmin(admin.ModelAdmin):
+class HealthParameterAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'is_active', 'updated_at')
     list_filter = ('is_active',)
     search_fields = ('name', 'description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
@@ -99,7 +100,7 @@ class FishParameterScoreInline(admin.TabularInline):
     autocomplete_fields = ['parameter']
 
 @admin.register(HealthSamplingEvent)
-class HealthSamplingEventAdmin(admin.ModelAdmin):
+class HealthSamplingEventAdmin(SimpleHistoryAdmin):
     list_display = ('sampling_date', 'assignment', 'number_of_fish_sampled', 'calculated_sample_size', 'avg_weight_g', 'avg_length_cm', 'avg_k_factor', 'sampled_by')
     list_filter = ('sampling_date', 'assignment__batch', 'assignment__container')
     search_fields = ('assignment__batch__batch_number', 'assignment__container__name', 'notes')
@@ -138,7 +139,7 @@ class HealthSamplingEventAdmin(admin.ModelAdmin):
         obj.calculate_aggregate_metrics() # This method now saves the instance
 
 @admin.register(IndividualFishObservation)
-class IndividualFishObservationAdmin(admin.ModelAdmin):
+class IndividualFishObservationAdmin(SimpleHistoryAdmin):
     list_display = ('sampling_event', 'fish_identifier', 'length_cm', 'weight_g')
     list_filter = (
         'sampling_event__sampling_date',
@@ -151,7 +152,7 @@ class IndividualFishObservationAdmin(admin.ModelAdmin):
     inlines = [FishParameterScoreInline]
 
 @admin.register(FishParameterScore)
-class FishParameterScoreAdmin(admin.ModelAdmin):
+class FishParameterScoreAdmin(SimpleHistoryAdmin):
     list_display = ('individual_fish_observation', 'parameter', 'score')
     list_filter = ('parameter', 'score', 'individual_fish_observation__sampling_event__sampling_date')
     search_fields = ('individual_fish_observation__fish_identifier', 'parameter__name')
@@ -216,7 +217,7 @@ class HealthLabSampleForm(forms.ModelForm):
         return cleaned_data
 
 @admin.register(HealthLabSample)
-class HealthLabSampleAdmin(admin.ModelAdmin):
+class HealthLabSampleAdmin(SimpleHistoryAdmin):
     form = HealthLabSampleForm
 
     class Media:
