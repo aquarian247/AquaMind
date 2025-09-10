@@ -7,6 +7,7 @@ stations with geo-positioning for early lifecycle stages.
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models.geography import Geography
 
@@ -39,6 +40,11 @@ class FreshwaterStation(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    class Meta:
+        ordering = ['name']
+
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.name} ({self.get_station_type_display()})"

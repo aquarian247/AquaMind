@@ -6,6 +6,7 @@ used in aquaculture operations.
 """
 
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class ContainerType(models.Model):
@@ -26,6 +27,11 @@ class ContainerType(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    class Meta:
+        ordering = ['name']
+
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.name} ({self.get_category_display()})"

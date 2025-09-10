@@ -7,6 +7,7 @@ linked to areas or halls.
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.area import Area
@@ -40,12 +41,15 @@ class FeedContainer(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    models.Q(hall__isnull=False, area__isnull=True) | 
+                    models.Q(hall__isnull=False, area__isnull=True) |
                     models.Q(hall__isnull=True, area__isnull=False)
                 ),
                 name="feed_container_in_either_hall_or_area"
             )
         ]
+        ordering = ['name']
+
+    history = HistoricalRecords()
     
     def clean(self):
         """Validate the feed container model.

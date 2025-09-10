@@ -6,6 +6,7 @@ such as Faroe Islands or Scotland.
 """
 
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class Geography(models.Model):
@@ -21,6 +22,8 @@ class Geography(models.Model):
     class Meta:
         verbose_name_plural = "Geographies"
         ordering = ['name']
+
+    history = HistoricalRecords()
     
     def __str__(self):
         return self.name
