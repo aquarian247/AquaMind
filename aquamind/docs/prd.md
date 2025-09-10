@@ -509,6 +509,43 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 - *Reliability:* Ensure mobile sync preserves data integrity; sensor failures trigger fallback manual entry with logs.  
 - *Traceability:* Guarantee immutable lineage links and audit trails, meeting regulatory standards for both egg sources.
 
+#### 3.1.9 Audit Trail & CUD Logging (Core)
+- **Purpose**: Provide complete, reliable insight into Create/Update/Delete (CUD) operations across core domains for compliance, traceability, and operational review.  
+
+- **Functionality**:  
+  - The system **shall standardize on `django-simple-history`** for model-level auditing.  
+  - All meaningful business entities **shall be tracked** (non-exhaustive list):  
+    - **Batch**: `BatchTransfer`, `BatchContainerAssignment`, `GrowthSample`, `MortalityEvent`  
+    - **Inventory**: `FeedingEvent`  
+    - **Health**: `JournalEntry`, `HealthLabSample`, `MortalityRecord`, `LiceCount`, `Treatment`  
+    - **Infrastructure**: `Geography`, `Area`, `FreshwaterStation`, `Hall`, `ContainerType`, `Sensor`, `FeedContainer`  
+    - **Users**: `UserProfile`; additionally register Django `auth.User` for history  
+  - Historical rows shall capture `history_type` (+ / ~ / –), `history_date`, `history_user`, and `history_change_reason`.  
+  - Change reasons SHALL be recorded in the API layer on create/update/delete (e.g., “created via API by &lt;user&gt;”).  
+  - Admin users access histories via Django Admin; optionally expose **read-only** history endpoints for selected models (Batch, Assignment, Transfer, FeedingEvent) with pagination & filters.  
+
+- **Non-Functional / Out of Scope**:  
+  - High-frequency environmental hypertables (`environmental_environmentalreading`, `environmental_weatherdata`) are **excluded** from audit expansion.  
+
+- **Behavior**:  
+  - On every CUD action for tracked models, a historical row is written with the acting user (`history_user`) and—when invoked via API—a human-readable change reason.  
+  - Deletions are represented as historical rows with `history_type='-'`; if soft-delete is introduced later, a `deleted_at` / `deleted_by` approach can be evaluated separately.  
+
+- **Data Model & Attribution Decisions**:  
+  - The authoritative source for *who did what* is the audit history (`history_user_id` on historical tables).  
+  - **Do NOT** add global `created_by` / `updated_by` / `deleted_by` columns to core tables to avoid duplication and drift.  
+  - Keep existing domain-specific author fields (e.g., `recorded_by`) where they carry business meaning or already exist.  
+
+- **Acceptance Criteria**:  
+  1. 100 % of the above scoped models produce historical rows for each CUD event with the correct `history_user`.  
+  2. Change reasons are present for API-driven CUD actions.  
+  3. Migrations (and any required history backfill) are executed; admin history views are enabled for scoped models.  
+  4. Automated tests verify history creation, user attribution, and—where implemented—API history filters & permissions.  
+
+- **References**:  
+  - `docs/progress/AUDIT_TRAIL_ASSESSMENT.md` (current coverage & gaps)  
+  - `docs/progress/AUDIT_TRAIL_IMPLEMENTATION_PLAN.md` (phased plan)  
+
 ### 3.2 Phase 2: Operational Planning and Compliance
 
 #### 3.2.1 Operational Planning

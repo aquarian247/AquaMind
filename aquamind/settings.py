@@ -206,7 +206,7 @@ REST_FRAMEWORK = {
         # NOTE:
         # ------------------------------------------------------------------
         # SessionAuthentication is removed for API endpoints to ensure that
-        # contract-testing tools (e.g., Schemathesis) cannot fall back to a
+        # contract-testing tools cannot fall back to a
         # valid Django session cookie when an invalid / missing token is sent.
         # This prevents false-positive "ignored_auth" failures where requests
         # accidentally succeed with HTTP 200 instead of the expected 401/403.
@@ -282,7 +282,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     # Apply tokenAuth (DRF TokenAuthentication) as a global requirement so that
     # every operation in the generated OpenAPI spec explicitly requires
-    # authentication.  This ensures contract-test tools like Schemathesis send
+    # authentication.  This ensures contract-test tools send
     # the correct header by default and highlights any endpoint that is
     # intentionally anonymous (which would need an explicit override).
     #
@@ -296,7 +296,7 @@ SPECTACULAR_SETTINGS = {
     # 1.  ensure_global_security
     #     Guarantees a top-level ``security`` block is present even when
     #     drf-spectacular omits it (e.g., if any view forgets to declare
-    #     authentication).  This keeps tools like Schemathesis from sending
+    #     authentication).  This keeps tools from sending
     #     anonymous requests by default.
     #
     # 2.  cleanup_duplicate_security
