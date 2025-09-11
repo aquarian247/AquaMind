@@ -8,6 +8,7 @@ and health lab samples.
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import BatchContainerAssignment
 
@@ -90,6 +91,8 @@ class HealthLabSample(models.Model):
         ordering = ['-sample_date', '-created_at']
         verbose_name = "Health Lab Sample"
         verbose_name_plural = "Health Lab Samples"
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """Return a string representation of the health lab sample."""

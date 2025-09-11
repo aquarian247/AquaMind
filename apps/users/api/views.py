@@ -11,7 +11,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.types import OpenApiTypes
 
 # Local serializers for request / response documentation
-from .serializers import AuthTokenSerializer, AuthTokenResponseSerializer
+from apps.users.api.serializers import AuthTokenSerializer, AuthTokenResponseSerializer
 
 # --------------------------------------------------------------------------- #
 # Authentication Views                                                       #

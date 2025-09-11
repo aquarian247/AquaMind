@@ -6,6 +6,7 @@ containers for monitoring environmental conditions.
 """
 
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models.container import Container
 
@@ -33,6 +34,11 @@ class Sensor(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    class Meta:
+        ordering = ['name']
+
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.name} ({self.get_sensor_type_display()} in {self.container.name})"

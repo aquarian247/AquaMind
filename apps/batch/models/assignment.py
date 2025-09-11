@@ -8,6 +8,7 @@ multiple containers simultaneously.
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models.species import LifeCycleStage
 from apps.infrastructure.models import Container
@@ -54,6 +55,9 @@ class BatchContainerAssignment(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Add history tracking
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['-assignment_date']

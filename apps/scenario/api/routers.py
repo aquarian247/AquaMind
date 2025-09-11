@@ -5,10 +5,29 @@ Registers all viewsets and defines URL patterns for the API endpoints.
 """
 from rest_framework import routers
 
+# Import main viewsets directly from the viewsets.py file
+import importlib.util
+import os
+
+# Load the viewsets.py file directly
+viewsets_path = os.path.join(os.path.dirname(__file__), 'viewsets.py')
+spec = importlib.util.spec_from_file_location("viewsets_module", viewsets_path)
+viewsets_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(viewsets_module)
+
+TemperatureProfileViewSet = viewsets_module.TemperatureProfileViewSet
+TGCModelViewSet = viewsets_module.TGCModelViewSet
+FCRModelViewSet = viewsets_module.FCRModelViewSet
+MortalityModelViewSet = viewsets_module.MortalityModelViewSet
+ScenarioViewSet = viewsets_module.ScenarioViewSet
+DataEntryViewSet = viewsets_module.DataEntryViewSet
+BiologicalConstraintsViewSet = viewsets_module.BiologicalConstraintsViewSet
 from .viewsets import (
-    TemperatureProfileViewSet, TGCModelViewSet, FCRModelViewSet,
-    MortalityModelViewSet, ScenarioViewSet, DataEntryViewSet,
-    BiologicalConstraintsViewSet
+    TGCModelHistoryViewSet,
+    FCRModelHistoryViewSet,
+    MortalityModelHistoryViewSet,
+    ScenarioHistoryViewSet,
+    ScenarioModelChangeHistoryViewSet
 )
 
 # Create router
@@ -22,6 +41,13 @@ router.register(r'mortality-models', MortalityModelViewSet, basename='mortality-
 router.register(r'biological-constraints', BiologicalConstraintsViewSet, basename='biological-constraints')
 router.register(r'scenarios', ScenarioViewSet, basename='scenario')
 router.register(r'data-entry', DataEntryViewSet, basename='data-entry')
+
+# Register history endpoints
+router.register(r'history/tgc-models', TGCModelHistoryViewSet, basename='tgc-model-history')
+router.register(r'history/fcr-models', FCRModelHistoryViewSet, basename='fcr-model-history')
+router.register(r'history/mortality-models', MortalityModelHistoryViewSet, basename='mortality-model-history')
+router.register(r'history/scenarios', ScenarioHistoryViewSet, basename='scenario-history')
+router.register(r'history/scenario-model-changes', ScenarioModelChangeHistoryViewSet, basename='scenario-model-change-history')
 
 # The router will generate the following URL patterns:
 # 

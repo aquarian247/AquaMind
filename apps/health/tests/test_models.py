@@ -576,3 +576,271 @@ class HealthModelsTestCase(TestCase):
         )
         expected_str_no_ref = f"Sample {lab_sample_no_ref.id} for Batch {self.batch.batch_number} in Container {self.container.name} on {lab_sample_no_ref.sample_date}"
         self.assertEqual(str(lab_sample_no_ref), expected_str_no_ref)
+
+    # ===== HISTORICAL RECORDS TESTS =====
+
+    def test_journal_entry_historical_records_creation(self):
+        """Test that JournalEntry creates proper historical records on creation."""
+        entry = JournalEntry.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            category='observation',
+            severity='low',
+            description='Fish appear healthy.'
+        )
+        historical_records = JournalEntry.history.model.objects.filter(id=entry.id)
+        self.assertEqual(historical_records.count(), 1)
+        record = historical_records.first()
+        self.assertEqual(record.history_type, '+')  # Create record
+
+    def test_journal_entry_historical_records_update(self):
+        """Test that JournalEntry creates proper historical records on update."""
+        entry = JournalEntry.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            category='observation',
+            severity='low',
+            description='Fish appear healthy.'
+        )
+        # Update the entry
+        entry.description = 'Fish appear very healthy.'
+        entry.save()
+
+        historical_records = JournalEntry.history.model.objects.filter(id=entry.id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '~')  # Update record
+
+    def test_journal_entry_historical_records_delete(self):
+        """Test that JournalEntry creates proper historical records on deletion."""
+        entry = JournalEntry.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            category='observation',
+            severity='low',
+            description='Fish appear healthy.'
+        )
+        entry_id = entry.id
+        entry.delete()
+
+        historical_records = JournalEntry.history.model.objects.filter(id=entry_id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '-')  # Delete record
+
+    def test_health_lab_sample_historical_records_creation(self):
+        """Test that HealthLabSample creates proper historical records on creation."""
+        lab_sample = HealthLabSample.objects.create(
+            batch_container_assignment=self.batch_container_assignment,
+            sample_type=self.sample_type,
+            sample_date=date(2023, 5, 10),
+            lab_reference_id='LAB-TEST-001',
+            recorded_by=self.user
+        )
+        historical_records = HealthLabSample.history.model.objects.filter(id=lab_sample.id)
+        self.assertEqual(historical_records.count(), 1)
+        record = historical_records.first()
+        self.assertEqual(record.history_type, '+')  # Create record
+
+    def test_health_lab_sample_historical_records_update(self):
+        """Test that HealthLabSample creates proper historical records on update."""
+        lab_sample = HealthLabSample.objects.create(
+            batch_container_assignment=self.batch_container_assignment,
+            sample_type=self.sample_type,
+            sample_date=date(2023, 5, 10),
+            lab_reference_id='LAB-TEST-001',
+            recorded_by=self.user
+        )
+        # Update the lab sample
+        lab_sample.findings_summary = 'Updated findings.'
+        lab_sample.save()
+
+        historical_records = HealthLabSample.history.model.objects.filter(id=lab_sample.id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '~')  # Update record
+
+    def test_health_lab_sample_historical_records_delete(self):
+        """Test that HealthLabSample creates proper historical records on deletion."""
+        lab_sample = HealthLabSample.objects.create(
+            batch_container_assignment=self.batch_container_assignment,
+            sample_type=self.sample_type,
+            sample_date=date(2023, 5, 10),
+            lab_reference_id='LAB-TEST-001',
+            recorded_by=self.user
+        )
+        lab_sample_id = lab_sample.id
+        lab_sample.delete()
+
+        historical_records = HealthLabSample.history.model.objects.filter(id=lab_sample_id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '-')  # Delete record
+
+    def test_mortality_record_historical_records_creation(self):
+        """Test that MortalityRecord creates proper historical records on creation."""
+        reason = MortalityReason.objects.create(name='Test Reason')
+        record = MortalityRecord.objects.create(
+            batch=self.batch,
+            container=self.container,
+            count=10,
+            reason=reason,
+            notes='Test mortality event'
+        )
+        historical_records = MortalityRecord.history.model.objects.filter(id=record.id)
+        self.assertEqual(historical_records.count(), 1)
+        record_history = historical_records.first()
+        self.assertEqual(record_history.history_type, '+')  # Create record
+
+    def test_mortality_record_historical_records_update(self):
+        """Test that MortalityRecord creates proper historical records on update."""
+        reason = MortalityReason.objects.create(name='Test Reason')
+        record = MortalityRecord.objects.create(
+            batch=self.batch,
+            container=self.container,
+            count=10,
+            reason=reason,
+            notes='Test mortality event'
+        )
+        # Update the record
+        record.count = 15
+        record.save()
+
+        historical_records = MortalityRecord.history.model.objects.filter(id=record.id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '~')  # Update record
+
+    def test_mortality_record_historical_records_delete(self):
+        """Test that MortalityRecord creates proper historical records on deletion."""
+        reason = MortalityReason.objects.create(name='Test Reason')
+        record = MortalityRecord.objects.create(
+            batch=self.batch,
+            container=self.container,
+            count=10,
+            reason=reason,
+            notes='Test mortality event'
+        )
+        record_id = record.id
+        record.delete()
+
+        historical_records = MortalityRecord.history.model.objects.filter(id=record_id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '-')  # Delete record
+
+    def test_lice_count_historical_records_creation(self):
+        """Test that LiceCount creates proper historical records on creation."""
+        count = LiceCount.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            adult_female_count=5,
+            adult_male_count=3,
+            juvenile_count=8,
+            fish_sampled=10
+        )
+        historical_records = LiceCount.history.model.objects.filter(id=count.id)
+        self.assertEqual(historical_records.count(), 1)
+        record = historical_records.first()
+        self.assertEqual(record.history_type, '+')  # Create record
+
+    def test_lice_count_historical_records_update(self):
+        """Test that LiceCount creates proper historical records on update."""
+        count = LiceCount.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            adult_female_count=5,
+            adult_male_count=3,
+            juvenile_count=8,
+            fish_sampled=10
+        )
+        # Update the count
+        count.adult_female_count = 7
+        count.save()
+
+        historical_records = LiceCount.history.model.objects.filter(id=count.id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '~')  # Update record
+
+    def test_lice_count_historical_records_delete(self):
+        """Test that LiceCount creates proper historical records on deletion."""
+        count = LiceCount.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            adult_female_count=5,
+            adult_male_count=3,
+            juvenile_count=8,
+            fish_sampled=10
+        )
+        count_id = count.id
+        count.delete()
+
+        historical_records = LiceCount.history.model.objects.filter(id=count_id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '-')  # Delete record
+
+    def test_treatment_historical_records_creation(self):
+        """Test that Treatment creates proper historical records on creation."""
+        vtype = VaccinationType.objects.create(name='Test Vaccine')
+        treatment = Treatment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=vtype,
+            description='Test vaccination treatment',
+            dosage='0.5ml'
+        )
+        historical_records = Treatment.history.model.objects.filter(id=treatment.id)
+        self.assertEqual(historical_records.count(), 1)
+        record = historical_records.first()
+        self.assertEqual(record.history_type, '+')  # Create record
+
+    def test_treatment_historical_records_update(self):
+        """Test that Treatment creates proper historical records on update."""
+        vtype = VaccinationType.objects.create(name='Test Vaccine')
+        treatment = Treatment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=vtype,
+            description='Test vaccination treatment',
+            dosage='0.5ml'
+        )
+        # Update the treatment
+        treatment.outcome = 'successful'
+        treatment.save()
+
+        historical_records = Treatment.history.model.objects.filter(id=treatment.id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '~')  # Update record
+
+    def test_treatment_historical_records_delete(self):
+        """Test that Treatment creates proper historical records on deletion."""
+        vtype = VaccinationType.objects.create(name='Test Vaccine')
+        treatment = Treatment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=vtype,
+            description='Test vaccination treatment',
+            dosage='0.5ml'
+        )
+        treatment_id = treatment.id
+        treatment.delete()
+
+        historical_records = Treatment.history.model.objects.filter(id=treatment_id).order_by('history_date')
+        self.assertEqual(historical_records.count(), 2)
+        self.assertEqual(historical_records[0].history_type, '+')  # Create record
+        self.assertEqual(historical_records[1].history_type, '-')  # Delete record

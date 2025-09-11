@@ -20,30 +20,105 @@ This document defines the data model for AquaMind, an aquaculture management sys
 ## 3. Audit Trail Implementation
 
 ### 3.1 Django Simple History Integration
-AquaMind implements comprehensive audit trails using django-simple-history to track changes to critical models for regulatory compliance and operational transparency.
+AquaMind implements comprehensive audit trails using django-simple-history to track changes to critical models for regulatory compliance and operational transparency. The system provides complete Create/Update/Delete (CUD) logging across all major business domains.
 
-#### Tracked Models
+#### Tracked Models by App
+
+**Batch App (8 models)**
 - **`batch_batch`**: Complete change history for batch lifecycle management
-- **`infrastructure_container`**: Container modifications and status changes
-- **`inventory_feedstock`**: Feed inventory level changes and stock movements
+- **`batch_batchcontainerassignment`**: Container assignment changes and biomass updates
+- **`batch_growthsample`**: Growth sampling and weight measurements
+- **`batch_mortalityevent`**: Mortality tracking and cause documentation
+- **`batch_batchtransfer`**: Batch transfers between containers
+- **`batch_species`**: Species definition changes
+- **`batch_lifecyclestage`**: Lifecycle stage modifications
+- **`batch_batchcomposition`**: Batch composition tracking
 
-#### Historical Tables
-- **`batch_historicalbatch`**: Stores historical versions of batch records
-- **`infrastructure_historicalcontainer`**: Stores historical versions of container records  
-- **`inventory_historicalfeedstock`**: Stores historical versions of feed stock records
+**Broodstock App (5 models)**
+- **`broodstock_batchparentage`**: Egg-to-batch lineage tracking
+- **`broodstock_breedingpair`**: Breeding pair assignments and outcomes
+- **`broodstock_eggproduction`**: Internal egg production records
+- **`broodstock_fishmovement`**: Individual fish movements between containers
+- **`broodstock_broodstockfish`**: Individual broodstock fish records
+
+**Health App (9 models)**
+- **`health_healthlabsample`**: Laboratory sample tracking and results
+- **`health_journalentry`**: Health observation and treatment entries
+- **`health_licecount`**: Lice population monitoring
+- **`health_mortalityrecord`**: Health-related mortality documentation
+- **`health_treatment`**: Medical treatment administration
+- **`health_vaccinationtype`**: Vaccination type definitions
+- **`health_healthparameter`**: Health assessment parameters
+- **`health_healthsamplingevent`**: Detailed health sampling sessions
+- **`health_individualfishobservation`**: Individual fish health observations
+
+**Infrastructure App (8 models)**
+- **`infrastructure_container`**: Container modifications and status changes
+- **`infrastructure_containertype`**: Container type definitions
+- **`infrastructure_sensor`**: Sensor configuration and calibration
+- **`infrastructure_feedcontainer`**: Feed container management
+- **`infrastructure_geography`**: Geographic location definitions
+- **`infrastructure_area`**: Operational area configurations
+- **`infrastructure_freshwaterstation`**: Freshwater station management
+- **`infrastructure_hall`**: Facility hall definitions
+
+**Inventory App (7 models)**
+- **`inventory_feed`**: Feed type and specification changes
+- **`inventory_feedpurchase`**: Feed procurement and supplier tracking
+- **`inventory_feedstock`**: Feed stock level monitoring
+- **`inventory_feedingevent`**: Feeding event documentation
+- **`inventory_containerfeedingsummary`**: Container-level feeding summaries
+- **`inventory_batchfeedingsummary`**: Batch-level feeding and FCR analysis
+- **`inventory_feedcontainerstock`**: FIFO inventory tracking
+
+**Operational App (0 models)**
+- No operational models currently tracked
+
+**Scenario App (9 models)**
+- **`scenario_scenario`**: Scenario planning configurations
+- **`scenario_scenariomodelchange`**: Mid-scenario model adjustments
+- **`scenario_scenarioprojection`**: Daily projection calculations
+- **`scenario_temperatureprofile`**: Temperature profile definitions
+- **`scenario_temperaturereading`**: Temperature data points
+- **`scenario_tgcmodel`**: Thermal Growth Coefficient models
+- **`scenario_fcrmodel`**: Feed Conversion Ratio models
+- **`scenario_fcrmodelstage`**: Stage-specific FCR values
+- **`scenario_mortalitymodel`**: Mortality rate models
+
+**Environmental App (0 models)**
+- Environmental readings use TimescaleDB hypertables but are excluded from audit trails
+
+**Users App (1 model)**
+- **`users_userprofile`**: User profile modifications
+
+#### Historical Tables (62 Total)
+All historical tables follow the naming convention `{app}_historical{model}` and include:
+- Complete field-level change tracking
+- User attribution (`history_user_id`)
+- Timestamp tracking (`history_date`)
+- Change type indication (`history_type`: +, ~, -)
+- Optional change reason (`history_change_reason`)
+
+**API Endpoints**: Each tracked model provides dedicated history endpoints:
+- `GET /api/v1/{app}/history/{model}/` - List model history
+- `GET /api/v1/{app}/history/{model}/{id}/` - Retrieve specific historical record
 
 #### Features
-- **Automatic Tracking**: All changes to tracked models are automatically recorded
-- **User Attribution**: Changes are linked to the user who made them
-- **Timestamp Tracking**: Precise timestamps for all modifications
-- **Admin Integration**: Historical records viewable through Django admin interface
-- **API Access**: Historical data accessible via Django admin and can be extended to API endpoints
+- **Automatic Tracking**: All CUD operations automatically recorded
+- **User Attribution**: Changes linked to authenticated user
+- **Timestamp Precision**: Microsecond-level change tracking
+- **Admin Integration**: Historical records viewable through Django admin
+- **API Access**: RESTful history endpoints with filtering and pagination
+- **OpenAPI Documentation**: Complete schema generation with zero Spectacular warnings
+- **Frontend Integration**: Generated TypeScript clients with clean method names
 
 #### Benefits
-- **Regulatory Compliance**: Complete audit trail for regulatory reporting
-- **Operational Transparency**: Full visibility into system changes
-- **Data Recovery**: Ability to view and potentially restore previous states
-- **Change Analysis**: Track patterns and trends in operational changes
+- **Regulatory Compliance**: Complete audit trail for Faroese and Scottish regulations
+- **Operational Transparency**: Full visibility into all system changes
+- **Data Recovery**: Historical state reconstruction capabilities
+- **Change Analysis**: Pattern recognition and trend analysis
+- **Debugging Support**: Complete operational history for troubleshooting
+- **Contract-First Development**: Clean OpenAPI schema enables optimal frontend integration
 
 ## 4. Implemented Data Model Domains
 

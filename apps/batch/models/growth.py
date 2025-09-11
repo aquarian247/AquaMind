@@ -7,6 +7,7 @@ to track growth metrics at a point in time.
 from django.db import models
 import decimal
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 
 class GrowthSample(models.Model):
@@ -30,6 +31,9 @@ class GrowthSample(models.Model):
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Add history tracking
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['assignment', '-sample_date']

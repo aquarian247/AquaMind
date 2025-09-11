@@ -315,6 +315,8 @@ SPECTACULAR_SETTINGS = {
         "aquamind.utils.openapi_utils.add_validation_error_responses",
         # Clamp integer bounds for SQLite so generated schemas are portable
         "aquamind.utils.openapi_utils.clamp_integer_schema_bounds",
+        # Fix operation ID collisions for history endpoints
+        "aquamind.utils.history_utils.fix_history_operation_ids",
     ],
 }
 

@@ -8,6 +8,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
@@ -84,6 +85,8 @@ class Treatment(models.Model):
     class Meta:
         ordering = ['-treatment_date']
         verbose_name_plural = "Treatments"
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """Return a string representation of the treatment."""

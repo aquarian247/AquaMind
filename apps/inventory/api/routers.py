@@ -13,6 +13,10 @@ from apps.inventory.api.viewsets import (
     BatchFeedingSummaryViewSet,
     FeedContainerStockViewSet
 )
+from apps.inventory.api.viewsets.history import (
+    FeedStockHistoryViewSet,
+    FeedingEventHistoryViewSet
+)
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -22,6 +26,10 @@ router.register(r'feed-stocks', FeedStockViewSet, basename='feed-stock')
 router.register(r'feeding-events', FeedingEventViewSet, basename='feeding-event')
 router.register(r'batch-feeding-summaries', BatchFeedingSummaryViewSet, basename='batch-feeding-summary')
 router.register(r'feed-container-stock', FeedContainerStockViewSet, basename='feed-container-stock')
+
+# Register history endpoints
+router.register(r'history/feed-stocks', FeedStockHistoryViewSet, basename='feed-stock-history')
+router.register(r'history/feeding-events', FeedingEventHistoryViewSet, basename='feeding-event-history')
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls

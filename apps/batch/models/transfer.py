@@ -5,6 +5,7 @@ This model records transfers of fish batches between containers, lifecycle stage
 batch splits, and batch merges.
 """
 from django.db import models, transaction
+from simple_history.models import HistoricalRecords
 from apps.batch.models.species import LifeCycleStage
 
 
@@ -90,7 +91,10 @@ class BatchTransfer(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    # Add history tracking
+    history = HistoricalRecords()
+
     class Meta:
         ordering = ['-transfer_date', '-created_at']
     

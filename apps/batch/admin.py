@@ -103,7 +103,7 @@ class BatchAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(BatchContainerAssignment)
-class BatchContainerAssignmentAdmin(admin.ModelAdmin):
+class BatchContainerAssignmentAdmin(SimpleHistoryAdmin):
     """Admin interface for the BatchContainerAssignment model."""
     list_display = (
         'batch',
@@ -141,7 +141,7 @@ class BatchContainerAssignmentAdmin(admin.ModelAdmin):
 
 
 @admin.register(BatchTransfer)
-class BatchTransferAdmin(admin.ModelAdmin):
+class BatchTransferAdmin(SimpleHistoryAdmin):
     """Admin interface for the BatchTransfer model."""
     list_display = (
         'source_batch',
@@ -189,7 +189,7 @@ class BatchTransferAdmin(admin.ModelAdmin):
 
 
 @admin.register(MortalityEvent)
-class MortalityEventAdmin(admin.ModelAdmin):
+class MortalityEventAdmin(SimpleHistoryAdmin):
     """Admin interface for the MortalityEvent model."""
     list_display = ('batch', 'event_date', 'count', 'biomass_kg', 'cause')
     list_filter = ('cause', 'event_date')
@@ -199,7 +199,7 @@ class MortalityEventAdmin(admin.ModelAdmin):
 
 
 @admin.register(GrowthSample)
-class GrowthSampleAdmin(admin.ModelAdmin):
+class GrowthSampleAdmin(SimpleHistoryAdmin):
     """Admin interface for the GrowthSample model."""
     list_display = (
         'assignment',

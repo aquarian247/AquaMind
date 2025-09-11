@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from simple_history.models import HistoricalRecords
 
 
 
@@ -113,6 +114,9 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = _('user profile')
         verbose_name_plural = _('user profiles')
+
+    # History tracking
+    history = HistoricalRecords()
 
 
 @receiver(post_save, sender=User)
