@@ -181,6 +181,8 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 (Same template; add optional filters.)
 
+**✅ COMPLETED**: Successfully implemented location-based filters for the container-assignments summary endpoint. Added `apply_location_filters` helper method to `BatchContainerAssignmentViewSet` that validates and applies optional query parameters: `geography` (int ID), `area` (int ID), `station` (int ID), `hall` (int ID), and `container_type` (category slug). The method properly handles the complex relationship hierarchy (Container → Hall → FreshwaterStation → Geography and Container → Area → Geography) with appropriate validation that returns 400 errors for invalid or non-existent IDs. Updated the summary action with comprehensive `@extend_schema` documentation including parameter descriptions, response schemas, and usage examples. Created extensive test suite (`test_container_assignments_summary_filters.py`) covering all filter combinations, edge cases, and error scenarios. All tests pass, OpenAPI schema validates without warnings, and backward compatibility is maintained. Endpoint maintains 30-second caching and follows API standards.
+
 ---
 
 ## Issue 7 (no. 50 in github) — Extend /inventory/feeding-events/summary to support date ranges
@@ -190,6 +192,8 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 **Body**
 
 (Same template; range support.)
+
+**✅ COMPLETED**: Successfully implemented date range support for feeding-events summary endpoint. Added optional `start_date` and `end_date` query parameters as alternatives to existing `date` parameter. Implemented proper precedence rules (range parameters win when both are provided), validation (both dates required together, start_date ≤ end_date), and backward compatibility. Enhanced endpoint with comprehensive `@extend_schema` documentation including parameter descriptions, response schemas, and usage examples. Maintained existing 30-second caching and ensured all existing filters (batch, container) continue to work with range mode. Created comprehensive test suite (`test_feeding_events_summary_range.py`) with 11 test cases covering all scenarios: single-day ranges, multi-day aggregation, validation errors, precedence rules, filter compatibility, backward compatibility, and edge cases. Resolved CI test failure by replacing problematic test with more robust version that creates multiple events on today's date and verifies correct filtering behavior. All tests pass, OpenAPI schema validates successfully, and existing functionality remains unchanged. Endpoint now supports flexible date-based aggregations for KPI dashboard consumption while maintaining full backward compatibility.
 
 ---
 

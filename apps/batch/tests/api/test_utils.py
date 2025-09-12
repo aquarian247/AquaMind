@@ -78,23 +78,53 @@ def create_test_container_type(name="Test Tank"):
     return container_type
 
 
-def create_test_container(hall=None, container_type=None, name="Test Container"):
-    """Create and return a test Container."""
-    if not hall:
-        hall = create_test_hall()
-    
-    if not container_type:
-        container_type = create_test_container_type()
-    
-    container, created = Container.objects.get_or_create(
+def create_test_area(geography=None, name="Test Area"):
+    """Create and return a test Area."""
+    if not geography:
+        geography = create_test_geography()
+
+    area, created = Area.objects.get_or_create(
         name=name,
-        hall=hall,
+        geography=geography,
         defaults={
-            'container_type': container_type,
-            'volume_m3': 50.0,
-            'max_biomass_kg': 500.0
+            'latitude': Decimal("40.7128"),
+            'longitude': Decimal("-74.0060"),
+            'max_biomass': 10000.0
         }
     )
+    return area
+
+
+def create_test_container(hall=None, area=None, container_type=None, name="Test Container"):
+    """Create and return a test Container."""
+    if not hall and not area:
+        hall = create_test_hall()
+
+    if not container_type:
+        container_type = create_test_container_type()
+
+    # Determine which location field to set
+    defaults = {
+        'container_type': container_type,
+        'volume_m3': 50.0,
+        'max_biomass_kg': 500.0
+    }
+
+    if hall:
+        container, created = Container.objects.get_or_create(
+            name=name,
+            hall=hall,
+            defaults=defaults
+        )
+    elif area:
+        container, created = Container.objects.get_or_create(
+            name=name,
+            area=area,
+            defaults=defaults
+        )
+    else:
+        raise ValueError("Either hall or area must be provided")
+
     return container
 
 

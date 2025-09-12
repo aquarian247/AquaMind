@@ -18,6 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+
 from apps.batch.models import (
     Species,
     LifeCycleStage,
@@ -730,20 +733,221 @@ class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
+    def apply_location_filters(self, queryset, request):
+        """
+        Apply location-based filters to the BatchContainerAssignment queryset.
+
+        Filters supported:
+        - geography: Filter by Geography ID (through hall->station or area)
+        - area: Filter by Area ID (direct container area)
+        - station: Filter by FreshwaterStation ID (through hall)
+        - hall: Filter by Hall ID (direct container hall)
+        - container_type: Filter by ContainerType category slug (TANK, PEN, TRAY, OTHER)
+
+        Returns filtered queryset or raises ValidationError for invalid IDs.
+        """
+        filters_applied = Q()
+
+        # Geography filter (affects both hall and area containers)
+        geography_id = request.query_params.get('geography')
+        if geography_id:
+            try:
+                geography_id = int(geography_id)
+                # Validate geography exists
+                from apps.infrastructure.models import Geography
+                if not Geography.objects.filter(id=geography_id).exists():
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({'geography': 'Geography not found'})
+                # Filter containers that are either in halls of stations in this geography
+                # OR directly in areas in this geography
+                filters_applied &= (
+                    Q(container__hall__freshwater_station__geography_id=geography_id) |
+                    Q(container__area__geography_id=geography_id)
+                )
+            except (ValueError, TypeError):
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'geography': 'Invalid geography ID'})
+
+        # Area filter (only affects containers directly in areas)
+        area_id = request.query_params.get('area')
+        if area_id:
+            try:
+                area_id = int(area_id)
+                # Validate area exists
+                from apps.infrastructure.models import Area
+                if not Area.objects.filter(id=area_id).exists():
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({'area': 'Area not found'})
+                filters_applied &= Q(container__area_id=area_id)
+            except (ValueError, TypeError):
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'area': 'Invalid area ID'})
+
+        # Station filter (only affects containers in halls)
+        station_id = request.query_params.get('station')
+        if station_id:
+            try:
+                station_id = int(station_id)
+                # Validate station exists
+                from apps.infrastructure.models import FreshwaterStation
+                if not FreshwaterStation.objects.filter(id=station_id).exists():
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({'station': 'Freshwater station not found'})
+                filters_applied &= Q(container__hall__freshwater_station_id=station_id)
+            except (ValueError, TypeError):
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'station': 'Invalid freshwater station ID'})
+
+        # Hall filter (only affects containers in halls)
+        hall_id = request.query_params.get('hall')
+        if hall_id:
+            try:
+                hall_id = int(hall_id)
+                # Validate hall exists
+                from apps.infrastructure.models import Hall
+                if not Hall.objects.filter(id=hall_id).exists():
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({'hall': 'Hall not found'})
+                filters_applied &= Q(container__hall_id=hall_id)
+            except (ValueError, TypeError):
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'hall': 'Invalid hall ID'})
+
+        # Container type filter (by category)
+        container_type = request.query_params.get('container_type')
+        if container_type:
+            # Validate that the category exists
+            from apps.infrastructure.models import ContainerType
+            if not ContainerType.objects.filter(category=container_type.upper()).exists():
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({
+                    'container_type': f'Invalid container type. Must be one of: {[choice[0] for choice in ContainerType.CONTAINER_CATEGORIES]}'
+                })
+            filters_applied &= Q(container__container_type__category=container_type.upper())
+
+        return queryset.filter(filters_applied) if filters_applied else queryset
+
     # ------------------------------------------------------------------ #
     # Aggregated summary endpoint                                        #
     # ------------------------------------------------------------------ #
     @action(detail=False, methods=['get'])
     @method_decorator(cache_page(30))
+    @extend_schema(
+        operation_id="batch-container-assignments-summary",
+        summary="Get aggregated summary of batch container assignments",
+        description="Returns aggregated metrics for batch container assignments with optional location-based filtering.",
+        parameters=[
+            OpenApiParameter(
+                name="is_active",
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description="Filter by active status (default: true). Set to false to include inactive assignments.",
+                required=False,
+                default=True,
+            ),
+            OpenApiParameter(
+                name="geography",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by geography ID. Affects containers in both halls and areas within this geography.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="area",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by area ID. Only affects containers directly assigned to this area.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="station",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by freshwater station ID. Only affects containers in halls within this station.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="hall",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by hall ID. Only affects containers directly in this hall.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="container_type",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by container type category. Valid values: TANK, PEN, TRAY, OTHER.",
+                required=False,
+            ),
+        ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "active_biomass_kg": {"type": "number", "description": "Total biomass in kg for active assignments"},
+                    "count": {"type": "integer", "description": "Total number of assignments matching filters"},
+                },
+                "required": ["active_biomass_kg", "count"],
+            },
+            400: {
+                "type": "object",
+                "properties": {
+                    "detail": {"type": "string"},
+                    "geography": {"type": "array", "items": {"type": "string"}},
+                    "area": {"type": "array", "items": {"type": "string"}},
+                    "station": {"type": "array", "items": {"type": "string"}},
+                    "hall": {"type": "array", "items": {"type": "string"}},
+                    "container_type": {"type": "array", "items": {"type": "string"}},
+                },
+                "description": "Validation error for invalid filter parameters",
+            },
+        },
+        examples=[
+            {
+                "summary": "Default summary (all active assignments)",
+                "value": {
+                    "active_biomass_kg": 1250.5,
+                    "count": 45,
+                },
+            },
+            {
+                "summary": "Filtered by geography",
+                "parameters": {"geography": 1},
+                "value": {
+                    "active_biomass_kg": 750.0,
+                    "count": 28,
+                },
+            },
+            {
+                "summary": "Filtered by container type",
+                "parameters": {"container_type": "TANK"},
+                "value": {
+                    "active_biomass_kg": 950.2,
+                    "count": 32,
+                },
+            },
+        ],
+    )
     def summary(self, request):
         """
-        Return aggregated metrics about batch-container assignments.
+        Return aggregated metrics about batch-container assignments with optional location filtering.
 
         Query Parameters
         ----------------
         is_active : bool (default ``true``)
             If ``true`` (default) aggregates only active assignments.
             If ``false`` aggregates inactive assignments.
+        geography : int
+            Filter by geography ID (affects containers in halls and areas).
+        area : int
+            Filter by area ID (containers directly in this area).
+        station : int
+            Filter by freshwater station ID (containers in halls of this station).
+        hall : int
+            Filter by hall ID (containers directly in this hall).
+        container_type : str
+            Filter by container type category (TANK, PEN, TRAY, OTHER).
 
         Response Schema
         ---------------
@@ -756,6 +960,9 @@ class BatchContainerAssignmentViewSet(viewsets.ModelViewSet):
         is_active = is_active_param != "false"
 
         assignments = self.get_queryset().filter(is_active=is_active)
+
+        # Apply location filters
+        assignments = self.apply_location_filters(assignments, request)
 
         aggregates = assignments.aggregate(
             active_biomass_kg=Sum("biomass_kg"),
