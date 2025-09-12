@@ -12,6 +12,8 @@ Scope: Replace high-impact client-side aggregations for KPI card-like GUI compon
 • Prioritize endpoints that eliminate expensive client-side joins (containers × assignments) used by the dashboard and area/station KPI hooks.  
 • FCR trends are largely in place; a few improvements will make the feature complete and clearer for consumers.
 
+📋 **[Implementation Playbook](../development/aggregation_playbook.md)**: Follow this guide for standardized aggregation endpoint development.
+
 ---
 
 ## Current State (What Exists Today)
