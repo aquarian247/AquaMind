@@ -872,13 +872,12 @@ class FCRCalculationService:
         worst_confidence = 'VERY_HIGH'
         estimation_methods = set()
 
-        for summary in container_summaries:
-            # Weight by feed consumption for FCR averaging
-            if summary.total_feed_kg and summary.fcr:
-                weight = float(summary.total_feed_kg)
-                # Weighted FCR would be calculated here
-                # For now, simple average as placeholder
+        # Variables for weighted FCR calculation
+        weighted_fcr_sum = Decimal('0')
+        total_weight = Decimal('0')
 
+        for summary in container_summaries:
+            # Accumulate totals for non-weighted metrics
             total_feed += summary.total_feed_kg or 0
             total_growth += summary.growth_kg or 0
             if summary.starting_biomass_kg:
@@ -894,12 +893,21 @@ class FCRCalculationService:
             if confidence_levels.index(summary.confidence_level) > confidence_levels.index(worst_confidence):
                 worst_confidence = summary.confidence_level
 
-        # Calculate weighted average FCR
-        # This is a simplified implementation - in practice, you'd weight by feed consumption
-        valid_fcrs = [s.fcr for s in container_summaries if s.fcr]
+            # Calculate weighted FCR contribution
+            # Use total_feed_kg as primary weight, fallback to biomass_gain_kg if available
+            weight = summary.total_feed_kg
+            if weight is None or weight == 0:
+                # Fallback to biomass gain if feed data unavailable
+                weight = summary.growth_kg
+
+            if weight and weight > 0 and summary.fcr and summary.fcr > 0:
+                weighted_fcr_sum += Decimal(str(weight)) * Decimal(str(summary.fcr))
+                total_weight += Decimal(str(weight))
+
+        # Calculate weighted average FCR (rounded to 3 decimal places for consistency)
         weighted_avg_fcr = None
-        if valid_fcrs:
-            weighted_avg_fcr = sum(valid_fcrs) / len(valid_fcrs)
+        if total_weight > 0 and weighted_fcr_sum > 0:
+            weighted_avg_fcr = round(weighted_fcr_sum / total_weight, 3)
 
         # Determine overall estimation method
         if len(estimation_methods) == 1:

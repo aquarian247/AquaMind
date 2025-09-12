@@ -205,6 +205,8 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 (Same template; update weighting logic.)
 
+**✅ COMPLETED**: Successfully implemented weighted averaging for FCR trends with comprehensive improvements. Updated `aggregate_container_fcr_to_batch` method in `FCRCalculationService` to use proper weighted averaging formula `Σ(feed_kg × fcr) / Σ(feed_kg)` with fallback to `biomass_gain_kg` when feed data unavailable. Enhanced `FCRTrendsService` geography-level aggregation with consistent weighted averaging and improved bucketization to support DAILY/WEEKLY/MONTHLY intervals dynamically. Added consistent 3-decimal rounding across all FCR values for API standardization. Created comprehensive unit tests covering basic functionality, zero-weight handling, biomass fallback scenarios, and edge cases. Fixed critical interval parameter passing issue in `_ensure_container_summaries_exist` method and corrected geography query relationship path. All core weighted averaging functionality verified and production-ready.
+
 ---
 
 ## Issue 9 (no. 52 in github) — FCR Trends: Schema semantics and default behavior
@@ -214,6 +216,8 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 **Body**
 
 (Same template; docs & serializer clarity.)
+
+**✅ COMPLETED**: Successfully implemented comprehensive FCR trends schema clarification and default behavior documentation. Updated FCRTrendsSerializer with detailed field documentation including units (ratio), data_points meaning (number of feeding/growth data points), confidence semantics (VERY_HIGH/HIGH/MEDIUM/LOW based on data quality), and estimation_method. Added explicit defaults: aggregation_level='geography', interval='DAILY'. Enhanced extend_schema with detailed parameter descriptions, interval semantics (DAILY=calendar days, WEEKLY=Monday-Sunday inclusive, MONTHLY=calendar months), and comprehensive response examples. Added optional model_version metadata field. Created comprehensive test suite (test_fcr_trends_schema.py) validating defaults, field presence, and OpenAPI schema generation. All tests pass, OpenAPI schema validates without warnings, and endpoint now provides explicit, well-documented responses regardless of request filters. Service updated to include model_version metadata and serializer ensures explicit defaults are always returned.
 
 ---
 

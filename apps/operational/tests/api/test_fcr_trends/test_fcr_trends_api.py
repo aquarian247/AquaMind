@@ -361,5 +361,5 @@ class FCRTrendsAPITest(APITestCase):
 
         if response.status_code == status.HTTP_200_OK:
             data = response.json()
-            self.assertEqual(data['interval'], 'WEEKLY')  # Default interval
+            self.assertEqual(data['interval'], 'DAILY')  # Default interval
             self.assertEqual(data['aggregation_level'], 'assignment')
