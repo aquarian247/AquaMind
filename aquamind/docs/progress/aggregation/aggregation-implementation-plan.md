@@ -1,7 +1,7 @@
 # Server-side Aggregation for KPI Cards — Implementation Plan (Issue-ready)
 
 Audience: **Backend engineers**  
-Purpose: Split the recommendations into outcome-driven, single-session tasks with standardized guidance to minimize context rot. Each task below is presented as an **issue** (title + body) you can paste directly into your tracker.
+Purpose: Split the recommendations into outcome-driven, single-session tasks with standardized guidance to minimize context rot. Each task below is presented as an **issue** (title + body, issues 44 through 53 in github). This must all be done in the same feature branch: features/aggregations-for-frontend
 
 ---
 
@@ -36,13 +36,14 @@ Purpose: Split the recommendations into outcome-driven, single-session tasks wit
 
 ---
 
-## Issue 1 — Establish Aggregation Implementation Playbook (patterns, tests, docs)
+## Issue 1 (no. 44 in github) — Establish Aggregation Implementation Playbook (patterns, tests, docs)
 
 **Title:** Establish Aggregation Implementation Playbook (patterns, tests, docs)
 
 **Body**
 
 **Summary**  
+Make sure we are on a main and everything is pruned and remnant feature branches are deleted. Then create features/aggregations-for-frontend branch for this side-quest. 
 Create a small shared “playbook” to standardize how we build aggregation endpoints for KPI cards (patterns, caching, schema, tests). This reduces context rot across sessions.
 
 **Outcome**  
@@ -67,7 +68,7 @@ Add “Session Playbook” section (if not already) + minimal code & test templa
 
 ---
 
-## Issue 2 — Area KPI Summary endpoint (/infrastructure/areas/{id}/summary/)
+## Issue 2 (no. 45 in github) — Area KPI Summary endpoint (/infrastructure/areas/{id}/summary/)
 
 **Title:** Implement Area KPI Summary endpoint (containers, biomass, population, avg weight)
 
@@ -100,7 +101,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 3 — Freshwater Station KPI Summary endpoint (/infrastructure/freshwater-stations/{id}/summary/)
+## Issue 3 (no. 46 in github) — Freshwater Station KPI Summary endpoint (/infrastructure/freshwater-stations/{id}/summary/)
 
 **Title:** Implement Freshwater Station KPI Summary endpoint (halls, containers, biomass, population, avg weight)
 
@@ -110,7 +111,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 4 — Hall KPI Summary endpoint (/infrastructure/halls/{id}/summary/)
+## Issue 4 (no. 47 in github) — Hall KPI Summary endpoint (/infrastructure/halls/{id}/summary/)
 
 **Title:** Implement Hall KPI Summary endpoint (containers, biomass, population, avg weight)
 
@@ -120,7 +121,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 5 — Geography KPI Summary endpoint (/infrastructure/geographies/{id}/summary/)
+## Issue 5 (no. 48 in github) — Geography KPI Summary endpoint (/infrastructure/geographies/{id}/summary/)
 
 **Title:** Implement Geography KPI Summary endpoint (area/station/hall/container/ring counts, capacity, biomass)
 
@@ -130,7 +131,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 6 — Enhance /batch/container-assignments/summary with location filters
+## Issue 6 (no. 49 in github) — Enhance /batch/container-assignments/summary with location filters
 
 **Title:** Enhance container-assignments summary with geography/area/station/container_type filters
 
@@ -140,7 +141,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 7 — Extend /inventory/feeding-events/summary to support date ranges
+## Issue 7 (no. 50 in github) — Extend /inventory/feeding-events/summary to support date ranges
 
 **Title:** Extend feeding-events summary with start_date/end_date range (keep date param)
 
@@ -150,7 +151,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 8 — FCR Trends: Weighted averaging and correctness pass
+## Issue 8 (no. 51 in github) — FCR Trends: Weighted averaging and correctness pass
 
 **Title:** FCR Trends — implement weighted averaging and unit tests
 
@@ -160,7 +161,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 9 — FCR Trends: Schema semantics and default behavior
+## Issue 9 (no. 52 in github) — FCR Trends: Schema semantics and default behavior
 
 **Title:** FCR Trends — clarify schema (units, data_points, confidence) and default aggregation behavior
 
@@ -170,7 +171,7 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 
-## Issue 10 — Integration notes + examples for dashboards
+## Issue 10 (no. 53 in github) — Integration notes + examples for dashboards
 
 **Title:** Publish integration notes and example requests for dashboard KPI consumption
 
