@@ -13,6 +13,36 @@ from apps.infrastructure.models.station import FreshwaterStation
 from apps.infrastructure.api.serializers.base import TimestampedModelSerializer, NamedModelSerializer
 
 
+class HallSummarySerializer(serializers.Serializer):
+    """
+    Serializer for hall KPI summary metrics.
+
+    Returns aggregated metrics for a specific hall including
+    container counts and active biomass/population data.
+    """
+    container_count = serializers.IntegerField(
+        min_value=0,
+        help_text="Number of containers in this hall."
+    )
+    active_biomass_kg = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        help_text="Sum of biomass_kg from active BatchContainerAssignments in containers within this hall."
+    )
+    population_count = serializers.IntegerField(
+        min_value=0,
+        help_text="Sum of population_count from active BatchContainerAssignments in containers within this hall."
+    )
+    avg_weight_kg = serializers.FloatField(
+        min_value=0,
+        help_text="Average weight in kg per fish (active_biomass_kg / population_count). Returns 0 if population_count is 0."
+    )
+
+    class Meta:
+        fields = ['container_count', 'active_biomass_kg', 'population_count', 'avg_weight_kg']
+
+
 class HallSerializer(TimestampedModelSerializer, NamedModelSerializer):
     """Serializer for the Hall model."""
 
