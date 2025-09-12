@@ -2,7 +2,8 @@
 # This workflow is disabled due to reliability issues.
 # Use manual sync instead: npm run sync:openapi in the frontend repo
 #
-# on:
+on:
+  workflow_dispatch: # Explicitly disabled - never triggers automatically
 #   workflow_run:
 #     workflows: ["AquaMind CI/CD"]
 #     types:
