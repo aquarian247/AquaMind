@@ -9,29 +9,61 @@ Purpose: Split the recommendations into outcome-driven, single-session tasks wit
 
 * Recommendations: `aquamind/docs/progress/aggregation/server-side-aggregation-kpi-recommendations.md`
 * API standards: `aquamind/docs/quality_assurance/api_standards.md`
-* Existing aggregates to mirror  
-  * `apps/infrastructure/api/viewsets/overview.py`  
-  * `apps/batch/api/viewsets.py` → `BatchContainerAssignmentViewSet.summary`  
+* Existing aggregates to mirror
+  * `apps/infrastructure/api/viewsets/overview.py`
+  * `apps/batch/api/viewsets.py` → `BatchContainerAssignmentViewSet.summary`
   * `apps/inventory/api/viewsets/feeding.py` → `FeedingEventViewSet.summary`
-* FCR trends reference  
-  * `apps/operational/api/viewsets/fcr_trends.py`  
-  * `apps/operational/services/fcr_trends_service.py`  
-  * `apps/inventory/services/fcr_service.py`
 
-### Session Playbook (use for every task)
+## Git Workflow Best Practices
 
-1. Pre-read shared context (5–10 min) **and** the task’s References list.  
-2. Add endpoint/action skeleton with explicit kebab-case basename and `extend_schema`. Keep under `/api/v1/`.  
-3. Implement DB-level aggregates (`Sum` / `Count`), add 30–60 s cache via `cache_page`.  
-4. Add tests (success, edge cases, filters, caching neutrality) and update OpenAPI schema.  
-5. Run Django tests **and** OpenAPI validation; ensure no drf-spectacular warnings.  
-6. Update Sources/notes if anything deviates from recommendations.
+### 🎯 One Feature Branch, One Comprehensive PR
 
-**Definition of Done (applies to all tasks)**  
-✔ Endpoint functional with documented schema and inputs.  
-✔ Tests cover happy-path + edge cases + filter variations.  
-✔ OpenAPI validates; CI passing locally.  
-✔ Caching set to 30–60 s where applicable.  
+**For cohesive features with multiple tightly-coupled issues:**
+- ✅ **Use one feature branch** for all related issues (e.g., `features/aggregations-for-frontend`)
+- ✅ **Complete all issues** before creating PR
+- ✅ **Create one comprehensive PR** at the end covering the entire feature
+- ✅ **Commit frequently** with clear messages referencing issue numbers
+
+**Benefits:**
+- **No merge conflicts** between related changes
+- **Complete feature testing** before review
+- **Cleaner git history** with feature-focused commits
+- **Better reviewer experience** seeing the full feature
+- **Easier rollback** if issues arise
+
+**When to use this approach:**
+- Multiple issues that are tightly coupled
+- Shared dependencies between issues
+- Need to test complete feature integration
+- Want to deliver as one cohesive unit for UAT
+
+**Example commit messages:**
+```
+feat: implement area KPI summary endpoint (#45)
+feat: implement station KPI summary endpoint (#46)
+feat: implement hall KPI summary endpoint (#47)
+# ... more implementation commits ...
+docs: update aggregation playbook with additional patterns
+test: add comprehensive test coverage for all endpoints
+```
+
+**Avoid:** Multiple PRs per issue for tightly-coupled features (creates unnecessary complexity and potential conflicts).
+
+---
+
+## Session Playbook (use for every task)
+
+1. Pre-read shared context (5–10 min) **and** the task's References list.
+2. Add endpoint/action skeleton with explicit kebab-case basename and `extend_schema`. Keep under `/api/v1/`.
+3. Implement DB-level aggregates (`Sum` / `Count`), add 30–60 s cache via `cache_page`.
+4. Add tests (success, edge cases, filters, caching neutrality) and update OpenAPI schema.
+5. Run Django tests **and** OpenAPI validation; ensure no drf-spectacular warnings.
+
+**Definition of Done (applies to all tasks)**
+✔ Endpoint functional with documented schema and inputs.
+✔ Tests cover happy-path + edge cases + filter variations.
+✔ OpenAPI validates; CI passing locally.
+✔ Caching set to 30–60 s where applicable.
 ✔ Naming/routers follow `api_standards.md`.
 
 ---
@@ -42,29 +74,62 @@ Purpose: Split the recommendations into outcome-driven, single-session tasks wit
 
 **Body**
 
-**Summary**  
-Make sure we are on a main and everything is pruned and remnant feature branches are deleted. Then create features/aggregations-for-frontend branch for this side-quest. 
-Create a small shared “playbook” to standardize how we build aggregation endpoints for KPI cards (patterns, caching, schema, tests). This reduces context rot across sessions.
+**Summary**
+Make sure we are on a main and everything is pruned and remnant feature branches are deleted. Then create features/aggregations-for-frontend branch for this side-quest.
+Create a small shared "playbook" to standardize how we build aggregation endpoints for KPI cards (patterns, caching, schema, tests). This reduces context rot across sessions.
 
-**Outcome**  
+**Outcome**
 A concise doc and example snippet(s) that every subsequent task follows. CI validation steps are codified.
 
-**Scope**  
-* Add a short doc section (or sibling doc) with:  
-  * Required imports, `@action` vs APIView selection, example `extend_schema`, `cache_page`.  
-  * Test example structure using `reverse()` with kebab-case basenames.  
-  * OpenAPI validation command and expectations.  
+**Scope**
+* Add a short doc section (or sibling doc) with:
+  * Required imports, `@action` vs APIView selection, example `extend_schema`, `cache_page`.
+  * Test example structure using `reverse()` with kebab-case basenames.
+  * OpenAPI validation command and expectations.
 * **No business endpoint implementation here.**
 
-**References**  
+**References**
 See shared context list.
 
-**Approach**  
-Add “Session Playbook” section (if not already) + minimal code & test template.
+**Approach**
+Add "Session Playbook" section (if not already) + minimal code & test template.
 
-**Acceptance Criteria**  
-* Playbook published; linked from recommendations doc.  
+**Acceptance Criteria**
+* Playbook published; linked from recommendations doc.
 * Includes code templates, test template, and validation commands.
+
+---
+
+## Issue 2 (no. 45 in github) — Area KPI Summary endpoint (/infrastructure/areas/{id}/summary/)
+
+**Title:** Implement Area KPI Summary endpoint (containers, biomass, population, avg weight)
+
+**Body**
+
+**Summary**
+Add a detail action that returns area-level KPI metrics for KPI cards, replacing client-side joins in `useAreaKpi`.
+
+**Outcome**
+GET returns: `container_count`, `ring_count`, `active_biomass_kg`, `population_count`, `avg_weight_kg`.
+
+**Scope**
+* `@action(detail=True, methods=['get'])` on `AreaViewSet`.
+* Compute via ORM aggregates across Containers in area and active BatchContainerAssignments.
+* 30–60 s cache; `extend_schema`.
+
+**References**
+Frontend hook, recommendations doc, overview & assignment summaries.
+
+**Implementation Steps**
+1. Add action `summary(self, request, pk=None)`.
+2. Query containers; calc counts/sums; derive avg weight.
+3. Schema + caching + tests.
+
+**Testing**
+`apps/infrastructure/tests/api/test_area_summary.py` with multiple scenarios.
+
+**Acceptance Criteria**
+Endpoint metrics correct; tests pass; OpenAPI validates.
 
 ---
 

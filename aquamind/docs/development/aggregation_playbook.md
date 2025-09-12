@@ -10,6 +10,8 @@
 4. **Test**: Add tests for happy-path + edge cases + filter variations
 5. **Validate**: Run Django tests + OpenAPI validation; ensure no drf-spectacular warnings
 
+📋 **Git Workflow**: For multi-issue features like this aggregation implementation, follow the [Git Workflow Best Practices](../progress/aggregation/aggregation-implementation-plan.md#git-workflow-best-practices) - use one feature branch for all related issues and create one comprehensive PR at the end.
+
 ## Pattern Selection
 
 ### Use `@action` for Detail-Level Aggregation
