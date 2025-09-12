@@ -21,8 +21,8 @@ sys.path.insert(0, project_root)
 os.environ['USE_TIMESCALEDB_TESTING'] = 'false'
 
 # Configure Django settings
-# Use the test settings file in the scripts/testing directory
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scripts.testing.test_settings')
+# Use the CI settings file
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings_ci')
 
 import django
 from django.core.management import call_command
@@ -63,7 +63,7 @@ def run_tests(app_name=None):
         test_command.append(app_name)
     
     # Use the correct settings module path
-    test_command.extend(['--settings=scripts.testing.test_settings', '--noinput', '--testrunner=apps.core.test_runner.TimescaleDBTestRunner'])
+    test_command.extend(['--settings=aquamind.settings_ci', '--noinput'])
     
     try:
         subprocess.run(test_command, check=True)

@@ -11,6 +11,36 @@ from apps.infrastructure.models.geography import Geography
 from apps.infrastructure.api.serializers.base import TimestampedModelSerializer, NamedModelSerializer
 
 
+class GeographySummarySerializer(serializers.Serializer):
+    """Serializer for Geography KPI summary data."""
+
+    area_count = serializers.IntegerField(
+        help_text="Number of Areas in the geography"
+    )
+    station_count = serializers.IntegerField(
+        help_text="Number of Freshwater Stations in the geography"
+    )
+    hall_count = serializers.IntegerField(
+        help_text="Number of Halls in the geography"
+    )
+    container_count = serializers.IntegerField(
+        help_text="Number of Containers in the geography"
+    )
+    ring_count = serializers.IntegerField(
+        help_text="Number of Containers whose container_type category/name contains 'ring' or 'pen'"
+    )
+    capacity_kg = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text="Sum of Container.max_biomass_kg"
+    )
+    active_biomass_kg = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text="Sum of BatchContainerAssignment.active_biomass_kg for active assignments in geography"
+    )
+
+
 class GeographySerializer(TimestampedModelSerializer, NamedModelSerializer):
     """Serializer for the Geography model."""
 

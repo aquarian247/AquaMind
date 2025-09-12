@@ -178,7 +178,7 @@ class AreaSummaryTestCase(APITestCase):
 python manage.py spectacular --validate --file /tmp/schema.yaml --settings=aquamind.settings_ci
 
 # Regenerate OpenAPI schema
-python manage.py spectacular --file openapi.yaml --settings=aquamind.settings_ci
+python manage.py spectacular --file api/openapi.yaml --settings=aquamind.settings_ci
 
 # Check for schema generation warnings
 python manage.py spectacular --settings=aquamind.settings_ci 2>&1 | grep -i warning
