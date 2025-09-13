@@ -229,4 +229,6 @@ Endpoint metrics correct; tests pass; OpenAPI validates.
 
 (Same template; append examples to recommendations doc.)
 
+**✅ COMPLETED**: Successfully published comprehensive integration notes and example requests for dashboard KPI consumption. Added detailed "Integration Notes & Examples" section to the server-side aggregation recommendations document with actionable, copy-pasteable examples for all new server-side summary endpoints. Included concrete examples for Area summary, Freshwater Station summary, Hall summary, Geography summary, Container-assignments summary with location filters, Feeding-events summary with date range support, and FCR trends with different intervals. Provided cURL commands, Postman examples, JavaScript/React integration code, and comprehensive frontend migration guidance. Examples validated against current serializers and schema, with proper authentication setup, response schemas, and usage patterns for immediate frontend integration. Documented migration strategy, performance benefits, error handling patterns, and testing approaches to ensure smooth transition from client-side aggregation to server-side endpoints.
+
 ---
