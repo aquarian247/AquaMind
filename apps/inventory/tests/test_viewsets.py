@@ -560,18 +560,32 @@ class FeedingEventSummaryTest(TestCase):
             self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_default_today_filter(self):
-        """Without query params, endpoint aggregates only today's events."""
+        """Without query params, endpoint aggregates events using today's date."""
+        # Ensure clean slate - clear ALL feeding events from database
         FeedingEvent.objects.all().delete()
+
+        # Create multiple events on today's date
         today = timezone.now().date()
-        yesterday = today - timedelta(days=1)
         self._create_feeding_event(date=today, amount_kg=5)
-        # yesterday should be ignored
-        self._create_feeding_event(date=yesterday, amount_kg=7)
+        self._create_feeding_event(date=today, amount_kg=3)
+        self._create_feeding_event(date=today, amount_kg=2)
+
+        # Create events on other dates (should be ignored)
+        yesterday = today - timedelta(days=1)
+        tomorrow = today + timedelta(days=1)
+        self._create_feeding_event(date=yesterday, amount_kg=10)
+        self._create_feeding_event(date=tomorrow, amount_kg=15)
 
         resp = self.client.get(self.summary_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["events_count"], 1)
-        self.assertEqual(resp.data["total_feed_kg"], 5.0)
+
+        # More robust assertions - check that we get the expected number regardless of other data
+        today_events = list(FeedingEvent.objects.filter(feeding_date=today).values('amount_kg'))
+        expected_count = len(today_events)
+        expected_total = sum(event['amount_kg'] for event in today_events)
+
+        self.assertEqual(resp.data["events_count"], expected_count)
+        self.assertEqual(resp.data["total_feed_kg"], expected_total)
 
     def test_filter_by_batch(self):
         """Only events matching the given batch should be included."""

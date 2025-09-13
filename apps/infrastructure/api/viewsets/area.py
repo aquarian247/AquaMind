@@ -6,12 +6,22 @@ This module defines the viewset for the Area model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Sum, Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
-from apps.infrastructure.models.area import Area
-from apps.infrastructure.api.serializers.area import AreaSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
+from apps.infrastructure.models.area import Area
+from apps.infrastructure.models.container import Container
+from apps.batch.models.assignment import BatchContainerAssignment
+from apps.infrastructure.api.serializers.area import AreaSerializer
 
 class AreaViewSet(viewsets.ModelViewSet):
     """
@@ -64,3 +74,101 @@ class AreaViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    # ------------------------------------------------------------------ #
+    # Aggregated summary endpoint                                        #
+    # ------------------------------------------------------------------ #
+    @method_decorator(cache_page(60))
+    @action(detail=True, methods=['get'])
+    @extend_schema(
+        operation_id="area-summary",
+        description="Get KPI summary for an area including container counts, biomass, population, and average weight.",
+        responses={
+            200: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "properties": {
+                        "container_count": {"type": "integer", "description": "Total number of containers in the area"},
+                        "ring_count": {"type": "integer", "description": "Number of ring/pen containers in the area"},
+                        "active_biomass_kg": {"type": "number", "description": "Total active biomass in kilograms"},
+                        "population_count": {"type": "integer", "description": "Total population count"},
+                        "avg_weight_kg": {"type": "number", "description": "Average weight in kilograms per fish"},
+                    },
+                    "required": ["container_count", "ring_count", "active_biomass_kg", "population_count", "avg_weight_kg"],
+                },
+                description="Area KPI metrics",
+            )
+        },
+    )
+    def summary(self, request, pk=None):
+        """
+        Return KPI summary for a specific area.
+
+        Computes aggregated metrics including:
+        - container_count: Total containers in the area
+        - ring_count: Containers that are rings/pens (category='PEN' or name contains 'Ring')
+        - active_biomass_kg: Sum of biomass from active batch assignments
+        - population_count: Sum of population from active batch assignments
+        - avg_weight_kg: Biomass divided by population (0 if no population)
+
+        Query Parameters:
+        - is_active: Filter by active status (default: true)
+
+        Returns:
+            Response: JSON with aggregated area metrics
+        """
+        # Get the area object
+        area = self.get_object()
+
+        # Parse query parameters
+        is_active_param = request.query_params.get("is_active", "true").lower()
+        is_active_filter = is_active_param != "false"
+
+        # Get containers in this area
+        containers = Container.objects.filter(area=area)
+
+        # Aggregate container counts
+        container_aggregates = containers.aggregate(
+            container_count=Count('id'),
+            ring_count=Count('id', filter=Q(
+                Q(container_type__category='PEN') |
+                Q(container_type__name__icontains='ring') |
+                Q(name__icontains='ring')
+            )),
+        )
+
+        # Get biomass and population aggregates based on is_active filter
+        if is_active_filter:
+            # Default behavior: only active assignments
+            biomass_aggregates = BatchContainerAssignment.objects.filter(
+                container__area=area,
+                is_active=True
+            ).aggregate(
+                active_biomass_kg=Sum('biomass_kg'),
+                population_count=Sum('population_count'),
+            )
+        else:
+            # Include all assignments (active and inactive)
+            biomass_aggregates = BatchContainerAssignment.objects.filter(
+                container__area=area
+            ).aggregate(
+                active_biomass_kg=Sum('biomass_kg'),
+                population_count=Sum('population_count'),
+            )
+
+        # Extract values with defaults
+        container_count = container_aggregates['container_count'] or 0
+        ring_count = container_aggregates['ring_count'] or 0
+        active_biomass_kg = float(biomass_aggregates['active_biomass_kg'] or 0)
+        population_count = biomass_aggregates['population_count'] or 0
+
+        # Calculate average weight with division by zero protection
+        avg_weight_kg = active_biomass_kg / population_count if population_count > 0 else 0
+
+        return Response({
+            'container_count': container_count,
+            'ring_count': ring_count,
+            'active_biomass_kg': active_biomass_kg,
+            'population_count': population_count,
+            'avg_weight_kg': round(avg_weight_kg, 3),
+        })

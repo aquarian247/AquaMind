@@ -76,3 +76,37 @@ class FreshwaterStationSerializer(TimestampedModelSerializer, NamedModelSerializ
             'id', 'created_at', 'updated_at',
             'station_type_display', 'geography_name'
         ]
+
+
+class FreshwaterStationSummarySerializer(serializers.Serializer):
+    """
+    Serializer for freshwater station KPI summary metrics.
+
+    Returns aggregated metrics for a specific freshwater station including
+    counts of infrastructure components and active biomass/population data.
+    """
+    hall_count = serializers.IntegerField(
+        min_value=0,
+        help_text="Number of halls belonging to this freshwater station."
+    )
+    container_count = serializers.IntegerField(
+        min_value=0,
+        help_text="Number of containers inside the halls of this station."
+    )
+    active_biomass_kg = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        help_text="Sum of biomass_kg from active BatchContainerAssignments in containers within this station's halls."
+    )
+    population_count = serializers.IntegerField(
+        min_value=0,
+        help_text="Sum of population_count from active BatchContainerAssignments in containers within this station's halls."
+    )
+    avg_weight_kg = serializers.FloatField(
+        min_value=0,
+        help_text="Average weight in kg per fish (active_biomass_kg / population_count). Returns 0 if population_count is 0."
+    )
+
+    class Meta:
+        fields = ['hall_count', 'container_count', 'active_biomass_kg', 'population_count', 'avg_weight_kg']

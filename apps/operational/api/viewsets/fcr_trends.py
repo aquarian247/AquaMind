@@ -7,7 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.types import OpenApiTypes
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
@@ -37,57 +37,77 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
 
     @extend_schema(
         summary="Get FCR trends data",
-        description="Retrieve FCR (Feed Conversion Ratio) trend data with actual and predicted values across different time intervals and aggregation levels.",
+        description="""
+        Retrieve FCR (Feed Conversion Ratio) trend data with actual and predicted values across different time intervals and aggregation levels.
+
+        **Time Intervals:**
+        - `DAILY`: Single calendar day buckets
+        - `WEEKLY`: Monday-Sunday inclusive buckets
+        - `MONTHLY`: Calendar month buckets (1st to last day)
+
+        **Aggregation Levels:**
+        - `batch`: Aggregate by batch ID
+        - `assignment`: Aggregate by container assignment ID
+        - `geography`: Aggregate across all batches in geography (default when no filters provided)
+
+        **Defaults when no filters provided:**
+        - `aggregation_level`: 'geography'
+        - `interval`: 'DAILY'
+        - `start_date`: 1 year ago
+        - `end_date`: today
+
+        **FCR Units:** Ratio (feed consumed kg / biomass gained kg)
+        """,
         parameters=[
             OpenApiParameter(
                 name='start_date',
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description='Start date for the trend analysis (ISO format, default: 1 year ago)',
+                description='Start date for the trend analysis (ISO format: YYYY-MM-DD, default: 1 year ago)',
                 required=False
             ),
             OpenApiParameter(
                 name='end_date',
                 type=OpenApiTypes.DATE,
                 location=OpenApiParameter.QUERY,
-                description='End date for the trend analysis (ISO format, default: today)',
+                description='End date for the trend analysis (ISO format: YYYY-MM-DD, default: today)',
                 required=False
             ),
             OpenApiParameter(
                 name='interval',
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
-                description='Time interval for aggregation',
+                description='Time interval for aggregation. DAILY=calendar days, WEEKLY=Monday-Sunday inclusive, MONTHLY=calendar months.',
                 enum=['DAILY', 'WEEKLY', 'MONTHLY'],
-                default='WEEKLY',
+                default='DAILY',
                 required=False
             ),
             OpenApiParameter(
                 name='batch_id',
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY,
-                description='Optional batch ID for batch-level aggregation',
+                description='Optional batch ID for batch-level aggregation. When provided, aggregation_level becomes "batch".',
                 required=False
             ),
             OpenApiParameter(
                 name='assignment_id',
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY,
-                description='Optional assignment ID for container-level aggregation',
+                description='Optional assignment ID for container-level aggregation. When provided, aggregation_level becomes "assignment".',
                 required=False
             ),
             OpenApiParameter(
                 name='geography_id',
                 type=OpenApiTypes.INT,
                 location=OpenApiParameter.QUERY,
-                description='Optional geography ID for geography-level aggregation',
+                description='Optional geography ID for geography-level aggregation. When provided, aggregation_level becomes "geography".',
                 required=False
             ),
             OpenApiParameter(
                 name='include_predicted',
                 type=OpenApiTypes.BOOL,
                 location=OpenApiParameter.QUERY,
-                description='Include predicted FCR values from scenarios',
+                description='Include predicted FCR values from scenario models (default: true)',
                 default=True,
                 required=False
             ),
@@ -137,10 +157,8 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
             )
 
             # Serialize and return
-            serializer = self.serializer_class(data=trends_data)
-            serializer.is_valid(raise_exception=True)
-
-            return Response(serializer.validated_data)
+            serializer = self.serializer_class(instance=trends_data)
+            return Response(serializer.data)
 
         except ValidationError as e:
             return Response(
@@ -189,7 +207,7 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
             return None
 
         # Interval parameter
-        interval_str = request.query_params.get('interval', 'WEEKLY')
+        interval_str = request.query_params.get('interval', 'DAILY')
         try:
             params['interval'] = TimeInterval[interval_str]
         except KeyError:

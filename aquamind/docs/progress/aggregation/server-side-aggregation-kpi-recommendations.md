@@ -12,6 +12,8 @@ Scope: Replace high-impact client-side aggregations for KPI card-like GUI compon
 • Prioritize endpoints that eliminate expensive client-side joins (containers × assignments) used by the dashboard and area/station KPI hooks.  
 • FCR trends are largely in place; a few improvements will make the feature complete and clearer for consumers.
 
+📋 **[Implementation Playbook](../development/aggregation_playbook.md)**: Follow this guide for standardized aggregation endpoint development.
+
 ---
 
 ## Current State (What Exists Today)
@@ -172,6 +174,579 @@ _All endpoints under `/api/v1/`; payloads are inspirational, not prescriptive._
 * Add API tests mirroring existing patterns (see tests for container-assignments summary) to validate metrics, filters, and caching [7].  
 * Update OpenAPI via drf-spectacular (`extend_schema`) for each new summary endpoint [6][10].  
 * Keep cache windows short (30–60 s) to avoid stale dashboards.
+
+---
+
+## Integration Notes & Examples (Issue #53)
+
+This section provides actionable, copy-pasteable examples for integrating the new server-side summary endpoints into frontend applications. All examples use the real API endpoints and include authentication headers for immediate testing.
+
+### Authentication Setup
+
+All endpoints require JWT authentication. Include the access token in the Authorization header:
+
+```bash
+# Replace YOUR_JWT_TOKEN with actual token from /api/token/
+AUTH_HEADER="Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Base URL
+```bash
+BASE_URL="http://localhost:8000/api/v1"
+```
+
+---
+
+### 1. Area KPI Summary
+
+**Endpoint:** `GET /api/v1/infrastructure/areas/{id}/summary/`
+
+**Replaces:** `useAreaKpi` client-side aggregation
+
+**Response Schema:**
+```json
+{
+  "container_count": 18,
+  "ring_count": 12,
+  "active_biomass_kg": 84250.5,
+  "population_count": 213400,
+  "avg_weight_kg": 0.395
+}
+```
+
+**cURL Example:**
+```bash
+# Get area summary for area ID 5
+curl -X GET "http://localhost:8000/api/v1/infrastructure/areas/5/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Postman Example:**
+```
+Method: GET
+URL: http://localhost:8000/api/v1/infrastructure/areas/5/summary/
+Headers:
+  Authorization: Bearer YOUR_JWT_TOKEN
+  Content-Type: application/json
+```
+
+**JavaScript/React Example:**
+```typescript
+// In api.ts or custom hook
+const fetchAreaSummary = async (areaId: number) => {
+  const response = await fetch(`/api/v1/infrastructure/areas/${areaId}/summary/`, {
+    headers: {
+      'Authorization': `Bearer ${getStoredToken()}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch area summary');
+  }
+
+  return response.json();
+};
+
+// Usage in component
+const areaData = await fetchAreaSummary(5);
+console.log(`Area has ${areaData.container_count} containers with ${areaData.active_biomass_kg}kg biomass`);
+```
+
+---
+
+### 2. Freshwater Station KPI Summary
+
+**Endpoint:** `GET /api/v1/infrastructure/freshwater-stations/{id}/summary/`
+
+**Replaces:** `useStationKpi` client-side aggregation
+
+**Response Schema:**
+```json
+{
+  "hall_count": 6,
+  "container_count": 42,
+  "active_biomass_kg": 35670.8,
+  "population_count": 90500,
+  "avg_weight_kg": 0.394
+}
+```
+
+**cURL Example:**
+```bash
+# Get freshwater station summary for station ID 7
+curl -X GET "http://localhost:8000/api/v1/infrastructure/freshwater-stations/7/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Postman Example:**
+```
+Method: GET
+URL: http://localhost:8000/api/v1/infrastructure/freshwater-stations/7/summary/
+Headers:
+  Authorization: Bearer YOUR_JWT_TOKEN
+  Content-Type: application/json
+```
+
+---
+
+### 3. Hall KPI Summary
+
+**Endpoint:** `GET /api/v1/infrastructure/halls/{id}/summary/`
+
+**Response Schema:**
+```json
+{
+  "container_count": 14,
+  "active_biomass_kg": 12100.2,
+  "population_count": 31000,
+  "avg_weight_kg": 0.39
+}
+```
+
+**cURL Example:**
+```bash
+# Get hall summary for hall ID 11
+curl -X GET "http://localhost:8000/api/v1/infrastructure/halls/11/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+### 4. Geography KPI Summary
+
+**Endpoint:** `GET /api/v1/infrastructure/geographies/{id}/summary/`
+
+**Response Schema:**
+```json
+{
+  "area_count": 5,
+  "station_count": 3,
+  "hall_count": 11,
+  "container_count": 124,
+  "ring_count": 48,
+  "capacity_kg": 250000.0,
+  "active_biomass_kg": 132500.0
+}
+```
+
+**cURL Example:**
+```bash
+# Get geography summary for geography ID 3
+curl -X GET "http://localhost:8000/api/v1/infrastructure/geographies/3/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Postman Example:**
+```
+Method: GET
+URL: http://localhost:8000/api/v1/infrastructure/geographies/3/summary/
+Headers:
+  Authorization: Bearer YOUR_JWT_TOKEN
+  Content-Type: application/json
+```
+
+---
+
+### 5. Container Assignments Summary with Filters
+
+**Endpoint:** `GET /api/v1/batch/container-assignments/summary/`
+
+**Enhanced with location-based filtering**
+
+**Response Schema:**
+```json
+{
+  "active_biomass_kg": 48720.4,
+  "count": 57
+}
+```
+
+**cURL Examples:**
+
+```bash
+# Default summary (all active assignments)
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Filtered by geography
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?geography=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Filtered by area
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?area=5" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Filtered by station
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?station=7" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Filtered by hall
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?hall=11" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Filtered by container type
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?container_type=PEN" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Combined filters (geography + container type)
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?geography=3&container_type=RING" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Include inactive assignments
+curl -X GET "http://localhost:8000/api/v1/batch/container-assignments/summary/?is_active=false" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**JavaScript/React Example:**
+```typescript
+// In api.ts - flexible filtering function
+const fetchContainerAssignmentsSummary = async (filters: {
+  geography?: number;
+  area?: number;
+  station?: number;
+  hall?: number;
+  container_type?: string;
+  is_active?: boolean;
+} = {}) => {
+  const params = new URLSearchParams();
+
+  // Add filters to query params
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined) {
+      params.append(key, String(value));
+    }
+  });
+
+  const response = await fetch(`/api/v1/batch/container-assignments/summary/?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${getStoredToken()}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch container assignments summary');
+  }
+
+  return response.json();
+};
+
+// Usage examples
+const allActive = await fetchContainerAssignmentsSummary();
+const byGeography = await fetchContainerAssignmentsSummary({ geography: 3 });
+const ringsOnly = await fetchContainerAssignmentsSummary({ container_type: 'RING' });
+const combined = await fetchContainerAssignmentsSummary({
+  geography: 3,
+  container_type: 'PEN',
+  is_active: true
+});
+```
+
+---
+
+### 6. Feeding Events Summary with Date Ranges
+
+**Endpoint:** `GET /api/v1/inventory/feeding-events/summary/`
+
+**Enhanced with date range support**
+
+**Response Schema:**
+```json
+{
+  "events_count": 124,
+  "total_feed_kg": 3580.2
+}
+```
+
+**cURL Examples:**
+
+```bash
+# Default (today's feeding events)
+curl -X GET "http://localhost:8000/api/v1/inventory/feeding-events/summary/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Specific date
+curl -X GET "http://localhost:8000/api/v1/inventory/feeding-events/summary/?date=2025-01-15" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Date range (January 2025)
+curl -X GET "http://localhost:8000/api/v1/inventory/feeding-events/summary/?start_date=2025-01-01&end_date=2025-01-31" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Date range with batch filter
+curl -X GET "http://localhost:8000/api/v1/inventory/feeding-events/summary/?start_date=2025-01-01&end_date=2025-01-31&batch=42" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Date range with container filter
+curl -X GET "http://localhost:8000/api/v1/inventory/feeding-events/summary/?start_date=2025-01-01&end_date=2025-01-31&container=15" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**JavaScript/React Example:**
+```typescript
+// In api.ts - flexible feeding events summary
+const fetchFeedingEventsSummary = async (filters: {
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  batch?: number;
+  container?: number;
+} = {}) => {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined) {
+      params.append(key, String(value));
+    }
+  });
+
+  const response = await fetch(`/api/v1/inventory/feeding-events/summary/?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${getStoredToken()}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch feeding events summary');
+  }
+
+  return response.json();
+};
+
+// Usage examples
+const today = await fetchFeedingEventsSummary();
+const specificDate = await fetchFeedingEventsSummary({ date: '2025-01-15' });
+const monthRange = await fetchFeedingEventsSummary({
+  start_date: '2025-01-01',
+  end_date: '2025-01-31'
+});
+const batchMonth = await fetchFeedingEventsSummary({
+  start_date: '2025-01-01',
+  end_date: '2025-01-31',
+  batch: 42
+});
+```
+
+---
+
+### 7. FCR Trends with Different Intervals
+
+**Endpoint:** `GET /api/v1/operational/fcr-trends/`
+
+**Response Schema:**
+```json
+{
+  "interval": "DAILY",
+  "unit": "ratio",
+  "aggregation_level": "geography",
+  "model_version": "v1.0",
+  "series": [
+    {
+      "period_start": "2025-01-01",
+      "period_end": "2025-01-01",
+      "actual_fcr": 1.45,
+      "confidence": "HIGH",
+      "data_points": 12,
+      "predicted_fcr": 1.48,
+      "scenarios_used": 3,
+      "deviation": -2.03,
+      "container_name": null,
+      "assignment_id": null,
+      "container_count": 45,
+      "total_containers": 48
+    }
+  ]
+}
+```
+
+**cURL Examples:**
+
+```bash
+# Default FCR trends (geography level, daily intervals, last year)
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Daily intervals (most granular)
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?interval=DAILY&start_date=2025-01-01&end_date=2025-01-31" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Weekly intervals (Monday-Sunday buckets)
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?interval=WEEKLY&start_date=2025-01-01&end_date=2025-01-31" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Monthly intervals (calendar months)
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?interval=MONTHLY&start_date=2025-01-01&end_date=2025-12-31" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Batch-level aggregation
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?batch_id=42&interval=WEEKLY" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Container assignment-level aggregation
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?assignment_id=15&interval=DAILY" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Geography-specific aggregation
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?geography_id=3&interval=MONTHLY" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Without predicted values
+curl -X GET "http://localhost:8000/api/v1/operational/fcr-trends/?include_predicted=false" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**JavaScript/React Example:**
+```typescript
+// In api.ts - FCR trends with flexible parameters
+const fetchFCRTrends = async (params: {
+  start_date?: string;
+  end_date?: string;
+  interval?: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  batch_id?: number;
+  assignment_id?: number;
+  geography_id?: number;
+  include_predicted?: boolean;
+} = {}) => {
+  const queryParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, String(value));
+    }
+  });
+
+  const response = await fetch(`/api/v1/operational/fcr-trends/?${queryParams}`, {
+    headers: {
+      'Authorization': `Bearer ${getStoredToken()}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch FCR trends');
+  }
+
+  return response.json();
+};
+
+// Usage examples
+const defaultTrends = await fetchFCRTrends();
+const dailyTrends = await fetchFCRTrends({
+  interval: 'DAILY',
+  start_date: '2025-01-01',
+  end_date: '2025-01-31'
+});
+const batchWeekly = await fetchFCRTrends({
+  batch_id: 42,
+  interval: 'WEEKLY',
+  start_date: '2025-01-01',
+  end_date: '2025-03-31'
+});
+const geographyMonthly = await fetchFCRTrends({
+  geography_id: 3,
+  interval: 'MONTHLY',
+  start_date: '2025-01-01',
+  end_date: '2025-12-31'
+});
+```
+
+---
+
+### Frontend Migration Guide
+
+#### Migration Strategy
+
+1. **Identify client-side aggregations** that can be replaced
+2. **Test new endpoints** with Postman/cURL first
+3. **Update hooks and API calls** incrementally
+4. **Maintain fallbacks** during transition
+5. **Remove client-side aggregation logic** after verification
+
+#### Common Migration Patterns
+
+**Before (Client-side aggregation):**
+```typescript
+// useAreaKpi.ts - OLD approach
+const useAreaKpi = (areaId: number) => {
+  const { data: containers } = useContainers({ areaId });
+  const { data: assignments } = useAssignments({ areaId });
+
+  // Complex client-side joins and calculations
+  const biomass = assignments?.reduce((sum, a) => sum + a.biomass_kg, 0) || 0;
+  const population = assignments?.reduce((sum, a) => sum + a.population_count, 0) || 0;
+  const avgWeight = population > 0 ? biomass / population : 0;
+
+  return {
+    containerCount: containers?.length || 0,
+    biomass,
+    population,
+    avgWeight
+  };
+};
+```
+
+**After (Server-side aggregation):**
+```typescript
+// useAreaKpi.ts - NEW approach
+const useAreaKpi = (areaId: number) => {
+  const { data: summary } = useQuery({
+    queryKey: ['area-summary', areaId],
+    queryFn: () => api.get(`/infrastructure/areas/${areaId}/summary/`)
+  });
+
+  return {
+    containerCount: summary?.container_count || 0,
+    biomass: summary?.active_biomass_kg || 0,
+    population: summary?.population_count || 0,
+    avgWeight: summary?.avg_weight_kg || 0
+  };
+};
+```
+
+#### Hook Replacement Mapping
+
+| Old Hook | New Endpoint | Migration Priority |
+|----------|-------------|-------------------|
+| `useAreaKpi` | `/infrastructure/areas/{id}/summary/` | High |
+| `useStationKpi` | `/infrastructure/freshwater-stations/{id}/summary/` | High |
+| Dashboard KPI cards | Multiple summary endpoints | Medium |
+| `useBatchFcr` | `/operational/fcr-trends/` | Medium |
+
+#### Error Handling
+
+```typescript
+// Robust error handling for summary endpoints
+const fetchSummaryWithFallback = async (endpoint: string) => {
+  try {
+    const response = await api.get(endpoint);
+    return response.data;
+  } catch (error) {
+    console.warn(`Server-side summary failed for ${endpoint}, falling back to client aggregation`);
+    // Implement fallback logic here
+    return null;
+  }
+};
+```
+
+#### Performance Benefits
+
+- **Reduced network requests**: Single endpoint vs multiple list endpoints
+- **Faster response times**: Server-side aggregation vs client-side processing
+- **Lower bandwidth**: Summary data vs full object lists
+- **Better caching**: 30-60s cache windows on summary endpoints
+
+#### Testing Strategy
+
+1. **Unit tests**: Verify endpoint responses match expected schemas
+2. **Integration tests**: Compare old vs new hook outputs
+3. **Performance tests**: Measure response times and data transfer
+4. **Fallback tests**: Ensure graceful degradation when server unavailable
 
 ---
 
