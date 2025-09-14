@@ -10,7 +10,7 @@ Working mode
 Baseline & scope
 - Goal: lower cyclomatic/cognitive complexity, improve MI, and resolve analyzer blockers
 - Exclude `operational` app from refactors (per metrics scope)
-- Baseline artifacts: `aquamind/docs/metrics/*.json`, `aquamind/docs/DAILY_METRICS_REPORT.md`
+- Baseline artifacts: `aquamind/docs/metrics/*.json`, `aquamind/docs/METRICS_REPORT.md`
 
 Session protocol (apply in every phase)
 1) Read these docs first:
@@ -79,7 +79,7 @@ Issue 1
   - No parse errors; tests unchanged and passing.
 
   References
-  - `aquamind/docs/DAILY_METRICS_REPORT.md`, metrics JSON
+  - `aquamind/docs/METRICS_REPORT.md`, metrics JSON
 
 Issue 2
 - Title: Backend: Extract serializer validation helpers (batch serializers)
@@ -173,4 +173,4 @@ Issue 6
   - CI artifacts present; pipeline stable.
 
   References
-  - `aquamind/docs/metrics/*`, `aquamind/docs/DAILY_METRICS_REPORT.md`
+  - `aquamind/docs/metrics/*`, `aquamind/docs/METRICS_REPORT.md`
