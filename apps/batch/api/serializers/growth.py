@@ -176,62 +176,78 @@ class GrowthSampleSerializer(
             individual_weights = validated_data.get('individual_weights', [])
             individual_lengths = validated_data.get('individual_lengths', [])
 
-            if individual_weights or individual_lengths:
-                num_weights = len(individual_weights) if individual_weights else 0
-                num_lengths = len(individual_lengths) if individual_lengths else 0
+            # Early return if no measurements provided
+            if not individual_weights and not individual_lengths:
+                return validated_data
 
-                if num_weights > 0 and num_lengths > 0 and num_weights != num_lengths:
-                    # This should be caught by validate_individual_measurements
-                    pass
-                elif num_weights > 0:
-                    validated_data['sample_size'] = num_weights
-                elif num_lengths > 0:
-                    validated_data['sample_size'] = num_lengths
+            # Set sample size from measurements
+            self._set_sample_size_from_measurements(validated_data, individual_weights, individual_lengths)
 
+            # Process weight statistics
             if individual_weights:
-                try:
-                    avg_w, std_dev_w = self._calculate_stats(
-                        individual_weights, 'individual_weights'
-                    )
-                    validated_data['avg_weight_g'] = avg_w
-                    validated_data['std_deviation_weight'] = std_dev_w
-                    validated_data['min_weight_g'] = (
-                        min(individual_weights) if individual_weights else None
-                    )
-                    validated_data['max_weight_g'] = (
-                        max(individual_weights) if individual_weights else None
-                    )
-                except Exception as e:
-                    raise serializers.ValidationError({'individual_weights': f'Error calculating weight statistics: {str(e)}'})
+                self._process_weight_statistics(validated_data, individual_weights)
 
+            # Process length statistics
             if individual_lengths:
-                try:
-                    avg_l, std_dev_l = self._calculate_stats(
-                        individual_lengths, 'individual_lengths'
-                    )
-                    validated_data['avg_length_cm'] = avg_l
-                    validated_data['std_deviation_length'] = std_dev_l
-                except Exception as e:
-                    raise serializers.ValidationError({'individual_lengths': f'Error calculating length statistics: {str(e)}'})
+                self._process_length_statistics(validated_data, individual_lengths)
 
-            if individual_weights and individual_lengths and \
-               len(individual_weights) == len(individual_lengths):
-                try:
-                    validated_data['condition_factor'] = (
-                        self._calculate_condition_factor_from_individuals(
-                            individual_weights, individual_lengths
-                        )
-                    )
-                except Exception as e:
-                    raise serializers.ValidationError({'condition_factor': f'Error calculating condition factor: {str(e)}'})
-            elif individual_lengths or individual_weights:
-                validated_data['condition_factor'] = None
+            # Process condition factor if both measurements available
+            self._process_condition_factor(validated_data, individual_weights, individual_lengths)
+
         except serializers.ValidationError:
             raise  # Re-raise validation errors
         except Exception as e:
             raise serializers.ValidationError({'measurement_processing': f'Unexpected error processing measurements: {str(e)}'})
 
         return validated_data
+
+    def _set_sample_size_from_measurements(self, validated_data, weights, lengths):
+        """Set sample size based on available measurements."""
+        num_weights = len(weights) if weights else 0
+        num_lengths = len(lengths) if lengths else 0
+
+        if num_weights > 0 and num_lengths > 0 and num_weights != num_lengths:
+            # This should be caught by validate_individual_measurements
+            return
+        elif num_weights > 0:
+            validated_data['sample_size'] = num_weights
+        elif num_lengths > 0:
+            validated_data['sample_size'] = num_lengths
+
+    def _process_weight_statistics(self, validated_data, individual_weights):
+        """Process weight statistics and update validated_data."""
+        try:
+            avg_w, std_dev_w = self._calculate_stats(individual_weights, 'individual_weights')
+            validated_data['avg_weight_g'] = avg_w
+            validated_data['std_deviation_weight'] = std_dev_w
+            validated_data['min_weight_g'] = min(individual_weights) if individual_weights else None
+            validated_data['max_weight_g'] = max(individual_weights) if individual_weights else None
+        except Exception as e:
+            raise serializers.ValidationError({'individual_weights': f'Error calculating weight statistics: {str(e)}'})
+
+    def _process_length_statistics(self, validated_data, individual_lengths):
+        """Process length statistics and update validated_data."""
+        try:
+            avg_l, std_dev_l = self._calculate_stats(individual_lengths, 'individual_lengths')
+            validated_data['avg_length_cm'] = avg_l
+            validated_data['std_deviation_length'] = std_dev_l
+        except Exception as e:
+            raise serializers.ValidationError({'individual_lengths': f'Error calculating length statistics: {str(e)}'})
+
+    def _process_condition_factor(self, validated_data, individual_weights, individual_lengths):
+        """Process condition factor and update validated_data."""
+        if (individual_weights and individual_lengths and
+            len(individual_weights) == len(individual_lengths)):
+            try:
+                validated_data['condition_factor'] = (
+                    self._calculate_condition_factor_from_individuals(
+                        individual_weights, individual_lengths
+                    )
+                )
+            except Exception as e:
+                raise serializers.ValidationError({'condition_factor': f'Error calculating condition factor: {str(e)}'})
+        elif individual_lengths or individual_weights:
+            validated_data['condition_factor'] = None
 
     def _calculate_stats(self, numeric_data, field_name):
         """Calculate mean and std deviation for a list of numbers."""

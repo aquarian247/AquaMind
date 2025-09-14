@@ -65,54 +65,88 @@ class BatchTransferSerializer(NestedModelMixin, serializers.ModelSerializer):
         """
         errors = {}
 
-        source_batch = data.get('source_batch')
-        if source_batch and 'transferred_count' in data:
-            if data['transferred_count'] > \
-                    source_batch.calculated_population_count:
-                errors['transferred_count'] = (
-                    f"Transfer count ({data['transferred_count']}) "
-                    "exceeds source batch population "
-                    f"({source_batch.calculated_population_count})."
-                )
+        # Validate transfer count against source batch
+        if 'transferred_count' in data:
+            self._validate_transfer_count(data, errors)
 
+        # Validate transfer type requirements
         if 'transfer_type' in data:
-            transfer_type = data['transfer_type']
-            if transfer_type == 'LIFECYCLE' and \
-                    not data.get('destination_lifecycle_stage'):
-                errors['destination_lifecycle_stage'] = (
-                    "Destination lifecycle stage is required for "
-                    "lifecycle transfers."
-                )
+            self._validate_transfer_type_requirements(data, errors)
 
-            if transfer_type == 'CONTAINER' and \
-                    not data.get('destination_assignment'):
-                errors['destination_assignment'] = (
-                    "Destination assignment is required for container "
-                    "transfers."
-                )
-
-            if transfer_type == 'SPLIT' and \
-                    not data.get('destination_batch'):
-                errors['destination_batch'] = (
-                    "Destination batch is required for batch splits."
-                )
-
-            if transfer_type == 'MERGE' and \
-                    not data.get('destination_batch'):
-                errors['destination_batch'] = (
-                    "Destination batch is required for batch merges."
-                )
-
-        if 'source_biomass_kg' in data and \
-                'transferred_biomass_kg' in data:
-            if data['transferred_biomass_kg'] > data['source_biomass_kg']:
-                errors['transferred_biomass_kg'] = (
-                    f"Transferred biomass ({data['transferred_biomass_kg']} kg) "
-                    "exceeds source biomass "
-                    f"({data['source_biomass_kg']} kg)."
-                )
+        # Validate biomass transfer
+        if 'source_biomass_kg' in data and 'transferred_biomass_kg' in data:
+            self._validate_biomass_transfer(data, errors)
 
         if errors:
             raise serializers.ValidationError(errors)
 
         return data
+
+    def _validate_transfer_count(self, data, errors):
+        """Validate transfer count against source batch population."""
+        source_batch = data.get('source_batch')
+        if not source_batch:
+            return
+
+        transferred_count = data['transferred_count']
+        source_population = source_batch.calculated_population_count
+
+        if transferred_count > source_population:
+            errors['transferred_count'] = (
+                f"Transfer count ({transferred_count}) "
+                "exceeds source batch population "
+                f"({source_population})."
+            )
+
+    def _validate_transfer_type_requirements(self, data, errors):
+        """Validate requirements based on transfer type."""
+        transfer_type = data['transfer_type']
+
+        if transfer_type == 'LIFECYCLE':
+            self._validate_lifecycle_transfer(data, errors)
+        elif transfer_type == 'CONTAINER':
+            self._validate_container_transfer(data, errors)
+        elif transfer_type == 'SPLIT':
+            self._validate_split_transfer(data, errors)
+        elif transfer_type == 'MERGE':
+            self._validate_merge_transfer(data, errors)
+
+    def _validate_lifecycle_transfer(self, data, errors):
+        """Validate lifecycle transfer requirements."""
+        if not data.get('destination_lifecycle_stage'):
+            errors['destination_lifecycle_stage'] = (
+                "Destination lifecycle stage is required for lifecycle transfers."
+            )
+
+    def _validate_container_transfer(self, data, errors):
+        """Validate container transfer requirements."""
+        if not data.get('destination_assignment'):
+            errors['destination_assignment'] = (
+                "Destination assignment is required for container transfers."
+            )
+
+    def _validate_split_transfer(self, data, errors):
+        """Validate batch split requirements."""
+        if not data.get('destination_batch'):
+            errors['destination_batch'] = (
+                "Destination batch is required for batch splits."
+            )
+
+    def _validate_merge_transfer(self, data, errors):
+        """Validate batch merge requirements."""
+        if not data.get('destination_batch'):
+            errors['destination_batch'] = (
+                "Destination batch is required for batch merges."
+            )
+
+    def _validate_biomass_transfer(self, data, errors):
+        """Validate biomass transfer amounts."""
+        transferred_biomass = data['transferred_biomass_kg']
+        source_biomass = data['source_biomass_kg']
+
+        if transferred_biomass > source_biomass:
+            errors['transferred_biomass_kg'] = (
+                f"Transferred biomass ({transferred_biomass} kg) "
+                "exceeds source biomass "
+                f"({source_biomass} kg)."
+            )
