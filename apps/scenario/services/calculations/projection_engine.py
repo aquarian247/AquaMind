@@ -361,6 +361,90 @@ class ProjectionEngine:
             }
         }
     
+    def _get_original_parameter_value(self, parameter: str) -> float:
+        """
+        Get the original value for a parameter before sensitivity analysis.
+
+        Args:
+            parameter: Parameter name ('tgc', 'fcr', 'mortality')
+
+        Returns:
+            Original parameter value
+
+        Raises:
+            ValueError: If parameter is unknown
+        """
+        if parameter == 'tgc':
+            return self.tgc_calculator.tgc_value
+        elif parameter == 'fcr':
+            # Get average FCR across stages
+            fcr_values = [v for v in self.fcr_calculator.stage_fcr_map.values()]
+            return sum(fcr_values) / len(fcr_values) if fcr_values else 1.2
+        elif parameter == 'mortality':
+            return self.mortality_calculator.rate
+        else:
+            raise ValueError(f'Unknown parameter: {parameter}')
+
+    def _apply_parameter_variation(self, parameter: str, original_value: float, variation: float):
+        """
+        Apply a percentage variation to a parameter.
+
+        Args:
+            parameter: Parameter name
+            original_value: Original parameter value
+            variation: Percentage variation (e.g., -10.0, 5.0)
+        """
+        varied_value = original_value * (1 + variation / 100)
+
+        if parameter == 'tgc':
+            self.tgc_calculator.tgc_value = varied_value
+        elif parameter == 'fcr':
+            # Apply variation to all stages
+            for stage_id in self.fcr_calculator.stage_fcr_map:
+                self.fcr_calculator.stage_fcr_map[stage_id] *= (1 + variation / 100)
+        elif parameter == 'mortality':
+            self.mortality_calculator.rate = varied_value
+            self.mortality_calculator.daily_rate = varied_value if self.mortality_calculator.frequency == 'daily' else self.mortality_calculator.daily_rate
+
+    def _reset_parameter_to_original(self, parameter: str, original_value: float):
+        """
+        Reset a parameter to its original value.
+
+        Args:
+            parameter: Parameter name
+            original_value: Original parameter value
+        """
+        if parameter == 'tgc':
+            self.tgc_calculator.tgc_value = original_value
+        elif parameter == 'fcr':
+            self._initialize_calculators()  # Easiest way to reset
+        elif parameter == 'mortality':
+            self.mortality_calculator.rate = original_value
+            self.mortality_calculator.__init__(self.scenario.mortality_model)
+
+    def _run_projection_for_variation(self, parameter: str, original_value: float, variation: float) -> Optional[Dict]:
+        """
+        Run a projection for a parameter variation and extract results.
+
+        Args:
+            parameter: Parameter name
+            original_value: Original parameter value
+            variation: Percentage variation
+
+        Returns:
+            Dict with variation results or None if projection failed
+        """
+        varied_value = original_value * (1 + variation / 100)
+        result = self.run_projection(save_results=False)
+
+        if result['success'] and result['projections']:
+            return {
+                'parameter_value': round(varied_value, 3),
+                'summary': result['summary']
+            }
+
+        return None
+
     def run_sensitivity_analysis(
         self,
         parameter: str,
@@ -369,63 +453,32 @@ class ProjectionEngine:
     ) -> Dict[str, any]:
         """
         Run sensitivity analysis on a parameter.
-        
+
         Args:
             parameter: Parameter to vary ('tgc', 'fcr', 'mortality')
             variations: List of percentage variations (e.g., [-10, 0, 10])
             save_results: Whether to save results
-            
+
         Returns:
             Dict with sensitivity analysis results
         """
+        try:
+            original_value = self._get_original_parameter_value(parameter)
+        except ValueError as e:
+            return {'error': str(e)}
+
         results = {}
-        original_value = None
-        
-        # Store original value
-        if parameter == 'tgc':
-            original_value = self.tgc_calculator.tgc_value
-        elif parameter == 'fcr':
-            # Get average FCR across stages
-            fcr_values = [v for v in self.fcr_calculator.stage_fcr_map.values()]
-            original_value = sum(fcr_values) / len(fcr_values) if fcr_values else 1.2
-        elif parameter == 'mortality':
-            original_value = self.mortality_calculator.rate
-        else:
-            return {'error': f'Unknown parameter: {parameter}'}
-        
+
         # Run projections with variations
         for variation in variations:
-            # Apply variation
-            varied_value = original_value * (1 + variation / 100)
-            
-            if parameter == 'tgc':
-                self.tgc_calculator.tgc_value = varied_value
-            elif parameter == 'fcr':
-                # Apply variation to all stages
-                for stage_id in self.fcr_calculator.stage_fcr_map:
-                    self.fcr_calculator.stage_fcr_map[stage_id] *= (1 + variation / 100)
-            elif parameter == 'mortality':
-                self.mortality_calculator.rate = varied_value
-                self.mortality_calculator.daily_rate = varied_value if self.mortality_calculator.frequency == 'daily' else self.mortality_calculator.daily_rate
-            
-            # Run projection
-            result = self.run_projection(save_results=False)
-            
-            if result['success'] and result['projections']:
-                results[f"{variation:+.0f}%"] = {
-                    'parameter_value': round(varied_value, 3),
-                    'summary': result['summary']
-                }
-            
-            # Reset to original
-            if parameter == 'tgc':
-                self.tgc_calculator.tgc_value = original_value
-            elif parameter == 'fcr':
-                self._initialize_calculators()  # Easiest way to reset
-            elif parameter == 'mortality':
-                self.mortality_calculator.rate = original_value
-                self.mortality_calculator.__init__(self.scenario.mortality_model)
-        
+            self._apply_parameter_variation(parameter, original_value, variation)
+
+            variation_result = self._run_projection_for_variation(parameter, original_value, variation)
+            if variation_result:
+                results[f"{variation:+.0f}%"] = variation_result
+
+            self._reset_parameter_to_original(parameter, original_value)
+
         return {
             'parameter': parameter,
             'original_value': round(original_value, 3),

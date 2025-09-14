@@ -7,7 +7,7 @@ including support for mixed batches.
 from decimal import Decimal
 from django.db import transaction, models
 from django.db.models import Sum, Q, Avg
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from datetime import date
 
 from apps.batch.models import Batch, BatchComposition, GrowthSample, BatchContainerAssignment
@@ -20,7 +20,163 @@ class FCRCalculationError(ValueError):
 
 class FCRCalculationService:
     """Service for calculating Feed Conversion Ratios at batch level."""
-    
+
+    # ============================================================================
+    # Pure Helper Functions (No Database Dependencies)
+    # ============================================================================
+
+    @staticmethod
+    def _calculate_fcr_value(
+        total_feed_consumed: Decimal,
+        biomass_gain_kg: Decimal
+    ) -> Decimal:
+        """
+        Calculate FCR value from feed consumed and biomass gain.
+
+        Args:
+            total_feed_consumed: Total feed consumed in kg
+            biomass_gain_kg: Biomass gain in kg
+
+        Returns:
+            Decimal: FCR value (feed_consumed / biomass_gain)
+
+        Raises:
+            FCRCalculationError: If biomass_gain is zero or negative
+        """
+        if not biomass_gain_kg or biomass_gain_kg <= 0:
+            raise FCRCalculationError("Cannot calculate FCR with zero or negative biomass gain")
+
+        if not total_feed_consumed or total_feed_consumed <= 0:
+            return Decimal('0')
+
+        return total_feed_consumed / biomass_gain_kg
+
+    @staticmethod
+    def _calculate_confidence_level_from_days(days_since_weighing: int) -> str:
+        """
+        Calculate confidence level based on days since last weighing.
+
+        Args:
+            days_since_weighing: Number of days since last weighing event
+
+        Returns:
+            str: Confidence level ('VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW')
+        """
+        if days_since_weighing < 0:
+            return 'LOW'  # Future weighing date (data issue)
+
+        if days_since_weighing < 10:
+            return 'VERY_HIGH'
+        elif days_since_weighing < 20:
+            return 'HIGH'
+        elif days_since_weighing < 40:
+            return 'MEDIUM'
+        else:
+            return 'LOW'
+
+    @staticmethod
+    def _determine_estimation_method_from_data(
+        biomass_gain_kg: Optional[Decimal],
+        has_weighing_events: bool
+    ) -> Optional[str]:
+        """
+        Determine estimation method based on available data.
+
+        Args:
+            biomass_gain_kg: The biomass gain value used
+            has_weighing_events: Whether weighing events exist
+
+        Returns:
+            str or None: 'MEASURED', 'INTERPOLATED', or None
+        """
+        if not biomass_gain_kg:
+            return None
+
+        return 'MEASURED' if has_weighing_events else 'INTERPOLATED'
+
+    @staticmethod
+    def _prorate_feed_by_composition(
+        feed_amount: Decimal,
+        percentage: Decimal
+    ) -> Decimal:
+        """
+        Calculate prorated feed amount based on composition percentage.
+
+        Args:
+            feed_amount: Original feed amount
+            percentage: Composition percentage (0-100)
+
+        Returns:
+            Decimal: Prorated feed amount
+        """
+        return feed_amount * (percentage / Decimal('100'))
+
+    @staticmethod
+    def _calculate_weighted_average_fcr(
+        fcr_contributions: List[Tuple[Decimal, Decimal]]
+    ) -> Optional[Decimal]:
+        """
+        Calculate weighted average FCR from contributions.
+
+        Args:
+            fcr_contributions: List of (weight, fcr_value) tuples
+
+        Returns:
+            Decimal or None: Weighted average FCR, rounded to 3 decimal places
+        """
+        if not fcr_contributions:
+            return None
+
+        total_weight = Decimal('0')
+        weighted_sum = Decimal('0')
+
+        for weight, fcr_value in fcr_contributions:
+            if weight > 0 and fcr_value > 0:
+                weighted_sum += weight * fcr_value
+                total_weight += weight
+
+        if total_weight == 0:
+            return None
+
+        # Round to 3 decimal places for consistency
+        return round(weighted_sum / total_weight, 3)
+
+    @staticmethod
+    def _aggregate_feeding_event_data(
+        feeding_events: List[Dict]
+    ) -> Tuple[Optional[Decimal], Optional[Decimal]]:
+        """
+        Aggregate biomass and feeding percentage data from feeding events.
+
+        Args:
+            feeding_events: List of feeding event dictionaries
+
+        Returns:
+            Tuple of (avg_biomass, avg_feeding_pct)
+        """
+        if not feeding_events:
+            return None, None
+
+        total_biomass = Decimal('0')
+        total_feeding_pct = Decimal('0')
+        count = 0
+
+        for event in feeding_events:
+            biomass = event.get('batch_biomass_kg')
+            feeding_pct = event.get('feeding_percentage')
+
+            if biomass is not None:
+                total_biomass += biomass
+                count += 1
+
+            if feeding_pct is not None:
+                total_feeding_pct += feeding_pct
+
+        avg_biomass = (total_biomass / count) if count > 0 else None
+        avg_feeding_pct = (total_feeding_pct / len(feeding_events)) if feeding_events else None
+
+        return avg_biomass, avg_feeding_pct
+
     @classmethod
     def calculate_batch_fcr(
         cls,
@@ -31,28 +187,31 @@ class FCRCalculationService:
     ) -> Optional[Decimal]:
         """
         Calculate FCR for a batch over a specific period.
-        
+
         Args:
             batch: The batch to calculate FCR for
             period_start: Start date of the period
             period_end: End date of the period
             biomass_gain_kg: Biomass gain during period (from scenario modeling)
-            
+
         Returns:
             Decimal: FCR value, or None if cannot be calculated
         """
+        # Early return if no biomass gain provided
+        if biomass_gain_kg is None:
+            return None
+
         # Get total feed consumed by this batch
         total_feed_consumed = cls.get_batch_feed_consumption(
             batch, period_start, period_end
         )
-        
+
+        # Early return if no feed consumed
         if not total_feed_consumed or total_feed_consumed == 0:
             return None
-            
-        if not biomass_gain_kg or biomass_gain_kg <= 0:
-            raise FCRCalculationError("Cannot calculate FCR with zero or negative biomass gain")
-            
-        return total_feed_consumed / biomass_gain_kg
+
+        # Use pure helper function for FCR calculation
+        return cls._calculate_fcr_value(total_feed_consumed, biomass_gain_kg)
     
     @classmethod
     def get_batch_feed_consumption(
@@ -108,7 +267,7 @@ class FCRCalculationService:
     ) -> Decimal:
         """
         Get feed consumption for a mixed batch, prorated by composition.
-        
+
         For mixed batches, we need to:
         1. Get all feeding events for containers with this mixed batch
         2. Prorate the feed consumption based on batch composition percentages
@@ -117,15 +276,15 @@ class FCRCalculationService:
         container_assignments = batch.batch_assignments.filter(
             is_active=True
         ).values_list('container_id', flat=True)
-        
+
         feeding_events = FeedingEvent.objects.filter(
             container_id__in=container_assignments,
             feeding_date__gte=period_start,
             feeding_date__lte=period_end
         )
-        
+
         total_prorated_feed = Decimal('0')
-        
+
         # For each feeding event, calculate this batch's share
         for event in feeding_events:
             # Get the composition percentage for this batch in the container
@@ -133,15 +292,17 @@ class FCRCalculationService:
                 mixed_batch=batch,
                 source_batch=event.batch  # The original batch being fed
             ).first()
-            
+
             if composition:
-                # Prorate the feed amount by the composition percentage
-                batch_share = event.amount_kg * (composition.percentage / 100)
+                # Use pure helper function for prorated calculation
+                batch_share = cls._prorate_feed_by_composition(
+                    event.amount_kg, composition.percentage
+                )
                 total_prorated_feed += batch_share
             elif event.batch == batch:
                 # Direct feeding to this mixed batch
                 total_prorated_feed += event.amount_kg
-        
+
         return total_prorated_feed
     
     @classmethod
@@ -156,7 +317,7 @@ class FCRCalculationService:
     ) -> BatchFeedingSummary:
         """
         Update or create a BatchFeedingSummary with FCR calculation.
-        
+
         Args:
             batch: The batch to update summary for
             period_start: Start date of the period
@@ -164,57 +325,41 @@ class FCRCalculationService:
             biomass_gain_kg: Biomass gain from scenario modeling
             starting_biomass_kg: Starting biomass for the period
             ending_biomass_kg: Ending biomass for the period
-            
+
         Returns:
             BatchFeedingSummary: The updated summary
         """
-        # Calculate total feed consumed
+        # Calculate total feed consumed and cost
         total_feed_consumed = cls.get_batch_feed_consumption(
             batch, period_start, period_end
         )
-        
-        # Calculate total feed cost
+
         total_feed_cost = cls.get_batch_feed_cost(
             batch, period_start, period_end
         )
-        
-        # Calculate FCR
-        fcr = None
-        if biomass_gain_kg and biomass_gain_kg > 0:
-            fcr = cls.calculate_batch_fcr(
-                batch, period_start, period_end, biomass_gain_kg
-            )
-        
-        # Get average biomass and feeding percentage from feeding events
-        feeding_events = FeedingEvent.objects.filter(
+
+        # Aggregate feeding event statistics using helper
+        avg_biomass, avg_feeding_pct, has_weighing_events = cls._aggregate_feeding_event_statistics(
+            batch, period_start, period_end
+        )
+
+        # Calculate confidence level and estimation method
+        confidence_level = cls.calculate_confidence_level(batch, period_end)
+        estimation_method = cls.determine_estimation_method(biomass_gain_kg, has_weighing_events)
+
+        # Create summary data using helper
+        summary_data = cls._create_batch_feeding_summary_data(
             batch=batch,
-            feeding_date__gte=period_start,
-            feeding_date__lte=period_end
-        )
-        
-        avg_biomass = feeding_events.aggregate(
-            avg=Avg('batch_biomass_kg')
-        )['avg']
-        
-        avg_feeding_pct = feeding_events.aggregate(
-            avg=Avg('feeding_percentage')
-        )['avg']
-
-        # Check for weighing events in the period
-        has_weighing_events = GrowthSample.objects.filter(
-            assignment__batch=batch,
-            sample_date__gte=period_start,
-            sample_date__lte=period_end
-        ).exists()
-
-        # Calculate confidence level
-        confidence_level = cls.calculate_confidence_level(
-            batch, period_end
-        )
-
-        # Determine estimation method
-        estimation_method = cls.determine_estimation_method(
-            biomass_gain_kg, has_weighing_events
+            period_start=period_start,
+            period_end=period_end,
+            total_feed_consumed=total_feed_consumed,
+            total_feed_cost=total_feed_cost,
+            biomass_gain_kg=biomass_gain_kg,
+            avg_biomass=avg_biomass,
+            avg_feeding_pct=avg_feeding_pct,
+            has_weighing_events=has_weighing_events,
+            confidence_level=confidence_level,
+            estimation_method=estimation_method
         )
 
         # Update or create summary
@@ -222,37 +367,16 @@ class FCRCalculationService:
             batch=batch,
             period_start=period_start,
             period_end=period_end,
-            defaults={
-                'total_feed_consumed_kg': total_feed_consumed,
-                # Core feed and growth data
-                'total_feed_kg': total_feed_consumed,
-                'total_feed_consumed_kg': total_feed_consumed,
-                'total_growth_kg': biomass_gain_kg,
-                'total_biomass_gain_kg': biomass_gain_kg,
-                'weighted_avg_fcr': fcr,
-                'fcr': fcr,  # Legacy field for backward compatibility
-
-                # Biomass tracking
-                'total_starting_biomass_kg': avg_biomass,
-                'total_ending_biomass_kg': (avg_biomass + biomass_gain_kg) if avg_biomass and biomass_gain_kg else avg_biomass,
-
-                # Quality indicators
-                'overall_confidence_level': confidence_level,
-                'estimation_method': estimation_method,
-
-                # Legacy fields for backward compatibility
-                'average_feeding_percentage': avg_feeding_pct,
-                'container_count': 1,  # Default for legacy method
-            }
+            defaults=summary_data
         )
-        
+
         # Add custom attributes for test compatibility
         # (These aren't stored in the model but the tests expect them)
         summary.total_feed_cost = total_feed_cost
         summary.biomass_gain_kg = biomass_gain_kg
         summary.starting_biomass_kg = starting_biomass_kg
         summary.ending_biomass_kg = ending_biomass_kg
-        
+
         return summary
     
     @classmethod
@@ -313,16 +437,16 @@ class FCRCalculationService:
         container_assignments = batch.batch_assignments.filter(
             is_active=True
         ).values_list('container_id', flat=True)
-        
+
         feeding_events = FeedingEvent.objects.filter(
             container_id__in=container_assignments,
             feeding_date__gte=period_start,
             feeding_date__lte=period_end,
             feed_cost__isnull=False
         )
-        
+
         total_prorated_cost = Decimal('0')
-        
+
         # For each feeding event, calculate this batch's share
         for event in feeding_events:
             # Get the composition percentage for this batch in the container
@@ -330,15 +454,17 @@ class FCRCalculationService:
                 mixed_batch=batch,
                 source_batch=event.batch
             ).first()
-            
+
             if composition:
-                # Prorate the feed cost by the composition percentage
-                batch_share = event.feed_cost * (composition.percentage / 100)
+                # Use pure helper function for prorated calculation
+                batch_share = cls._prorate_feed_by_composition(
+                    event.feed_cost, composition.percentage
+                )
                 total_prorated_cost += batch_share
             elif event.batch == batch:
                 # Direct feeding to this mixed batch
                 total_prorated_cost += event.feed_cost
-        
+
         return total_prorated_cost
 
     @classmethod
@@ -359,33 +485,23 @@ class FCRCalculationService:
         Returns:
             str: Confidence level ('VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW')
         """
-        if not last_weighing_date:
+        # Determine the last weighing date
+        weighing_date = last_weighing_date
+        if not weighing_date:
             # Try to find the most recent weighing date for this batch
             latest_growth_sample = GrowthSample.objects.filter(
                 assignment__batch=batch
             ).order_by('-sample_date').first()
 
-            if latest_growth_sample:
-                last_weighing_date = latest_growth_sample.sample_date
+            weighing_date = latest_growth_sample.sample_date if latest_growth_sample else None
 
-        if not last_weighing_date:
-            # No weighing data available
+        # Early return if no weighing data available
+        if not weighing_date:
             return 'LOW'
 
-        # Calculate days since last weighing
-        days_since_weighing = (period_end - last_weighing_date).days
-
-        if days_since_weighing < 0:
-            # Future weighing date (data issue)
-            return 'LOW'
-        elif days_since_weighing < 10:
-            return 'VERY_HIGH'
-        elif days_since_weighing < 20:
-            return 'HIGH'
-        elif days_since_weighing < 40:
-            return 'MEDIUM'
-        else:
-            return 'LOW'
+        # Calculate days since last weighing and use pure helper
+        days_since_weighing = (period_end - weighing_date).days
+        return cls._calculate_confidence_level_from_days(days_since_weighing)
 
     @classmethod
     def determine_estimation_method(
@@ -403,13 +519,10 @@ class FCRCalculationService:
         Returns:
             str or None: 'MEASURED', 'INTERPOLATED', or None if no FCR
         """
-        if not biomass_gain_kg:
-            return None
-
-        if has_weighing_events:
-            return 'MEASURED'
-        else:
-            return 'INTERPOLATED'
+        # Use pure helper function
+        return cls._determine_estimation_method_from_data(
+            biomass_gain_kg, has_weighing_events
+        )
 
     @classmethod
     def update_batch_feeding_summary(
@@ -437,81 +550,47 @@ class FCRCalculationService:
         Returns:
             BatchFeedingSummary: The updated summary
         """
-        # Calculate total feed consumed
+        # Calculate total feed consumed and cost
         total_feed_consumed = cls.get_batch_feed_consumption(
             batch, period_start, period_end
         )
 
-        # Calculate total feed cost
         total_feed_cost = cls.get_batch_feed_cost(
             batch, period_start, period_end
         )
 
-        # Calculate FCR
-        fcr = None
-        if biomass_gain_kg and biomass_gain_kg > 0:
-            fcr = cls.calculate_batch_fcr(
-                batch, period_start, period_end, biomass_gain_kg
-            )
+        # Aggregate feeding event statistics using helper
+        avg_biomass, avg_feeding_pct, has_weighing_events = cls._aggregate_feeding_event_statistics(
+            batch, period_start, period_end
+        )
 
-        # Check for weighing events in the period
-        has_weighing_events = GrowthSample.objects.filter(
-            assignment__batch=batch,
-            sample_date__gte=period_start,
-            sample_date__lte=period_end
-        ).exists()
-
-        # Calculate confidence level
+        # Calculate confidence level (with optional last_weighing_date) and estimation method
         confidence_level = cls.calculate_confidence_level(
             batch, period_end, last_weighing_date
         )
+        estimation_method = cls.determine_estimation_method(biomass_gain_kg, has_weighing_events)
 
-        # Determine estimation method
-        estimation_method = cls.determine_estimation_method(
-            biomass_gain_kg, has_weighing_events
-        )
-
-        # Get average biomass and feeding percentage from feeding events
-        feeding_events = FeedingEvent.objects.filter(
+        # Create summary data using helper
+        summary_data = cls._create_batch_feeding_summary_data(
             batch=batch,
-            feeding_date__gte=period_start,
-            feeding_date__lte=period_end
+            period_start=period_start,
+            period_end=period_end,
+            total_feed_consumed=total_feed_consumed,
+            total_feed_cost=total_feed_cost,
+            biomass_gain_kg=biomass_gain_kg,
+            avg_biomass=avg_biomass,
+            avg_feeding_pct=avg_feeding_pct,
+            has_weighing_events=has_weighing_events,
+            confidence_level=confidence_level,
+            estimation_method=estimation_method
         )
-
-        avg_biomass = feeding_events.aggregate(
-            avg=Avg('batch_biomass_kg')
-        )['avg']
-
-        avg_feeding_pct = feeding_events.aggregate(
-            avg=Avg('feeding_percentage')
-        )['avg']
 
         # Update or create summary
         summary, created = BatchFeedingSummary.objects.update_or_create(
             batch=batch,
             period_start=period_start,
             period_end=period_end,
-            defaults={
-                # Core feed and growth data
-                'total_feed_kg': total_feed_consumed,
-                'total_feed_consumed_kg': total_feed_consumed,
-                'total_growth_kg': biomass_gain_kg,
-                'total_biomass_gain_kg': biomass_gain_kg,
-                'weighted_avg_fcr': fcr,
-                'fcr': fcr,  # Legacy field for backward compatibility
-
-                # Biomass tracking
-                'total_starting_biomass_kg': avg_biomass,
-                'total_ending_biomass_kg': (avg_biomass + biomass_gain_kg) if avg_biomass and biomass_gain_kg else avg_biomass,
-
-                # Quality indicators
-                'overall_confidence_level': confidence_level,
-                'estimation_method': estimation_method,
-
-                # Legacy fields for backward compatibility
-                'average_feeding_percentage': avg_feeding_pct,
-                'container_count': 1,  # Default for legacy method
-            }
+            defaults=summary_data
         )
 
         # Add custom attributes for test compatibility
@@ -551,6 +630,223 @@ class FCRCalculationService:
             comp.source_batch.id: comp.percentage
             for comp in compositions
         }
+
+    # ============================================================================
+    # Data Aggregation Helpers
+    # ============================================================================
+
+    @classmethod
+    def _aggregate_feeding_event_statistics(
+        cls,
+        batch: Batch,
+        period_start: date,
+        period_end: date
+    ) -> Tuple[Optional[Decimal], Optional[Decimal], bool]:
+        """
+        Aggregate feeding event statistics for a batch.
+
+        Args:
+            batch: The batch to aggregate data for
+            period_start: Start date of the period
+            period_end: End date of the period
+
+        Returns:
+            Tuple of (avg_biomass, avg_feeding_pct, has_weighing_events)
+        """
+        # Get feeding events
+        feeding_events = FeedingEvent.objects.filter(
+            batch=batch,
+            feeding_date__gte=period_start,
+            feeding_date__lte=period_end
+        )
+
+        # Early return if no feeding events
+        if not feeding_events.exists():
+            return None, None, False
+
+        # Convert queryset to list of dicts for pure function
+        event_data = list(feeding_events.values(
+            'batch_biomass_kg', 'feeding_percentage'
+        ))
+
+        # Use pure helper for aggregation
+        avg_biomass, avg_feeding_pct = cls._aggregate_feeding_event_data(event_data)
+
+        # Check for weighing events in the period
+        has_weighing_events = GrowthSample.objects.filter(
+            assignment__batch=batch,
+            sample_date__gte=period_start,
+            sample_date__lte=period_end
+        ).exists()
+
+        return avg_biomass, avg_feeding_pct, has_weighing_events
+
+    @classmethod
+    def _create_batch_feeding_summary_data(
+        cls,
+        batch: Batch,
+        period_start: date,
+        period_end: date,
+        total_feed_consumed: Decimal,
+        total_feed_cost: Decimal,
+        biomass_gain_kg: Optional[Decimal],
+        avg_biomass: Optional[Decimal],
+        avg_feeding_pct: Optional[Decimal],
+        has_weighing_events: bool,
+        confidence_level: str,
+        estimation_method: Optional[str]
+    ) -> Dict[str, any]:
+        """
+        Create the data dictionary for BatchFeedingSummary creation/update.
+
+        Args:
+            batch: The batch
+            period_start/end: Period dates
+            total_feed_consumed: Total feed consumed
+            total_feed_cost: Total feed cost
+            biomass_gain_kg: Biomass gain
+            avg_biomass: Average biomass from feeding events
+            avg_feeding_pct: Average feeding percentage
+            has_weighing_events: Whether weighing events exist
+            confidence_level: Calculated confidence level
+            estimation_method: Estimation method
+
+        Returns:
+            Dict containing all fields for BatchFeedingSummary
+        """
+        # Calculate ending biomass
+        ending_biomass = None
+        if avg_biomass is not None and biomass_gain_kg is not None:
+            ending_biomass = avg_biomass + biomass_gain_kg
+
+        return {
+            # Core feed and growth data
+            'total_feed_kg': total_feed_consumed,
+            'total_feed_consumed_kg': total_feed_consumed,
+            'total_growth_kg': biomass_gain_kg,
+            'total_biomass_gain_kg': biomass_gain_kg,
+            'weighted_avg_fcr': cls._calculate_fcr_value(total_feed_consumed, biomass_gain_kg) if biomass_gain_kg else None,
+            'fcr': cls._calculate_fcr_value(total_feed_consumed, biomass_gain_kg) if biomass_gain_kg else None,  # Legacy field
+
+            # Biomass tracking
+            'total_starting_biomass_kg': avg_biomass,
+            'total_ending_biomass_kg': ending_biomass,
+
+            # Quality indicators
+            'overall_confidence_level': confidence_level,
+            'estimation_method': estimation_method,
+
+            # Legacy fields for backward compatibility
+            'average_feeding_percentage': avg_feeding_pct,
+            'container_count': 1,  # Default for legacy method
+        }
+
+    # ============================================================================
+    # Container Aggregation Helpers
+    # ============================================================================
+
+    @staticmethod
+    def _calculate_worst_confidence_level(confidence_levels: List[str]) -> str:
+        """
+        Calculate the worst (lowest) confidence level from a list.
+
+        Args:
+            confidence_levels: List of confidence level strings
+
+        Returns:
+            str: Worst confidence level
+        """
+        if not confidence_levels:
+            return 'LOW'
+
+        level_order = ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
+        worst_level = 'VERY_HIGH'
+
+        for level in confidence_levels:
+            if level_order.index(level) > level_order.index(worst_level):
+                worst_level = level
+
+        return worst_level
+
+    @staticmethod
+    def _determine_overall_estimation_method(estimation_methods: List[str]) -> str:
+        """
+        Determine overall estimation method from container methods.
+
+        Args:
+            estimation_methods: List of estimation method strings
+
+        Returns:
+            str: Overall estimation method
+        """
+        unique_methods = set(method for method in estimation_methods if method)
+
+        if len(unique_methods) == 1:
+            return list(unique_methods)[0]
+        elif 'INTERPOLATED' in unique_methods:
+            return 'MIXED' if 'MEASURED' in unique_methods else 'INTERPOLATED'
+        else:
+            return 'MEASURED'
+
+    @classmethod
+    def _aggregate_container_summary_data(
+        cls,
+        container_summaries: models.QuerySet
+    ) -> Tuple[Decimal, Decimal, Decimal, Decimal, int, str, str, Optional[Decimal]]:
+        """
+        Aggregate data from container summaries.
+
+        Args:
+            container_summaries: QuerySet of ContainerFeedingSummary objects
+
+        Returns:
+            Tuple of aggregated data: (total_feed, total_growth, total_starting_biomass,
+                                     total_ending_biomass, container_count, worst_confidence,
+                                     overall_method, weighted_avg_fcr)
+        """
+        total_feed = Decimal('0')
+        total_growth = Decimal('0')
+        total_starting_biomass = Decimal('0')
+        total_ending_biomass = Decimal('0')
+        container_count = 0
+        confidence_levels = []
+        estimation_methods = []
+
+        # Variables for weighted FCR calculation
+        fcr_contributions = []
+
+        for summary in container_summaries:
+            # Accumulate totals for non-weighted metrics
+            total_feed += summary.total_feed_kg or Decimal('0')
+            total_growth += summary.growth_kg or Decimal('0')
+
+            if summary.starting_biomass_kg:
+                total_starting_biomass += summary.starting_biomass_kg
+            if summary.ending_biomass_kg:
+                total_ending_biomass += summary.ending_biomass_kg
+
+            container_count += 1
+
+            # Collect data for aggregation calculations
+            if summary.confidence_level:
+                confidence_levels.append(summary.confidence_level)
+            if summary.estimation_method:
+                estimation_methods.append(summary.estimation_method)
+
+            # Prepare FCR contribution for weighted calculation
+            weight = summary.total_feed_kg or summary.growth_kg
+            if weight and weight > 0 and summary.fcr and summary.fcr > 0:
+                fcr_contributions.append((weight, summary.fcr))
+
+        # Calculate aggregations
+        worst_confidence = cls._calculate_worst_confidence_level(confidence_levels)
+        overall_method = cls._determine_overall_estimation_method(estimation_methods)
+        weighted_avg_fcr = cls._calculate_weighted_average_fcr(fcr_contributions)
+
+        return (
+            total_feed, total_growth, total_starting_biomass, total_ending_biomass,
+            container_count, worst_confidence, overall_method, weighted_avg_fcr
+        )
 
     # ============================================================================
     # Container-Level FCR Calculations (Option B Implementation)
@@ -860,62 +1156,15 @@ class FCRCalculationService:
             period_end=period_end
         )
 
+        # Early return if no container summaries exist
         if not container_summaries.exists():
             return None
 
-        # Calculate weighted averages
-        total_feed = Decimal('0')
-        total_growth = Decimal('0')
-        total_starting_biomass = Decimal('0')
-        total_ending_biomass = Decimal('0')
-        container_count = 0
-        worst_confidence = 'VERY_HIGH'
-        estimation_methods = set()
-
-        # Variables for weighted FCR calculation
-        weighted_fcr_sum = Decimal('0')
-        total_weight = Decimal('0')
-
-        for summary in container_summaries:
-            # Accumulate totals for non-weighted metrics
-            total_feed += summary.total_feed_kg or 0
-            total_growth += summary.growth_kg or 0
-            if summary.starting_biomass_kg:
-                total_starting_biomass += summary.starting_biomass_kg
-            if summary.ending_biomass_kg:
-                total_ending_biomass += summary.ending_biomass_kg
-
-            container_count += 1
-            estimation_methods.add(summary.estimation_method)
-
-            # Track worst confidence level
-            confidence_levels = ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
-            if confidence_levels.index(summary.confidence_level) > confidence_levels.index(worst_confidence):
-                worst_confidence = summary.confidence_level
-
-            # Calculate weighted FCR contribution
-            # Use total_feed_kg as primary weight, fallback to biomass_gain_kg if available
-            weight = summary.total_feed_kg
-            if weight is None or weight == 0:
-                # Fallback to biomass gain if feed data unavailable
-                weight = summary.growth_kg
-
-            if weight and weight > 0 and summary.fcr and summary.fcr > 0:
-                weighted_fcr_sum += Decimal(str(weight)) * Decimal(str(summary.fcr))
-                total_weight += Decimal(str(weight))
-
-        # Calculate weighted average FCR (rounded to 3 decimal places for consistency)
-        weighted_avg_fcr = None
-        if total_weight > 0 and weighted_fcr_sum > 0:
-            weighted_avg_fcr = round(weighted_fcr_sum / total_weight, 3)
-
-        # Determine overall estimation method
-        if len(estimation_methods) == 1:
-            overall_method = list(estimation_methods)[0]
-        elif 'INTERPOLATED' in estimation_methods:
-            overall_method = 'MIXED' if 'MEASURED' in estimation_methods else 'INTERPOLATED'
-        else:
-            overall_method = 'MEASURED'
+        # Use helper method to aggregate all container data
+        (
+            total_feed, total_growth, total_starting_biomass, total_ending_biomass,
+            container_count, worst_confidence, overall_method, weighted_avg_fcr
+        ) = cls._aggregate_container_summary_data(container_summaries)
 
         # Create or update batch summary
         summary, created = BatchFeedingSummary.objects.update_or_create(

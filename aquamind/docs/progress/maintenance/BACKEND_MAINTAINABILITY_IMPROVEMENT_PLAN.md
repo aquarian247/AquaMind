@@ -46,10 +46,11 @@ Phase 3 — Decompose `batch/api/viewsets.py`
 - Approach: split by resource into multiple files or adopt mixins; isolate filter logic
 - Acceptance: MI improves (>50 target); routes unchanged; tests green
 
-Phase 4 — Simplify inventory FCR service
+Phase 4 — Simplify inventory FCR service ✅ COMPLETED
 - File: `apps/inventory/services/fcr_service.py` (low MI; multiple CC spikes)
 - Approach: separate IO from computation; extract pure functions; early returns
 - Acceptance: key functions CC < 15; service behavior verified with unit tests
+- **COMPLETED**: Extracted 8 pure helper functions, reduced complexity from C/D to A/B ratings, MI improved to A, all tests passing
 
 Phase 5 — Scenario calculations complexity reduction
 - Files: `apps/scenario/services/calculations/*` (projection_engine, fcr_calculator, mortality_calculator, tgc_calculator)

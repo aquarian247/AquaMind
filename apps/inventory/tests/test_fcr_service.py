@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
 from datetime import date, timedelta
+from unittest.mock import Mock
 
 from apps.inventory.models import (
     Feed, FeedingEvent, BatchFeedingSummary
@@ -429,7 +430,207 @@ class FCRCalculationServiceTest(TestCase):
         percentages = FCRCalculationService.get_mixed_batch_composition_percentages(
             self.batch1
         )
-        
+
         # Single batch should return 100% for itself
         expected_percentages = {self.batch1.id: Decimal("100.0")}
-        self.assertEqual(percentages, expected_percentages) 
+        self.assertEqual(percentages, expected_percentages)
+
+    # ============================================================================
+    # Tests for Pure Helper Functions
+    # ============================================================================
+
+    def test_calculate_fcr_value_valid_inputs(self):
+        """Test FCR calculation with valid inputs."""
+        total_feed = Decimal('100.0')
+        biomass_gain = Decimal('80.0')
+
+        fcr = FCRCalculationService._calculate_fcr_value(total_feed, biomass_gain)
+        expected_fcr = Decimal('1.25')  # 100 / 80
+
+        self.assertEqual(fcr, expected_fcr)
+
+    def test_calculate_fcr_value_zero_biomass_gain(self):
+        """Test FCR calculation with zero biomass gain raises error."""
+        total_feed = Decimal('100.0')
+        biomass_gain = Decimal('0')
+
+        with self.assertRaises(FCRCalculationError):
+            FCRCalculationService._calculate_fcr_value(total_feed, biomass_gain)
+
+    def test_calculate_fcr_value_negative_biomass_gain(self):
+        """Test FCR calculation with negative biomass gain raises error."""
+        total_feed = Decimal('100.0')
+        biomass_gain = Decimal('-10.0')
+
+        with self.assertRaises(FCRCalculationError):
+            FCRCalculationService._calculate_fcr_value(total_feed, biomass_gain)
+
+    def test_calculate_fcr_value_zero_feed_consumed(self):
+        """Test FCR calculation with zero feed consumed returns zero."""
+        total_feed = Decimal('0')
+        biomass_gain = Decimal('80.0')
+
+        fcr = FCRCalculationService._calculate_fcr_value(total_feed, biomass_gain)
+        self.assertEqual(fcr, Decimal('0'))
+
+    def test_calculate_confidence_level_from_days_very_high(self):
+        """Test confidence level calculation for very recent weighing."""
+        days = 5
+        confidence = FCRCalculationService._calculate_confidence_level_from_days(days)
+        self.assertEqual(confidence, 'VERY_HIGH')
+
+    def test_calculate_confidence_level_from_days_high(self):
+        """Test confidence level calculation for recent weighing."""
+        days = 15
+        confidence = FCRCalculationService._calculate_confidence_level_from_days(days)
+        self.assertEqual(confidence, 'HIGH')
+
+    def test_calculate_confidence_level_from_days_medium(self):
+        """Test confidence level calculation for medium-term weighing."""
+        days = 25
+        confidence = FCRCalculationService._calculate_confidence_level_from_days(days)
+        self.assertEqual(confidence, 'MEDIUM')
+
+    def test_calculate_confidence_level_from_days_low(self):
+        """Test confidence level calculation for old weighing."""
+        days = 50
+        confidence = FCRCalculationService._calculate_confidence_level_from_days(days)
+        self.assertEqual(confidence, 'LOW')
+
+    def test_calculate_confidence_level_from_days_negative(self):
+        """Test confidence level calculation for future weighing date."""
+        days = -5
+        confidence = FCRCalculationService._calculate_confidence_level_from_days(days)
+        self.assertEqual(confidence, 'LOW')
+
+    def test_determine_estimation_method_from_data_with_biomass_and_weighing(self):
+        """Test estimation method determination with biomass gain and weighing events."""
+        biomass_gain = Decimal('100.0')
+        has_weighing_events = True
+
+        method = FCRCalculationService._determine_estimation_method_from_data(
+            biomass_gain, has_weighing_events
+        )
+        self.assertEqual(method, 'MEASURED')
+
+    def test_determine_estimation_method_from_data_with_biomass_no_weighing(self):
+        """Test estimation method determination with biomass gain but no weighing events."""
+        biomass_gain = Decimal('100.0')
+        has_weighing_events = False
+
+        method = FCRCalculationService._determine_estimation_method_from_data(
+            biomass_gain, has_weighing_events
+        )
+        self.assertEqual(method, 'INTERPOLATED')
+
+    def test_determine_estimation_method_from_data_no_biomass(self):
+        """Test estimation method determination with no biomass gain."""
+        biomass_gain = None
+        has_weighing_events = True
+
+        method = FCRCalculationService._determine_estimation_method_from_data(
+            biomass_gain, has_weighing_events
+        )
+        self.assertIsNone(method)
+
+    def test_prorate_feed_by_composition(self):
+        """Test feed prorating by composition percentage."""
+        feed_amount = Decimal('100.0')
+        percentage = Decimal('60.0')
+
+        prorated = FCRCalculationService._prorate_feed_by_composition(
+            feed_amount, percentage
+        )
+        expected = Decimal('60.0')  # 100 * (60/100)
+
+        self.assertEqual(prorated, expected)
+
+    def test_calculate_weighted_average_fcr_with_contributions(self):
+        """Test weighted average FCR calculation with valid contributions."""
+        contributions = [
+            (Decimal('100.0'), Decimal('1.2')),
+            (Decimal('200.0'), Decimal('1.5')),
+        ]
+
+        weighted_avg = FCRCalculationService._calculate_weighted_average_fcr(contributions)
+        # (100*1.2 + 200*1.5) / (100+200) = (120 + 300) / 300 = 420/300 = 1.4
+        expected = Decimal('1.400')  # Rounded to 3 decimal places
+
+        self.assertEqual(weighted_avg, expected)
+
+    def test_calculate_weighted_average_fcr_empty_contributions(self):
+        """Test weighted average FCR calculation with no contributions."""
+        contributions = []
+
+        weighted_avg = FCRCalculationService._calculate_weighted_average_fcr(contributions)
+        self.assertIsNone(weighted_avg)
+
+    def test_calculate_weighted_average_fcr_zero_weights(self):
+        """Test weighted average FCR calculation with zero weights."""
+        contributions = [
+            (Decimal('0'), Decimal('1.2')),
+            (Decimal('0'), Decimal('1.5')),
+        ]
+
+        weighted_avg = FCRCalculationService._calculate_weighted_average_fcr(contributions)
+        self.assertIsNone(weighted_avg)
+
+    def test_aggregate_feeding_event_data_with_events(self):
+        """Test aggregation of feeding event data."""
+        event_data = [
+            {'batch_biomass_kg': Decimal('1000.0'), 'feeding_percentage': Decimal('5.0')},
+            {'batch_biomass_kg': Decimal('1100.0'), 'feeding_percentage': Decimal('4.5')},
+            {'batch_biomass_kg': None, 'feeding_percentage': Decimal('6.0')},
+        ]
+
+        avg_biomass, avg_feeding_pct = FCRCalculationService._aggregate_feeding_event_data(event_data)
+
+        # Biomass: (1000 + 1100) / 2 = 1050
+        self.assertEqual(avg_biomass, Decimal('1050.0'))
+        # Feeding %: (5.0 + 4.5 + 6.0) / 3 = 5.1667
+        self.assertAlmostEqual(avg_feeding_pct, Decimal('5.1667'), places=4)
+
+    def test_aggregate_feeding_event_data_empty(self):
+        """Test aggregation of empty feeding event data."""
+        event_data = []
+
+        avg_biomass, avg_feeding_pct = FCRCalculationService._aggregate_feeding_event_data(event_data)
+
+        self.assertIsNone(avg_biomass)
+        self.assertIsNone(avg_feeding_pct)
+
+    def test_calculate_worst_confidence_level(self):
+        """Test calculation of worst confidence level from list."""
+        confidence_levels = ['HIGH', 'VERY_HIGH', 'MEDIUM', 'LOW']
+        worst = FCRCalculationService._calculate_worst_confidence_level(confidence_levels)
+        self.assertEqual(worst, 'LOW')
+
+    def test_calculate_worst_confidence_level_empty(self):
+        """Test calculation of worst confidence level from empty list."""
+        confidence_levels = []
+        worst = FCRCalculationService._calculate_worst_confidence_level(confidence_levels)
+        self.assertEqual(worst, 'LOW')
+
+    def test_determine_overall_estimation_method_single_method(self):
+        """Test overall estimation method with single method."""
+        methods = ['MEASURED', 'MEASURED', 'MEASURED']
+        overall = FCRCalculationService._determine_overall_estimation_method(methods)
+        self.assertEqual(overall, 'MEASURED')
+
+    def test_determine_overall_estimation_method_mixed(self):
+        """Test overall estimation method with mixed methods."""
+        methods = ['MEASURED', 'INTERPOLATED']
+        overall = FCRCalculationService._determine_overall_estimation_method(methods)
+        self.assertEqual(overall, 'MIXED')
+
+    def test_determine_overall_estimation_method_only_interpolated(self):
+        """Test overall estimation method with only interpolated."""
+        methods = ['INTERPOLATED', 'INTERPOLATED']
+        overall = FCRCalculationService._determine_overall_estimation_method(methods)
+        self.assertEqual(overall, 'INTERPOLATED')
+
+    def test_determine_overall_estimation_method_only_measured(self):
+        """Test overall estimation method with only measured."""
+        methods = ['MEASURED', 'MEASURED']
+        overall = FCRCalculationService._determine_overall_estimation_method(methods)
+        self.assertEqual(overall, 'MEASURED') 
