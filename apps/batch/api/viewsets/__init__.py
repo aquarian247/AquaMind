@@ -6,3 +6,10 @@ This package contains viewsets for the batch app, organized into separate module
 
 # Import all viewsets to make them available
 from .history import *
+from .species import SpeciesViewSet, LifeCycleStageViewSet
+from .batch import BatchViewSet
+from .transfers import BatchTransferViewSet
+from .mortality import MortalityEventViewSet
+from .assignments import BatchContainerAssignmentViewSet
+from .composition import BatchCompositionViewSet
+from .growth import GrowthSampleViewSet
