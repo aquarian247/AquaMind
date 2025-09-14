@@ -1,0 +1,821 @@
+{
+  "app": "batch",
+  "timestamp": "2025-09-14",
+  "files": [
+    {
+      "file": "apps/batch/serializers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 170,
+        "sloc": 131,
+        "comments": 6,
+        "multi": 0,
+        "blank": 33
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 52.3627264651594
+    },
+    {
+      "file": "apps/batch/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/apps.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 11,
+        "sloc": 7,
+        "comments": 1,
+        "multi": 0,
+        "blank": 3
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/admin.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 242,
+        "sloc": 221,
+        "comments": 0,
+        "multi": 0,
+        "blank": 14
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/urls.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 13,
+        "sloc": 6,
+        "comments": 0,
+        "multi": 3,
+        "blank": 4
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/views.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 344,
+        "sloc": 249,
+        "comments": 33,
+        "multi": 8,
+        "blank": 58
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 47.86078016827356
+    },
+    {
+      "file": "apps/batch/management/commands/clear_batch_data.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 199,
+        "sloc": 139,
+        "comments": 24,
+        "multi": 6,
+        "blank": 32
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 66.22602514531182
+    },
+    {
+      "file": "apps/batch/models/species.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 108,
+        "sloc": 87,
+        "comments": 0,
+        "multi": 12,
+        "blank": 9
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/models/batch.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 119,
+        "sloc": 76,
+        "comments": 5,
+        "multi": 14,
+        "blank": 18
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 57.61427455844868
+    },
+    {
+      "file": "apps/batch/models/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 31,
+        "sloc": 17,
+        "comments": 0,
+        "multi": 11,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/models/growth.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 72,
+        "sloc": 40,
+        "comments": 2,
+        "multi": 19,
+        "blank": 11
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 61.15018695479232
+    },
+    {
+      "file": "apps/batch/models/transfer.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 126,
+        "sloc": 86,
+        "comments": 20,
+        "multi": 10,
+        "blank": 19
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 73.79314276758745
+    },
+    {
+      "file": "apps/batch/models/mortality.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 42,
+        "sloc": 25,
+        "comments": 2,
+        "multi": 7,
+        "blank": 8
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/models/assignment.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 89,
+        "sloc": 58,
+        "comments": 4,
+        "multi": 16,
+        "blank": 11
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 65.24044730507987
+    },
+    {
+      "file": "apps/batch/models/composition.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 45,
+        "sloc": 28,
+        "comments": 1,
+        "multi": 10,
+        "blank": 6
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/routers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 46,
+        "sloc": 33,
+        "comments": 4,
+        "multi": 4,
+        "blank": 5
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/transfers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 66,
+        "sloc": 43,
+        "comments": 5,
+        "multi": 8,
+        "blank": 10
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/species.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 66,
+        "sloc": 35,
+        "comments": 5,
+        "multi": 12,
+        "blank": 14
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/batch.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 72,
+        "sloc": 45,
+        "comments": 9,
+        "multi": 9,
+        "blank": 13
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/growth.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 65,
+        "sloc": 40,
+        "comments": 6,
+        "multi": 8,
+        "blank": 11
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/assignments.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 76,
+        "sloc": 48,
+        "comments": 10,
+        "multi": 9,
+        "blank": 14
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/mortality.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 57,
+        "sloc": 34,
+        "comments": 5,
+        "multi": 8,
+        "blank": 10
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/composition.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 53,
+        "sloc": 32,
+        "comments": 4,
+        "multi": 8,
+        "blank": 9
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/base.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 18,
+        "sloc": 5,
+        "comments": 0,
+        "multi": 8,
+        "blank": 5
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/filters/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 56,
+        "sloc": 29,
+        "comments": 0,
+        "multi": 5,
+        "blank": 17
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/mixins.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 570,
+        "sloc": 360,
+        "comments": 40,
+        "multi": 51,
+        "blank": 104
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 32.79638522912565
+    },
+    {
+      "file": "apps/batch/api/viewsets/transfers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 91,
+        "sloc": 46,
+        "comments": 2,
+        "multi": 27,
+        "blank": 16
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/species.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 73,
+        "sloc": 34,
+        "comments": 7,
+        "multi": 17,
+        "blank": 15
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/batch.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 103,
+        "sloc": 44,
+        "comments": 4,
+        "multi": 39,
+        "blank": 18
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 15,
+        "sloc": 8,
+        "comments": 1,
+        "multi": 4,
+        "blank": 2
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/growth.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 69,
+        "sloc": 31,
+        "comments": 0,
+        "multi": 22,
+        "blank": 16
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/assignments.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 239,
+        "sloc": 157,
+        "comments": 6,
+        "multi": 50,
+        "blank": 26
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 62.92447978718579
+    },
+    {
+      "file": "apps/batch/api/viewsets/mortality.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 71,
+        "sloc": 29,
+        "comments": 4,
+        "multi": 22,
+        "blank": 16
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/composition.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 76,
+        "sloc": 35,
+        "comments": 2,
+        "multi": 23,
+        "blank": 16
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/viewsets/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 105,
+        "sloc": 73,
+        "comments": 0,
+        "multi": 5,
+        "blank": 17
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 45.705848804454384
+    },
+    {
+      "file": "apps/batch/api/serializers/species.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 68,
+        "sloc": 41,
+        "comments": 4,
+        "multi": 5,
+        "blank": 14
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 62.83889327342708
+    },
+    {
+      "file": "apps/batch/api/serializers/batch.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 182,
+        "sloc": 132,
+        "comments": 6,
+        "multi": 15,
+        "blank": 22
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 52.94984130792825
+    },
+    {
+      "file": "apps/batch/api/serializers/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 74,
+        "sloc": 53,
+        "comments": 4,
+        "multi": 15,
+        "blank": 6
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/serializers/growth.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 316,
+        "sloc": 242,
+        "comments": 25,
+        "multi": 6,
+        "blank": 44
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 39.03166064460936
+    },
+    {
+      "file": "apps/batch/api/serializers/transfer.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 152,
+        "sloc": 104,
+        "comments": 4,
+        "multi": 10,
+        "blank": 24
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 50.03443561396794
+    },
+    {
+      "file": "apps/batch/api/serializers/utils.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 151,
+        "sloc": 53,
+        "comments": 1,
+        "multi": 62,
+        "blank": 35
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 49.050065568965174
+    },
+    {
+      "file": "apps/batch/api/serializers/mortality.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 78,
+        "sloc": 48,
+        "comments": 3,
+        "multi": 9,
+        "blank": 14
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 66.52455318033022
+    },
+    {
+      "file": "apps/batch/api/serializers/assignment.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 205,
+        "sloc": 159,
+        "comments": 5,
+        "multi": 10,
+        "blank": 22
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 54.279348878127756
+    },
+    {
+      "file": "apps/batch/api/serializers/composition.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 143,
+        "sloc": 98,
+        "comments": 4,
+        "multi": 11,
+        "blank": 23
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 49.680173426844924
+    },
+    {
+      "file": "apps/batch/api/serializers/base.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 126,
+        "sloc": 39,
+        "comments": 3,
+        "multi": 55,
+        "blank": 29
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 71.40175888711435
+    },
+    {
+      "file": "apps/batch/api/serializers/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 56,
+        "sloc": 29,
+        "comments": 0,
+        "multi": 5,
+        "blank": 17
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/batch/api/serializers/validation.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 175,
+        "sloc": 80,
+        "comments": 9,
+        "multi": 48,
+        "blank": 38
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 55.69271929659031
+    },
+    {
+      "file": "apps/batch/services/growth_service.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 57,
+        "sloc": 21,
+        "comments": 3,
+        "multi": 21,
+        "blank": 12
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 86.3728570981749
+    },
+    {
+      "file": "apps/batch/services/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 3,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 3,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    }
+  ],
+  "summary": {
+    "total_files": 50,
+    "total_functions": 0,
+    "cc_average": 0,
+    "cc_max": 0,
+    "mi_average": 82.07061208722996,
+    "mi_min": 32.79638522912565,
+    "halstead_avg_volume": 0,
+    "halstead_avg_difficulty": 0,
+    "halstead_avg_effort": 0
+  }
+}

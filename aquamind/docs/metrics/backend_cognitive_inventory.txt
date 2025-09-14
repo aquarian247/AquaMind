@@ -1,0 +1,11 @@
+# Cognitive Complexity Report for inventory
+# Generated: 2025-09-14
+# Files analyzed: 43
+# Total violations: 3
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/inventory/api/viewsets/feeding.py:124:5: C90C901 'FeedingEventViewSet.summary' is too complex (11)
+apps/inventory/management/commands/setup_feed_recommendations.py:255:5: C90C901 'Command._setup_assignments' is too complex (14)
+apps/inventory/tests/test_models.py:195:5: C90C901 'FeedingEventModelTest.setUp' is too complex (20)

@@ -1,0 +1,52 @@
+{
+  "project": "aquamind-backend",
+  "timestamp": "2025-09-14",
+  "metric_type": "maintainability_index",
+  "apps": [
+    {
+      "app": "batch",
+      "mi_average": 82.07061208722996,
+      "mi_min": 32.79638522912565
+    },
+    {
+      "app": "broodstock",
+      "mi_average": 78.82063725747712,
+      "mi_min": 38.857299659912194
+    },
+    {
+      "app": "environmental",
+      "mi_average": 80.3948647586976,
+      "mi_min": 37.58273616576123
+    },
+    {
+      "app": "health",
+      "mi_average": 84.51804453651282,
+      "mi_min": 47.708713343859856
+    },
+    {
+      "app": "infrastructure",
+      "mi_average": 86.46171259499428,
+      "mi_min": 38.83002491337459
+    },
+    {
+      "app": "inventory",
+      "mi_average": 82.89892239752794,
+      "mi_min": 25.894449323248004
+    },
+    {
+      "app": "operational",
+      "mi_average": 92.4709091654717,
+      "mi_min": 29.227814248282343
+    },
+    {
+      "app": "scenario",
+      "mi_average": 76.72500951684347,
+      "mi_min": 12.040542990587644
+    },
+    {
+      "app": "users",
+      "mi_average": 89.39412361706196,
+      "mi_min": 54.51085000746586
+    }
+  ]
+}

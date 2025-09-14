@@ -1,0 +1,12 @@
+# Cognitive Complexity Report for infrastructure
+# Generated: 2025-09-14
+# Files analyzed: 43
+# Total violations: 4
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/infrastructure/management/commands/validate_openapi.py:138:5: C90C901 'Command.validate_response_codes' is too complex (14)
+apps/infrastructure/tests/test_openapi_spec.py:68:5: C90C901 'OpenAPISpecTestCase.test_all_endpoints_have_proper_response_documentation' is too complex (12)
+apps/infrastructure/tests/test_openapi_spec.py:134:5: C90C901 'OpenAPISpecTestCase.check_integer_bounds_in_schema' is too complex (12)
+apps/infrastructure/tests/test_openapi_spec.py:228:5: C90C901 'OpenAPISpecTestCase.test_all_viewsets_included' is too complex (13)

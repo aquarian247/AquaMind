@@ -1,0 +1,370 @@
+{
+  "app": "operational",
+  "timestamp": "2025-09-14",
+  "files": [
+    {
+      "file": "apps/operational/models.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/serializers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/apps.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 7,
+        "sloc": 5,
+        "comments": 0,
+        "multi": 0,
+        "blank": 2
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/admin.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/urls.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 14,
+        "sloc": 7,
+        "comments": 1,
+        "multi": 4,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/views.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/api/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 3,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 3,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/api/routers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 19,
+        "sloc": 8,
+        "comments": 3,
+        "multi": 5,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/api/viewsets/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 6,
+        "sloc": 2,
+        "comments": 0,
+        "multi": 3,
+        "blank": 1
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/api/viewsets/fcr_trends.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 277,
+        "sloc": 189,
+        "comments": 15,
+        "multi": 39,
+        "blank": 35
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 57.8358232337931
+    },
+    {
+      "file": "apps/operational/api/serializers/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 6,
+        "sloc": 2,
+        "comments": 0,
+        "multi": 3,
+        "blank": 1
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/api/serializers/fcr_trends.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 160,
+        "sloc": 115,
+        "comments": 6,
+        "multi": 30,
+        "blank": 13
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/operational/services/fcr_trends_service.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 629,
+        "sloc": 459,
+        "comments": 50,
+        "multi": 31,
+        "blank": 80
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 29.227814248282343
+    },
+    {
+      "file": "apps/operational/services/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 3,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 3,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    }
+  ],
+  "summary": {
+    "total_files": 15,
+    "total_functions": 0,
+    "cc_average": 0,
+    "cc_max": 0,
+    "mi_average": 92.4709091654717,
+    "mi_min": 29.227814248282343,
+    "halstead_avg_volume": 0,
+    "halstead_avg_difficulty": 0,
+    "halstead_avg_effort": 0
+  }
+}

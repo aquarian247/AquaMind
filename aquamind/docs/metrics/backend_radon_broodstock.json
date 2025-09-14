@@ -1,0 +1,319 @@
+{
+  "app": "broodstock",
+  "timestamp": "2025-09-14",
+  "files": [
+    {
+      "file": "apps/broodstock/models.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 509,
+        "sloc": 368,
+        "comments": 6,
+        "multi": 55,
+        "blank": 77
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 41.10671533945679
+    },
+    {
+      "file": "apps/broodstock/serializers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 320,
+        "sloc": 227,
+        "comments": 7,
+        "multi": 5,
+        "blank": 61
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 41.23222371445152
+    },
+    {
+      "file": "apps/broodstock/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/apps.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 18,
+        "sloc": 7,
+        "comments": 1,
+        "multi": 3,
+        "blank": 5
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/admin.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 300,
+        "sloc": 226,
+        "comments": 1,
+        "multi": 5,
+        "blank": 50
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 44.35500269732898
+    },
+    {
+      "file": "apps/broodstock/urls.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 12,
+        "sloc": 6,
+        "comments": 0,
+        "multi": 3,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/views.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 402,
+        "sloc": 291,
+        "comments": 5,
+        "multi": 5,
+        "blank": 70
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 38.857299659912194
+    },
+    {
+      "file": "apps/broodstock/api/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 1,
+        "sloc": 0,
+        "comments": 1,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/api/routers.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 52,
+        "sloc": 37,
+        "comments": 4,
+        "multi": 4,
+        "blank": 7
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/api/filters/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 56,
+        "sloc": 29,
+        "comments": 0,
+        "multi": 5,
+        "blank": 17
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/api/viewsets/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 11,
+        "sloc": 2,
+        "comments": 2,
+        "multi": 4,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/api/viewsets/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 65,
+        "sloc": 43,
+        "comments": 0,
+        "multi": 5,
+        "blank": 12
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/api/serializers/history.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 56,
+        "sloc": 29,
+        "comments": 0,
+        "multi": 5,
+        "blank": 17
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/services/broodstock_service.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 445,
+        "sloc": 253,
+        "comments": 31,
+        "multi": 82,
+        "blank": 78
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 49.697816772917214
+    },
+    {
+      "file": "apps/broodstock/services/__init__.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 10,
+        "sloc": 3,
+        "comments": 0,
+        "multi": 4,
+        "blank": 3
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": null,
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/broodstock/services/egg_management_service.py",
+      "timestamp": "2025-09-14",
+      "raw": {
+        "loc": 460,
+        "sloc": 289,
+        "comments": 30,
+        "multi": 72,
+        "blank": 69
+      },
+      "cyclomatic_complexity": null,
+      "halstead": null,
+      "maintainability_index": 45.88113793556721
+    }
+  ],
+  "summary": {
+    "total_files": 16,
+    "total_functions": 0,
+    "cc_average": 0,
+    "cc_max": 0,
+    "mi_average": 78.82063725747712,
+    "mi_min": 38.857299659912194,
+    "halstead_avg_volume": 0,
+    "halstead_avg_difficulty": 0,
+    "halstead_avg_effort": 0
+  }
+}

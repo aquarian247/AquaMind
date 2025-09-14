@@ -1,0 +1,11 @@
+# Cognitive Complexity Report for batch
+# Generated: 2025-09-14
+# Files analyzed: 50
+# Total violations: 3
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/batch/api/serializers/growth.py:106:5: C90C901 'GrowthSampleSerializer.validate' is too complex (20)
+apps/batch/api/serializers/validation.py:115:1: C90C901 'validate_sample_size_against_population' is too complex (13)
+apps/batch/views.py:152:5: C90C901 'BatchViewSet.merge_batches' is too complex (12)

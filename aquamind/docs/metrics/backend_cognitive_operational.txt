@@ -1,0 +1,10 @@
+# Cognitive Complexity Report for operational
+# Generated: 2025-09-14
+# Files analyzed: 15
+# Total violations: 2
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/operational/api/viewsets/fcr_trends.py:174:5: C90C901 'FCRTrendsViewSet._parse_query_parameters' is too complex (14)
+apps/operational/services/fcr_trends_service.py:381:5: C90C901 'FCRTrendsService._get_predicted_fcr_series' is too complex (15)
