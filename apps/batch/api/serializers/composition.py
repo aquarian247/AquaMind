@@ -57,53 +57,87 @@ class BatchCompositionSerializer(
         - At least one of population, biomass, or percentage is provided.
         """
         errors = {}
+        source_batch = self._get_source_batch(data)
 
-        current_source_batch = data.get('source_batch')
-        if not current_source_batch and self.instance:
-            current_source_batch = self.instance.source_batch
+        # Validate required fields
+        self._validate_required_fields(data, errors)
 
-        if not any(key in data for key in ['population_count', 'biomass_kg', 'percentage']):
-            errors['non_field_errors'] = (
-                "At least one of population count, biomass, or percentage must be provided."
-            )
-
+        # Validate percentage range
         if 'percentage' in data:
-            if not (Decimal('0') <= data['percentage'] <= Decimal('100')):
-                errors['percentage'] = "Percentage must be between 0 and 100."
+            self._validate_percentage(data, errors)
 
-        if 'population_count' in data and current_source_batch:
-            try:
-                pop_count = int(data['population_count'])
-                source_pop = current_source_batch.calculated_population_count
-                if pop_count <= 0:
-                    errors['population_count'] = "Population count must be > 0."
-                elif source_pop is not None and pop_count > source_pop:
-                    msg = (
-                        f"Population ({pop_count}) cannot exceed available "
-                        f"({source_pop}) in source batch "
-                        f"{current_source_batch.batch_number}."
-                    )
-                    errors['population_count'] = msg
-            except (ValueError, TypeError):
-                errors['population_count'] = "Population count must be an integer."
+        # Validate population count
+        if 'population_count' in data:
+            self._validate_population_count(data, source_batch, errors)
 
-        if 'biomass_kg' in data and current_source_batch:
-            try:
-                biomass_kg = Decimal(data['biomass_kg'])
-                source_bio = current_source_batch.calculated_biomass_kg
-                if biomass_kg <= Decimal('0'):
-                    errors['biomass_kg'] = "Biomass must be > 0."
-                elif source_bio is not None and biomass_kg > source_bio:
-                    msg = (
-                        f"Biomass ({biomass_kg} kg) cannot exceed available "
-                        f"({source_bio} kg) in source batch "
-                        f"{current_source_batch.batch_number}."
-                    )
-                    errors['biomass_kg'] = msg
-            except InvalidOperation:
-                errors['biomass_kg'] = "Biomass must be a valid decimal."
+        # Validate biomass
+        if 'biomass_kg' in data:
+            self._validate_biomass(data, source_batch, errors)
 
         if errors:
             raise serializers.ValidationError(errors)
 
         return data
+
+    def _get_source_batch(self, data):
+        """Get the source batch from data or instance."""
+        source_batch = data.get('source_batch')
+        if not source_batch and self.instance:
+            source_batch = self.instance.source_batch
+        return source_batch
+
+    def _validate_required_fields(self, data, errors):
+        """Validate that at least one required field is provided."""
+        if not any(key in data for key in ['population_count', 'biomass_kg', 'percentage']):
+            errors['non_field_errors'] = (
+                "At least one of population count, biomass, or percentage must be provided."
+            )
+
+    def _validate_percentage(self, data, errors):
+        """Validate percentage is between 0 and 100."""
+        if not (Decimal('0') <= data['percentage'] <= Decimal('100')):
+            errors['percentage'] = "Percentage must be between 0 and 100."
+
+    def _validate_population_count(self, data, source_batch, errors):
+        """Validate population count against source batch."""
+        if not source_batch:
+            return
+
+        try:
+            pop_count = int(data['population_count'])
+            if pop_count <= 0:
+                errors['population_count'] = "Population count must be > 0."
+                return
+
+            source_pop = source_batch.calculated_population_count
+            if source_pop is not None and pop_count > source_pop:
+                msg = (
+                    f"Population ({pop_count}) cannot exceed available "
+                    f"({source_pop}) in source batch "
+                    f"{source_batch.batch_number}."
+                )
+                errors['population_count'] = msg
+        except (ValueError, TypeError):
+            errors['population_count'] = "Population count must be an integer."
+
+    def _validate_biomass(self, data, source_batch, errors):
+        """Validate biomass against source batch."""
+        if not source_batch:
+            return
+
+        try:
+            biomass_kg = Decimal(data['biomass_kg'])
+            if biomass_kg <= Decimal('0'):
+                errors['biomass_kg'] = "Biomass must be > 0."
+                return
+
+            source_bio = source_batch.calculated_biomass_kg
+            if source_bio is not None and biomass_kg > source_bio:
+                msg = (
+                    f"Biomass ({biomass_kg} kg) cannot exceed available "
+                    f"({source_bio} kg) in source batch "
+                    f"{source_batch.batch_number}."
+                )
+                errors['biomass_kg'] = msg
+        except InvalidOperation:
+            errors['biomass_kg'] = "Biomass must be a valid decimal."

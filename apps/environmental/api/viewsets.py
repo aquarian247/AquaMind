@@ -1,4 +1,4 @@
-﻿"""
+"""
 ViewSets for the environmental app API.
 
 These ViewSets provide the CRUD operations for environmental models,
@@ -74,32 +74,42 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         Parses time strings into aware datetime objects for reliable filtering.
         """
         queryset = super().get_queryset()
-        
+
         from_time_str = self.request.query_params.get('from_time')
         to_time_str = self.request.query_params.get('to_time')
-        
+
+        # Early return if no time filters provided
+        if not from_time_str and not to_time_str:
+            return queryset
+
+        # Apply time filters with error handling
+        queryset = self._apply_time_filter(queryset, from_time_str, to_time_str)
+        return queryset
+
+    def _apply_time_filter(self, queryset, from_time_str, to_time_str):
+        """Apply time-based filtering to queryset."""
         try:
             if from_time_str:
-                from_time = parse_datetime(from_time_str)
-                if from_time and timezone.is_naive(from_time):
-                    # Attempt to make naive datetime aware using the current timezone
-                    # Adjust this logic if a specific timezone is expected from the client
-                    from_time = timezone.make_aware(from_time, timezone.get_current_timezone())
+                from_time = self._parse_and_make_aware(from_time_str)
                 if from_time:
                     queryset = queryset.filter(reading_time__gte=from_time)
 
             if to_time_str:
-                to_time = parse_datetime(to_time_str)
-                if to_time and timezone.is_naive(to_time):
-                    # Attempt to make naive datetime aware using the current timezone
-                    to_time = timezone.make_aware(to_time, timezone.get_current_timezone())
+                to_time = self._parse_and_make_aware(to_time_str)
                 if to_time:
                     queryset = queryset.filter(reading_time__lte=to_time)
-        except ValueError: 
-            # Handle potential parsing errors gracefully, maybe log or ignore
-            pass # Or raise ParseError("Invalid datetime format")
+        except ValueError:
+            # Handle potential parsing errors gracefully
+            pass
 
         return queryset
+
+    def _parse_and_make_aware(self, time_str):
+        """Parse datetime string and make it timezone aware if needed."""
+        dt = parse_datetime(time_str)
+        if dt and timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        return dt
     
     @action(detail=False, methods=['get'])
     def recent(self, request):

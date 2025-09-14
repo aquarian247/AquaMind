@@ -212,16 +212,22 @@ class BatchViewSetTest(BaseAPITestCase):
             self.assertEqual(len(response.data['results']), 2)  # Both batches are active
             
             # Filter by date range
-            # Uses the mocked date.today() (which returns simulated_today)
-            start_date_query_val = (date.today() - timedelta(days=60)).isoformat()
-            end_date_query_val = (date.today() - timedelta(days=1)).isoformat()
+            # The batches were created with start_date = real_today - 30 days
+            # So we need to filter for dates that include that range
+            thirty_days_ago = OriginalDate.today() - timedelta(days=30)
+            sixty_days_ago = OriginalDate.today() - timedelta(days=60)
+            ten_days_ago = OriginalDate.today() - timedelta(days=10)
+
+            # Filter for batches created between 60 days ago and 10 days ago
+            start_date_query_val = sixty_days_ago.isoformat()
+            end_date_query_val = ten_days_ago.isoformat()
             url = f"{self.get_api_url('batch', 'batches')}?start_date_after={start_date_query_val}&start_date_before={end_date_query_val}"
             response = self.client.get(url)
-            
+
             # Print response for debugging
             print("Filter by Date Range Response:", response.data)
-            
-            # The test batch should be included as it was created 30 days ago
+
+            # Both test batches should be included as they were created ~30 days ago
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data['results']), 2)
             

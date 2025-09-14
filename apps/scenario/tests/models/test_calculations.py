@@ -8,15 +8,18 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 
 from apps.batch.models import LifeCycleStage
 from apps.scenario.models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel,
-    FCRModelStage, MortalityModel
+    FCRModelStage, MortalityModel, Scenario
 )
 from apps.scenario.services.calculations import (
-    TGCCalculator, FCRCalculator, MortalityCalculator
+    TGCCalculator, FCRCalculator, MortalityCalculator, ProjectionEngine
 )
+
+User = get_user_model()
 
 
 class TGCCalculatorTests(TestCase):
@@ -510,6 +513,231 @@ class MortalityCalculatorTests(TestCase):
         # This test is commented out as the method doesn't exist
         # The calculator should handle this internally
         pass
+
+
+class ProjectionEngineTests(TestCase):
+    """Test ProjectionEngine calculations and sensitivity analysis."""
+
+    def setUp(self):
+        """Set up test data."""
+        # Create temperature profile
+        self.temp_profile = TemperatureProfile.objects.create(
+            name='Test Temperature Profile'
+        )
+
+        # Add temperature readings (10°C constant)
+        start_date = date(2024, 1, 1)
+        for i in range(365):
+            TemperatureReading.objects.create(
+                profile=self.temp_profile,
+                reading_date=start_date + timedelta(days=i),
+                temperature=10.0
+            )
+
+        # Create models
+        self.tgc_model = TGCModel.objects.create(
+            name='Test TGC Model',
+            location='Test Location',
+            release_period='Test',
+            tgc_value=2.5,
+            exponent_n=1.0,
+            exponent_m=0.333,
+            profile=self.temp_profile
+        )
+
+        self.fcr_model = FCRModel.objects.create(
+            name='Test FCR Model'
+        )
+
+        self.mortality_model = MortalityModel.objects.create(
+            name='Test Mortality',
+            frequency='daily',
+            rate=0.05
+        )
+
+        # Create species and lifecycle stages for FCR
+        from apps.batch.models import Species
+        self.species = Species.objects.create(
+            name='Test Species',
+            scientific_name='Test scientific'
+        )
+
+        fry_stage = LifeCycleStage.objects.create(
+            name='fry',
+            species=self.species,
+            order=1,
+            expected_weight_min_g=1.0,
+            expected_weight_max_g=5.0
+        )
+        self.fry_stage_id = fry_stage.id  # Store the actual stage ID
+
+        # Add FCR stage
+        FCRModelStage.objects.create(
+            model=self.fcr_model,
+            stage=fry_stage,
+            fcr_value=1.0,
+            duration_days=90
+        )
+
+        # Create user for scenario
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+
+        # Create scenario
+        self.scenario = Scenario.objects.create(
+            name='Test Scenario',
+            genotype='Test Genotype',
+            supplier='Test Supplier',
+            start_date=start_date,
+            duration_days=30,
+            initial_count=10000,
+            initial_weight=3.0,
+            tgc_model=self.tgc_model,
+            fcr_model=self.fcr_model,
+            mortality_model=self.mortality_model,
+            created_by=self.user
+        )
+
+        self.engine = ProjectionEngine(self.scenario)
+
+    def test_get_original_parameter_value_tgc(self):
+        """Test getting original TGC parameter value."""
+        original_value = self.engine._get_original_parameter_value('tgc')
+        self.assertEqual(original_value, 2.5)
+
+    def test_get_original_parameter_value_fcr(self):
+        """Test getting original FCR parameter value."""
+        original_value = self.engine._get_original_parameter_value('fcr')
+        # Should return average FCR across stages
+        self.assertEqual(original_value, 1.0)
+
+    def test_get_original_parameter_value_mortality(self):
+        """Test getting original mortality parameter value."""
+        original_value = self.engine._get_original_parameter_value('mortality')
+        self.assertEqual(original_value, 0.05)
+
+    def test_get_original_parameter_value_invalid(self):
+        """Test getting original value for invalid parameter."""
+        with self.assertRaises(ValueError):
+            self.engine._get_original_parameter_value('invalid')
+
+    def test_apply_parameter_variation_tgc(self):
+        """Test applying TGC parameter variation."""
+        original_value = 2.5
+        variation = 10.0  # +10%
+
+        self.engine._apply_parameter_variation('tgc', original_value, variation)
+
+        # TGC value should be increased by 10%
+        self.assertEqual(self.engine.tgc_calculator.tgc_value, 2.75)
+
+    def test_apply_parameter_variation_fcr(self):
+        """Test applying FCR parameter variation."""
+        original_value = 1.0
+        variation = -5.0  # -5%
+
+        # Get original FCR values
+        original_fcr_values = self.engine.fcr_calculator.stage_fcr_map.copy()
+
+        self.engine._apply_parameter_variation('fcr', original_value, variation)
+
+        # All FCR values should be reduced by 5%
+        for stage_id, fcr_value in self.engine.fcr_calculator.stage_fcr_map.items():
+            expected_fcr = original_fcr_values[stage_id] * 0.95
+            self.assertAlmostEqual(fcr_value, expected_fcr, places=6)
+
+    def test_apply_parameter_variation_mortality(self):
+        """Test applying mortality parameter variation."""
+        original_value = 0.05
+        variation = 20.0  # +20%
+
+        self.engine._apply_parameter_variation('mortality', original_value, variation)
+
+        # Mortality rate should be increased by 20%
+        self.assertEqual(self.engine.mortality_calculator.rate, 0.06)
+
+    def test_reset_parameter_to_original_tgc(self):
+        """Test resetting TGC parameter to original value."""
+        # First modify the value
+        self.engine.tgc_calculator.tgc_value = 5.0
+
+        # Reset to original
+        self.engine._reset_parameter_to_original('tgc', 2.5)
+
+        # Should be back to original value
+        self.assertEqual(self.engine.tgc_calculator.tgc_value, 2.5)
+
+    def test_reset_parameter_to_original_fcr(self):
+        """Test resetting FCR parameter to original value."""
+        # Modify FCR values
+        for stage_id in self.engine.fcr_calculator.stage_fcr_map:
+            self.engine.fcr_calculator.stage_fcr_map[stage_id] = 2.0
+
+        # Reset (this reinitializes the calculator)
+        self.engine._reset_parameter_to_original('fcr', 1.0)
+
+        # Should be back to original values
+        self.assertEqual(self.engine.fcr_calculator.stage_fcr_map, {self.fry_stage_id: 1.0})
+
+    def test_reset_parameter_to_original_mortality(self):
+        """Test resetting mortality parameter to original value."""
+        # First modify the value
+        self.engine.mortality_calculator.rate = 1.0
+
+        # Reset to original (this recreates the calculator)
+        self.engine._reset_parameter_to_original('mortality', 0.05)
+
+        # Should be back to original value
+        self.assertEqual(self.engine.mortality_calculator.rate, 0.05)
+
+    def test_run_projection_for_variation_success(self):
+        """Test running projection for variation with success."""
+        result = self.engine._run_projection_for_variation('tgc', 2.5, 10.0)  # +10% variation
+
+        # Should return a dict with parameter_value and summary
+        self.assertIsInstance(result, dict)
+        self.assertIn('parameter_value', result)
+        self.assertIn('summary', result)
+        self.assertEqual(result['parameter_value'], 2.75)  # 2.5 * 1.1
+
+    def test_run_projection_for_variation_failure(self):
+        """Test running projection for variation with failure."""
+        # Set up engine with errors
+        self.engine.errors = ['Test error']
+
+        result = self.engine._run_projection_for_variation('tgc', 2.5, 0.0)
+
+        # Should return None on failure
+        self.assertIsNone(result)
+
+    def test_sensitivity_analysis_basic(self):
+        """Test basic sensitivity analysis functionality."""
+        variations = [-10.0, 0.0, 10.0]
+
+        result = self.engine.run_sensitivity_analysis('tgc', variations, save_results=False)
+
+        # Should return a dict with parameter, original_value, and variations
+        self.assertIn('parameter', result)
+        self.assertIn('original_value', result)
+        self.assertIn('variations', result)
+        self.assertEqual(result['parameter'], 'tgc')
+        self.assertEqual(result['original_value'], 2.5)
+
+        # Should have results for each variation
+        self.assertIn('-10%', result['variations'])
+        self.assertIn('+0%', result['variations'])
+        self.assertIn('+10%', result['variations'])
+
+    def test_sensitivity_analysis_invalid_parameter(self):
+        """Test sensitivity analysis with invalid parameter."""
+        result = self.engine.run_sensitivity_analysis('invalid', [0.0], save_results=False)
+
+        # Should return error dict
+        self.assertIn('error', result)
+        self.assertEqual(result['error'], 'Unknown parameter: invalid')
 
 
 class EdgeCaseTests(TestCase):

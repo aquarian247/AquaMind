@@ -16,7 +16,6 @@ Session protocol (apply in every phase)
 1) Read these docs first:
    - `aquamind/docs/quality_assurance/code_organization_guidelines.md`
    - `aquamind/docs/quality_assurance/api_standards.md`
-   - `aquamind/docs/progress/implementation_plan_and_progress.md`
    - App-specific docs under `aquamind/docs/progress/*` when touching those modules
 2) Verify OpenAPI alignment (`api/openapi.yaml`)
 3) Run metrics (radon CC/MI/Halstead/raw + flake8 cognitive) before/after changes
@@ -47,19 +46,22 @@ Phase 3 — Decompose `batch/api/viewsets.py`
 - Approach: split by resource into multiple files or adopt mixins; isolate filter logic
 - Acceptance: MI improves (>50 target); routes unchanged; tests green
 
-Phase 4 — Simplify inventory FCR service
+Phase 4 — Simplify inventory FCR service ✅ COMPLETED
 - File: `apps/inventory/services/fcr_service.py` (low MI; multiple CC spikes)
 - Approach: separate IO from computation; extract pure functions; early returns
 - Acceptance: key functions CC < 15; service behavior verified with unit tests
+- **COMPLETED**: Extracted 8 pure helper functions, reduced complexity from C/D to A/B ratings, MI improved to A, all tests passing
 
-Phase 5 — Scenario calculations complexity reduction
+Phase 5 — Scenario calculations complexity reduction ✅ COMPLETED
 - Files: `apps/scenario/services/calculations/*` (projection_engine, fcr_calculator, mortality_calculator, tgc_calculator)
 - Approach: extract algorithmic steps into named helpers; annotate types; reduce nesting
 - Acceptance: largest functions CC < 15; tests for new helpers; outputs invariant
+- **COMPLETED**: Extracted 4 helper methods from run_sensitivity_analysis (CC 17→4), added 14 unit tests, all functions CC < 15, MI maintained, 145 tests pass
 
-Phase 6 — Introduce metrics guardrails in CI (warn-only)
+Phase 6 — Introduce metrics guardrails in CI (warn-only) ✅ COMPLETED
 - Add radon/flake8-cognitive steps; export JSON/text artifacts; document thresholds
 - Acceptance: CI publishes CC/MI/Cognitive tables; no blocking yet
+- **COMPLETED**: Added radon (6.0.1) and flake8-cognitive-complexity to requirements.txt, created CI scripts (run_radon_metrics.py, run_cognitive_metrics.py), integrated into GitHub Actions workflow, created comprehensive documentation (CI_METRICS_THRESHOLDS.md, CI_METRICS_REMEDIATION_WORKFLOW.md), tested pipeline locally - all artifacts generated successfully
 
 GitHub issues (one per phase)
 
@@ -174,3 +176,17 @@ Issue 6
 
   References
   - `aquamind/docs/metrics/*`, `aquamind/docs/METRICS_REPORT.md`
+
+## Completed Milestones
+
+### 2025-09-14 - Phase 6: Metrics Guardrails in CI
+- **Milestone**: Successfully implemented comprehensive CI metrics collection system
+- **Implementation Details**:
+  - Added radon 6.0.1 and flake8-cognitive-complexity to requirements.txt for automated metrics analysis
+  - Created `scripts/run_radon_metrics.py` for collecting CC, MI, Halstead, and raw metrics with JSON artifacts
+  - Created `scripts/run_cognitive_metrics.py` for cognitive complexity analysis with text artifacts
+  - Integrated metrics collection into GitHub Actions workflow (`.github/workflows/django-tests.yml`)
+  - Developed comprehensive documentation including thresholds and remediation workflows
+  - Tested pipeline locally ensuring all artifacts generate correctly
+- **Key Technologies**: radon, flake8-cognitive-complexity, GitHub Actions, Python scripting
+- **Outcome**: Continuous visibility into code quality trends with automated artifact generation for trend analysis

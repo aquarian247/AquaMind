@@ -329,14 +329,8 @@ class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
         # Import permissions to patch the viewset
         from rest_framework import permissions
         from unittest import mock
-        # The import path needs to be from the main viewsets.py file
-        import importlib.util
-        import os
-        viewsets_path = os.path.join(os.path.dirname(__file__), '../../api/viewsets.py')
-        spec = importlib.util.spec_from_file_location("viewsets_module", viewsets_path)
-        viewsets_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(viewsets_module)
-        BatchContainerAssignmentViewSet = viewsets_module.BatchContainerAssignmentViewSet
+        # Import from the new modular structure
+        from apps.batch.api.viewsets.assignments import BatchContainerAssignmentViewSet
         
         # Save original permission classes
         original_permission_classes = BatchContainerAssignmentViewSet.permission_classes
