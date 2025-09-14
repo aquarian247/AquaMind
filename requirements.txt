@@ -29,6 +29,9 @@ pytest-django==4.7.0
 coverage==7.5.4
 flake8==7.0.0
 black==24.1.1
+# Code quality and metrics tools
+radon==6.0.1
+flake8-cognitive-complexity==0.1.0
 # Contract testing (validates backend responses against OpenAPI spec)
 
 # Frontend (Vue.js will be installed separately)

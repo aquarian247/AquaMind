@@ -71,6 +71,38 @@ jobs:
       # Environment variables for PostgreSQL removed as CI now uses SQLite
 
     # ------------------------------------------------------------------
+    # Code Quality Metrics – Radon Analysis (CC, MI, Halstead, Raw)
+    # ------------------------------------------------------------------
+    - name: Run Radon Code Metrics
+      run: |
+        pip install radon
+        mkdir -p aquamind/docs/metrics
+        python scripts/run_radon_metrics.py --output-dir aquamind/docs/metrics
+
+    - name: Upload Radon Metrics Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: radon-metrics
+        path: aquamind/docs/metrics/backend_radon_*.json
+        if-no-files-found: warn
+
+    # ------------------------------------------------------------------
+    # Cognitive Complexity Analysis
+    # ------------------------------------------------------------------
+    - name: Run Cognitive Complexity Analysis
+      run: |
+        pip install flake8-cognitive-complexity
+        mkdir -p aquamind/docs/metrics
+        python scripts/run_cognitive_metrics.py --output-dir aquamind/docs/metrics
+
+    - name: Upload Cognitive Complexity Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cognitive-complexity
+        path: aquamind/docs/metrics/backend_cognitive_*.txt
+        if-no-files-found: warn
+
+    # ------------------------------------------------------------------
     # Cross-repo API Contract Synchronisation
     # ------------------------------------------------------------------
     - name: Generate OpenAPI spec
