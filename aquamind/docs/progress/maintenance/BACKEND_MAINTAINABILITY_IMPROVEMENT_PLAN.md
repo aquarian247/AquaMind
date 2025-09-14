@@ -16,7 +16,6 @@ Session protocol (apply in every phase)
 1) Read these docs first:
    - `aquamind/docs/quality_assurance/code_organization_guidelines.md`
    - `aquamind/docs/quality_assurance/api_standards.md`
-   - `aquamind/docs/progress/implementation_plan_and_progress.md`
    - App-specific docs under `aquamind/docs/progress/*` when touching those modules
 2) Verify OpenAPI alignment (`api/openapi.yaml`)
 3) Run metrics (radon CC/MI/Halstead/raw + flake8 cognitive) before/after changes
