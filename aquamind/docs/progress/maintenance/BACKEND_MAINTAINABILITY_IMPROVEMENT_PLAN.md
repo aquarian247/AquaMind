@@ -52,10 +52,11 @@ Phase 4 — Simplify inventory FCR service ✅ COMPLETED
 - Acceptance: key functions CC < 15; service behavior verified with unit tests
 - **COMPLETED**: Extracted 8 pure helper functions, reduced complexity from C/D to A/B ratings, MI improved to A, all tests passing
 
-Phase 5 — Scenario calculations complexity reduction
+Phase 5 — Scenario calculations complexity reduction ✅ COMPLETED
 - Files: `apps/scenario/services/calculations/*` (projection_engine, fcr_calculator, mortality_calculator, tgc_calculator)
 - Approach: extract algorithmic steps into named helpers; annotate types; reduce nesting
 - Acceptance: largest functions CC < 15; tests for new helpers; outputs invariant
+- **COMPLETED**: Extracted 4 helper methods from run_sensitivity_analysis (CC 17→4), added 14 unit tests, all functions CC < 15, MI maintained, 145 tests pass
 
 Phase 6 — Introduce metrics guardrails in CI (warn-only)
 - Add radon/flake8-cognitive steps; export JSON/text artifacts; document thresholds
