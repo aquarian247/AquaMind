@@ -1,0 +1,56 @@
+/Users/aquarian247/Projects/AquaMind/apps/health/apps.py
+    C 4:0 HealthConfig - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/admin.py
+    M 196:4 HealthLabSampleForm.clean - C (12)
+    C 163:0 HealthLabSampleForm - B (7)
+    M 169:4 HealthLabSampleForm.__init__ - A (4)
+    C 220:0 HealthLabSampleAdmin - A (4)
+    M 274:4 HealthLabSampleAdmin.batch_container_assignment_info - A (4)
+    M 191:4 HealthLabSampleForm.batch_container_assignment_label - A (3)
+    C 103:0 HealthSamplingEventAdmin - A (2)
+    M 282:4 HealthLabSampleAdmin.save_model - A (2)
+    C 19:0 JournalEntryAdmin - A (1)
+    C 40:0 MortalityReasonAdmin - A (1)
+    C 45:0 LiceCountAdmin - A (1)
+    C 52:0 MortalityRecordAdmin - A (1)
+    C 59:0 TreatmentAdmin - A (1)
+    C 66:0 VaccinationTypeAdmin - A (1)
+    C 71:0 SampleTypeAdmin - A (1)
+    C 77:0 HealthParameterAdmin - A (1)
+    C 90:0 IndividualFishObservationInline - A (1)
+    C 96:0 FishParameterScoreInline - A (1)
+    M 134:4 HealthSamplingEventAdmin.save_model - A (1)
+    C 142:0 IndividualFishObservationAdmin - A (1)
+    C 155:0 FishParameterScoreAdmin - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/views.py
+    F 9:0 load_batch_assignments - A (4)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/journal_entry.py
+    C 19:0 JournalEntry - A (2)
+    M 71:4 JournalEntry.__str__ - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/treatment.py
+    C 20:0 Treatment - A (3)
+    M 96:4 Treatment.withholding_end_date - A (2)
+    M 91:4 Treatment.__str__ - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/mortality.py
+    C 68:0 LiceCount - A (3)
+    C 18:0 MortalityReason - A (2)
+    C 32:0 MortalityRecord - A (2)
+    M 114:4 LiceCount.average_per_fish - A (2)
+    M 27:4 MortalityReason.__str__ - A (1)
+    M 63:4 MortalityRecord.__str__ - A (1)
+    M 108:4 LiceCount.__str__ - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/vaccination.py
+    C 10:0 VaccinationType - A (2)
+    M 21:4 VaccinationType.__str__ - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/health_observation.py
+    M 165:4 HealthSamplingEvent.calculate_aggregate_metrics - C (15)
+    C 56:0 HealthSamplingEvent - B (9)
+    C 20:0 HealthParameter - A (2)
+    C 270:0 IndividualFishObservation - A (2)
+    C 312:0 FishParameterScore - A (2)
+    M 51:4 HealthParameter.__str__ - A (1)
+    M 156:4 HealthSamplingEvent.__str__ - A (1)
+    M 307:4 IndividualFishObservation.__str__ - A (1)
+    M 338:4 FishParameterScore.__str__ - A (1)
+/Users/aquarian247/Projects/AquaMind/apps/health/models/lab_sample.py
+    
