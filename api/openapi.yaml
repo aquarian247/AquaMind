@@ -36422,11 +36422,6 @@ components:
       type: object
       description: History serializer for UserProfile model.
       properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
         history_user:
           type: string
           readOnly: true
@@ -36555,14 +36550,29 @@ components:
           nullable: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        username:
+          type: string
+          readOnly: true
+          description: Username of the user
+        email:
+          type: string
+          format: email
+          readOnly: true
+          description: Email address of the user
+        user_full_name:
+          type: string
+          readOnly: true
+          description: Full name from User model
       required:
       - created_at
+      - email
       - history_change_reason
       - history_date
-      - history_id
       - history_type
       - history_user
       - updated_at
+      - user_full_name
+      - username
     UserProfileUpdate:
       type: object
       description: |-
