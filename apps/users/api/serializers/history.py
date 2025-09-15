@@ -8,6 +8,7 @@ for all users models, exposing change tracking information.
 from rest_framework import serializers
 from aquamind.utils.history_utils import HistorySerializer
 from apps.users.models import UserProfile
+from typing import Optional
 
 
 class UserProfileHistorySerializer(HistorySerializer):
@@ -16,7 +17,11 @@ class UserProfileHistorySerializer(HistorySerializer):
     # Include user information from the related User model
     username = serializers.CharField(source='user.username', read_only=True, help_text="Username of the user")
     email = serializers.EmailField(source='user.email', read_only=True, help_text="Email address of the user")
-    user_full_name = serializers.CharField(source='user.full_name', read_only=True, help_text="Full name from User model")
+    user_full_name = serializers.SerializerMethodField(help_text="Full name from User model")
+
+    def get_user_full_name(self, obj) -> Optional[str]:
+        """Get the full name from the related User model."""
+        return obj.user.get_full_name() if obj.user else None
 
     class Meta:
         model = UserProfile.history.model
