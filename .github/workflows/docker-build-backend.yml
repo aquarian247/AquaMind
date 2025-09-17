@@ -61,7 +61,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
 
     - name: Generate artifact attestation
-      if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
       uses: actions/attest-build-provenance@v1
       with:
         subject-name: ghcr.io/${{ github.repository }}/backend
