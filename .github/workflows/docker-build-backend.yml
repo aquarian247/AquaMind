@@ -20,6 +20,7 @@ on:
       - 'apps/**'
       - 'scripts/**'
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   build-and-push:
