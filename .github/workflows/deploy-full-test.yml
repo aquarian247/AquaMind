@@ -1,0 +1,124 @@
+name: Full Test Environment Deployment
+
+on:
+  push:
+    branches: [ test ]
+  workflow_dispatch:
+    inputs:
+      skip_build:
+        description: 'Skip Docker build step'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-backend:
+    if: ${{ !inputs.skip_build }}
+    uses: aquarian247/AquaMind/.github/workflows/docker-build-backend.yml@test
+
+  build-frontend:
+    if: ${{ !inputs.skip_build }}
+    uses: aquarian247/AquaMind-Frontend/.github/workflows/docker-build-frontend.yml@test
+
+  deploy:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+    - name: Checkout backend repository
+      uses: actions/checkout@v4
+      with:
+        repository: aquarian247/AquaMind
+        path: backend
+
+    - name: Checkout frontend repository
+      uses: actions/checkout@v4
+      with:
+        repository: aquarian247/AquaMind-Frontend
+        path: frontend
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.TEST_SSH_PRIVATE_KEY }}
+
+    - name: Deploy to test server
+      run: |
+        echo "🚀 Starting full deployment to test environment..."
+
+        # Deploy backend
+        echo "📦 Deploying backend..."
+        scp backend/docker-compose.yml ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+        scp -r backend/scripts ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+
+        # Deploy frontend
+        echo "🎨 Deploying frontend..."
+        scp frontend/Dockerfile ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/frontend/
+        scp frontend/nginx.conf ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/frontend/
+
+        # Update services on server
+        ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+          cd ~/aquamind-test
+
+          echo "🐳 Pulling latest images..."
+          docker-compose pull
+
+          echo "🔄 Restarting all services..."
+          docker-compose down
+          docker-compose up -d
+
+          echo "⏳ Waiting for services to be ready..."
+          sleep 60
+
+          echo "🩺 Running health checks..."
+
+          # Check container status
+          if ! docker-compose ps | grep -q "Up"; then
+            echo "❌ Some containers failed to start"
+            docker-compose logs
+            exit 1
+          fi
+
+          # Setup database
+          echo "🗄️ Setting up database..."
+          docker-compose exec -T web python manage.py migrate || {
+            echo "❌ Database migration failed"
+            exit 1
+          }
+
+          docker-compose exec -T web python manage.py shell < scripts/create_admin_user.py || {
+            echo "❌ Admin user creation failed"
+            exit 1
+          }
+
+          # Test API connectivity
+          echo "🔗 Testing API connectivity..."
+          if ! curl -f --max-time 30 http://localhost:8000/api/v1/infrastructure/geographies/ > /dev/null 2>&1; then
+            echo "❌ Backend API not responding"
+            docker-compose logs web
+            exit 1
+          fi
+
+          # Test frontend
+          if ! curl -f --max-time 30 http://localhost:3000 > /dev/null 2>&1; then
+            echo "❌ Frontend not responding"
+            docker-compose logs frontend
+            exit 1
+          fi
+
+          echo "✅ All services are healthy!"
+        EOF
+
+    - name: Update deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🎉 Full test deployment successful!"
+          echo "🌐 Frontend: http://${{ secrets.TEST_SERVER_HOST }}:3000"
+          echo "🔗 Backend API: http://${{ secrets.TEST_SERVER_HOST }}:8000"
+          echo "👤 Admin login: admin / admin123"
+        else
+          echo "💥 Full test deployment failed!"
+          echo "Check the logs above for details."
+        fi

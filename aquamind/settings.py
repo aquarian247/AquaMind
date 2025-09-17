@@ -21,12 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-m6+q(yw*=akv((3vbx3$=6zh&41+s(q&58aa#g5#^ok6-5+86^"
+# Use environment variable with fallback for development
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "django-insecure-m6+q(yw*=akv((3vbx3$=6zh&41+s(q&58aa#g5#^ok6-5+86^")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Use environment variable with fallback for development
+DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+# Configure allowed hosts from environment
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
 
 
 # Application definition
@@ -124,12 +128,12 @@ WSGI_APPLICATION = "aquamind.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'aquamind_db',
-        'USER': 'postgres',
-        'PASSWORD': 'adminpass1234',  # Updated with the correct password
-        'HOST': 'localhost',  # Changed from 'timescale-db' to 'localhost'
-        'PORT': '5432',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.environ.get('DB_NAME', 'aquamind_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'adminpass1234'),  # Fallback for development
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {
             'options': '-c search_path=public -c client_encoding=utf8'
         }
@@ -251,16 +255,9 @@ SIMPLE_JWT = {
 TIMESCALE_ENABLED = True
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:36307',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174',
-]
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', str(DEBUG).lower()).lower() == 'true'
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8080,http://127.0.0.1:8080,http://127.0.0.1:36307,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174').split(',')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
 
 # Swagger settings
 SWAGGER_SETTINGS = {

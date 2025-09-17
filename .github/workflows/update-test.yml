@@ -1,0 +1,79 @@
+name: Update Test Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'restart'
+        type: choice
+        options:
+        - restart
+        - update-config
+        - backup-db
+        - logs
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.TEST_SSH_PRIVATE_KEY }}
+
+    - name: Execute action on test server
+      run: |
+        case "${{ inputs.action }}" in
+          "restart")
+            echo "🔄 Restarting services..."
+            ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+              cd ~/aquamind-test
+              docker-compose restart
+              echo "✅ Services restarted"
+            EOF
+            ;;
+
+          "update-config")
+            echo "📝 Updating configuration..."
+            scp docker-compose.yml ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+            ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+              cd ~/aquamind-test
+              docker-compose up -d --no-deps
+              echo "✅ Configuration updated"
+            EOF
+            ;;
+
+          "backup-db")
+            echo "💾 Creating database backup..."
+            ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+              cd ~/aquamind-test
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              docker-compose exec -T timescale-db pg_dump -U aquamind aquamind_db > backup_$TIMESTAMP.sql
+              echo "✅ Database backup created: backup_$TIMESTAMP.sql"
+            EOF
+            ;;
+
+          "logs")
+            echo "📋 Fetching service logs..."
+            ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+              cd ~/aquamind-test
+              echo "=== Container Status ==="
+              docker-compose ps
+              echo ""
+              echo "=== Recent Logs ==="
+              docker-compose logs --tail=50
+            EOF
+            ;;
+        esac
+
+    - name: Notify completion
+      run: |
+        echo "✅ Test environment update completed"
+        echo "Action performed: ${{ inputs.action }}"

@@ -1,0 +1,130 @@
+name: Deploy to Test Environment
+
+on:
+  push:
+    branches: [ test ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+        - test
+        - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.TEST_SSH_PRIVATE_KEY }}
+
+    - name: Add test server to known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.TEST_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to test server
+      run: |
+        echo "🚀 Starting deployment to test environment..."
+
+        # Create deployment directory on remote server
+        ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+          mkdir -p ~/aquamind-test
+          cd ~/aquamind-test
+
+          # Backup current deployment
+          if [ -f "docker-compose.yml" ]; then
+            echo "📦 Backing up current deployment..."
+            cp docker-compose.yml docker-compose.yml.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+        EOF
+
+        # Copy updated files to server
+        echo "📤 Copying deployment files..."
+        scp docker-compose.yml ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+        scp -r scripts ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+
+        # Deploy on remote server
+        ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
+          cd ~/aquamind-test
+
+          echo "🐳 Pulling latest Docker images..."
+          docker-compose pull
+
+          echo "🔄 Restarting services..."
+          docker-compose down
+          docker-compose up -d
+
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+
+          echo "🩺 Running health checks..."
+          # Check if services are running
+          if docker-compose ps | grep -q "Up"; then
+            echo "✅ Services are running"
+          else
+            echo "❌ Services failed to start"
+            docker-compose logs
+            exit 1
+          fi
+
+          # Run database migrations and setup
+          echo "🗄️ Setting up database..."
+          docker-compose exec -T web python manage.py migrate
+          docker-compose exec -T web python manage.py shell < scripts/create_admin_user.py
+
+          echo "📊 Loading test data..."
+          docker-compose exec -T web python manage.py shell < scripts/init_test_data.py
+
+          echo "🔍 Running final health check..."
+          # Test API endpoints
+          if curl -f http://localhost:8000/api/v1/infrastructure/geographies/ > /dev/null 2>&1; then
+            echo "✅ Backend API is responding"
+          else
+            echo "❌ Backend API is not responding"
+            exit 1
+          fi
+
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "✅ Frontend is responding"
+          else
+            echo "❌ Frontend is not responding"
+            exit 1
+          fi
+        EOF
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🎉 Deployment to test environment successful!"
+          echo "🌐 Frontend: http://${{ secrets.TEST_SERVER_HOST }}:3000"
+          echo "🔗 Backend API: http://${{ secrets.TEST_SERVER_HOST }}:8000"
+        else
+          echo "💥 Deployment to test environment failed!"
+          echo "Check the logs above for details."
+        fi
+
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Send notification
+      run: |
+        if [ ${{ needs.deploy.result }} == 'success' ]; then
+          echo "✅ Test deployment completed successfully"
+        else
+          echo "❌ Test deployment failed"
+        fi

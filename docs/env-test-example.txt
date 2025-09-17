@@ -1,0 +1,204 @@
+# AquaMind TEST ENVIRONMENT Configuration
+# This is specifically configured for Bakkafrost test servers
+# Copy this file to .env and configure with your test environment values
+
+# ========================================
+# DJANGO SETTINGS - TEST ENVIRONMENT
+# ========================================
+
+# Django Secret Key (REQUIRED - Generate a new one for test environment)
+# Generate with: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+DJANGO_SECRET_KEY=your-test-environment-secret-key-here
+
+# Debug mode (set to true for test environment troubleshooting)
+DJANGO_DEBUG=true
+
+# Allowed hosts (comma-separated list) - Include your test server IPs
+# Example: ALLOWED_HOSTS=192.168.1.100,10.0.0.50,test.aquamind.local
+ALLOWED_HOSTS=localhost,127.0.0.1,your-test-server-ip-here
+
+# Django settings module for test environment
+DJANGO_SETTINGS_MODULE=aquamind.settings_test
+
+# ========================================
+# DATABASE CONFIGURATION - TEST ENVIRONMENT
+# ========================================
+
+# Database Engine (PostgreSQL with TimescaleDB for test)
+DB_ENGINE=django.db.backends.postgresql
+
+# Database Name (separate from production)
+DB_NAME=aquamind_test_db
+
+# Database User (use dedicated test user)
+DB_USER=aquamind_test
+
+# Database Password (REQUIRED - Use strong password for test environment)
+DB_PASSWORD=your-test-db-password-here
+
+# Database Host (your test database server IP)
+DB_HOST=your-test-db-server-ip
+
+# Database Port
+DB_PORT=5432
+
+# TimescaleDB Enabled
+TIMESCALE_ENABLED=true
+
+# ========================================
+# CORS CONFIGURATION - TEST ENVIRONMENT
+# ========================================
+
+# Allow all origins (false for test environment security)
+CORS_ALLOW_ALL_ORIGINS=false
+
+# Specific allowed origins (comma-separated list)
+# Include your test frontend URLs and internal network IPs
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://test.aquamind.local,http://your-test-frontend-ip:80
+
+# CSRF Trusted origins (comma-separated list)
+CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000,http://test.aquamind.local:8000,http://your-test-server-ip:8000
+
+# ========================================
+# EMAIL CONFIGURATION - TEST ENVIRONMENT
+# ========================================
+
+# Email backend (use console for test environment)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+
+# Email host (for SMTP backend - optional for test)
+# EMAIL_HOST=your-test-smtp-server.bakkafrost.local
+
+# Email port
+# EMAIL_PORT=587
+
+# Email TLS
+# EMAIL_USE_TLS=true
+
+# Email user
+# EMAIL_HOST_USER=test@aquamind.local
+
+# Email password
+# EMAIL_HOST_PASSWORD=your-test-email-password
+
+# Default from email
+DEFAULT_FROM_EMAIL=test@aquamind.local
+
+# ========================================
+# LOGGING CONFIGURATION - TEST ENVIRONMENT
+# ========================================
+
+# Log file path (test environment specific)
+LOG_FILE=/var/log/aquamind/test.log
+
+# Security log file path
+SECURITY_LOG_FILE=/var/log/aquamind/test-security.log
+
+# ========================================
+# CACHE CONFIGURATION - TEST ENVIRONMENT
+# ========================================
+
+# Redis URL for test environment caching (optional)
+# REDIS_URL=redis://your-test-redis-server:6379/1
+
+# ========================================
+# FRONTEND INTEGRATION - TEST ENVIRONMENT
+# ========================================
+
+# Frontend URL (for CORS and redirects in test environment)
+FRONTEND_URL=http://test.aquamind.local
+
+# ========================================
+# SECURITY HEADERS - TEST ENVIRONMENT
+# ========================================
+
+# Content Security Policy (optional)
+# CSP_DEFAULT_SRC=self
+
+# HTTPS Strict Transport Security (shorter for test)
+# HSTS_MAX_AGE=3600
+
+# ========================================
+# MONITORING & METRICS - TEST ENVIRONMENT
+# ========================================
+
+# Application environment name
+ENVIRONMENT=test
+
+# Enable metrics collection (recommended for test)
+METRICS_ENABLED=true
+
+# Metrics endpoint
+METRICS_ENDPOINT=/metrics
+
+# ========================================
+# TEST SPECIFIC CONFIGURATION
+# ========================================
+
+# Enable Django Debug Toolbar for test environment
+DEBUG_TOOLBAR_ENABLED=true
+
+# Enable SQL query logging for performance testing
+SQL_LOGGING_ENABLED=true
+
+# ========================================
+# THIRD PARTY SERVICES - TEST ENVIRONMENT
+# ========================================
+
+# Slack webhook for test environment notifications
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# Discord webhook for test environment notifications
+# DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR/DISCORD/WEBHOOK
+
+# ========================================
+# BAKKAFROST TEST ENVIRONMENT SPECIFIC
+# ========================================
+
+# Company/Subsidiary identifier
+BAKKAFROST_SUBSIDIARY=TEST
+
+# Geographic region (SCOTLAND or FAROE_ISLANDS)
+BAKKAFROST_REGION=SCOTLAND
+
+# Environment type
+DEPLOYMENT_ENV=test
+
+# Test environment identifier
+TEST_ENV_ID=BAKKAFROST_TEST_001
+
+# ========================================
+# NETWORK CONFIGURATION
+# ========================================
+
+# Internal network subnet (for security logging)
+INTERNAL_SUBNET=192.168.0.0/16,10.0.0.0/8
+
+# VPN access required (true/false)
+VPN_REQUIRED=true
+
+# ========================================
+# BACKUP CONFIGURATION
+# ========================================
+
+# Database backup schedule
+DB_BACKUP_SCHEDULE=daily
+
+# Backup retention days
+BACKUP_RETENTION_DAYS=30
+
+# Backup storage location
+BACKUP_STORAGE_PATH=/mnt/backups/aquamind-test
+
+# ========================================
+# MONITORING CONFIGURATION
+# ========================================
+
+# Enable health checks
+HEALTH_CHECKS_ENABLED=true
+
+# Health check endpoint
+HEALTH_CHECK_ENDPOINT=/health/
+
+# Monitoring dashboard URL
+MONITORING_DASHBOARD_URL=http://monitoring.bakkafrost.local/aquamind-test

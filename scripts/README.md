@@ -2,6 +2,23 @@
 
 This directory contains scripts for initializing and managing test data for the AquaMind system.
 
+## Admin User Creation Script
+
+The `create_admin_user.py` script creates an admin user for testing the AquaMind system.
+
+### Usage
+
+```bash
+# From the project root directory
+python manage.py shell < scripts/create_admin_user.py
+```
+
+This creates a user with:
+- **Username**: admin
+- **Email**: admin@aquamind.test
+- **Password**: admin123
+- **Role**: Superuser (full access)
+
 ## Test Data Initialization Script
 
 The `init_test_data.py` script creates a complete set of infrastructure test data for the AquaMind system. This includes:
@@ -62,6 +79,9 @@ python manage.py reset_db --noinput
 
 # Run migrations
 python manage.py migrate
+
+# Create admin user
+python manage.py shell < scripts/create_admin_user.py
 
 # Initialize test data
 python manage.py shell < scripts/init_test_data.py
