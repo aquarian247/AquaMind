@@ -19,10 +19,12 @@ on:
       - 'aquamind/**'
       - 'apps/**'
       - 'scripts/**'
+  workflow_call:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
@@ -60,8 +62,16 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
-    - name: Generate artifact attestation
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test'
+    - name: Generate artifact attestation (main)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-name: ghcr.io/${{ github.repository }}/backend
+        subject-digest: ${{ steps.push.outputs.digest }}
+        push-to-registry: true
+
+    - name: Generate artifact attestation (non-blocking on develop/test)
+      if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test'
       uses: actions/attest-build-provenance@v1
       with:
         subject-name: ghcr.io/${{ github.repository }}/backend
