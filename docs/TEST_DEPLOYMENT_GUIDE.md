@@ -176,6 +176,31 @@ BAKKAFROST_REGION=SCOTLAND  # or FAROE_ISLANDS
 TEST_ENV_ID=BAKKAFROST_TEST_001
 ```
 
+### 2.1 CI/CD Test Secrets (GitHub Actions)
+
+Set these repository secrets in GitHub (Repository → Settings → Secrets and variables → Actions) for the backend repo to enable automated test deployments:
+
+```
+# SSH / Deployment
+TEST_SSH_PRIVATE_KEY   # Full private key (BEGIN/END OPENSSH PRIVATE KEY)
+TEST_SSH_USER          # e.g., aquamind
+TEST_SERVER_HOST       # e.g., 192.168.1.100 or test.aquamind.local
+
+# Django / App
+TEST_DJANGO_SECRET_KEY # Generated with Django secret key util
+TEST_ALLOWED_HOSTS     # Comma-separated, e.g., test.aquamind.local,192.168.1.100
+TEST_CORS_ALLOWED_ORIGINS   # e.g., http://test.aquamind.local,http://192.168.1.100
+TEST_CSRF_TRUSTED_ORIGINS   # e.g., http://test.aquamind.local,http://192.168.1.100
+
+# Database
+TEST_DB_USER           # e.g., aquamind_test
+TEST_DB_PASSWORD       # strong password
+TEST_DB_HOST           # database host/IP (if external DB)
+TEST_DB_NAME           # e.g., aquamind_test_db
+```
+
+For detailed guidance and rotation procedures, see `docs/SECRETS_MANAGEMENT_GUIDE.md`.
+
 ### 3. Validate Environment Configuration
 ```bash
 # Test environment file syntax
