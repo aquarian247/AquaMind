@@ -172,7 +172,7 @@ CORS_ALLOWED_ORIGINS=http://test.aquamind.local,http://your-test-server-ip
 CSRF_TRUSTED_ORIGINS=http://test.aquamind.local,http://your-test-server-ip
 
 # Bakkafrost specific
-BAKKAFROST_REGION=SCOTLAND  # or FAROE_ISLANDS
+BAKKAFROST_REGION=FAROE_ISLANDS
 TEST_ENV_ID=BAKKAFROST_TEST_001
 ```
 

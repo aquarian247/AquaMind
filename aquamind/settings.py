@@ -20,18 +20,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+# SECURITY WARNING: keep the secret key used in production secret!
+# Use environment variable with fallback for development
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "django-insecure-m6+q(yw*=akv((3vbx3$=6zh&41+s(q&58aa#g5#^ok6-5+86^")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 # Use environment variable with fallback for development
 DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# In non-debug environments, require DJANGO_SECRET_KEY to be set and fail fast if missing.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = "django-insecure-dev-only"
-    else:
-        raise ValueError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false")
 
 # Configure allowed hosts from environment
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
@@ -131,16 +126,12 @@ WSGI_APPLICATION = "aquamind.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-_db_password = os.environ.get('DB_PASSWORD')
-if not DEBUG and not _db_password:
-    raise ValueError("DB_PASSWORD must be set when DJANGO_DEBUG is false")
-
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
         'NAME': os.environ.get('DB_NAME', 'aquamind_db'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': _db_password or 'adminpass1234',  # Fallback only in debug
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'adminpass1234'),  # Fallback for development
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {

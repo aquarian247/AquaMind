@@ -23,12 +23,7 @@ jobs:
   deploy:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
-    environment:
-      name: test
-    timeout-minutes: 45
-    concurrency:
-      group: deploy-test-${{ github.ref }}
-      cancel-in-progress: true
+    environment: test
 
     steps:
     - name: Checkout backend repository
