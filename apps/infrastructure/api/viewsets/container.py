@@ -6,6 +6,7 @@ This module defines the viewset for the Container model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 
 from apps.infrastructure.models.container import Container
 from apps.infrastructure.api.serializers.container import ContainerSerializer
@@ -13,6 +14,20 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from aquamind.utils.history_mixins import HistoryReasonMixin
+
+
+class ContainerFilter(FilterSet):
+    """Custom filterset for Container model to support __in lookups."""
+
+    class Meta:
+        model = Container
+        fields = {
+            'name': ['exact'],
+            'container_type': ['exact'],
+            'hall': ['exact', 'in'],
+            'area': ['exact', 'in'],
+            'active': ['exact']
+        }
 
 class ContainerViewSet(viewsets.ModelViewSet):
     """
@@ -27,7 +42,9 @@ class ContainerViewSet(viewsets.ModelViewSet):
     - `name`: Filter by the exact name of the container.
     - `container_type`: Filter by the ID of the ContainerType.
     - `hall`: Filter by the ID of the parent Hall.
+    - `hall__in`: Filter by multiple Hall IDs (comma-separated).
     - `area`: Filter by the ID of the parent Area.
+    - `area__in`: Filter by multiple Area IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -44,11 +61,11 @@ class ContainerViewSet(viewsets.ModelViewSet):
     # Explicitly override authentication to prevent SessionAuthentication fallback
     authentication_classes = [TokenAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
     queryset = Container.objects.all()
     serializer_class = ContainerSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'container_type', 'hall', 'area', 'active']
+    filterset_class = ContainerFilter
     search_fields = ['name', 'container_type__name', 'hall__name', 'area__name']
     ordering_fields = ['name', 'container_type__name', 'created_at']
     ordering = ['name']

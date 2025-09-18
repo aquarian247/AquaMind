@@ -263,11 +263,47 @@ class ContainerAPITest(APITestCase):
         """Test filtering containers by hall."""
         response = self.client.get(f"{self.list_url}?hall={self.hall.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Check that only containers in the hall are returned
         items = get_response_items(response)
         for item in items:
             self.assertEqual(item['hall'], self.hall.id)
+            self.assertIsNone(item['area'])
+
+    def test_filter_by_multiple_halls(self):
+        """Test filtering containers by multiple halls using hall__in."""
+        # Create an additional hall and container for this test
+        additional_hall = Hall.objects.create(
+            name='Additional Test Hall',
+            freshwater_station=self.station,
+            description='Additional test hall description',
+            area_sqm=Decimal('600.00'),
+            active=True
+        )
+        additional_container = Container.objects.create(
+            name='Additional Hall Container',
+            container_type=self.container_type,
+            hall=additional_hall,
+            volume_m3=Decimal('40.00'),
+            max_biomass_kg=Decimal('400.00'),
+            active=True
+        )
+
+        # Test filtering by multiple halls
+        response = self.client.get(f"{self.list_url}?hall__in={self.hall.id},{additional_hall.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check that containers from both halls are returned
+        items = get_response_items(response)
+        returned_hall_ids = [item['hall'] for item in items]
+
+        # Should contain containers from both halls
+        self.assertIn(self.hall.id, returned_hall_ids)
+        self.assertIn(additional_hall.id, returned_hall_ids)
+
+        # Should not contain containers from other halls
+        for item in items:
+            self.assertIn(item['hall'], [self.hall.id, additional_hall.id])
             self.assertIsNone(item['area'])
 
     def test_filter_by_area(self):

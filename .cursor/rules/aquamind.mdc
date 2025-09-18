@@ -1,7 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: For the backend repo: AquaMind
+alwaysApply: false
 ---
 # Coding Guidelines
 
