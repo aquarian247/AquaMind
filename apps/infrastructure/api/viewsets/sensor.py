@@ -6,9 +6,23 @@ This module defines the viewset for the Sensor model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 
 from apps.infrastructure.models.sensor import Sensor
 from apps.infrastructure.api.serializers.sensor import SensorSerializer
+
+
+class SensorFilter(FilterSet):
+    """Custom filterset for Sensor model to support __in lookups."""
+
+    class Meta:
+        model = Sensor
+        fields = {
+            'name': ['exact', 'icontains'],
+            'sensor_type': ['exact'],
+            'container': ['exact', 'in'],
+            'active': ['exact']
+        }
 
 class SensorViewSet(viewsets.ModelViewSet):
     """
@@ -23,6 +37,7 @@ class SensorViewSet(viewsets.ModelViewSet):
     - `name`: Filter by the exact name of the sensor.
     - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
     - `container`: Filter by the ID of the Container where the sensor is installed.
+    - `container__in`: Filter by multiple Container IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -41,7 +56,7 @@ class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'sensor_type', 'container', 'active']
+    filterset_class = SensorFilter
     search_fields = ['name', 'serial_number', 'manufacturer', 'container__name']
     ordering_fields = ['name', 'sensor_type', 'container__name', 'created_at']
     ordering = ['name']

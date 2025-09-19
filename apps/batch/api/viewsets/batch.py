@@ -27,7 +27,9 @@ class BatchViewSet(BatchAnalyticsMixin, viewsets.ModelViewSet):
     **Filtering:**
     - `batch_number`: Exact match.
     - `species`: Exact match by Species ID.
+    - `species__in`: Filter by multiple Species IDs (comma-separated).
     - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+    - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
     - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
     - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
 
@@ -52,7 +54,6 @@ class BatchViewSet(BatchAnalyticsMixin, viewsets.ModelViewSet):
     serializer_class = BatchSerializer
     filterset_class = BatchFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch_number', 'species', 'lifecycle_stage', 'status', 'batch_type']
     search_fields = [
         'batch_number',
         'species__name',

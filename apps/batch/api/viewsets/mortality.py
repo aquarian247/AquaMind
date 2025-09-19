@@ -25,6 +25,7 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
 
     **Filtering:**
     - `batch`: ID of the batch associated with the mortality event.
+    - `batch__in`: Filter by multiple Batch IDs (comma-separated).
     - `event_date`: Exact date of the mortality event.
     - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -45,7 +46,6 @@ class MortalityEventViewSet(viewsets.ModelViewSet):
     serializer_class = MortalityEventSerializer
     filterset_class = MortalityEventFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch', 'event_date', 'cause']
     # Use the correct model field name "description" instead of the
     # non-existent "notes" to avoid FieldError during search filtering
     search_fields = ['batch__batch_number', 'description']

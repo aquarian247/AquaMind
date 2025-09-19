@@ -42,16 +42,9 @@ class MortalityEventFilter(rest_filters.FilterSet):
 
     class Meta:
         model = MortalityEvent
-        fields = [
-            'batch',
-            'event_date',
-            'cause',
-            'event_date_after',
-            'event_date_before',
-            'count_min',
-            'count_max',
-            'biomass_min',
-            'biomass_max',
-            'cause_in',
-            'batch_number',
-        ]
+        fields = {
+            # Basic fields with __in support for foreign keys
+            'batch': ['exact', 'in'],
+            'event_date': ['exact'],
+            'cause': ['exact']
+        }

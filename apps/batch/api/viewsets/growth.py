@@ -26,6 +26,7 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
 
     **Filtering:**
     - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+    - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
     - `sample_date`: Exact date of the sample.
 
     **Searching:**
@@ -45,7 +46,6 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
     serializer_class = GrowthSampleSerializer
     filterset_class = GrowthSampleFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['assignment__batch', 'sample_date']
     search_fields = ['batch__batch_number', 'notes']
     ordering_fields = ['sample_date', 'batch__batch_number', 'avg_weight_g', 'created_at']
     ordering = ['-sample_date']

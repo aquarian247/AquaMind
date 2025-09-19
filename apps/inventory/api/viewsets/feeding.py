@@ -17,15 +17,34 @@ from drf_spectacular.types import OpenApiTypes
 
 from apps.inventory.models import FeedingEvent
 from apps.inventory.api.serializers.feeding import FeedingEventSerializer
+from apps.inventory.api.filters.feeding import FeedingEventFilter
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 
 class FeedingEventViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for FeedingEvent model.
+    API endpoint for managing Feeding Events in aquaculture operations.
 
-    Provides CRUD operations for feeding events with additional filtering
-    capabilities.
+    Feeding events record the amount of feed given to batches in specific containers
+    on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+    **Filtering:**
+    - `batch`: ID of the batch being fed.
+    - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+    - `feed`: ID of the feed type used.
+    - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+    - `container`: ID of the container where feeding occurred.
+    - `container__in`: Filter by multiple Container IDs (comma-separated).
+    - `feeding_date`: Exact date of feeding.
+    - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+    **Searching:**
+    - `notes`: Notes associated with the feeding event.
+
+    **Ordering:**
+    - `feeding_date` (default: descending)
+    - `feeding_time`
+    - `amount_kg`
     """
     queryset = FeedingEvent.objects.all()
     serializer_class = FeedingEventSerializer
@@ -34,9 +53,7 @@ class FeedingEventViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter
     ]
-    filterset_fields = [
-        'batch', 'feed', 'feeding_date', 'container', 'method'
-    ]
+    filterset_class = FeedingEventFilter
     search_fields = ['notes']
     ordering_fields = ['feeding_date', 'feeding_time', 'amount_kg']
     ordering = ['-feeding_date', '-feeding_time']

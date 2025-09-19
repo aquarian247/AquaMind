@@ -48,29 +48,10 @@ class BatchContainerAssignmentFilter(rest_filters.FilterSet):
 
     class Meta:
         model = BatchContainerAssignment
-        fields = [
-            # Basic fields
-            'batch',
-            'container',
-            'is_active',
-            'assignment_date',
-
-            # Date range filters
-            'assignment_date_after',
-            'assignment_date_before',
-
-            # Biomass and population filters
-            'biomass_min',
-            'biomass_max',
-            'population_min',
-            'population_max',
-
-            # Container filters
-            'container_name',
-            'container_type',
-
-            # Batch relationship filters
-            'batch_number',
-            'species',
-            'lifecycle_stage',
-        ]
+        fields = {
+            # Basic fields with __in support for foreign keys
+            'batch': ['exact', 'in'],
+            'container': ['exact', 'in'],
+            'is_active': ['exact'],
+            'assignment_date': ['exact']
+        }

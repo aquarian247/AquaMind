@@ -9,6 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg, Min, Max, Count
@@ -32,6 +33,53 @@ from apps.environmental.api.serializers import (
 )
 
 
+class EnvironmentalParameterFilter(FilterSet):
+    """Custom filterset for EnvironmentalParameter model."""
+
+    class Meta:
+        model = EnvironmentalParameter
+        fields = {
+            'name': ['exact', 'icontains'],
+            'unit': ['exact']
+        }
+
+
+class EnvironmentalReadingFilter(FilterSet):
+    """Custom filterset for EnvironmentalReading model to support __in lookups."""
+
+    class Meta:
+        model = EnvironmentalReading
+        fields = {
+            'parameter': ['exact', 'in'],
+            'container': ['exact', 'in'],
+            'batch': ['exact', 'in'],
+            'sensor': ['exact', 'in'],
+            'is_manual': ['exact']
+        }
+
+
+class PhotoperiodDataFilter(FilterSet):
+    """Custom filterset for PhotoperiodData model to support __in lookups."""
+
+    class Meta:
+        model = PhotoperiodData
+        fields = {
+            'area': ['exact', 'in'],
+            'date': ['exact'],
+            'is_interpolated': ['exact']
+        }
+
+
+class WeatherDataFilter(FilterSet):
+    """Custom filterset for WeatherData model to support __in lookups."""
+
+    class Meta:
+        model = WeatherData
+        fields = {
+            'area': ['exact', 'in']
+        }
+
+
 class EnvironmentalParameterViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing EnvironmentalParameter instances."""
     
@@ -42,7 +90,7 @@ class EnvironmentalParameterViewSet(viewsets.ModelViewSet):
     queryset = EnvironmentalParameter.objects.all()
     serializer_class = EnvironmentalParameterSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'unit']
+    filterset_class = EnvironmentalParameterFilter
     search_fields = ['name', 'description', 'unit']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
@@ -62,7 +110,7 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     queryset = EnvironmentalReading.objects.all()
     serializer_class = EnvironmentalReadingSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['parameter', 'container', 'batch', 'sensor', 'is_manual']
+    filterset_class = EnvironmentalReadingFilter
     search_fields = ['notes', 'parameter__name', 'container__name']
     ordering_fields = ['reading_time', 'value', 'created_at']
     ordering = ['-reading_time']  # Default to most recent readings first
@@ -197,7 +245,7 @@ class PhotoperiodDataViewSet(viewsets.ModelViewSet):
     queryset = PhotoperiodData.objects.all()
     serializer_class = PhotoperiodDataSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['area', 'date', 'is_interpolated']
+    filterset_class = PhotoperiodDataFilter
     search_fields = ['area__name']
     ordering_fields = ['date', 'day_length_hours', 'created_at']
     ordering = ['-date']  # Default to most recent dates first
@@ -235,7 +283,7 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     queryset = WeatherData.objects.all()
     serializer_class = WeatherDataSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['area']
+    filterset_class = WeatherDataFilter
     search_fields = ['area__name']
     ordering_fields = ['timestamp', 'created_at']
     ordering = ['-timestamp']  # Default to most recent timestamps first

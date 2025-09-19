@@ -6,9 +6,24 @@ This module defines the viewset for the FeedContainer model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 
 from apps.infrastructure.models.feed_container import FeedContainer
 from apps.infrastructure.api.serializers.feed_container import FeedContainerSerializer
+
+
+class FeedContainerFilter(FilterSet):
+    """Custom filterset for FeedContainer model to support __in lookups."""
+
+    class Meta:
+        model = FeedContainer
+        fields = {
+            'name': ['exact'],
+            'container_type': ['exact', 'in'],
+            'hall': ['exact', 'in'],
+            'area': ['exact', 'in'],
+            'active': ['exact']
+        }
 
 class FeedContainerViewSet(viewsets.ModelViewSet):
     """
@@ -22,8 +37,11 @@ class FeedContainerViewSet(viewsets.ModelViewSet):
     **Filtering:**
     - `name`: Filter by the exact name of the feed container.
     - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+    - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
     - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+    - `hall__in`: Filter by multiple Hall IDs (comma-separated).
     - `area`: Filter by the ID of the parent Area where the feed container is located.
+    - `area__in`: Filter by multiple Area IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -40,7 +58,7 @@ class FeedContainerViewSet(viewsets.ModelViewSet):
     queryset = FeedContainer.objects.all()
     serializer_class = FeedContainerSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'container_type', 'hall', 'area', 'active']
+    filterset_class = FeedContainerFilter
     search_fields = ['name', 'hall__name', 'area__name']
     ordering_fields = ['name', 'container_type', 'created_at']
     ordering = ['name']

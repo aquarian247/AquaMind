@@ -6,6 +6,7 @@ This module defines the viewset for the Area model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 from django.db.models import Count, Sum, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -23,6 +24,19 @@ from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.infrastructure.api.serializers.area import AreaSerializer
 
+
+class AreaFilter(FilterSet):
+    """Custom filterset for Area model to support __in lookups."""
+
+    class Meta:
+        model = Area
+        fields = {
+            'name': ['exact', 'icontains'],
+            'geography': ['exact', 'in'],
+            'active': ['exact']
+        }
+
+
 class AreaViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing Areas within the aquaculture facility.
@@ -34,6 +48,7 @@ class AreaViewSet(viewsets.ModelViewSet):
     **Filtering:**
     - `name`: Filter by the exact name of the area.
     - `geography`: Filter by the ID of the parent Geography.
+    - `geography__in`: Filter by multiple Geography IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -52,7 +67,7 @@ class AreaViewSet(viewsets.ModelViewSet):
     queryset = Area.objects.all()
     serializer_class = AreaSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'geography', 'active']
+    filterset_class = AreaFilter
     search_fields = ['name', 'geography__name']
     ordering_fields = ['name', 'geography__name', 'created_at']
     ordering = ['name']

@@ -7,6 +7,7 @@ This module defines the viewset for the Hall model.
 from decimal import Decimal
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 from django.db.models import Count, Sum
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -24,6 +25,19 @@ from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.infrastructure.api.serializers.hall import HallSerializer, HallSummarySerializer
 
+
+class HallFilter(FilterSet):
+    """Custom filterset for Hall model to support __in lookups."""
+
+    class Meta:
+        model = Hall
+        fields = {
+            'name': ['exact'],
+            'freshwater_station': ['exact', 'in'],
+            'active': ['exact']
+        }
+
+
 class HallViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing Halls within the aquaculture facility.
@@ -36,6 +50,7 @@ class HallViewSet(viewsets.ModelViewSet):
     **Filtering:**
     - `name`: Filter by the exact name of the hall.
     - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+    - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -55,7 +70,7 @@ class HallViewSet(viewsets.ModelViewSet):
     queryset = Hall.objects.all()
     serializer_class = HallSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'freshwater_station', 'active']
+    filterset_class = HallFilter
     search_fields = ['name', 'description', 'freshwater_station__name']
     ordering_fields = ['name', 'freshwater_station__name', 'created_at']
     ordering = ['name']

@@ -47,19 +47,8 @@ class GrowthSampleFilter(rest_filters.FilterSet):
 
     class Meta:
         model = GrowthSample
-        fields = [
-            'assignment__batch',
-            'sample_date',
-            'sample_date_after',
-            'sample_date_before',
-            'avg_weight_min',
-            'avg_weight_max',
-            'avg_length_min',
-            'avg_length_max',
-            'sample_size_min',
-            'sample_size_max',
-            'condition_factor_min',
-            'condition_factor_max',
-            'batch_number',
-            'container_name',
-        ]
+        fields = {
+            # Basic fields with __in support for foreign keys
+            'assignment__batch': ['exact', 'in'],
+            'sample_date': ['exact']
+        }

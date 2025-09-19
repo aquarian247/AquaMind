@@ -46,27 +46,11 @@ class BatchFilter(rest_filters.FilterSet):
 
     class Meta:
         model = Batch
-        fields = [
-            # Basic fields
-            'batch_number',
-            'species',
-            'lifecycle_stage',
-            'status',
-            'batch_type',
-
-            # Date filters
-            'start_date_after',
-            'start_date_before',
-            'end_date_after',
-            'end_date_before',
-
-            # Biomass and population filters
-            'biomass_min',
-            'biomass_max',
-            'population_min',
-            'population_max',
-
-            # Multiple choice filters
-            'status_in',
-            'batch_type_in',
-        ]
+        fields = {
+            # Basic fields with __in support for foreign keys
+            'batch_number': ['exact', 'icontains'],
+            'species': ['exact', 'in'],
+            'lifecycle_stage': ['exact', 'in'],
+            'status': ['exact'],
+            'batch_type': ['exact']
+        }

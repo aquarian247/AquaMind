@@ -6,6 +6,7 @@ This module defines the viewset for the FreshwaterStation model.
 
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import FilterSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.decorators import method_decorator
@@ -18,6 +19,20 @@ from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.infrastructure.api.serializers.station import FreshwaterStationSerializer, FreshwaterStationSummarySerializer
+
+
+class FreshwaterStationFilter(FilterSet):
+    """Custom filterset for FreshwaterStation model to support __in lookups."""
+
+    class Meta:
+        model = FreshwaterStation
+        fields = {
+            'name': ['exact', 'icontains'],
+            'station_type': ['exact'],
+            'geography': ['exact', 'in'],
+            'active': ['exact']
+        }
+
 
 class FreshwaterStationViewSet(viewsets.ModelViewSet):
     """
@@ -32,6 +47,7 @@ class FreshwaterStationViewSet(viewsets.ModelViewSet):
     - `name`: Filter by the exact name of the freshwater station.
     - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
     - `geography`: Filter by the ID of the associated Geography.
+    - `geography__in`: Filter by multiple Geography IDs (comma-separated).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -49,7 +65,7 @@ class FreshwaterStationViewSet(viewsets.ModelViewSet):
     queryset = FreshwaterStation.objects.all()
     serializer_class = FreshwaterStationSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['name', 'station_type', 'geography', 'active']
+    filterset_class = FreshwaterStationFilter
     search_fields = ['name', 'description', 'geography__name']
     ordering_fields = ['name', 'station_type', 'geography__name', 'created_at']
     ordering = ['name']

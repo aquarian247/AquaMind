@@ -38,7 +38,9 @@ class BatchContainerAssignmentViewSet(LocationFilterMixin, viewsets.ModelViewSet
 
     **Filtering:**
     - `batch`: ID of the assigned batch.
+    - `batch__in`: Filter by multiple Batch IDs (comma-separated).
     - `container`: ID of the assigned container.
+    - `container__in`: Filter by multiple Container IDs (comma-separated).
     - `is_active`: Boolean indicating if the assignment is currently active.
     - `assignment_date`: Exact date of the assignment.
 
@@ -60,7 +62,6 @@ class BatchContainerAssignmentViewSet(LocationFilterMixin, viewsets.ModelViewSet
     serializer_class = BatchContainerAssignmentSerializer
     filterset_class = BatchContainerAssignmentFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch', 'container', 'is_active', 'assignment_date']
     search_fields = ['batch__batch_number', 'container__name']
     ordering_fields = [
         'assignment_date',
