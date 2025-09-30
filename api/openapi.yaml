@@ -622,6 +622,10 @@ paths:
         schema:
           type: string
       - in: query
+        name: batch_number__icontains
+        schema:
+          type: string
+      - in: query
         name: batch_type
         schema:
           type: string
@@ -671,6 +675,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: lifecycle_stage__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - name: ordering
         required: false
         in: query
@@ -705,6 +720,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: species__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: start_date_after
         schema:
@@ -817,7 +843,9 @@ paths:
         **Filtering:**
         - `batch_number`: Exact match.
         - `species`: Exact match by Species ID.
+        - `species__in`: Filter by multiple Species IDs (comma-separated).
         - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+        - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
         - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
         - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
 
@@ -875,7 +903,9 @@ paths:
         **Filtering:**
         - `batch_number`: Exact match.
         - `species`: Exact match by Species ID.
+        - `species__in`: Filter by multiple Species IDs (comma-separated).
         - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+        - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
         - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
         - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
 
@@ -947,7 +977,9 @@ paths:
         **Filtering:**
         - `batch_number`: Exact match.
         - `species`: Exact match by Species ID.
+        - `species__in`: Filter by multiple Species IDs (comma-separated).
         - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+        - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
         - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
         - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
 
@@ -1018,7 +1050,9 @@ paths:
         **Filtering:**
         - `batch_number`: Exact match.
         - `species`: Exact match by Species ID.
+        - `species__in`: Filter by multiple Species IDs (comma-separated).
         - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+        - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
         - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
         - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
 
@@ -1191,7 +1225,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1228,6 +1264,17 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: batch_number
         schema:
           type: string
@@ -1245,6 +1292,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: container__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: container_name
         schema:
@@ -1335,7 +1393,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1396,7 +1456,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1453,7 +1515,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1524,7 +1588,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1594,7 +1660,9 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the assigned batch.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `container`: ID of the assigned container.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `is_active`: Boolean indicating if the assignment is currently active.
         - `assignment_date`: Exact date of the assignment.
 
@@ -1692,15 +1760,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       parameters:
@@ -1710,6 +1779,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: assignment__batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: avg_length_max
         schema:
@@ -1821,15 +1901,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       tags:
@@ -1877,15 +1958,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       parameters:
@@ -1929,15 +2011,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       parameters:
@@ -1995,15 +2078,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       parameters:
@@ -2060,15 +2144,16 @@ paths:
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+        - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `sample_date`: Exact date of the sample.
 
         **Searching:**
-        - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `notes`: Notes associated with the growth sample.
 
         **Ordering:**
         - `sample_date` (default: descending)
-        - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+        - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
         - `avg_weight_g`: Average weight in grams.
         - `created_at`
       parameters:
@@ -3088,6 +3173,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -3107,6 +3193,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: batch_number
         schema:
@@ -3239,6 +3336,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -3295,6 +3393,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -3347,6 +3446,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -3413,6 +3513,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -3478,6 +3579,7 @@ paths:
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
         - `event_date`: Exact date of the mortality event.
         - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
 
@@ -7766,6 +7868,10 @@ paths:
         name: name
         schema:
           type: string
+      - in: query
+        name: name__icontains
+        schema:
+          type: string
       - name: ordering
         required: false
         in: query
@@ -8008,6 +8114,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: date
         schema:
@@ -8259,11 +8376,33 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: container
         schema:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: container__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: is_manual
         schema:
@@ -8288,6 +8427,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: parameter__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - name: search
         required: false
         in: query
@@ -8300,6 +8450,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: sensor__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       tags:
       - api
       security:
@@ -8822,6 +8983,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - name: ordering
         required: false
         in: query
@@ -13174,6 +13346,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13196,7 +13369,22 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: geography__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: name
+        schema:
+          type: string
+      - in: query
+        name: name__icontains
         schema:
           type: string
       - name: ordering
@@ -13251,6 +13439,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13306,6 +13495,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13357,6 +13547,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13422,6 +13613,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13486,6 +13678,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the area.
         - `geography`: Filter by the ID of the parent Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13942,7 +14135,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -13967,6 +14162,17 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: container_type
         schema:
           type: integer
@@ -13978,6 +14184,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: hall__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: name
         schema:
@@ -14036,7 +14253,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14096,7 +14315,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14152,7 +14373,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14222,7 +14445,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14291,7 +14516,9 @@ paths:
         - `name`: Filter by the exact name of the container.
         - `container_type`: Filter by the ID of the ContainerType.
         - `hall`: Filter by the ID of the parent Hall.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14343,8 +14570,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14368,6 +14598,17 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: container_type
         schema:
           type: string
@@ -14383,11 +14624,31 @@ paths:
           * `TANK` - Tank
           * `OTHER` - Other
       - in: query
+        name: container_type__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: hall
         schema:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: hall__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: name
         schema:
@@ -14445,8 +14706,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14504,8 +14768,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14559,8 +14826,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14628,8 +14898,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14696,8 +14969,11 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
         - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+        - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
         - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+        - `hall__in`: Filter by multiple Hall IDs (comma-separated).
         - `area`: Filter by the ID of the parent Area where the feed container is located.
+        - `area__in`: Filter by multiple Area IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14749,6 +15025,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14773,7 +15050,22 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: geography__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: name
+        schema:
+          type: string
+      - in: query
+        name: name__icontains
         schema:
           type: string
       - name: ordering
@@ -14841,6 +15133,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14900,6 +15193,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -14955,6 +15249,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15024,6 +15319,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15092,6 +15388,7 @@ paths:
         - `name`: Filter by the exact name of the freshwater station.
         - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
         - `geography`: Filter by the ID of the associated Geography.
+        - `geography__in`: Filter by multiple Geography IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15567,6 +15864,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15589,6 +15887,17 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: freshwater_station__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
       - in: query
         name: name
         schema:
@@ -15646,6 +15955,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15703,6 +16013,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15756,6 +16067,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15823,6 +16135,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -15889,6 +16202,7 @@ paths:
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
         - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+        - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17089,6 +17403,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17114,7 +17429,22 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: container__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
         name: name
+        schema:
+          type: string
+      - in: query
+        name: name__icontains
         schema:
           type: string
       - name: ordering
@@ -17190,6 +17520,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17250,6 +17581,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17306,6 +17638,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17376,6 +17709,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -17445,6 +17779,7 @@ paths:
         - `name`: Filter by the exact name of the sensor.
         - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
         - `container`: Filter by the ID of the Container where the sensor is installed.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
         - `active`: Filter by active status (boolean).
 
         **Searching:**
@@ -18583,11 +18918,37 @@ paths:
     get:
       operationId: api_v1_inventory_feeding_events_list
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       parameters:
+      - in: query
+        name: amount_max
+        schema:
+          type: number
+      - in: query
+        name: amount_min
+        schema:
+          type: number
       - in: query
         name: batch
         schema:
@@ -18595,11 +18956,41 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: batch_number
+        schema:
+          type: string
+      - in: query
         name: container
         schema:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: container__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: container_name
+        schema:
+          type: string
       - in: query
         name: feed
         schema:
@@ -18607,7 +18998,32 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: feed__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: feed_name
+        schema:
+          type: string
+      - in: query
         name: feeding_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: feeding_date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: feeding_date_before
         schema:
           type: string
           format: date
@@ -18624,6 +19040,23 @@ paths:
           * `MANUAL` - Manual
           * `AUTOMATIC` - Automatic Feeder
           * `BROADCAST` - Broadcast
+      - in: query
+        name: method_in
+        schema:
+          type: array
+          items:
+            type: string
+            x-spec-enum-id: 037132121c393c6e
+            enum:
+            - AUTOMATIC
+            - BROADCAST
+            - MANUAL
+        description: |-
+          * `MANUAL` - Manual
+          * `AUTOMATIC` - Automatic Feeder
+          * `BROADCAST` - Broadcast
+        explode: true
+        style: form
       - name: ordering
         required: false
         in: query
@@ -18667,10 +19100,28 @@ paths:
     post:
       operationId: api_v1_inventory_feeding_events_create
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       tags:
       - api
       requestBody:
@@ -18707,10 +19158,28 @@ paths:
     get:
       operationId: api_v1_inventory_feeding_events_retrieve
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       parameters:
       - in: path
         name: id
@@ -18743,10 +19212,28 @@ paths:
     put:
       operationId: api_v1_inventory_feeding_events_update
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       parameters:
       - in: path
         name: id
@@ -18793,10 +19280,28 @@ paths:
     patch:
       operationId: api_v1_inventory_feeding_events_partial_update
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       parameters:
       - in: path
         name: id
@@ -18842,10 +19347,28 @@ paths:
     delete:
       operationId: api_v1_inventory_feeding_events_destroy
       description: |-
-        ViewSet for FeedingEvent model.
+        API endpoint for managing Feeding Events in aquaculture operations.
 
-        Provides CRUD operations for feeding events with additional filtering
-        capabilities.
+        Feeding events record the amount of feed given to batches in specific containers
+        on particular dates. This endpoint provides full CRUD operations for feeding events.
+
+        **Filtering:**
+        - `batch`: ID of the batch being fed.
+        - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+        - `feed`: ID of the feed type used.
+        - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+        - `container`: ID of the container where feeding occurred.
+        - `container__in`: Filter by multiple Container IDs (comma-separated).
+        - `feeding_date`: Exact date of feeding.
+        - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+
+        **Searching:**
+        - `notes`: Notes associated with the feeding event.
+
+        **Ordering:**
+        - `feeding_date` (default: descending)
+        - `feeding_time`
+        - `amount_kg`
       parameters:
       - in: path
         name: id
@@ -36561,8 +37084,9 @@ components:
           description: Email address of the user
         user_full_name:
           type: string
-          readOnly: true
+          nullable: true
           description: Full name from User model
+          readOnly: true
       required:
       - created_at
       - email
