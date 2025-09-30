@@ -30,12 +30,12 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
     - `sample_date`: Exact date of the sample.
 
     **Searching:**
-    - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+    - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
     - `notes`: Notes associated with the growth sample.
 
     **Ordering:**
     - `sample_date` (default: descending)
-    - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+    - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
     - `avg_weight_g`: Average weight in grams.
     - `created_at`
     """
@@ -46,8 +46,8 @@ class GrowthSampleViewSet(viewsets.ModelViewSet):
     serializer_class = GrowthSampleSerializer
     filterset_class = GrowthSampleFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['batch__batch_number', 'notes']
-    ordering_fields = ['sample_date', 'batch__batch_number', 'avg_weight_g', 'created_at']
+    search_fields = ['assignment__batch__batch_number', 'notes']
+    ordering_fields = ['sample_date', 'assignment__batch__batch_number', 'avg_weight_g', 'created_at']
     ordering = ['-sample_date']
 
     def list(self, request, *args, **kwargs):
