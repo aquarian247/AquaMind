@@ -73,10 +73,16 @@ class UserSerializer(serializers.ModelSerializer):
         Returns:
             User: The newly created User instance
         """
-        profile_data = {}
-        for profile_field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']:
-            if f'profile.{profile_field}' in validated_data:
-                profile_data[profile_field] = validated_data.pop(f'profile.{profile_field}')
+        profile_payload = validated_data.pop('profile', {}) or {}
+        profile_data = {
+            field: profile_payload[field]
+            for field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']
+            if field in profile_payload
+        }
+        for field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']:
+            dotted_key = f'profile.{field}'
+            if dotted_key in validated_data:
+                profile_data[field] = validated_data.pop(dotted_key)
         
         password = validated_data.pop('password', None)
         email = validated_data.get('email')
@@ -110,11 +116,16 @@ class UserSerializer(serializers.ModelSerializer):
         Returns:
             User: The updated User instance
         """
-        profile_data = {}
-        for profile_field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']:
-            field_key = f'profile.{profile_field}'
-            if field_key in validated_data:
-                profile_data[profile_field] = validated_data.pop(field_key)
+        profile_payload = validated_data.pop('profile', {}) or {}
+        profile_data = {
+            field: profile_payload[field]
+            for field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']
+            if field in profile_payload
+        }
+        for field in ['full_name', 'phone', 'geography', 'subsidiary', 'role']:
+            dotted_key = f'profile.{field}'
+            if dotted_key in validated_data:
+                profile_data[field] = validated_data.pop(dotted_key)
         
         # Handle password update if provided
         password = validated_data.pop('password', None)
