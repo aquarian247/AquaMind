@@ -1703,32 +1703,55 @@ paths:
           description: Internal Server Error
   /api/v1/batch/container-assignments/summary/:
     get:
-      operationId: api_v1_batch_container_assignments_summary_retrieve
-      description: |-
-        Return aggregated metrics about batch-container assignments with optional location filtering.
-
-        Query Parameters
-        ----------------
-        is_active : bool (default ``true``)
-            If ``true`` (default) aggregates only active assignments.
-            If ``false`` aggregates inactive assignments.
-        geography : int
-            Filter by geography ID (affects containers in halls and areas).
-        area : int
-            Filter by area ID (containers directly in this area).
-        station : int
-            Filter by freshwater station ID (containers in halls of this station).
-        hall : int
-            Filter by hall ID (containers directly in this hall).
-        container_type : str
-            Filter by container type category (TANK, PEN, TRAY, OTHER).
-
-        Response Schema
-        ---------------
-        {
-            "active_biomass_kg": number,
-            "count": integer
-        }
+      operationId: batch-container-assignments-summary
+      description: Returns aggregated metrics for batch container assignments with
+        optional location-based filtering.
+      summary: Get aggregated summary of batch container assignments
+      parameters:
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID. Only affects containers directly assigned
+          to this area.
+      - in: query
+        name: container_type
+        schema:
+          type: string
+        description: 'Filter by container type category. Valid values: TANK, PEN,
+          TRAY, OTHER.'
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID. Affects containers in both halls and
+          areas within this geography.
+      - in: query
+        name: hall
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by hall ID. Only affects containers directly in this hall.
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+          default: true
+        description: 'Filter by active status (default: true). Set to false to include
+          inactive assignments.'
+      - in: query
+        name: station
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by freshwater station ID. Only affects containers in halls
+          within this station.
       tags:
       - api
       security:
@@ -1739,7 +1762,49 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchContainerAssignment'
+                type: object
+                properties:
+                  active_biomass_kg:
+                    type: number
+                    description: Total biomass in kg for active assignments
+                  count:
+                    type: integer
+                    description: Total number of assignments matching filters
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                required:
+                - active_biomass_kg
+                - count
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                  geography:
+                    type: array
+                    items:
+                      type: string
+                  area:
+                    type: array
+                    items:
+                      type: string
+                  station:
+                    type: array
+                    items:
+                      type: string
+                  hall:
+                    type: array
+                    items:
+                      type: string
+                  container_type:
+                    type: array
+                    items:
+                      type: string
+                description: Validation error for invalid filter parameters
           description: ''
         '401':
           description: Unauthorized

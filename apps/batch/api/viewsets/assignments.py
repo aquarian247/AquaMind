@@ -93,8 +93,6 @@ class BatchContainerAssignmentViewSet(LocationFilterMixin, viewsets.ModelViewSet
     # ------------------------------------------------------------------ #
     # Aggregated summary endpoint                                        #
     # ------------------------------------------------------------------ #
-    @action(detail=False, methods=['get'])
-    @method_decorator(cache_page(30))
     @extend_schema(
         operation_id="batch-container-assignments-summary",
         summary="Get aggregated summary of batch container assignments",
@@ -166,32 +164,9 @@ class BatchContainerAssignmentViewSet(LocationFilterMixin, viewsets.ModelViewSet
                 "description": "Validation error for invalid filter parameters",
             },
         },
-        examples=[
-            {
-                "summary": "Default summary (all active assignments)",
-                "value": {
-                    "active_biomass_kg": 1250.5,
-                    "count": 45,
-                },
-            },
-            {
-                "summary": "Filtered by geography",
-                "parameters": {"geography": 1},
-                "value": {
-                    "active_biomass_kg": 750.0,
-                    "count": 28,
-                },
-            },
-            {
-                "summary": "Filtered by container type",
-                "parameters": {"container_type": "TANK"},
-                "value": {
-                    "active_biomass_kg": 950.2,
-                    "count": 32,
-                },
-            },
-        ],
     )
+    @action(detail=False, methods=['get'])
+    @method_decorator(cache_page(30))
     def summary(self, request):
         """
         Return aggregated metrics about batch-container assignments with optional location filtering.
