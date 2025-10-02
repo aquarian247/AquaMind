@@ -16,6 +16,8 @@ from django.db.models import Avg, Min, Max, Count
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from datetime import timedelta
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.environmental.models import (
     EnvironmentalParameter,
@@ -184,6 +186,26 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(recent_readings, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='group_by',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Aggregation dimension: parameter (default), container, or batch.',
+                required=False,
+                default='parameter',
+            ),
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days to include in the aggregation window.',
+                required=False,
+                default=7,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Return aggregated statistics for readings based on query parameters."""

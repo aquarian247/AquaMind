@@ -17,7 +17,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.models.container import Container
@@ -93,11 +94,19 @@ class AreaViewSet(viewsets.ModelViewSet):
     # ------------------------------------------------------------------ #
     # Aggregated summary endpoint                                        #
     # ------------------------------------------------------------------ #
-    @method_decorator(cache_page(60))
-    @action(detail=True, methods=['get'])
     @extend_schema(
         operation_id="area-summary",
         description="Get KPI summary for an area including container counts, biomass, population, and average weight.",
+        parameters=[
+            OpenApiParameter(
+                name="is_active",
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description="Filter assignments by active status (default: true).",
+                required=False,
+                default=True,
+            ),
+        ],
         responses={
             200: OpenApiResponse(
                 response={
@@ -115,6 +124,8 @@ class AreaViewSet(viewsets.ModelViewSet):
             )
         },
     )
+    @method_decorator(cache_page(60))
+    @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
         """
         Return KPI summary for a specific area.

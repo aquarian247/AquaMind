@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.broodstock.models import (
     MaintenanceTask, BroodstockFish, FishMovement, BreedingPlan,
@@ -90,6 +92,18 @@ class BroodstockFishViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(healthy_fish, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the container to list broodstock fish for.',
+                required=True,
+            ),
+        ],
+        responses=BroodstockFishSerializer(many=True),
+    )
     @action(detail=False, methods=['get'])
     def by_container(self, request):
         """Get fish grouped by container."""
@@ -387,6 +401,18 @@ class BatchParentageViewSet(viewsets.ModelViewSet):
             'batch', 'egg_production'
         )
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='batch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the batch to retrieve lineage information for.',
+                required=True,
+            ),
+        ],
+        responses=BatchParentageSerializer(many=True),
+    )
     @action(detail=False, methods=['get'])
     def lineage(self, request):
         """Get complete lineage for a batch."""

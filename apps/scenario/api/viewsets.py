@@ -15,6 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
 
 from apps.scenario.models import (
     TemperatureProfile, TGCModel, FCRModel, MortalityModel,
@@ -656,6 +658,34 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         
         return Response(result, status=status.HTTP_200_OK)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='start_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Filter projections at or after this date (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Filter projections at or before this date (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='aggregation',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Aggregation granularity for projections (daily, weekly, monthly).',
+                required=False,
+                default='daily',
+                enum=['daily', 'weekly', 'monthly'],
+            ),
+        ],
+        responses=ScenarioProjectionSerializer(many=True),
+    )
     @action(detail=True, methods=['get'])
     def projections(self, request, pk=None):
         """Get projections for a scenario with optional filtering."""
@@ -684,6 +714,35 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer = ScenarioProjectionSerializer(projections, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chart_type',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Chart visualization type (line, area, or bar).',
+                required=False,
+                default='line',
+                enum=['line', 'area', 'bar'],
+            ),
+            OpenApiParameter(
+                name='metrics',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Comma-separated metrics to include (weight, population, biomass, feed, temperature).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='aggregation',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Temporal aggregation for chart data (daily, weekly, monthly).',
+                required=False,
+                default='daily',
+                enum=['daily', 'weekly', 'monthly'],
+            ),
+        ]
+    )
     @action(detail=True, methods=['get'])
     def chart_data(self, request, pk=None):
         """Get projection data formatted for charts."""
@@ -831,6 +890,27 @@ class DataEntryViewSet(viewsets.ViewSet):
             status=status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST
         )
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='data_type',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Type of template to download (temperature, fcr, mortality).",
+                required=True,
+                enum=['temperature', 'fcr', 'mortality'],
+            ),
+            OpenApiParameter(
+                name='include_sample_data',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Include sample rows in the generated template.',
+                required=False,
+                default=False,
+            ),
+        ],
+        responses=OpenApiResponse(description='CSV template file'),
+    )
     @action(detail=False, methods=['get'])
     def csv_template(self, request):
         """

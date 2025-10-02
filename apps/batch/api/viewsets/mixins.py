@@ -10,6 +10,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.batch.models import GrowthSample, MortalityEvent, BatchContainerAssignment
 from rest_framework.exceptions import ValidationError
@@ -269,6 +271,25 @@ class BatchAnalyticsMixin:
             for sample in latest_samples
         ]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='batch_ids',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Comma-separated list of batch IDs to compare.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='metrics',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Comma-separated metrics to include (growth, mortality, biomass, all).',
+                required=False,
+                default='all',
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def compare(self, request):
         """

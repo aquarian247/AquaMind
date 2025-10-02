@@ -10,6 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.inventory.models import FeedContainerStock
 from apps.inventory.api.serializers import (
@@ -53,6 +55,17 @@ class FeedContainerStockViewSet(viewsets.ModelViewSet):
             return FeedContainerStockCreateSerializer
         return FeedContainerStockSerializer
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Limit results to a specific feed container.',
+                required=False,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def by_container(self, request):
         """
@@ -119,6 +132,17 @@ class FeedContainerStockViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the feed container to fetch FIFO ordered stock for.',
+                required=True,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def fifo_order(self, request):
         """

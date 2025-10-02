@@ -228,6 +228,48 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
 
         return params
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='batch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Batch ID to retrieve FCR trends for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Start date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='End date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='interval',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Aggregation interval (DAILY, WEEKLY, or MONTHLY).',
+                required=False,
+                enum=['DAILY', 'WEEKLY', 'MONTHLY'],
+                default='DAILY',
+            ),
+            OpenApiParameter(
+                name='include_predicted',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Include predicted FCR values (default: true).',
+                required=False,
+                default=True,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def batch_trends(self, request, batch_id=None):
         """
@@ -244,6 +286,48 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
 
         return self.list(request)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='assignment_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Container assignment ID to retrieve FCR trends for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Start date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='End date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='interval',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Aggregation interval (DAILY, WEEKLY, or MONTHLY).',
+                required=False,
+                enum=['DAILY', 'WEEKLY', 'MONTHLY'],
+                default='DAILY',
+            ),
+            OpenApiParameter(
+                name='include_predicted',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Include predicted FCR values (default: true).',
+                required=False,
+                default=True,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def assignment_trends(self, request, assignment_id=None):
         """
@@ -260,6 +344,48 @@ class FCRTrendsViewSet(viewsets.GenericViewSet):
 
         return self.list(request)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='geography_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Geography ID to retrieve FCR trends for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='Start date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description='End date for the trend analysis (YYYY-MM-DD).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='interval',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Aggregation interval (DAILY, WEEKLY, or MONTHLY).',
+                required=False,
+                enum=['DAILY', 'WEEKLY', 'MONTHLY'],
+                default='DAILY',
+            ),
+            OpenApiParameter(
+                name='include_predicted',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Include predicted FCR values (default: true).',
+                required=False,
+                default=True,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def geography_trends(self, request, geography_id=None):
         """

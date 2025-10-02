@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from .models import (
     EnvironmentalParameter,
@@ -61,6 +63,46 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
             return EnvironmentalReadingCreateSerializer
         return EnvironmentalReadingSerializer
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the container to fetch readings for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='parameter_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings by environmental parameter.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or after this timestamp (ISO 8601).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or before this timestamp (ISO 8601).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of readings to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def by_container(self, request):
         """
@@ -136,6 +178,39 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
             return WeatherDataCreateSerializer
         return WeatherDataSerializer
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='area_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the area to fetch weather data for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or after this timestamp (ISO 8601).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or before this timestamp (ISO 8601).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of records to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def by_area(self, request):
         """

@@ -10,6 +10,8 @@ from apps.inventory.models import BatchFeedingSummary
 from apps.inventory.api.serializers.summary import (
     BatchFeedingSummarySerializer, BatchFeedingSummaryGenerateSerializer
 )
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 
 class BatchFeedingSummaryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -49,6 +51,17 @@ class BatchFeedingSummaryViewSet(viewsets.ReadOnlyModelViewSet):
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='batch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the batch to retrieve feeding summaries for.',
+                required=True,
+            ),
+        ]
+    )
     @action(detail=False, methods=['get'])
     def by_batch(self, request):
         """

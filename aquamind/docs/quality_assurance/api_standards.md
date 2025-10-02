@@ -384,6 +384,20 @@ These standards are enforced through:
 - Code organization guidelines
 - Testing guide (quality_assurance/testing_guide.md)
 
+### Custom Action Schema Requirements
+
+Every DRF `@action` that reads `request.query_params` **must**:
+
+1. Declare an `@extend_schema(...)` decorator positioned **above** `@action`.
+2. List all query parameters via `OpenApiParameter` with accurate types, defaults, and descriptions.
+3. Regenerate `api/openapi.yaml` (`python manage.py spectacular --file api/openapi.yaml --validate --fail-on-warn`) after modifying the action.
+
+#### Code Review Checklist Addendum
+
+- [ ] `@extend_schema` precedes `@action` on every custom action touching query parameters.
+- [ ] All query parameters referenced in the view logic appear in the schema definition.
+- [ ] OpenAPI regeneration command has been run and the schema committed.
+
 ## 9. Appendix: Complete Router Example
 
 ```python

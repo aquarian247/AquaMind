@@ -58,6 +58,18 @@ class FeedingEventViewSet(viewsets.ModelViewSet):
     ordering_fields = ['feeding_date', 'feeding_time', 'amount_kg']
     ordering = ['-feeding_date', '-feeding_time']
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='batch_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the batch to fetch feeding events for.',
+                required=True,
+            ),
+        ],
+        responses=FeedingEventSerializer(many=True),
+    )
     @action(detail=False, methods=['get'])
     def by_batch(self, request):
         """
