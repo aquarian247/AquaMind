@@ -29,9 +29,9 @@ class JournalEntrySerializer(HealthBaseSerializer):
         allow_null=True,
         help_text="Optional container this journal entry is associated with. Can be null if the entry applies to the entire batch."
     )
-    entry_date = serializers.DateField(
-        default=serializers.CreateOnlyDefault(timezone.now().date),
-        help_text="Date when the observation or incident occurred. Defaults to current date if not provided."
+    entry_date = serializers.DateTimeField(
+        default=serializers.CreateOnlyDefault(timezone.now),
+        help_text="Date and time when the observation or incident occurred. Defaults to the current datetime if not provided."
     )
     description = serializers.CharField(
         help_text="Detailed description of the health observation or incident."

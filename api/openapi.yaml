@@ -28710,9 +28710,8 @@ components:
           minimum: -9223372036854775808
         entry_date:
           type: string
-          format: date
-          description: Date when the observation or incident occurred. Defaults to
-            current date if not provided.
+          format: date-time
+          description: Date and time when the observation or incident occurred. Defaults to the current datetime if not provided.
         description:
           type: string
           description: Detailed description of the health observation or incident.
@@ -34203,9 +34202,8 @@ components:
           minimum: -9223372036854775808
         entry_date:
           type: string
-          format: date
-          description: Date when the observation or incident occurred. Defaults to
-            current date if not provided.
+          format: date-time
+          description: Date and time when the observation or incident occurred. Defaults to the current datetime if not provided.
         description:
           type: string
           description: Detailed description of the health observation or incident.
