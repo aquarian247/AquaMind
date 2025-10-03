@@ -3,31 +3,35 @@ Router configuration for Scenario Planning API.
 
 Registers all viewsets and defines URL patterns for the API endpoints.
 """
-from rest_framework import routers
-
-# Import main viewsets directly from the viewsets.py file
 import importlib.util
 import os
+import sys
 
-# Load the viewsets.py file directly
-viewsets_path = os.path.join(os.path.dirname(__file__), 'viewsets.py')
-spec = importlib.util.spec_from_file_location("viewsets_module", viewsets_path)
+from rest_framework import routers
+
+# Load the main viewsets module with proper package context so relative imports work
+viewsets_path = os.path.join(os.path.dirname(__file__), "viewsets.py")
+spec = importlib.util.spec_from_file_location(
+    "apps.scenario.api._viewsets_runtime", viewsets_path
+)
 viewsets_module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = viewsets_module
 spec.loader.exec_module(viewsets_module)
 
 TemperatureProfileViewSet = viewsets_module.TemperatureProfileViewSet
 TGCModelViewSet = viewsets_module.TGCModelViewSet
 FCRModelViewSet = viewsets_module.FCRModelViewSet
 MortalityModelViewSet = viewsets_module.MortalityModelViewSet
+BiologicalConstraintsViewSet = viewsets_module.BiologicalConstraintsViewSet
 ScenarioViewSet = viewsets_module.ScenarioViewSet
 DataEntryViewSet = viewsets_module.DataEntryViewSet
-BiologicalConstraintsViewSet = viewsets_module.BiologicalConstraintsViewSet
-from .viewsets import (
-    TGCModelHistoryViewSet,
+
+from .viewsets.history import (
     FCRModelHistoryViewSet,
     MortalityModelHistoryViewSet,
     ScenarioHistoryViewSet,
-    ScenarioModelChangeHistoryViewSet
+    ScenarioModelChangeHistoryViewSet,
+    TGCModelHistoryViewSet,
 )
 
 # Create router

@@ -9,10 +9,9 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from collections import defaultdict
 
 # Radon imports
-from radon.complexity import cc_visit, cc_rank
+from radon.complexity import cc_visit
 from radon.metrics import h_visit, mi_visit
 from radon.raw import analyze
 
@@ -86,13 +85,14 @@ class CIMetricsCollector:
             cc_results = cc_visit(code)
             cc_data = []
             for result in cc_results:
+                endline = getattr(result, 'endline', getattr(result, 'endlineno', None))
                 cc_data.append({
-                    'name': result.name,
-                    'complexity': result.complexity,
-                    'lineno': result.lineno,
-                    'col_offset': result.col_offset,
-                    'endline': result.endlineno,
-                    'type': result.type
+                    'name': getattr(result, 'name', None),
+                    'complexity': getattr(result, 'complexity', 0),
+                    'lineno': getattr(result, 'lineno', None),
+                    'col_offset': getattr(result, 'col_offset', None),
+                    'endline': endline,
+                    'type': result.__class__.__name__
                 })
 
             metrics['cyclomatic_complexity'] = {
@@ -111,19 +111,23 @@ class CIMetricsCollector:
         # Halstead Metrics
         try:
             h_results = h_visit(code)
-            metrics['halstead'] = {
-                'h1': h_results.h1,  # Distinct operators
-                'h2': h_results.h2,  # Distinct operands
-                'N1': h_results.N1,  # Total operators
-                'N2': h_results.N2,  # Total operands
-                'vocabulary': h_results.vocabulary,
-                'length': h_results.length,
-                'volume': h_results.volume,
-                'difficulty': h_results.difficulty,
-                'effort': h_results.effort,
-                'time': h_results.time,
-                'bugs': h_results.bugs
-            }
+            total = getattr(h_results, 'total', None)
+            if total is not None:
+                metrics['halstead'] = {
+                    'h1': total.h1,  # Distinct operators
+                    'h2': total.h2,  # Distinct operands
+                    'N1': total.N1,  # Total operators
+                    'N2': total.N2,  # Total operands
+                    'vocabulary': total.vocabulary,
+                    'length': total.length,
+                    'volume': total.volume,
+                    'difficulty': total.difficulty,
+                    'effort': total.effort,
+                    'time': total.time,
+                    'bugs': total.bugs
+                }
+            else:
+                metrics['halstead'] = None
         except Exception as e:
             print(f"Warning: Could not analyze Halstead metrics for {file_path}: {e}", file=sys.stderr)
             metrics['halstead'] = None
@@ -389,10 +393,12 @@ def main():
         print("\n📊 Summary:")
         for app_data in results['apps']:
             summary = app_data['summary']
-            print(f"  {app_data['app']}: {summary['total_files']} files, "
-                  ".1f"
-                  ".1f"
-                  f"MI: {summary['mi_average']:.1f}")
+            print(
+                f"  {app_data['app']}: {summary['total_files']} files, "
+                f"CC avg: {summary['cc_average']:.1f}, "
+                f"CC max: {summary['cc_max']:.1f}, "
+                f"MI avg: {summary['mi_average']:.1f}"
+            )
 
         return 0
 

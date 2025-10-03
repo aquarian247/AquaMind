@@ -51,79 +51,23 @@ class BulkDataImportService:
             Tuple of (success, result_dict) where result_dict contains
             errors, warnings, preview_data, and created objects
         """
-        self.errors = []
-        self.warnings = []
-        self.preview_data = []
-        
+        self._reset_state()
+
         try:
-            # Parse CSV
             reader = csv.DictReader(csv_file)
-            
-            # Validate headers
             if not self._validate_headers(reader.fieldnames, self.TEMP_HEADERS):
                 return False, self._get_result()
-            
-            # Process rows
-            temperature_data = []
-            row_num = 1
-            
-            for row in reader:
-                row_num += 1
-                try:
-                    # Parse date
-                    reading_date = self._parse_date(row.get('date', '').strip())
-                    if not reading_date:
-                        self.errors.append(f"Row {row_num}: Invalid date format")
-                        continue
-                    
-                    # Parse temperature
-                    temp_str = row.get('temperature', '').strip()
-                    try:
-                        temperature = float(temp_str)
-                    except ValueError:
-                        self.errors.append(
-                            f"Row {row_num}: Invalid temperature value '{temp_str}'"
-                        )
-                        continue
-                    
-                    # Validate temperature range
-                    if temperature < -50 or temperature > 50:
-                        self.warnings.append(
-                            f"Row {row_num}: Unusual temperature {temperature}°C"
-                        )
-                    
-                    temperature_data.append({
-                        'date': reading_date,
-                        'temperature': temperature
-                    })
-                    
-                except Exception as e:
-                    self.errors.append(f"Row {row_num}: {str(e)}")
-            
-            # Check for duplicates
-            dates = [d['date'] for d in temperature_data]
-            if len(dates) != len(set(dates)):
-                self.errors.append("Duplicate dates found in CSV")
-            
-            # Sort by date
-            temperature_data.sort(key=lambda x: x['date'])
-            
-            # Generate preview
-            self.preview_data = temperature_data[:10]  # First 10 rows
-            
-            # If validation only or errors exist, return
+
+            temperature_data = self._collect_temperature_rows(reader)
+            self._finalize_temperature_data(temperature_data)
+
             if validate_only or self.errors:
                 return len(self.errors) == 0, self._get_result()
-            
-            # Save to database
+
             created_objects = self._save_temperature_data(profile_name, temperature_data)
-            
-            return True, {
-                **self._get_result(),
-                'created_objects': created_objects
-            }
-            
-        except Exception as e:
+            return True, {**self._get_result(), 'created_objects': created_objects}
+
+        except Exception as e:  # pragma: no cover - defensive outer guard
             self.errors.append(f"Import failed: {str(e)}")
             return False, self._get_result()
     
@@ -238,6 +182,48 @@ class BulkDataImportService:
             return False
         
         return True
+
+    def _reset_state(self) -> None:
+        self.errors = []
+        self.warnings = []
+        self.preview_data = []
+
+    def _collect_temperature_rows(self, reader: csv.DictReader) -> List[Dict[str, Any]]:
+        temperature_data: List[Dict[str, Any]] = []
+        row_num = 1
+        for row in reader:
+            row_num += 1
+            parsed = self._parse_temperature_row(row, row_num)
+            if parsed:
+                temperature_data.append(parsed)
+        return temperature_data
+
+    def _parse_temperature_row(self, row: Dict[str, Any], row_num: int) -> Optional[Dict[str, Any]]:
+        date_str = row.get('date', '').strip()
+        reading_date = self._parse_date(date_str)
+        if not reading_date:
+            self.errors.append(f"Row {row_num}: Invalid date format")
+            return None
+
+        temp_str = row.get('temperature', '').strip()
+        try:
+            temperature = float(temp_str)
+        except ValueError:
+            self.errors.append(f"Row {row_num}: Invalid temperature value '{temp_str}'")
+            return None
+
+        if temperature < -50 or temperature > 50:
+            self.warnings.append(f"Row {row_num}: Unusual temperature {temperature}°C")
+
+        return {'date': reading_date, 'temperature': temperature}
+
+    def _finalize_temperature_data(self, temperature_data: List[Dict[str, Any]]) -> None:
+        dates = [entry['date'] for entry in temperature_data]
+        if len(dates) != len(set(dates)):
+            self.errors.append("Duplicate dates found in CSV")
+
+        temperature_data.sort(key=lambda item: item['date'])
+        self.preview_data = temperature_data[:10]
     
     def _parse_date(self, date_str: str) -> Optional[date]:
         """Parse date string in various formats."""

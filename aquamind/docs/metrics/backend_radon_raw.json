@@ -1,26 +1,26 @@
 {
   "project": "aquamind-backend",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "metric_type": "raw",
   "apps": [
     {
       "app": "batch",
-      "total_loc": 5384,
-      "total_sloc": 3430,
-      "total_comments": 283,
+      "total_loc": 4856,
+      "total_sloc": 3016,
+      "total_comments": 241,
       "total_files": 50
     },
     {
       "app": "broodstock",
-      "total_loc": 2717,
-      "total_sloc": 1810,
+      "total_loc": 2743,
+      "total_sloc": 1836,
       "total_comments": 88,
       "total_files": 16
     },
     {
       "app": "environmental",
-      "total_loc": 1401,
-      "total_sloc": 953,
+      "total_loc": 1546,
+      "total_sloc": 1082,
       "total_comments": 55,
       "total_files": 11
     },
@@ -33,37 +33,37 @@
     },
     {
       "app": "infrastructure",
-      "total_loc": 3451,
-      "total_sloc": 2155,
-      "total_comments": 143,
-      "total_files": 43
+      "total_loc": 3923,
+      "total_sloc": 2499,
+      "total_comments": 171,
+      "total_files": 44
     },
     {
       "app": "inventory",
-      "total_loc": 4522,
-      "total_sloc": 2783,
-      "total_comments": 245,
-      "total_files": 43
+      "total_loc": 4534,
+      "total_sloc": 2776,
+      "total_comments": 248,
+      "total_files": 44
     },
     {
       "app": "operational",
-      "total_loc": 1124,
-      "total_sloc": 787,
+      "total_loc": 1250,
+      "total_sloc": 913,
       "total_comments": 75,
       "total_files": 15
     },
     {
       "app": "scenario",
-      "total_loc": 5779,
-      "total_sloc": 3666,
-      "total_comments": 344,
-      "total_files": 26
+      "total_loc": 5889,
+      "total_sloc": 3853,
+      "total_comments": 290,
+      "total_files": 32
     },
     {
       "app": "users",
-      "total_loc": 946,
-      "total_sloc": 460,
-      "total_comments": 46,
+      "total_loc": 994,
+      "total_sloc": 502,
+      "total_comments": 50,
       "total_files": 18
     }
   ]

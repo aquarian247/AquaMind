@@ -1,6 +1,6 @@
-# Cognitive Complexity Report for environmental
-# Generated: 2025-09-14
-# Files analyzed: 11
+# Cognitive Complexity Report for users
+# Generated: 2025-10-03
+# Files analyzed: 18
 # Total violations: 0
 # Status: pass
 # Message: Cognitive complexity within acceptable limits

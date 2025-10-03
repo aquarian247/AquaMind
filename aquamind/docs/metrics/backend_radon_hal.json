@@ -1,61 +1,61 @@
 {
   "project": "aquamind-backend",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "metric_type": "halstead",
   "apps": [
     {
       "app": "batch",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 84.18081868478191,
+      "halstead_avg_difficulty": 1.3521206293952452,
+      "halstead_avg_effort": 467.2112210066422
     },
     {
       "app": "broodstock",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 98.73485475792896,
+      "halstead_avg_difficulty": 1.5215530814215024,
+      "halstead_avg_effort": 587.8951168117102
     },
     {
       "app": "environmental",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 119.79807493740381,
+      "halstead_avg_difficulty": 0.8015961439690252,
+      "halstead_avg_effort": 463.80085812277025
     },
     {
       "app": "health",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 59.53702667276877,
+      "halstead_avg_difficulty": 1.2096742178144977,
+      "halstead_avg_effort": 310.9528877272155
     },
     {
       "app": "infrastructure",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 44.86275413104924,
+      "halstead_avg_difficulty": 0.9706055308328037,
+      "halstead_avg_effort": 225.5874488588762
     },
     {
       "app": "inventory",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 89.22313335094455,
+      "halstead_avg_difficulty": 1.2670996476371466,
+      "halstead_avg_effort": 646.1936639362494
     },
     {
       "app": "operational",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 119.63496373982971,
+      "halstead_avg_difficulty": 0.8517906336088154,
+      "halstead_avg_effort": 1256.8109564964636
     },
     {
       "app": "scenario",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 277.9119440650243,
+      "halstead_avg_difficulty": 2.979305499042738,
+      "halstead_avg_effort": 2459.4379253065167
     },
     {
       "app": "users",
-      "halstead_avg_volume": 0,
-      "halstead_avg_difficulty": 0,
-      "halstead_avg_effort": 0
+      "halstead_avg_volume": 19.486056012661567,
+      "halstead_avg_difficulty": 0.4543803418803419,
+      "halstead_avg_effort": 39.997311052646914
     }
   ]
 }

@@ -1,10 +1,10 @@
 {
   "app": "environmental",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/environmental/models.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 199,
         "sloc": 147,
@@ -12,13 +12,119 @@
         "multi": 22,
         "blank": 21
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameter",
+            "complexity": 2,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 51,
+            "col_offset": 4,
+            "endline": 52,
+            "type": "Function"
+          },
+          {
+            "name": "EnvironmentalReading",
+            "complexity": 2,
+            "lineno": 55,
+            "col_offset": 0,
+            "endline": 95,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 94,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
+            "name": "PhotoperiodData",
+            "complexity": 2,
+            "lineno": 98,
+            "col_offset": 0,
+            "endline": 131,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 130,
+            "col_offset": 4,
+            "endline": 131,
+            "type": "Function"
+          },
+          {
+            "name": "WeatherData",
+            "complexity": 2,
+            "lineno": 134,
+            "col_offset": 0,
+            "endline": 180,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 179,
+            "col_offset": 4,
+            "endline": 180,
+            "type": "Function"
+          },
+          {
+            "name": "StageTransitionEnvironmental",
+            "complexity": 2,
+            "lineno": 183,
+            "col_offset": 0,
+            "endline": 199,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 198,
+            "col_offset": 4,
+            "endline": 199,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 99,
         "sloc": 60,
@@ -26,13 +132,95 @@
         "multi": 23,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameterSerializer",
+            "complexity": 1,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 13,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalReadingSerializer",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 29,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalReadingCreateSerializer",
+            "complexity": 1,
+            "lineno": 40,
+            "col_offset": 0,
+            "endline": 41,
+            "type": "Class"
+          },
+          {
+            "name": "PhotoperiodDataSerializer",
+            "complexity": 1,
+            "lineno": 53,
+            "col_offset": 0,
+            "endline": 54,
+            "type": "Class"
+          },
+          {
+            "name": "WeatherDataSerializer",
+            "complexity": 1,
+            "lineno": 65,
+            "col_offset": 0,
+            "endline": 66,
+            "type": "Class"
+          },
+          {
+            "name": "WeatherDataCreateSerializer",
+            "complexity": 1,
+            "lineno": 78,
+            "col_offset": 0,
+            "endline": 79,
+            "type": "Class"
+          },
+          {
+            "name": "StageTransitionEnvironmentalSerializer",
+            "complexity": 1,
+            "lineno": 90,
+            "col_offset": 0,
+            "endline": 91,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -54,12 +242,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -67,13 +267,47 @@
         "multi": 0,
         "blank": 2
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalConfig",
+            "complexity": 1,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 7,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 104,
         "sloc": 79,
@@ -81,13 +315,191 @@
         "multi": 0,
         "blank": 25
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameterAdmin",
+            "complexity": 3,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 33,
+            "type": "Class"
+          },
+          {
+            "name": "min_value_display",
+            "complexity": 2,
+            "lineno": 19,
+            "col_offset": 4,
+            "endline": 20,
+            "type": "Function"
+          },
+          {
+            "name": "max_value_display",
+            "complexity": 2,
+            "lineno": 23,
+            "col_offset": 4,
+            "endline": 24,
+            "type": "Function"
+          },
+          {
+            "name": "optimal_min_display",
+            "complexity": 2,
+            "lineno": 27,
+            "col_offset": 4,
+            "endline": 28,
+            "type": "Function"
+          },
+          {
+            "name": "optimal_max_display",
+            "complexity": 2,
+            "lineno": 31,
+            "col_offset": 4,
+            "endline": 32,
+            "type": "Function"
+          },
+          {
+            "name": "EnvironmentalReadingAdmin",
+            "complexity": 3,
+            "lineno": 37,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          },
+          {
+            "name": "value_display",
+            "complexity": 2,
+            "lineno": 43,
+            "col_offset": 4,
+            "endline": 44,
+            "type": "Function"
+          },
+          {
+            "name": "PhotoperiodDataAdmin",
+            "complexity": 3,
+            "lineno": 49,
+            "col_offset": 0,
+            "endline": 61,
+            "type": "Class"
+          },
+          {
+            "name": "day_length_hours_display",
+            "complexity": 2,
+            "lineno": 55,
+            "col_offset": 4,
+            "endline": 56,
+            "type": "Function"
+          },
+          {
+            "name": "light_intensity_display",
+            "complexity": 2,
+            "lineno": 59,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "WeatherDataAdmin",
+            "complexity": 3,
+            "lineno": 65,
+            "col_offset": 0,
+            "endline": 81,
+            "type": "Class"
+          },
+          {
+            "name": "temperature_display",
+            "complexity": 2,
+            "lineno": 71,
+            "col_offset": 4,
+            "endline": 72,
+            "type": "Function"
+          },
+          {
+            "name": "wind_speed_display",
+            "complexity": 2,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 76,
+            "type": "Function"
+          },
+          {
+            "name": "precipitation_display",
+            "complexity": 2,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "StageTransitionEnvironmentalAdmin",
+            "complexity": 3,
+            "lineno": 85,
+            "col_offset": 0,
+            "endline": 104,
+            "type": "Class"
+          },
+          {
+            "name": "temperature_display",
+            "complexity": 2,
+            "lineno": 90,
+            "col_offset": 4,
+            "endline": 91,
+            "type": "Function"
+          },
+          {
+            "name": "oxygen_display",
+            "complexity": 2,
+            "lineno": 94,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
+            "name": "salinity_display",
+            "complexity": 2,
+            "lineno": 98,
+            "col_offset": 4,
+            "endline": 99,
+            "type": "Function"
+          },
+          {
+            "name": "ph_display",
+            "complexity": 2,
+            "lineno": 102,
+            "col_offset": 4,
+            "endline": 103,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 19,
+          "average_complexity": 2.263157894736842,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 19,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 26,
+        "N1": 14,
+        "N2": 28,
+        "vocabulary": 27,
+        "length": 42,
+        "volume": 199.7052750908657,
+        "difficulty": 0.5384615384615384,
+        "effort": 107.5336096643123,
+        "time": 5.974089425795127,
+        "bugs": 0.06656842503028856
+      },
       "maintainability_index": 39.34559955942509
     },
     {
       "file": "apps/environmental/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 23,
         "sloc": 18,
@@ -109,40 +521,312 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 186,
-        "sloc": 100,
+        "loc": 261,
+        "sloc": 175,
         "comments": 2,
         "multi": 50,
         "blank": 34
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 53.48175345487986
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameterViewSet",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 39,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalReadingViewSet",
+            "complexity": 5,
+            "lineno": 42,
+            "col_offset": 0,
+            "endline": 144,
+            "type": "Class"
+          },
+          {
+            "name": "get_serializer_class",
+            "complexity": 2,
+            "lineno": 55,
+            "col_offset": 4,
+            "endline": 64,
+            "type": "Function"
+          },
+          {
+            "name": "by_container",
+            "complexity": 5,
+            "lineno": 107,
+            "col_offset": 4,
+            "endline": 144,
+            "type": "Function"
+          },
+          {
+            "name": "PhotoperiodDataViewSet",
+            "complexity": 1,
+            "lineno": 147,
+            "col_offset": 0,
+            "endline": 158,
+            "type": "Class"
+          },
+          {
+            "name": "WeatherDataViewSet",
+            "complexity": 4,
+            "lineno": 161,
+            "col_offset": 0,
+            "endline": 247,
+            "type": "Class"
+          },
+          {
+            "name": "get_serializer_class",
+            "complexity": 2,
+            "lineno": 173,
+            "col_offset": 4,
+            "endline": 179,
+            "type": "Function"
+          },
+          {
+            "name": "by_area",
+            "complexity": 4,
+            "lineno": 215,
+            "col_offset": 4,
+            "endline": 247,
+            "type": "Function"
+          },
+          {
+            "name": "StageTransitionEnvironmentalViewSet",
+            "complexity": 1,
+            "lineno": 250,
+            "col_offset": 0,
+            "endline": 261,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 2.7777777777777777,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 9,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 5,
+        "N1": 4,
+        "N2": 6,
+        "vocabulary": 7,
+        "length": 10,
+        "volume": 28.07354922057604,
+        "difficulty": 1.2,
+        "effort": 33.688259064691245,
+        "time": 1.8715699480384025,
+        "bugs": 0.009357849740192013
+      },
+      "maintainability_index": 51.060787824630076
     },
     {
       "file": "apps/environmental/api/viewsets.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 301,
-        "sloc": 188,
+        "loc": 371,
+        "sloc": 242,
         "comments": 24,
         "multi": 26,
-        "blank": 59
+        "blank": 71
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 53.93342316560739
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameterFilter",
+            "complexity": 1,
+            "lineno": 38,
+            "col_offset": 0,
+            "endline": 39,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalReadingFilter",
+            "complexity": 1,
+            "lineno": 49,
+            "col_offset": 0,
+            "endline": 50,
+            "type": "Class"
+          },
+          {
+            "name": "PhotoperiodDataFilter",
+            "complexity": 1,
+            "lineno": 63,
+            "col_offset": 0,
+            "endline": 64,
+            "type": "Class"
+          },
+          {
+            "name": "WeatherDataFilter",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 0,
+            "endline": 76,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalParameterViewSet",
+            "complexity": 1,
+            "lineno": 85,
+            "col_offset": 0,
+            "endline": 98,
+            "type": "Class"
+          },
+          {
+            "name": "EnvironmentalReadingViewSet",
+            "complexity": 5,
+            "lineno": 101,
+            "col_offset": 0,
+            "endline": 257,
+            "type": "Class"
+          },
+          {
+            "name": "get_queryset",
+            "complexity": 3,
+            "lineno": 120,
+            "col_offset": 4,
+            "endline": 137,
+            "type": "Function"
+          },
+          {
+            "name": "_apply_time_filter",
+            "complexity": 6,
+            "lineno": 139,
+            "col_offset": 4,
+            "endline": 155,
+            "type": "Function"
+          },
+          {
+            "name": "_parse_and_make_aware",
+            "complexity": 3,
+            "lineno": 157,
+            "col_offset": 4,
+            "endline": 162,
+            "type": "Function"
+          },
+          {
+            "name": "recent",
+            "complexity": 3,
+            "lineno": 165,
+            "col_offset": 4,
+            "endline": 187,
+            "type": "Function"
+          },
+          {
+            "name": "stats",
+            "complexity": 5,
+            "lineno": 210,
+            "col_offset": 4,
+            "endline": 257,
+            "type": "Function"
+          },
+          {
+            "name": "PhotoperiodDataViewSet",
+            "complexity": 4,
+            "lineno": 260,
+            "col_offset": 0,
+            "endline": 291,
+            "type": "Class"
+          },
+          {
+            "name": "get_queryset",
+            "complexity": 3,
+            "lineno": 275,
+            "col_offset": 4,
+            "endline": 291,
+            "type": "Function"
+          },
+          {
+            "name": "WeatherDataViewSet",
+            "complexity": 4,
+            "lineno": 294,
+            "col_offset": 0,
+            "endline": 349,
+            "type": "Class"
+          },
+          {
+            "name": "get_queryset",
+            "complexity": 3,
+            "lineno": 313,
+            "col_offset": 4,
+            "endline": 329,
+            "type": "Function"
+          },
+          {
+            "name": "recent",
+            "complexity": 3,
+            "lineno": 332,
+            "col_offset": 4,
+            "endline": 349,
+            "type": "Function"
+          },
+          {
+            "name": "StageTransitionEnvironmentalViewSet",
+            "complexity": 1,
+            "lineno": 352,
+            "col_offset": 0,
+            "endline": 371,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 17,
+          "average_complexity": 2.823529411764706,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 16,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 4,
+        "h2": 12,
+        "N1": 8,
+        "N2": 14,
+        "vocabulary": 16,
+        "length": 22,
+        "volume": 88.0,
+        "difficulty": 2.3333333333333335,
+        "effort": 205.33333333333334,
+        "time": 11.407407407407408,
+        "bugs": 0.029333333333333333
+      },
+      "maintainability_index": 50.44543581409084
     },
     {
       "file": "apps/environmental/api/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 456,
         "sloc": 341,
@@ -150,13 +834,119 @@
         "multi": 32,
         "blank": 65
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "EnvironmentalParameterSerializer",
+            "complexity": 14,
+            "lineno": 20,
+            "col_offset": 0,
+            "endline": 101,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 13,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 101,
+            "type": "Function"
+          },
+          {
+            "name": "EnvironmentalReadingSerializer",
+            "complexity": 8,
+            "lineno": 104,
+            "col_offset": 0,
+            "endline": 193,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 7,
+            "lineno": 171,
+            "col_offset": 4,
+            "endline": 193,
+            "type": "Function"
+          },
+          {
+            "name": "PhotoperiodDataSerializer",
+            "complexity": 4,
+            "lineno": 196,
+            "col_offset": 0,
+            "endline": 254,
+            "type": "Class"
+          },
+          {
+            "name": "validate_day_length_hours",
+            "complexity": 3,
+            "lineno": 250,
+            "col_offset": 4,
+            "endline": 254,
+            "type": "Function"
+          },
+          {
+            "name": "WeatherDataSerializer",
+            "complexity": 11,
+            "lineno": 257,
+            "col_offset": 0,
+            "endline": 361,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 10,
+            "lineno": 338,
+            "col_offset": 4,
+            "endline": 361,
+            "type": "Function"
+          },
+          {
+            "name": "StageTransitionEnvironmentalSerializer",
+            "complexity": 11,
+            "lineno": 364,
+            "col_offset": 0,
+            "endline": 456,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 10,
+            "lineno": 426,
+            "col_offset": 4,
+            "endline": 456,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 9.1,
+          "max_complexity": 14,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 4,
+            "high": 4,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 59,
+        "N1": 55,
+        "N2": 112,
+        "vocabulary": 64,
+        "length": 167,
+        "volume": 1002.0,
+        "difficulty": 4.745762711864407,
+        "effort": 4755.254237288135,
+        "time": 264.180790960452,
+        "bugs": 0.334
+      },
       "maintainability_index": 37.58273616576123
     },
     {
       "file": "apps/environmental/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -178,12 +968,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/environmental/api/routers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 25,
         "sloc": 15,
@@ -205,19 +1007,31 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
     "total_files": 11,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 80.3948647586976,
+    "total_functions": 73,
+    "cc_average": 3.1506849315068495,
+    "cc_max": 14,
+    "mi_average": 79.85768721490066,
     "mi_min": 37.58273616576123,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "halstead_avg_volume": 119.79807493740381,
+    "halstead_avg_difficulty": 0.8015961439690252,
+    "halstead_avg_effort": 463.80085812277025
   }
 }

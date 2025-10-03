@@ -1,24 +1,49 @@
 {
   "app": "batch",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/batch/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 170,
-        "sloc": 131,
-        "comments": 6,
-        "multi": 0,
-        "blank": 33
+        "loc": 21,
+        "sloc": 10,
+        "comments": 1,
+        "multi": 5,
+        "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 52.3627264651594
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 1,
+        "N1": 1,
+        "N2": 1,
+        "vocabulary": 2,
+        "length": 2,
+        "volume": 2.0,
+        "difficulty": 0.5,
+        "effort": 1.0,
+        "time": 0.05555555555555555,
+        "bugs": 0.0006666666666666666
+      },
+      "maintainability_index": 96.87117963187056
     },
     {
       "file": "apps/batch/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -40,12 +65,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 11,
         "sloc": 7,
@@ -53,13 +90,55 @@
         "multi": 0,
         "blank": 3
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchConfig",
+            "complexity": 2,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 11,
+            "type": "Class"
+          },
+          {
+            "name": "ready",
+            "complexity": 1,
+            "lineno": 9,
+            "col_offset": 4,
+            "endline": 11,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 242,
         "sloc": 221,
@@ -67,13 +146,95 @@
         "multi": 0,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "SpeciesAdmin",
+            "complexity": 1,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 34,
+            "type": "Class"
+          },
+          {
+            "name": "LifeCycleStageAdmin",
+            "complexity": 1,
+            "lineno": 41,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          },
+          {
+            "name": "BatchAdmin",
+            "complexity": 1,
+            "lineno": 56,
+            "col_offset": 0,
+            "endline": 100,
+            "type": "Class"
+          },
+          {
+            "name": "BatchContainerAssignmentAdmin",
+            "complexity": 1,
+            "lineno": 106,
+            "col_offset": 0,
+            "endline": 138,
+            "type": "Class"
+          },
+          {
+            "name": "BatchTransferAdmin",
+            "complexity": 1,
+            "lineno": 144,
+            "col_offset": 0,
+            "endline": 186,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityEventAdmin",
+            "complexity": 1,
+            "lineno": 192,
+            "col_offset": 0,
+            "endline": 198,
+            "type": "Class"
+          },
+          {
+            "name": "GrowthSampleAdmin",
+            "complexity": 1,
+            "lineno": 202,
+            "col_offset": 0,
+            "endline": 240,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 13,
         "sloc": 6,
@@ -95,26 +256,63 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 344,
-        "sloc": 249,
-        "comments": 33,
-        "multi": 8,
-        "blank": 58
+        "loc": 20,
+        "sloc": 10,
+        "comments": 1,
+        "multi": 4,
+        "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 47.86078016827356
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 1,
+        "N1": 1,
+        "N2": 1,
+        "vocabulary": 2,
+        "length": 2,
+        "volume": 2.0,
+        "difficulty": 0.5,
+        "effort": 1.0,
+        "time": 0.05555555555555555,
+        "bugs": 0.0006666666666666666
+      },
+      "maintainability_index": 96.87117963187056
     },
     {
       "file": "apps/batch/management/commands/clear_batch_data.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 199,
         "sloc": 139,
@@ -122,13 +320,79 @@
         "multi": 6,
         "blank": 32
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 4,
+            "lineno": 32,
+            "col_offset": 0,
+            "endline": 199,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 35,
+            "col_offset": 4,
+            "endline": 39,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 5,
+            "lineno": 42,
+            "col_offset": 4,
+            "endline": 150,
+            "type": "Function"
+          },
+          {
+            "name": "_get_record_counts",
+            "complexity": 2,
+            "lineno": 152,
+            "col_offset": 4,
+            "endline": 178,
+            "type": "Function"
+          },
+          {
+            "name": "_delete_records",
+            "complexity": 5,
+            "lineno": 182,
+            "col_offset": 4,
+            "endline": 199,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 3.4,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 5,
+        "N1": 4,
+        "N2": 7,
+        "vocabulary": 8,
+        "length": 11,
+        "volume": 33.0,
+        "difficulty": 2.1,
+        "effort": 69.3,
+        "time": 3.8499999999999996,
+        "bugs": 0.011
+      },
       "maintainability_index": 66.22602514531182
     },
     {
       "file": "apps/batch/models/species.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 108,
         "sloc": 87,
@@ -136,13 +400,71 @@
         "multi": 12,
         "blank": 9
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Species",
+            "complexity": 2,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 60,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 59,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "LifeCycleStage",
+            "complexity": 2,
+            "lineno": 63,
+            "col_offset": 0,
+            "endline": 108,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 107,
+            "col_offset": 4,
+            "endline": 108,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 4,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 4,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/models/batch.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 119,
         "sloc": 76,
@@ -150,13 +472,111 @@
         "multi": 14,
         "blank": 18
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Batch",
+            "complexity": 3,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 119,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 2,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 50,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 1,
+            "lineno": 52,
+            "col_offset": 4,
+            "endline": 57,
+            "type": "Function"
+          },
+          {
+            "name": "containers",
+            "complexity": 1,
+            "lineno": 60,
+            "col_offset": 4,
+            "endline": 64,
+            "type": "Function"
+          },
+          {
+            "name": "is_mixed",
+            "complexity": 1,
+            "lineno": 68,
+            "col_offset": 4,
+            "endline": 70,
+            "type": "Function"
+          },
+          {
+            "name": "component_batches",
+            "complexity": 3,
+            "lineno": 73,
+            "col_offset": 4,
+            "endline": 77,
+            "type": "Function"
+          },
+          {
+            "name": "calculated_population_count",
+            "complexity": 2,
+            "lineno": 80,
+            "col_offset": 4,
+            "endline": 86,
+            "type": "Function"
+          },
+          {
+            "name": "calculated_avg_weight_g",
+            "complexity": 4,
+            "lineno": 89,
+            "col_offset": 4,
+            "endline": 107,
+            "type": "Function"
+          },
+          {
+            "name": "calculated_biomass_kg",
+            "complexity": 2,
+            "lineno": 110,
+            "col_offset": 4,
+            "endline": 119,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 2.111111111111111,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 9,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 8,
+        "h2": 19,
+        "N1": 10,
+        "N2": 20,
+        "vocabulary": 27,
+        "length": 30,
+        "volume": 142.64662506490407,
+        "difficulty": 4.2105263157894735,
+        "effort": 600.6173686943329,
+        "time": 33.367631594129605,
+        "bugs": 0.04754887502163469
+      },
       "maintainability_index": 57.61427455844868
     },
     {
       "file": "apps/batch/models/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 31,
         "sloc": 17,
@@ -178,12 +598,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/models/growth.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 72,
         "sloc": 40,
@@ -191,13 +623,71 @@
         "multi": 19,
         "blank": 11
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "GrowthSample",
+            "complexity": 4,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 72,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 41,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_condition_factor",
+            "complexity": 5,
+            "lineno": 44,
+            "col_offset": 4,
+            "endline": 58,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 3,
+            "lineno": 60,
+            "col_offset": 4,
+            "endline": 72,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 4,
+          "average_complexity": 3.25,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 4,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 16,
+        "N1": 9,
+        "N2": 19,
+        "vocabulary": 23,
+        "length": 28,
+        "volume": 126.65973476959637,
+        "difficulty": 4.15625,
+        "effort": 526.429522636135,
+        "time": 29.246084590896388,
+        "bugs": 0.042219911589865454
+      },
       "maintainability_index": 61.15018695479232
     },
     {
       "file": "apps/batch/models/transfer.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 126,
         "sloc": 86,
@@ -205,13 +695,63 @@
         "multi": 10,
         "blank": 19
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchTransfer",
+            "complexity": 5,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 126,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 102,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 6,
+            "lineno": 104,
+            "col_offset": 4,
+            "endline": 126,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.0,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 11,
+        "N1": 7,
+        "N2": 13,
+        "vocabulary": 18,
+        "length": 20,
+        "volume": 83.39850002884624,
+        "difficulty": 4.136363636363637,
+        "effort": 344.9665228465913,
+        "time": 19.16480682481063,
+        "bugs": 0.027799500009615414
+      },
       "maintainability_index": 73.79314276758745
     },
     {
       "file": "apps/batch/models/mortality.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 42,
         "sloc": 25,
@@ -219,13 +759,55 @@
         "multi": 7,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "MortalityEvent",
+            "complexity": 2,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 42,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 41,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/models/assignment.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 89,
         "sloc": 58,
@@ -233,13 +815,63 @@
         "multi": 16,
         "blank": 11
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchContainerAssignment",
+            "complexity": 5,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 89,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 6,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 89,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.0,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 8,
+        "h2": 15,
+        "N1": 9,
+        "N2": 18,
+        "vocabulary": 23,
+        "length": 27,
+        "volume": 122.13617281353935,
+        "difficulty": 4.8,
+        "effort": 586.2536295049888,
+        "time": 32.569646083610486,
+        "bugs": 0.040712057604513116
+      },
       "maintainability_index": 65.24044730507987
     },
     {
       "file": "apps/batch/models/composition.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 45,
         "sloc": 28,
@@ -247,13 +879,55 @@
         "multi": 10,
         "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchComposition",
+            "complexity": 2,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 44,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -275,12 +949,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/routers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 46,
         "sloc": 33,
@@ -302,12 +988,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/transfers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 66,
         "sloc": 43,
@@ -315,13 +1013,47 @@
         "multi": 8,
         "blank": 10
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchTransferFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/species.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 66,
         "sloc": 35,
@@ -329,69 +1061,247 @@
         "multi": 12,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "SpeciesFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 23,
+            "type": "Class"
+          },
+          {
+            "name": "LifeCycleStageFilter",
+            "complexity": 1,
+            "lineno": 36,
+            "col_offset": 0,
+            "endline": 53,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/batch.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 72,
-        "sloc": 45,
-        "comments": 9,
+        "loc": 56,
+        "sloc": 32,
+        "comments": 6,
         "multi": 9,
-        "blank": 13
+        "blank": 10
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/growth.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 65,
-        "sloc": 40,
-        "comments": 6,
+        "loc": 54,
+        "sloc": 29,
+        "comments": 7,
         "multi": 8,
         "blank": 11
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "GrowthSampleFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/assignments.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 76,
-        "sloc": 48,
-        "comments": 10,
+        "loc": 57,
+        "sloc": 33,
+        "comments": 6,
         "multi": 9,
-        "blank": 14
+        "blank": 10
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchContainerAssignmentFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 47,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/mortality.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 57,
-        "sloc": 34,
-        "comments": 5,
+        "loc": 50,
+        "sloc": 27,
+        "comments": 6,
         "multi": 8,
         "blank": 10
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "MortalityEventFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 40,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/composition.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 53,
         "sloc": 32,
@@ -399,13 +1309,47 @@
         "multi": 8,
         "blank": 9
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchCompositionFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 37,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/base.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 18,
         "sloc": 5,
@@ -413,13 +1357,47 @@
         "multi": 8,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchBaseFilter",
+            "complexity": 1,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 11,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/filters/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -427,27 +1405,295 @@
         "multi": 5,
         "blank": 17
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchHistoryFilter",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 20,
+            "type": "Class"
+          },
+          {
+            "name": "BatchContainerAssignmentHistoryFilter",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 28,
+            "type": "Class"
+          },
+          {
+            "name": "BatchTransferHistoryFilter",
+            "complexity": 1,
+            "lineno": 35,
+            "col_offset": 0,
+            "endline": 36,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityEventHistoryFilter",
+            "complexity": 1,
+            "lineno": 43,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "GrowthSampleHistoryFilter",
+            "complexity": 1,
+            "lineno": 51,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/mixins.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 570,
-        "sloc": 360,
+        "loc": 591,
+        "sloc": 381,
         "comments": 40,
         "multi": 51,
         "blank": 104
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 32.79638522912565
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchAnalyticsMixin",
+            "complexity": 5,
+            "lineno": 20,
+            "col_offset": 0,
+            "endline": 467,
+            "type": "Class"
+          },
+          {
+            "name": "growth_analysis",
+            "complexity": 2,
+            "lineno": 29,
+            "col_offset": 4,
+            "endline": 54,
+            "type": "Function"
+          },
+          {
+            "name": "_build_growth_analysis_response",
+            "complexity": 3,
+            "lineno": 56,
+            "col_offset": 4,
+            "endline": 84,
+            "type": "Function"
+          },
+          {
+            "name": "_process_growth_sample",
+            "complexity": 6,
+            "lineno": 86,
+            "col_offset": 4,
+            "endline": 114,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_growth_summary",
+            "complexity": 3,
+            "lineno": 116,
+            "col_offset": 4,
+            "endline": 135,
+            "type": "Function"
+          },
+          {
+            "name": "performance_metrics",
+            "complexity": 3,
+            "lineno": 138,
+            "col_offset": 4,
+            "endline": 180,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_mortality_metrics",
+            "complexity": 3,
+            "lineno": 182,
+            "col_offset": 4,
+            "endline": 208,
+            "type": "Function"
+          },
+          {
+            "name": "_get_mortality_by_cause",
+            "complexity": 3,
+            "lineno": 211,
+            "col_offset": 4,
+            "endline": 225,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_container_metrics",
+            "complexity": 3,
+            "lineno": 228,
+            "col_offset": 4,
+            "endline": 239,
+            "type": "Function"
+          },
+          {
+            "name": "_process_container_assignment",
+            "complexity": 3,
+            "lineno": 241,
+            "col_offset": 4,
+            "endline": 254,
+            "type": "Function"
+          },
+          {
+            "name": "_get_recent_growth_samples",
+            "complexity": 4,
+            "lineno": 257,
+            "col_offset": 4,
+            "endline": 271,
+            "type": "Function"
+          },
+          {
+            "name": "compare",
+            "complexity": 9,
+            "lineno": 294,
+            "col_offset": 4,
+            "endline": 365,
+            "type": "Function"
+          },
+          {
+            "name": "_get_growth_comparison_metrics",
+            "complexity": 6,
+            "lineno": 367,
+            "col_offset": 4,
+            "endline": 404,
+            "type": "Function"
+          },
+          {
+            "name": "_get_mortality_comparison_metrics",
+            "complexity": 5,
+            "lineno": 406,
+            "col_offset": 4,
+            "endline": 434,
+            "type": "Function"
+          },
+          {
+            "name": "_get_biomass_comparison_metrics",
+            "complexity": 5,
+            "lineno": 436,
+            "col_offset": 4,
+            "endline": 467,
+            "type": "Function"
+          },
+          {
+            "name": "LocationFilterMixin",
+            "complexity": 4,
+            "lineno": 470,
+            "col_offset": 0,
+            "endline": 591,
+            "type": "Class"
+          },
+          {
+            "name": "apply_location_filters",
+            "complexity": 7,
+            "lineno": 478,
+            "col_offset": 4,
+            "endline": 523,
+            "type": "Function"
+          },
+          {
+            "name": "_get_geography_filters",
+            "complexity": 3,
+            "lineno": 525,
+            "col_offset": 4,
+            "endline": 541,
+            "type": "Function"
+          },
+          {
+            "name": "_get_area_filters",
+            "complexity": 3,
+            "lineno": 543,
+            "col_offset": 4,
+            "endline": 554,
+            "type": "Function"
+          },
+          {
+            "name": "_get_station_filters",
+            "complexity": 3,
+            "lineno": 556,
+            "col_offset": 4,
+            "endline": 567,
+            "type": "Function"
+          },
+          {
+            "name": "_get_hall_filters",
+            "complexity": 3,
+            "lineno": 569,
+            "col_offset": 4,
+            "endline": 580,
+            "type": "Function"
+          },
+          {
+            "name": "_get_container_type_filters",
+            "complexity": 3,
+            "lineno": 582,
+            "col_offset": 4,
+            "endline": 591,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 22,
+          "average_complexity": 4.045454545454546,
+          "max_complexity": 9,
+          "complexity_distribution": {
+            "low": 18,
+            "medium": 4,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 12,
+        "h2": 89,
+        "N1": 61,
+        "N2": 113,
+        "vocabulary": 101,
+        "length": 174,
+        "volume": 1158.5287979988125,
+        "difficulty": 7.617977528089888,
+        "effort": 8825.646348799943,
+        "time": 490.3136860444413,
+        "bugs": 0.38617626599960414
+      },
+      "maintainability_index": 32.257951687405196
     },
     {
       "file": "apps/batch/api/viewsets/transfers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 91,
         "sloc": 46,
@@ -455,13 +1701,95 @@
         "multi": 27,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchTransferViewSet",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 91,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 76,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 78,
+            "col_offset": 4,
+            "endline": 79,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 81,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 85,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 87,
+            "col_offset": 4,
+            "endline": 88,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 90,
+            "col_offset": 4,
+            "endline": 91,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.1428571428571428,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/species.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 73,
         "sloc": 34,
@@ -469,27 +1797,183 @@
         "multi": 17,
         "blank": 15
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "SpeciesViewSet",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 41,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 44,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          },
+          {
+            "name": "LifeCycleStageViewSet",
+            "complexity": 2,
+            "lineno": 48,
+            "col_offset": 0,
+            "endline": 73,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 69,
+            "col_offset": 4,
+            "endline": 70,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 1.3333333333333333,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/batch.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 103,
-        "sloc": 44,
+        "loc": 104,
+        "sloc": 43,
         "comments": 4,
-        "multi": 39,
+        "multi": 41,
         "blank": 18
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchViewSet",
+            "complexity": 2,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 104,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 83,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 85,
+            "col_offset": 4,
+            "endline": 92,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 94,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 97,
+            "col_offset": 4,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 100,
+            "col_offset": 4,
+            "endline": 101,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 103,
+            "col_offset": 4,
+            "endline": 104,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.1428571428571428,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 15,
         "sloc": 8,
@@ -511,54 +1995,320 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/growth.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 69,
-        "sloc": 31,
+        "sloc": 30,
         "comments": 0,
-        "multi": 22,
+        "multi": 23,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "GrowthSampleViewSet",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 69,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 53,
+            "col_offset": 4,
+            "endline": 54,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 56,
+            "col_offset": 4,
+            "endline": 57,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 59,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 62,
+            "col_offset": 4,
+            "endline": 63,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 65,
+            "col_offset": 4,
+            "endline": 66,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 68,
+            "col_offset": 4,
+            "endline": 69,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.1428571428571428,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/assignments.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 239,
-        "sloc": 157,
+        "loc": 215,
+        "sloc": 131,
         "comments": 6,
-        "multi": 50,
+        "multi": 52,
         "blank": 26
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 62.92447978718579
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchContainerAssignmentViewSet",
+            "complexity": 2,
+            "lineno": 28,
+            "col_offset": 0,
+            "endline": 213,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 76,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 78,
+            "col_offset": 4,
+            "endline": 79,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 81,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 85,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 87,
+            "col_offset": 4,
+            "endline": 88,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 90,
+            "col_offset": 4,
+            "endline": 91,
+            "type": "Function"
+          },
+          {
+            "name": "summary",
+            "complexity": 3,
+            "lineno": 170,
+            "col_offset": 4,
+            "endline": 213,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 8,
+          "average_complexity": 1.375,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 5,
+        "N1": 3,
+        "N2": 6,
+        "vocabulary": 7,
+        "length": 9,
+        "volume": 25.26619429851844,
+        "difficulty": 1.2,
+        "effort": 30.319433158222125,
+        "time": 1.6844129532345624,
+        "bugs": 0.008422064766172813
+      },
+      "maintainability_index": 64.13110078375742
     },
     {
       "file": "apps/batch/api/viewsets/mortality.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 71,
-        "sloc": 29,
+        "sloc": 28,
         "comments": 4,
-        "multi": 22,
+        "multi": 23,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "MortalityEventViewSet",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 71,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 55,
+            "col_offset": 4,
+            "endline": 56,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 58,
+            "col_offset": 4,
+            "endline": 59,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 61,
+            "col_offset": 4,
+            "endline": 62,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 64,
+            "col_offset": 4,
+            "endline": 65,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 67,
+            "col_offset": 4,
+            "endline": 68,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 70,
+            "col_offset": 4,
+            "endline": 71,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.1428571428571428,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/composition.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 76,
         "sloc": 35,
@@ -566,13 +2316,95 @@
         "multi": 23,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchCompositionViewSet",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 76,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 60,
+            "col_offset": 4,
+            "endline": 61,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 63,
+            "col_offset": 4,
+            "endline": 64,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 66,
+            "col_offset": 4,
+            "endline": 67,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 69,
+            "col_offset": 4,
+            "endline": 70,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 76,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.1428571428571428,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/viewsets/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 105,
         "sloc": 73,
@@ -580,13 +2412,119 @@
         "multi": 5,
         "blank": 17
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchHistoryViewSet",
+            "complexity": 4,
+            "lineno": 33,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          },
+          {
+            "name": "get_operation_id",
+            "complexity": 3,
+            "lineno": 39,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          },
+          {
+            "name": "BatchContainerAssignmentHistoryViewSet",
+            "complexity": 4,
+            "lineno": 48,
+            "col_offset": 0,
+            "endline": 60,
+            "type": "Class"
+          },
+          {
+            "name": "get_operation_id",
+            "complexity": 3,
+            "lineno": 54,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "BatchTransferHistoryViewSet",
+            "complexity": 4,
+            "lineno": 63,
+            "col_offset": 0,
+            "endline": 75,
+            "type": "Class"
+          },
+          {
+            "name": "get_operation_id",
+            "complexity": 3,
+            "lineno": 69,
+            "col_offset": 4,
+            "endline": 75,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityEventHistoryViewSet",
+            "complexity": 4,
+            "lineno": 78,
+            "col_offset": 0,
+            "endline": 90,
+            "type": "Class"
+          },
+          {
+            "name": "get_operation_id",
+            "complexity": 3,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 90,
+            "type": "Function"
+          },
+          {
+            "name": "GrowthSampleHistoryViewSet",
+            "complexity": 4,
+            "lineno": 93,
+            "col_offset": 0,
+            "endline": 105,
+            "type": "Class"
+          },
+          {
+            "name": "get_operation_id",
+            "complexity": 3,
+            "lineno": 99,
+            "col_offset": 4,
+            "endline": 105,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 3.5,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 3,
+        "N1": 10,
+        "N2": 20,
+        "vocabulary": 4,
+        "length": 30,
+        "volume": 60.0,
+        "difficulty": 3.3333333333333335,
+        "effort": 200.0,
+        "time": 11.11111111111111,
+        "bugs": 0.02
+      },
       "maintainability_index": 45.705848804454384
     },
     {
       "file": "apps/batch/api/serializers/species.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 68,
         "sloc": 41,
@@ -594,13 +2532,71 @@
         "multi": 5,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "SpeciesSerializer",
+            "complexity": 12,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 37,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 11,
+            "lineno": 19,
+            "col_offset": 4,
+            "endline": 37,
+            "type": "Function"
+          },
+          {
+            "name": "LifeCycleStageSerializer",
+            "complexity": 12,
+            "lineno": 40,
+            "col_offset": 0,
+            "endline": 68,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 11,
+            "lineno": 50,
+            "col_offset": 4,
+            "endline": 68,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 4,
+          "average_complexity": 11.5,
+          "max_complexity": 12,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 4,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 33,
+        "N1": 16,
+        "N2": 40,
+        "vocabulary": 36,
+        "length": 56,
+        "volume": 289.5158000807695,
+        "difficulty": 1.8181818181818181,
+        "effort": 526.3923637832173,
+        "time": 29.24402021017874,
+        "bugs": 0.09650526669358983
+      },
       "maintainability_index": 62.83889327342708
     },
     {
       "file": "apps/batch/api/serializers/batch.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 182,
         "sloc": 132,
@@ -608,13 +2604,111 @@
         "multi": 15,
         "blank": 22
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchSerializer",
+            "complexity": 4,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 181,
+            "type": "Class"
+          },
+          {
+            "name": "get_current_lifecycle_stage",
+            "complexity": 3,
+            "lineno": 85,
+            "col_offset": 4,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "get_days_in_production",
+            "complexity": 2,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 105,
+            "type": "Function"
+          },
+          {
+            "name": "get_active_containers",
+            "complexity": 3,
+            "lineno": 108,
+            "col_offset": 4,
+            "endline": 113,
+            "type": "Function"
+          },
+          {
+            "name": "get_calculated_biomass_kg",
+            "complexity": 1,
+            "lineno": 117,
+            "col_offset": 4,
+            "endline": 119,
+            "type": "Function"
+          },
+          {
+            "name": "get_calculated_avg_weight_g",
+            "complexity": 1,
+            "lineno": 122,
+            "col_offset": 4,
+            "endline": 124,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 3,
+            "lineno": 126,
+            "col_offset": 4,
+            "endline": 132,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 8,
+            "lineno": 134,
+            "col_offset": 4,
+            "endline": 174,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 2,
+            "lineno": 176,
+            "col_offset": 4,
+            "endline": 181,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 3.0,
+          "max_complexity": 8,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 19,
+        "N1": 10,
+        "N2": 20,
+        "vocabulary": 26,
+        "length": 30,
+        "volume": 141.01319154423277,
+        "difficulty": 3.6842105263157894,
+        "effort": 519.522284636647,
+        "time": 28.862349146480387,
+        "bugs": 0.047004397181410924
+      },
       "maintainability_index": 52.94984130792825
     },
     {
       "file": "apps/batch/api/serializers/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 74,
         "sloc": 53,
@@ -636,12 +2730,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/serializers/growth.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 316,
         "sloc": 242,
@@ -649,13 +2755,135 @@
         "multi": 6,
         "blank": 44
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "GrowthSampleSerializer",
+            "complexity": 7,
+            "lineno": 25,
+            "col_offset": 0,
+            "endline": 316,
+            "type": "Class"
+          },
+          {
+            "name": "get_assignment_details",
+            "complexity": 2,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 103,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 17,
+            "lineno": 106,
+            "col_offset": 4,
+            "endline": 171,
+            "type": "Function"
+          },
+          {
+            "name": "_process_individual_measurements",
+            "complexity": 7,
+            "lineno": 173,
+            "col_offset": 4,
+            "endline": 202,
+            "type": "Function"
+          },
+          {
+            "name": "_set_sample_size_from_measurements",
+            "complexity": 8,
+            "lineno": 204,
+            "col_offset": 4,
+            "endline": 215,
+            "type": "Function"
+          },
+          {
+            "name": "_process_weight_statistics",
+            "complexity": 4,
+            "lineno": 217,
+            "col_offset": 4,
+            "endline": 226,
+            "type": "Function"
+          },
+          {
+            "name": "_process_length_statistics",
+            "complexity": 2,
+            "lineno": 228,
+            "col_offset": 4,
+            "endline": 235,
+            "type": "Function"
+          },
+          {
+            "name": "_process_condition_factor",
+            "complexity": 7,
+            "lineno": 237,
+            "col_offset": 4,
+            "endline": 250,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_stats",
+            "complexity": 4,
+            "lineno": 252,
+            "col_offset": 4,
+            "endline": 263,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_condition_factor_from_individuals",
+            "complexity": 10,
+            "lineno": 265,
+            "col_offset": 4,
+            "endline": 286,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 7,
+            "lineno": 288,
+            "col_offset": 4,
+            "endline": 305,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 3,
+            "lineno": 307,
+            "col_offset": 4,
+            "endline": 316,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 12,
+          "average_complexity": 6.5,
+          "max_complexity": 17,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 6,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 13,
+        "h2": 56,
+        "N1": 39,
+        "N2": 69,
+        "vocabulary": 69,
+        "length": 108,
+        "volume": 659.7206413320423,
+        "difficulty": 8.008928571428571,
+        "effort": 5283.655493525374,
+        "time": 293.53641630696524,
+        "bugs": 0.2199068804440141
+      },
       "maintainability_index": 39.03166064460936
     },
     {
       "file": "apps/batch/api/serializers/transfer.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 152,
         "sloc": 104,
@@ -663,13 +2891,127 @@
         "multi": 10,
         "blank": 24
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchTransferSerializer",
+            "complexity": 3,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 151,
+            "type": "Class"
+          },
+          {
+            "name": "get_source_batch_info",
+            "complexity": 1,
+            "lineno": 46,
+            "col_offset": 4,
+            "endline": 50,
+            "type": "Function"
+          },
+          {
+            "name": "get_destination_batch_info",
+            "complexity": 1,
+            "lineno": 53,
+            "col_offset": 4,
+            "endline": 57,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 6,
+            "lineno": 60,
+            "col_offset": 4,
+            "endline": 83,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_transfer_count",
+            "complexity": 3,
+            "lineno": 85,
+            "col_offset": 4,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_transfer_type_requirements",
+            "complexity": 5,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 112,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_lifecycle_transfer",
+            "complexity": 2,
+            "lineno": 114,
+            "col_offset": 4,
+            "endline": 118,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_container_transfer",
+            "complexity": 2,
+            "lineno": 121,
+            "col_offset": 4,
+            "endline": 125,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_split_transfer",
+            "complexity": 2,
+            "lineno": 128,
+            "col_offset": 4,
+            "endline": 132,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_merge_transfer",
+            "complexity": 2,
+            "lineno": 135,
+            "col_offset": 4,
+            "endline": 139,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_biomass_transfer",
+            "complexity": 2,
+            "lineno": 142,
+            "col_offset": 4,
+            "endline": 151,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 11,
+          "average_complexity": 2.6363636363636362,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 21,
+        "N1": 16,
+        "N2": 27,
+        "vocabulary": 26,
+        "length": 43,
+        "volume": 202.11890788006698,
+        "difficulty": 3.2142857142857144,
+        "effort": 649.6679181859296,
+        "time": 36.09266212144053,
+        "bugs": 0.06737296929335566
+      },
       "maintainability_index": 50.03443561396794
     },
     {
       "file": "apps/batch/api/serializers/utils.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 151,
         "sloc": 53,
@@ -677,13 +3019,95 @@
         "multi": 62,
         "blank": 35
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "format_decimal",
+            "complexity": 4,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 34,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_biomass_kg",
+            "complexity": 6,
+            "lineno": 37,
+            "col_offset": 0,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "validate_date_order",
+            "complexity": 5,
+            "lineno": 63,
+            "col_offset": 0,
+            "endline": 84,
+            "type": "Function"
+          },
+          {
+            "name": "DecimalFieldsMixin",
+            "complexity": 2,
+            "lineno": 87,
+            "col_offset": 0,
+            "endline": 109,
+            "type": "Class"
+          },
+          {
+            "name": "get_formatted_decimal",
+            "complexity": 1,
+            "lineno": 95,
+            "col_offset": 4,
+            "endline": 109,
+            "type": "Function"
+          },
+          {
+            "name": "NestedModelMixin",
+            "complexity": 9,
+            "lineno": 112,
+            "col_offset": 0,
+            "endline": 151,
+            "type": "Class"
+          },
+          {
+            "name": "get_nested_info",
+            "complexity": 8,
+            "lineno": 120,
+            "col_offset": 4,
+            "endline": 151,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 5.0,
+          "max_complexity": 9,
+          "complexity_distribution": {
+            "low": 4,
+            "medium": 3,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 28,
+        "N1": 21,
+        "N2": 33,
+        "vocabulary": 35,
+        "length": 54,
+        "volume": 276.9812829150282,
+        "difficulty": 4.125,
+        "effort": 1142.5477920244914,
+        "time": 63.474877334693964,
+        "bugs": 0.0923270943050094
+      },
       "maintainability_index": 49.050065568965174
     },
     {
       "file": "apps/batch/api/serializers/mortality.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 78,
         "sloc": 48,
@@ -691,13 +3115,79 @@
         "multi": 9,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "MortalityEventSerializer",
+            "complexity": 3,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 78,
+            "type": "Class"
+          },
+          {
+            "name": "get_batch_info",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 4,
+            "endline": 31,
+            "type": "Function"
+          },
+          {
+            "name": "get_container_info",
+            "complexity": 1,
+            "lineno": 34,
+            "col_offset": 4,
+            "endline": 38,
+            "type": "Function"
+          },
+          {
+            "name": "get_reason_info",
+            "complexity": 1,
+            "lineno": 41,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 7,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 78,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 2.6,
+          "max_complexity": 7,
+          "complexity_distribution": {
+            "low": 4,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 7,
+        "N1": 4,
+        "N2": 8,
+        "vocabulary": 9,
+        "length": 12,
+        "volume": 38.03910001730775,
+        "difficulty": 1.1428571428571428,
+        "effort": 43.47325716263743,
+        "time": 2.415180953479857,
+        "bugs": 0.012679700005769252
+      },
       "maintainability_index": 66.52455318033022
     },
     {
       "file": "apps/batch/api/serializers/assignment.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 205,
         "sloc": 159,
@@ -705,13 +3195,95 @@
         "multi": 10,
         "blank": 22
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchContainerAssignmentSerializer",
+            "complexity": 3,
+            "lineno": 21,
+            "col_offset": 0,
+            "endline": 205,
+            "type": "Class"
+          },
+          {
+            "name": "get_batch_info",
+            "complexity": 1,
+            "lineno": 119,
+            "col_offset": 4,
+            "endline": 124,
+            "type": "Function"
+          },
+          {
+            "name": "get_container_info",
+            "complexity": 1,
+            "lineno": 127,
+            "col_offset": 4,
+            "endline": 132,
+            "type": "Function"
+          },
+          {
+            "name": "get_lifecycle_stage_info",
+            "complexity": 1,
+            "lineno": 135,
+            "col_offset": 4,
+            "endline": 140,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 10,
+            "lineno": 143,
+            "col_offset": 4,
+            "endline": 180,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 182,
+            "col_offset": 4,
+            "endline": 189,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 2,
+            "lineno": 191,
+            "col_offset": 4,
+            "endline": 205,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 2.7142857142857144,
+          "max_complexity": 10,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 7,
+        "N1": 4,
+        "N2": 9,
+        "vocabulary": 9,
+        "length": 13,
+        "volume": 41.20902501875006,
+        "difficulty": 1.2857142857142858,
+        "effort": 52.98303216696437,
+        "time": 2.943501787053576,
+        "bugs": 0.013736341672916687
+      },
       "maintainability_index": 54.279348878127756
     },
     {
       "file": "apps/batch/api/serializers/composition.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 143,
         "sloc": 98,
@@ -719,13 +3291,95 @@
         "multi": 11,
         "blank": 23
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchCompositionSerializer",
+            "complexity": 5,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 143,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 5,
+            "lineno": 51,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "_get_source_batch",
+            "complexity": 3,
+            "lineno": 82,
+            "col_offset": 4,
+            "endline": 87,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_required_fields",
+            "complexity": 3,
+            "lineno": 89,
+            "col_offset": 4,
+            "endline": 93,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_percentage",
+            "complexity": 2,
+            "lineno": 96,
+            "col_offset": 4,
+            "endline": 99,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_population_count",
+            "complexity": 6,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 121,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_biomass",
+            "complexity": 6,
+            "lineno": 123,
+            "col_offset": 4,
+            "endline": 143,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 4.285714285714286,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 2,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 6,
+        "h2": 28,
+        "N1": 20,
+        "N2": 34,
+        "vocabulary": 34,
+        "length": 54,
+        "volume": 274.72299342751836,
+        "difficulty": 3.642857142857143,
+        "effort": 1000.7766189145311,
+        "time": 55.598701050807286,
+        "bugs": 0.09157433114250613
+      },
       "maintainability_index": 49.680173426844924
     },
     {
       "file": "apps/batch/api/serializers/base.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 126,
         "sloc": 39,
@@ -733,13 +3387,103 @@
         "multi": 55,
         "blank": 29
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "StandardErrorMixin",
+            "complexity": 3,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 46,
+            "type": "Class"
+          },
+          {
+            "name": "format_error",
+            "complexity": 2,
+            "lineno": 21,
+            "col_offset": 4,
+            "endline": 31,
+            "type": "Function"
+          },
+          {
+            "name": "add_error",
+            "complexity": 1,
+            "lineno": 33,
+            "col_offset": 4,
+            "endline": 46,
+            "type": "Function"
+          },
+          {
+            "name": "ReadWriteFieldsMixin",
+            "complexity": 4,
+            "lineno": 49,
+            "col_offset": 0,
+            "endline": 89,
+            "type": "Class"
+          },
+          {
+            "name": "create_field_pair",
+            "complexity": 3,
+            "lineno": 57,
+            "col_offset": 4,
+            "endline": 89,
+            "type": "Function"
+          },
+          {
+            "name": "BatchBaseSerializer",
+            "complexity": 3,
+            "lineno": 93,
+            "col_offset": 0,
+            "endline": 126,
+            "type": "Class"
+          },
+          {
+            "name": "get_fields",
+            "complexity": 1,
+            "lineno": 104,
+            "col_offset": 4,
+            "endline": 110,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 2,
+            "lineno": 112,
+            "col_offset": 4,
+            "endline": 126,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 8,
+          "average_complexity": 2.375,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 5,
+        "N1": 3,
+        "N2": 6,
+        "vocabulary": 8,
+        "length": 9,
+        "volume": 27.0,
+        "difficulty": 1.8,
+        "effort": 48.6,
+        "time": 2.7,
+        "bugs": 0.009
+      },
       "maintainability_index": 71.40175888711435
     },
     {
       "file": "apps/batch/api/serializers/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -747,13 +3491,79 @@
         "multi": 5,
         "blank": 17
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchHistorySerializer",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 20,
+            "type": "Class"
+          },
+          {
+            "name": "BatchContainerAssignmentHistorySerializer",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 28,
+            "type": "Class"
+          },
+          {
+            "name": "BatchTransferHistorySerializer",
+            "complexity": 1,
+            "lineno": 35,
+            "col_offset": 0,
+            "endline": 36,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityEventHistorySerializer",
+            "complexity": 1,
+            "lineno": 43,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "GrowthSampleHistorySerializer",
+            "complexity": 1,
+            "lineno": 51,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/batch/api/serializers/validation.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 175,
         "sloc": 80,
@@ -761,13 +3571,79 @@
         "multi": 48,
         "blank": 38
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "validate_container_capacity",
+            "complexity": 5,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 43,
+            "type": "Function"
+          },
+          {
+            "name": "validate_batch_population",
+            "complexity": 6,
+            "lineno": 46,
+            "col_offset": 0,
+            "endline": 78,
+            "type": "Function"
+          },
+          {
+            "name": "validate_individual_measurements",
+            "complexity": 9,
+            "lineno": 81,
+            "col_offset": 0,
+            "endline": 112,
+            "type": "Function"
+          },
+          {
+            "name": "validate_sample_size_against_population",
+            "complexity": 11,
+            "lineno": 115,
+            "col_offset": 0,
+            "endline": 155,
+            "type": "Function"
+          },
+          {
+            "name": "validate_min_max_weight",
+            "complexity": 4,
+            "lineno": 158,
+            "col_offset": 0,
+            "endline": 175,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 7.0,
+          "max_complexity": 11,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 2,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 9,
+        "h2": 44,
+        "N1": 30,
+        "N2": 57,
+        "vocabulary": 53,
+        "length": 87,
+        "volume": 498.32907954699834,
+        "difficulty": 5.829545454545454,
+        "effort": 2905.0320205410244,
+        "time": 161.3906678078347,
+        "bugs": 0.1661096931823328
+      },
       "maintainability_index": 55.69271929659031
     },
     {
       "file": "apps/batch/services/growth_service.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 57,
         "sloc": 21,
@@ -775,13 +3651,71 @@
         "multi": 21,
         "blank": 12
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "update_assignment_on_growth_sample_save",
+            "complexity": 3,
+            "lineno": 49,
+            "col_offset": 0,
+            "endline": 57,
+            "type": "Function"
+          },
+          {
+            "name": "GrowthSampleService",
+            "complexity": 2,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "update_assignment_weighing_dates",
+            "complexity": 1,
+            "lineno": 18,
+            "col_offset": 4,
+            "endline": 29,
+            "type": "Function"
+          },
+          {
+            "name": "get_latest_weighing_date",
+            "complexity": 1,
+            "lineno": 32,
+            "col_offset": 4,
+            "endline": 44,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 4,
+          "average_complexity": 1.75,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 4,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 2,
+        "N1": 1,
+        "N2": 2,
+        "vocabulary": 3,
+        "length": 3,
+        "volume": 4.754887502163469,
+        "difficulty": 0.5,
+        "effort": 2.3774437510817346,
+        "time": 0.1320802083934297,
+        "bugs": 0.0015849625007211565
+      },
       "maintainability_index": 86.3728570981749
     },
     {
       "file": "apps/batch/services/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 3,
         "sloc": 0,
@@ -803,19 +3737,31 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
     "total_files": 50,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 82.07061208722996,
-    "mi_min": 32.79638522912565,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "total_functions": 220,
+    "cc_average": 2.8863636363636362,
+    "cc_max": 17,
+    "mi_average": 83.95435288893317,
+    "mi_min": 32.257951687405196,
+    "halstead_avg_volume": 84.18081868478191,
+    "halstead_avg_difficulty": 1.3521206293952452,
+    "halstead_avg_effort": 467.2112210066422
   }
 }

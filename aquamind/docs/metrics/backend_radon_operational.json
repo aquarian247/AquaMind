@@ -1,10 +1,10 @@
 {
   "app": "operational",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/operational/models.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -26,12 +26,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -53,12 +65,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -80,12 +104,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -93,13 +129,47 @@
         "multi": 0,
         "blank": 2
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "OperationalConfig",
+            "complexity": 1,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 7,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -121,12 +191,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 14,
         "sloc": 7,
@@ -148,12 +230,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -175,12 +269,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 3,
         "sloc": 0,
@@ -202,12 +308,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/api/routers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 19,
         "sloc": 8,
@@ -229,12 +347,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/api/viewsets/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 6,
         "sloc": 2,
@@ -256,26 +386,112 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/api/viewsets/fcr_trends.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 277,
-        "sloc": 189,
+        "loc": 403,
+        "sloc": 315,
         "comments": 15,
         "multi": 39,
         "blank": 35
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 57.8358232337931
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FCRTrendsViewSet",
+            "complexity": 5,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 403,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 4,
+            "lineno": 126,
+            "col_offset": 4,
+            "endline": 171,
+            "type": "Function"
+          },
+          {
+            "name": "_parse_query_parameters",
+            "complexity": 10,
+            "lineno": 174,
+            "col_offset": 4,
+            "endline": 229,
+            "type": "Function"
+          },
+          {
+            "name": "batch_trends",
+            "complexity": 2,
+            "lineno": 274,
+            "col_offset": 4,
+            "endline": 287,
+            "type": "Function"
+          },
+          {
+            "name": "assignment_trends",
+            "complexity": 2,
+            "lineno": 332,
+            "col_offset": 4,
+            "endline": 345,
+            "type": "Function"
+          },
+          {
+            "name": "geography_trends",
+            "complexity": 2,
+            "lineno": 390,
+            "col_offset": 4,
+            "endline": 403,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 4.166666666666667,
+          "max_complexity": 10,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 4,
+        "h2": 9,
+        "N1": 6,
+        "N2": 9,
+        "vocabulary": 13,
+        "length": 15,
+        "volume": 55.506595772116384,
+        "difficulty": 2.0,
+        "effort": 111.01319154423277,
+        "time": 6.167399530235154,
+        "bugs": 0.01850219859070546
+      },
+      "maintainability_index": 54.20405340475143
     },
     {
       "file": "apps/operational/api/serializers/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 6,
         "sloc": 2,
@@ -297,12 +513,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/api/serializers/fcr_trends.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 160,
         "sloc": 115,
@@ -310,13 +538,63 @@
         "multi": 30,
         "blank": 13
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FCRDataPointSerializer",
+            "complexity": 1,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 78,
+            "type": "Class"
+          },
+          {
+            "name": "FCRTrendsSerializer",
+            "complexity": 3,
+            "lineno": 82,
+            "col_offset": 0,
+            "endline": 158,
+            "type": "Class"
+          },
+          {
+            "name": "to_representation",
+            "complexity": 2,
+            "lineno": 124,
+            "col_offset": 4,
+            "endline": 158,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 2.0,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/operational/services/fcr_trends_service.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 629,
         "sloc": 459,
@@ -324,13 +602,191 @@
         "multi": 31,
         "blank": 80
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "AggregationLevel",
+            "complexity": 1,
+            "lineno": 22,
+            "col_offset": 0,
+            "endline": 26,
+            "type": "Class"
+          },
+          {
+            "name": "TimeInterval",
+            "complexity": 1,
+            "lineno": 29,
+            "col_offset": 0,
+            "endline": 33,
+            "type": "Class"
+          },
+          {
+            "name": "FCRTrendsService",
+            "complexity": 6,
+            "lineno": 36,
+            "col_offset": 0,
+            "endline": 629,
+            "type": "Class"
+          },
+          {
+            "name": "get_fcr_trends",
+            "complexity": 2,
+            "lineno": 40,
+            "col_offset": 4,
+            "endline": 92,
+            "type": "Function"
+          },
+          {
+            "name": "_determine_aggregation_level",
+            "complexity": 4,
+            "lineno": 96,
+            "col_offset": 4,
+            "endline": 110,
+            "type": "Function"
+          },
+          {
+            "name": "_get_actual_fcr_series",
+            "complexity": 7,
+            "lineno": 113,
+            "col_offset": 4,
+            "endline": 149,
+            "type": "Function"
+          },
+          {
+            "name": "_ensure_container_summaries_exist",
+            "complexity": 5,
+            "lineno": 153,
+            "col_offset": 4,
+            "endline": 188,
+            "type": "Function"
+          },
+          {
+            "name": "_get_relevant_assignments",
+            "complexity": 4,
+            "lineno": 192,
+            "col_offset": 4,
+            "endline": 210,
+            "type": "Function"
+          },
+          {
+            "name": "_generate_time_periods",
+            "complexity": 7,
+            "lineno": 213,
+            "col_offset": 4,
+            "endline": 253,
+            "type": "Function"
+          },
+          {
+            "name": "_get_container_assignment_series",
+            "complexity": 3,
+            "lineno": 256,
+            "col_offset": 4,
+            "endline": 283,
+            "type": "Function"
+          },
+          {
+            "name": "_get_batch_aggregated_series",
+            "complexity": 3,
+            "lineno": 286,
+            "col_offset": 4,
+            "endline": 312,
+            "type": "Function"
+          },
+          {
+            "name": "_get_geography_aggregated_series",
+            "complexity": 15,
+            "lineno": 315,
+            "col_offset": 4,
+            "endline": 378,
+            "type": "Function"
+          },
+          {
+            "name": "_get_predicted_fcr_series",
+            "complexity": 17,
+            "lineno": 381,
+            "col_offset": 4,
+            "endline": 488,
+            "type": "Function"
+          },
+          {
+            "name": "_get_fcr_for_date",
+            "complexity": 4,
+            "lineno": 491,
+            "col_offset": 4,
+            "endline": 511,
+            "type": "Function"
+          },
+          {
+            "name": "_merge_series",
+            "complexity": 8,
+            "lineno": 514,
+            "col_offset": 4,
+            "endline": 575,
+            "type": "Function"
+          },
+          {
+            "name": "_numeric_to_confidence_level",
+            "complexity": 4,
+            "lineno": 578,
+            "col_offset": 4,
+            "endline": 587,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_period_end",
+            "complexity": 4,
+            "lineno": 590,
+            "col_offset": 4,
+            "endline": 603,
+            "type": "Function"
+          },
+          {
+            "name": "_get_bucket_start",
+            "complexity": 3,
+            "lineno": 606,
+            "col_offset": 4,
+            "endline": 616,
+            "type": "Function"
+          },
+          {
+            "name": "_get_next_bucket_date",
+            "complexity": 4,
+            "lineno": 619,
+            "col_offset": 4,
+            "endline": 629,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 19,
+          "average_complexity": 5.368421052631579,
+          "max_complexity": 17,
+          "complexity_distribution": {
+            "low": 13,
+            "medium": 4,
+            "high": 2,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 16,
+        "h2": 121,
+        "N1": 82,
+        "N2": 163,
+        "vocabulary": 137,
+        "length": 245,
+        "volume": 1739.0178603253291,
+        "difficulty": 10.776859504132231,
+        "effort": 18741.15115590272,
+        "time": 1041.1750642168179,
+        "bugs": 0.579672620108443
+      },
       "maintainability_index": 29.227814248282343
     },
     {
       "file": "apps/operational/services/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 3,
         "sloc": 0,
@@ -352,19 +808,31 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
     "total_files": 15,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 92.4709091654717,
+    "total_functions": 29,
+    "cc_average": 4.620689655172414,
+    "cc_max": 17,
+    "mi_average": 92.22879117686892,
     "mi_min": 29.227814248282343,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "halstead_avg_volume": 119.63496373982971,
+    "halstead_avg_difficulty": 0.8517906336088154,
+    "halstead_avg_effort": 1256.8109564964636
   }
 }
