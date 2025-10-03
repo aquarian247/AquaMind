@@ -1,10 +1,10 @@
 {
   "app": "scenario",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/scenario/models.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 770,
         "sloc": 582,
@@ -12,13 +12,319 @@
         "multi": 63,
         "blank": 94
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "LifecycleStageChoices",
+            "complexity": 1,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 24,
+            "type": "Class"
+          },
+          {
+            "name": "TemperatureProfile",
+            "complexity": 2,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 49,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 49,
+            "type": "Function"
+          },
+          {
+            "name": "TemperatureReading",
+            "complexity": 2,
+            "lineno": 52,
+            "col_offset": 0,
+            "endline": 80,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "TGCModel",
+            "complexity": 2,
+            "lineno": 83,
+            "col_offset": 0,
+            "endline": 134,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 133,
+            "col_offset": 4,
+            "endline": 134,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModel",
+            "complexity": 2,
+            "lineno": 137,
+            "col_offset": 0,
+            "endline": 162,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 161,
+            "col_offset": 4,
+            "endline": 162,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelStage",
+            "complexity": 2,
+            "lineno": 165,
+            "col_offset": 0,
+            "endline": 199,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 198,
+            "col_offset": 4,
+            "endline": 199,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModel",
+            "complexity": 2,
+            "lineno": 202,
+            "col_offset": 0,
+            "endline": 241,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 240,
+            "col_offset": 4,
+            "endline": 241,
+            "type": "Function"
+          },
+          {
+            "name": "Scenario",
+            "complexity": 6,
+            "lineno": 244,
+            "col_offset": 0,
+            "endline": 374,
+            "type": "Class"
+          },
+          {
+            "name": "clean",
+            "complexity": 12,
+            "lineno": 333,
+            "col_offset": 4,
+            "endline": 365,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 1,
+            "lineno": 368,
+            "col_offset": 4,
+            "endline": 371,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 373,
+            "col_offset": 4,
+            "endline": 374,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioModelChange",
+            "complexity": 3,
+            "lineno": 377,
+            "col_offset": 0,
+            "endline": 443,
+            "type": "Class"
+          },
+          {
+            "name": "clean",
+            "complexity": 2,
+            "lineno": 429,
+            "col_offset": 4,
+            "endline": 438,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 442,
+            "col_offset": 4,
+            "endline": 443,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioProjection",
+            "complexity": 2,
+            "lineno": 446,
+            "col_offset": 0,
+            "endline": 507,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 506,
+            "col_offset": 4,
+            "endline": 507,
+            "type": "Function"
+          },
+          {
+            "name": "BiologicalConstraints",
+            "complexity": 2,
+            "lineno": 511,
+            "col_offset": 0,
+            "endline": 544,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 543,
+            "col_offset": 4,
+            "endline": 544,
+            "type": "Function"
+          },
+          {
+            "name": "StageConstraint",
+            "complexity": 6,
+            "lineno": 547,
+            "col_offset": 0,
+            "endline": 638,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 599,
+            "col_offset": 4,
+            "endline": 600,
+            "type": "Function"
+          },
+          {
+            "name": "clean",
+            "complexity": 8,
+            "lineno": 605,
+            "col_offset": 4,
+            "endline": 638,
+            "type": "Function"
+          },
+          {
+            "name": "TGCModelStage",
+            "complexity": 2,
+            "lineno": 642,
+            "col_offset": 0,
+            "endline": 676,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 675,
+            "col_offset": 4,
+            "endline": 676,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelStageOverride",
+            "complexity": 4,
+            "lineno": 679,
+            "col_offset": 0,
+            "endline": 725,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 706,
+            "col_offset": 4,
+            "endline": 707,
+            "type": "Function"
+          },
+          {
+            "name": "clean",
+            "complexity": 4,
+            "lineno": 712,
+            "col_offset": 4,
+            "endline": 725,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModelStage",
+            "complexity": 3,
+            "lineno": 730,
+            "col_offset": 0,
+            "endline": 767,
+            "type": "Class"
+          },
+          {
+            "name": "save",
+            "complexity": 3,
+            "lineno": 758,
+            "col_offset": 4,
+            "endline": 764,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 766,
+            "col_offset": 4,
+            "endline": 767,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 35,
+          "average_complexity": 2.4285714285714284,
+          "max_complexity": 12,
+          "complexity_distribution": {
+            "low": 31,
+            "medium": 3,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 12,
+        "h2": 37,
+        "N1": 30,
+        "N2": 61,
+        "vocabulary": 49,
+        "length": 91,
+        "volume": 510.93859581448396,
+        "difficulty": 9.891891891891891,
+        "effort": 5054.149353191922,
+        "time": 280.786075177329,
+        "bugs": 0.17031286527149464
+      },
       "maintainability_index": 33.37695693604684
     },
     {
       "file": "apps/scenario/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -40,12 +346,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -67,12 +385,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -80,13 +410,47 @@
         "multi": 0,
         "blank": 2
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ScenarioConfig",
+            "complexity": 1,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 7,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 435,
         "sloc": 322,
@@ -94,13 +458,311 @@
         "multi": 5,
         "blank": 67
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TemperatureReadingInline",
+            "complexity": 1,
+            "lineno": 20,
+            "col_offset": 0,
+            "endline": 25,
+            "type": "Class"
+          },
+          {
+            "name": "TemperatureProfileAdmin",
+            "complexity": 1,
+            "lineno": 29,
+            "col_offset": 0,
+            "endline": 42,
+            "type": "Class"
+          },
+          {
+            "name": "TGCModelAdmin",
+            "complexity": 1,
+            "lineno": 48,
+            "col_offset": 0,
+            "endline": 65,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelStageInline",
+            "complexity": 1,
+            "lineno": 70,
+            "col_offset": 0,
+            "endline": 75,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelAdmin",
+            "complexity": 2,
+            "lineno": 79,
+            "col_offset": 0,
+            "endline": 99,
+            "type": "Class"
+          },
+          {
+            "name": "get_stage_count",
+            "complexity": 1,
+            "lineno": 96,
+            "col_offset": 4,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModelAdmin",
+            "complexity": 1,
+            "lineno": 103,
+            "col_offset": 0,
+            "endline": 117,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioModelChangeInline",
+            "complexity": 1,
+            "lineno": 122,
+            "col_offset": 0,
+            "endline": 127,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioAdmin",
+            "complexity": 3,
+            "lineno": 131,
+            "col_offset": 0,
+            "endline": 165,
+            "type": "Class"
+          },
+          {
+            "name": "save_model",
+            "complexity": 2,
+            "lineno": 161,
+            "col_offset": 4,
+            "endline": 165,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioProjectionAdmin",
+            "complexity": 2,
+            "lineno": 169,
+            "col_offset": 0,
+            "endline": 199,
+            "type": "Class"
+          },
+          {
+            "name": "has_add_permission",
+            "complexity": 1,
+            "lineno": 179,
+            "col_offset": 4,
+            "endline": 181,
+            "type": "Function"
+          },
+          {
+            "name": "has_change_permission",
+            "complexity": 1,
+            "lineno": 183,
+            "col_offset": 4,
+            "endline": 185,
+            "type": "Function"
+          },
+          {
+            "name": "TemperatureReadingAdmin",
+            "complexity": 1,
+            "lineno": 206,
+            "col_offset": 0,
+            "endline": 211,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelStageAdmin",
+            "complexity": 1,
+            "lineno": 215,
+            "col_offset": 0,
+            "endline": 220,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioModelChangeAdmin",
+            "complexity": 6,
+            "lineno": 224,
+            "col_offset": 0,
+            "endline": 241,
+            "type": "Class"
+          },
+          {
+            "name": "get_changes_summary",
+            "complexity": 5,
+            "lineno": 231,
+            "col_offset": 4,
+            "endline": 240,
+            "type": "Function"
+          },
+          {
+            "name": "StageConstraintInline",
+            "complexity": 1,
+            "lineno": 246,
+            "col_offset": 0,
+            "endline": 253,
+            "type": "Class"
+          },
+          {
+            "name": "BiologicalConstraintsAdmin",
+            "complexity": 2,
+            "lineno": 258,
+            "col_offset": 0,
+            "endline": 292,
+            "type": "Class"
+          },
+          {
+            "name": "save_model",
+            "complexity": 2,
+            "lineno": 276,
+            "col_offset": 4,
+            "endline": 280,
+            "type": "Function"
+          },
+          {
+            "name": "has_change_permission",
+            "complexity": 1,
+            "lineno": 282,
+            "col_offset": 4,
+            "endline": 284,
+            "type": "Function"
+          },
+          {
+            "name": "has_add_permission",
+            "complexity": 1,
+            "lineno": 286,
+            "col_offset": 4,
+            "endline": 288,
+            "type": "Function"
+          },
+          {
+            "name": "has_delete_permission",
+            "complexity": 1,
+            "lineno": 290,
+            "col_offset": 4,
+            "endline": 292,
+            "type": "Function"
+          },
+          {
+            "name": "TGCModelStageInline",
+            "complexity": 1,
+            "lineno": 295,
+            "col_offset": 0,
+            "endline": 299,
+            "type": "Class"
+          },
+          {
+            "name": "TGCModelAdminEnhanced",
+            "complexity": 2,
+            "lineno": 305,
+            "col_offset": 0,
+            "endline": 331,
+            "type": "Class"
+          },
+          {
+            "name": "has_stage_overrides",
+            "complexity": 1,
+            "lineno": 327,
+            "col_offset": 4,
+            "endline": 329,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelStageOverrideInline",
+            "complexity": 1,
+            "lineno": 334,
+            "col_offset": 0,
+            "endline": 339,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelStageAdminEnhanced",
+            "complexity": 2,
+            "lineno": 345,
+            "col_offset": 0,
+            "endline": 357,
+            "type": "Class"
+          },
+          {
+            "name": "has_weight_overrides",
+            "complexity": 1,
+            "lineno": 353,
+            "col_offset": 4,
+            "endline": 355,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModelStageInline",
+            "complexity": 1,
+            "lineno": 360,
+            "col_offset": 0,
+            "endline": 365,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityModelAdminEnhanced",
+            "complexity": 2,
+            "lineno": 371,
+            "col_offset": 0,
+            "endline": 394,
+            "type": "Class"
+          },
+          {
+            "name": "has_stage_overrides",
+            "complexity": 1,
+            "lineno": 390,
+            "col_offset": 4,
+            "endline": 392,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioAdminEnhanced",
+            "complexity": 3,
+            "lineno": 400,
+            "col_offset": 0,
+            "endline": 435,
+            "type": "Class"
+          },
+          {
+            "name": "save_model",
+            "complexity": 2,
+            "lineno": 431,
+            "col_offset": 4,
+            "endline": 435,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 34,
+          "average_complexity": 1.6470588235294117,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 33,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 1,
+        "N1": 3,
+        "N2": 3,
+        "vocabulary": 2,
+        "length": 6,
+        "volume": 6.0,
+        "difficulty": 1.5,
+        "effort": 9.0,
+        "time": 0.5,
+        "bugs": 0.002
+      },
       "maintainability_index": 51.3911470548293
     },
     {
       "file": "apps/scenario/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 17,
         "sloc": 9,
@@ -122,12 +784,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -149,40 +823,351 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/viewsets.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 870,
-        "sloc": 592,
-        "comments": 45,
+        "loc": 943,
+        "sloc": 668,
+        "comments": 44,
         "multi": 78,
-        "blank": 134
+        "blank": 132
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 34.38133157381836
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TemperatureProfileViewSet",
+            "complexity": 4,
+            "lineno": 48,
+            "col_offset": 0,
+            "endline": 203,
+            "type": "Class"
+          },
+          {
+            "name": "upload_csv",
+            "complexity": 2,
+            "lineno": 62,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
+            "name": "bulk_date_ranges",
+            "complexity": 5,
+            "lineno": 99,
+            "col_offset": 4,
+            "endline": 167,
+            "type": "Function"
+          },
+          {
+            "name": "download_template",
+            "complexity": 1,
+            "lineno": 171,
+            "col_offset": 4,
+            "endline": 178,
+            "type": "Function"
+          },
+          {
+            "name": "statistics",
+            "complexity": 3,
+            "lineno": 181,
+            "col_offset": 4,
+            "endline": 203,
+            "type": "Function"
+          },
+          {
+            "name": "TGCModelViewSet",
+            "complexity": 4,
+            "lineno": 209,
+            "col_offset": 0,
+            "endline": 292,
+            "type": "Class"
+          },
+          {
+            "name": "templates",
+            "complexity": 1,
+            "lineno": 222,
+            "col_offset": 4,
+            "endline": 254,
+            "type": "Function"
+          },
+          {
+            "name": "duplicate",
+            "complexity": 4,
+            "lineno": 257,
+            "col_offset": 4,
+            "endline": 292,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelViewSet",
+            "complexity": 3,
+            "lineno": 295,
+            "col_offset": 0,
+            "endline": 358,
+            "type": "Class"
+          },
+          {
+            "name": "templates",
+            "complexity": 1,
+            "lineno": 307,
+            "col_offset": 4,
+            "endline": 334,
+            "type": "Function"
+          },
+          {
+            "name": "stage_summary",
+            "complexity": 3,
+            "lineno": 337,
+            "col_offset": 4,
+            "endline": 358,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModelViewSet",
+            "complexity": 2,
+            "lineno": 361,
+            "col_offset": 0,
+            "endline": 403,
+            "type": "Class"
+          },
+          {
+            "name": "templates",
+            "complexity": 1,
+            "lineno": 374,
+            "col_offset": 4,
+            "endline": 403,
+            "type": "Function"
+          },
+          {
+            "name": "BiologicalConstraintsViewSet",
+            "complexity": 2,
+            "lineno": 406,
+            "col_offset": 0,
+            "endline": 421,
+            "type": "Class"
+          },
+          {
+            "name": "active",
+            "complexity": 1,
+            "lineno": 417,
+            "col_offset": 4,
+            "endline": 421,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioViewSet",
+            "complexity": 3,
+            "lineno": 424,
+            "col_offset": 0,
+            "endline": 818,
+            "type": "Class"
+          },
+          {
+            "name": "get_queryset",
+            "complexity": 2,
+            "lineno": 439,
+            "col_offset": 4,
+            "endline": 447,
+            "type": "Function"
+          },
+          {
+            "name": "perform_create",
+            "complexity": 1,
+            "lineno": 449,
+            "col_offset": 4,
+            "endline": 451,
+            "type": "Function"
+          },
+          {
+            "name": "duplicate",
+            "complexity": 3,
+            "lineno": 454,
+            "col_offset": 4,
+            "endline": 506,
+            "type": "Function"
+          },
+          {
+            "name": "from_batch",
+            "complexity": 1,
+            "lineno": 509,
+            "col_offset": 4,
+            "endline": 537,
+            "type": "Function"
+          },
+          {
+            "name": "compare",
+            "complexity": 1,
+            "lineno": 540,
+            "col_offset": 4,
+            "endline": 565,
+            "type": "Function"
+          },
+          {
+            "name": "run_projection",
+            "complexity": 3,
+            "lineno": 568,
+            "col_offset": 4,
+            "endline": 607,
+            "type": "Function"
+          },
+          {
+            "name": "sensitivity_analysis",
+            "complexity": 3,
+            "lineno": 611,
+            "col_offset": 4,
+            "endline": 652,
+            "type": "Function"
+          },
+          {
+            "name": "projections",
+            "complexity": 5,
+            "lineno": 683,
+            "col_offset": 4,
+            "endline": 708,
+            "type": "Function"
+          },
+          {
+            "name": "chart_data",
+            "complexity": 1,
+            "lineno": 740,
+            "col_offset": 4,
+            "endline": 751,
+            "type": "Function"
+          },
+          {
+            "name": "export_projections",
+            "complexity": 6,
+            "lineno": 754,
+            "col_offset": 4,
+            "endline": 791,
+            "type": "Function"
+          },
+          {
+            "name": "summary_stats",
+            "complexity": 1,
+            "lineno": 794,
+            "col_offset": 4,
+            "endline": 818,
+            "type": "Function"
+          },
+          {
+            "name": "DataEntryViewSet",
+            "complexity": 4,
+            "lineno": 821,
+            "col_offset": 0,
+            "endline": 942,
+            "type": "Class"
+          },
+          {
+            "name": "validate_csv",
+            "complexity": 5,
+            "lineno": 833,
+            "col_offset": 4,
+            "endline": 883,
+            "type": "Function"
+          },
+          {
+            "name": "csv_template",
+            "complexity": 2,
+            "lineno": 908,
+            "col_offset": 4,
+            "endline": 933,
+            "type": "Function"
+          },
+          {
+            "name": "import_status",
+            "complexity": 1,
+            "lineno": 937,
+            "col_offset": 4,
+            "endline": 942,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 31,
+          "average_complexity": 2.5483870967741935,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 30,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 10,
+        "h2": 31,
+        "N1": 22,
+        "N2": 39,
+        "vocabulary": 41,
+        "length": 61,
+        "volume": 326.8106722817031,
+        "difficulty": 6.290322580645161,
+        "effort": 2055.7445514494225,
+        "time": 114.20803063607903,
+        "bugs": 0.1089368907605677
+      },
+      "maintainability_index": 33.790046044087106
     },
     {
       "file": "apps/scenario/api/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 954,
-        "sloc": 681,
-        "comments": 45,
-        "multi": 5,
-        "blank": 165
+        "loc": 3,
+        "sloc": 1,
+        "comments": 1,
+        "multi": 0,
+        "blank": 1
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 12.040542990587644
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 6,
         "sloc": 0,
@@ -204,12 +1189,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/routers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 95,
         "sloc": 34,
@@ -231,12 +1228,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/filters/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -244,13 +1253,79 @@
         "multi": 5,
         "blank": 17
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TGCModelHistoryFilter",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 20,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelHistoryFilter",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 28,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityModelHistoryFilter",
+            "complexity": 1,
+            "lineno": 35,
+            "col_offset": 0,
+            "endline": 36,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioHistoryFilter",
+            "complexity": 1,
+            "lineno": 43,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioModelChangeHistoryFilter",
+            "complexity": 1,
+            "lineno": 51,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/viewsets/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 11,
         "sloc": 2,
@@ -272,12 +1347,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/api/viewsets/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 65,
         "sloc": 43,
@@ -285,19 +1372,237 @@
         "multi": 5,
         "blank": 12
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TGCModelHistoryViewSet",
+            "complexity": 1,
+            "lineno": 33,
+            "col_offset": 0,
+            "endline": 37,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelHistoryViewSet",
+            "complexity": 1,
+            "lineno": 40,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityModelHistoryViewSet",
+            "complexity": 1,
+            "lineno": 47,
+            "col_offset": 0,
+            "endline": 51,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioHistoryViewSet",
+            "complexity": 1,
+            "lineno": 54,
+            "col_offset": 0,
+            "endline": 58,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioModelChangeHistoryViewSet",
+            "complexity": 1,
+            "lineno": 61,
+            "col_offset": 0,
+            "endline": 65,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
-      "file": "apps/scenario/api/serializers/__init__.py",
-      "timestamp": "2025-09-14",
+      "file": "apps/scenario/api/serializers/bulk.py",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 5,
-        "sloc": 0,
+        "loc": 149,
+        "sloc": 120,
+        "comments": 1,
+        "multi": 0,
+        "blank": 28
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "CSVUploadSerializer",
+            "complexity": 4,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 42,
+            "type": "Class"
+          },
+          {
+            "name": "validate_file",
+            "complexity": 4,
+            "lineno": 24,
+            "col_offset": 4,
+            "endline": 35,
+            "type": "Function"
+          },
+          {
+            "name": "validate_profile_name",
+            "complexity": 2,
+            "lineno": 37,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          },
+          {
+            "name": "DateRangeEntrySerializer",
+            "complexity": 4,
+            "lineno": 45,
+            "col_offset": 0,
+            "endline": 56,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 3,
+            "lineno": 50,
+            "col_offset": 4,
+            "endline": 56,
+            "type": "Function"
+          },
+          {
+            "name": "BulkDateRangeSerializer",
+            "complexity": 5,
+            "lineno": 59,
+            "col_offset": 0,
+            "endline": 79,
+            "type": "Class"
+          },
+          {
+            "name": "validate_ranges",
+            "complexity": 4,
+            "lineno": 69,
+            "col_offset": 4,
+            "endline": 79,
+            "type": "Function"
+          },
+          {
+            "name": "DataValidationResultSerializer",
+            "complexity": 1,
+            "lineno": 82,
+            "col_offset": 0,
+            "endline": 87,
+            "type": "Class"
+          },
+          {
+            "name": "CSVTemplateRequestSerializer",
+            "complexity": 1,
+            "lineno": 90,
+            "col_offset": 0,
+            "endline": 92,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioDuplicateSerializer",
+            "complexity": 3,
+            "lineno": 95,
+            "col_offset": 0,
+            "endline": 104,
+            "type": "Class"
+          },
+          {
+            "name": "validate_new_name",
+            "complexity": 2,
+            "lineno": 100,
+            "col_offset": 4,
+            "endline": 104,
+            "type": "Function"
+          },
+          {
+            "name": "BatchInitializationSerializer",
+            "complexity": 5,
+            "lineno": 107,
+            "col_offset": 0,
+            "endline": 149,
+            "type": "Class"
+          },
+          {
+            "name": "validate_batch_id",
+            "complexity": 2,
+            "lineno": 116,
+            "col_offset": 4,
+            "endline": 123,
+            "type": "Function"
+          },
+          {
+            "name": "create_scenario_from_batch",
+            "complexity": 5,
+            "lineno": 125,
+            "col_offset": 4,
+            "endline": 149,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 14,
+          "average_complexity": 3.2142857142857144,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 14,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 16,
+        "N1": 10,
+        "N2": 17,
+        "vocabulary": 21,
+        "length": 27,
+        "volume": 118.59257041502654,
+        "difficulty": 2.65625,
+        "effort": 315.0115151649143,
+        "time": 17.500639731384126,
+        "bugs": 0.03953085680500885
+      },
+      "maintainability_index": 44.73976069676527
+    },
+    {
+      "file": "apps/scenario/api/serializers/__init__.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 51,
+        "sloc": 48,
         "comments": 0,
-        "multi": 4,
-        "blank": 1
+        "multi": 0,
+        "blank": 2
       },
       "cyclomatic_complexity": {
         "functions": [],
@@ -313,12 +1618,664 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
+      "file": "apps/scenario/api/serializers/temperature.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 82,
+        "sloc": 60,
+        "comments": 0,
+        "multi": 0,
+        "blank": 15
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TemperatureReadingSerializer",
+            "complexity": 4,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 24,
+            "type": "Class"
+          },
+          {
+            "name": "validate_temperature",
+            "complexity": 3,
+            "lineno": 18,
+            "col_offset": 4,
+            "endline": 24,
+            "type": "Function"
+          },
+          {
+            "name": "TemperatureProfileSerializer",
+            "complexity": 4,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 82,
+            "type": "Class"
+          },
+          {
+            "name": "get_date_range",
+            "complexity": 2,
+            "lineno": 49,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "get_temperature_summary",
+            "complexity": 3,
+            "lineno": 62,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_std_dev",
+            "complexity": 3,
+            "lineno": 76,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 3.1666666666666665,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 9,
+        "h2": 25,
+        "N1": 15,
+        "N2": 28,
+        "vocabulary": 34,
+        "length": 43,
+        "volume": 218.7609021737646,
+        "difficulty": 5.04,
+        "effort": 1102.5549469557736,
+        "time": 61.25305260865409,
+        "bugs": 0.0729203007245882
+      },
+      "maintainability_index": 45.13158975765184
+    },
+    {
+      "file": "apps/scenario/api/serializers/scenario.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 161,
+        "sloc": 124,
+        "comments": 1,
+        "multi": 0,
+        "blank": 27
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "_stage_payload",
+            "complexity": 1,
+            "lineno": 25,
+            "col_offset": 0,
+            "endline": 26,
+            "type": "Function"
+          },
+          {
+            "name": "_stage_from_constraints",
+            "complexity": 4,
+            "lineno": 29,
+            "col_offset": 0,
+            "endline": 40,
+            "type": "Function"
+          },
+          {
+            "name": "_stage_from_weight",
+            "complexity": 3,
+            "lineno": 43,
+            "col_offset": 0,
+            "endline": 47,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioSerializer",
+            "complexity": 4,
+            "lineno": 50,
+            "col_offset": 0,
+            "endline": 161,
+            "type": "Class"
+          },
+          {
+            "name": "get_initial_stage",
+            "complexity": 3,
+            "lineno": 90,
+            "col_offset": 4,
+            "endline": 100,
+            "type": "Function"
+          },
+          {
+            "name": "get_projected_harvest_day",
+            "complexity": 3,
+            "lineno": 102,
+            "col_offset": 4,
+            "endline": 107,
+            "type": "Function"
+          },
+          {
+            "name": "validate_name",
+            "complexity": 4,
+            "lineno": 109,
+            "col_offset": 4,
+            "endline": 123,
+            "type": "Function"
+          },
+          {
+            "name": "validate_duration_days",
+            "complexity": 3,
+            "lineno": 125,
+            "col_offset": 4,
+            "endline": 133,
+            "type": "Function"
+          },
+          {
+            "name": "validate_initial_count",
+            "complexity": 3,
+            "lineno": 135,
+            "col_offset": 4,
+            "endline": 143,
+            "type": "Function"
+          },
+          {
+            "name": "validate_initial_weight",
+            "complexity": 4,
+            "lineno": 145,
+            "col_offset": 4,
+            "endline": 157,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 1,
+            "lineno": 159,
+            "col_offset": 4,
+            "endline": 161,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 11,
+          "average_complexity": 3.0,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 11,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 6,
+        "h2": 21,
+        "N1": 14,
+        "N2": 25,
+        "vocabulary": 27,
+        "length": 39,
+        "volume": 185.4406125843753,
+        "difficulty": 3.5714285714285716,
+        "effort": 662.2879020870546,
+        "time": 36.7937723381697,
+        "bugs": 0.061813537528125094
+      },
+      "maintainability_index": 43.69687878622287
+    },
+    {
+      "file": "apps/scenario/api/serializers/constraints.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 106,
+        "sloc": 83,
+        "comments": 0,
+        "multi": 0,
+        "blank": 16
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ScenarioModelChangeSerializer",
+            "complexity": 5,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 58,
+            "type": "Class"
+          },
+          {
+            "name": "get_change_description",
+            "complexity": 5,
+            "lineno": 27,
+            "col_offset": 4,
+            "endline": 37,
+            "type": "Function"
+          },
+          {
+            "name": "validate_change_day",
+            "complexity": 4,
+            "lineno": 39,
+            "col_offset": 4,
+            "endline": 46,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 2,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 58,
+            "type": "Function"
+          },
+          {
+            "name": "BiologicalConstraintsSerializer",
+            "complexity": 6,
+            "lineno": 61,
+            "col_offset": 0,
+            "endline": 105,
+            "type": "Class"
+          },
+          {
+            "name": "get_stage_constraints",
+            "complexity": 5,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 105,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 4.5,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 5,
+        "N1": 3,
+        "N2": 5,
+        "vocabulary": 8,
+        "length": 8,
+        "volume": 24.0,
+        "difficulty": 1.5,
+        "effort": 36.0,
+        "time": 2.0,
+        "bugs": 0.008
+      },
+      "maintainability_index": 51.986074706381
+    },
+    {
+      "file": "apps/scenario/api/serializers/projections.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 202,
+        "sloc": 164,
+        "comments": 0,
+        "multi": 0,
+        "blank": 34
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ScenarioProjectionSerializer",
+            "complexity": 4,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 45,
+            "type": "Class"
+          },
+          {
+            "name": "get_growth_rate",
+            "complexity": 2,
+            "lineno": 37,
+            "col_offset": 4,
+            "endline": 40,
+            "type": "Function"
+          },
+          {
+            "name": "get_fcr_actual",
+            "complexity": 3,
+            "lineno": 42,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          },
+          {
+            "name": "ProjectionChartSerializer",
+            "complexity": 3,
+            "lineno": 48,
+            "col_offset": 0,
+            "endline": 120,
+            "type": "Class"
+          },
+          {
+            "name": "to_representation",
+            "complexity": 5,
+            "lineno": 61,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          },
+          {
+            "name": "_aggregate_projections",
+            "complexity": 2,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 97,
+            "type": "Function"
+          },
+          {
+            "name": "_get_metric_label",
+            "complexity": 1,
+            "lineno": 99,
+            "col_offset": 4,
+            "endline": 107,
+            "type": "Function"
+          },
+          {
+            "name": "_get_metric_color",
+            "complexity": 1,
+            "lineno": 109,
+            "col_offset": 4,
+            "endline": 117,
+            "type": "Function"
+          },
+          {
+            "name": "_get_y_axis_id",
+            "complexity": 2,
+            "lineno": 119,
+            "col_offset": 4,
+            "endline": 120,
+            "type": "Function"
+          },
+          {
+            "name": "ScenarioComparisonSerializer",
+            "complexity": 6,
+            "lineno": 123,
+            "col_offset": 0,
+            "endline": 201,
+            "type": "Class"
+          },
+          {
+            "name": "validate_scenario_ids",
+            "complexity": 2,
+            "lineno": 141,
+            "col_offset": 4,
+            "endline": 148,
+            "type": "Function"
+          },
+          {
+            "name": "to_representation",
+            "complexity": 4,
+            "lineno": 150,
+            "col_offset": 4,
+            "endline": 182,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_metric_comparison",
+            "complexity": 8,
+            "lineno": 184,
+            "col_offset": 4,
+            "endline": 201,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 13,
+          "average_complexity": 3.3076923076923075,
+          "max_complexity": 8,
+          "complexity_distribution": {
+            "low": 11,
+            "medium": 2,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 21,
+        "N1": 14,
+        "N2": 26,
+        "vocabulary": 28,
+        "length": 40,
+        "volume": 192.29419688230416,
+        "difficulty": 4.333333333333333,
+        "effort": 833.2748531566513,
+        "time": 46.293047397591735,
+        "bugs": 0.06409806562743472
+      },
+      "maintainability_index": 36.498680982280575
+    },
+    {
+      "file": "apps/scenario/api/serializers/modeling.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 256,
+        "sloc": 193,
+        "comments": 0,
+        "multi": 0,
+        "blank": 43
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TGCModelStageSerializer",
+            "complexity": 4,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 41,
+            "type": "Class"
+          },
+          {
+            "name": "validate_tgc_value",
+            "complexity": 3,
+            "lineno": 35,
+            "col_offset": 4,
+            "endline": 41,
+            "type": "Function"
+          },
+          {
+            "name": "TGCModelSerializer",
+            "complexity": 3,
+            "lineno": 44,
+            "col_offset": 0,
+            "endline": 107,
+            "type": "Class"
+          },
+          {
+            "name": "get_has_temperature_data",
+            "complexity": 1,
+            "lineno": 70,
+            "col_offset": 4,
+            "endline": 72,
+            "type": "Function"
+          },
+          {
+            "name": "validate_tgc_value",
+            "complexity": 3,
+            "lineno": 74,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          },
+          {
+            "name": "validate_exponent_n",
+            "complexity": 3,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 90,
+            "type": "Function"
+          },
+          {
+            "name": "validate_exponent_m",
+            "complexity": 3,
+            "lineno": 92,
+            "col_offset": 4,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 3,
+            "lineno": 100,
+            "col_offset": 4,
+            "endline": 107,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelStageSerializer",
+            "complexity": 4,
+            "lineno": 110,
+            "col_offset": 0,
+            "endline": 150,
+            "type": "Class"
+          },
+          {
+            "name": "get_overrides",
+            "complexity": 2,
+            "lineno": 120,
+            "col_offset": 4,
+            "endline": 129,
+            "type": "Function"
+          },
+          {
+            "name": "validate_fcr_value",
+            "complexity": 3,
+            "lineno": 132,
+            "col_offset": 4,
+            "endline": 140,
+            "type": "Function"
+          },
+          {
+            "name": "validate_duration_days",
+            "complexity": 3,
+            "lineno": 142,
+            "col_offset": 4,
+            "endline": 150,
+            "type": "Function"
+          },
+          {
+            "name": "FCRModelSerializer",
+            "complexity": 4,
+            "lineno": 153,
+            "col_offset": 0,
+            "endline": 185,
+            "type": "Class"
+          },
+          {
+            "name": "get_total_duration",
+            "complexity": 2,
+            "lineno": 173,
+            "col_offset": 4,
+            "endline": 175,
+            "type": "Function"
+          },
+          {
+            "name": "get_stage_coverage",
+            "complexity": 3,
+            "lineno": 177,
+            "col_offset": 4,
+            "endline": 185,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityModelStageSerializer",
+            "complexity": 1,
+            "lineno": 190,
+            "col_offset": 0,
+            "endline": 194,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityModelSerializer",
+            "complexity": 6,
+            "lineno": 207,
+            "col_offset": 0,
+            "endline": 256,
+            "type": "Class"
+          },
+          {
+            "name": "get_effective_annual_rate",
+            "complexity": 2,
+            "lineno": 227,
+            "col_offset": 4,
+            "endline": 234,
+            "type": "Function"
+          },
+          {
+            "name": "validate_rate",
+            "complexity": 8,
+            "lineno": 236,
+            "col_offset": 4,
+            "endline": 256,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 19,
+          "average_complexity": 3.210526315789474,
+          "max_complexity": 8,
+          "complexity_distribution": {
+            "low": 17,
+            "medium": 2,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 11,
+        "h2": 58,
+        "N1": 38,
+        "N2": 75,
+        "vocabulary": 69,
+        "length": 113,
+        "volume": 690.2632636159332,
+        "difficulty": 7.112068965517241,
+        "effort": 4909.199935199525,
+        "time": 272.7333297333069,
+        "bugs": 0.23008775453864438
+      },
+      "maintainability_index": 28.77446185951286
+    },
+    {
       "file": "apps/scenario/api/serializers/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -326,13 +2283,79 @@
         "multi": 5,
         "blank": 17
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TGCModelHistorySerializer",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 20,
+            "type": "Class"
+          },
+          {
+            "name": "FCRModelHistorySerializer",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 28,
+            "type": "Class"
+          },
+          {
+            "name": "MortalityModelHistorySerializer",
+            "complexity": 1,
+            "lineno": 35,
+            "col_offset": 0,
+            "endline": 36,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioHistorySerializer",
+            "complexity": 1,
+            "lineno": 43,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "ScenarioModelChangeHistorySerializer",
+            "complexity": 1,
+            "lineno": 51,
+            "col_offset": 0,
+            "endline": 52,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/services/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 17,
         "sloc": 10,
@@ -354,12 +2377,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/services/template_management.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 37,
         "sloc": 11,
@@ -367,13 +2402,79 @@
         "multi": 10,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TemplateManagementService",
+            "complexity": 2,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 37,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 4,
+            "endline": 22,
+            "type": "Function"
+          },
+          {
+            "name": "save_template",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 4,
+            "endline": 27,
+            "type": "Function"
+          },
+          {
+            "name": "load_template",
+            "complexity": 1,
+            "lineno": 29,
+            "col_offset": 4,
+            "endline": 32,
+            "type": "Function"
+          },
+          {
+            "name": "list_templates",
+            "complexity": 1,
+            "lineno": 34,
+            "col_offset": 4,
+            "endline": 37,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.2,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/services/pattern_generation.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 53,
         "sloc": 27,
@@ -381,27 +2482,223 @@
         "multi": 10,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "PatternGenerationService",
+            "complexity": 2,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 53,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 4,
+            "endline": 22,
+            "type": "Function"
+          },
+          {
+            "name": "generate_sine_wave",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 4,
+            "endline": 34,
+            "type": "Function"
+          },
+          {
+            "name": "generate_linear_progression",
+            "complexity": 1,
+            "lineno": 36,
+            "col_offset": 4,
+            "endline": 45,
+            "type": "Function"
+          },
+          {
+            "name": "generate_step_function",
+            "complexity": 1,
+            "lineno": 47,
+            "col_offset": 4,
+            "endline": 53,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 1.2,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/scenario/services/bulk_import.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 313,
-        "sloc": 200,
-        "comments": 21,
+        "loc": 299,
+        "sloc": 199,
+        "comments": 10,
         "multi": 35,
-        "blank": 53
+        "blank": 51
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 50.37101235140645
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BulkDataImportService",
+            "complexity": 4,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 298,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 30,
+            "col_offset": 4,
+            "endline": 34,
+            "type": "Function"
+          },
+          {
+            "name": "import_temperature_data",
+            "complexity": 5,
+            "lineno": 36,
+            "col_offset": 4,
+            "endline": 72,
+            "type": "Function"
+          },
+          {
+            "name": "validate_csv_structure",
+            "complexity": 6,
+            "lineno": 74,
+            "col_offset": 4,
+            "endline": 112,
+            "type": "Function"
+          },
+          {
+            "name": "generate_csv_template",
+            "complexity": 2,
+            "lineno": 114,
+            "col_offset": 4,
+            "endline": 160,
+            "type": "Function"
+          },
+          {
+            "name": "_validate_headers",
+            "complexity": 5,
+            "lineno": 163,
+            "col_offset": 4,
+            "endline": 184,
+            "type": "Function"
+          },
+          {
+            "name": "_reset_state",
+            "complexity": 1,
+            "lineno": 186,
+            "col_offset": 4,
+            "endline": 189,
+            "type": "Function"
+          },
+          {
+            "name": "_collect_temperature_rows",
+            "complexity": 3,
+            "lineno": 191,
+            "col_offset": 4,
+            "endline": 199,
+            "type": "Function"
+          },
+          {
+            "name": "_parse_temperature_row",
+            "complexity": 5,
+            "lineno": 201,
+            "col_offset": 4,
+            "endline": 218,
+            "type": "Function"
+          },
+          {
+            "name": "_finalize_temperature_data",
+            "complexity": 3,
+            "lineno": 220,
+            "col_offset": 4,
+            "endline": 226,
+            "type": "Function"
+          },
+          {
+            "name": "_parse_date",
+            "complexity": 4,
+            "lineno": 228,
+            "col_offset": 4,
+            "endline": 249,
+            "type": "Function"
+          },
+          {
+            "name": "_save_temperature_data",
+            "complexity": 3,
+            "lineno": 252,
+            "col_offset": 4,
+            "endline": 288,
+            "type": "Function"
+          },
+          {
+            "name": "_get_result",
+            "complexity": 1,
+            "lineno": 292,
+            "col_offset": 4,
+            "endline": 298,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 13,
+          "average_complexity": 3.3076923076923075,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 12,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 8,
+        "h2": 26,
+        "N1": 19,
+        "N2": 29,
+        "vocabulary": 34,
+        "length": 48,
+        "volume": 244.19821638001633,
+        "difficulty": 4.461538461538462,
+        "effort": 1089.4997346185344,
+        "time": 60.52776303436302,
+        "bugs": 0.08139940546000544
+      },
+      "maintainability_index": 44.04947852288628
     },
     {
       "file": "apps/scenario/services/date_range_input.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 393,
         "sloc": 220,
@@ -409,13 +2706,207 @@
         "multi": 67,
         "blank": 78
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "DateRange",
+            "complexity": 2,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 41,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 2,
+            "lineno": 18,
+            "col_offset": 4,
+            "endline": 25,
+            "type": "Function"
+          },
+          {
+            "name": "overlaps_with",
+            "complexity": 2,
+            "lineno": 27,
+            "col_offset": 4,
+            "endline": 30,
+            "type": "Function"
+          },
+          {
+            "name": "contains_date",
+            "complexity": 1,
+            "lineno": 32,
+            "col_offset": 4,
+            "endline": 34,
+            "type": "Function"
+          },
+          {
+            "name": "get_days",
+            "complexity": 1,
+            "lineno": 36,
+            "col_offset": 4,
+            "endline": 38,
+            "type": "Function"
+          },
+          {
+            "name": "__repr__",
+            "complexity": 1,
+            "lineno": 40,
+            "col_offset": 4,
+            "endline": 41,
+            "type": "Function"
+          },
+          {
+            "name": "DateRangeInputService",
+            "complexity": 6,
+            "lineno": 44,
+            "col_offset": 0,
+            "endline": 393,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 52,
+            "col_offset": 4,
+            "endline": 56,
+            "type": "Function"
+          },
+          {
+            "name": "add_range",
+            "complexity": 5,
+            "lineno": 58,
+            "col_offset": 4,
+            "endline": 96,
+            "type": "Function"
+          },
+          {
+            "name": "add_multiple_ranges",
+            "complexity": 3,
+            "lineno": 98,
+            "col_offset": 4,
+            "endline": 127,
+            "type": "Function"
+          },
+          {
+            "name": "merge_adjacent_ranges",
+            "complexity": 6,
+            "lineno": 129,
+            "col_offset": 4,
+            "endline": 164,
+            "type": "Function"
+          },
+          {
+            "name": "fill_gaps",
+            "complexity": 8,
+            "lineno": 166,
+            "col_offset": 4,
+            "endline": 205,
+            "type": "Function"
+          },
+          {
+            "name": "generate_daily_values",
+            "complexity": 10,
+            "lineno": 207,
+            "col_offset": 4,
+            "endline": 249,
+            "type": "Function"
+          },
+          {
+            "name": "save_as_temperature_profile",
+            "complexity": 7,
+            "lineno": 252,
+            "col_offset": 4,
+            "endline": 301,
+            "type": "Function"
+          },
+          {
+            "name": "validate_ranges",
+            "complexity": 8,
+            "lineno": 303,
+            "col_offset": 4,
+            "endline": 336,
+            "type": "Function"
+          },
+          {
+            "name": "_sort_ranges",
+            "complexity": 1,
+            "lineno": 339,
+            "col_offset": 4,
+            "endline": 341,
+            "type": "Function"
+          },
+          {
+            "name": "_find_overlapping_ranges",
+            "complexity": 3,
+            "lineno": 343,
+            "col_offset": 4,
+            "endline": 345,
+            "type": "Function"
+          },
+          {
+            "name": "_find_gaps",
+            "complexity": 7,
+            "lineno": 347,
+            "col_offset": 4,
+            "endline": 368,
+            "type": "Function"
+          },
+          {
+            "name": "_interpolate_linear",
+            "complexity": 4,
+            "lineno": 370,
+            "col_offset": 4,
+            "endline": 379,
+            "type": "Function"
+          },
+          {
+            "name": "_get_previous_value",
+            "complexity": 3,
+            "lineno": 381,
+            "col_offset": 4,
+            "endline": 386,
+            "type": "Function"
+          },
+          {
+            "name": "_get_next_value",
+            "complexity": 3,
+            "lineno": 388,
+            "col_offset": 4,
+            "endline": 393,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 21,
+          "average_complexity": 4.0,
+          "max_complexity": 10,
+          "complexity_distribution": {
+            "low": 14,
+            "medium": 7,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 14,
+        "h2": 77,
+        "N1": 59,
+        "N2": 107,
+        "vocabulary": 91,
+        "length": 166,
+        "volume": 1080.2939102729836,
+        "difficulty": 9.727272727272727,
+        "effort": 10508.313490837203,
+        "time": 583.7951939354002,
+        "bugs": 0.36009797009099453
+      },
       "maintainability_index": 33.90115548564137
     },
     {
       "file": "apps/scenario/services/calculations/projection_engine.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 486,
         "sloc": 288,
@@ -423,13 +2914,159 @@
         "multi": 79,
         "blank": 80
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ProjectionEngine",
+            "complexity": 5,
+            "lineno": 23,
+            "col_offset": 0,
+            "endline": 485,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 31,
+            "col_offset": 4,
+            "endline": 49,
+            "type": "Function"
+          },
+          {
+            "name": "_initialize_calculators",
+            "complexity": 4,
+            "lineno": 51,
+            "col_offset": 4,
+            "endline": 65,
+            "type": "Function"
+          },
+          {
+            "name": "_load_model_changes",
+            "complexity": 2,
+            "lineno": 67,
+            "col_offset": 4,
+            "endline": 75,
+            "type": "Function"
+          },
+          {
+            "name": "_load_lifecycle_stages",
+            "complexity": 1,
+            "lineno": 77,
+            "col_offset": 4,
+            "endline": 81,
+            "type": "Function"
+          },
+          {
+            "name": "_determine_lifecycle_stage",
+            "complexity": 8,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 103,
+            "type": "Function"
+          },
+          {
+            "name": "_stage_has_external_feeding",
+            "complexity": 2,
+            "lineno": 105,
+            "col_offset": 4,
+            "endline": 124,
+            "type": "Function"
+          },
+          {
+            "name": "_apply_model_changes",
+            "complexity": 5,
+            "lineno": 126,
+            "col_offset": 4,
+            "endline": 146,
+            "type": "Function"
+          },
+          {
+            "name": "run_projection",
+            "complexity": 15,
+            "lineno": 150,
+            "col_offset": 4,
+            "endline": 300,
+            "type": "Function"
+          },
+          {
+            "name": "_generate_summary",
+            "complexity": 6,
+            "lineno": 303,
+            "col_offset": 4,
+            "endline": 360,
+            "type": "Function"
+          },
+          {
+            "name": "_get_original_parameter_value",
+            "complexity": 6,
+            "lineno": 364,
+            "col_offset": 4,
+            "endline": 386,
+            "type": "Function"
+          },
+          {
+            "name": "_apply_parameter_variation",
+            "complexity": 6,
+            "lineno": 388,
+            "col_offset": 4,
+            "endline": 407,
+            "type": "Function"
+          },
+          {
+            "name": "_reset_parameter_to_original",
+            "complexity": 4,
+            "lineno": 409,
+            "col_offset": 4,
+            "endline": 423,
+            "type": "Function"
+          },
+          {
+            "name": "_run_projection_for_variation",
+            "complexity": 3,
+            "lineno": 425,
+            "col_offset": 4,
+            "endline": 446,
+            "type": "Function"
+          },
+          {
+            "name": "run_sensitivity_analysis",
+            "complexity": 4,
+            "lineno": 448,
+            "col_offset": 4,
+            "endline": 485,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 15,
+          "average_complexity": 4.8,
+          "max_complexity": 15,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 4,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 14,
+        "h2": 99,
+        "N1": 68,
+        "N2": 130,
+        "vocabulary": 113,
+        "length": 198,
+        "volume": 1350.3954345582074,
+        "difficulty": 9.191919191919192,
+        "effort": 12412.725711595644,
+        "time": 689.5958728664247,
+        "bugs": 0.45013181151940246
+      },
       "maintainability_index": 39.016153463503436
     },
     {
       "file": "apps/scenario/services/calculations/mortality_calculator.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 410,
         "sloc": 221,
@@ -437,13 +3074,119 @@
         "multi": 88,
         "blank": 70
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "MortalityCalculator",
+            "complexity": 5,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 410,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 2,
+            "lineno": 21,
+            "col_offset": 4,
+            "endline": 39,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_daily_mortality",
+            "complexity": 6,
+            "lineno": 41,
+            "col_offset": 4,
+            "endline": 84,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_mortality",
+            "complexity": 3,
+            "lineno": 90,
+            "col_offset": 4,
+            "endline": 138,
+            "type": "Function"
+          },
+          {
+            "name": "project_population",
+            "complexity": 6,
+            "lineno": 141,
+            "col_offset": 4,
+            "endline": 192,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_period_mortality",
+            "complexity": 3,
+            "lineno": 194,
+            "col_offset": 4,
+            "endline": 234,
+            "type": "Function"
+          },
+          {
+            "name": "simulate_mortality_scenarios",
+            "complexity": 5,
+            "lineno": 237,
+            "col_offset": 4,
+            "endline": 278,
+            "type": "Function"
+          },
+          {
+            "name": "estimate_catastrophic_event",
+            "complexity": 3,
+            "lineno": 280,
+            "col_offset": 4,
+            "endline": 346,
+            "type": "Function"
+          },
+          {
+            "name": "validate_parameters",
+            "complexity": 6,
+            "lineno": 348,
+            "col_offset": 4,
+            "endline": 369,
+            "type": "Function"
+          },
+          {
+            "name": "get_mortality_rate_for_stage",
+            "complexity": 9,
+            "lineno": 371,
+            "col_offset": 4,
+            "endline": 410,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 4.8,
+          "max_complexity": 9,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 4,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 14,
+        "h2": 90,
+        "N1": 75,
+        "N2": 146,
+        "vocabulary": 104,
+        "length": 221,
+        "volume": 1480.7971777091814,
+        "difficulty": 11.355555555555556,
+        "effort": 16815.27461798648,
+        "time": 934.1819232214712,
+        "bugs": 0.4935990592363938
+      },
       "maintainability_index": 46.26114972786347
     },
     {
       "file": "apps/scenario/services/calculations/tgc_calculator.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 354,
         "sloc": 173,
@@ -451,13 +3194,119 @@
         "multi": 91,
         "blank": 73
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TGCCalculator",
+            "complexity": 6,
+            "lineno": 21,
+            "col_offset": 0,
+            "endline": 354,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 29,
+            "col_offset": 4,
+            "endline": 40,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_weight_gain",
+            "complexity": 6,
+            "lineno": 42,
+            "col_offset": 4,
+            "endline": 78,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_daily_growth",
+            "complexity": 3,
+            "lineno": 80,
+            "col_offset": 4,
+            "endline": 128,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_tgc_from_growth",
+            "complexity": 7,
+            "lineno": 131,
+            "col_offset": 4,
+            "endline": 163,
+            "type": "Function"
+          },
+          {
+            "name": "project_growth",
+            "complexity": 5,
+            "lineno": 165,
+            "col_offset": 4,
+            "endline": 214,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_days_to_target_weight",
+            "complexity": 5,
+            "lineno": 216,
+            "col_offset": 4,
+            "endline": 247,
+            "type": "Function"
+          },
+          {
+            "name": "_get_temperature_for_date",
+            "complexity": 8,
+            "lineno": 249,
+            "col_offset": 4,
+            "endline": 296,
+            "type": "Function"
+          },
+          {
+            "name": "validate_parameters",
+            "complexity": 8,
+            "lineno": 298,
+            "col_offset": 4,
+            "endline": 322,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_degree_days",
+            "complexity": 3,
+            "lineno": 324,
+            "col_offset": 4,
+            "endline": 354,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 5.2,
+          "max_complexity": 8,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 5,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 14,
+        "h2": 113,
+        "N1": 73,
+        "N2": 147,
+        "vocabulary": 127,
+        "length": 220,
+        "volume": 1537.5106310898766,
+        "difficulty": 9.106194690265486,
+        "effort": 14000.87114505737,
+        "time": 777.8261747254095,
+        "bugs": 0.5125035436966255
+      },
       "maintainability_index": 44.26173376552627
     },
     {
       "file": "apps/scenario/services/calculations/fcr_calculator.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 352,
         "sloc": 178,
@@ -465,13 +3314,135 @@
         "multi": 86,
         "blank": 65
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FCRCalculator",
+            "complexity": 4,
+            "lineno": 16,
+            "col_offset": 0,
+            "endline": 352,
+            "type": "Class"
+          },
+          {
+            "name": "__init__",
+            "complexity": 1,
+            "lineno": 23,
+            "col_offset": 4,
+            "endline": 31,
+            "type": "Function"
+          },
+          {
+            "name": "_load_stage_fcr_map",
+            "complexity": 2,
+            "lineno": 33,
+            "col_offset": 4,
+            "endline": 40,
+            "type": "Function"
+          },
+          {
+            "name": "get_fcr_for_stage",
+            "complexity": 7,
+            "lineno": 42,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_daily_feed_with_fcr",
+            "complexity": 3,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 111,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_daily_feed",
+            "complexity": 3,
+            "lineno": 114,
+            "col_offset": 4,
+            "endline": 158,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_feed_for_period",
+            "complexity": 5,
+            "lineno": 161,
+            "col_offset": 4,
+            "endline": 209,
+            "type": "Function"
+          },
+          {
+            "name": "optimize_fcr",
+            "complexity": 1,
+            "lineno": 211,
+            "col_offset": 4,
+            "endline": 237,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_feed_cost",
+            "complexity": 2,
+            "lineno": 240,
+            "col_offset": 4,
+            "endline": 261,
+            "type": "Function"
+          },
+          {
+            "name": "estimate_stage_duration",
+            "complexity": 4,
+            "lineno": 264,
+            "col_offset": 4,
+            "endline": 300,
+            "type": "Function"
+          },
+          {
+            "name": "validate_parameters",
+            "complexity": 8,
+            "lineno": 302,
+            "col_offset": 4,
+            "endline": 327,
+            "type": "Function"
+          },
+          {
+            "name": "get_stage_summary",
+            "complexity": 4,
+            "lineno": 329,
+            "col_offset": 4,
+            "endline": 352,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 12,
+          "average_complexity": 3.6666666666666665,
+          "max_complexity": 8,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 2,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 14,
+        "h2": 70,
+        "N1": 49,
+        "N2": 96,
+        "vocabulary": 84,
+        "length": 145,
+        "volume": 926.8860263029202,
+        "difficulty": 9.6,
+        "effort": 8898.105852508033,
+        "time": 494.3392140282241,
+        "bugs": 0.3089620087676401
+      },
       "maintainability_index": 49.84906408870677
     },
     {
       "file": "apps/scenario/services/calculations/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 17,
         "sloc": 10,
@@ -493,19 +3464,31 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
-    "total_files": 26,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 76.72500951684347,
-    "mi_min": 12.040542990587644,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "total_files": 32,
+    "total_functions": 276,
+    "cc_average": 2.967391304347826,
+    "cc_max": 15,
+    "mi_average": 72.71013537118453,
+    "mi_min": 28.77446185951286,
+    "halstead_avg_volume": 277.9119440650243,
+    "halstead_avg_difficulty": 2.979305499042738,
+    "halstead_avg_effort": 2459.4379253065167
   }
 }

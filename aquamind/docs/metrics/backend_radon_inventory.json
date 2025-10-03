@@ -1,10 +1,10 @@
 {
   "app": "inventory",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/inventory/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -26,12 +26,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -39,13 +51,47 @@
         "multi": 0,
         "blank": 2
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "InventoryConfig",
+            "complexity": 1,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 7,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 97,
         "sloc": 83,
@@ -53,13 +99,95 @@
         "multi": 0,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedAdmin",
+            "complexity": 1,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 19,
+            "type": "Class"
+          },
+          {
+            "name": "FeedPurchaseAdmin",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 33,
+            "type": "Class"
+          },
+          {
+            "name": "FeedStockAdmin",
+            "complexity": 1,
+            "lineno": 38,
+            "col_offset": 0,
+            "endline": 47,
+            "type": "Class"
+          },
+          {
+            "name": "FeedingEventAdmin",
+            "complexity": 1,
+            "lineno": 52,
+            "col_offset": 0,
+            "endline": 60,
+            "type": "Class"
+          },
+          {
+            "name": "BatchFeedingSummaryAdmin",
+            "complexity": 1,
+            "lineno": 65,
+            "col_offset": 0,
+            "endline": 73,
+            "type": "Class"
+          },
+          {
+            "name": "ContainerFeedingSummaryAdmin",
+            "complexity": 1,
+            "lineno": 77,
+            "col_offset": 0,
+            "endline": 85,
+            "type": "Class"
+          },
+          {
+            "name": "FeedContainerStockAdmin",
+            "complexity": 1,
+            "lineno": 89,
+            "col_offset": 0,
+            "endline": 97,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/utils.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 135,
         "sloc": 54,
@@ -67,13 +195,111 @@
         "multi": 43,
         "blank": 31
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "format_decimal",
+            "complexity": 3,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 31,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_feeding_percentage",
+            "complexity": 6,
+            "lineno": 34,
+            "col_offset": 0,
+            "endline": 55,
+            "type": "Function"
+          },
+          {
+            "name": "validate_stock_quantity",
+            "complexity": 3,
+            "lineno": 58,
+            "col_offset": 0,
+            "endline": 76,
+            "type": "Function"
+          },
+          {
+            "name": "TimestampedModelMixin",
+            "complexity": 1,
+            "lineno": 79,
+            "col_offset": 0,
+            "endline": 84,
+            "type": "Class"
+          },
+          {
+            "name": "UpdatedModelMixin",
+            "complexity": 1,
+            "lineno": 90,
+            "col_offset": 0,
+            "endline": 96,
+            "type": "Class"
+          },
+          {
+            "name": "ActiveModelMixin",
+            "complexity": 1,
+            "lineno": 102,
+            "col_offset": 0,
+            "endline": 106,
+            "type": "Class"
+          },
+          {
+            "name": "DecimalFieldMixin",
+            "complexity": 2,
+            "lineno": 112,
+            "col_offset": 0,
+            "endline": 134,
+            "type": "Class"
+          },
+          {
+            "name": "percentage_field",
+            "complexity": 1,
+            "lineno": 117,
+            "col_offset": 4,
+            "endline": 123,
+            "type": "Function"
+          },
+          {
+            "name": "positive_decimal_field",
+            "complexity": 1,
+            "lineno": 127,
+            "col_offset": 4,
+            "endline": 134,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 2.111111111111111,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 19,
+        "N1": 14,
+        "N2": 22,
+        "vocabulary": 26,
+        "length": 36,
+        "volume": 169.21582985307933,
+        "difficulty": 4.052631578947368,
+        "effort": 685.769415720374,
+        "time": 38.09830087335411,
+        "bugs": 0.05640527661769311
+      },
       "maintainability_index": 62.40768383220707
     },
     {
       "file": "apps/inventory/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 8,
         "sloc": 6,
@@ -95,26 +321,63 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 134,
-        "sloc": 100,
-        "comments": 5,
-        "multi": 0,
-        "blank": 21
+        "loc": 20,
+        "sloc": 10,
+        "comments": 1,
+        "multi": 4,
+        "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 65.01220260682193
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 1,
+        "N1": 1,
+        "N2": 1,
+        "vocabulary": 2,
+        "length": 2,
+        "volume": 2.0,
+        "difficulty": 0.5,
+        "effort": 1.0,
+        "time": 0.05555555555555555,
+        "bugs": 0.0006666666666666666
+      },
+      "maintainability_index": 96.87117963187056
     },
     {
       "file": "apps/inventory/management/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -136,12 +399,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/management/commands/setup_feed_recommendations.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 343,
         "sloc": 244,
@@ -149,13 +424,119 @@
         "multi": 6,
         "blank": 62
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 6,
+            "lineno": 22,
+            "col_offset": 0,
+            "endline": 343,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 25,
+            "col_offset": 4,
+            "endline": 39,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 1,
+            "lineno": 43,
+            "col_offset": 4,
+            "endline": 77,
+            "type": "Function"
+          },
+          {
+            "name": "_create_test_user",
+            "complexity": 2,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 99,
+            "type": "Function"
+          },
+          {
+            "name": "_create_auth_token",
+            "complexity": 2,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 111,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_containers",
+            "complexity": 9,
+            "lineno": 113,
+            "col_offset": 4,
+            "endline": 172,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_feeds",
+            "complexity": 4,
+            "lineno": 174,
+            "col_offset": 4,
+            "endline": 200,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_lifecycle_stages",
+            "complexity": 4,
+            "lineno": 202,
+            "col_offset": 4,
+            "endline": 214,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_batches",
+            "complexity": 11,
+            "lineno": 216,
+            "col_offset": 4,
+            "endline": 253,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_assignments",
+            "complexity": 17,
+            "lineno": 255,
+            "col_offset": 4,
+            "endline": 343,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 5.7,
+          "max_complexity": 17,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 2,
+            "high": 2,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 6,
+        "h2": 42,
+        "N1": 30,
+        "N2": 48,
+        "vocabulary": 48,
+        "length": 78,
+        "volume": 435.62707505625025,
+        "difficulty": 3.4285714285714284,
+        "effort": 1493.5785430500007,
+        "time": 82.97658572500004,
+        "bugs": 0.14520902501875008
+      },
       "maintainability_index": 43.216574545491355
     },
     {
       "file": "apps/inventory/management/commands/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -177,12 +558,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/management/commands/generate_feed_recommendations.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 55,
         "sloc": 39,
@@ -190,13 +583,63 @@
         "multi": 10,
         "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 2,
+            "lineno": 7,
+            "col_offset": 0,
+            "endline": 53,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 1,
+            "lineno": 45,
+            "col_offset": 4,
+            "endline": 53,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 1.3333333333333333,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/management/commands/setup_feed_data.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 122,
         "sloc": 83,
@@ -204,13 +647,87 @@
         "multi": 4,
         "blank": 23
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 4,
+            "lineno": 9,
+            "col_offset": 0,
+            "endline": 122,
+            "type": "Class"
+          },
+          {
+            "name": "handle",
+            "complexity": 1,
+            "lineno": 16,
+            "col_offset": 4,
+            "endline": 43,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_auth",
+            "complexity": 2,
+            "lineno": 45,
+            "col_offset": 4,
+            "endline": 62,
+            "type": "Function"
+          },
+          {
+            "name": "_setup_containers",
+            "complexity": 5,
+            "lineno": 64,
+            "col_offset": 4,
+            "endline": 91,
+            "type": "Function"
+          },
+          {
+            "name": "_check_feeds",
+            "complexity": 3,
+            "lineno": 93,
+            "col_offset": 4,
+            "endline": 104,
+            "type": "Function"
+          },
+          {
+            "name": "_check_assignments",
+            "complexity": 3,
+            "lineno": 106,
+            "col_offset": 4,
+            "endline": 122,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 3.0,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 6,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 3,
+        "N1": 3,
+        "N2": 6,
+        "vocabulary": 5,
+        "length": 9,
+        "volume": 20.89735285398626,
+        "difficulty": 2.0,
+        "effort": 41.79470570797252,
+        "time": 2.321928094887362,
+        "bugs": 0.0069657842846620865
+      },
       "maintainability_index": 64.53040074802679
     },
     {
       "file": "apps/inventory/models/feeding.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 157,
         "sloc": 115,
@@ -218,13 +735,79 @@
         "multi": 20,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedingEvent",
+            "complexity": 4,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 156,
+            "type": "Class"
+          },
+          {
+            "name": "calculate_feeding_percentage",
+            "complexity": 4,
+            "lineno": 108,
+            "col_offset": 4,
+            "endline": 120,
+            "type": "Function"
+          },
+          {
+            "name": "validate_stock_quantity",
+            "complexity": 1,
+            "lineno": 122,
+            "col_offset": 4,
+            "endline": 129,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 5,
+            "lineno": 131,
+            "col_offset": 4,
+            "endline": 152,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 154,
+            "col_offset": 4,
+            "endline": 156,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 3.0,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 11,
+        "N1": 8,
+        "N2": 14,
+        "vocabulary": 16,
+        "length": 22,
+        "volume": 88.0,
+        "difficulty": 3.1818181818181817,
+        "effort": 280.0,
+        "time": 15.555555555555555,
+        "bugs": 0.029333333333333333
+      },
       "maintainability_index": 60.66598072034661
     },
     {
       "file": "apps/inventory/models/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 22,
         "sloc": 15,
@@ -246,12 +829,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/models/feed.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 56,
         "sloc": 43,
@@ -259,13 +854,55 @@
         "multi": 7,
         "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Feed",
+            "complexity": 2,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 55,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 53,
+            "col_offset": 4,
+            "endline": 55,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/models/purchase.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 43,
         "sloc": 32,
@@ -273,13 +910,55 @@
         "multi": 6,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedPurchase",
+            "complexity": 2,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 42,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 40,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/models/stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 47,
         "sloc": 32,
@@ -287,13 +966,63 @@
         "multi": 6,
         "blank": 7
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStock",
+            "complexity": 2,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 47,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 40,
+            "col_offset": 4,
+            "endline": 42,
+            "type": "Function"
+          },
+          {
+            "name": "needs_reorder",
+            "complexity": 1,
+            "lineno": 45,
+            "col_offset": 4,
+            "endline": 47,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 1.3333333333333333,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 2,
+        "N1": 1,
+        "N2": 2,
+        "vocabulary": 3,
+        "length": 3,
+        "volume": 4.754887502163469,
+        "difficulty": 0.5,
+        "effort": 2.3774437510817346,
+        "time": 0.1320802083934297,
+        "bugs": 0.0015849625007211565
+      },
       "maintainability_index": 76.48478427981199
     },
     {
       "file": "apps/inventory/models/summary.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 293,
         "sloc": 216,
@@ -301,13 +1030,87 @@
         "multi": 22,
         "blank": 34
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ContainerFeedingSummary",
+            "complexity": 2,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 110,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 104,
+            "type": "Function"
+          },
+          {
+            "name": "container_name",
+            "complexity": 1,
+            "lineno": 108,
+            "col_offset": 4,
+            "endline": 110,
+            "type": "Function"
+          },
+          {
+            "name": "BatchFeedingSummary",
+            "complexity": 5,
+            "lineno": 113,
+            "col_offset": 0,
+            "endline": 293,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 218,
+            "col_offset": 4,
+            "endline": 220,
+            "type": "Function"
+          },
+          {
+            "name": "generate_for_batch",
+            "complexity": 7,
+            "lineno": 224,
+            "col_offset": 4,
+            "endline": 293,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 6,
+          "average_complexity": 2.8333333333333335,
+          "max_complexity": 7,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 6,
+        "h2": 10,
+        "N1": 7,
+        "N2": 13,
+        "vocabulary": 16,
+        "length": 20,
+        "volume": 80.0,
+        "difficulty": 3.9,
+        "effort": 312.0,
+        "time": 17.333333333333332,
+        "bugs": 0.02666666666666667
+      },
       "maintainability_index": 62.023873581555726
     },
     {
       "file": "apps/inventory/models/container_stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 52,
         "sloc": 38,
@@ -315,13 +1118,55 @@
         "multi": 8,
         "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedContainerStock",
+            "complexity": 2,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 51,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 51,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -343,12 +1188,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/routers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 35,
         "sloc": 23,
@@ -370,12 +1227,72 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/inventory/api/filters/feeding.py",
+      "timestamp": "2025-10-03",
+      "raw": {
+        "loc": 60,
+        "sloc": 35,
+        "comments": 7,
+        "multi": 8,
+        "blank": 11
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedingEventFilter",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 48,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/filters/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 29,
         "sloc": 14,
@@ -383,27 +1300,119 @@
         "multi": 5,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStockHistoryFilter",
+            "complexity": 1,
+            "lineno": 16,
+            "col_offset": 0,
+            "endline": 17,
+            "type": "Class"
+          },
+          {
+            "name": "FeedingEventHistoryFilter",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 25,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/viewsets/feeding.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 218,
-        "sloc": 151,
+        "loc": 247,
+        "sloc": 162,
         "comments": 13,
-        "multi": 34,
-        "blank": 21
+        "multi": 49,
+        "blank": 24
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 57.55115873695788
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedingEventViewSet",
+            "complexity": 10,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 245,
+            "type": "Class"
+          },
+          {
+            "name": "by_batch",
+            "complexity": 2,
+            "lineno": 74,
+            "col_offset": 4,
+            "endline": 87,
+            "type": "Function"
+          },
+          {
+            "name": "summary",
+            "complexity": 16,
+            "lineno": 153,
+            "col_offset": 4,
+            "endline": 245,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 9.333333333333334,
+          "max_complexity": 16,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 1,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 17,
+        "N1": 13,
+        "N2": 23,
+        "vocabulary": 22,
+        "length": 36,
+        "volume": 160.5395382709427,
+        "difficulty": 3.3823529411764706,
+        "effort": 543.0013794458356,
+        "time": 30.166743302546422,
+        "bugs": 0.05351317942364757
+      },
+      "maintainability_index": 56.80048236848784
     },
     {
       "file": "apps/inventory/api/viewsets/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 21,
         "sloc": 14,
@@ -425,12 +1434,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/viewsets/feed.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 27,
         "sloc": 16,
@@ -438,13 +1459,47 @@
         "multi": 7,
         "blank": 4
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedViewSet",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 27,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/viewsets/purchase.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 27,
         "sloc": 16,
@@ -452,13 +1507,47 @@
         "multi": 7,
         "blank": 4
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedPurchaseViewSet",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 0,
+            "endline": 27,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/viewsets/stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 36,
         "sloc": 21,
@@ -466,41 +1555,199 @@
         "multi": 10,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStockViewSet",
+            "complexity": 2,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 36,
+            "type": "Class"
+          },
+          {
+            "name": "low_stock",
+            "complexity": 1,
+            "lineno": 28,
+            "col_offset": 4,
+            "endline": 36,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/viewsets/summary.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 66,
-        "sloc": 45,
+        "loc": 79,
+        "sloc": 58,
         "comments": 0,
         "multi": 14,
         "blank": 7
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 62.62382390264376
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchFeedingSummaryViewSet",
+            "complexity": 4,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 79,
+            "type": "Class"
+          },
+          {
+            "name": "generate",
+            "complexity": 3,
+            "lineno": 37,
+            "col_offset": 4,
+            "endline": 52,
+            "type": "Function"
+          },
+          {
+            "name": "by_batch",
+            "complexity": 2,
+            "lineno": 66,
+            "col_offset": 4,
+            "endline": 79,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 3.0,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 1,
+        "N1": 1,
+        "N2": 1,
+        "vocabulary": 2,
+        "length": 2,
+        "volume": 2.0,
+        "difficulty": 0.5,
+        "effort": 1.0,
+        "time": 0.05555555555555555,
+        "bugs": 0.0006666666666666666
+      },
+      "maintainability_index": 61.9039574154845
     },
     {
       "file": "apps/inventory/api/viewsets/container_stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 148,
-        "sloc": 93,
+        "loc": 172,
+        "sloc": 117,
         "comments": 4,
         "multi": 29,
         "blank": 22
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 60.93527885052279
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedContainerStockViewSet",
+            "complexity": 4,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 171,
+            "type": "Class"
+          },
+          {
+            "name": "get_serializer_class",
+            "complexity": 2,
+            "lineno": 52,
+            "col_offset": 4,
+            "endline": 56,
+            "type": "Function"
+          },
+          {
+            "name": "by_container",
+            "complexity": 4,
+            "lineno": 70,
+            "col_offset": 4,
+            "endline": 97,
+            "type": "Function"
+          },
+          {
+            "name": "add_to_container",
+            "complexity": 3,
+            "lineno": 100,
+            "col_offset": 4,
+            "endline": 133,
+            "type": "Function"
+          },
+          {
+            "name": "fifo_order",
+            "complexity": 3,
+            "lineno": 147,
+            "col_offset": 4,
+            "endline": 171,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 3.2,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 5,
+        "N1": 3,
+        "N2": 5,
+        "vocabulary": 8,
+        "length": 8,
+        "volume": 24.0,
+        "difficulty": 1.5,
+        "effort": 36.0,
+        "time": 2.0,
+        "bugs": 0.008
+      },
+      "maintainability_index": 59.134419633242985
     },
     {
       "file": "apps/inventory/api/viewsets/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 35,
         "sloc": 22,
@@ -508,13 +1755,55 @@
         "multi": 5,
         "blank": 6
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStockHistoryViewSet",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 28,
+            "type": "Class"
+          },
+          {
+            "name": "FeedingEventHistoryViewSet",
+            "complexity": 1,
+            "lineno": 31,
+            "col_offset": 0,
+            "endline": 35,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/serializers/feeding.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 152,
         "sloc": 100,
@@ -522,13 +1811,63 @@
         "multi": 20,
         "blank": 19
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedingEventSerializer",
+            "complexity": 10,
+            "lineno": 18,
+            "col_offset": 0,
+            "endline": 152,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 14,
+            "lineno": 71,
+            "col_offset": 4,
+            "endline": 116,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 3,
+            "lineno": 119,
+            "col_offset": 4,
+            "endline": 152,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 9.0,
+          "max_complexity": 14,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 1,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 26,
+        "N1": 17,
+        "N2": 37,
+        "vocabulary": 33,
+        "length": 54,
+        "volume": 272.3972824453565,
+        "difficulty": 4.980769230769231,
+        "effort": 1356.7480029489873,
+        "time": 75.37488905272151,
+        "bugs": 0.09079909414845216
+      },
       "maintainability_index": 63.41915862526399
     },
     {
       "file": "apps/inventory/api/serializers/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 29,
         "sloc": 22,
@@ -550,12 +1889,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/serializers/feed.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 22,
         "sloc": 11,
@@ -563,13 +1914,47 @@
         "multi": 7,
         "blank": 4
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedSerializer",
+            "complexity": 1,
+            "lineno": 9,
+            "col_offset": 0,
+            "endline": 10,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/serializers/purchase.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 42,
         "sloc": 22,
@@ -577,13 +1962,55 @@
         "multi": 10,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedPurchaseSerializer",
+            "complexity": 5,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 33,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 4,
+            "lineno": 23,
+            "col_offset": 4,
+            "endline": 33,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 4.5,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 6,
+        "N1": 3,
+        "N2": 7,
+        "vocabulary": 8,
+        "length": 10,
+        "volume": 30.0,
+        "difficulty": 1.1666666666666667,
+        "effort": 35.0,
+        "time": 1.9444444444444444,
+        "bugs": 0.01
+      },
       "maintainability_index": 79.82033554638244
     },
     {
       "file": "apps/inventory/api/serializers/stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 31,
         "sloc": 18,
@@ -591,13 +2018,47 @@
         "multi": 7,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStockSerializer",
+            "complexity": 1,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 22,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/serializers/summary.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 84,
         "sloc": 48,
@@ -605,13 +2066,79 @@
         "multi": 19,
         "blank": 14
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "BatchFeedingSummarySerializer",
+            "complexity": 4,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 44,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 3,
+            "lineno": 35,
+            "col_offset": 4,
+            "endline": 44,
+            "type": "Function"
+          },
+          {
+            "name": "BatchFeedingSummaryGenerateSerializer",
+            "complexity": 3,
+            "lineno": 47,
+            "col_offset": 0,
+            "endline": 84,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 1,
+            "lineno": 55,
+            "col_offset": 4,
+            "endline": 65,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 2,
+            "lineno": 67,
+            "col_offset": 4,
+            "endline": 84,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 2.6,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 6,
+        "N1": 4,
+        "N2": 7,
+        "vocabulary": 9,
+        "length": 11,
+        "volume": 34.86917501586544,
+        "difficulty": 1.75,
+        "effort": 61.021056277764515,
+        "time": 3.3900586820980285,
+        "bugs": 0.011623058338621813
+      },
       "maintainability_index": 69.05441773027647
     },
     {
       "file": "apps/inventory/api/serializers/utils.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 126,
         "sloc": 45,
@@ -619,13 +2146,103 @@
         "multi": 45,
         "blank": 26
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "ReadWriteFieldsMixin",
+            "complexity": 6,
+            "lineno": 9,
+            "col_offset": 0,
+            "endline": 41,
+            "type": "Class"
+          },
+          {
+            "name": "get_fields",
+            "complexity": 5,
+            "lineno": 18,
+            "col_offset": 4,
+            "endline": 41,
+            "type": "Function"
+          },
+          {
+            "name": "StandardErrorMixin",
+            "complexity": 6,
+            "lineno": 44,
+            "col_offset": 0,
+            "endline": 85,
+            "type": "Class"
+          },
+          {
+            "name": "add_error",
+            "complexity": 3,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 62,
+            "type": "Function"
+          },
+          {
+            "name": "validate",
+            "complexity": 7,
+            "lineno": 64,
+            "col_offset": 4,
+            "endline": 85,
+            "type": "Function"
+          },
+          {
+            "name": "NestedModelMixin",
+            "complexity": 3,
+            "lineno": 88,
+            "col_offset": 0,
+            "endline": 114,
+            "type": "Class"
+          },
+          {
+            "name": "create_or_update_related",
+            "complexity": 2,
+            "lineno": 95,
+            "col_offset": 4,
+            "endline": 114,
+            "type": "Function"
+          },
+          {
+            "name": "InventoryBaseSerializer",
+            "complexity": 1,
+            "lineno": 117,
+            "col_offset": 0,
+            "endline": 126,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 8,
+          "average_complexity": 4.125,
+          "max_complexity": 7,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 3,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 10,
+        "N1": 7,
+        "N2": 10,
+        "vocabulary": 15,
+        "length": 17,
+        "volume": 66.41714012534482,
+        "difficulty": 2.5,
+        "effort": 166.04285031336204,
+        "time": 9.22460279518678,
+        "bugs": 0.02213904670844827
+      },
       "maintainability_index": 71.80154005246332
     },
     {
       "file": "apps/inventory/api/serializers/base.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 99,
         "sloc": 35,
@@ -633,13 +2250,95 @@
         "multi": 40,
         "blank": 24
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "InventoryBaseSerializer",
+            "complexity": 1,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 15,
+            "type": "Class"
+          },
+          {
+            "name": "TimestampedModelSerializer",
+            "complexity": 1,
+            "lineno": 25,
+            "col_offset": 0,
+            "endline": 26,
+            "type": "Class"
+          },
+          {
+            "name": "UpdatedModelSerializer",
+            "complexity": 1,
+            "lineno": 34,
+            "col_offset": 0,
+            "endline": 35,
+            "type": "Class"
+          },
+          {
+            "name": "FeedRelatedSerializer",
+            "complexity": 1,
+            "lineno": 45,
+            "col_offset": 0,
+            "endline": 53,
+            "type": "Class"
+          },
+          {
+            "name": "ContainerRelatedSerializer",
+            "complexity": 1,
+            "lineno": 59,
+            "col_offset": 0,
+            "endline": 67,
+            "type": "Class"
+          },
+          {
+            "name": "BatchRelatedSerializer",
+            "complexity": 1,
+            "lineno": 73,
+            "col_offset": 0,
+            "endline": 81,
+            "type": "Class"
+          },
+          {
+            "name": "FeedingBaseSerializer",
+            "complexity": 1,
+            "lineno": 87,
+            "col_offset": 0,
+            "endline": 90,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 7,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 2,
+        "N1": 2,
+        "N2": 4,
+        "vocabulary": 3,
+        "length": 6,
+        "volume": 9.509775004326938,
+        "difficulty": 1.0,
+        "effort": 9.509775004326938,
+        "time": 0.5283208335737188,
+        "bugs": 0.003169925001442313
+      },
       "maintainability_index": 59.608710158246105
     },
     {
       "file": "apps/inventory/api/serializers/container_stock.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 119,
         "sloc": 81,
@@ -647,13 +2346,79 @@
         "multi": 16,
         "blank": 19
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedContainerStockSerializer",
+            "complexity": 3,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 69,
+            "type": "Class"
+          },
+          {
+            "name": "get_total_value",
+            "complexity": 1,
+            "lineno": 61,
+            "col_offset": 4,
+            "endline": 63,
+            "type": "Function"
+          },
+          {
+            "name": "validate_quantity_kg",
+            "complexity": 2,
+            "lineno": 65,
+            "col_offset": 4,
+            "endline": 69,
+            "type": "Function"
+          },
+          {
+            "name": "FeedContainerStockCreateSerializer",
+            "complexity": 4,
+            "lineno": 72,
+            "col_offset": 0,
+            "endline": 119,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 3,
+            "lineno": 97,
+            "col_offset": 4,
+            "endline": 119,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 2.6,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 10,
+        "N1": 5,
+        "N2": 10,
+        "vocabulary": 15,
+        "length": 15,
+        "volume": 58.60335893412778,
+        "difficulty": 2.5,
+        "effort": 146.50839733531944,
+        "time": 8.139355407517748,
+        "bugs": 0.019534452978042596
+      },
       "maintainability_index": 57.5018300101635
     },
     {
       "file": "apps/inventory/api/serializers/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 29,
         "sloc": 14,
@@ -661,13 +2426,55 @@
         "multi": 5,
         "blank": 8
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedStockHistorySerializer",
+            "complexity": 1,
+            "lineno": 16,
+            "col_offset": 0,
+            "endline": 17,
+            "type": "Class"
+          },
+          {
+            "name": "FeedingEventHistorySerializer",
+            "complexity": 1,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 25,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/inventory/api/serializers/validation.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 116,
         "sloc": 33,
@@ -675,13 +2482,79 @@
         "multi": 51,
         "blank": 29
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "validate_feed_stock_quantity",
+            "complexity": 4,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 33,
+            "type": "Function"
+          },
+          {
+            "name": "validate_batch_assignment_relationship",
+            "complexity": 4,
+            "lineno": 37,
+            "col_offset": 0,
+            "endline": 54,
+            "type": "Function"
+          },
+          {
+            "name": "validate_date_range",
+            "complexity": 4,
+            "lineno": 58,
+            "col_offset": 0,
+            "endline": 71,
+            "type": "Function"
+          },
+          {
+            "name": "validate_batch_exists",
+            "complexity": 2,
+            "lineno": 75,
+            "col_offset": 0,
+            "endline": 91,
+            "type": "Function"
+          },
+          {
+            "name": "validate_batch_and_date_range",
+            "complexity": 1,
+            "lineno": 94,
+            "col_offset": 0,
+            "endline": 116,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 5,
+          "average_complexity": 3.0,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 5,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 6,
+        "h2": 12,
+        "N1": 9,
+        "N2": 15,
+        "vocabulary": 18,
+        "length": 24,
+        "volume": 100.07820003461549,
+        "difficulty": 3.75,
+        "effort": 375.2932501298081,
+        "time": 20.84962500721156,
+        "bugs": 0.0333594000115385
+      },
       "maintainability_index": 68.49155859279645
     },
     {
       "file": "apps/inventory/services/fcr_service.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 1189,
         "sloc": 692,
@@ -689,13 +2562,303 @@
         "multi": 216,
         "blank": 184
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FCRCalculationError",
+            "complexity": 1,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 19,
+            "type": "Class"
+          },
+          {
+            "name": "FCRCalculationService",
+            "complexity": 4,
+            "lineno": 21,
+            "col_offset": 0,
+            "endline": 1189,
+            "type": "Class"
+          },
+          {
+            "name": "_calculate_fcr_value",
+            "complexity": 5,
+            "lineno": 29,
+            "col_offset": 4,
+            "endline": 52,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_confidence_level_from_days",
+            "complexity": 5,
+            "lineno": 55,
+            "col_offset": 4,
+            "endline": 75,
+            "type": "Function"
+          },
+          {
+            "name": "_determine_estimation_method_from_data",
+            "complexity": 3,
+            "lineno": 78,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
+            "name": "_prorate_feed_by_composition",
+            "complexity": 1,
+            "lineno": 98,
+            "col_offset": 4,
+            "endline": 112,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_weighted_average_fcr",
+            "complexity": 6,
+            "lineno": 115,
+            "col_offset": 4,
+            "endline": 142,
+            "type": "Function"
+          },
+          {
+            "name": "_aggregate_feeding_event_data",
+            "complexity": 7,
+            "lineno": 145,
+            "col_offset": 4,
+            "endline": 178,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_batch_fcr",
+            "complexity": 4,
+            "lineno": 181,
+            "col_offset": 4,
+            "endline": 214,
+            "type": "Function"
+          },
+          {
+            "name": "get_batch_feed_consumption",
+            "complexity": 2,
+            "lineno": 217,
+            "col_offset": 4,
+            "endline": 240,
+            "type": "Function"
+          },
+          {
+            "name": "_get_standard_batch_feed_consumption",
+            "complexity": 2,
+            "lineno": 244,
+            "col_offset": 4,
+            "endline": 259,
+            "type": "Function"
+          },
+          {
+            "name": "_get_mixed_batch_feed_consumption",
+            "complexity": 4,
+            "lineno": 262,
+            "col_offset": 4,
+            "endline": 306,
+            "type": "Function"
+          },
+          {
+            "name": "update_batch_feeding_summary",
+            "complexity": 1,
+            "lineno": 309,
+            "col_offset": 4,
+            "endline": 380,
+            "type": "Function"
+          },
+          {
+            "name": "get_batch_feed_cost",
+            "complexity": 2,
+            "lineno": 383,
+            "col_offset": 4,
+            "endline": 406,
+            "type": "Function"
+          },
+          {
+            "name": "_get_standard_batch_feed_cost",
+            "complexity": 2,
+            "lineno": 410,
+            "col_offset": 4,
+            "endline": 426,
+            "type": "Function"
+          },
+          {
+            "name": "_get_mixed_batch_feed_cost",
+            "complexity": 4,
+            "lineno": 429,
+            "col_offset": 4,
+            "endline": 468,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_confidence_level",
+            "complexity": 4,
+            "lineno": 471,
+            "col_offset": 4,
+            "endline": 504,
+            "type": "Function"
+          },
+          {
+            "name": "determine_estimation_method",
+            "complexity": 1,
+            "lineno": 507,
+            "col_offset": 4,
+            "endline": 524,
+            "type": "Function"
+          },
+          {
+            "name": "update_batch_feeding_summary",
+            "complexity": 1,
+            "lineno": 528,
+            "col_offset": 4,
+            "endline": 603,
+            "type": "Function"
+          },
+          {
+            "name": "get_mixed_batch_composition_percentages",
+            "complexity": 3,
+            "lineno": 606,
+            "col_offset": 4,
+            "endline": 631,
+            "type": "Function"
+          },
+          {
+            "name": "_aggregate_feeding_event_statistics",
+            "complexity": 2,
+            "lineno": 639,
+            "col_offset": 4,
+            "endline": 682,
+            "type": "Function"
+          },
+          {
+            "name": "_create_batch_feeding_summary_data",
+            "complexity": 5,
+            "lineno": 685,
+            "col_offset": 4,
+            "endline": 741,
+            "type": "Function"
+          },
+          {
+            "name": "_calculate_worst_confidence_level",
+            "complexity": 4,
+            "lineno": 749,
+            "col_offset": 4,
+            "endline": 769,
+            "type": "Function"
+          },
+          {
+            "name": "_determine_overall_estimation_method",
+            "complexity": 6,
+            "lineno": 772,
+            "col_offset": 4,
+            "endline": 789,
+            "type": "Function"
+          },
+          {
+            "name": "_aggregate_container_summary_data",
+            "complexity": 13,
+            "lineno": 792,
+            "col_offset": 4,
+            "endline": 848,
+            "type": "Function"
+          },
+          {
+            "name": "calculate_container_fcr",
+            "complexity": 5,
+            "lineno": 856,
+            "col_offset": 4,
+            "endline": 912,
+            "type": "Function"
+          },
+          {
+            "name": "_get_container_feed_consumption",
+            "complexity": 3,
+            "lineno": 916,
+            "col_offset": 4,
+            "endline": 941,
+            "type": "Function"
+          },
+          {
+            "name": "_get_mixed_container_feed_consumption",
+            "complexity": 4,
+            "lineno": 944,
+            "col_offset": 4,
+            "endline": 972,
+            "type": "Function"
+          },
+          {
+            "name": "_get_container_growth_data",
+            "complexity": 5,
+            "lineno": 975,
+            "col_offset": 4,
+            "endline": 1016,
+            "type": "Function"
+          },
+          {
+            "name": "_estimate_container_growth_from_batch",
+            "complexity": 6,
+            "lineno": 1020,
+            "col_offset": 4,
+            "endline": 1069,
+            "type": "Function"
+          },
+          {
+            "name": "_get_batch_growth_data",
+            "complexity": 3,
+            "lineno": 1073,
+            "col_offset": 4,
+            "endline": 1108,
+            "type": "Function"
+          },
+          {
+            "name": "create_container_feeding_summary",
+            "complexity": 2,
+            "lineno": 1112,
+            "col_offset": 4,
+            "endline": 1140,
+            "type": "Function"
+          },
+          {
+            "name": "aggregate_container_fcr_to_batch",
+            "complexity": 4,
+            "lineno": 1143,
+            "col_offset": 4,
+            "endline": 1189,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 33,
+          "average_complexity": 3.757575757575758,
+          "max_complexity": 13,
+          "complexity_distribution": {
+            "low": 28,
+            "medium": 4,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 15,
+        "h2": 141,
+        "N1": 103,
+        "N2": 191,
+        "vocabulary": 156,
+        "length": 294,
+        "volume": 2141.9082523455013,
+        "difficulty": 10.159574468085106,
+        "effort": 21760.876393510145,
+        "time": 1208.9375774172304,
+        "bugs": 0.7139694174485004
+      },
       "maintainability_index": 25.894449323248004
     },
     {
       "file": "apps/inventory/services/fifo_service.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 254,
         "sloc": 136,
@@ -703,13 +2866,111 @@
         "multi": 62,
         "blank": 46
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "InsufficientStockError",
+            "complexity": 1,
+            "lineno": 16,
+            "col_offset": 0,
+            "endline": 18,
+            "type": "Class"
+          },
+          {
+            "name": "FIFOInventoryService",
+            "complexity": 3,
+            "lineno": 20,
+            "col_offset": 0,
+            "endline": 254,
+            "type": "Class"
+          },
+          {
+            "name": "add_feed_to_container",
+            "complexity": 3,
+            "lineno": 24,
+            "col_offset": 4,
+            "endline": 65,
+            "type": "Function"
+          },
+          {
+            "name": "consume_feed_fifo",
+            "complexity": 7,
+            "lineno": 68,
+            "col_offset": 4,
+            "endline": 141,
+            "type": "Function"
+          },
+          {
+            "name": "get_available_purchase_quantity",
+            "complexity": 2,
+            "lineno": 144,
+            "col_offset": 4,
+            "endline": 160,
+            "type": "Function"
+          },
+          {
+            "name": "get_container_stock_summary",
+            "complexity": 2,
+            "lineno": 163,
+            "col_offset": 4,
+            "endline": 196,
+            "type": "Function"
+          },
+          {
+            "name": "get_container_stock_fifo_order",
+            "complexity": 1,
+            "lineno": 199,
+            "col_offset": 4,
+            "endline": 212,
+            "type": "Function"
+          },
+          {
+            "name": "get_total_container_stock",
+            "complexity": 2,
+            "lineno": 215,
+            "col_offset": 4,
+            "endline": 232,
+            "type": "Function"
+          },
+          {
+            "name": "get_container_stock_value",
+            "complexity": 2,
+            "lineno": 235,
+            "col_offset": 4,
+            "endline": 254,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 2.5555555555555554,
+          "max_complexity": 7,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 8,
+        "h2": 24,
+        "N1": 15,
+        "N2": 30,
+        "vocabulary": 32,
+        "length": 45,
+        "volume": 225.0,
+        "difficulty": 5.0,
+        "effort": 1125.0,
+        "time": 62.5,
+        "bugs": 0.075
+      },
       "maintainability_index": 53.60990125047579
     },
     {
       "file": "apps/inventory/services/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 15,
         "sloc": 6,
@@ -731,19 +2992,31 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
-    "total_files": 43,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 82.89892239752794,
+    "total_files": 44,
+    "total_functions": 157,
+    "cc_average": 3.070063694267516,
+    "cc_max": 17,
+    "mi_average": 83.9373008646782,
     "mi_min": 25.894449323248004,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "halstead_avg_volume": 89.22313335094455,
+    "halstead_avg_difficulty": 1.2670996476371466,
+    "halstead_avg_effort": 646.1936639362494
   }
 }

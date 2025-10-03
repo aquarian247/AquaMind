@@ -1,6 +1,6 @@
 # Cognitive Complexity Report for infrastructure
-# Generated: 2025-09-14
-# Files analyzed: 43
+# Generated: 2025-10-03
+# Files analyzed: 44
 # Total violations: 4
 # Status: pass
 # Message: Cognitive complexity within acceptable limits

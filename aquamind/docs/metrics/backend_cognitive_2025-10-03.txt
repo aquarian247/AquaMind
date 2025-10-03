@@ -1,7 +1,7 @@
 # AquaMind Backend Cognitive Complexity Summary
-# Generated: 2025-09-14
+# Generated: 2025-10-03
 # Total apps analyzed: 9
-# Total violations: 19
+# Total violations: 16
 # Apps with violations: 6
 # Apps above warning threshold: 0
 # Apps above critical threshold: 0
@@ -9,7 +9,7 @@
 ## App Details:
 ### batch
 - Files analyzed: 50
-- Violations: 3
+- Violations: 2
 - Status: pass
 - Message: Cognitive complexity within acceptable limits
 
@@ -32,13 +32,13 @@
 - Message: Cognitive complexity within acceptable limits
 
 ### infrastructure
-- Files analyzed: 43
+- Files analyzed: 44
 - Violations: 4
 - Status: pass
 - Message: Cognitive complexity within acceptable limits
 
 ### inventory
-- Files analyzed: 43
+- Files analyzed: 44
 - Violations: 3
 - Status: pass
 - Message: Cognitive complexity within acceptable limits
@@ -50,8 +50,8 @@
 - Message: Cognitive complexity within acceptable limits
 
 ### scenario
-- Files analyzed: 26
-- Violations: 3
+- Files analyzed: 32
+- Violations: 1
 - Status: pass
 - Message: Cognitive complexity within acceptable limits
 

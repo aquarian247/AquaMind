@@ -1,10 +1,10 @@
 {
   "app": "users",
-  "timestamp": "2025-09-14",
+  "timestamp": "2025-10-03",
   "files": [
     {
       "file": "apps/users/signals.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 40,
         "sloc": 13,
@@ -12,13 +12,55 @@
         "multi": 18,
         "blank": 9
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "create_user_profile",
+            "complexity": 3,
+            "lineno": 10,
+            "col_offset": 0,
+            "endline": 24,
+            "type": "Function"
+          },
+          {
+            "name": "save_user_profile",
+            "complexity": 2,
+            "lineno": 28,
+            "col_offset": 0,
+            "endline": 40,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 2.5,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 3,
+        "N1": 2,
+        "N2": 3,
+        "vocabulary": 5,
+        "length": 5,
+        "volume": 11.60964047443681,
+        "difficulty": 1.0,
+        "effort": 11.60964047443681,
+        "time": 0.6449800263576005,
+        "bugs": 0.0038698801581456034
+      },
       "maintainability_index": 66.35090083904167
     },
     {
       "file": "apps/users/models.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 153,
         "sloc": 87,
@@ -26,27 +68,247 @@
         "multi": 24,
         "blank": 31
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "create_user_profile",
+            "complexity": 2,
+            "lineno": 123,
+            "col_offset": 0,
+            "endline": 137,
+            "type": "Function"
+          },
+          {
+            "name": "save_user_profile",
+            "complexity": 2,
+            "lineno": 141,
+            "col_offset": 0,
+            "endline": 153,
+            "type": "Function"
+          },
+          {
+            "name": "Geography",
+            "complexity": 1,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 17,
+            "type": "Class"
+          },
+          {
+            "name": "Subsidiary",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 25,
+            "type": "Class"
+          },
+          {
+            "name": "Role",
+            "complexity": 1,
+            "lineno": 27,
+            "col_offset": 0,
+            "endline": 35,
+            "type": "Class"
+          },
+          {
+            "name": "UserProfile",
+            "complexity": 3,
+            "lineno": 38,
+            "col_offset": 0,
+            "endline": 119,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 103,
+            "col_offset": 4,
+            "endline": 104,
+            "type": "Function"
+          },
+          {
+            "name": "has_geography_access",
+            "complexity": 3,
+            "lineno": 106,
+            "col_offset": 4,
+            "endline": 108,
+            "type": "Function"
+          },
+          {
+            "name": "has_subsidiary_access",
+            "complexity": 3,
+            "lineno": 110,
+            "col_offset": 4,
+            "endline": 112,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 1.8888888888888888,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 9,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 10,
+        "N1": 6,
+        "N2": 14,
+        "vocabulary": 12,
+        "length": 20,
+        "volume": 71.69925001442313,
+        "difficulty": 1.4,
+        "effort": 100.37895002019238,
+        "time": 5.576608334455132,
+        "bugs": 0.02389975000480771
+      },
       "maintainability_index": 61.39996603162057
     },
     {
       "file": "apps/users/serializers.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 247,
-        "sloc": 104,
+        "loc": 258,
+        "sloc": 115,
         "comments": 7,
         "multi": 77,
         "blank": 59
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
-      "maintainability_index": 54.51085000746586
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UserProfileSerializer",
+            "complexity": 1,
+            "lineno": 8,
+            "col_offset": 0,
+            "endline": 9,
+            "type": "Class"
+          },
+          {
+            "name": "UserSerializer",
+            "complexity": 9,
+            "lineno": 24,
+            "col_offset": 0,
+            "endline": 147,
+            "type": "Class"
+          },
+          {
+            "name": "validate_password",
+            "complexity": 1,
+            "lineno": 50,
+            "col_offset": 4,
+            "endline": 64,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 12,
+            "lineno": 66,
+            "col_offset": 4,
+            "endline": 106,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 11,
+            "lineno": 108,
+            "col_offset": 4,
+            "endline": 147,
+            "type": "Function"
+          },
+          {
+            "name": "UserCreateSerializer",
+            "complexity": 1,
+            "lineno": 150,
+            "col_offset": 0,
+            "endline": 157,
+            "type": "Class"
+          },
+          {
+            "name": "CustomTokenObtainPairSerializer",
+            "complexity": 3,
+            "lineno": 160,
+            "col_offset": 0,
+            "endline": 198,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 2,
+            "lineno": 168,
+            "col_offset": 4,
+            "endline": 198,
+            "type": "Function"
+          },
+          {
+            "name": "UserProfileUpdateSerializer",
+            "complexity": 1,
+            "lineno": 201,
+            "col_offset": 0,
+            "endline": 202,
+            "type": "Class"
+          },
+          {
+            "name": "PasswordChangeSerializer",
+            "complexity": 3,
+            "lineno": 216,
+            "col_offset": 0,
+            "endline": 258,
+            "type": "Class"
+          },
+          {
+            "name": "validate_old_password",
+            "complexity": 2,
+            "lineno": 226,
+            "col_offset": 4,
+            "endline": 242,
+            "type": "Function"
+          },
+          {
+            "name": "validate_new_password",
+            "complexity": 1,
+            "lineno": 244,
+            "col_offset": 4,
+            "endline": 258,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 12,
+          "average_complexity": 3.9166666666666665,
+          "max_complexity": 12,
+          "complexity_distribution": {
+            "low": 9,
+            "medium": 1,
+            "high": 2,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 5,
+        "h2": 20,
+        "N1": 11,
+        "N2": 21,
+        "vocabulary": 25,
+        "length": 32,
+        "volume": 148.60339807279118,
+        "difficulty": 2.625,
+        "effort": 390.08391994107683,
+        "time": 21.67132888561538,
+        "bugs": 0.04953446602426373
+      },
+      "maintainability_index": 50.704571677653355
     },
     {
       "file": "apps/users/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -68,12 +330,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/apps.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 21,
         "sloc": 10,
@@ -81,13 +355,55 @@
         "multi": 5,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UsersConfig",
+            "complexity": 2,
+            "lineno": 6,
+            "col_offset": 0,
+            "endline": 21,
+            "type": "Class"
+          },
+          {
+            "name": "ready",
+            "complexity": 1,
+            "lineno": 11,
+            "col_offset": 4,
+            "endline": 21,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/admin.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 43,
         "sloc": 20,
@@ -95,13 +411,63 @@
         "multi": 13,
         "blank": 9
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UserProfileInline",
+            "complexity": 1,
+            "lineno": 9,
+            "col_offset": 0,
+            "endline": 17,
+            "type": "Class"
+          },
+          {
+            "name": "CustomUserAdmin",
+            "complexity": 1,
+            "lineno": 23,
+            "col_offset": 0,
+            "endline": 30,
+            "type": "Class"
+          },
+          {
+            "name": "UserProfileAdmin",
+            "complexity": 1,
+            "lineno": 34,
+            "col_offset": 0,
+            "endline": 43,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 46,
         "sloc": 23,
@@ -123,12 +489,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 141,
         "sloc": 59,
@@ -136,13 +514,119 @@
         "multi": 51,
         "blank": 29
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "CustomTokenObtainPairView",
+            "complexity": 1,
+            "lineno": 19,
+            "col_offset": 0,
+            "endline": 26,
+            "type": "Class"
+          },
+          {
+            "name": "UserViewSet",
+            "complexity": 3,
+            "lineno": 29,
+            "col_offset": 0,
+            "endline": 112,
+            "type": "Class"
+          },
+          {
+            "name": "get_serializer_class",
+            "complexity": 2,
+            "lineno": 39,
+            "col_offset": 4,
+            "endline": 48,
+            "type": "Function"
+          },
+          {
+            "name": "get_permissions",
+            "complexity": 3,
+            "lineno": 50,
+            "col_offset": 4,
+            "endline": 62,
+            "type": "Function"
+          },
+          {
+            "name": "get_queryset",
+            "complexity": 4,
+            "lineno": 64,
+            "col_offset": 4,
+            "endline": 81,
+            "type": "Function"
+          },
+          {
+            "name": "me",
+            "complexity": 1,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 92,
+            "type": "Function"
+          },
+          {
+            "name": "change_password",
+            "complexity": 2,
+            "lineno": 95,
+            "col_offset": 4,
+            "endline": 112,
+            "type": "Function"
+          },
+          {
+            "name": "UserProfileView",
+            "complexity": 3,
+            "lineno": 115,
+            "col_offset": 0,
+            "endline": 141,
+            "type": "Class"
+          },
+          {
+            "name": "get_object",
+            "complexity": 1,
+            "lineno": 124,
+            "col_offset": 4,
+            "endline": 131,
+            "type": "Function"
+          },
+          {
+            "name": "get_serializer_class",
+            "complexity": 2,
+            "lineno": 133,
+            "col_offset": 4,
+            "endline": 141,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 10,
+          "average_complexity": 2.2,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 10,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 4,
+        "h2": 13,
+        "N1": 7,
+        "N2": 14,
+        "vocabulary": 17,
+        "length": 21,
+        "volume": 85.83671966625714,
+        "difficulty": 2.1538461538461537,
+        "effort": 184.87908851193845,
+        "time": 10.27106047288547,
+        "bugs": 0.02861223988875238
+      },
       "maintainability_index": 55.79476648725709
     },
     {
       "file": "apps/users/management/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -164,12 +648,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/management/commands/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -191,12 +687,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -218,12 +726,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/urls.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 38,
         "sloc": 13,
@@ -245,12 +765,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/views.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 109,
         "sloc": 77,
@@ -258,13 +790,63 @@
         "multi": 9,
         "blank": 16
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "dev_auth",
+            "complexity": 3,
+            "lineno": 72,
+            "col_offset": 0,
+            "endline": 108,
+            "type": "Function"
+          },
+          {
+            "name": "CustomObtainAuthToken",
+            "complexity": 5,
+            "lineno": 29,
+            "col_offset": 0,
+            "endline": 59,
+            "type": "Class"
+          },
+          {
+            "name": "post",
+            "complexity": 4,
+            "lineno": 36,
+            "col_offset": 4,
+            "endline": 59,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.0,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 2,
+        "h2": 6,
+        "N1": 5,
+        "N2": 6,
+        "vocabulary": 8,
+        "length": 11,
+        "volume": 33.0,
+        "difficulty": 1.0,
+        "effort": 33.0,
+        "time": 1.8333333333333333,
+        "bugs": 0.011
+      },
       "maintainability_index": 71.03774174172999
     },
     {
       "file": "apps/users/api/filters/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 18,
         "sloc": 7,
@@ -272,13 +854,47 @@
         "multi": 5,
         "blank": 5
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UserProfileHistoryFilter",
+            "complexity": 1,
+            "lineno": 13,
+            "col_offset": 0,
+            "endline": 14,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/viewsets/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 19,
         "sloc": 9,
@@ -286,13 +902,47 @@
         "multi": 5,
         "blank": 4
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UserProfileHistoryViewSet",
+            "complexity": 1,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 19,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/serializers/__init__.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 11,
         "sloc": 2,
@@ -314,12 +964,24 @@
           }
         }
       },
-      "halstead": null,
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/serializers/main.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
         "loc": 41,
         "sloc": 29,
@@ -327,34 +989,118 @@
         "multi": 8,
         "blank": 4
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "AuthTokenSerializer",
+            "complexity": 1,
+            "lineno": 4,
+            "col_offset": 0,
+            "endline": 21,
+            "type": "Class"
+          },
+          {
+            "name": "AuthTokenResponseSerializer",
+            "complexity": 1,
+            "lineno": 25,
+            "col_offset": 0,
+            "endline": 40,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     },
     {
       "file": "apps/users/api/serializers/history.py",
-      "timestamp": "2025-09-14",
+      "timestamp": "2025-10-03",
       "raw": {
-        "loc": 18,
-        "sloc": 7,
-        "comments": 0,
+        "loc": 55,
+        "sloc": 38,
+        "comments": 4,
         "multi": 5,
-        "blank": 5
+        "blank": 9
       },
-      "cyclomatic_complexity": null,
-      "halstead": null,
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "UserProfileHistorySerializer",
+            "complexity": 3,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 24,
+            "type": "Class"
+          },
+          {
+            "name": "get_user_full_name",
+            "complexity": 2,
+            "lineno": 22,
+            "col_offset": 4,
+            "endline": 24,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 2.5,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
       "maintainability_index": 100.0
     }
   ],
   "summary": {
     "total_files": 18,
-    "total_functions": 0,
-    "cc_average": 0,
-    "cc_max": 0,
-    "mi_average": 89.39412361706196,
-    "mi_min": 54.51085000746586,
-    "halstead_avg_volume": 0,
-    "halstead_avg_difficulty": 0,
-    "halstead_avg_effort": 0
+    "total_functions": 47,
+    "cc_average": 2.5106382978723403,
+    "cc_max": 12,
+    "mi_average": 89.18266370985015,
+    "mi_min": 50.704571677653355,
+    "halstead_avg_volume": 19.486056012661567,
+    "halstead_avg_difficulty": 0.4543803418803419,
+    "halstead_avg_effort": 39.997311052646914
   }
 }

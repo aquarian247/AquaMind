@@ -1,0 +1,9 @@
+# Cognitive Complexity Report for scenario
+# Generated: 2025-10-03
+# Files analyzed: 32
+# Total violations: 1
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/scenario/tests/api/test_integration.py:2141:5: C90C901 'PerformanceTests.test_concurrent_scenario_processing' is too complex (13)
