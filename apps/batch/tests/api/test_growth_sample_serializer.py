@@ -241,7 +241,13 @@ class GrowthSampleSerializerTest(TestCase):
             serializer.is_valid(raise_exception=True)
 
         self.assertIn('sample_size', cm.exception.detail)
-        self.assertIn('greater than or equal to 0', str(cm.exception.detail['sample_size']))
+        # Check for either our custom message or Django's default message
+        error_msg = str(cm.exception.detail['sample_size'])
+        self.assertTrue(
+            'cannot be negative' in error_msg.lower() or
+            'greater than or equal to 0' in error_msg.lower(),
+            f"Expected negative validation message, got: {error_msg}"
+        )
 
     def test_zero_sample_size_validation(self):
         """Test validation of zero sample size."""

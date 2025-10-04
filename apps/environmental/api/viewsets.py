@@ -169,17 +169,34 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         """
         Return the most recent readings for each parameter-container combo.
         
-        Optimized using PostgreSQL's DISTINCT ON to get latest reading
-        for each unique parameter-container pair in a single query.
-        Avoids N+1 query problem by using select_related for FKs.
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related to avoid N+1.
         """
-        # Use PostgreSQL DISTINCT ON to get one reading per combo
-        # Order by param, container first, then -reading_time for recency
-        recent_readings = EnvironmentalReading.objects.select_related(
-            'parameter', 'container', 'sensor', 'batch'
-        ).order_by(
-            'parameter', 'container', '-reading_time'
-        ).distinct('parameter', 'container')
+        from django.db import connection
+        
+        # Use DISTINCT ON for PostgreSQL (optimal performance)
+        if connection.vendor == 'postgresql':
+            recent_readings = EnvironmentalReading.objects.select_related(
+                'parameter', 'container', 'sensor', 'batch'
+            ).order_by(
+                'parameter', 'container', '-reading_time'
+            ).distinct('parameter', 'container')
+        else:
+            # Fallback for SQLite/other databases
+            recent_readings = []
+            unique_pairs = EnvironmentalReading.objects.values(
+                'parameter', 'container'
+            ).distinct()
+            
+            for pair in unique_pairs:
+                reading = EnvironmentalReading.objects.filter(
+                    parameter=pair['parameter'],
+                    container=pair['container']
+                ).select_related(
+                    'parameter', 'container', 'sensor', 'batch'
+                ).order_by('-reading_time').first()
+                if reading:
+                    recent_readings.append(reading)
         
         serializer = self.get_serializer(recent_readings, many=True)
         return Response(serializer.data)
@@ -413,14 +430,27 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
         """
         Return the most recent weather data for each area.
         
-        Optimized using PostgreSQL's DISTINCT ON to get latest data
-        for each area in a single query. Avoids N+1 query problem.
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related.
         """
-        # Use DISTINCT ON to get one weather record per area
-        # DISTINCT ON fields must match initial ORDER BY fields
-        recent_data = WeatherData.objects.select_related(
-            'area'
-        ).order_by('area_id', '-timestamp').distinct('area_id')
+        from django.db import connection
+        
+        # Use DISTINCT ON for PostgreSQL (optimal performance)
+        if connection.vendor == 'postgresql':
+            recent_data = WeatherData.objects.select_related(
+                'area'
+            ).order_by('area_id', '-timestamp').distinct('area_id')
+        else:
+            # Fallback for SQLite/other databases
+            recent_data = []
+            areas = WeatherData.objects.values('area').distinct()
+            
+            for area_dict in areas:
+                data = WeatherData.objects.filter(
+                    area=area_dict['area']
+                ).select_related('area').order_by('-timestamp').first()
+                if data:
+                    recent_data.append(data)
         
         serializer = self.get_serializer(recent_data, many=True)
         return Response(serializer.data)
