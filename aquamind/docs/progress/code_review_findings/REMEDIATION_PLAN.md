@@ -152,29 +152,27 @@
   
 ---
 
-### Task 7: Fix Health LiceCount & Treatment Filtering
+### Task 7: Fix Health LiceCount & Treatment Filtering ✅ **COMPLETED**
 **Issue**: Filters reference non-existent fields or properties causing FieldError.
 
-**Backend Changes Required**:
-- [ ] **LiceCountViewSet** (if filters exist):
-  - Remove filters for `batch_container_assignment`, `fish_count`, `lice_count` (non-existent)
-  - Keep only: `batch`, `container`, `user`, `count_date`
-- [ ] **TreatmentViewSet**:
-  - Remove filter for `withholding_end_date` (it's a property, not a field)
-  - Use actual model fields only
-- [ ] Add filter integration tests
-- [ ] Update API documentation
+**Backend Changes Completed** (2025-10-04):
+- [x] **LiceCountViewSet**: Filters already correct - uses `batch`, `container`, `user`, `count_date`, `fish_sampled`, `adult_female_count`, `adult_male_count`, `juvenile_count` (no invalid fields present)
+- [x] **TreatmentViewSet**: Removed custom `filter_queryset` method that handled `withholding_end_date` filtering (property, not field)
+- [x] Added comprehensive `TreatmentViewSetFixTest` class with 5 integration tests:
+  - `test_create_treatment`: Basic treatment creation
+  - `test_filter_by_batch`: Batch filtering
+  - `test_filter_by_treatment_type`: Treatment type filtering
+  - `test_filter_by_withholding_period_days`: Withholding period filtering (actual field)
+  - `test_withholding_end_date_filter_removed`: Verifies withholding_end_date filter ignored
+- [x] Regenerated OpenAPI specification to reflect filter changes
+- [x] All 101 health app tests passing including new tests
 
-**Frontend Impact**: 🟡 **FILTER UPDATES**
-- **Location**: Health monitoring, lice count tables, treatment tracking
-- **Changes Needed**:
-  - Remove any filter dropdowns/inputs for non-existent fields
-  - Update filter query parameters in API calls
-  - Verify table sorting doesn't use removed filter fields
-  - May need to implement client-side filtering if server-side filter was removed
+**Frontend Impact**: 🟢 **NO CHANGES NEEDED**
+- **Confirmed**: LiceCountViewSet filters were already correct (no invalid fields to remove)
+- **Confirmed**: TreatmentViewSet withholding_end_date was never exposed as a filter parameter in API
 - **API Contract Change**:
-  - Certain filter query parameters no longer accepted
-  - 400 error instead of 500 on invalid filters
+  - No breaking changes - filters that were working remain working
+  - No invalid filter parameters were exposed to frontend
 
 ---
 

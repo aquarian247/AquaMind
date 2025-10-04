@@ -58,24 +58,4 @@ class TreatmentViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
         'user__id': ['exact']
     }
     
-    # Override filter_queryset to add custom filtering for calculated fields
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        
-        # Get query parameters for withholding_end_date
-        withholding_end_date = self.request.query_params.get('withholding_end_date')
-        withholding_end_date_gte = self.request.query_params.get('withholding_end_date__gte')
-        withholding_end_date_lte = self.request.query_params.get('withholding_end_date__lte')
-        
-        # Apply filters if parameters are provided
-        if withholding_end_date:
-            # Since withholding_end_date is calculated, we need to filter on treatment_date + withholding_period_days
-            # This is a simplification - for exact filtering, we'd need a more complex query
-            queryset = queryset.filter(withholding_end_date=withholding_end_date)
-        if withholding_end_date_gte:
-            queryset = queryset.filter(withholding_end_date__gte=withholding_end_date_gte)
-        if withholding_end_date_lte:
-            queryset = queryset.filter(withholding_end_date__lte=withholding_end_date_lte)
-            
-        return queryset
     search_fields = ['description', 'dosage', 'outcome']

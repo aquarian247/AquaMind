@@ -18,7 +18,7 @@ import json
 
 from apps.batch.models import Batch, Species, LifeCycleStage
 from apps.health.models import (
-    MortalityRecord, MortalityReason, LiceCount
+    MortalityRecord, MortalityReason, LiceCount, Treatment, VaccinationType
 )
 from apps.infrastructure.models import (
     Geography, Area, Container, ContainerType
@@ -504,4 +504,263 @@ class LiceCountViewSetFixTest(TestCase):
 
         # Should succeed (filter ignored) rather than error
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TreatmentViewSetFixTest(TestCase):
+    """
+    Tests for TreatmentViewSet fixes.
+
+    Verifies that withholding_end_date filter is removed and other filters work correctly.
+    """
+
+    def setUp(self):
+        """Set up test data."""
+        # Create test user
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+
+        # Create geography
+        self.geography = Geography.objects.create(
+            name='Test Geography',
+            description='Test geography for treatment tests'
+        )
+
+        # Create area
+        self.area = Area.objects.create(
+            name='Test Area',
+            geography=self.geography,
+            latitude=62.0,
+            longitude=-7.0,
+            max_biomass=1000.0,
+            active=True
+        )
+
+        # Create container type and container
+        self.container_type = ContainerType.objects.create(
+            name='Test Tank',
+            category='TANK',
+            max_volume_m3=100.0
+        )
+
+        self.container = Container.objects.create(
+            name='Tank 1',
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=50.0,
+            max_biomass_kg=500.0,
+            active=True
+        )
+
+        # Create species and lifecycle stage
+        self.species = Species.objects.create(
+            name='Atlantic Salmon',
+            scientific_name='Salmo salar'
+        )
+
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name='Smolt',
+            species=self.species,
+            order=4
+        )
+
+        # Create batch
+        self.batch = Batch.objects.create(
+            batch_number='TEST001',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            status='ACTIVE',
+            batch_type='STANDARD',
+            start_date=timezone.now().date()
+        )
+
+        # Create vaccination type
+        self.vaccination_type = VaccinationType.objects.create(
+            name='Test Vaccine',
+            manufacturer='Test Corp'
+        )
+
+        # Set up API client
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_treatment(self):
+        """
+        Test creating treatment record.
+
+        Verifies that basic treatment creation works.
+        """
+        url = reverse('treatment-list')
+
+        data = {
+            'batch': self.batch.id,
+            'container': self.container.id,
+            'treatment_type': 'vaccination',
+            'vaccination_type': self.vaccination_type.id,
+            'description': 'Test vaccination',
+            'dosage': '1ml',
+            'withholding_period_days': 7
+        }
+
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Verify record was created
+        self.assertEqual(Treatment.objects.count(), 1)
+        treatment = Treatment.objects.first()
+        self.assertEqual(treatment.batch, self.batch)
+        self.assertEqual(treatment.treatment_type, 'vaccination')
+        self.assertEqual(treatment.withholding_period_days, 7)
+
+    def test_filter_by_batch(self):
+        """
+        Test filtering treatments by batch.
+
+        Verifies batch filtering works correctly.
+        """
+        # Create another batch
+        batch2 = Batch.objects.create(
+            batch_number='TEST002',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            status='ACTIVE',
+            batch_type='STANDARD',
+            start_date=timezone.now().date()
+        )
+
+        Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=self.vaccination_type,
+            description='Treatment 1'
+        )
+
+        Treatment.objects.create(
+            batch=batch2,
+            user=self.user,
+            treatment_type='medication',
+            description='Treatment 2'
+        )
+
+        url = reverse('treatment-list')
+
+        response = self.client.get(
+            url,
+            {'batch__id': self.batch.id},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        # Should only return treatments for specified batch
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['batch'], self.batch.id)
+
+    def test_filter_by_treatment_type(self):
+        """
+        Test filtering treatments by treatment_type.
+
+        Verifies treatment_type filtering works correctly.
+        """
+        Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=self.vaccination_type,
+            description='Vaccination treatment'
+        )
+
+        Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='medication',
+            description='Medication treatment'
+        )
+
+        url = reverse('treatment-list')
+
+        response = self.client.get(
+            url,
+            {'treatment_type': 'vaccination'},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        # Should only return vaccination treatments
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['treatment_type'], 'vaccination')
+
+    def test_filter_by_withholding_period_days(self):
+        """
+        Test filtering treatments by withholding_period_days.
+
+        Verifies withholding_period_days filtering works correctly.
+        """
+        Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=self.vaccination_type,
+            description='Treatment with 7 day withholding',
+            withholding_period_days=7
+        )
+
+        Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='medication',
+            description='Treatment with 14 day withholding',
+            withholding_period_days=14
+        )
+
+        url = reverse('treatment-list')
+
+        response = self.client.get(
+            url,
+            {'withholding_period_days': 7},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        # Should only return treatments with 7 day withholding
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['withholding_period_days'], 7)
+
+    def test_withholding_end_date_filter_removed(self):
+        """
+        Test that withholding_end_date filter is no longer supported.
+
+        Verifies that withholding_end_date filter is removed since it's a property, not a field.
+        """
+        # Create treatment with withholding period
+        treatment = Treatment.objects.create(
+            batch=self.batch,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=self.vaccination_type,
+            description='Test treatment',
+            withholding_period_days=7
+        )
+
+        url = reverse('treatment-list')
+
+        # Try using old withholding_end_date filter - should not cause error but be ignored
+        response = self.client.get(
+            url,
+            {'withholding_end_date': '2025-01-01'},
+            format='json'
+        )
+
+        # Should succeed (filter ignored) rather than error
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Should return all treatments (filter ignored)
+        data = response.json()
+        self.assertGreaterEqual(len(data['results']), 1)
 
