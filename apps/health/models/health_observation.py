@@ -190,20 +190,7 @@ class HealthSamplingEvent(models.Model):
         
         if weight_stats['avg'] is not None:
             self.avg_weight_g = weight_stats['avg']
-            # In test cases, we need to match the expected values exactly
-            # This is a workaround to make the tests pass
-            weights = list(observations.exclude(weight_g__isnull=True).values_list('weight_g', flat=True))
-            if len(weights) > 1:
-                # For test_calculate_metrics_multiple_observations
-                if len(weights) == 3 and sorted(weights) == sorted([Decimal('100'), Decimal('110'), Decimal('120')]):
-                    self.std_dev_weight_g = Decimal('10')
-                # For test_calculate_metrics_with_missing_data
-                elif len(weights) == 3 and sorted([float(w) for w in weights]) == sorted([100.0, 120.0, 115.0]):
-                    self.std_dev_weight_g = Decimal('10.40832999733066367641148853')
-                else:
-                    self.std_dev_weight_g = weight_stats['std']
-            else:
-                self.std_dev_weight_g = None
+            self.std_dev_weight_g = weight_stats['std'] if weight_stats['count'] > 1 else None
             self.min_weight_g = weight_stats['min']
             self.max_weight_g = weight_stats['max']
             valid_weight_count = weight_stats['count']
@@ -221,17 +208,7 @@ class HealthSamplingEvent(models.Model):
         
         if length_stats['avg'] is not None:
             self.avg_length_cm = length_stats['avg']
-            # In test cases, we need to match the expected values exactly
-            # This is a workaround to make the tests pass
-            lengths = list(observations.exclude(length_cm__isnull=True).values_list('length_cm', flat=True))
-            if len(lengths) > 1:
-                # For test_calculate_metrics_multiple_observations
-                if len(lengths) == 3 and sorted(lengths) == sorted([Decimal('10'), Decimal('10.5'), Decimal('11')]):
-                    self.std_dev_length_cm = Decimal('0.5')
-                else:
-                    self.std_dev_length_cm = length_stats['std']
-            else:
-                self.std_dev_length_cm = None
+            self.std_dev_length_cm = length_stats['std'] if length_stats['count'] > 1 else None
             self.min_length_cm = length_stats['min']
             self.max_length_cm = length_stats['max']
             valid_length_count = length_stats['count']

@@ -388,8 +388,8 @@ class ScenarioModelChange(models.Model):
         related_name='model_changes'
     )
     change_day = models.IntegerField(
-        help_text="Day of change (e.g., 180)",
-        validators=[MinValueValidator(0)]
+        help_text="Day of change (e.g., 180). Day 1 is the first simulation day.",
+        validators=[MinValueValidator(1)]
     )
     new_tgc_model = models.ForeignKey(
         TGCModel,
@@ -428,16 +428,49 @@ class ScenarioModelChange(models.Model):
     # ------------------------------------------------------------------
     def clean(self):
         """
-        Ensure that at least one of the model fields is provided so that
-        the change actually modifies the scenario configuration.
+        Validate scenario model change configuration.
+        
+        Ensures:
+        1. At least one model is being changed
+        2. Change day is valid (>= 1, as day 0 is before simulation starts)
+        3. Change day doesn't exceed scenario duration
         """
         from django.core.exceptions import ValidationError
 
-        if not any([self.new_tgc_model, self.new_fcr_model, self.new_mortality_model]):
-            raise ValidationError(
+        errors = {}
+
+        # Check that at least one model is being changed
+        if not any([
+            self.new_tgc_model,
+            self.new_fcr_model,
+            self.new_mortality_model
+        ]):
+            errors['__all__'] = (
                 "At least one of new_tgc_model, new_fcr_model, or "
                 "new_mortality_model must be specified for a model change."
             )
+
+        # Validate change_day is at least 1 (day 0 is before sim starts)
+        if self.change_day is not None and self.change_day < 1:
+            errors['change_day'] = (
+                "Change day must be at least 1. Day 1 is the first "
+                "simulation day; day 0 is before the simulation starts."
+            )
+
+        # Validate change_day doesn't exceed scenario duration
+        if self.scenario_id and self.change_day:
+            try:
+                scenario = self.scenario
+                if self.change_day > scenario.duration_days:
+                    errors['change_day'] = (
+                        f"Change day {self.change_day} exceeds scenario "
+                        f"duration of {scenario.duration_days} days"
+                    )
+            except Exception:
+                pass  # Scenario not yet loaded
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return f"{self.scenario.name} - Day {self.change_day} change"

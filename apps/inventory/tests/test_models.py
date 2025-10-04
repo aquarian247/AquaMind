@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 from datetime import timedelta
 
-from apps.inventory.models import Feed, FeedPurchase
+from apps.inventory.models import Feed, FeedPurchase, BatchFeedingSummary
 from apps.inventory.utils import DecimalFieldMixin
 from apps.inventory.utils import format_decimal, calculate_feeding_percentage, validate_stock_quantity
 
@@ -477,3 +477,311 @@ class DecimalFieldMixinTest(TestCase):
         self.assertTrue(field.null)
         # Check that the validator has the correct min_value
         self.assertEqual(field.validators[0].limit_value, Decimal('0.1'))
+
+
+class BatchFeedingSummaryModelTest(TestCase):
+    """Tests for the BatchFeedingSummary model."""
+
+    def setUp(self):
+        """Set up test data for BatchFeedingSummary tests."""
+        from apps.batch.models import Batch, Species, LifeCycleStage
+        from apps.inventory.models import FeedingEvent, Feed
+        from apps.infrastructure.models import Container, ContainerType, Geography, FreshwaterStation, Hall
+        from django.contrib.auth.models import User
+
+        # Create test user
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+
+        # Create test infrastructure (minimal setup)
+        self.geography = Geography.objects.create(name="Test Geography")
+        self.station = FreshwaterStation.objects.create(
+            name="Test Station",
+            geography=self.geography,
+            latitude=Decimal("10.0"),
+            longitude=Decimal("20.0")
+        )
+        self.hall = Hall.objects.create(
+            name="Test Hall",
+            freshwater_station=self.station
+        )
+        self.container_type = ContainerType.objects.create(
+            name="Test Tank",
+            category="TANK",
+            max_volume_m3=Decimal("100.0")
+        )
+        self.container = Container.objects.create(
+            name="Test Container",
+            container_type=self.container_type,
+            hall=self.hall,
+            volume_m3=Decimal("50.0"),
+            max_biomass_kg=Decimal("1000.0")
+        )
+
+        # Create test species and lifecycle stage
+        self.species = Species.objects.create(
+            name="Test Species",
+            scientific_name="Test scientificus"
+        )
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name="Test Stage",
+            species=self.species,
+            order=1
+        )
+
+        # Create test batch
+        self.batch = Batch.objects.create(
+            batch_number="TEST001",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            start_date=timezone.now().date(),
+            notes="Test batch"
+        )
+
+        # Create test feed
+        self.feed = Feed.objects.create(
+            name="Test Feed",
+            brand="Test Brand",
+            size_category="MEDIUM"
+        )
+
+    def test_generate_for_batch_no_events(self):
+        """Test generate_for_batch returns None when no feeding events exist."""
+        start_date = timezone.now().date() - timedelta(days=30)
+        end_date = timezone.now().date()
+
+        result = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        self.assertIsNone(result)
+
+    def test_generate_for_batch_with_single_event(self):
+        """Test generate_for_batch with a single feeding event."""
+        from apps.inventory.models import FeedingEvent
+
+        start_date = timezone.now().date() - timedelta(days=10)
+        end_date = timezone.now().date()
+
+        # Create a feeding event
+        feeding_event = FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=5),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("10.0"),
+            batch_biomass_kg=Decimal("200.0"),
+            feeding_percentage=Decimal("5.0"),
+            recorded_by=self.user
+        )
+
+        result = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.batch, self.batch)
+        self.assertEqual(result.period_start, start_date)
+        self.assertEqual(result.period_end, end_date)
+        self.assertEqual(result.total_feed_kg, Decimal("10.0"))
+        self.assertEqual(result.average_biomass_kg, Decimal("200.0"))
+        self.assertEqual(result.average_feeding_percentage, Decimal("5.0"))
+        self.assertEqual(result.total_feed_consumed_kg, Decimal("10.0"))
+        self.assertEqual(result.total_biomass_gain_kg, Decimal("0.00"))  # Single event, no growth
+
+    def test_generate_for_batch_with_multiple_events(self):
+        """Test generate_for_batch with multiple feeding events."""
+        from apps.inventory.models import FeedingEvent
+
+        start_date = timezone.now().date() - timedelta(days=10)
+        end_date = timezone.now().date()
+
+        # Create multiple feeding events
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=3),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("5.0"),
+            batch_biomass_kg=Decimal("150.0"),
+            feeding_percentage=Decimal("3.33"),
+            recorded_by=self.user
+        )
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=7),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("8.0"),
+            batch_biomass_kg=Decimal("220.0"),
+            feeding_percentage=Decimal("3.64"),
+            recorded_by=self.user
+        )
+
+        result = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.total_feed_kg, Decimal("13.0"))
+        # Average biomass should be average of 150.0 and 220.0 = 185.0
+        self.assertEqual(result.average_biomass_kg, Decimal("185.0"))
+        # Average feeding percentage should be average of 3.33 and 3.64 = 3.485
+        self.assertAlmostEqual(
+            result.average_feeding_percentage,
+            Decimal("3.485"),
+            places=3
+        )
+
+    def test_generate_for_batch_with_growth_calculation(self):
+        """Test generate_for_batch calculates growth when possible."""
+        from apps.inventory.models import FeedingEvent
+
+        start_date = timezone.now().date() - timedelta(days=10)
+        end_date = timezone.now().date()
+
+        # Create feeding events at start and end
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("5.0"),
+            batch_biomass_kg=Decimal("150.0"),
+            feeding_percentage=Decimal("3.33"),
+            recorded_by=self.user
+        )
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=end_date,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("8.0"),
+            batch_biomass_kg=Decimal("220.0"),
+            feeding_percentage=Decimal("3.64"),
+            recorded_by=self.user
+        )
+
+        result = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.total_feed_kg, Decimal("13.0"))
+        self.assertEqual(result.average_biomass_kg, Decimal("185.0"))
+        # Growth should be 220.0 - 150.0 = 70.0
+        self.assertEqual(result.total_growth_kg, Decimal("70.0"))
+        # FCR should be 13.0 / 70.0 = 0.1857...
+        self.assertAlmostEqual(result.fcr, Decimal("0.186"), places=3)
+
+    def test_generate_for_batch_updates_existing(self):
+        """Test generate_for_batch updates existing summary."""
+        from apps.inventory.models import FeedingEvent
+
+        start_date = timezone.now().date() - timedelta(days=10)
+        end_date = timezone.now().date()
+
+        # Create initial feeding event
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=5),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("5.0"),
+            batch_biomass_kg=Decimal("150.0"),
+            feeding_percentage=Decimal("3.33"),
+            recorded_by=self.user
+        )
+
+        # Generate summary first time
+        result1 = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+        self.assertEqual(result1.total_feed_kg, Decimal("5.0"))
+
+        # Add another feeding event
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=7),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("8.0"),
+            batch_biomass_kg=Decimal("200.0"),
+            feeding_percentage=Decimal("4.0"),
+            recorded_by=self.user
+        )
+
+        # Generate summary again - should update
+        result2 = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        # Should be the same object (updated)
+        self.assertEqual(result1.id, result2.id)
+        self.assertEqual(result2.total_feed_kg, Decimal("13.0"))
+        self.assertEqual(result2.average_biomass_kg, Decimal("175.0"))
+
+    def test_generate_for_batch_out_of_range_events(self):
+        """Test generate_for_batch ignores events outside the date range."""
+        from apps.inventory.models import FeedingEvent
+
+        start_date = timezone.now().date() - timedelta(days=5)
+        end_date = timezone.now().date() - timedelta(days=1)
+
+        # Create event before range
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date - timedelta(days=2),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("10.0"),
+            batch_biomass_kg=Decimal("200.0"),
+            feeding_percentage=Decimal("5.0"),
+            recorded_by=self.user
+        )
+
+        # Create event in range
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=start_date + timedelta(days=2),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("5.0"),
+            batch_biomass_kg=Decimal("150.0"),
+            feeding_percentage=Decimal("3.33"),
+            recorded_by=self.user
+        )
+
+        # Create event after range
+        FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=end_date + timedelta(days=2),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("15.0"),
+            batch_biomass_kg=Decimal("250.0"),
+            feeding_percentage=Decimal("6.0"),
+            recorded_by=self.user
+        )
+
+        result = BatchFeedingSummary.generate_for_batch(
+            self.batch, start_date, end_date
+        )
+
+        self.assertIsNotNone(result)
+        # Should only include the event in range
+        self.assertEqual(result.total_feed_kg, Decimal("5.0"))
+        self.assertEqual(result.average_biomass_kg, Decimal("150.0"))

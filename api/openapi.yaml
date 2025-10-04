@@ -1190,6 +1190,20 @@ paths:
           Options: growth, mortality, biomass, all
 
         Example URL: /api/v1/batch/batches/compare/?batch_ids=1,2,3&metrics=growth,mortality
+      parameters:
+      - in: query
+        name: batch_ids
+        schema:
+          type: string
+        description: Comma-separated list of batch IDs to compare.
+        required: true
+      - in: query
+        name: metrics
+        schema:
+          type: string
+          default: all
+        description: Comma-separated metrics to include (growth, mortality, biomass,
+          all).
       tags:
       - api
       security:
@@ -4699,8 +4713,48 @@ paths:
           description: Internal Server Error
   /api/v1/broodstock/batch-parentages/lineage/:
     get:
-      operationId: api_v1_broodstock_batch_parentages_lineage_retrieve
+      operationId: api_v1_broodstock_batch_parentages_lineage_list
       description: Get complete lineage for a batch.
+      parameters:
+      - in: query
+        name: assignment_date
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: batch_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the batch to retrieve lineage information for.
+        required: true
+      - in: query
+        name: egg_production
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       tags:
       - api
       security:
@@ -4713,7 +4767,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BatchParentage'
+                  $ref: '#/components/schemas/PaginatedBatchParentageList'
           description: ''
         '401':
           description: Unauthorized
@@ -4721,6 +4775,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/breeding-pairs/:
     get:
       operationId: api_v1_broodstock_breeding_pairs_list
@@ -5554,7 +5610,13 @@ paths:
   /api/v1/broodstock/egg-productions/acquire_external/:
     post:
       operationId: api_v1_broodstock_egg_productions_acquire_external_create
-      description: Create external egg acquisition.
+      description: |-
+        Create external egg acquisition.
+
+        Delegates to EggManagementService for proper validation including:
+        - Duplicate batch number prevention
+        - Atomic transaction handling
+        - Unique batch ID generation
       tags:
       - api
       requestBody:
@@ -5590,7 +5652,14 @@ paths:
   /api/v1/broodstock/egg-productions/produce_internal/:
     post:
       operationId: api_v1_broodstock_egg_productions_produce_internal_create
-      description: Create internal egg production from a breeding pair.
+      description: |-
+        Create internal egg production from a breeding pair.
+
+        Delegates to EggManagementService for proper validation including:
+        - Active breeding plan validation
+        - Fish health status checks
+        - Automatic progeny count updates
+        - Unique batch ID generation
       tags:
       - api
       requestBody:
@@ -6647,8 +6716,60 @@ paths:
           description: Internal Server Error
   /api/v1/broodstock/fish/by_container/:
     get:
-      operationId: api_v1_broodstock_fish_by_container_retrieve
+      operationId: api_v1_broodstock_fish_by_container_list
       description: Get fish grouped by container.
+      parameters:
+      - in: query
+        name: container
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: container_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the container to list broodstock fish for.
+        required: true
+      - in: query
+        name: health_status
+        schema:
+          type: string
+          x-spec-enum-id: f6dd9f80b09f5c06
+          enum:
+          - deceased
+          - healthy
+          - monitored
+          - sick
+        description: |-
+          Current health status
+
+          * `healthy` - Healthy
+          * `monitored` - Monitored
+          * `sick` - Sick
+          * `deceased` - Deceased
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
       tags:
       - api
       security:
@@ -6661,7 +6782,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BroodstockFish'
+                  $ref: '#/components/schemas/PaginatedBroodstockFishList'
           description: ''
         '401':
           description: Unauthorized
@@ -6669,6 +6790,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/broodstock/fish/healthy/:
     get:
       operationId: api_v1_broodstock_fish_healthy_retrieve
@@ -8748,10 +8871,82 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/environmental/readings/by_container/:
+    get:
+      operationId: api_v1_environmental_readings_by_container_retrieve
+      description: |-
+        Get readings filtered by container and optional time range.
+
+        Query parameters:
+        - container_id: Required, container to fetch readings for
+        - parameter_id: Optional, filter by specific parameter
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+      parameters:
+      - in: query
+        name: container_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the container to fetch readings for.
+        required: true
+      - in: query
+        name: end_time
+        schema:
+          type: string
+          format: date-time
+        description: Filter readings at or before this timestamp.
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 1000
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Maximum number of readings to return (default 1000).
+      - in: query
+        name: parameter_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter readings by environmental parameter.
+      - in: query
+        name: start_time
+        schema:
+          type: string
+          format: date-time
+        description: Filter readings at or after this timestamp.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentalReading'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/environmental/readings/recent/:
     get:
       operationId: api_v1_environmental_readings_recent_retrieve
-      description: Return the most recent readings for each parameter-container combination.
+      description: |-
+        Return the most recent readings for each parameter-container combo.
+
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related to avoid N+1.
       tags:
       - api
       security:
@@ -8776,6 +8971,21 @@ paths:
     get:
       operationId: api_v1_environmental_readings_stats_retrieve
       description: Return aggregated statistics for readings based on query parameters.
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+          default: 7
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Number of days to include in the aggregation window.
+      - in: query
+        name: group_by
+        schema:
+          type: string
+          default: parameter
+        description: 'Aggregation dimension: parameter (default), container, or batch.'
       tags:
       - api
       security:
@@ -9301,10 +9511,72 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/environmental/weather/by_area/:
+    get:
+      operationId: api_v1_environmental_weather_by_area_retrieve
+      description: |-
+        Get weather data filtered by area and optional time range.
+
+        Query parameters:
+        - area_id: Required, the ID of the area to fetch weather data for
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+      parameters:
+      - in: query
+        name: area_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the area to fetch weather data for.
+        required: true
+      - in: query
+        name: end_time
+        schema:
+          type: string
+          format: date-time
+        description: Filter weather data at or before this timestamp.
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 1000
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Maximum number of records to return (default 1000).
+      - in: query
+        name: start_time
+        schema:
+          type: string
+          format: date-time
+        description: Filter weather data at or after this timestamp.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherData'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/environmental/weather/recent/:
     get:
       operationId: api_v1_environmental_weather_recent_retrieve
-      description: Return the most recent weather data for each area.
+      description: |-
+        Return the most recent weather data for each area.
+
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related.
       tags:
       - api
       security:
@@ -11746,7 +12018,57 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       parameters:
+      - in: query
+        name: adult_female_count
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: adult_female_count__gte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: adult_female_count__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: adult_male_count
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: adult_male_count__gte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: adult_male_count__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: container
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       - in: query
         name: count_date
         schema:
@@ -11762,6 +12084,42 @@ paths:
         schema:
           type: string
           format: date-time
+      - in: query
+        name: fish_sampled
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: fish_sampled__gte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: fish_sampled__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: juvenile_count
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: juvenile_count__gte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: juvenile_count__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       - name: page
         required: false
         in: query
@@ -11777,7 +12135,7 @@ paths:
         schema:
           type: string
       - in: query
-        name: user__id
+        name: user
         schema:
           type: integer
           maximum: 9223372036854775807
@@ -11809,6 +12167,8 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       tags:
       - api
       requestBody:
@@ -11849,6 +12209,8 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       parameters:
       - in: path
         name: id
@@ -11885,6 +12247,8 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       parameters:
       - in: path
         name: id
@@ -11935,6 +12299,8 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       parameters:
       - in: path
         name: id
@@ -11984,6 +12350,8 @@ paths:
 
         Provides CRUD operations for lice counts, which track sea lice infestations
         in fish populations.
+
+        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
       parameters:
       - in: path
         name: id
@@ -12269,7 +12637,21 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       parameters:
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: container
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       - in: query
         name: count
         schema:
@@ -12288,6 +12670,21 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: event_date
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: event_date__gte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: event_date__lte
+        schema:
+          type: string
+          format: date-time
       - name: page
         required: false
         in: query
@@ -12297,7 +12694,7 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
-        name: reason__id
+        name: reason
         schema:
           type: integer
           maximum: 9223372036854775807
@@ -12335,6 +12732,8 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       tags:
       - api
       requestBody:
@@ -12375,6 +12774,8 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       parameters:
       - in: path
         name: id
@@ -12411,6 +12812,8 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       parameters:
       - in: path
         name: id
@@ -12461,6 +12864,8 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       parameters:
       - in: path
         name: id
@@ -12510,6 +12915,8 @@ paths:
 
         Provides CRUD operations for mortality records, which track fish deaths
         and their causes.
+
+        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
       parameters:
       - in: path
         name: id
@@ -13781,22 +14188,9 @@ paths:
           description: Internal Server Error
   /api/v1/infrastructure/areas/{id}/summary/:
     get:
-      operationId: api_v1_infrastructure_areas_summary_retrieve
-      description: |-
-        Return KPI summary for a specific area.
-
-        Computes aggregated metrics including:
-        - container_count: Total containers in the area
-        - ring_count: Containers that are rings/pens (category='PEN' or name contains 'Ring')
-        - active_biomass_kg: Sum of biomass from active batch assignments
-        - population_count: Sum of population from active batch assignments
-        - avg_weight_kg: Biomass divided by population (0 if no population)
-
-        Query Parameters:
-        - is_active: Filter by active status (default: true)
-
-        Returns:
-            Response: JSON with aggregated area metrics
+      operationId: area-summary
+      description: Get KPI summary for an area including container counts, biomass,
+        population, and average weight.
       parameters:
       - in: path
         name: id
@@ -13806,6 +14200,12 @@ paths:
           minimum: -9223372036854775808
         description: A unique integer value identifying this area.
         required: true
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+          default: true
+        description: 'Filter assignments by active status (default: true).'
       tags:
       - api
       security:
@@ -13816,8 +14216,36 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Area'
-          description: ''
+                type: object
+                properties:
+                  container_count:
+                    type: integer
+                    description: Total number of containers in the area
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  ring_count:
+                    type: integer
+                    description: Number of ring/pen containers in the area
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  active_biomass_kg:
+                    type: number
+                    description: Total active biomass in kilograms
+                  population_count:
+                    type: integer
+                    description: Total population count
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  avg_weight_kg:
+                    type: number
+                    description: Average weight in kilograms per fish
+                required:
+                - container_count
+                - ring_count
+                - active_biomass_kg
+                - population_count
+                - avg_weight_kg
+          description: Area KPI metrics
         '404':
           description: Not Found
         '401':
@@ -16306,21 +16734,9 @@ paths:
           description: Internal Server Error
   /api/v1/infrastructure/halls/{id}/summary/:
     get:
-      operationId: api_v1_infrastructure_halls_summary_retrieve
-      description: |-
-        Return KPI summary for a specific hall.
-
-        Computes aggregated metrics including:
-        - container_count: Total containers in the hall
-        - active_biomass_kg: Sum of biomass from active batch assignments
-        - population_count: Sum of population from active batch assignments
-        - avg_weight_kg: Biomass divided by population (0 if no population)
-
-        Query Parameters:
-        - is_active: Filter by active status (default: true)
-
-        Returns:
-            Response: JSON with aggregated hall metrics
+      operationId: hall-summary
+      description: Get KPI summary for a hall including container counts, biomass,
+        population, and average weight.
       parameters:
       - in: path
         name: id
@@ -16330,8 +16746,14 @@ paths:
           minimum: -9223372036854775808
         description: A unique integer value identifying this hall.
         required: true
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+          default: true
+        description: 'Filter assignments by active status (default: true).'
       tags:
-      - api
+      - Infrastructure
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -16340,8 +16762,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Hall'
-          description: ''
+                type: object
+                properties:
+                  container_count:
+                    type: integer
+                    description: Total number of containers in the hall
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  active_biomass_kg:
+                    type: number
+                    description: Total active biomass in kilograms
+                  population_count:
+                    type: integer
+                    description: Total population count
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  avg_weight_kg:
+                    type: number
+                    description: Average weight in kilograms per fish
+                required:
+                - container_count
+                - active_biomass_kg
+                - population_count
+                - avg_weight_kg
+          description: Hall KPI metrics
         '404':
           description: Not Found
         '401':
@@ -17983,6 +18427,15 @@ paths:
     get:
       operationId: api_v1_inventory_batch_feeding_summaries_by_batch_retrieve
       description: Get feeding summaries for a specific batch.
+      parameters:
+      - in: query
+        name: batch_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the batch to retrieve feeding summaries for.
+        required: true
       tags:
       - api
       security:
@@ -18386,6 +18839,14 @@ paths:
 
         Query parameters:
         - container_id: Filter by specific container
+      parameters:
+      - in: query
+        name: container_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Limit results to a specific feed container.
       tags:
       - api
       security:
@@ -18414,6 +18875,15 @@ paths:
 
         Query parameters:
         - container_id: Required. Container to get FIFO order for.
+      parameters:
+      - in: query
+        name: container_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the feed container to fetch FIFO ordered stock for.
+        required: true
       tags:
       - api
       security:
@@ -19461,8 +19931,153 @@ paths:
           description: Internal Server Error
   /api/v1/inventory/feeding-events/by_batch/:
     get:
-      operationId: api_v1_inventory_feeding_events_by_batch_retrieve
+      operationId: api_v1_inventory_feeding_events_by_batch_list
       description: Get feeding events for a specific batch.
+      parameters:
+      - in: query
+        name: amount_max
+        schema:
+          type: number
+      - in: query
+        name: amount_min
+        schema:
+          type: number
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: batch__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: batch_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: ID of the batch to fetch feeding events for.
+        required: true
+      - in: query
+        name: batch_number
+        schema:
+          type: string
+      - in: query
+        name: container
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: container__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: container_name
+        schema:
+          type: string
+      - in: query
+        name: feed
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: feed__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: feed_name
+        schema:
+          type: string
+      - in: query
+        name: feeding_date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: feeding_date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: feeding_date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: method
+        schema:
+          type: string
+          x-spec-enum-id: 037132121c393c6e
+          enum:
+          - AUTOMATIC
+          - BROADCAST
+          - MANUAL
+        description: |-
+          * `MANUAL` - Manual
+          * `AUTOMATIC` - Automatic Feeder
+          * `BROADCAST` - Broadcast
+      - in: query
+        name: method_in
+        schema:
+          type: array
+          items:
+            type: string
+            x-spec-enum-id: 037132121c393c6e
+            enum:
+            - AUTOMATIC
+            - BROADCAST
+            - MANUAL
+        description: |-
+          * `MANUAL` - Manual
+          * `AUTOMATIC` - Automatic Feeder
+          * `BROADCAST` - Broadcast
+        explode: true
+        style: form
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
       tags:
       - api
       security:
@@ -19475,7 +20090,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FeedingEvent'
+                  $ref: '#/components/schemas/PaginatedFeedingEventList'
           description: ''
         '401':
           description: Unauthorized
@@ -19483,6 +20098,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/inventory/feeding-events/summary/:
     get:
       operationId: feeding-events-summary
@@ -20211,6 +20828,43 @@ paths:
 
         Args:
             assignment_id: Assignment ID from URL path
+      parameters:
+      - in: query
+        name: assignment_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Container assignment ID to retrieve FCR trends for.
+        required: true
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for the trend analysis (YYYY-MM-DD).
+      - in: query
+        name: include_predicted
+        schema:
+          type: boolean
+          default: true
+        description: 'Include predicted FCR values (default: true).'
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+          - DAILY
+          - MONTHLY
+          - WEEKLY
+          default: DAILY
+        description: Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for the trend analysis (YYYY-MM-DD).
       tags:
       - api
       security:
@@ -20237,6 +20891,43 @@ paths:
 
         Args:
             batch_id: Batch ID from URL path
+      parameters:
+      - in: query
+        name: batch_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Batch ID to retrieve FCR trends for.
+        required: true
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for the trend analysis (YYYY-MM-DD).
+      - in: query
+        name: include_predicted
+        schema:
+          type: boolean
+          default: true
+        description: 'Include predicted FCR values (default: true).'
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+          - DAILY
+          - MONTHLY
+          - WEEKLY
+          default: DAILY
+        description: Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for the trend analysis (YYYY-MM-DD).
       tags:
       - api
       security:
@@ -20263,6 +20954,43 @@ paths:
 
         Args:
             geography_id: Geography ID from URL path
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for the trend analysis (YYYY-MM-DD).
+      - in: query
+        name: geography_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Geography ID to retrieve FCR trends for.
+        required: true
+      - in: query
+        name: include_predicted
+        schema:
+          type: boolean
+          default: true
+        description: 'Include predicted FCR values (default: true).'
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+          - DAILY
+          - MONTHLY
+          - WEEKLY
+          default: DAILY
+        description: Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for the trend analysis (YYYY-MM-DD).
       tags:
       - api
       security:
@@ -20548,6 +21276,23 @@ paths:
         Query params:
         - data_type: 'temperature', 'fcr', or 'mortality'
         - include_sample_data: true/false
+      parameters:
+      - in: query
+        name: data_type
+        schema:
+          type: string
+          enum:
+          - fcr
+          - mortality
+          - temperature
+        description: Type of template to download (temperature, fcr, mortality).
+        required: true
+      - in: query
+        name: include_sample_data
+        schema:
+          type: boolean
+          default: false
+        description: Include sample rows in the generated template.
       tags:
       - api
       security:
@@ -20555,11 +21300,7 @@ paths:
       - tokenAuth: []
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CSVUpload'
-          description: ''
+          description: CSV template file
         '401':
           description: Unauthorized
         '403':
@@ -22063,6 +22804,32 @@ paths:
       operationId: api_v1_scenario_scenarios_chart_data_retrieve
       description: Get projection data formatted for charts.
       parameters:
+      - in: query
+        name: aggregation
+        schema:
+          type: string
+          enum:
+          - daily
+          - monthly
+          - weekly
+          default: daily
+        description: Temporal aggregation for chart data (daily, weekly, monthly).
+      - in: query
+        name: chart_type
+        schema:
+          type: string
+          enum:
+          - area
+          - bar
+          - line
+          default: line
+        description: Chart visualization type (line, area, or bar).
+      - in: query
+        name: metrics
+        schema:
+          type: string
+        description: Comma-separated metrics to include (weight, population, biomass,
+          feed, temperature).
       - in: path
         name: scenario_id
         schema:
@@ -22181,9 +22948,45 @@ paths:
           description: Internal Server Error
   /api/v1/scenario/scenarios/{scenario_id}/projections/:
     get:
-      operationId: api_v1_scenario_scenarios_projections_retrieve
+      operationId: api_v1_scenario_scenarios_projections_list
       description: Get projections for a scenario with optional filtering.
       parameters:
+      - in: query
+        name: aggregation
+        schema:
+          type: string
+          enum:
+          - daily
+          - monthly
+          - weekly
+          default: daily
+        description: Aggregation granularity for projections (daily, weekly, monthly).
+      - in: query
+        name: created_by
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: Filter projections at or before this date (YYYY-MM-DD).
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       - in: path
         name: scenario_id
         schema:
@@ -22192,6 +22995,22 @@ paths:
           minimum: -9223372036854775808
         description: A unique integer value identifying this Scenario.
         required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Filter projections at or after this date (YYYY-MM-DD).
+      - in: query
+        name: tgc_model__location
+        schema:
+          type: string
       tags:
       - api
       security:
@@ -22202,7 +23021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scenario'
+                $ref: '#/components/schemas/PaginatedScenarioProjectionList'
           description: ''
         '404':
           description: Not Found
@@ -22212,6 +23031,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/scenario/scenarios/{scenario_id}/run_projection/:
     post:
       operationId: api_v1_scenario_scenarios_run_projection_create
@@ -23708,6 +24529,63 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/users/users/{id}/admin_update/:
+    patch:
+      operationId: api_v1_users_users_admin_update_partial_update
+      description: |-
+        Admin-only endpoint to update user profile including RBAC fields.
+
+        Allows administrators to modify role, geography, and subsidiary
+        fields which are restricted for regular users to prevent
+        privilege escalation.
+
+        Args:
+            pk: User ID to update
+
+        Returns:
+            Response: Updated user profile data or error messages
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/users/users/change_password/:
     put:
       operationId: api_v1_users_users_change_password_update
@@ -25032,7 +25910,7 @@ components:
           items:
             type: object
             additionalProperties: {}
-          description: Get stage constraints in a structured format.
+          description: Serialize stage constraints as dictionaries.
           readOnly: true
         created_at:
           type: string
@@ -25433,7 +26311,6 @@ components:
       - updated_at
     CSVUpload:
       type: object
-      description: Enhanced serializer for CSV file upload.
       properties:
         file:
           type: string
@@ -26106,28 +26983,28 @@ components:
         min_value:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Minimum acceptable value for this parameter. Values below this
             trigger alerts.
         max_value:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Maximum acceptable value for this parameter. Values above this
             trigger alerts.
         optimal_min:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Minimum optimal value for this parameter. Values in the optimal
             range are ideal for fish health.
         optimal_max:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Maximum optimal value for this parameter. Values in the optimal
             range are ideal for fish health.
@@ -28711,7 +29588,8 @@ components:
         entry_date:
           type: string
           format: date-time
-          description: Date and time when the observation or incident occurred. Defaults to the current datetime if not provided.
+          description: Date and time when the observation or incident occurred. Defaults
+            to the current datetime if not provided.
         description:
           type: string
           description: Detailed description of the health observation or incident.
@@ -28884,7 +29762,8 @@ components:
           minimum: -9223372036854775808
         container:
           type: integer
-          description: The container where the fish were sampled for lice counting.
+          nullable: true
+          description: The container where fish were sampled (optional).
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         user:
@@ -28933,7 +29812,6 @@ components:
       - adult_male_count
       - average_per_fish
       - batch
-      - container
       - count_date
       - fish_sampled
       - id
@@ -29549,7 +30427,8 @@ components:
           minimum: -9223372036854775808
         container:
           type: integer
-          description: The container where the mortality occurred.
+          nullable: true
+          description: The container where the mortality occurred (optional).
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container_name:
@@ -29578,7 +30457,6 @@ components:
           description: Additional notes about the mortality event.
       required:
       - batch
-      - container
       - container_name
       - count
       - event_date
@@ -31558,6 +32436,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScenarioModelChangeHistory'
+    PaginatedScenarioProjectionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioProjection'
     PaginatedSensorHistoryList:
       type: object
       required:
@@ -32386,7 +33289,7 @@ components:
           items:
             type: object
             additionalProperties: {}
-          description: Get stage constraints in a structured format.
+          description: Serialize stage constraints as dictionaries.
           readOnly: true
         created_at:
           type: string
@@ -32850,28 +33753,28 @@ components:
         min_value:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Minimum acceptable value for this parameter. Values below this
             trigger alerts.
         max_value:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Maximum acceptable value for this parameter. Values above this
             trigger alerts.
         optimal_min:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Minimum optimal value for this parameter. Values in the optimal
             range are ideal for fish health.
         optimal_max:
           type: string
           format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,4})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
           description: Maximum optimal value for this parameter. Values in the optimal
             range are ideal for fish health.
@@ -34203,7 +35106,8 @@ components:
         entry_date:
           type: string
           format: date-time
-          description: Date and time when the observation or incident occurred. Defaults to the current datetime if not provided.
+          description: Date and time when the observation or incident occurred. Defaults
+            to the current datetime if not provided.
         description:
           type: string
           description: Detailed description of the health observation or incident.
@@ -34259,7 +35163,8 @@ components:
           minimum: -9223372036854775808
         container:
           type: integer
-          description: The container where the fish were sampled for lice counting.
+          nullable: true
+          description: The container where fish were sampled (optional).
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         user:
@@ -34585,7 +35490,8 @@ components:
           minimum: -9223372036854775808
         container:
           type: integer
-          description: The container where the mortality occurred.
+          nullable: true
+          description: The container where the mortality occurred (optional).
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container_name:
@@ -34643,20 +35549,6 @@ components:
           format: decimal
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           description: Natural day length in hours (0-24).
-        artificial_light_start:
-          type: string
-          format: time
-          nullable: true
-          description: Time when artificial lighting starts, if used.
-        artificial_light_end:
-          type: string
-          format: time
-          nullable: true
-          description: Time when artificial lighting ends, if used.
-        notes:
-          type: string
-          nullable: true
-          description: Additional notes about the photoperiod conditions.
         light_intensity:
           type: string
           format: decimal
@@ -35285,7 +36177,8 @@ components:
         Serializer for updating UserProfile information.
 
         Provides a dedicated serializer for profile updates separate from user data.
-        Includes all fields from the UserProfile model that should be updatable by users.
+        Allows users to update their own profile information excluding RBAC fields
+        (role, geography, subsidiary) which require admin privileges.
       properties:
         full_name:
           type: string
@@ -35307,57 +36200,6 @@ components:
           type: string
           nullable: true
           maxLength: 100
-        geography:
-          enum:
-          - FO
-          - SC
-          - ALL
-          type: string
-          x-spec-enum-id: 8dd4678e4b7e8e8d
-          description: |-
-            Geographic region access level
-
-            * `FO` - Faroe Islands
-            * `SC` - Scotland
-            * `ALL` - All Geographies
-        subsidiary:
-          enum:
-          - BS
-          - FW
-          - FM
-          - LG
-          - ALL
-          type: string
-          x-spec-enum-id: 4e135cac36bd030a
-          description: |-
-            Subsidiary access level
-
-            * `BS` - Broodstock
-            * `FW` - Freshwater
-            * `FM` - Farming
-            * `LG` - Logistics
-            * `ALL` - All Subsidiaries
-        role:
-          enum:
-          - ADMIN
-          - MGR
-          - OPR
-          - VET
-          - QA
-          - FIN
-          - VIEW
-          type: string
-          x-spec-enum-id: 14edb24667015962
-          description: |-
-            User role and permission level
-
-            * `ADMIN` - Administrator
-            * `MGR` - Manager
-            * `OPR` - Operator
-            * `VET` - Veterinarian
-            * `QA` - Quality Assurance
-            * `FIN` - Finance
-            * `VIEW` - Viewer
         language_preference:
           enum:
           - en
@@ -35443,7 +36285,7 @@ components:
         wind_speed:
           type: string
           format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           nullable: true
           description: Wind speed in meters per second.
         wind_direction:
@@ -35455,7 +36297,7 @@ components:
         precipitation:
           type: string
           format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           nullable: true
           description: Precipitation amount in millimeters.
         wave_height:
@@ -35464,6 +36306,12 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Wave height in meters.
+        wave_period:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Wave period in seconds.
         wave_direction:
           type: integer
           nullable: true
@@ -35476,12 +36324,6 @@ components:
           description: Cloud cover percentage (0-100).
           minimum: 0
           maximum: 100
-        wave_period:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
-          nullable: true
-          description: Wave period in seconds
         created_at:
           type: string
           format: date-time
@@ -35517,20 +36359,6 @@ components:
           format: decimal
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           description: Natural day length in hours (0-24).
-        artificial_light_start:
-          type: string
-          format: time
-          nullable: true
-          description: Time when artificial lighting starts, if used.
-        artificial_light_end:
-          type: string
-          format: time
-          nullable: true
-          description: Time when artificial lighting ends, if used.
-        notes:
-          type: string
-          nullable: true
-          description: Additional notes about the photoperiod conditions.
         light_intensity:
           type: string
           format: decimal
@@ -35822,7 +36650,7 @@ components:
       - updated_at
     ScenarioModelChange:
       type: object
-      description: Enhanced serializer for scenario model changes.
+      description: Serializer for scenario model changes.
       properties:
         change_id:
           type: integer
@@ -35832,8 +36660,8 @@ components:
         change_day:
           type: integer
           maximum: 2147483647
-          minimum: 0
-          description: Day of change (e.g., 180)
+          minimum: 1
+          description: Day of change (e.g., 180). Day 1 is the first simulation day.
         new_tgc_model:
           type: integer
           nullable: true
@@ -35891,8 +36719,8 @@ components:
         change_day:
           type: integer
           maximum: 2147483647
-          minimum: 0
-          description: Day of change (e.g., 180)
+          minimum: 1
+          description: Day of change (e.g., 180). Day 1 is the first simulation day.
         created_at:
           type: string
           format: date-time
@@ -35930,6 +36758,89 @@ components:
       - history_type
       - history_user
       - updated_at
+    ScenarioProjection:
+      type: object
+      description: Serializer for scenario projection entries.
+      properties:
+        projection_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        projection_date:
+          type: string
+          format: date
+          description: Projection date
+        day_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Day offset from start (e.g., 45)
+        average_weight:
+          type: number
+          format: double
+          minimum: 0
+          description: Fish weight in grams (e.g., 250.5)
+        population:
+          type: number
+          format: double
+          minimum: 0
+          description: Fish count (e.g., 9950.3)
+        biomass:
+          type: number
+          format: double
+          minimum: 0
+          description: Biomass in kilograms (e.g., 2491.2)
+        daily_feed:
+          type: number
+          format: double
+          minimum: 0
+          description: Daily feed in kilograms (e.g., 30.5)
+        cumulative_feed:
+          type: number
+          format: double
+          minimum: 0
+          description: Total feed in kilograms (e.g., 1200.7)
+        temperature:
+          type: number
+          format: double
+          description: Temperature in Celsius (e.g., 12.8)
+        current_stage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        stage_name:
+          type: string
+          readOnly: true
+        growth_rate:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+        fcr_actual:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+      required:
+      - average_weight
+      - biomass
+      - cumulative_feed
+      - current_stage
+      - daily_feed
+      - day_number
+      - fcr_actual
+      - growth_rate
+      - population
+      - projection_date
+      - projection_id
+      - scenario
+      - stage_name
+      - temperature
     Sensor:
       type: object
       description: Serializer for the Sensor model.
@@ -36954,23 +37865,87 @@ components:
     UserProfile:
       type: object
       description: |-
-        Serializer for the UserProfile model.
+        Read-only serializer for the UserProfile model.
 
-        Handles serialization and deserialization of UserProfile instances,
-        including user preferences and profile information.
+        Handles serialization of UserProfile instances for GET requests,
+        including all profile information and RBAC fields. All fields are
+        read-only to ensure profile updates use the appropriate update serializers.
       properties:
+        full_name:
+          type: string
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+          nullable: true
+          title: Phone number
         profile_picture:
           type: string
           format: uri
+          readOnly: true
           nullable: true
         job_title:
           type: string
+          readOnly: true
           nullable: true
-          maxLength: 100
         department:
           type: string
+          readOnly: true
           nullable: true
-          maxLength: 100
+        geography:
+          enum:
+          - FO
+          - SC
+          - ALL
+          type: string
+          x-spec-enum-id: 8dd4678e4b7e8e8d
+          readOnly: true
+          description: |-
+            Geographic region access level
+
+            * `FO` - Faroe Islands
+            * `SC` - Scotland
+            * `ALL` - All Geographies
+        subsidiary:
+          enum:
+          - BS
+          - FW
+          - FM
+          - LG
+          - ALL
+          type: string
+          x-spec-enum-id: 4e135cac36bd030a
+          readOnly: true
+          description: |-
+            Subsidiary access level
+
+            * `BS` - Broodstock
+            * `FW` - Freshwater
+            * `FM` - Farming
+            * `LG` - Logistics
+            * `ALL` - All Subsidiaries
+        role:
+          enum:
+          - ADMIN
+          - MGR
+          - OPR
+          - VET
+          - QA
+          - FIN
+          - VIEW
+          type: string
+          x-spec-enum-id: 14edb24667015962
+          readOnly: true
+          description: |-
+            User role and permission level
+
+            * `ADMIN` - Administrator
+            * `MGR` - Manager
+            * `OPR` - Operator
+            * `VET` - Veterinarian
+            * `QA` - Quality Assurance
+            * `FIN` - Finance
+            * `VIEW` - Viewer
         language_preference:
           enum:
           - en
@@ -36982,6 +37957,7 @@ components:
             * `fo` - Faroese
             * `da` - Danish
           x-spec-enum-id: a6dfd54e4a1eb17f
+          readOnly: true
         date_format_preference:
           enum:
           - DMY
@@ -36993,6 +37969,7 @@ components:
             * `MDY` - MM/DD/YYYY
             * `YMD` - YYYY-MM-DD
           x-spec-enum-id: 11e0f28405e2bb3e
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -37003,6 +37980,16 @@ components:
           readOnly: true
       required:
       - created_at
+      - date_format_preference
+      - department
+      - full_name
+      - geography
+      - job_title
+      - language_preference
+      - phone
+      - profile_picture
+      - role
+      - subsidiary
       - updated_at
     UserProfileHistory:
       type: object
@@ -37166,7 +38153,8 @@ components:
         Serializer for updating UserProfile information.
 
         Provides a dedicated serializer for profile updates separate from user data.
-        Includes all fields from the UserProfile model that should be updatable by users.
+        Allows users to update their own profile information excluding RBAC fields
+        (role, geography, subsidiary) which require admin privileges.
       properties:
         full_name:
           type: string
@@ -37188,57 +38176,6 @@ components:
           type: string
           nullable: true
           maxLength: 100
-        geography:
-          enum:
-          - FO
-          - SC
-          - ALL
-          type: string
-          x-spec-enum-id: 8dd4678e4b7e8e8d
-          description: |-
-            Geographic region access level
-
-            * `FO` - Faroe Islands
-            * `SC` - Scotland
-            * `ALL` - All Geographies
-        subsidiary:
-          enum:
-          - BS
-          - FW
-          - FM
-          - LG
-          - ALL
-          type: string
-          x-spec-enum-id: 4e135cac36bd030a
-          description: |-
-            Subsidiary access level
-
-            * `BS` - Broodstock
-            * `FW` - Freshwater
-            * `FM` - Farming
-            * `LG` - Logistics
-            * `ALL` - All Subsidiaries
-        role:
-          enum:
-          - ADMIN
-          - MGR
-          - OPR
-          - VET
-          - QA
-          - FIN
-          - VIEW
-          type: string
-          x-spec-enum-id: 14edb24667015962
-          description: |-
-            User role and permission level
-
-            * `ADMIN` - Administrator
-            * `MGR` - Manager
-            * `OPR` - Operator
-            * `VET` - Veterinarian
-            * `QA` - Quality Assurance
-            * `FIN` - Finance
-            * `VIEW` - Viewer
         language_preference:
           enum:
           - en
@@ -37329,7 +38266,7 @@ components:
         wind_speed:
           type: string
           format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           nullable: true
           description: Wind speed in meters per second.
         wind_direction:
@@ -37341,7 +38278,7 @@ components:
         precipitation:
           type: string
           format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
           nullable: true
           description: Precipitation amount in millimeters.
         wave_height:
@@ -37350,6 +38287,12 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Wave height in meters.
+        wave_period:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Wave period in seconds.
         wave_direction:
           type: integer
           nullable: true
@@ -37362,12 +38305,6 @@ components:
           description: Cloud cover percentage (0-100).
           minimum: 0
           maximum: 100
-        wave_period:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
-          nullable: true
-          description: Wave period in seconds
         created_at:
           type: string
           format: date-time

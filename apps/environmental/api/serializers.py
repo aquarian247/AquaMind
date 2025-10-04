@@ -36,30 +36,30 @@ class EnvironmentalParameterSerializer(serializers.ModelSerializer):
         help_text="Detailed description of the parameter and its importance in aquaculture."
     )
     min_value = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Minimum acceptable value for this parameter. Values below this trigger alerts."
     )
     max_value = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Maximum acceptable value for this parameter. Values above this trigger alerts."
     )
     optimal_min = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Minimum optimal value for this parameter. Values in the optimal range are ideal for fish health."
     )
     optimal_max = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Maximum optimal value for this parameter. Values in the optimal range are ideal for fish health."
     )
@@ -223,24 +223,6 @@ class PhotoperiodDataSerializer(serializers.ModelSerializer):
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('24'))],
         help_text="Natural day length in hours (0-24)."
     )
-    
-    artificial_light_start = serializers.TimeField(
-        required=False,
-        allow_null=True,
-        help_text="Time when artificial lighting starts, if used."
-    )
-    
-    artificial_light_end = serializers.TimeField(
-        required=False,
-        allow_null=True,
-        help_text="Time when artificial lighting ends, if used."
-    )
-    
-    notes = serializers.CharField(
-        required=False,
-        allow_null=True,
-        help_text="Additional notes about the photoperiod conditions."
-    )
 
     class Meta:
         model = PhotoperiodData
@@ -286,7 +268,7 @@ class WeatherDataSerializer(serializers.ModelSerializer):
     )
     
     wind_speed = serializers.DecimalField(
-        max_digits=5,
+        max_digits=6,
         decimal_places=2,
         required=False,
         allow_null=True,
@@ -301,7 +283,7 @@ class WeatherDataSerializer(serializers.ModelSerializer):
     )
     
     precipitation = serializers.DecimalField(
-        max_digits=5,
+        max_digits=6,
         decimal_places=2,
         required=False,
         allow_null=True,
@@ -315,7 +297,15 @@ class WeatherDataSerializer(serializers.ModelSerializer):
         allow_null=True,
         help_text="Wave height in meters."
     )
-    
+
+    wave_period = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Wave period in seconds."
+    )
+
     wave_direction = serializers.IntegerField(
         required=False,
         allow_null=True,

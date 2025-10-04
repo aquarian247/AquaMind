@@ -39,14 +39,33 @@ class ProjectionEngine:
         self.errors = []
         self.warnings = []
         
-        # Initialize calculators
-        self._initialize_calculators()
+        # Validate required fields first (before accessing related objects)
+        self._validate_scenario()
         
-        # Load model changes
-        self._load_model_changes()
-        
-        # Load lifecycle stages
-        self._load_lifecycle_stages()
+        # Only proceed with initialization if validation passed
+        if not self.errors:
+            # Initialize calculators
+            self._initialize_calculators()
+            
+            # Load model changes
+            self._load_model_changes()
+            
+            # Load lifecycle stages
+            self._load_lifecycle_stages()
+    
+    def _validate_scenario(self):
+        """Validate scenario has all required fields for projection."""
+        if self.scenario.initial_weight is None:
+            self.errors.append(
+                "Scenario requires initial_weight to run projections. "
+                "Please provide the starting weight in grams (e.g., 50.0 for "
+                "smolt stage, 0.1 for egg stage)."
+            )
+        elif self.scenario.initial_weight <= 0:
+            self.errors.append(
+                f"initial_weight must be greater than 0 "
+                f"(got {self.scenario.initial_weight}g)"
+            )
     
     def _initialize_calculators(self):
         """Initialize the biological calculators."""

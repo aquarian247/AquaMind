@@ -458,10 +458,10 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 
 #### Tables
 - **`health_journalentry`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='journal_entries')
-  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='journal_entries')
-  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='journal_entries')
+  - id: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='journal_entries')
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=SET_NULL, nullable, blank=True, related_name='journal_entries')
+  - `user_id`: integer (FK to `users_customuser`.id, on_delete=PROTECT, related_name='journal_entries')
   - `entry_date`: timestamptz (default=timezone.now)
   - `category`: varchar(20) (Choices: 'observation', 'issue', 'action', 'diagnosis', 'treatment', 'vaccination', 'sample')
   - `severity`: varchar(10) (Choices: 'low', 'medium', 'high', default='low', nullable, blank=True)
@@ -472,7 +472,7 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `verbose_name_plural = "Journal Entries"`, `ordering = ['-entry_date']`
 - **`health_healthparameter`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique, help_text="Name of the health parameter (e.g., Gill Health).")
   - `description_score_1`: text (help_text="Description for score 1 (Best/Excellent).")
   - `description_score_2`: text (help_text="Description for score 2 (Good).")
@@ -483,8 +483,8 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
 - **`health_healthsamplingevent`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='health_sampling_events')
+  - id: bigint (PK, auto-increment)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=CASCADE, related_name='health_sampling_events')
   - `sampling_date`: date (default=timezone.now)
   - `number_of_fish_sampled`: positive integer (help_text="Target or initially declared number of individual fish to be examined...")
   - `avg_weight_g`: decimal(10,2) (nullable, blank=True, help_text="Average weight in grams of sampled fish.")
@@ -497,14 +497,14 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `max_length_cm`: decimal(10,2) (nullable, blank=True, help_text="Maximum length in centimeters among sampled fish.")
   - `avg_k_factor`: decimal(10,4) (nullable, blank=True, help_text="Average condition factor (K-factor) of sampled fish.")
   - `calculated_sample_size`: positive integer (nullable, blank=True, help_text="Number of fish with complete measurements used in calculations.")
-  - `sampled_by_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='health_sampling_events_conducted')
+  - `sampled_by_id`: integer (FK to `users_customuser`.id, on_delete=SET_NULL, nullable, blank=True, related_name='health_sampling_events_conducted')
   - `notes`: text (blank=True, nullable)
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['-sampling_date', '-created_at']`, `verbose_name = "Health Sampling Event"`
 - **`health_individualfishobservation`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='individual_fish_observations')
+  - id: bigint (PK, auto-increment)
+  - `sampling_event_id`: bigint (FK to `health_healthsamplingevent`.id, on_delete=CASCADE, related_name='individual_fish_observations')
   - `fish_identifier`: varchar(50) (help_text="Identifier for the specific fish (e.g., tag number or sequential ID).")
   - `length_cm`: decimal(10,2) (nullable, blank=True, help_text="Length of the fish in centimeters.")
   - `weight_g`: decimal(10,2) (nullable, blank=True, help_text="Weight of the fish in grams.")
@@ -512,32 +512,32 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `unique_together = ('sampling_event', 'fish_identifier')`, `ordering = ['sampling_event', 'fish_identifier']`, `verbose_name = "Individual Fish Observation", `verbose_name_plural = "Individual Fish Observations"`
 - **`health_fishparameterscore`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='parameter_scores')
-  - `parameter_id`: bigint (FK to `health_healthparameter`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='fish_scores')
+  - id: bigint (PK, auto-increment)
+  - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`.id, on_delete=CASCADE, related_name='parameter_scores')
+  - `parameter_id`: bigint (FK to `health_healthparameter`.id, on_delete=PROTECT, related_name='fish_scores')
   - `score`: integer (validators: MinValueValidator(1), MaxValueValidator(5), help_text="Score from 1 (best) to 5 (worst).")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `unique_together = ('individual_fish_observation', 'parameter')`, `ordering = ['individual_fish_observation', 'parameter']`, `verbose_name = "Fish Parameter Score", `verbose_name_plural = "Fish Parameter Scores"`
 - **`health_mortalityreason`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
   - `description`: text (blank=True)
   - Meta: `verbose_name_plural = "Mortality Reasons"`, `ordering = ['name']`
 - **`health_mortalityrecord`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='mortality_records')
-  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='mortality_records', nullable, blank=True)
+  - id: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='mortality_records')
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='mortality_records', nullable, blank=True)
   - `event_date`: timestamptz (auto_now_add=True)
   - `count`: positive integer
-  - `reason_id`: bigint (FK to `health_mortalityreason`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='mortality_records')
+  - `reason_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, related_name='mortality_records')
   - `notes`: text (blank=True)
   - Meta: `verbose_name_plural = "Mortality Records"`, `ordering = ['-event_date']`
 - **`health_licecount`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='lice_counts')
-  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='lice_counts', nullable, blank=True)
-  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='lice_counts')
+  - id: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='lice_counts')
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='lice_counts', nullable, blank=True)
+  - `user_id`: integer (FK to `users_customuser`.id, on_delete=SET_NULL, nullable, related_name='lice_counts')
   - `count_date`: timestamptz (auto_now_add=True)
   - `adult_female_count`: positive integer (default=0)
   - `adult_male_count`: positive integer (default=0)
@@ -546,21 +546,21 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `notes`: text (blank=True)
   - Meta: `verbose_name_plural = "Lice Counts"`, `ordering = ['-count_date']`
 - **`health_vaccinationtype`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
   - `manufacturer`: varchar(100) (blank=True)
   - `dosage`: varchar(50) (blank=True)
   - `description`: text (blank=True)
   - Meta: `verbose_name_plural = "Vaccination Types"`, `ordering = ['name']`
 - **`health_treatment`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `batch_id`: bigint (FK to `batch_batch`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments')
-  - `container_id`: bigint (FK to `infrastructure_container`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments', nullable, blank=True)
-  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=CASCADE, related_name='treatments', nullable, blank=True)
-  - `user_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, related_name='treatments')
+  - id: bigint (PK, auto-increment)
+  - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='treatments')
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='treatments', nullable, blank=True)
+  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=CASCADE, related_name='treatments', nullable, blank=True)
+  - `user_id`: integer (FK to `users_customuser`.id, on_delete=SET_NULL, nullable, related_name='treatments')
   - `treatment_date`: timestamptz (auto_now_add=True)
   - `treatment_type`: varchar(20) (Choices: 'medication', 'vaccination', 'delicing', 'other', default='medication')
-  - `vaccination_type_id`: bigint (FK to `health_vaccinationtype`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='treatments')
+  - `vaccination_type_id`: bigint (FK to `health_vaccinationtype`.id, on_delete=SET_NULL, nullable, blank=True, related_name='treatments')
   - `description`: text
   - `dosage`: varchar(100) (blank=True)
   - `duration_days`: positive integer (default=0)
@@ -568,23 +568,23 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `outcome`: text (blank=True)
   - Meta: `verbose_name_plural = "Treatments"`, `ordering = ['-treatment_date']`
 - **`health_sampletype`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
+  - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
   - `description`: text (blank=True)
   - Meta: `verbose_name_plural = "Sample Types"`
 - **`health_healthlabsample`**
-  - [id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80): bigint (PK, auto-increment)
-  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='lab_samples')
-  - `sample_type_id`: bigint (FK to `health_sampletype`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=PROTECT, related_name='lab_samples')
+  - id: bigint (PK, auto-increment)
+  - `batch_container_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=PROTECT, related_name='lab_samples')
+  - `sample_type_id`: bigint (FK to `health_sampletype`.id, on_delete=PROTECT, related_name='lab_samples')
   - `sample_date`: date (help_text="Date the sample was physically taken.")
   - `date_sent_to_lab`: date (nullable, blank=True)
   - `date_results_received`: date (nullable, blank=True)
   - `lab_reference_id`: varchar(100) (nullable, blank=True)
   - `findings_summary`: text (nullable, blank=True)
   - `quantitative_results`: jsonb (nullable, blank=True, help_text="Structured quantitative results...")
-  - [attachment](cci:1://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:582:4-583:53): file (upload_to='health/lab_samples/%Y/%m/', nullable, blank=True)
+  - attachment: file (upload_to='health/lab_samples/%Y/%m/', nullable, blank=True)
   - `notes`: text (nullable, blank=True)
-  - `recorded_by_id`: integer (FK to `users_customuser`.[id](cci:2://file:///c:/Users/bf10087/Projects/AquaMind/apps/health/models.py:256:0-284:80), on_delete=SET_NULL, nullable, blank=True, related_name='recorded_lab_samples')
+  - `recorded_by_id`: integer (FK to `users_customuser`.id, on_delete=SET_NULL, nullable, blank=True, related_name='recorded_lab_samples')
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['-sample_date', '-created_at']`, `verbose_name = "Health Lab Sample"`

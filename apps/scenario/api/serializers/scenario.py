@@ -27,7 +27,9 @@ def _stage_payload(stage: str, display: str) -> Dict[str, str]:
 
 
 def _stage_from_constraints(obj: Scenario) -> Optional[Dict[str, str]]:
-    constraints = getattr(obj.biological_constraints, "stage_constraints", None)
+    constraints = getattr(
+        obj.biological_constraints, "stage_constraints", None
+    )
     if not constraints:
         return None
 
@@ -35,7 +37,8 @@ def _stage_from_constraints(obj: Scenario) -> Optional[Dict[str, str]]:
     for constraint in constraints.all():
         if constraint.min_weight_g <= weight <= constraint.max_weight_g:
             return _stage_payload(
-                constraint.lifecycle_stage, constraint.get_lifecycle_stage_display()
+                constraint.lifecycle_stage,
+                constraint.get_lifecycle_stage_display()
             )
     return None
 
@@ -85,7 +88,9 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["scenario_id", "created_by", "created_at", "updated_at"]
+        read_only_fields = [
+            "scenario_id", "created_by", "created_at", "updated_at"
+        ]
 
     def get_initial_stage(self, obj) -> Optional[Dict[str, str]]:
         """Determine initial lifecycle stage based on weight."""
@@ -125,7 +130,9 @@ class ScenarioSerializer(serializers.ModelSerializer):
     def validate_duration_days(self, value):
         """Validate scenario duration."""
         if value < 1:
-            raise serializers.ValidationError("Duration must be at least 1 day")
+            raise serializers.ValidationError(
+                "Duration must be at least 1 day"
+            )
         if value > 1200:
             raise serializers.ValidationError(
                 "Duration cannot exceed 1200 days (>3 years)"
@@ -146,6 +153,10 @@ class ScenarioSerializer(serializers.ModelSerializer):
         """Validate initial weight."""
         if value is None:
             return value
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Initial weight must be greater than 0"
+            )
         if value < 0.01:
             raise serializers.ValidationError(
                 "Initial weight too small (minimum 0.01g)"
@@ -157,5 +168,14 @@ class ScenarioSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        """Placeholder for cross-field validation hooks."""
+        """Cross-field validation."""
+        # Require initial_weight for new scenarios
+        if not self.instance and data.get('initial_weight') is None:
+            raise serializers.ValidationError({
+                'initial_weight': (
+                    'Initial weight is required for new scenarios. '
+                    'Please provide the starting weight in grams '
+                    '(e.g., 50.0 for smolt stage, 0.1 for egg stage).'
+                )
+            })
         return data

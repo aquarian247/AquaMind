@@ -112,12 +112,11 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
         Returns:
             Feeding percentage as a Decimal, or None if biomass is not available
         """
-        if (not self.batch or 
-                not hasattr(self.batch, 'biomass_kg') or 
-                not self.batch.biomass_kg):
+        # Use the stored batch_biomass_kg field, not the batch's calculated biomass
+        if not self.batch_biomass_kg:
             return None
 
-        return calculate_feeding_percentage(self.amount_kg, self.batch.biomass_kg)
+        return calculate_feeding_percentage(self.amount_kg, self.batch_biomass_kg)
 
     def validate_stock_quantity(self):
         """

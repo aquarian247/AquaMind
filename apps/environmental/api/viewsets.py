@@ -109,7 +109,9 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
-    queryset = EnvironmentalReading.objects.all()
+    queryset = EnvironmentalReading.objects.select_related(
+        'parameter', 'container', 'sensor', 'batch'
+    )
     serializer_class = EnvironmentalReadingSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = EnvironmentalReadingFilter
@@ -122,6 +124,7 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         Override to provide time-based filtering support.
         Supports from_time and to_time query parameters.
         Parses time strings into aware datetime objects for reliable filtering.
+        Optimized with select_related to avoid N+1 queries.
         """
         queryset = super().get_queryset()
 
@@ -163,27 +166,121 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Return the most recent readings for each parameter-container combination."""
-        # Get most recent readings for each unique parameter-container combination
-        # This leverages TimescaleDB's efficient time-based indexing
+        """
+        Return the most recent readings for each parameter-container combo.
         
-        # Subquery would be ideal here, but for simplicity:
-        recent_readings = []
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related to avoid N+1.
+        """
+        from django.db import connection
         
-        # Get unique parameter-container combinations
-        param_container_pairs = EnvironmentalReading.objects.values('parameter', 'container').distinct()
-        
-        for pair in param_container_pairs:
-            # For each combination, get the most recent reading
-            reading = EnvironmentalReading.objects.filter(
-                parameter=pair['parameter'],
-                container=pair['container']
-            ).order_by('-reading_time').first()
+        # Use DISTINCT ON for PostgreSQL (optimal performance)
+        if connection.vendor == 'postgresql':
+            recent_readings = EnvironmentalReading.objects.select_related(
+                'parameter', 'container', 'sensor', 'batch'
+            ).order_by(
+                'parameter', 'container', '-reading_time'
+            ).distinct('parameter', 'container')
+        else:
+            # Fallback for SQLite/other databases
+            recent_readings = []
+            unique_pairs = EnvironmentalReading.objects.values(
+                'parameter', 'container'
+            ).distinct()
             
-            if reading:
-                recent_readings.append(reading)
+            for pair in unique_pairs:
+                reading = EnvironmentalReading.objects.filter(
+                    parameter=pair['parameter'],
+                    container=pair['container']
+                ).select_related(
+                    'parameter', 'container', 'sensor', 'batch'
+                ).order_by('-reading_time').first()
+                if reading:
+                    recent_readings.append(reading)
         
         serializer = self.get_serializer(recent_readings, many=True)
+        return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the container to fetch readings for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='parameter_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings by environmental parameter.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or after this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or before this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of readings to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
+    @action(detail=False, methods=['get'])
+    def by_container(self, request):
+        """
+        Get readings filtered by container and optional time range.
+        
+        Query parameters:
+        - container_id: Required, container to fetch readings for
+        - parameter_id: Optional, filter by specific parameter
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+        """
+        from rest_framework import status as drf_status
+        
+        container_id = request.query_params.get('container_id')
+        parameter_id = request.query_params.get('parameter_id')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        limit = int(request.query_params.get('limit', 1000))
+        
+        if not container_id:
+            return Response(
+                {"error": "container_id is required"},
+                status=drf_status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Build query
+        queryset = self.get_queryset().filter(container_id=container_id)
+        
+        if parameter_id:
+            queryset = queryset.filter(parameter_id=parameter_id)
+            
+        if start_time:
+            queryset = queryset.filter(reading_time__gte=start_time)
+            
+        if end_time:
+            queryset = queryset.filter(reading_time__lte=end_time)
+            
+        queryset = queryset[:limit]
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
     @extend_schema(
@@ -302,7 +399,7 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
-    queryset = WeatherData.objects.all()
+    queryset = WeatherData.objects.select_related('area')
     serializer_class = WeatherDataSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = WeatherDataFilter
@@ -330,22 +427,102 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Return the most recent weather data for each area."""
-        recent_data = []
+        """
+        Return the most recent weather data for each area.
         
-        # Get unique areas
-        areas = WeatherData.objects.values('area').distinct()
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related.
+        """
+        from django.db import connection
         
-        for area_dict in areas:
-            # For each area, get the most recent weather data
-            data = WeatherData.objects.filter(
-                area=area_dict['area']
-            ).order_by('-timestamp').first()
+        # Use DISTINCT ON for PostgreSQL (optimal performance)
+        if connection.vendor == 'postgresql':
+            recent_data = WeatherData.objects.select_related(
+                'area'
+            ).order_by('area_id', '-timestamp').distinct('area_id')
+        else:
+            # Fallback for SQLite/other databases
+            recent_data = []
+            areas = WeatherData.objects.values('area').distinct()
             
-            if data:
-                recent_data.append(data)
+            for area_dict in areas:
+                data = WeatherData.objects.filter(
+                    area=area_dict['area']
+                ).select_related('area').order_by('-timestamp').first()
+                if data:
+                    recent_data.append(data)
         
         serializer = self.get_serializer(recent_data, many=True)
+        return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='area_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the area to fetch weather data for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or after this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or before this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of records to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
+    @action(detail=False, methods=['get'])
+    def by_area(self, request):
+        """
+        Get weather data filtered by area and optional time range.
+        
+        Query parameters:
+        - area_id: Required, the ID of the area to fetch weather data for
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+        """
+        from rest_framework import status as drf_status
+        
+        area_id = request.query_params.get('area_id')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        limit = int(request.query_params.get('limit', 1000))
+        
+        if not area_id:
+            return Response(
+                {"error": "area_id is required"},
+                status=drf_status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Build query
+        queryset = self.get_queryset().filter(area_id=area_id)
+            
+        if start_time:
+            queryset = queryset.filter(timestamp__gte=start_time)
+            
+        if end_time:
+            queryset = queryset.filter(timestamp__lte=end_time)
+            
+        queryset = queryset[:limit]
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 

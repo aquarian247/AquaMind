@@ -359,11 +359,8 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
                         print(f"HealthParameter with id {parameter_id} does not exist")
         
         # Calculate aggregate metrics (avg weight, length, etc.) based on individual observations
-        # Special handling for tests: only calculate metrics when not called through the API POST method
-        # This is to match the expected behavior in tests where metrics are calculated separately
-        request = self.context.get('request')
-        if not request or not hasattr(request, 'method') or request.method != 'POST':
-            health_sampling_event.calculate_aggregate_metrics()
+        # Always calculate metrics after creation to ensure data consistency
+        health_sampling_event.calculate_aggregate_metrics()
         
         return health_sampling_event
         

@@ -400,8 +400,14 @@ class HealthAPITestCase(BaseAPITestCase):
         created_event = HealthSamplingEvent.objects.get(pk=event_id)
         self.assertEqual(created_event.notes, 'API creation test')
         self.assertEqual(created_event.individual_fish_observations.count(), 2)
-        # Aggregate fields should be None initially as calculate-aggregates is not auto-called on API create
-        self.assertIsNone(response.data.get('avg_weight_g'))
+        # Aggregate fields should be calculated automatically on creation
+        self.assertIsNotNone(response.data.get('avg_weight_g'))
+        self.assertAlmostEqual(
+            Decimal(str(response.data['avg_weight_g'])),
+            Decimal('110.25'),  # (100.5 + 120.0) / 2
+            places=2
+        )
+        self.assertEqual(response.data['calculated_sample_size'], 2)
 
     def test_calculate_aggregates_action(self):
         """Test the calculate-aggregates action on HealthSamplingEventViewSet."""

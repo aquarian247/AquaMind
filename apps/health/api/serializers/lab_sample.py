@@ -289,22 +289,33 @@ class HealthLabSampleSerializer(HealthDecimalFieldsMixin, UserAssignmentMixin, H
         ).order_by('-assignment_date', '-id').first()
 
         if not assignment:
-            raise serializers.ValidationError(
-                f"No active or relevant assignment found for Batch {batch.batch_number} "
-                f"in Container {container.name} on {sample_date}."
-            )
+            raise serializers.ValidationError({
+                "sample_date": f"No active or relevant assignment found for Batch {batch.batch_number} "
+                               f"in Container {container.name} on {sample_date}."
+            })
+        
+        # Validate sample_date is within the assignment's active period
+        # Check that sample was taken before assignment ended (if it has ended)
+        if assignment.departure_date and sample_date > assignment.departure_date:
+            raise serializers.ValidationError({
+                "sample_date": f"Sample date ({sample_date}) cannot be after the assignment's "
+                               f"departure date ({assignment.departure_date}). This assignment ended "
+                               f"on {assignment.departure_date}."
+            })
 
         # Validate sample_date against batch's overall lifecycle
         # Use actual_end_date if available, otherwise expected_end_date
         effective_batch_end_date = batch.actual_end_date or batch.expected_end_date
         if batch.start_date > sample_date:
-            raise serializers.ValidationError(
-                f"Sample date {sample_date} is before the batch's start date ({batch.start_date})."
-            )
+            raise serializers.ValidationError({
+                "sample_date": f"Sample date ({sample_date}) cannot be before the batch's "
+                               f"start date ({batch.start_date})."
+            })
         if effective_batch_end_date and effective_batch_end_date < sample_date:
-            raise serializers.ValidationError(
-                f"Sample date {sample_date} is after the batch's effective end date ({effective_batch_end_date})."
-            )
+            raise serializers.ValidationError({
+                "sample_date": f"Sample date ({sample_date}) cannot be after the batch's "
+                               f"effective end date ({effective_batch_end_date})."
+            })
         
         # Store the ID of the resolved assignment to be used in create()
         data['resolved_assignment_id'] = assignment.id

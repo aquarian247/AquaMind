@@ -34,15 +34,26 @@ class ScenarioModelChangeSerializer(serializers.ModelSerializer):
         if obj.new_mortality_model:
             changes.append(f"Mortality → {obj.new_mortality_model.name}")
 
-        return f"Day {obj.change_day}: {', '.join(changes)}" if changes else "No changes"
+        joined = ', '.join(changes)
+        return f"Day {obj.change_day}: {joined}" if changes else "No changes"
 
     def validate_change_day(self, value):
-        """Ensure change day occurs before scenario end."""
+        """Validate change day is within valid range."""
+        # Ensure change day is at least 1 (day 0 is before simulation starts)
+        if value < 1:
+            raise serializers.ValidationError(
+                "Change day must be at least 1. Day 1 is the first "
+                "simulation day; day 0 is before the simulation starts."
+            )
+        
+        # Check against scenario duration if instance exists
         if self.instance and self.instance.scenario:
-            if value >= self.instance.scenario.duration_days:
+            if value > self.instance.scenario.duration_days:
                 raise serializers.ValidationError(
-                    f"Change day must be before scenario end (day {self.instance.scenario.duration_days})"
+                    f"Change day {value} exceeds scenario duration "
+                    f"of {self.instance.scenario.duration_days} days"
                 )
+        
         return value
 
     def validate(self, data: Dict[str, Any]):

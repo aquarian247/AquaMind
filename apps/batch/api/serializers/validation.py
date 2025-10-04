@@ -81,17 +81,17 @@ def validate_batch_population(batch, population_count, assignment_id=None):
 def validate_individual_measurements(sample_size, individual_lengths, individual_weights):
     """
     Validate individual measurements for growth samples.
-    
+
     Args:
         sample_size: The declared sample size
         individual_lengths: List of individual length measurements
         individual_weights: List of individual weight measurements
-        
-    Returns:
-        Dictionary of validation errors or empty dict if valid
+
+    Raises:
+        ValidationError: If validation fails
     """
     errors = {}
-    
+
     # Check sample_size against individual measurement lists
     if sample_size is not None:
         if individual_lengths and len(individual_lengths) != sample_size:
@@ -108,8 +108,9 @@ def validate_individual_measurements(sample_size, individual_lengths, individual
         errors['individual_measurements'] = [
             "Length of individual_weights must match individual_lengths."
         ]
-    
-    return errors
+
+    if errors:
+        raise serializers.ValidationError(errors)
 
 
 def validate_sample_size_against_population(sample_size, assignment):
@@ -158,18 +159,18 @@ def validate_sample_size_against_population(sample_size, assignment):
 def validate_min_max_weight(min_weight, max_weight):
     """
     Validate that min_weight is not greater than max_weight.
-    
+
     Args:
         min_weight: Minimum weight value
         max_weight: Maximum weight value
-        
-    Returns:
-        Error message if validation fails, None otherwise
+
+    Raises:
+        ValidationError: If min_weight > max_weight
     """
     if min_weight is None or max_weight is None:
-        return None
-        
+        return
+
     if min_weight > max_weight:
-        return "Minimum weight cannot be greater than maximum weight."
-    
-    return None
+        raise serializers.ValidationError({
+            'min_weight_g': "Minimum weight cannot be greater than maximum weight."
+        })

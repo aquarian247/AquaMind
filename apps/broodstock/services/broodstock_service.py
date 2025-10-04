@@ -6,7 +6,7 @@ breeding operations, and container capacity management.
 """
 
 from typing import List, Dict, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db import transaction, models
 from django.db.models import Count, Sum, Q, F
 from django.core.exceptions import ValidationError
@@ -321,12 +321,12 @@ class BroodstockService:
         # Get recent movements
         recent_movements_in = FishMovement.objects.filter(
             to_container=container,
-            movement_date__gte=timezone.now() - timezone.timedelta(days=30)
+            movement_date__gte=timezone.now() - timedelta(days=30)
         ).count()
         
         recent_movements_out = FishMovement.objects.filter(
             from_container=container,
-            movement_date__gte=timezone.now() - timezone.timedelta(days=30)
+            movement_date__gte=timezone.now() - timedelta(days=30)
         ).count()
         
         # Get breeding pairs using fish from this container
@@ -441,5 +441,5 @@ class BroodstockService:
         return MaintenanceTask.objects.filter(
             container=container,
             completed_date__isnull=True,
-            scheduled_date__lte=timezone.now() + timezone.timedelta(days=7)
+            scheduled_date__lte=timezone.now() + timedelta(days=7)
         ).order_by('scheduled_date') 

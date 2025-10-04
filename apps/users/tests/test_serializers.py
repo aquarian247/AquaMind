@@ -198,11 +198,17 @@ class UserProfileSerializerTest(TestCase):
     def test_profile_serializer_contains_expected_fields(self):
         """
         Test that UserProfileSerializer includes all expected fields.
+
+        Updated to include RBAC fields (role, geography, subsidiary) which
+        are now included as read-only for GET requests.
         """
         serializer = UserProfileSerializer(instance=self.profile)
-        expected_fields = ['profile_picture', 'job_title', 'department', 
-                          'language_preference', 'date_format_preference',
-                          'created_at', 'updated_at']
+        expected_fields = [
+            'full_name', 'phone', 'profile_picture', 'job_title',
+            'department', 'geography', 'subsidiary', 'role',
+            'language_preference', 'date_format_preference',
+            'created_at', 'updated_at'
+        ]
         self.assertEqual(set(serializer.data.keys()), set(expected_fields))
     
     def test_profile_update_serializer(self):
