@@ -29,7 +29,6 @@
   - `PUT/PATCH /api/v1/users/profile/` will reject role/geography/subsidiary fields
   - New endpoint needed: `PATCH /api/v1/users/{id}/admin-update/` (admin only)
 
-**Estimated Effort**: Backend (2h), Frontend (3h), Testing (2h)
 
 ---
 
@@ -54,39 +53,27 @@
   - Filter parameter `mortality_date` → `event_date`
   - Filter parameter `recorded_by` is removed
 
-**Estimated Effort**: Backend (1h), Frontend (1-2h), Testing (1h)
 
 ---
 
 ### Task 3: Fix PhotoperiodData Missing Database Columns
 **Issue**: API serializer defines `artificial_light_start`, `artificial_light_end`, and `notes` fields that don't exist in database.
 
-**Backend Changes Required** (Choose Option A or B):
+**Backend Changes Required** 
 
-**Option A - Remove Fields from Serializer** (Recommended if fields not needed):
+**Remove Fields from Serializer** (Recommended if fields not needed):
 - [ ] Remove `artificial_light_start`, `artificial_light_end`, `notes` from `PhotoperiodDataSerializer` (lines 227-243 in `apps/environmental/api/serializers.py`)
 - [ ] Update API documentation/OpenAPI spec
 - [ ] Verify no business logic depends on these fields
 
-**Option B - Add Fields to Database** (If fields are needed):
-- [ ] Create migration to add `artificial_light_start TIME NULL`, `artificial_light_end TIME NULL`, `notes TEXT DEFAULT ''` to `environmental_photoperioddata` table
-- [ ] Update `PhotoperiodData` model in `apps/environmental/models.py` to include these fields
-- [ ] Run migration and verify
 
 **Frontend Impact**: 🟢 **LIKELY NO CHANGES**
 - **Location**: Environmental data management, photoperiod forms
 - **Changes Needed**:
-  - **If Option A**: Remove any UI for artificial light times and notes from photoperiod forms (if they exist)
-  - **If Option B**: No changes needed, fields will start working
-  - Verify create/edit photoperiod forms against new schema
+  - **Possible, not likely**: Remove any UI for artificial light times and notes from photoperiod forms (if they exist)
 - **API Contract Change**: 
-  - **Option A**: Fields removed from API responses and requests
-  - **Option B**: Fields now functional (previously would have failed)
-
-**Estimated Effort**: 
-- Option A: Backend (30min), Frontend (30min-1h), Testing (30min)
-- Option B: Backend (1h), Frontend (0h), Testing (30min)
-
+  - **Check**: Fields removed from API responses and requests
+ 
 ---
 
 ## 🟠 HIGH PRIORITY (P1) - Runtime Errors
@@ -105,8 +92,6 @@
 - These are internal service methods
 - No API contract changes
 - Frontend continues to call existing endpoints
-
-**Estimated Effort**: Backend (15min), Testing (15min)
 
 ---
 
@@ -135,41 +120,27 @@
   - Filter parameters may be removed or renamed
   - Response data structure unchanged
 
-**Estimated Effort**: Backend (3-4h), Frontend (1-2h), Testing (2h)
-
 ---
 
 ### Task 6: Fix EnvironmentalParameter Precision Mismatch
 **Issue**: Serializer accepts 4 decimal places but database only stores 2, causing data loss.
 
-**Backend Changes Required** (Choose Option A or B):
+**Backend Changes Required** 
 
-**Option A - Update Serializer to Match DB** (Recommended):
+**Update Serializer to Match DB** 
 - [ ] Change `decimal_places=4` to `decimal_places=2` in `EnvironmentalParameterSerializer` (lines 38-65 in `apps/environmental/api/serializers.py`)
 - [ ] Update API documentation to reflect 2 decimal precision
 - [ ] Add validation tests for precision enforcement
 
-**Option B - Update Database to Match Serializer**:
-- [ ] Create migration to alter column types from `NUMERIC(10,2)` to `NUMERIC(10,4)`
-- [ ] Update model fields in `apps/environmental/models.py` to `decimal_places=4`
-- [ ] Test data migration with existing data
-- [ ] Update any reports/calculations that assume 2 decimal precision
-
 **Frontend Impact**: 🟡 **VALIDATION UPDATES**
 - **Location**: Environmental parameter forms, parameter configuration
 - **Changes Needed**:
-  - **Option A**: Update form validation to allow max 2 decimal places (e.g., step="0.01" in inputs)
-  - **Option B**: Update form validation to allow 4 decimal places (e.g., step="0.0001")
+  - **Check**: Update form validation to allow max 2 decimal places (e.g., step="0.01" in inputs)
   - Update number input components and formatters
   - Add client-side validation messages for decimal precision
 - **API Contract Change**:
-  - **Option A**: Server will reject values with >2 decimal places
-  - **Option B**: Server will accept and store 4 decimal places
-
-**Estimated Effort**: 
-- Option A: Backend (30min), Frontend (1h), Testing (30min)
-- Option B: Backend (1.5h), Frontend (1h), Testing (1h)
-
+  - **Check**: Server will reject values with >2 decimal places
+  
 ---
 
 ### Task 7: Fix Health LiceCount & Treatment Filtering
@@ -196,8 +167,6 @@
   - Certain filter query parameters no longer accepted
   - 400 error instead of 500 on invalid filters
 
-**Estimated Effort**: Backend (1h), Frontend (2h), Testing (1h)
-
 ---
 
 ### Task 8: Fix Growth Sample Validation
@@ -219,8 +188,6 @@
 - **API Contract Change**:
   - Error response format becomes consistent (always JSON with field keys)
   - Previously inconsistent error formats now standardized
-
-**Estimated Effort**: Backend (2h), Frontend (30min), Testing (1.5h)
 
 ---
 
@@ -245,8 +212,6 @@
   - `wave_period` field now available in responses (was previously missing)
   - Larger values accepted for wind_speed and precipitation
 
-**Estimated Effort**: Backend (1h), Frontend (1.5h), Testing (1h)
-
 ---
 
 ### Task 10: Fix BatchFeedingSummary Field Names
@@ -266,8 +231,6 @@
 - Internal batch analytics method
 - Frontend consumes completed summaries via API
 - No API contract changes to consumption endpoints
-
-**Estimated Effort**: Backend (2h), Testing (1.5h)
 
 ---
 
@@ -296,8 +259,6 @@
   - More validation errors returned (400 status)
   - Descriptive error messages for constraint violations
 
-**Estimated Effort**: Backend (4h), Frontend (2h), Testing (3h)
-
 ---
 
 ### Task 12: Fix Broodstock Egg Production Actions
@@ -325,8 +286,6 @@
   - More comprehensive validation (may reject previously accepted requests)
   - Consistent egg_batch_id format
 
-**Estimated Effort**: Backend (3h), Frontend (30min), Testing (2h)
-
 ---
 
 ### Task 13: Fix Broodstock Container Validation
@@ -347,8 +306,6 @@
 - Same API behavior (reject invalid containers)
 - May accept more valid containers that were previously rejected due to naming
 
-**Estimated Effort**: Backend (1.5h), Testing (1h)
-
 ---
 
 ### Task 14: Fix HealthSamplingEvent Aggregation
@@ -366,8 +323,6 @@
 - Backend fix ensures correct calculation
 - Frontend continues to display aggregate metrics
 - No API contract changes
-
-**Estimated Effort**: Backend (3h), Data Migration (1h), Testing (2h)
 
 ---
 
@@ -388,8 +343,6 @@
 - **API Contract Change**:
   - Consistent error response format
   - Additional validation constraint (departed assignments rejected)
-
-**Estimated Effort**: Backend (1.5h), Frontend (30min), Testing (1h)
 
 ---
 
@@ -414,8 +367,6 @@
 - **API Contract Change**:
   - Endpoints that previously returned 500 will now work
 
-**Estimated Effort**: Backend (4h), Frontend (2h), Testing (2h)
-
 ---
 
 ### Task 17: Fix Scenario Projection Engine Null Weight Handling
@@ -439,8 +390,6 @@
   - Scenario creation may reject null initial_weight
   - Better error messages for projection failures
 
-**Estimated Effort**: Backend (2h), Frontend (1.5h), Testing (1h)
-
 ---
 
 ### Task 18: Fix Scenario Projections Aggregation Endpoint
@@ -460,8 +409,6 @@
   - Data structure should be unchanged after fix
 - **API Contract Change**:
   - Endpoints that returned 500 will now return proper data
-
-**Estimated Effort**: Backend (2h), Frontend (30min if used), Testing (1h)
 
 ---
 
@@ -484,8 +431,6 @@
 - **API Contract Change**:
   - change_day=0 will be rejected with validation error
 
-**Estimated Effort**: Backend (1h), Frontend (30min), Testing (1h)
-
 ---
 
 ### Task 20: Optimize Environmental Reading Queries
@@ -502,8 +447,6 @@
 - Performance improvement only
 - Faster API responses
 - No contract changes
-
-**Estimated Effort**: Backend (3h), Testing (1h)
 
 ---
 
@@ -523,8 +466,6 @@
 - API contract unchanged
 - Internal refactoring only
 
-**Estimated Effort**: Backend (4h), Testing (2h)
-
 ---
 
 ## 📊 Summary Statistics
@@ -543,19 +484,19 @@
 
 ## 🚀 Recommended Execution Order
 
-### Phase 1: Critical Security & Breakage (Week 1)
+### Phase 1: Critical Security & Breakage 
 1. Task 1 - Users privilege escalation (Security)
 2. Task 2 - MortalityRecord mixin conflict
 3. Task 3 - PhotoperiodData missing columns
 4. Task 4 - Broodstock timedelta error
 
-### Phase 2: Runtime Errors (Week 2)
+### Phase 2: Runtime Errors 
 5. Task 5 - Batch analytics field references
 6. Task 6 - EnvironmentalParameter precision
 7. Task 7 - Health filtering issues
 8. Task 8 - Growth sample validation
 
-### Phase 3: Data Integrity (Week 3-4)
+### Phase 3: Data Integrity 
 9. Task 9 - WeatherData field coverage
 10. Task 10 - BatchFeedingSummary fields
 11. Task 11 - Assignment & transfer workflows
@@ -564,7 +505,7 @@
 14. Task 14 - HealthSamplingEvent aggregation
 15. Task 15 - HealthLabSample validation
 
-### Phase 4: Optimizations (Week 5)
+### Phase 4: Optimizations 
 16. Task 16 - Scenario CSV imports
 17. Task 17 - Scenario projection null weights
 18. Task 18 - Scenario projections aggregation
@@ -605,7 +546,7 @@ Several tasks involve breaking changes that require careful API version manageme
 
 ### Recommended Approach: Phased Deprecation
 
-**Phase 1: Soft Deprecation (Week 1-2)**
+**Phase 1: Soft Deprecation**
 ```python
 # Add deprecation warnings without breaking existing code
 from rest_framework.response import Response
@@ -634,7 +575,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
 ```
 
-**Phase 2: Hard Break with Clear Errors (Week 3)**
+**Phase 2: Hard Break with Clear Errors**
 ```python
 def update(self, request, *args, **kwargs):
     deprecated_fields = ['role', 'geography', 'subsidiary']
@@ -681,12 +622,6 @@ class APIVersionMiddleware:
         response['X-API-Version'] = api_version
         return response
 ```
-
-### Timeline
-- **Week 1**: Deploy with warnings (Phase 1)
-- **Week 2**: Monitor logs, coordinate with frontend team
-- **Week 3**: Deploy hard breaks (Phase 2)
-- **Week 4+**: Remove deprecated code paths
 
 ---
 
@@ -755,58 +690,6 @@ curl -X POST $API_URL/api/v1/health/mortality-records/ \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"batch": 1, "count": 5, "reason": 1}'
 # Should return TypeError (known bad state)
-```
-
----
-
-### Task 3: PhotoperiodData Fields (Option B - With Migration)
-
-**Rollback Scenario**: Migration causes data issues or performance problems
-
-**Pre-Migration Backup**:
-```bash
-# 1. Backup database
-pg_dump -h $DB_HOST -U $DB_USER -d aquamind \
-  -t environmental_photoperioddata \
-  -f photoperiod_backup_$(date +%Y%m%d_%H%M%S).sql
-
-# 2. Record row count
-psql -h $DB_HOST -U $DB_USER -d aquamind \
-  -c "SELECT COUNT(*) FROM environmental_photoperioddata;" > row_count_pre.txt
-
-# 3. Tag migration
-git tag pre-task-3-migration-$(date +%Y%m%d)
-```
-
-**Rollback Steps**:
-```bash
-# 1. Rollback migration
-python manage.py migrate environmental <previous_migration_number>
-
-# 2. Verify columns removed
-psql -h $DB_HOST -U $DB_USER -d aquamind \
-  -c "\d environmental_photoperioddata"
-# Should NOT show artificial_light_start, artificial_light_end, notes
-
-# 3. Revert code
-git revert <commit-hash>
-
-# 4. Verify row count unchanged
-psql -h $DB_HOST -U $DB_USER -d aquamind \
-  -c "SELECT COUNT(*) FROM environmental_photoperioddata;"
-# Compare with row_count_pre.txt
-
-# 5. Redeploy
-python manage.py migrate
-python manage.py collectstatic --noinput
-# Restart services
-```
-
-**Data Integrity Check**:
-```sql
--- Verify no data loss
-SELECT COUNT(*), MIN(date), MAX(date) 
-FROM environmental_photoperioddata;
 ```
 
 ---
@@ -934,201 +817,3 @@ git push origin main
 ```
 
 **Data Cleanup Required**: If negative populations found, investigate recent transfers and mortality events.
-
----
-
-## 🗄️ Database Migration Guide
-
-### Pre-Migration Checklist
-
-**For ALL migrations**:
-- [ ] Test migration on copy of production database
-- [ ] Estimate migration time (run EXPLAIN ANALYZE)
-- [ ] Schedule maintenance window if >5 minutes
-- [ ] Notify users of potential downtime
-- [ ] Backup database
-- [ ] Tag current state in git
-- [ ] Test rollback procedure in staging
-
-### Task 3: PhotoperiodData Columns (Option B)
-
-**Migration File**: `apps/environmental/migrations/00XX_add_photoperiod_fields.py`
-
-```python
-from django.db import migrations, models
-
-class Migration(migrations.Migration):
-    dependencies = [
-        ('environmental', '00XX_previous_migration'),
-    ]
-
-    operations = [
-        migrations.AddField(
-            model_name='photoperioddata',
-            name='artificial_light_start',
-            field=models.TimeField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='photoperioddata',
-            name='artificial_light_end',
-            field=models.TimeField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='photoperioddata',
-            name='notes',
-            field=models.TextField(blank=True, default=''),
-        ),
-    ]
-```
-
-**Testing**:
-```bash
-# 1. Dry run
-python manage.py migrate environmental 00XX --plan
-
-# 2. Apply in dev
-python manage.py migrate environmental 00XX
-
-# 3. Verify columns added
-python manage.py dbshell
-\d environmental_photoperioddata
-
-# 4. Test data insertion
-python manage.py shell
-from apps.environmental.models import PhotoperiodData
-from apps.infrastructure.models import Area
-area = Area.objects.first()
-p = PhotoperiodData.objects.create(
-    area=area,
-    date='2025-10-03',
-    day_length_hours=12.5,
-    artificial_light_start='06:00:00',
-    notes='Test entry'
-)
-print(f"Created: {p.id}")
-
-# 5. Test rollback
-python manage.py migrate environmental <previous_number>
-# Verify columns removed
-```
-
-**Performance Impact**: Minimal (3 new columns, all nullable/default values)
-
----
-
-### Task 6: EnvironmentalParameter Precision (Option B)
-
-**Migration File**: `apps/environmental/migrations/00XX_increase_parameter_precision.py`
-
-```python
-from django.db import migrations, models
-
-class Migration(migrations.Migration):
-    dependencies = [
-        ('environmental', '00XX_previous_migration'),
-    ]
-
-    operations = [
-        migrations.AlterField(
-            model_name='environmentalparameter',
-            name='min_value',
-            field=models.DecimalField(
-                max_digits=10, decimal_places=4,
-                null=True, blank=True
-            ),
-        ),
-        migrations.AlterField(
-            model_name='environmentalparameter',
-            name='max_value',
-            field=models.DecimalField(
-                max_digits=10, decimal_places=4,
-                null=True, blank=True
-            ),
-        ),
-        migrations.AlterField(
-            model_name='environmentalparameter',
-            name='optimal_min',
-            field=models.DecimalField(
-                max_digits=10, decimal_places=4,
-                null=True, blank=True
-            ),
-        ),
-        migrations.AlterField(
-            model_name='environmentalparameter',
-            name='optimal_max',
-            field=models.DecimalField(
-                max_digits=10, decimal_places=4,
-                null=True, blank=True
-            ),
-        ),
-    ]
-```
-
-**Testing**:
-```bash
-# 1. Check existing data won't be truncated (should be fine, increasing precision)
-psql -h $DB_HOST -U $DB_USER -d aquamind << EOF
-SELECT id, name, 
-       LENGTH(min_value::text) as min_len,
-       LENGTH(max_value::text) as max_len
-FROM environmental_environmentalparameter
-WHERE min_value IS NOT NULL OR max_value IS NOT NULL;
-EOF
-
-# 2. Apply migration
-python manage.py migrate environmental 00XX
-
-# 3. Verify precision changed
-psql -h $DB_HOST -U $DB_USER -d aquamind << EOF
-SELECT column_name, numeric_precision, numeric_scale
-FROM information_schema.columns
-WHERE table_name = 'environmental_environmentalparameter'
-AND data_type = 'numeric';
-EOF
-# Should show numeric_scale = 4
-
-# 4. Test data preservation
-python manage.py shell
-from apps.environmental.models import EnvironmentalParameter
-# Insert with 4 decimal places
-param = EnvironmentalParameter.objects.create(
-    name='Test Precision',
-    unit='ppm',
-    min_value=Decimal('10.1234'),
-    max_value=Decimal('20.5678')
-)
-# Verify stored correctly
-param.refresh_from_db()
-assert str(param.min_value) == '10.1234'
-```
-
-**Performance Impact**: Minimal (no data rewrite for precision increase, just metadata change)
-
----
-
-### Migration Execution in Production
-
-```bash
-# 1. Enter maintenance mode (optional but recommended)
-echo "MAINTENANCE_MODE=True" >> .env
-
-# 2. Backup before migration
-pg_dump -h $DB_HOST -U $DB_USER -d aquamind \
-  -f backup_pre_migration_$(date +%Y%m%d_%H%M%S).sql
-
-# 3. Apply migrations
-python manage.py migrate --noinput
-
-# 4. Verify migrations applied
-python manage.py showmigrations | grep -A 5 environmental
-
-# 5. Run data integrity checks
-python manage.py check --deploy
-
-# 6. Exit maintenance mode
-sed -i '/MAINTENANCE_MODE/d' .env
-
-# 7. Monitor application logs
-tail -f /var/log/aquamind/application.log
-```
-
