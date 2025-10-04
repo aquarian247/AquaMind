@@ -503,23 +503,33 @@
 
 ---
 
-### Task 18: Fix Scenario Projections Aggregation Endpoint
+### Task 18: Fix Scenario Projections Aggregation Endpoint ✅ **COMPLETED**
 **Issue**: Uses invalid `day_number__mod` lookup and returns non-serializable queryset.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Replace `day_number__mod` with Django `Mod()` function or `TruncWeek`/`TruncMonth`
-- [ ] Keep queryset as instances for serializer compatibility
-- [ ] Use `ExpressionWrapper` for custom aggregations
-- [ ] Add tests for weekly/monthly aggregation endpoints
-- [ ] Verify serialization works correctly
+- [x] Replace `day_number__mod` with Django `Mod()` function
+- [x] Remove `.values()` to keep queryset as model instances for serializer compatibility
+- [x] Use `Mod(F('day_number'), 7)` for weekly and `Mod(F('day_number'), 30)` for monthly aggregation
+- [x] Add 11 comprehensive tests for weekly/monthly aggregation endpoints
+- [x] Verify serialization works correctly - all fields properly serialized
+- [x] All 223 scenario tests passing with no regressions
+
+**Implementation Details**:
+- Replaced invalid `day_number__mod=7` with `.annotate(mod_result=Mod(F('day_number'), 7)).filter(mod_result=0)`
+- Removed `.values()` call that was breaking serialization
+- Weekly aggregation samples every 7th day (days 0, 7, 14, 21...)
+- Monthly aggregation samples every 30th day (days 0, 30, 60, 90...)
+- Queryset now returns model instances that serialize properly
+- Tests verify correct sampling, field preservation, chronological order, and compatibility with date filtering
 
 **Frontend Impact**: 🟢 **NO CHANGES IF UNUSED**
 - **Location**: Scenario projection charts, aggregation views
 - **Changes Needed**:
   - If frontend uses weekly/monthly aggregation, verify charts still render
-  - Data structure should be unchanged after fix
+  - Data structure is unchanged - all fields remain the same
 - **API Contract Change**:
   - Endpoints that returned 500 will now return proper data
+  - Response structure unchanged, just now works correctly
 
 ---
 

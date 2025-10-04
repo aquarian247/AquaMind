@@ -7,7 +7,8 @@ import io
 import csv
 from django.http import HttpResponse
 from django.db import transaction
-from django.db.models import Count, Q, Avg, Max, Min
+from django.db.models import Count, Avg, F
+from django.db.models.functions import Mod
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -20,8 +21,7 @@ from drf_spectacular.types import OpenApiTypes
 
 from apps.scenario.models import (
     TemperatureProfile, TGCModel, FCRModel, MortalityModel,
-    Scenario, ScenarioProjection, BiologicalConstraints,
-    ScenarioModelChange
+    Scenario, BiologicalConstraints, ScenarioModelChange
 )
 from apps.scenario.services import BulkDataImportService, DateRangeInputService
 from apps.scenario.services.calculations import ProjectionEngine
@@ -698,11 +698,15 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         aggregation = request.query_params.get('aggregation', 'daily')
         
         if aggregation == 'weekly':
-            # Aggregate by week
-            projections = projections.filter(day_number__mod=7).values()
+            # Sample every 7th day (weekly aggregation)
+            projections = projections.annotate(
+                mod_result=Mod(F('day_number'), 7)
+            ).filter(mod_result=0)
         elif aggregation == 'monthly':
-            # Aggregate by month (every 30 days)
-            projections = projections.filter(day_number__mod=30).values()
+            # Sample every 30th day (monthly aggregation)
+            projections = projections.annotate(
+                mod_result=Mod(F('day_number'), 30)
+            ).filter(mod_result=0)
         
         serializer = ScenarioProjectionSerializer(projections, many=True)
         return Response(serializer.data)
