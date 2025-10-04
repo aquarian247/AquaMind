@@ -249,29 +249,39 @@ class UserProfileViewTest(TestCase):
     def test_update_profile(self):
         """
         Test updating the authenticated user's profile.
+
+        Updated to reflect security fix: regular users can no longer update
+        RBAC fields (role, geography, subsidiary). Only allowed fields can
+        be updated.
         """
         url = reverse('user_profile')
-        
+
         # Authenticate user
         self.client.force_authenticate(user=self.user)
-        
-        # Update profile data
+
+        # Store original RBAC field values
+        original_geography = self.profile.geography
+        original_subsidiary = self.profile.subsidiary
+
+        # Update profile data (including RBAC fields to test they're ignored)
         update_data = {
             'full_name': 'Updated Name',
-            'geography': Geography.FAROE_ISLANDS,
-            'subsidiary': Subsidiary.BROODSTOCK,
+            'geography': Geography.FAROE_ISLANDS,  # Should be ignored
+            'subsidiary': Subsidiary.BROODSTOCK,   # Should be ignored
             'phone': '+4521987654'
         }
-        
+
         response = self.client.patch(url, update_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        # Verify profile was updated
+
+        # Verify allowed fields were updated
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.full_name, update_data['full_name'])
-        self.assertEqual(self.profile.geography, update_data['geography'])
-        self.assertEqual(self.profile.subsidiary, update_data['subsidiary'])
         self.assertEqual(self.profile.phone, update_data['phone'])
+
+        # Verify RBAC fields were NOT updated (security fix)
+        self.assertEqual(self.profile.geography, original_geography)
+        self.assertEqual(self.profile.subsidiary, original_subsidiary)
 
 
 class AuthenticationTest(TestCase):

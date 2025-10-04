@@ -7,18 +7,27 @@ from .models import UserProfile, Geography, Subsidiary, Role
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """
-    Serializer for the UserProfile model.
+    Read-only serializer for the UserProfile model.
     
-    Handles serialization and deserialization of UserProfile instances,
-    including user preferences and profile information.
+    Handles serialization of UserProfile instances for GET requests,
+    including all profile information and RBAC fields. All fields are
+    read-only to ensure profile updates use the appropriate update serializers.
     """
     
     class Meta:
         model = UserProfile
-        fields = ['profile_picture', 'job_title', 'department', 
-                  'language_preference', 'date_format_preference',
-                  'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = [
+            'full_name', 'phone', 'profile_picture', 'job_title',
+            'department', 'geography', 'subsidiary', 'role',
+            'language_preference', 'date_format_preference',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'full_name', 'phone', 'profile_picture', 'job_title',
+            'department', 'geography', 'subsidiary', 'role',
+            'language_preference', 'date_format_preference',
+            'created_at', 'updated_at'
+        ]
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,16 +40,32 @@ class UserSerializer(serializers.ModelSerializer):
     
     profile = UserProfileSerializer(read_only=True)
     password = serializers.CharField(write_only=True, required=False)
-    full_name = serializers.CharField(source='profile.full_name', required=False)
+    full_name = serializers.CharField(
+        source='profile.full_name', required=False)
     phone = serializers.CharField(source='profile.phone', required=False)
-    geography = serializers.ChoiceField(source='profile.geography', choices=Geography.choices, required=False)
-    subsidiary = serializers.ChoiceField(source='profile.subsidiary', choices=Subsidiary.choices, required=False)
-    role = serializers.ChoiceField(source='profile.role', choices=Role.choices, required=False)
-    
+    geography = serializers.ChoiceField(
+        source='profile.geography',
+        choices=Geography.choices,
+        required=False
+    )
+    subsidiary = serializers.ChoiceField(
+        source='profile.subsidiary',
+        choices=Subsidiary.choices,
+        required=False
+    )
+    role = serializers.ChoiceField(
+        source='profile.role',
+        choices=Role.choices,
+        required=False
+    )
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'full_name', 'phone', 'geography', 'subsidiary', 
-                  'role', 'password', 'is_active', 'profile', 'date_joined']
+        fields = [
+            'id', 'username', 'email', 'full_name', 'phone',
+            'geography', 'subsidiary', 'role', 'password',
+            'is_active', 'profile', 'date_joined'
+        ]
         read_only_fields = ['id', 'date_joined']
         extra_kwargs = {
             'password': {'write_only': True},
@@ -108,6 +133,10 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """
         Update and return an existing user instance.
+
+        Server-side enforcement: RBAC fields (role, geography, subsidiary)
+        are ignored unless the requester is staff/superuser to prevent
+        privilege escalation.
         
         Args:
             instance: The User instance to update
@@ -116,6 +145,10 @@ class UserSerializer(serializers.ModelSerializer):
         Returns:
             User: The updated User instance
         """
+        # Get the request user from context
+        request = self.context.get('request')
+        is_admin = request and (request.user.is_staff or request.user.is_superuser)
+        
         profile_payload = validated_data.pop('profile', {}) or {}
         profile_data = {
             field: profile_payload[field]
@@ -126,6 +159,12 @@ class UserSerializer(serializers.ModelSerializer):
             dotted_key = f'profile.{field}'
             if dotted_key in validated_data:
                 profile_data[field] = validated_data.pop(dotted_key)
+        
+        # Server-side enforcement: Remove RBAC fields if not admin
+        rbac_fields = ['geography', 'subsidiary', 'role']
+        if not is_admin:
+            for field in rbac_fields:
+                profile_data.pop(field, None)
         
         # Handle password update if provided
         password = validated_data.pop('password', None)
@@ -203,7 +242,23 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     Serializer for updating UserProfile information.
     
     Provides a dedicated serializer for profile updates separate from user data.
-    Includes all fields from the UserProfile model that should be updatable by users.
+    Allows users to update their own profile information excluding RBAC fields
+    (role, geography, subsidiary) which require admin privileges.
+    """
+    
+    class Meta:
+        model = UserProfile
+        fields = ['full_name', 'phone', 'profile_picture', 'job_title', 'department',
+                 'language_preference', 'date_format_preference']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class UserProfileAdminUpdateSerializer(serializers.ModelSerializer):
+    """
+    Admin-only serializer for updating UserProfile information including RBAC fields.
+    
+    This serializer includes role, geography, and subsidiary fields that should only
+    be modifiable by administrators to prevent privilege escalation.
     """
     
     class Meta:

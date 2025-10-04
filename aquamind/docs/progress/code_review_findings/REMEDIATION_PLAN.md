@@ -7,27 +7,30 @@
 
 ## 🔴 CRITICAL PRIORITY (P0) - Security & Breaking Errors
 
-### Task 1: Fix Users App Privilege Escalation Vulnerability
+### Task 1: Fix Users App Privilege Escalation Vulnerability ✅ **COMPLETED**
 **Issue**: Users can modify their own role, geography, and subsidiary fields, allowing privilege escalation to admin.
 
-**Backend Changes Required**:
-- [ ] Remove `role`, `geography`, `subsidiary` from `UserProfileUpdateSerializer` fields (line 212 in `apps/users/serializers.py`)
-- [ ] Create a separate `UserProfileAdminUpdateSerializer` for admin-only updates
-- [ ] Add server-side enforcement in `UserSerializer.update()` to ignore RBAC fields unless requester is staff/superuser
-- [ ] Add validation tests to ensure non-admin users cannot modify RBAC fields
-- [ ] Update `UserProfileView` to use read-only serializer for GET requests
+**Backend Changes Completed** (2025-10-04):
+- [x] Removed `role`, `geography`, `subsidiary` from `UserProfileUpdateSerializer` fields
+- [x] Created `UserProfileAdminUpdateSerializer` for admin-only updates with RBAC fields
+- [x] Added server-side enforcement in `UserSerializer.update()` to ignore RBAC fields unless requester is staff/superuser
+- [x] Added comprehensive validation tests (9 new security tests) ensuring non-admin users cannot modify RBAC fields
+- [x] Updated `UserProfileSerializer` to include RBAC fields as read-only for GET requests
+- [x] Created admin-only endpoint `/api/v1/users/{id}/admin-update/` for RBAC field updates
+- [x] All 43 users app tests passing including new security tests
 
 **Frontend Impact**: 🔴 **BREAKING - REQUIRES CHANGES**
 - **Location**: `AquaMind-Frontend/client/src/components/users/` or profile management components
 - **Changes Needed**:
-  - Remove role, geography, subsidiary from user profile edit forms
-  - Create separate admin-only user management interface for RBAC changes
-  - Update API types/interfaces to remove these fields from user update DTOs
+  - Remove role, geography, subsidiary from user profile edit forms (fields are now read-only in API)
+  - Create separate admin-only user management interface using new `/api/v1/users/{id}/admin-update/` endpoint
+  - Update API types/interfaces - RBAC fields removed from `UserProfileUpdateSerializer`
   - Add admin-only routes/components for role management
   - Update permission checks to ensure only admins see role editing UI
-- **API Contract Change**: 
-  - `PUT/PATCH /api/v1/users/profile/` will reject role/geography/subsidiary fields
-  - New endpoint needed: `PATCH /api/v1/users/{id}/admin-update/` (admin only)
+- **API Contract Change**:
+  - `PUT/PATCH /api/v1/users/profile/` now silently ignores role/geography/subsidiary fields
+  - New endpoint available: `PATCH /api/v1/users/{id}/admin-update/` (admin only, requires IsAdminUser permission)
+  - `GET /api/v1/users/profile/` now includes RBAC fields for visibility (read-only)
 
 
 ---

@@ -2,18 +2,17 @@ from django.contrib.auth.models import User
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.shortcuts import get_object_or_404
 from .serializers import (
-    UserSerializer, 
+    UserSerializer,
     UserCreateSerializer,
     UserProfileSerializer,
     CustomTokenObtainPairSerializer,
     UserProfileUpdateSerializer,
+    UserProfileAdminUpdateSerializer,
     PasswordChangeSerializer
 )
-from .models import UserProfile, Geography, Subsidiary, Role
+from .models import UserProfile, Role
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -74,13 +73,16 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # Allow admin users to see all users
-        if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == Role.ADMIN):
+        if (user.is_superuser or
+                (hasattr(user, 'profile') and
+                 user.profile.role == Role.ADMIN)):
             return User.objects.all().order_by('username')
         
         # Regular users can only see themselves
         return User.objects.filter(id=user.id)
     
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['get'],
+            permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         """
         Endpoint to retrieve the currently authenticated user.
@@ -91,7 +93,8 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['put'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['put'],
+            permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
         """
         Endpoint to change user's password.
@@ -102,14 +105,56 @@ class UserViewSet(viewsets.ModelViewSet):
             Response: Success or error message
         """
         user = request.user
-        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+        serializer = PasswordChangeSerializer(
+            data=request.data,
+            context={'request': request}
+        )
         
         if serializer.is_valid():
             user.set_password(serializer.validated_data['new_password'])
             user.save()
-            return Response({'detail': 'Password updated successfully'}, status=status.HTTP_200_OK)
+            return Response(
+                {'detail': 'Password updated successfully'},
+                status=status.HTTP_200_OK
+            )
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    @action(detail=True, methods=['patch'],
+            permission_classes=[permissions.IsAdminUser])
+    def admin_update(self, request, pk=None):
+        """
+        Admin-only endpoint to update user profile including RBAC fields.
+
+        Allows administrators to modify role, geography, and subsidiary
+        fields which are restricted for regular users to prevent
+        privilege escalation.
+        
+        Args:
+            pk: User ID to update
+            
+        Returns:
+            Response: Updated user profile data or error messages
+        """
+        user = self.get_object()
+        serializer = UserProfileAdminUpdateSerializer(
+            user.profile,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -133,8 +178,9 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_serializer_class(self):
         """
         Return appropriate serializer based on the request method.
-        
-        Returns UserProfileSerializer for GET, UserProfileUpdateSerializer for PUT/PATCH.
+
+        Returns UserProfileSerializer for GET, UserProfileUpdateSerializer
+        for PUT/PATCH.
         """
         if self.request.method == 'GET':
             return UserProfileSerializer
