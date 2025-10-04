@@ -109,7 +109,9 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
-    queryset = EnvironmentalReading.objects.all()
+    queryset = EnvironmentalReading.objects.select_related(
+        'parameter', 'container', 'sensor', 'batch'
+    )
     serializer_class = EnvironmentalReadingSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = EnvironmentalReadingFilter
@@ -122,6 +124,7 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         Override to provide time-based filtering support.
         Supports from_time and to_time query parameters.
         Parses time strings into aware datetime objects for reliable filtering.
+        Optimized with select_related to avoid N+1 queries.
         """
         queryset = super().get_queryset()
 
@@ -163,25 +166,20 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Return the most recent readings for each parameter-container combination."""
-        # Get most recent readings for each unique parameter-container combination
-        # This leverages TimescaleDB's efficient time-based indexing
+        """
+        Return the most recent readings for each parameter-container combo.
         
-        # Subquery would be ideal here, but for simplicity:
-        recent_readings = []
-        
-        # Get unique parameter-container combinations
-        param_container_pairs = EnvironmentalReading.objects.values('parameter', 'container').distinct()
-        
-        for pair in param_container_pairs:
-            # For each combination, get the most recent reading
-            reading = EnvironmentalReading.objects.filter(
-                parameter=pair['parameter'],
-                container=pair['container']
-            ).order_by('-reading_time').first()
-            
-            if reading:
-                recent_readings.append(reading)
+        Optimized using PostgreSQL's DISTINCT ON to get latest reading
+        for each unique parameter-container pair in a single query.
+        Avoids N+1 query problem by using select_related for FKs.
+        """
+        # Use PostgreSQL DISTINCT ON to get one reading per combo
+        # Order by param, container first, then -reading_time for recency
+        recent_readings = EnvironmentalReading.objects.select_related(
+            'parameter', 'container', 'sensor', 'batch'
+        ).order_by(
+            'parameter', 'container', '-reading_time'
+        ).distinct('parameter', 'container')
         
         serializer = self.get_serializer(recent_readings, many=True)
         return Response(serializer.data)
@@ -302,7 +300,7 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication, JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
-    queryset = WeatherData.objects.all()
+    queryset = WeatherData.objects.select_related('area')
     serializer_class = WeatherDataSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = WeatherDataFilter
@@ -330,20 +328,17 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Return the most recent weather data for each area."""
-        recent_data = []
+        """
+        Return the most recent weather data for each area.
         
-        # Get unique areas
-        areas = WeatherData.objects.values('area').distinct()
-        
-        for area_dict in areas:
-            # For each area, get the most recent weather data
-            data = WeatherData.objects.filter(
-                area=area_dict['area']
-            ).order_by('-timestamp').first()
-            
-            if data:
-                recent_data.append(data)
+        Optimized using PostgreSQL's DISTINCT ON to get latest data
+        for each area in a single query. Avoids N+1 query problem.
+        """
+        # Use DISTINCT ON to get one weather record per area
+        # DISTINCT ON fields must match initial ORDER BY fields
+        recent_data = WeatherData.objects.select_related(
+            'area'
+        ).order_by('area_id', '-timestamp').distinct('area_id')
         
         serializer = self.get_serializer(recent_data, many=True)
         return Response(serializer.data)
