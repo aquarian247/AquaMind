@@ -436,15 +436,27 @@
 
 ## 🔵 LOW PRIORITY (P3) - Optimizations & Code Quality
 
-### Task 16: Fix Scenario CSV Import Services
+### Task 16: Fix Scenario CSV Import Services ✅ **COMPLETED**
 **Issue**: Only temperature handlers exist; FCR/mortality import methods missing.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Implement `BulkDataImportService.import_fcr_data()`
-- [ ] Implement `BulkDataImportService.import_mortality_data()`
-- [ ] Mirror temperature flow pattern
-- [ ] Add CSV format validation
-- [ ] Add tests for each import type
+- [x] Implement `BulkDataImportService.import_fcr_data()` with full validation
+- [x] Implement `BulkDataImportService.import_mortality_data()` with average rate calculation
+- [x] Mirror temperature flow pattern for consistency
+- [x] Add CSV format validation (headers, data types, value ranges)
+- [x] Add 37 comprehensive tests covering success cases, validation failures, and edge cases
+- [x] All 196 scenario tests passing with no regressions
+
+**Implementation Details**:
+- FCR import creates `FCRModel` with `FCRModelStage` entries linked to existing lifecycle stages
+- Mortality import calculates average rate from time-series data (current model doesn't support time-series storage)
+- Both methods include validation for:
+  - CSV structure and headers
+  - Data types (numeric values, dates)
+  - Value ranges (non-negative FCR, 0-100% mortality)
+  - Warnings for unusual values
+- Support for validate-only mode and preview data generation
+- Proper error messages for missing lifecycle stages
 
 **Frontend Impact**: 🟡 **NEW FUNCTIONALITY**
 - **Location**: Data import interfaces, CSV upload forms
@@ -454,6 +466,8 @@
   - Add format help text for each CSV type
 - **API Contract Change**:
   - Endpoints that previously returned 500 will now work
+  - FCR CSV format: `stage,fcr_value,duration_days`
+  - Mortality CSV format: `date,rate` (creates model with average rate)
 
 ---
 
