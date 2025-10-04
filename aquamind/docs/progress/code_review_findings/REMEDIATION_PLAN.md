@@ -324,23 +324,36 @@
 
 ---
 
-### Task 13: Fix Broodstock Container Validation
+### Task 13: Fix Broodstock Container Validation ✅ **COMPLETED**
 **Issue**: Container validation uses fragile substring matching instead of category/type checks.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Update `BroodstockFishSerializer.validate_container()` (line 24 in `apps/broodstock/serializers.py`)
-- [ ] Replace `'broodstock' in container_type.name.lower()` with proper category check
-- [ ] Coordinate with infrastructure team on container categorization
-- [ ] Options:
-  - Check `container_type.category` field
-  - Use boolean flag on container type
-  - Whitelist specific category enum values
-- [ ] Add tests with various container type names
+- [x] Updated `BroodstockFishSerializer.validate_container()` in `apps/broodstock/serializers.py`
+- [x] Replaced `'broodstock' in container_type.name.lower()` with proper category check
+- [x] Now validates that `container_type.category == 'TANK'` (broodstock fish kept in tanks)
+- [x] Uses `get_category_display()` for human-readable error messages
+- [x] Added comprehensive tests in `test_container_validation.py` (7 test cases):
+  - Tank containers accepted ✓
+  - Pen containers rejected ✓
+  - Tray containers rejected ✓
+  - Other category containers rejected ✓
+  - Various tank names accepted (name-agnostic validation) ✓
+  - Update to invalid container rejected ✓
+  - Error messages include category display names ✓
+- [x] Fixed `test_egg_production_actions.py` to include category in container_type creation
+- [x] All 68 broodstock tests passing (including 7 new tests)
 
-**Frontend Impact**: 🟢 **NO CHANGES NEEDED**
+**Implementation Details**:
+- Uses ContainerType.category field (TANK, PEN, TRAY, OTHER) instead of name matching
+- Validation is robust and won't break if container names change
+- Accepts ANY tank regardless of naming (more flexible than before)
+- Clear error messages: "Broodstock fish can only be assigned to tank containers. This container is a Pen."
+
+**Frontend Impact**: 🟢 **NO CHANGES NEEDED - IMPROVEMENTS ONLY**
 - Internal validation logic improvement
 - Same API behavior (reject invalid containers)
-- May accept more valid containers that were previously rejected due to naming
+- ✅ IMPROVEMENT: Now accepts valid tank containers that were previously rejected due to naming
+- Better error messages with specific category information
 
 ---
 

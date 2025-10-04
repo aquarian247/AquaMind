@@ -60,10 +60,16 @@ class BroodstockFishSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
     
     def validate_container(self, value):
-        """Ensure container is a broodstock type."""
-        if 'broodstock' not in value.container_type.name.lower():
+        """
+        Ensure container is suitable for broodstock.
+        
+        Broodstock fish should be kept in tank-type containers.
+        Uses category check instead of fragile name substring matching.
+        """
+        if value.container_type.category != 'TANK':
             raise serializers.ValidationError(
-                "Fish can only be assigned to broodstock containers."
+                f"Broodstock fish can only be assigned to tank containers. "
+                f"This container is a {value.container_type.get_category_display()}."
             )
         return value
     

@@ -52,7 +52,8 @@ class EggProductionActionsTest(TestCase):
             freshwater_station=self.station
         )
         container_type = ContainerType.objects.create(
-            name='broodstock tank',
+            name='Broodstock Tank',
+            category='TANK',
             max_volume_m3=Decimal('100.0')
         )
         self.container = Container.objects.create(
