@@ -533,15 +533,28 @@
 
 ---
 
-### Task 19: Fix Scenario Model Change Scheduling
+### Task 19: Fix Scenario Model Change Scheduling ✅ **COMPLETED**
 **Issue**: Allows change_day=0, causing changes to apply before simulation starts.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Update `ScenarioModelChange.clean()` to enforce `change_day >= 1`
-- [ ] Update serializer validation
-- [ ] Fix scheduling math to use consistent indexing
-- [ ] Add validation tests for boundary conditions
-- [ ] Test with change_day = 0, 1, last day of simulation
+- [x] Update `ScenarioModelChange.clean()` to enforce `change_day >= 1`
+- [x] Update model field validator to `MinValueValidator(1)` 
+- [x] Update `ScenarioModelChangeSerializer.validate_change_day()` with consistent validation
+- [x] Add validation for change_day exceeding scenario duration
+- [x] Add 10 comprehensive validation tests for boundary conditions
+- [x] Test with change_day = 0, 1, last day, beyond duration
+- [x] All 233 scenario tests passing with no regressions
+
+**Implementation Details**:
+- Updated `change_day` field validator from `MinValueValidator(0)` to `MinValueValidator(1)`
+- Enhanced `ScenarioModelChange.clean()` to validate:
+  1. At least one model is being changed
+  2. change_day >= 1 (day 0 is before simulation starts)
+  3. change_day <= scenario.duration_days
+- Updated serializer validation to match model validation
+- Added helpful error messages explaining "Day 1 is the first simulation day"
+- Fixed existing test that incorrectly expected day 0 to be valid
+- Added 10 new tests covering: day 0 rejection, day 1 acceptance, mid-simulation, last day, exceeding duration, negative values
 
 **Frontend Impact**: 🟡 **VALIDATION UPDATES**
 - **Location**: Scenario model change forms, simulation configuration
@@ -551,6 +564,7 @@
   - Update help text: "Day 1 is the first day of simulation"
 - **API Contract Change**:
   - change_day=0 will be rejected with validation error
+  - change_day beyond scenario duration will be rejected
 
 ---
 

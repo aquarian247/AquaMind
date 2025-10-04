@@ -725,11 +725,21 @@ class ScenarioModelChangeTests(TestCase):
         self.assertEqual(self.model_change.new_mortality_model, self.mortality_model2)
 
     def test_change_day_validation(self):
-        """Test change_day validation (must be positive)."""
+        """Test change_day validation (must be >= 1)."""
+        # Test negative value
         with self.assertRaises(ValidationError):
             change = ScenarioModelChange(
                 scenario=self.scenario,
                 change_day=-1,  # Invalid negative value
+                new_tgc_model=self.tgc_model2
+            )
+            change.full_clean()
+        
+        # Test zero value (should also be invalid now)
+        with self.assertRaises(ValidationError):
+            change = ScenarioModelChange(
+                scenario=self.scenario,
+                change_day=0,  # Day 0 is before simulation starts
                 new_tgc_model=self.tgc_model2
             )
             change.full_clean()

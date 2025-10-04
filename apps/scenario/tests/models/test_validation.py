@@ -910,18 +910,21 @@ class ScenarioModelChangeValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             change.full_clean()
             
-        # Test zero change_day
+        # Test zero change_day - should now be invalid
         change = ScenarioModelChange(
             **{**self.valid_data, "change_day": 0}
         )
-        change.full_clean()  # Day 0 should be valid
+        with self.assertRaises(ValidationError) as cm:
+            change.full_clean()
+        self.assertIn('change_day', str(cm.exception))
             
         # Test change_day > scenario duration
         change = ScenarioModelChange(
             **{**self.valid_data, "change_day": 200}  # > 180 days
         )
-        # This should be allowed, as the scenario duration might be extended later
-        change.full_clean()  # Should not raise
+        with self.assertRaises(ValidationError) as cm:
+            change.full_clean()
+        self.assertIn('exceeds scenario duration', str(cm.exception))
     
     def test_at_least_one_model_must_change(self):
         """Test at least one model must change."""
