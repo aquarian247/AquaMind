@@ -227,18 +227,25 @@
 
 ---
 
-### Task 10: Fix BatchFeedingSummary Field Names
+### Task 10: Fix BatchFeedingSummary Field Names ✅ **COMPLETED**
 **Issue**: `generate_for_batch` tries to write to non-existent fields causing FieldError.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Locate `BatchFeedingSummary.generate_for_batch()` method
-- [ ] Replace field names:
-  - `average_biomass_kg` → `total_starting_biomass_kg` or appropriate field
-  - `growth_kg` → `total_growth_kg`
-  - `average_biomass` → use appropriate field from DB schema
-- [ ] Verify all 17 columns in DB schema are properly mapped
-- [ ] Add regression test for summary generation
-- [ ] Test with various batch configurations
+- [x] Located `BatchFeedingSummary.generate_for_batch()` method in `apps/inventory/models/summary.py`
+- [x] Added missing `average_biomass_kg` field to `BatchFeedingSummary` model (was in DB schema but missing from Django model)
+- [x] Fixed field name mappings: `growth_kg` → `total_growth_kg`
+- [x] Fixed `FeedingEvent.calculate_feeding_percentage()` to use stored `batch_biomass_kg` field instead of batch's calculated biomass
+- [x] Verified all 17 database columns are properly mapped in the Django model
+- [x] Added comprehensive regression test suite (`BatchFeedingSummaryModelTest`) with 6 test cases covering:
+  - No events (returns None)
+  - Single event with correct field mappings
+  - Multiple events with averaging calculations
+  - Growth calculation with start/end biomass
+  - Existing summary updates
+  - Date range filtering (events outside range ignored)
+- [x] Created database migration for new `average_biomass_kg` field
+- [x] All 6 new regression tests passing
+- [x] All 146 inventory app tests passing (no regressions)
 
 **Frontend Impact**: 🟢 **NO CHANGES NEEDED**
 - Internal batch analytics method

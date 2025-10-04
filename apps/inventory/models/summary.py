@@ -129,6 +129,11 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
     total_feed_kg = DecimalFieldMixin.positive_decimal_field(
         help_text="Total feed used across all containers (kg)"
     )
+    average_biomass_kg = DecimalFieldMixin.positive_decimal_field(
+        null=True,
+        blank=True,
+        help_text="Average biomass of the batch during this period (kg)"
+    )
     average_feeding_percentage = DecimalFieldMixin.percentage_field(
         null=True,
         blank=True,
@@ -282,7 +287,7 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
                 'total_feed_kg': total_feed,
                 'average_biomass_kg': avg_biomass,
                 'average_feeding_percentage': avg_feeding_pct,
-                'growth_kg': growth,
+                'total_growth_kg': growth,
                 # Use the more precise fcr field
                 'total_feed_consumed_kg': total_feed,
                 'total_biomass_gain_kg': growth,
