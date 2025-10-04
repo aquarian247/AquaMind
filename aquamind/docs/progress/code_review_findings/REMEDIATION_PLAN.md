@@ -471,26 +471,35 @@
 
 ---
 
-### Task 17: Fix Scenario Projection Engine Null Weight Handling
+### Task 17: Fix Scenario Projection Engine Null Weight Handling ✅ **COMPLETED**
 **Issue**: Projection fails when initial_weight is null.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Add validation in `ProjectionEngine.run_projection()`
-- [ ] Either enforce non-null weights before projection or supply default
-- [ ] Update serializer to require initial_weight OR provide default
-- [ ] Add error message explaining weight requirement
-- [ ] Test projection with various weight scenarios
+- [x] Add validation in `ProjectionEngine.__init__()` to check for null/invalid weight
+- [x] Validate weight before accessing related objects to prevent crashes
+- [x] Update serializer to require initial_weight for new scenarios
+- [x] Add clear error messages explaining weight requirements with examples
+- [x] Test projection with various weight scenarios (null, zero, negative, valid)
+- [x] All 212 scenario tests passing with no regressions
+
+**Implementation Details**:
+- `ProjectionEngine._validate_scenario()` now checks if `initial_weight` is None or ≤0
+- Error message provides helpful examples: "50.0 for smolt stage, 0.1 for egg stage"
+- Validation occurs early in `__init__()` before attempting to access related objects
+- `ScenarioSerializer.validate()` requires initial_weight for new scenarios (allows updates without it)
+- Added 16 comprehensive tests covering all validation scenarios
+- ProjectionEngine only proceeds with initialization if validation passes
 
 **Frontend Impact**: 🟡 **VALIDATION UPDATES**
 - **Location**: Scenario creation/editing forms
 - **Changes Needed**:
   - Make initial_weight a required field in scenario forms
-  - Add client-side validation
-  - Provide helpful error messages
+  - Add client-side validation (minimum 0.01g)
+  - Display helpful error messages from API
   - Consider adding a "typical weight" helper/suggestion
 - **API Contract Change**:
-  - Scenario creation may reject null initial_weight
-  - Better error messages for projection failures
+  - Scenario creation now rejects null initial_weight with clear error message
+  - Better error messages for projection failures include weight examples
 
 ---
 
