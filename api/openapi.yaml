@@ -8945,9 +8945,8 @@ paths:
       description: |-
         Return the most recent readings for each parameter-container combo.
 
-        Optimized using PostgreSQL's DISTINCT ON to get latest reading
-        for each unique parameter-container pair in a single query.
-        Avoids N+1 query problem by using select_related for FKs.
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related to avoid N+1.
       tags:
       - api
       security:
@@ -9576,8 +9575,8 @@ paths:
       description: |-
         Return the most recent weather data for each area.
 
-        Optimized using PostgreSQL's DISTINCT ON to get latest data
-        for each area in a single query. Avoids N+1 query problem.
+        Uses PostgreSQL DISTINCT ON when available, falls back to
+        iteration for SQLite. Optimized with select_related.
       tags:
       - api
       security:
