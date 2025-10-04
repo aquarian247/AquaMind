@@ -102,44 +102,59 @@ class BatchTransfer(models.Model):
         return f"Transfer {self.get_transfer_type_display()}: {self.source_batch.batch_number} on {self.transfer_date}"
 
     def save(self, *args, **kwargs):
-        # We are interested in logic that runs when a new transfer is created.
+        """
+        Save transfer and update source assignment population.
+        
+        Validates transfer before saving to prevent inconsistent state.
+        """
+        # We are interested in logic that runs when a new transfer is created
         is_new = self.pk is None
-        super().save(*args, **kwargs) # Save first to get a PK if new, and ensure data is valid.
 
         if is_new and self.source_assignment:
+            # CRITICAL: Validate BEFORE saving to prevent inconsistent state
+            # If validation fails, no transfer record should be created
             with transaction.atomic():
-                # Lock the source_assignment row to prevent race conditions if multiple transfers happen.
-                # Note: select_for_update() needs to be called on a queryset.
+                # Lock the source_assignment to prevent race conditions
                 from apps.batch.models.assignment import BatchContainerAssignment
-                assignment_to_update = BatchContainerAssignment.objects.select_for_update().get(pk=self.source_assignment.pk)
+                assignment_to_update = (
+                    BatchContainerAssignment.objects.select_for_update()
+                    .get(pk=self.source_assignment.pk)
+                )
 
-                # Validate transfer before updating population
+                # Validate transfer count before ANY database changes
                 reduction = self.transferred_count + (self.mortality_count or 0)
 
-                # Check if transfer would exceed available population
                 if reduction > assignment_to_update.population_count:
                     from django.core.exceptions import ValidationError
                     raise ValidationError(
-                        f"Transfer count ({reduction}) exceeds available population "
-                        f"({assignment_to_update.population_count}) in assignment {assignment_to_update.id}. "
+                        f"Transfer count ({reduction}) exceeds available "
+                        f"population ({assignment_to_update.population_count}) "
+                        f"in assignment {assignment_to_update.id}. "
                         f"Cannot create transfer."
                     )
 
-                # Reduce population from source assignment (now safe since validated above)
+                # Save transfer (validation passed)
+                super().save(*args, **kwargs)
+
+                # Update source assignment population
                 original_population = assignment_to_update.population_count
                 assignment_to_update.population_count -= reduction
 
-                # Log if population reached zero (this is expected behavior for complete transfers)
+                # Handle complete depletion
                 if assignment_to_update.population_count == 0:
                     import logging
                     logger = logging.getLogger(__name__)
                     logger.info(
                         f"Transfer depleted population completely. "
-                        f"Assignment {assignment_to_update.id}: {original_population} - {reduction} = 0. "
+                        f"Assignment {assignment_to_update.id}: "
+                        f"{original_population} - {reduction} = 0. "
                         f"Transfer ID: {self.id}"
                     )
-                    if not assignment_to_update.departure_date: # Only set if not already set
+                    if not assignment_to_update.departure_date:
                         assignment_to_update.departure_date = self.transfer_date
                     assignment_to_update.is_active = False
 
                 assignment_to_update.save()
+        else:
+            # No source assignment or updating existing transfer
+            super().save(*args, **kwargs)

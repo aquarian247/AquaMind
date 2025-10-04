@@ -89,28 +89,41 @@ def validate_individual_measurements(sample_size, individual_lengths, individual
 
     Raises:
         ValidationError: If validation fails
+    
+    Returns:
+        None: If validation passes or is not applicable
     """
+    # Skip validation if no individual measurements provided
+    if not individual_lengths and not individual_weights:
+        return None
+    
     errors = {}
 
-    # Check sample_size against individual measurement lists
+    # Only validate against sample_size if sample_size is provided
+    # If sample_size is None, we're not in measurement-based mode
     if sample_size is not None:
         if individual_lengths and len(individual_lengths) != sample_size:
             errors.setdefault('sample_size', []).append(
-                f"Sample size ({sample_size}) must match length of individual_lengths ({len(individual_lengths)})."
+                f"Sample size ({sample_size}) must match length of "
+                f"individual_lengths ({len(individual_lengths)})."
             )
         if individual_weights and len(individual_weights) != sample_size:
             errors.setdefault('sample_size', []).append(
-                f"Sample size ({sample_size}) must match length of individual_weights ({len(individual_weights)})."
+                f"Sample size ({sample_size}) must match length of "
+                f"individual_weights ({len(individual_weights)})."
             )
 
-    # Check list length mismatch
-    if individual_lengths and individual_weights and len(individual_lengths) != len(individual_weights):
+    # Check list length mismatch (only if both lists provided)
+    if (individual_lengths and individual_weights and 
+            len(individual_lengths) != len(individual_weights)):
         errors['individual_measurements'] = [
             "Length of individual_weights must match individual_lengths."
         ]
 
     if errors:
         raise serializers.ValidationError(errors)
+    
+    return None
 
 
 def validate_sample_size_against_population(sample_size, assignment):
@@ -166,11 +179,17 @@ def validate_min_max_weight(min_weight, max_weight):
 
     Raises:
         ValidationError: If min_weight > max_weight
+    
+    Returns:
+        None: If validation passes or is not applicable
     """
     if min_weight is None or max_weight is None:
-        return
+        return None
 
     if min_weight > max_weight:
         raise serializers.ValidationError({
-            'min_weight_g': "Minimum weight cannot be greater than maximum weight."
+            'min_weight_g': "Minimum weight cannot be greater than "
+                          "maximum weight."
         })
+    
+    return None
