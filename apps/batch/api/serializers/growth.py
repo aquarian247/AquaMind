@@ -122,12 +122,13 @@ class GrowthSampleSerializer(
             return errors
 
         try:
-            measurement_errors = validate_individual_measurements(
-                validated_data.get('individual_weights', []),
-                validated_data.get('individual_lengths', [])
+            validate_individual_measurements(
+                validated_data.get('sample_size'),
+                validated_data.get('individual_lengths', []),
+                validated_data.get('individual_weights', [])
             )
-            if measurement_errors:
-                errors.update(measurement_errors)
+        except serializers.ValidationError as e:
+            errors.update(e.detail)
         except Exception as e:
             errors['individual_measurements'] = f'Error validating individual measurements: {str(e)}'
 
@@ -145,13 +146,12 @@ class GrowthSampleSerializer(
 
         if not validated_data.get('individual_weights'):
             try:
-                min_max_errors = validate_min_max_weight(
+                validate_min_max_weight(
                     validated_data.get('min_weight_g'),
-                    validated_data.get('max_weight_g'),
-                    validated_data.get('avg_weight_g')
+                    validated_data.get('max_weight_g')
                 )
-                if min_max_errors:
-                    errors.update(min_max_errors)
+            except serializers.ValidationError as e:
+                errors.update(e.detail)
             except Exception as e:
                 errors['weight_validation'] = f'Error validating weight ranges: {str(e)}'
 

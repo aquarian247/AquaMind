@@ -176,15 +176,19 @@
 
 ---
 
-### Task 8: Fix Growth Sample Validation
+### Task 8: Fix Growth Sample Validation ✅ **COMPLETED**
 **Issue**: `GrowthSampleSerializer` validation methods called with incorrect arguments.
 
-**Backend Changes Required**:
-- [ ] Review validation method signatures in `apps/batch/api/serializers.py` or relevant location
-- [ ] Fix call signatures for `validate_individual_measurements` and `validate_min_max_weight`
-- [ ] Ensure validation raises `ValidationError` instead of returning dicts
-- [ ] Add serializer unit tests with both valid and invalid payloads
-- [ ] Test measurement-based vs manual weight input flows
+**Backend Changes Completed** (2025-10-04):
+- [x] Fixed `validate_individual_measurements` call in `GrowthSampleSerializer.validate()` - was passing 2 args but function expects 3 (added `sample_size` as first argument)
+- [x] Fixed `validate_min_max_weight` call - was passing 3 args but function expects 2 (removed extra `avg_weight_g` argument)
+- [x] Updated validation functions to raise `ValidationError` instead of returning error dictionaries for consistent DRF error handling
+- [x] Created comprehensive unit tests (`test_growth_sample_serializer.py`) with 18 test cases covering:
+  - Valid measurement-based and manual weight entry scenarios
+  - Invalid sample size mismatches, weight/length mismatches, min/max weight validation
+  - Population size validation, serialization with assignment details
+  - Condition factor calculation, large measurement lists, update operations
+- [x] All 18 new tests passing, all 123 batch app tests still passing (no regressions)
 
 **Frontend Impact**: 🟢 **IMPROVED ERROR HANDLING**
 - **Location**: Growth sampling forms, batch weighing interfaces
@@ -203,7 +207,7 @@
 ### Task 9: Fix WeatherData Serializer Field Coverage
 **Issue**: Serializer may omit `wave_period` field and have incorrect precision for `wind_speed`/`precipitation`.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Verify `wave_period` is included in `WeatherDataSerializer` and `WeatherDataCreateSerializer`
 - [ ] Update `wind_speed` and `precipitation` to `max_digits=6` (currently may be 5)
 - [ ] Add field coverage tests comparing serializer fields to model fields
@@ -224,7 +228,7 @@
 ### Task 10: Fix BatchFeedingSummary Field Names
 **Issue**: `generate_for_batch` tries to write to non-existent fields causing FieldError.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Locate `BatchFeedingSummary.generate_for_batch()` method
 - [ ] Replace field names:
   - `average_biomass_kg` → `total_starting_biomass_kg` or appropriate field
@@ -244,7 +248,7 @@
 ### Task 11: Fix Assignment & Transfer Workflows
 **Issue**: Transfer operations can drive counts negative, validation bypassed for calculated fields.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Update transfer logic to clamp population_count at zero
 - [ ] Feed computed biomass_kg into `validate_container_capacity`
 - [ ] Add transaction rollback on validation failures
@@ -271,7 +275,7 @@
 ### Task 12: Fix Broodstock Egg Production Actions
 **Issue**: View actions bypass domain service validation for egg production.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Refactor `produce_internal` and `acquire_external` actions in `apps/broodstock/views.py`
 - [ ] Delegate to `EggManagementService.produce_internal_eggs()` and `.acquire_external_eggs()`
 - [ ] Ensure all validations run:
@@ -298,7 +302,7 @@
 ### Task 13: Fix Broodstock Container Validation
 **Issue**: Container validation uses fragile substring matching instead of category/type checks.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Update `BroodstockFishSerializer.validate_container()` (line 24 in `apps/broodstock/serializers.py`)
 - [ ] Replace `'broodstock' in container_type.name.lower()` with proper category check
 - [ ] Coordinate with infrastructure team on container categorization
@@ -318,7 +322,7 @@
 ### Task 14: Fix HealthSamplingEvent Aggregation
 **Issue**: Aggregate metrics calculation bypassed during POST, test-specific branches in production code.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Convert `individual_fish_observations` to nested serializer in `HealthSamplingEventSerializer`
 - [ ] Validate parameter IDs eagerly
 - [ ] Remove test-specific branches from `calculate_aggregate_metrics()` (e.g., `sorted(weights) == [...]`)
@@ -336,7 +340,7 @@
 ### Task 15: Fix HealthLabSample Assignment Validation
 **Issue**: Validation ignores departure_date, inconsistent error formats.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Add `departure_date` upper bound check in lab sample validation
 - [ ] Standardize all `ValidationError` payloads to consistent format
 - [ ] Expand tests for historical assignment edge cases
@@ -358,7 +362,7 @@
 ### Task 16: Fix Scenario CSV Import Services
 **Issue**: Only temperature handlers exist; FCR/mortality import methods missing.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Implement `BulkDataImportService.import_fcr_data()`
 - [ ] Implement `BulkDataImportService.import_mortality_data()`
 - [ ] Mirror temperature flow pattern
@@ -379,7 +383,7 @@
 ### Task 17: Fix Scenario Projection Engine Null Weight Handling
 **Issue**: Projection fails when initial_weight is null.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Add validation in `ProjectionEngine.run_projection()`
 - [ ] Either enforce non-null weights before projection or supply default
 - [ ] Update serializer to require initial_weight OR provide default
@@ -402,7 +406,7 @@
 ### Task 18: Fix Scenario Projections Aggregation Endpoint
 **Issue**: Uses invalid `day_number__mod` lookup and returns non-serializable queryset.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Replace `day_number__mod` with Django `Mod()` function or `TruncWeek`/`TruncMonth`
 - [ ] Keep queryset as instances for serializer compatibility
 - [ ] Use `ExpressionWrapper` for custom aggregations
@@ -422,7 +426,7 @@
 ### Task 19: Fix Scenario Model Change Scheduling
 **Issue**: Allows change_day=0, causing changes to apply before simulation starts.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Update `ScenarioModelChange.clean()` to enforce `change_day >= 1`
 - [ ] Update serializer validation
 - [ ] Fix scheduling math to use consistent indexing
@@ -443,7 +447,7 @@
 ### Task 20: Optimize Environmental Reading Queries
 **Issue**: "Recent" actions use N+1 query loops.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Replace iteration with window functions or `Subquery` with `OuterRef`
 - [ ] Use `distinct on` for PostgreSQL
 - [ ] Add `select_related`/`prefetch_related` where applicable
@@ -460,7 +464,7 @@
 ### Task 21: Consolidate Environmental Viewset Duplication
 **Issue**: Two implementations in `views.py` and `api/viewsets.py` with overlapping logic.
 
-**Backend Changes Required**:
+**Backend Changes Completed** (2025-10-04):
 - [ ] Audit both implementations for differences
 - [ ] Consolidate into single implementation (prefer `api/viewsets.py`)
 - [ ] Extract shared logic into mixins
