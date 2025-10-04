@@ -156,19 +156,29 @@ class StageTransitionEnvironmentalAPITest(APITestCase):
 
     def test_create_transition(self):
         """Test creating a new stage transition environmental record."""
+        # Create a fresh assignment with available population for this test
+        fresh_assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            lifecycle_stage=self.source_stage,
+            population_count=1000,
+            biomass_kg=Decimal('100.00'),
+            assignment_date=timezone.now().date(),
+            is_active=True
+        )
+
         # Create a second batch transfer with proper field names
         new_batch_transfer = BatchTransfer.objects.create(
             source_batch=self.batch,
+            source_assignment=fresh_assignment,
             transfer_type="LIFECYCLE",
             transfer_date=timezone.now().date(),
-            source_count=950,
+            source_count=1000,
             transferred_count=950,
             source_biomass_kg=Decimal('100.00'),
-            transferred_biomass_kg=Decimal('100.00'),
+            transferred_biomass_kg=Decimal('95.00'),
             source_lifecycle_stage=self.source_stage,
-            destination_lifecycle_stage=self.dest_stage,
-            source_assignment=self.source_assignment,
-            destination_assignment=self.destination_assignment
+            destination_lifecycle_stage=self.dest_stage
         )
         
         new_data = {

@@ -154,15 +154,21 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
         container = data.get('container')
         assignment_id = self.instance.id if self.instance else None
 
-        # Validate container capacity
-        if batch and container and 'biomass_kg' in data:
-            capacity_error = validate_container_capacity(
-                container,
-                data['biomass_kg'],
-                assignment_id
-            )
-            if capacity_error:
-                errors['container'] = capacity_error
+        # Validate container capacity using computed biomass
+        if batch and container:
+            # Compute biomass from population_count and avg_weight_g
+            population_count = data.get('population_count')
+            avg_weight_g = data.get('avg_weight_g')
+
+            if population_count is not None and avg_weight_g is not None:
+                computed_biomass = calculate_biomass_kg(population_count, avg_weight_g)
+                capacity_error = validate_container_capacity(
+                    container,
+                    computed_biomass,
+                    assignment_id
+                )
+                if capacity_error:
+                    errors['container'] = capacity_error
 
         # Validate batch population
         if batch and 'population_count' in data:

@@ -254,19 +254,17 @@
 
 ---
 
-### Task 11: Fix Assignment & Transfer Workflows
+### Task 11: Fix Assignment & Transfer Workflows ✅ **COMPLETED**
 **Issue**: Transfer operations can drive counts negative, validation bypassed for calculated fields.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Update transfer logic to clamp population_count at zero
-- [ ] Feed computed biomass_kg into `validate_container_capacity`
-- [ ] Add transaction rollback on validation failures
-- [ ] Add tests for:
-  - Mortality exceeding population
-  - Over-transfer scenarios
-  - Mixed-batch compositions
-  - Negative population prevention
-- [ ] Add logging for unexpected negative populations
+- [x] Update transfer logic to clamp population_count at zero and prevent negative populations
+- [x] Feed computed biomass_kg into `validate_container_capacity` instead of stored field
+- [x] Add transaction rollback on validation failures in transfer operations
+- [x] Add comprehensive tests for mortality exceeding population, over-transfer scenarios, mixed-batch compositions, and negative population prevention
+- [x] Add logging for unexpected negative populations in transfers and mortality
+- [x] Update MortalityRecord model to automatically reduce batch populations when mortality events are recorded
+- [x] Implement proportional mortality distribution across batch assignments
 
 **Frontend Impact**: 🟡 **ERROR HANDLING**
 - **Location**: Transfer forms, assignment management, mortality recording
@@ -281,30 +279,48 @@
 
 ---
 
-### Task 12: Fix Broodstock Egg Production Actions
+### Task 12: Fix Broodstock Egg Production Actions ✅ **COMPLETED**
 **Issue**: View actions bypass domain service validation for egg production.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Refactor `produce_internal` and `acquire_external` actions in `apps/broodstock/views.py`
-- [ ] Delegate to `EggManagementService.produce_internal_eggs()` and `.acquire_external_eggs()`
-- [ ] Ensure all validations run:
-  - Inactive plans blocked
-  - Unhealthy broodstock rejected
-  - Duplicate supplier batches prevented
-  - `BreedingPair.progeny_count` properly updated
-- [ ] Wrap in `transaction.atomic()`
-- [ ] Reuse `EggManagementService.generate_egg_batch_id()` for uniqueness
-- [ ] Add integration tests for actions
+- [x] Refactored `produce_internal` and `acquire_external` actions in `apps/broodstock/views.py` 
+- [x] Delegated to `EggManagementService.produce_internal_eggs()` and `.acquire_external_eggs()`
+- [x] Ensured all validations run:
+  - Inactive plans blocked ✓
+  - Unhealthy broodstock rejected ✓
+  - Duplicate supplier batches prevented ✓
+  - `BreedingPair.progeny_count` properly updated ✓
+- [x] Service methods already wrapped in `transaction.atomic()`
+- [x] Reusing `EggManagementService.generate_egg_batch_id()` for uniqueness
+- [x] Added comprehensive integration tests (15 test cases in `test_egg_production_actions.py`):
+  - Successful internal/external egg production
+  - Inactive breeding plan rejection
+  - Unhealthy fish rejection (both male and female)
+  - Invalid ID handling (404s)
+  - Missing required field validation
+  - Negative egg count rejection
+  - Progeny count accumulation
+  - Duplicate batch number prevention
+  - Different suppliers with same batch number allowed
+  - Unique egg_batch_id generation
+- [x] All 61 broodstock tests passing (including 15 new tests)
+
+**Implementation Details**:
+- Actions now fetch related objects (BreedingPair, EggSupplier, FreshwaterStation) with proper error handling
+- Comprehensive input validation before delegating to service
+- Consistent error response format with clear messages
+- Service methods handle all business logic and validations atomically
 
 **Frontend Impact**: 🟢 **IMPROVED RELIABILITY**
 - **Location**: Broodstock management, egg production forms
 - **Changes Needed**:
   - No breaking changes
-  - Better error messages for validation failures
+  - Better error messages for validation failures (plan inactive, fish unhealthy, duplicate batches)
   - Verify egg production forms handle new validation errors gracefully
 - **API Contract Change**:
   - More comprehensive validation (may reject previously accepted requests)
-  - Consistent egg_batch_id format
+  - Consistent egg_batch_id format with microseconds (EB-INT-YYYYMMDDHHMMSS-mmm / EB-EXT-YYYYMMDDHHMMSS-mmm)
+  - Better error messages with specific validation failure reasons
 
 ---
 

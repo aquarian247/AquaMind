@@ -290,77 +290,162 @@ class EggProductionViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def produce_internal(self, request):
-        """Create internal egg production from a breeding pair."""
+        """
+        Create internal egg production from a breeding pair.
+        
+        Delegates to EggManagementService for proper validation including:
+        - Active breeding plan validation
+        - Fish health status checks
+        - Automatic progeny count updates
+        - Unique batch ID generation
+        """
+        from apps.broodstock.services.egg_management_service import EggManagementService
+        from apps.broodstock.models import BreedingPair
+        from apps.infrastructure.models import FreshwaterStation
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        
         pair_id = request.data.get('pair_id')
         egg_count = request.data.get('egg_count')
         destination_station_id = request.data.get('destination_station_id')
         
+        # Basic required field validation
         if not all([pair_id, egg_count]):
             return Response(
                 {'error': 'pair_id and egg_count are required.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Generate unique egg batch ID
-        egg_batch_id = f"EB-INT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        # Validate egg count is positive
+        try:
+            egg_count = int(egg_count)
+            if egg_count <= 0:
+                return Response(
+                    {'error': 'egg_count must be positive.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'egg_count must be a valid integer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        data = {
-            'pair': pair_id,
-            'egg_batch_id': egg_batch_id,
-            'egg_count': egg_count,
-            'source_type': 'internal',
-            'destination_station': destination_station_id
-        }
+        # Get breeding pair
+        try:
+            breeding_pair = BreedingPair.objects.select_related(
+                'plan', 'male_fish', 'female_fish'
+            ).get(id=pair_id)
+        except BreedingPair.DoesNotExist:
+            return Response(
+                {'error': f'Breeding pair with id {pair_id} not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        # Get destination station if provided
+        destination_station = None
+        if destination_station_id:
+            try:
+                destination_station = FreshwaterStation.objects.get(id=destination_station_id)
+            except FreshwaterStation.DoesNotExist:
+                return Response(
+                    {'error': f'Freshwater station with id {destination_station_id} not found.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
+        # Delegate to service with proper validation
+        try:
+            egg_production = EggManagementService.produce_internal_eggs(
+                breeding_pair=breeding_pair,
+                egg_count=egg_count,
+                destination_station=destination_station
+            )
+        except DjangoValidationError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Return serialized response
+        serializer = EggProductionDetailSerializer(egg_production)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=False, methods=['post'])
     def acquire_external(self, request):
-        """Create external egg acquisition."""
+        """
+        Create external egg acquisition.
+        
+        Delegates to EggManagementService for proper validation including:
+        - Duplicate batch number prevention
+        - Atomic transaction handling
+        - Unique batch ID generation
+        """
+        from apps.broodstock.services.egg_management_service import EggManagementService
+        from apps.broodstock.models import EggSupplier
+        from apps.infrastructure.models import FreshwaterStation
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        
         supplier_id = request.data.get('supplier_id')
         batch_number = request.data.get('batch_number')
         egg_count = request.data.get('egg_count')
         provenance_data = request.data.get('provenance_data', '')
         destination_station_id = request.data.get('destination_station_id')
         
+        # Basic required field validation
         if not all([supplier_id, batch_number, egg_count]):
             return Response(
                 {'error': 'supplier_id, batch_number, and egg_count are required.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Generate unique egg batch ID
-        egg_batch_id = f"EB-EXT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        # Validate egg count is positive
+        try:
+            egg_count = int(egg_count)
+            if egg_count <= 0:
+                return Response(
+                    {'error': 'egg_count must be positive.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'egg_count must be a valid integer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        with transaction.atomic():
-            # Create egg production
-            egg_data = {
-                'egg_batch_id': egg_batch_id,
-                'egg_count': egg_count,
-                'source_type': 'external',
-                'destination_station': destination_station_id
-            }
-            egg_serializer = self.get_serializer(data=egg_data)
-            egg_serializer.is_valid(raise_exception=True)
-            egg_production = egg_serializer.save()
-            
-            # Create external batch record
-            external_data = {
-                'egg_production': egg_production.id,
-                'supplier': supplier_id,
-                'batch_number': batch_number,
-                'provenance_data': provenance_data
-            }
-            external_serializer = ExternalEggBatchSerializer(data=external_data)
-            external_serializer.is_valid(raise_exception=True)
-            external_serializer.save()
+        # Get supplier
+        try:
+            supplier = EggSupplier.objects.get(id=supplier_id)
+        except EggSupplier.DoesNotExist:
+            return Response(
+                {'error': f'Egg supplier with id {supplier_id} not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
-        # Return the egg production with external batch data
-        egg_production.refresh_from_db()
+        # Get destination station if provided
+        destination_station = None
+        if destination_station_id:
+            try:
+                destination_station = FreshwaterStation.objects.get(id=destination_station_id)
+            except FreshwaterStation.DoesNotExist:
+                return Response(
+                    {'error': f'Freshwater station with id {destination_station_id} not found.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
+        # Delegate to service with proper validation (includes duplicate check)
+        try:
+            egg_production, external_batch = EggManagementService.acquire_external_eggs(
+                supplier=supplier,
+                batch_number=batch_number,
+                egg_count=egg_count,
+                provenance_data=provenance_data,
+                destination_station=destination_station
+            )
+        except DjangoValidationError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Return serialized response with external batch data
         serializer = EggProductionDetailSerializer(egg_production)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

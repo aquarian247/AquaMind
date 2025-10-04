@@ -112,15 +112,34 @@ class BatchTransfer(models.Model):
                 # Note: select_for_update() needs to be called on a queryset.
                 from apps.batch.models.assignment import BatchContainerAssignment
                 assignment_to_update = BatchContainerAssignment.objects.select_for_update().get(pk=self.source_assignment.pk)
-                
-                # Reduce population from source assignment
+
+                # Validate transfer before updating population
                 reduction = self.transferred_count + (self.mortality_count or 0)
+
+                # Check if transfer would exceed available population
+                if reduction > assignment_to_update.population_count:
+                    from django.core.exceptions import ValidationError
+                    raise ValidationError(
+                        f"Transfer count ({reduction}) exceeds available population "
+                        f"({assignment_to_update.population_count}) in assignment {assignment_to_update.id}. "
+                        f"Cannot create transfer."
+                    )
+
+                # Reduce population from source assignment (now safe since validated above)
+                original_population = assignment_to_update.population_count
                 assignment_to_update.population_count -= reduction
-                
-                if assignment_to_update.population_count <= 0:
-                    assignment_to_update.population_count = 0 # Ensure it doesn't go negative
+
+                # Log if population reached zero (this is expected behavior for complete transfers)
+                if assignment_to_update.population_count == 0:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(
+                        f"Transfer depleted population completely. "
+                        f"Assignment {assignment_to_update.id}: {original_population} - {reduction} = 0. "
+                        f"Transfer ID: {self.id}"
+                    )
                     if not assignment_to_update.departure_date: # Only set if not already set
                         assignment_to_update.departure_date = self.transfer_date
                     assignment_to_update.is_active = False
-                
+
                 assignment_to_update.save()
