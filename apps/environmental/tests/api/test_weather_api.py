@@ -1,7 +1,7 @@
 """
 Tests for the WeatherData API endpoints.
 
-This module tests CRUD operations and time-series data handling for 
+This module tests CRUD operations and time-series data handling for
 the WeatherData model through the API.
 """
 from decimal import Decimal
@@ -13,6 +13,8 @@ from rest_framework.test import APITestCase
 from datetime import timedelta
 
 from apps.environmental.models import WeatherData
+from apps.environmental.api.serializers import WeatherDataSerializer
+from apps.environmental.serializers import WeatherDataCreateSerializer
 from apps.infrastructure.models import Geography, Area
 
 
@@ -291,3 +293,108 @@ class WeatherDataAPITest(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_serializer_field_coverage(self):
+        """Test that serializers include all model fields."""
+        # Test WeatherDataSerializer (used for GET/retrieve)
+        serializer = WeatherDataSerializer()
+        serializer_fields = set(serializer.get_fields().keys())
+
+        # Expected fields from model (excluding many-to-many and reverse relations)
+        model_fields = set()
+        for field in WeatherData._meta.get_fields():
+            if not field.many_to_many and not field.one_to_many:
+                model_fields.add(field.name)
+
+        # Additional fields from serializer (read-only fields)
+        expected_extra_fields = {'area_name'}  # StringRelatedField for area
+
+        expected_fields = model_fields | expected_extra_fields
+        self.assertEqual(serializer_fields, expected_fields,
+                        f"WeatherDataSerializer missing fields: {expected_fields - serializer_fields}, "
+                        f"extra fields: {serializer_fields - expected_fields}")
+
+        # Ensure wave_period is included
+        self.assertIn('wave_period', serializer_fields,
+                     "wave_period field should be included in WeatherDataSerializer")
+
+    def test_create_serializer_field_coverage(self):
+        """Test that WeatherDataCreateSerializer includes all required model fields."""
+        serializer = WeatherDataCreateSerializer()
+        serializer_fields = set(serializer.get_fields().keys())
+
+        # WeatherDataCreateSerializer should include all model fields except read-only ones
+        expected_fields = {
+            'id', 'area', 'timestamp', 'temperature', 'wind_speed', 'wind_direction',
+            'precipitation', 'wave_height', 'wave_period', 'wave_direction', 'cloud_cover'
+        }
+
+        self.assertEqual(serializer_fields, expected_fields,
+                        f"WeatherDataCreateSerializer missing fields: {expected_fields - serializer_fields}, "
+                        f"extra fields: {serializer_fields - expected_fields}")
+
+        # Ensure wave_period is included
+        self.assertIn('wave_period', serializer_fields,
+                     "wave_period field should be included in WeatherDataCreateSerializer")
+
+    def test_round_trip_data_preservation(self):
+        """Test that data is preserved through create->retrieve cycle."""
+        # Create weather data with all fields including wave_period
+        create_data = {
+            'area': self.area.id,
+            'timestamp': (self.timestamp + timedelta(hours=2)).isoformat(),
+            'temperature': '18.50',
+            'wind_speed': '7.25',
+            'wind_direction': 225,
+            'precipitation': '1.75',
+            'wave_height': '1.85',
+            'wave_period': '7.25',
+            'wave_direction': 245,
+            'cloud_cover': 85
+        }
+
+        # Create via API
+        response = self.client.post(self.list_url, create_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Retrieve the created object
+        created_id = response.data['id']
+        detail_url = reverse('weather-detail', kwargs={'pk': created_id})
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify all fields are preserved
+        retrieved_data = response.data
+        self.assertEqual(float(retrieved_data['temperature']), float(create_data['temperature']))
+        self.assertEqual(float(retrieved_data['wind_speed']), float(create_data['wind_speed']))
+        self.assertEqual(retrieved_data['wind_direction'], create_data['wind_direction'])
+        self.assertEqual(float(retrieved_data['precipitation']), float(create_data['precipitation']))
+        self.assertEqual(float(retrieved_data['wave_height']), float(create_data['wave_height']))
+        self.assertEqual(float(retrieved_data['wave_period']), float(create_data['wave_period']))
+        self.assertEqual(retrieved_data['wave_direction'], create_data['wave_direction'])
+        self.assertEqual(retrieved_data['cloud_cover'], create_data['cloud_cover'])
+
+        # Ensure wave_period is present in the response
+        self.assertIn('wave_period', retrieved_data)
+        self.assertEqual(float(retrieved_data['wave_period']), float(create_data['wave_period']))
+
+    def test_precision_validation(self):
+        """Test that decimal fields accept values up to max_digits."""
+        # Test wind_speed accepts up to 6 digits
+        valid_wind_speed_data = {
+            'area': self.area.id,
+            'timestamp': (self.timestamp + timedelta(hours=3)).isoformat(),
+            'wind_speed': '123.45',  # 6 digits total (3 before decimal, 2 after)
+            'precipitation': '67.89'  # 5 digits total (2 before decimal, 2 after)
+        }
+
+        response = self.client.post(self.list_url, valid_wind_speed_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Verify the values are stored correctly
+        created_id = response.data['id']
+        detail_url = reverse('weather-detail', kwargs={'pk': created_id})
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(float(response.data['wind_speed']), 123.45)
+        self.assertEqual(float(response.data['precipitation']), 67.89)

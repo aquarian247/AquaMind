@@ -268,7 +268,7 @@ class WeatherDataSerializer(serializers.ModelSerializer):
     )
     
     wind_speed = serializers.DecimalField(
-        max_digits=5,
+        max_digits=6,
         decimal_places=2,
         required=False,
         allow_null=True,
@@ -283,7 +283,7 @@ class WeatherDataSerializer(serializers.ModelSerializer):
     )
     
     precipitation = serializers.DecimalField(
-        max_digits=5,
+        max_digits=6,
         decimal_places=2,
         required=False,
         allow_null=True,
@@ -297,7 +297,15 @@ class WeatherDataSerializer(serializers.ModelSerializer):
         allow_null=True,
         help_text="Wave height in meters."
     )
-    
+
+    wave_period = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Wave period in seconds."
+    )
+
     wave_direction = serializers.IntegerField(
         required=False,
         allow_null=True,
