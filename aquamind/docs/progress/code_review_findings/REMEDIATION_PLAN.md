@@ -35,26 +35,32 @@
 
 ---
 
-### Task 2: Fix MortalityRecord UserAssignmentMixin Conflict
+### Task 2: Fix MortalityRecord UserAssignmentMixin Conflict ✅ **COMPLETED**
 **Issue**: `MortalityRecordViewSet` uses `UserAssignmentMixin` but model has no `user` field, causing TypeError on create.
 
-**Backend Changes Required**:
-- [ ] Remove `UserAssignmentMixin` from `MortalityRecordViewSet` (line 48 in `apps/health/api/viewsets/mortality.py`)
-- [ ] Remove conflicting filter overrides that reference `mortality_date` and `recorded_by` fields
-- [ ] Update `filterset_fields` to only include actual model fields: `['event_date', 'batch', 'container', 'reason']`
-- [ ] Add tests for POST requests to mortality records endpoint
-- [ ] Verify list filtering works with corrected fields
+**Backend Changes Completed** (2025-10-04):
+- [x] Removed `UserAssignmentMixin` from `MortalityRecordViewSet`
+- [x] Removed conflicting filter overrides that referenced `mortality_date` and `recorded_by` fields
+- [x] Updated `filterset_fields` to only include actual model fields: `event_date`, `batch`, `container`, `reason`, `count`
+- [x] Fixed `LiceCountViewSet` filters to use actual fields (removed invalid `batch_container_assignment`, `fish_count`, `lice_count`)
+- [x] Updated `MortalityRecordSerializer` to mark `container` as optional (`required=False, allow_null=True`)
+- [x] Updated `LiceCountSerializer` to mark `container` as optional
+- [x] Added 11 comprehensive tests verifying POST/GET operations and filtering
+- [x] All tests passing
 
 **Frontend Impact**: 🟡 **MINOR - MAY REQUIRE CHANGES**
 - **Location**: Health monitoring/mortality recording components
 - **Changes Needed**:
   - If frontend filters by `mortality_date`, change to `event_date`
   - If frontend filters by `recorded_by`, remove that filter (field doesn't exist)
-  - Verify create requests don't send `user` field
-  - Update any mortality list table columns that reference wrong field names
+  - Verify create requests don't send `user` field to MortalityRecord endpoint
+  - For LiceCount: update filters from `fish_count` to `fish_sampled`
+  - Container field now properly optional in both endpoints
 - **API Contract Change**:
-  - Filter parameter `mortality_date` → `event_date`
-  - Filter parameter `recorded_by` is removed
+  - Filter parameter `mortality_date` → `event_date` for mortality records
+  - Filter parameter `recorded_by` removed from mortality records
+  - LiceCount filters updated to use actual fields (`fish_sampled`, individual count fields)
+  - Container field properly optional in create requests
 
 
 ---

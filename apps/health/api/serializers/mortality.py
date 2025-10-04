@@ -46,7 +46,9 @@ class MortalityRecordSerializer(HealthBaseSerializer):
     )
     container = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(),
-        help_text="The container where the mortality occurred."
+        required=False,
+        allow_null=True,
+        help_text="The container where the mortality occurred (optional)."
     )
     event_date = serializers.DateTimeField(
         read_only=True,
@@ -95,7 +97,9 @@ class LiceCountSerializer(HealthBaseSerializer):
     )
     container = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(),
-        help_text="The container where the fish were sampled for lice counting."
+        required=False,
+        allow_null=True,
+        help_text="The container where fish were sampled (optional)."
     )
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
