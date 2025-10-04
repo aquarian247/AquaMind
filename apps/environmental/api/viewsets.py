@@ -187,6 +187,88 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
+                name='container_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the container to fetch readings for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='parameter_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings by environmental parameter.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or after this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter readings at or before this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of readings to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
+    @action(detail=False, methods=['get'])
+    def by_container(self, request):
+        """
+        Get readings filtered by container and optional time range.
+        
+        Query parameters:
+        - container_id: Required, container to fetch readings for
+        - parameter_id: Optional, filter by specific parameter
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+        """
+        from rest_framework import status as drf_status
+        
+        container_id = request.query_params.get('container_id')
+        parameter_id = request.query_params.get('parameter_id')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        limit = int(request.query_params.get('limit', 1000))
+        
+        if not container_id:
+            return Response(
+                {"error": "container_id is required"},
+                status=drf_status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Build query
+        queryset = self.get_queryset().filter(container_id=container_id)
+        
+        if parameter_id:
+            queryset = queryset.filter(parameter_id=parameter_id)
+            
+        if start_time:
+            queryset = queryset.filter(reading_time__gte=start_time)
+            
+        if end_time:
+            queryset = queryset.filter(reading_time__lte=end_time)
+            
+        queryset = queryset[:limit]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
                 name='group_by',
                 type=OpenApiTypes.STR,
                 location=OpenApiParameter.QUERY,
@@ -341,6 +423,76 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
         ).order_by('area_id', '-timestamp').distinct('area_id')
         
         serializer = self.get_serializer(recent_data, many=True)
+        return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='area_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='ID of the area to fetch weather data for.',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='start_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or after this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='end_time',
+                type=OpenApiTypes.DATETIME,
+                location=OpenApiParameter.QUERY,
+                description='Filter weather data at or before this timestamp.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='limit',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Maximum number of records to return (default 1000).',
+                required=False,
+                default=1000,
+            ),
+        ]
+    )
+    @action(detail=False, methods=['get'])
+    def by_area(self, request):
+        """
+        Get weather data filtered by area and optional time range.
+        
+        Query parameters:
+        - area_id: Required, the ID of the area to fetch weather data for
+        - start_time: Optional, ISO format datetime for range start
+        - end_time: Optional, ISO format datetime for range end
+        - limit: Optional, limit number of results (default: 1000)
+        """
+        from rest_framework import status as drf_status
+        
+        area_id = request.query_params.get('area_id')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        limit = int(request.query_params.get('limit', 1000))
+        
+        if not area_id:
+            return Response(
+                {"error": "area_id is required"},
+                status=drf_status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Build query
+        queryset = self.get_queryset().filter(area_id=area_id)
+            
+        if start_time:
+            queryset = queryset.filter(timestamp__gte=start_time)
+            
+        if end_time:
+            queryset = queryset.filter(timestamp__lte=end_time)
+            
+        queryset = queryset[:limit]
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
