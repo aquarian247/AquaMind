@@ -223,24 +223,6 @@ class PhotoperiodDataSerializer(serializers.ModelSerializer):
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('24'))],
         help_text="Natural day length in hours (0-24)."
     )
-    
-    artificial_light_start = serializers.TimeField(
-        required=False,
-        allow_null=True,
-        help_text="Time when artificial lighting starts, if used."
-    )
-    
-    artificial_light_end = serializers.TimeField(
-        required=False,
-        allow_null=True,
-        help_text="Time when artificial lighting ends, if used."
-    )
-    
-    notes = serializers.CharField(
-        required=False,
-        allow_null=True,
-        help_text="Additional notes about the photoperiod conditions."
-    )
 
     class Meta:
         model = PhotoperiodData
