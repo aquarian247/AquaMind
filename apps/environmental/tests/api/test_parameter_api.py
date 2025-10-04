@@ -139,3 +139,61 @@ class EnvironmentalParameterAPITest(BaseAPITestCase):
         response = self.client.post(self.list_url, invalid_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('optimal_range', str(response.data))
+
+    def test_decimal_precision_validation(self):
+        """Test that serializer rejects values with more than 2 decimal places."""
+        # Test min_value precision validation
+        invalid_data = {
+            'name': 'Invalid Precision Parameter',
+            'unit': 'units',
+            'min_value': 10.123  # 3 decimal places - should be rejected
+        }
+        response = self.client.post(self.list_url, invalid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('min_value', str(response.data))
+
+        # Test max_value precision validation
+        invalid_data = {
+            'name': 'Invalid Precision Parameter',
+            'unit': 'units',
+            'max_value': 20.1234  # 4 decimal places - should be rejected
+        }
+        response = self.client.post(self.list_url, invalid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('max_value', str(response.data))
+
+        # Test optimal_min precision validation
+        invalid_data = {
+            'name': 'Invalid Precision Parameter',
+            'unit': 'units',
+            'optimal_min': 5.12345  # 5 decimal places - should be rejected
+        }
+        response = self.client.post(self.list_url, invalid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('optimal_min', str(response.data))
+
+        # Test optimal_max precision validation
+        invalid_data = {
+            'name': 'Invalid Precision Parameter',
+            'unit': 'units',
+            'optimal_max': 15.123456  # 6 decimal places - should be rejected
+        }
+        response = self.client.post(self.list_url, invalid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('optimal_max', str(response.data))
+
+        # Test that valid 2 decimal place values are accepted
+        valid_data = {
+            'name': 'Valid Precision Parameter',
+            'unit': 'units',
+            'min_value': 10.12,  # 2 decimal places - should be accepted
+            'max_value': 20.34,  # 2 decimal places - should be accepted
+            'optimal_min': 12.56,  # 2 decimal places - should be accepted
+            'optimal_max': 18.78   # 2 decimal places - should be accepted
+        }
+        response = self.client.post(self.list_url, valid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(float(response.data['min_value']), 10.12)
+        self.assertEqual(float(response.data['max_value']), 20.34)
+        self.assertEqual(float(response.data['optimal_min']), 12.56)
+        self.assertEqual(float(response.data['optimal_max']), 18.78)

@@ -36,30 +36,30 @@ class EnvironmentalParameterSerializer(serializers.ModelSerializer):
         help_text="Detailed description of the parameter and its importance in aquaculture."
     )
     min_value = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Minimum acceptable value for this parameter. Values below this trigger alerts."
     )
     max_value = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Maximum acceptable value for this parameter. Values above this trigger alerts."
     )
     optimal_min = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Minimum optimal value for this parameter. Values in the optimal range are ideal for fish health."
     )
     optimal_max = serializers.DecimalField(
-        max_digits=10, 
-        decimal_places=4, 
-        required=False, 
+        max_digits=10,
+        decimal_places=2,
+        required=False,
         allow_null=True,
         help_text="Maximum optimal value for this parameter. Values in the optimal range are ideal for fish health."
     )
