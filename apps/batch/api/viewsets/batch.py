@@ -5,6 +5,8 @@ These viewsets provide CRUD operations for batch management and analytics.
 """
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Sum, F, Case, When, Q
+from decimal import Decimal
 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -50,7 +52,21 @@ class BatchViewSet(BatchAnalyticsMixin, viewsets.ModelViewSet):
     # authentication_classes = [TokenAuthentication, JWTAuthentication]
     # permission_classes = [IsAuthenticated]
 
-    queryset = Batch.objects.all()
+    queryset = Batch.objects.annotate(
+        _calculated_population_count=Sum(
+            'batch_assignments__population_count',
+            filter=Q(batch_assignments__is_active=True)
+        ),
+        _calculated_biomass_kg=Sum(
+            'batch_assignments__biomass_kg',
+            filter=Q(batch_assignments__is_active=True)
+        ),
+        # Use a simple annotation for avg_weight_g filtering - exact calculation is in model property
+        _calculated_avg_weight_g=Sum(
+            'batch_assignments__avg_weight_g',
+            filter=Q(batch_assignments__is_active=True)
+        )
+    ).distinct()
     serializer_class = BatchSerializer
     filterset_class = BatchFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

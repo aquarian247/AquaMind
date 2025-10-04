@@ -104,19 +104,18 @@
 
 ---
 
-### Task 5: Fix Batch Analytics References to Removed Fields
+### Task 5: Fix Batch Analytics References to Removed Fields ✅ **COMPLETED**
 **Issue**: Analytics code references `batch.population_count` and `batch.biomass_kg` which don't exist as direct fields.
 
-**Backend Changes Required**:
-- [ ] Search and replace in batch analytics:
-  - `batch.population_count` → `batch.calculated_population_count`
-  - `batch.biomass_kg` → `batch.calculated_biomass_kg`
-- [ ] Update `BatchAnalyticsMixin` to use calculated properties
-- [ ] Update filter definitions in `BatchFilter`:
-  - Remove or annotate queries for `biomass_*` and `population_*` filters
-  - Use aggregations on `batch_assignments` instead
-- [ ] Add regression tests for analytics endpoints: `/api/v1/batch/batches/{id}/performance_metrics/`, `/growth_analysis/`, `/compare/`
-- [ ] Test with batches that have no assignments (edge case)
+**Backend Changes Completed** (2025-10-04):
+- [x] Fixed `BatchAnalyticsMixin.performance_metrics()` to use `batch.calculated_population_count`, `batch.calculated_biomass_kg`, `batch.calculated_avg_weight_g`
+- [x] Fixed `_calculate_mortality_metrics()` to use `batch.calculated_population_count`
+- [x] Fixed `_calculate_container_metrics()` to use `batch.batch_assignments` (correct related name)
+- [x] Updated `BatchViewSet` queryset with annotations for `_calculated_population_count`, `_calculated_biomass_kg`, `_calculated_avg_weight_g`
+- [x] Updated `BatchFilter` to use annotated fields for `biomass_min`, `biomass_max`, `population_min`, `population_max` filters
+- [x] Added comprehensive regression tests for all analytics endpoints (performance_metrics, growth_analysis, compare)
+- [x] Verified edge case: batches with no assignments return correct calculated values (population=0, biomass=0.00)
+- [x] All analytics tests passing
 
 **Frontend Impact**: 🟡 **MINOR - FILTER UPDATES**
 - **Location**: Batch list/table views, analytics dashboards

@@ -288,16 +288,28 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
 
     def test_performance_metrics_endpoint(self):
         """Test the performance metrics endpoint."""
-        url = reverse('batch-list')
+        url = reverse('batch-performance-metrics', kwargs={'pk': self.batch.id})
         response = self.client.get(url)
         print("Performance Metrics Response:", response.status_code, response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Adjust based on actual Batch model fields; assuming calculated_population_count exists
-        self.assertIn('results', response.data)
-        if response.data['results']:
-            for metric in response.data['results']:
-                self.assertIn('batch_number', metric)
-                self.assertIn('calculated_population_count', metric)  # Adjust to existing field
+
+        # Check that the response has the expected structure
+        data = response.json()
+        self.assertEqual(data['batch_number'], self.batch.batch_number)
+        self.assertEqual(data['species'], self.species.name)
+        self.assertIn('current_metrics', data)
+        self.assertIn('mortality_metrics', data)
+
+        # Check current metrics use calculated properties
+        current_metrics = data['current_metrics']
+        self.assertIn('population_count', current_metrics)
+        self.assertIn('biomass_kg', current_metrics)
+        self.assertIn('avg_weight_g', current_metrics)
+
+        # Values should match our test data (10000 population, avg 50g = 500kg biomass)
+        self.assertEqual(current_metrics['population_count'], 10000)
+        self.assertEqual(float(current_metrics['biomass_kg']), 500.0)
+        self.assertEqual(float(current_metrics['avg_weight_g']), 50.0)
 
     def test_batch_comparison_endpoint(self):
         """Test the batch comparison endpoint."""

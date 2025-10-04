@@ -157,9 +157,9 @@ class BatchAnalyticsMixin:
             'start_date': batch.start_date,
             'days_active': (timezone.now().date() - batch.start_date).days,
             'current_metrics': {
-                'population_count': batch.population_count,
-                'biomass_kg': float(batch.biomass_kg),
-                'avg_weight_g': float(batch.avg_weight_g)
+                'population_count': batch.calculated_population_count,
+                'biomass_kg': float(batch.calculated_biomass_kg),
+                'avg_weight_g': float(batch.calculated_avg_weight_g)
             },
         }
 
@@ -188,7 +188,7 @@ class BatchAnalyticsMixin:
 
         if total_mortality['total_count']:
             # Get initial population (current + mortality)
-            initial_population = batch.population_count + total_mortality['total_count']
+            initial_population = batch.calculated_population_count + total_mortality['total_count']
             mortality_rate = round((total_mortality['total_count'] / initial_population) * 100, 2)
 
             # Get mortality by cause
@@ -227,7 +227,7 @@ class BatchAnalyticsMixin:
 
     def _calculate_container_metrics(self, batch):
         """Calculate container assignment metrics for a batch."""
-        active_assignments = batch.container_assignments.filter(is_active=True)
+        active_assignments = batch.batch_assignments.filter(is_active=True)
         if not active_assignments.exists():
             return None
 

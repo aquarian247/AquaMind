@@ -22,13 +22,13 @@ class BatchFilter(rest_filters.FilterSet):
     end_date_after = filters.DateFilter(field_name='expected_end_date', lookup_expr='gte')
     end_date_before = filters.DateFilter(field_name='expected_end_date', lookup_expr='lte')
 
-    # Biomass range filters
-    biomass_min = filters.NumberFilter(field_name='biomass_kg', lookup_expr='gte')
-    biomass_max = filters.NumberFilter(field_name='biomass_kg', lookup_expr='lte')
+    # Biomass range filters (using annotated fields)
+    biomass_min = filters.NumberFilter(field_name='_calculated_biomass_kg', lookup_expr='gte')
+    biomass_max = filters.NumberFilter(field_name='_calculated_biomass_kg', lookup_expr='lte')
 
-    # Population range filters
-    population_min = filters.NumberFilter(field_name='population_count', lookup_expr='gte')
-    population_max = filters.NumberFilter(field_name='population_count', lookup_expr='lte')
+    # Population range filters (using annotated fields)
+    population_min = filters.NumberFilter(field_name='_calculated_population_count', lookup_expr='gte')
+    population_max = filters.NumberFilter(field_name='_calculated_population_count', lookup_expr='lte')
 
     # Status choices filter
     status_in = filters.MultipleChoiceFilter(
