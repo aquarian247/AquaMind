@@ -394,23 +394,43 @@
 
 ---
 
-### Task 15: Fix HealthLabSample Assignment Validation
+### Task 15: Fix HealthLabSample Assignment Validation ✅ **COMPLETED**
 **Issue**: Validation ignores departure_date, inconsistent error formats.
 
 **Backend Changes Completed** (2025-10-04):
-- [ ] Add `departure_date` upper bound check in lab sample validation
-- [ ] Standardize all `ValidationError` payloads to consistent format
-- [ ] Expand tests for historical assignment edge cases
-- [ ] Reject samples for assignments that have ended
+- [x] Added `departure_date` upper bound check in `HealthLabSampleSerializer.validate()`
+- [x] Standardized all `ValidationError` payloads to consistent dict format with field keys
+- [x] Changed all error raises from string to `{"field": "message"}` format
+- [x] Added validation: samples cannot be taken after assignment departure_date
+- [x] Expanded tests for historical assignment edge cases in `test_lab_sample_validation.py` (10 test cases):
+  - Active assignment samples accepted ✓
+  - Sample after departure_date rejected ✓
+  - Sample before departure_date accepted ✓
+  - Sample before assignment_date rejected ✓
+  - Sample before batch start rejected ✓
+  - Sample after batch end rejected ✓
+  - Error format consistency across all validations ✓
+  - Serializer validation directly ✓
+  - Multiple assignments selects correct historical one ✓
+  - Sample on exact departure date accepted ✓
+- [x] All 122 health tests passing (112 original + 10 new)
+
+**Implementation Details**:
+- Added check: `if assignment.departure_date and sample_date > assignment.departure_date`
+- Error message: "Sample date cannot be after the assignment's departure date. This assignment ended on {date}."
+- All ValidationErrors now use dict format: `{"sample_date": "error message"}`
+- Consistent error structure enables better frontend error display
 
 **Frontend Impact**: 🟢 **IMPROVED ERROR MESSAGES**
 - **Location**: Lab sample collection forms
 - **Changes Needed**:
-  - Consistent error message display
-  - May see new validation errors for ended assignments
+  - No breaking changes
+  - ✅ IMPROVEMENT: Consistent error message format across all validation failures
+  - May see new validation errors for ended assignments (expected improvement)
 - **API Contract Change**:
-  - Consistent error response format
-  - Additional validation constraint (departed assignments rejected)
+  - Consistent error response format (all errors use dict with field keys)
+  - Additional validation constraint: samples for ended assignments (departure_date passed) are rejected
+  - Better error messages explaining why sample was rejected
 
 ---
 
