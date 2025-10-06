@@ -21009,6 +21009,228 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/operational/harvest-events/:
+    get:
+      operationId: api_v1_operational_harvest_events_list
+      description: Retrieve harvest events with optional filtering by batch, assignment,
+        destination, date range, or document reference.
+      summary: List harvest events
+      parameters:
+      - in: query
+        name: assignment
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by assignment ID.
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by batch ID.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: Include events on or after this ISO 8601 timestamp.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Include events on or before this ISO 8601 timestamp.
+      - in: query
+        name: dest_geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by destination geography ID.
+      - in: query
+        name: dest_subsidiary
+        schema:
+          type: string
+        description: Filter events by destination subsidiary code.
+      - in: query
+        name: document_ref
+        schema:
+          type: string
+        description: Filter events whose document reference contains this value (case-insensitive).
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHarvestEventList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/operational/harvest-events/{id}/:
+    get:
+      operationId: api_v1_operational_harvest_events_retrieve
+      description: Read-only access to harvest events.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this harvest event.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HarvestEvent'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/operational/harvest-lots/:
+    get:
+      operationId: api_v1_operational_harvest_lots_list
+      description: Retrieve harvest lots with optional filtering by event or product
+        grade.
+      summary: List harvest lots
+      parameters:
+      - in: query
+        name: event
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter lots by harvest event ID.
+      - in: query
+        name: grade
+        schema:
+          type: string
+        description: Filter lots by product grade code (case insensitive).
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: product_grade
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter lots by product grade ID.
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHarvestLotList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/operational/harvest-lots/{id}/:
+    get:
+      operationId: api_v1_operational_harvest_lots_retrieve
+      description: Read-only access to harvest lots.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this harvest lot.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HarvestLot'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: api_v1_scenario_biological_constraints_list
@@ -28983,6 +29205,182 @@ components:
       - history_user
       - name
       - updated_at
+    HarvestEvent:
+      type: object
+      description: Read-only serializer for harvest events.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event_date:
+          type: string
+          format: date-time
+          readOnly: true
+        batch:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+          description: Batch number associated with this harvest event.
+        assignment:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment_container:
+          type: string
+          readOnly: true
+          description: Name of the container linked to the batch assignment at harvest
+            time.
+        dest_geography:
+          type: integer
+          readOnly: true
+          nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        dest_geography_name:
+          type: string
+          readOnly: true
+          description: Display name of the destination geography.
+        dest_subsidiary:
+          enum:
+          - BS
+          - FW
+          - FM
+          - LG
+          - ALL
+          - null
+          type: string
+          description: |-
+            * `BS` - Broodstock
+            * `FW` - Freshwater
+            * `FM` - Farming
+            * `LG` - Logistics
+            * `ALL` - All Subsidiaries
+          x-spec-enum-id: 4e135cac36bd030a
+          readOnly: true
+          nullable: true
+        dest_subsidiary_display:
+          type: string
+          readOnly: true
+          description: Human readable destination subsidiary label.
+        document_ref:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignment
+      - assignment_container
+      - batch
+      - batch_number
+      - created_at
+      - dest_geography
+      - dest_geography_name
+      - dest_subsidiary
+      - dest_subsidiary_display
+      - document_ref
+      - event_date
+      - id
+      - updated_at
+    HarvestLot:
+      type: object
+      description: Read-only serializer for harvest lots.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event_date:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of the harvest event that produced this lot.
+        batch:
+          type: integer
+          readOnly: true
+          description: Batch identifier associated with the harvest event.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+          description: Batch number tied to the harvest event.
+        product_grade:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        product_grade_code:
+          type: string
+          readOnly: true
+          description: Code representing the product grade.
+        product_grade_name:
+          type: string
+          readOnly: true
+          description: Human readable product grade name.
+        live_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        gutted_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+          nullable: true
+        fillet_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+          nullable: true
+        unit_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - batch
+      - batch_number
+      - created_at
+      - event
+      - event_date
+      - fillet_weight_kg
+      - gutted_weight_kg
+      - id
+      - live_weight_kg
+      - product_grade
+      - product_grade_code
+      - product_grade_name
+      - unit_count
+      - updated_at
     HealthCheckResponse:
       type: object
       description: Serializer for health check API response.
@@ -31861,6 +32259,56 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Hall'
+    PaginatedHarvestEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestEvent'
+    PaginatedHarvestLotList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestLot'
     PaginatedHealthLabSampleHistoryList:
       type: object
       required:

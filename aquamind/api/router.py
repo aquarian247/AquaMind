@@ -20,6 +20,7 @@ from apps.broodstock.api.routers import router as broodstock_router
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.scenario.api.routers import router as scenario_router
 from apps.operational.api.routers import router as operational_router
+from apps.harvest.api.routers import router as harvest_router
 # from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
@@ -52,5 +53,6 @@ urlpatterns = [
     path('infrastructure/', include(infrastructure_router.urls)),
     path('scenario/', include(scenario_router.urls)),
     path('operational/', include(operational_router.urls)),
+    path('operational/', include(harvest_router.urls)),
     path('users/', include('apps.users.urls')),
 ]

@@ -1,43 +1,42 @@
-# Issue 3 ➜ Issue 4 Handover
+# Issue 4 ➜ Issue 5 Handover
 
-## Current Status (Issue 3)
-- Finance domain scaffolded under `apps.finance` with `DimCompany` and `DimSite` models, admin registrations, and management command wiring.
-- Migration `finance/0001_initial.py` created and applied via `python manage.py migrate finance` (DB_HOST=localhost); rollback verified by Django auto-generation.
-- Idempotent sync implemented in `finance_sync_dimensions`; `display_name` derived as `{subsidiary}-{geography.name}`; subsidiaries sourced from `users.models.Subsidiary`.
-- Targeted test suite `python manage.py test apps.finance.tests.test_finance_sync_dimensions` passes; full project suite (1008 tests) confirmed green by previous agent.
+## Current Status (Issue 4)
+- Finance projection is complete: `FactHarvest`, `IntercompanyPolicy`, and `IntercompanyTransaction` models include history tracking, indexes, and admin registrations.
+- `finance_project` command materializes harvest lots into facts, caches dimension lookups, and raises intercompany transactions when configured policies exist.
+- Tests in `apps.finance.tests.test_finance_project` cover fact creation, idempotent reruns, missing-destination skips, and intercompany detection.
+- Migration `apps/finance/migrations/0002_intercompanypolicy_historicalintercompanytransaction_and_more.py` is generated; apply with `python manage.py migrate` before manual QA.
+- OpenAPI now documents harvest read-only endpoints; finance APIs are still pending (Issue 5 scope).
 
 ## Repo & Branch Notes
-- Working branch: `features/harvest-and-finance` (diverged from `main`).
-- New app paths: `apps/finance/` (models, admin, management command, tests, migrations).
-- Settings updated to include `apps.finance` in `INSTALLED_APPS`.
-- No OpenAPI changes for finance yet; harvest OpenAPI diffs remain from Issue 2 work (pending regeneration once finance APIs land).
+- Working branch: `features/harvest-and-finance` (rebased onto `main` at session start).
+- New/updated modules: finance models/admin, `utils/mapping.py`, `management/commands/finance_project.py`, associated tests, and migration `0002`.
+- Harvest API router now installs under `/api/v1/operational/`; ensure no duplicate prefixes when adding finance endpoints.
+- No additional migrations beyond finance `0002`; confirm `python manage.py showmigrations finance` reflects it as applied.
 
-## Environment & Data
-- Run migrations against local Postgres (set `DB_HOST=localhost` when not using docker-compose).
-- Management command usage: `python manage.py finance_sync_dimensions` (idempotent; safe to re-run).
-- Command populates `DimCompany` rows for every Geography × {Freshwater, Farming} pair, even if no infra sites exist yet.
+## Environment & Testing
+- Default Postgres host is `timescale-db`; override with `DB_HOST=localhost` when running commands outside Docker.
+- Verified via `DB_HOST=localhost python manage.py test apps.finance.tests` (passes; TimescaleDB warnings expected locally).
+- Supporting commands:
+  ```bash
+  python manage.py finance_sync_dimensions
+  python manage.py finance_project --from=YYYY-MM-DD --to=YYYY-MM-DD
+  ```
+- After schema or router changes, regenerate OpenAPI using `python manage.py spectacular --file api/openapi.yaml --validate --fail-on-warn`.
 
-## Acceptance Criteria Review (Issue 3)
-- ✅ Tables created/applied (`DimCompany`, `DimSite`).
-- ✅ Sync idempotency verified through dedicated tests.
-- ✅ Every `DimSite` binds to an existing `DimCompany` (enforced + tested).
-- ✅ At least one `DimCompany` per geography (command ensures coverage; tests assert presence).
-- ✅ Nullable finance fields (`currency`, `nav_company_code`) accepted (no non-null constraint).
-- ✅ Test coverage for first-run insert, rerun stability, and mapping integrity.
+## Issue 5 Scope Recap
+- Build read-only finance APIs (GitHub Issue 58) exposing facts, policies, and transactions with AND-combined filters, pagination, and RBAC alignment.
+- Serializer/viewset patterns should mirror harvest APIs; leverage projection indexes for filtering (`event_date`, `dim_company`, `product_grade`, `state`).
+- Reference docs: finance-harvest design spec, Issue 1 ADR §5 implementation sketch, API standards, and existing projection tests for field expectations.
 
-## Recommended Next Steps (Issue 4 Scope)
-1. Re-read `03_finance_app_dimensions_and_mapping.md` §6 and `IMPLEMENTATION_PLAN.md` for projection details.
-2. Design `FactHarvest` model + intercompany policy/transaction scaffolding under `apps.finance` (or dedicated app if spec dictates).
-3. Implement projection CLI (likely `finance_project`) that materializes fact rows, detecting intercompany transfers when geography/subsidiary keys diverge.
-4. Ensure projection respects idempotency (replace/update existing fact rows) and defers pricing mechanics per ADR.
-5. Expand tests to cover projection runs, intercompany detection logic, and rollback scenarios.
-6. Once projection ready, regenerate OpenAPI if new endpoints are added in later issues.
+## Recommended Next Steps
+1. Re-read context pack plus Implementation Plan Issue 5 section to confirm acceptance criteria.
+2. Scaffold finance API module (serializers, filters, viewsets, routers) following kebab-case basenames and read-only mixins.
+3. Implement `select_related`/`prefetch_related` to avoid N+1 lookups when listing facts and intercompany transactions.
+4. Add API tests covering pagination, filter combinations, permissions, and empty-state behavior.
+5. Regenerate OpenAPI and rerun focused suites (`apps.finance.tests` + new API tests); capture commands in PR notes.
 
 ## Risks & Watch-outs
-- Fact table volume may require batching; align with TimescaleDB warnings seen during tests (extension disabled locally).
-- Maintain read-only separation: operational models must not depend on finance dims.
-- Keep subsidiaries enumeration in sync; extend command/tests if new subsidiaries introduced.
-
-## References
-- Context Pack docs in `docs/progress/harvest_and_finance_app/` plus ADR §5 implementation sketch.
-- Tests: `apps.finance.tests.test_finance_sync_dimensions` (use as template for projection scenarios).
+- Keep finance endpoints strictly read-only until later issues unlock mutations.
+- Ensure router inclusion does not collide with existing operational paths.
+- Projection must remain idempotent—rerun `finance_project` after modifying policies or lot fixtures before capturing API responses.
+- Mind policy coverage: intercompany transactions only arise when both geography and subsidiary mappings exist.
