@@ -102,5 +102,5 @@ Derive keys, look-up `DimCompany`, build `FactHarvest`, evaluate IC.
 - [x] ADR merged at `docs/adr/ADR_0001_lightweight_intercompany_finance_dims.md`.  
 - [x] Design spec updated: Finance dims, dest fields, terminology.  
 - [x] Links to this ADR added in spec & implementation plan.  
-- [ ] Routers/settings re-validated against API standards (no basename omissions).  
+- [ ] Routers/settings re-validated against API standards (no basename omissions) — not applicable for documentation-only Issue 1; confirm when APIs ship.  
 

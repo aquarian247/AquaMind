@@ -26,9 +26,10 @@ Track and coordinate the “Harvest + Finance” side quest through clear, check
 1. Read the **Context Pack** above  
 2. Open the matching GitHub issue and its PR checklist  
 3. Work strictly within current phase scope  
-4. Regenerate OpenAPI & run full test suite  
-5. Update docs (design spec, ADRs, BI guide)  
-6. Link PR to issue; add verification & rollback notes  
+4. Review implementation sketch in [Issue 1 ADR §5](01_adr_lightweight_intercompany_finance_dims.md#5-implementation-sketch) for downstream build tasks  
+5. Regenerate OpenAPI & run full test suite  
+6. Update docs (design spec, ADRs, BI guide)  
+7. Link PR to issue; add verification & rollback notes  
 
 ---
 
@@ -37,9 +38,9 @@ Track and coordinate the “Harvest + Finance” side quest through clear, check
 | ✔ | Phase / Issue | Done-When | Links |
 |---|---------------|-----------|-------|
 | [ ] | **Issue 1 (no. 54 in github) — ADR: Lightweight Intercompany & Finance Dims**<br>Context: Align spec; keep ops free of Company model | ADR merged; spec updated; open decisions logged | [ADR](../../adr/ADR_0001_lightweight_intercompany_finance_dims.md) / [Issue]() |
-| [ ] | **Issue 2 (no. 55 in github) — Harvest Domain: Models, Audit, Read API**<br>Context: HarvestEvent, HarvestLot, HarvestWaste, ProductGrade; dest_geography + dest_subsidiary | Migrations+admin; endpoints list/filter; OpenAPI green | [PR]() / [Issue]() |
-| [ ] | **Issue 3 (no. 56 in github) — Finance App: Dimensions & Mapping**<br>Context: DimCompany, DimSite; sync command | `finance_sync_dimensions` idempotent | [PR]() / [Issue]() |
-| [ ] | **Issue 4 (no. 57 in github) — Finance Projection: fact_harvest & IC Detection**<br>Context: FactHarvest, IntercompanyPolicy/Transaction; projection CLI | Idempotent; IC only when keys differ + policy | [PR]() / [Issue]() |
+| [ ] | **Issue 2 (no. 55 in github) — Harvest Domain: Models, Audit, Read API**<br>Context: HarvestEvent, HarvestLot, HarvestWaste, ProductGrade; dest_geography + dest_subsidiary | Migrations+admin; endpoints list/filter; OpenAPI green<br>➡️ Follow [Issue 1 ADR §5](01_adr_lightweight_intercompany_finance_dims.md#5-implementation-sketch) for model fields | [PR]() / [Issue]() |
+| [ ] | **Issue 3 (no. 56 in github) — Finance App: Dimensions & Mapping**<br>Context: DimCompany, DimSite; sync command | `finance_sync_dimensions` idempotent<br>➡️ Follow [Issue 1 ADR §5](01_adr_lightweight_intercompany_finance_dims.md#5-implementation-sketch) for dimension tables | [PR]() / [Issue]() |
+| [ ] | **Issue 4 (no. 57 in github) — Finance Projection: fact_harvest & IC Detection**<br>Context: FactHarvest, IntercompanyPolicy/Transaction; projection CLI | Idempotent; IC only when keys differ + policy<br>➡️ Follow [Issue 1 ADR §5](01_adr_lightweight_intercompany_finance_dims.md#5-implementation-sketch) for projection logic | [PR]() / [Issue]() |
 | [ ] | **Issue 5 (no. 58 in github) — Finance Read APIs**<br>Context: Read-only endpoints, filters, RBAC | Filters AND-combined; pagination; schema validated | [PR]() / [Issue]() |
 | [ ] | **Issue 6 (no. 59 in github) — NAV Export Skeleton**<br>Context: Batch pending IC txns ➔ CSV/JSON; download endpoint | Batch marks txns exported; idempotent guard; file validates | [PR]() / [Issue]() |
 | [ ] | **Issue 7 (no. 60 in github) — BI Delivery: Views & Incremental Refresh Guide**<br>Context: DB views, indexes, Power BI guide | Views & guide in repo; performance indexes | [PR]() / [Issue]() |
