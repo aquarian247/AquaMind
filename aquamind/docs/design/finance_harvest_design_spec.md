@@ -33,7 +33,7 @@ Audience: Engineering teams, BI/Finance stakeholders, API integrators.
 ### 1.1 Objectives
 • Record harvests with lot/grade detail and link to batch/container at time of event.  
 • Support partial & multi-day harvests, waste/by-products, document attachments.  
-• Trigger intercompany transactions when destination subsidiary differs.
+• Trigger intercompany transactions when destination subsidiary differs (company derived per [ADR 0001](../adr/ADR_0001_lightweight_intercompany_finance_dims.md)).
 
 ### 1.2 Entity Overview
 Mermaid ERD (for reference):
@@ -50,17 +50,20 @@ erDiagram
   HARVEST_EVENT }o--|| COMPANY : source_company  
   HARVEST_EVENT }o--|| COMPANY : dest_company  
 
+> **Note:** `COMPANY` is a conceptual finance dimension (`DimCompany`). Operations do not persist a `Company` model; company context is derived from geography/subsidiary pairs per ADR 0001.
+
 ### 1.3 Proposed Django Models (illustrative)
 ```python
 class HarvestEvent(models.Model):
     event_id = models.BigAutoField(primary_key=True)
     event_date = models.DateTimeField(db_index=True)
-    source_company = models.ForeignKey("users.Company", on_delete=models.PROTECT)
     source_site = models.ForeignKey("infrastructure.Site", on_delete=models.PROTECT)
     batch = models.ForeignKey("batch.Batch", on_delete=models.PROTECT)
     assignment = models.ForeignKey("batch.BatchContainerAssignment", on_delete=models.PROTECT)
-    dest_company = models.ForeignKey("users.Company", on_delete=models.PROTECT,
-                                     related_name="harvest_dest_company", null=True, blank=True)
+    dest_geography = models.ForeignKey("infrastructure.Geography", on_delete=models.PROTECT,
+                                       null=True, blank=True)
+    dest_subsidiary = models.CharField(max_length=3, choices=Subsidiary.choices,
+                                       null=True, blank=True)
     dest_site = models.ForeignKey("infrastructure.Site", on_delete=models.PROTECT,
                                   null=True, blank=True)
     document_ref = models.CharField(max_length=100, blank=True)  # weigh-out sheet id
@@ -110,9 +113,9 @@ Audit: enable `HistoricalRecords()` on each model.
 ### 2.2 Dimensions
 | Table | Key fields |
 |-------|------------|
-| dim_company | company_id, name, currency |
+| dim_company | geography, subsidiary, display_name, currency, nav_company_code, legal_entity_code? |
 | dim_geography | geography_id, name |
-| dim_site | site_id, company_id, name |
+| dim_site | infra object key, object_type, dim_company_id |
 | dim_species | species_id, name |
 | dim_product_grade | grade_id, code, name |
 | dim_batch | batch_id, species_id, start_date |
@@ -125,8 +128,8 @@ Columns: quantity_kg, unit_count, value_amount (nullable), event_date plus dimen
 ### 2.4 Intercompany Pricing & Transactions
 ```python
 class IntercompanyPolicy(models.Model):
-    from_company = models.ForeignKey("users.Company", on_delete=models.PROTECT, related_name="ic_from")
-    to_company   = models.ForeignKey("users.Company", on_delete=models.PROTECT, related_name="ic_to")
+    from_company = models.ForeignKey("finance.DimCompany", on_delete=models.PROTECT, related_name="ic_from")
+    to_company   = models.ForeignKey("finance.DimCompany", on_delete=models.PROTECT, related_name="ic_to")
     product_grade = models.ForeignKey("harvest.ProductGrade", on_delete=models.PROTECT)
     method = models.CharField(max_length=20)  # market, cost_plus, standard
     markup_percent = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)

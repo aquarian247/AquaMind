@@ -36,7 +36,7 @@ Track and coordinate the “Harvest + Finance” side quest through clear, check
 
 | ✔ | Phase / Issue | Done-When | Links |
 |---|---------------|-----------|-------|
-| [ ] | **Issue 1 (no. 54 in github) — ADR: Lightweight Intercompany & Finance Dims**<br>Context: Align spec; keep ops free of Company model | ADR merged; spec updated; open decisions logged | [ADR PR]() / [Issue]() |
+| [ ] | **Issue 1 (no. 54 in github) — ADR: Lightweight Intercompany & Finance Dims**<br>Context: Align spec; keep ops free of Company model | ADR merged; spec updated; open decisions logged | [ADR](../../adr/ADR_0001_lightweight_intercompany_finance_dims.md) / [Issue]() |
 | [ ] | **Issue 2 (no. 55 in github) — Harvest Domain: Models, Audit, Read API**<br>Context: HarvestEvent, HarvestLot, HarvestWaste, ProductGrade; dest_geography + dest_subsidiary | Migrations+admin; endpoints list/filter; OpenAPI green | [PR]() / [Issue]() |
 | [ ] | **Issue 3 (no. 56 in github) — Finance App: Dimensions & Mapping**<br>Context: DimCompany, DimSite; sync command | `finance_sync_dimensions` idempotent | [PR]() / [Issue]() |
 | [ ] | **Issue 4 (no. 57 in github) — Finance Projection: fact_harvest & IC Detection**<br>Context: FactHarvest, IntercompanyPolicy/Transaction; projection CLI | Idempotent; IC only when keys differ + policy | [PR]() / [Issue]() |

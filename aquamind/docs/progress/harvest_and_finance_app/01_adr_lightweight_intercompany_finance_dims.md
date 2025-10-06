@@ -1,7 +1,7 @@
 # ADR 000X – Lightweight Inter-Company Handling & Finance Dimensions  
 
 Date: 2025-09-11  
-Status: Proposed  
+Status: Accepted  
 
 ## 1 Context  
 
@@ -21,7 +21,7 @@ Need
 
 ## 2 Decision  
 
-1. **No operational `Company` model** – operations stay agnostic.  
+1. **No operational `Company` model** – operations stay agnostic (see [ADR 0001](../../adr/ADR_0001_lightweight_intercompany_finance_dims.md)).  
 2. **Finance layer owns company mapping** via two new dimension tables:  
 
 | Dim | Key | Populated from | Purpose |
@@ -99,8 +99,8 @@ Derive keys, look-up `DimCompany`, build `FactHarvest`, evaluate IC.
 
 ## 8 Acceptance Checklist  
 
-- [ ] ADR merged at `docs/adr/ADR_000X_lightweight_intercompany_finance_dims.md`.  
-- [ ] Design spec updated: Finance dims, dest fields, terminology.  
-- [ ] Links to this ADR added in spec & implementation plan.  
+- [x] ADR merged at `docs/adr/ADR_0001_lightweight_intercompany_finance_dims.md`.  
+- [x] Design spec updated: Finance dims, dest fields, terminology.  
+- [x] Links to this ADR added in spec & implementation plan.  
 - [ ] Routers/settings re-validated against API standards (no basename omissions).  
 
