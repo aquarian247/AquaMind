@@ -1,3 +1,7 @@
+---
+description: For the backend repo: AquaMind
+alwaysApply: false
+---
 # Coding Guidelines
 
 ## General
@@ -48,7 +52,7 @@
 - When in doubt run the database inspection script to check the database schema
 
 ## Frontend
-- TBD
+- The frontend is Typescript and React. It's here https://github.com/aquarian247/AquaMind-Frontend
 
 ## Quality & Safety
 - Write unit tests for all new functions and classes using Django’s testing framework.
@@ -92,5 +96,6 @@ When we complete any milestone defined in the "implementation plan and progress.
    - Note any deviations from the original plan and their justification
 
 3. Always maintain the chronological order of milestone completions in the progress section
+
 
 This rule ensures we maintain a clear record of our development progress and helps with project tracking and accountability.
