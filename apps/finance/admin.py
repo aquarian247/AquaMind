@@ -8,6 +8,8 @@ from apps.finance.models import (
     FactHarvest,
     IntercompanyPolicy,
     IntercompanyTransaction,
+    NavExportBatch,
+    NavExportLine,
 )
 
 
@@ -99,3 +101,34 @@ class IntercompanyTransactionAdmin(admin.ModelAdmin):
         "policy__to_company__display_name",
     )
     ordering = ("-posting_date",)
+
+
+@admin.register(NavExportBatch)
+class NavExportBatchAdmin(admin.ModelAdmin):
+    list_display = (
+        "batch_id",
+        "company",
+        "date_from",
+        "date_to",
+        "posting_date",
+        "currency",
+        "state",
+    )
+    list_filter = ("state", "company__geography", "company__subsidiary")
+    search_fields = ("company__display_name",)
+    ordering = ("-created_at",)
+
+
+@admin.register(NavExportLine)
+class NavExportLineAdmin(admin.ModelAdmin):
+    list_display = (
+        "line_id",
+        "batch",
+        "transaction",
+        "document_no",
+        "account_no",
+        "amount",
+    )
+    list_filter = ("batch__company__display_name", "product_grade")
+    search_fields = ("document_no", "transaction__tx_id")
+    ordering = ("line_id",)

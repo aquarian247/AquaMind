@@ -234,3 +234,94 @@ class IntercompanyTransaction(models.Model):
 
     def __str__(self) -> str:
         return f"IntercompanyTransaction(event={self.event_id}, policy={self.policy_id})"
+
+
+class NavExportBatch(models.Model):
+    """Container for NAV journal exports grouped by company and date range."""
+
+    class State(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        EXPORTED = "exported", "Exported"
+
+    batch_id = models.BigAutoField(primary_key=True)
+    company = models.ForeignKey(
+        DimCompany,
+        on_delete=models.PROTECT,
+        related_name="nav_export_batches",
+    )
+    date_from = models.DateField()
+    date_to = models.DateField()
+    posting_date = models.DateField()
+    currency = models.CharField(max_length=3, null=True, blank=True)
+    state = models.CharField(
+        max_length=20,
+        choices=State.choices,
+        default=State.DRAFT,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("company", "date_from", "date_to"),
+                name="nav_export_batch_company_daterange_uniq",
+            )
+        ]
+        ordering = ("-created_at", "-batch_id")
+
+    def __str__(self) -> str:
+        return f"NavExportBatch(id={self.batch_id}, company={self.company_id})"
+
+
+class NavExportLine(models.Model):
+    """Immutable NAV journal line linked to a specific intercompany transaction."""
+
+    line_id = models.BigAutoField(primary_key=True)
+    batch = models.ForeignKey(
+        NavExportBatch,
+        on_delete=models.CASCADE,
+        related_name="lines",
+    )
+    transaction = models.ForeignKey(
+        IntercompanyTransaction,
+        on_delete=models.PROTECT,
+        related_name="nav_export_lines",
+    )
+    document_no = models.CharField(max_length=32)
+    account_no = models.CharField(max_length=50)
+    balancing_account_no = models.CharField(max_length=50)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    description = models.CharField(max_length=255)
+    dim_company = models.ForeignKey(
+        DimCompany,
+        on_delete=models.PROTECT,
+        related_name="nav_export_lines",
+    )
+    dim_site = models.ForeignKey(
+        DimSite,
+        on_delete=models.PROTECT,
+        related_name="nav_export_lines",
+    )
+    product_grade = models.ForeignKey(
+        "harvest.ProductGrade",
+        on_delete=models.PROTECT,
+        related_name="nav_export_lines",
+    )
+    batch_id_int = models.PositiveIntegerField()
+
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("batch", "document_no"),
+                name="nav_export_line_batch_document_no_uniq",
+            )
+        ]
+        ordering = ("line_id",)
+
+    def __str__(self) -> str:
+        return f"NavExportLine(batch={self.batch_id}, document={self.document_no})"

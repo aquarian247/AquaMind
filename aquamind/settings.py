@@ -354,6 +354,11 @@ BROODSTOCK_DEFAULTS = {
     'AVG_FISH_WEIGHT_KG': 10.0,
 }
 
+NAV_ACCOUNT_MAP = {
+    "sales_account": "4000",
+    "balancing_account": "3000",
+}
+
 # ------------------------------------------------------------------
 # Test configuration
 # ------------------------------------------------------------------
