@@ -13,7 +13,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`).
 - **Audit Trails**: Comprehensive change tracking implemented via django-simple-history for critical models (`batch_batch`, `infrastructure_container`, `inventory_feedstock`), providing regulatory compliance and operational transparency.
 - **Implementation Status**:
-  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`).
+  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`), `finance`.
   - **Planned Apps/Domains**: Broodstock Management enhancements, Operational Planning, Scenario Planning, Advanced Analytics.
   - **Removed Components**: Advanced audit analytics functionality (Core app) was removed to prioritize system stability and core operational features.
 
@@ -684,7 +684,109 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 - `infrastructure_area` ← `environmental_photoperioddata` (`area_id`, CASCADE)
 - `batch_batchtransfer` ← `environmental_stagetransitionenvironmental` (`batch_transfer_id`, CASCADE)
 
-### 4.6 User Management (`auth` and `users` apps)
+### 4.6 Finance Management (`finance` app)
+**Purpose**: To track financial transactions, harvest events, and intercompany policies for regulatory compliance and operational reporting.
+
+#### Tables
+- **`finance_dimcompany`**
+  - `company_id`: bigint (PK, auto-increment)
+  - `display_name`: varchar(100) (Unique)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_dimsite`**
+  - `site_id`: bigint (PK, auto-increment)
+  - `site_name`: varchar(100) (Unique)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=CASCADE)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_factharvest`**
+  - `fact_id`: bigint (PK, auto-increment)
+  - `event_date`: timestamptz
+  - `quantity_kg`: numeric(12,3)
+  - `unit_count`: integer
+  - `dim_batch_id`: integer
+  - `dim_company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `dim_site_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT)
+  - `event_id`: bigint (FK to `harvest_harvestevent`, on_delete=PROTECT)
+  - `lot_id`: bigint (FK to `harvest_harvestlot`, on_delete=PROTECT, unique=True)
+  - `product_grade_id`: bigint (FK to `harvest_productgrade`, on_delete=PROTECT)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_intercompanypolicy`**
+  - `policy_id`: bigint (PK, auto-increment)
+  - `method`: varchar(20)
+  - `markup_percent`: numeric(6,3) (nullable)
+  - `from_company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `to_company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `product_grade_id`: bigint (FK to `harvest_productgrade`, on_delete=PROTECT)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_intercompanytransaction`**
+  - `tx_id`: bigint (PK, auto-increment)
+  - `posting_date`: date
+  - `amount`: numeric(14,2) (nullable)
+  - `currency`: varchar(3) (nullable)
+  - `state`: varchar(20)
+  - `event_id`: bigint (FK to `harvest_harvestevent`, on_delete=PROTECT)
+  - `policy_id`: bigint (FK to `finance_intercompanypolicy`, on_delete=PROTECT)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_navexportbatch`**
+  - `batch_id`: bigint (PK, auto-increment)
+  - `date_from`: date
+  - `date_to`: date
+  - `posting_date`: date
+  - `currency`: varchar(3) (nullable)
+  - `state`: varchar(20)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+- **`finance_navexportline`**
+  - `line_id`: bigint (PK, auto-increment)
+  - `document_no`: varchar(32)
+  - `account_no`: varchar(50)
+  - `balancing_account_no`: varchar(50)
+  - `amount`: numeric(14,2)
+  - `description`: varchar(255)
+  - `batch_id_int`: integer
+  - `batch_id`: bigint (FK to `finance_navexportbatch`, on_delete=CASCADE)
+  - `dim_company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `dim_site_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT)
+  - `product_grade_id`: bigint (FK to `harvest_productgrade`, on_delete=PROTECT)
+  - `transaction_id`: bigint (FK to `finance_intercompanytransaction`, on_delete=PROTECT)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+#### Historical Tables (Audit Trail)
+All finance models are tracked with django-simple-history, creating corresponding historical tables with standard fields (`history_id`, `history_date`, `history_type`, `history_user_id`, `history_change_reason`).
+
+#### Views
+- **`vw_fact_harvest`**
+  - Combines harvest facts with product grades, companies, and sites for reporting
+  - Columns: fact_id, event_date, quantity_kg, unit_count, product_grade_code, company, site_name, batch_id
+- **`vw_intercompany_transactions`**
+  - Provides intercompany transaction details with company and product information
+  - Columns: tx_id, posting_date, state, from_company, to_company, product_grade_code, amount, currency
+
+#### Relationships
+- `finance_dimcompany` ← `finance_dimsite` (CASCADE)
+- `finance_dimcompany` ← `finance_factharvest` (PROTECT)
+- `finance_dimsite` ← `finance_factharvest` (PROTECT)
+- `harvest_harvestevent` ← `finance_factharvest` (PROTECT)
+- `harvest_harvestlot` ← `finance_factharvest` (PROTECT)
+- `harvest_productgrade` ← `finance_factharvest` (PROTECT)
+- `finance_dimcompany` ← `finance_intercompanypolicy` (PROTECT, both from/to)
+- `harvest_productgrade` ← `finance_intercompanypolicy` (PROTECT)
+- `harvest_harvestevent` ← `finance_intercompanytransaction` (PROTECT)
+- `finance_intercompanypolicy` ← `finance_intercompanytransaction` (PROTECT)
+- `finance_dimcompany` ← `finance_navexportbatch` (PROTECT)
+- `finance_navexportbatch` ← `finance_navexportline` (CASCADE)
+- `finance_dimcompany` ← `finance_navexportline` (PROTECT)
+- `finance_dimsite` ← `finance_navexportline` (PROTECT)
+- `harvest_productgrade` ← `finance_navexportline` (PROTECT)
+- `finance_intercompanytransaction` ← `finance_navexportline` (PROTECT)
+
+### 4.7 User Management (`auth` and `users` apps)
 **Purpose**: Manages user accounts and access control.
 
 #### Tables

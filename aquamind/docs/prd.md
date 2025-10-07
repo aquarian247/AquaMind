@@ -509,7 +509,134 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 - *Reliability:* Ensure mobile sync preserves data integrity; sensor failures trigger fallback manual entry with logs.  
 - *Traceability:* Guarantee immutable lineage links and audit trails, meeting regulatory standards for both egg sources.
 
-#### 3.1.9 Audit Trail & CUD Logging (Core)
+#### 3.1.9 Harvest Management
+- **Purpose**: To track and manage the complete harvest process from batch readiness to final processing, ensuring accurate yield recording, quality control, and financial reporting for harvested salmon batches.
+- **Functionality**:
+  - **Harvest Event Management**:
+    - The system shall track harvest events (`harvest_harvestevent`) linked to specific batches (`batch_batch`), recording harvest dates, locations, and processing details.
+    - Harvest events shall include yield metrics, quality assessments, and processing parameters to ensure traceability and performance monitoring.
+    - The system shall support multiple harvest methods (e.g., manual, automated) and processing techniques.
+
+  - **Harvest Lot Tracking**:
+    - The system shall manage harvest lots (`harvest_harvestlot`) as unique units of harvested product, each linked to a specific harvest event.
+    - Lots shall track quantity, weight, quality grades, and destination information for complete supply chain visibility.
+    - The system shall support lot splitting and merging operations to accommodate different processing and distribution requirements.
+
+  - **Product Grade Classification**:
+    - The system shall classify harvested products by grade (`harvest_productgrade`) based on quality criteria, size, and market requirements.
+    - Grades shall determine pricing, processing paths, and market destinations, supporting revenue optimization.
+    - The system shall maintain historical grade performance data for quality improvement initiatives.
+
+  - **Financial Integration**:
+    - The system shall integrate harvest data with financial systems via `finance_factharvest` for automated revenue recognition and cost tracking.
+    - Harvest events shall trigger financial transactions, including yield-based revenue calculations and processing cost allocations.
+    - The system shall provide real-time harvest profitability analysis by batch, grade, and processing method.
+
+  - **Quality Control and Compliance**:
+    - The system shall record quality parameters during harvest, including size distribution, health indicators, and processing standards.
+    - Compliance checks shall ensure harvested products meet regulatory requirements and company quality standards.
+    - The system shall generate harvest reports for regulatory submissions and quality audits.
+
+  - **Operational Planning**:
+    - The system shall forecast harvest schedules based on batch growth projections and market demands.
+    - Harvest planning shall consider processing capacity, labor availability, and logistical constraints.
+    - The system shall optimize harvest timing to maximize yield and quality while minimizing operational disruptions.
+
+- **Behavior**:
+  - Harvest events shall be initiated when batches reach target weights or market conditions are optimal.
+  - Lot tracking shall maintain unbroken chain of custody from harvest to final destination.
+  - Financial transactions shall be automatically generated upon harvest completion with proper audit trails.
+  - Quality control data shall be collected in real-time during processing operations.
+  - Reports shall be generated automatically for compliance and management review.
+
+- **Justification**: Harvest management is critical for revenue generation and operational efficiency in aquaculture. The system ensures accurate yield tracking, quality control, and financial reporting while maintaining regulatory compliance and supply chain traceability.
+
+- **User Story**: As a Harvest Manager, I want to record harvest events with accurate yield and quality data so that I can track batch performance and ensure proper financial reporting.
+  - **Acceptance Criteria**:
+    - The UI allows creating harvest events linked to specific batches with yield, quality, and processing details.
+    - Harvest data automatically populates financial fact tables for revenue recognition.
+    - Reports show harvest efficiency by batch, grade, and processing method.
+    - Audit trails capture all harvest-related changes for compliance.
+
+- **User Story**: As a Quality Control Officer, I want to classify harvested products by grade during processing so that I can optimize pricing and market allocation.
+  - **Acceptance Criteria**:
+    - Product grades are assigned during harvest with criteria-based classification.
+    - Grade data integrates with financial systems for automated pricing.
+    - Historical grade performance is available for quality improvement analysis.
+    - Grade changes are tracked with audit trails.
+
+- **User Story**: As a Farm Manager, I want to view harvest profitability by batch so that I can optimize future operations and maximize revenue.
+  - **Acceptance Criteria**:
+    - Dashboard displays harvest profitability metrics by batch and grade.
+    - Financial integration provides real-time revenue and cost data.
+    - Trend analysis shows harvest performance over time.
+    - Data can be exported for detailed financial analysis.
+
+#### 3.1.10 Finance Management
+- **Purpose**: To provide comprehensive financial reporting, intercompany transaction management, and ERP integration for aquaculture operations, enabling accurate revenue recognition, cost tracking, and compliance reporting across subsidiaries and geographies.
+- **Functionality**:
+  - **Company and Site Dimension Management**:
+    - The system shall maintain dimensional data for companies (`finance_dimcompany`) and sites (`finance_dimsite`) derived from operational geographies and subsidiaries.
+    - Company dimensions shall include display names, currencies, and NAV company codes for ERP integration.
+    - Site dimensions shall link to operational infrastructure with company associations.
+
+  - **Financial Fact Aggregation**:
+    - The system shall aggregate operational events into financial facts (`finance_factharvest`) for harvest operations, capturing quantities, values, and dimensional relationships.
+    - Facts shall include harvest yields, product grades, batch information, and company/site contexts.
+    - The system shall support incremental fact building with idempotent projections from operational events.
+
+  - **Intercompany Transaction Management**:
+    - The system shall manage intercompany pricing policies (`finance_intercompanypolicy`) defining markup methods and pricing rules between companies.
+    - Policies shall support different pricing methods (market, cost-plus, standard) with configurable markup percentages.
+    - The system shall automatically generate intercompany transactions (`finance_intercompanytransaction`) when operations cross company boundaries.
+
+  - **NAV Export and ERP Integration**:
+    - The system shall create NAV export batches (`finance_navexportbatch`) for journal entries and intercompany transactions.
+    - Export lines (`finance_navexportline`) shall include account mappings, amounts, descriptions, and dimensional data.
+    - The system shall support CSV and JSON export formats with configurable transport to secure storage.
+
+  - **Business Intelligence and Reporting**:
+    - The system shall provide BI views (`vw_fact_harvest`, `vw_intercompany_transactions`) for Power BI integration.
+    - Views shall combine dimensional and fact data for analytics, including company hierarchies and product grade classifications.
+    - The system shall support star schema queries with efficient indexing on event dates and dimensional keys.
+
+  - **Financial Compliance and Audit**:
+    - The system shall maintain complete audit trails for all financial transactions and policy changes.
+    - Financial data shall be immutable with proper change tracking and user attribution.
+    - The system shall support regulatory reporting requirements with traceable financial data.
+
+- **Behavior**:
+  - Financial facts shall be automatically generated from operational events with proper watermarking to ensure idempotency.
+  - Intercompany transactions shall be triggered automatically when operations span different companies.
+  - NAV exports shall mark transactions as exported to prevent duplicate processing.
+  - BI views shall provide real-time access to aggregated financial data without impacting operational performance.
+  - Financial policies shall be configurable with proper validation and audit logging.
+
+- **Justification**: Finance management is critical for multi-entity aquaculture operations, enabling accurate revenue recognition, intercompany accounting, and regulatory compliance. The system provides the necessary financial infrastructure to support commercial operations across geographies and subsidiaries.
+
+- **User Story**: As a Finance Manager, I want to configure intercompany pricing policies so that transactions between subsidiaries are properly valued and accounted for.
+  - **Acceptance Criteria**:
+    - The UI allows creating and managing pricing policies between companies with different markup methods.
+    - Policies can be configured with percentage markups or fixed pricing rules.
+    - Policy changes are audited with user attribution and timestamps.
+    - Policies are validated for consistency and business rules.
+
+- **User Story**: As a BI Analyst, I want to access harvest financial facts through Power BI so that I can create operational dashboards and profitability reports.
+  - **Acceptance Criteria**:
+    - BI views provide dimensional data including companies, sites, and product grades.
+    - Fact tables include harvest quantities, values, and event dates for time-series analysis.
+    - Views support efficient querying with proper indexing for large datasets.
+    - Data can be refreshed incrementally without full rebuilds.
+
+- **User Story**: As an ERP Administrator, I want to export intercompany transactions to NAV so that they can be posted in the financial system.
+  - **Acceptance Criteria**:
+    - Export batches can be created with date ranges and company filters.
+    - Export files include proper journal format with account mappings and amounts.
+    - Transactions are marked as exported to prevent duplicates.
+    - Files are securely delivered to configured storage locations.
+    - Export status can be tracked with success/failure reporting.
+
+#### 3.1.11 Audit Trail & CUD Logging (Core)
 - **Purpose**: Provide complete, reliable insight into Create/Update/Delete (CUD) operations across core domains for compliance, traceability, and operational review.  
 
 - **Functionality**:  
