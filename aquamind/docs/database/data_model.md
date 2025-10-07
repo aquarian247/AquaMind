@@ -10,11 +10,11 @@ This document defines the data model for AquaMind, an aquaculture management sys
 
 - **Database**: PostgreSQL with TimescaleDB extension.
 - **Schema**: All tables reside in the `public` schema.
-- **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`).
-- **Audit Trails**: Comprehensive change tracking implemented via django-simple-history for critical models (`batch_batch`, `infrastructure_container`, `inventory_feedstock`), providing regulatory compliance and operational transparency.
+- **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`). Automatic compression enabled after 7 days with segmentation by container_id/parameter_id and area_id respectively.
+- **Audit Trails**: Comprehensive change tracking implemented via django-simple-history for critical models across all major business domains, providing regulatory compliance and operational transparency.
 - **Implementation Status**:
-  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`), `finance`.
-  - **Planned Apps/Domains**: Broodstock Management enhancements, Operational Planning, Scenario Planning, Advanced Analytics.
+  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`), `finance`, `broodstock`, `scenario`, `harvest`.
+  - **Planned Apps/Domains**: Operational Planning, Advanced Analytics.
   - **Removed Components**: Advanced audit analytics functionality (Core app) was removed to prioritize system stability and core operational features.
 
 ## 3. Audit Trail Implementation
@@ -88,10 +88,15 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 **Environmental App (0 models)**
 - Environmental readings use TimescaleDB hypertables but are excluded from audit trails
 
+**Harvest App (3 models)**
+- **`harvest_harvestevent`**: Harvest event tracking and documentation
+- **`harvest_harvestlot`**: Individual harvest lot management
+- **`harvest_harvestwaste`**: Harvest waste tracking
+
 **Users App (1 model)**
 - **`users_userprofile`**: User profile modifications
 
-#### Historical Tables (62 Total)
+#### Historical Tables (50 Total)
 All historical tables follow the naming convention `{app}_historical{model}` and include:
 - Complete field-level change tracking
 - User attribution (`history_user_id`)
@@ -830,24 +835,28 @@ All finance models are tracked with django-simple-history, creating correspondin
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
 
-#### 4.7 FCR Trend Aggregation (TimescaleDB)
+#### 4.7 TimescaleDB Hypertables (Implemented)
 
-**Purpose**: Efficient time-series aggregation of FCR data for trend analysis and reporting.
+**Purpose**: Efficient time-series data management for environmental monitoring and weather data.
 
-**Recommended TimescaleDB Hypertable**: `inventory_containerfeedingsummary`
-- **Partitioning**: By `period_start` (date) for optimal time-range queries
-- **Continuous Aggregates**:
-  - Daily FCR averages: `CREATE CONTINUOUS AGGREGATE fcr_daily AS SELECT time_bucket('1 day', period_start) AS bucket, container_assignment_id, AVG(fcr) AS avg_fcr, MIN(confidence_level) AS min_confidence FROM inventory_containerfeedingsummary GROUP BY bucket, container_assignment_id;`
-  - Weekly batch FCR: `CREATE CONTINUOUS AGGREGATE fcr_weekly_batch AS SELECT time_bucket('1 week', period_start) AS bucket, batch_id, AVG(fcr) AS avg_fcr, COUNT(*) AS data_points FROM inventory_containerfeedingsummary GROUP BY bucket, batch_id;`
-  - Monthly geography FCR: `CREATE CONTINUOUS AGGREGATE fcr_monthly_geography AS SELECT time_bucket('1 month', period_start) AS bucket, geography_id, AVG(fcr) AS avg_fcr FROM inventory_containerfeedingsummary JOIN batch_batchcontainerassignment ON container_assignment_id = batch_batchcontainerassignment.id JOIN infrastructure_container ON batch_batchcontainerassignment.container_id = infrastructure_container.id JOIN infrastructure_area ON infrastructure_container.area_id = infrastructure_area.id GROUP BY bucket, geography_id;`
+**Implemented TimescaleDB Hypertables**:
+- **`environmental_environmentalreading`**: Environmental sensor readings
+  - **Partitioning**: By `reading_time` (timestamp with time zone)
+  - **Compression**: Enabled after 7 days, segmented by `container_id, parameter_id`
+  - **Chunks**: 123 active chunks with data automatically migrated
+- **`environmental_weatherdata`**: Weather station data
+  - **Partitioning**: By `timestamp` (timestamp with time zone)
+  - **Compression**: Enabled after 7 days, segmented by `area_id`
+  - **Chunks**: 0 chunks (empty table ready for data)
 
 **Benefits**:
-- Sub-second query performance for trend analysis
-- Automatic data compression for historical data
-- Efficient storage of high-frequency time-series data
+- Sub-second query performance for environmental data queries
+- Automatic data compression (70-90% reduction) for historical readings
+- Efficient storage of high-frequency sensor data
 - Built-in time-bucket aggregation functions
+- Automatic chunk management and retention policies
 
-#### 4.8 Broodstock Management (broodstock app)
+#### 4.8 Broodstock Management (broodstock app - IMPLEMENTED)
 
 The Broodstock Management app’s data model supports comprehensive management of broodstock containers, fish populations, breeding operations, egg production/acquisition, environmental monitoring, and batch traceability. It reuses existing models like `infrastructure_container`, introduces normalized tables for better integrity and querying, and integrates with apps like `environmental` and `health`. The design ensures flexible traceability for internal eggs (broodstock to batch) and external eggs (supplier to batch), matching the implementation complexity of Scenario Planning. It also supports end-to-end traceability to harvest events, leveraging existing batch models and audit logging for regulatory compliance.
 
@@ -1013,7 +1022,70 @@ The Broodstock Management app’s data model supports comprehensive management o
 - **JSON Fields**: Keep `traits` and `parameters` minimal, with structured formats (e.g., key-value pairs) and partial indexes for frequent queries.  
 - **Mobile Sync**: Ensure offline data entries (e.g., movements, egg logs) include temporary IDs, resolving conflicts during sync with server-side validation.
 
-#### 4.8 Scenario Planning (scenario app)
+#### 4.9 Harvest Management (harvest app - IMPLEMENTED)
+
+The Harvest Management app's data model supports comprehensive tracking of harvest operations, from batch harvesting through processing and waste management. It provides regulatory compliance through complete traceability from batch to final product, with detailed weight tracking and quality grading.
+
+**Core Entities and Attributes**
+
+- **harvest_harvestevent** (Harvest Event Tracking)
+  - `id` (PK): Unique identifier
+  - `assignment_id` (FK): Link to batch container assignment
+  - `batch_id` (FK): Link to batch
+  - `event_date` (DateTimeField): When harvest occurred
+  - `dest_subsidiary` (CharField, nullable): Destination subsidiary
+  - `dest_geography_id` (FK, nullable): Destination geography
+  - `document_ref` (CharField): Regulatory document reference
+  - `created_at`, `updated_at` (DateTimeField): Timestamps
+
+- **harvest_harvestlot** (Individual Lot Management)
+  - `id` (PK): Unique identifier
+  - `event_id` (FK): Link to harvest event
+  - `product_grade_id` (FK): Product grade classification
+  - `live_weight_kg` (Decimal): Live weight before processing
+  - `gutted_weight_kg` (Decimal, nullable): Weight after gutting
+  - `fillet_weight_kg` (Decimal, nullable): Final fillet weight
+  - `unit_count` (Integer): Number of individual fish/units
+  - `created_at`, `updated_at` (DateTimeField): Timestamps
+
+- **harvest_harvestwaste** (Waste Tracking)
+  - `id` (PK): Unique identifier
+  - `event_id` (FK): Link to harvest event
+  - `category` (CharField): Waste category (heads, frames, etc.)
+  - `weight_kg` (Decimal): Waste weight
+  - `created_at`, `updated_at` (DateTimeField): Timestamps
+
+- **harvest_productgrade** (Product Grading)
+  - `id` (PK): Unique identifier
+  - `name` (CharField): Grade name (Prime, Standard, etc.)
+  - `description` (TextField): Grade specifications
+  - `min_weight_g` (Integer, nullable): Minimum weight threshold
+  - `max_weight_g` (Integer, nullable): Maximum weight threshold
+  - `is_active` (Boolean): Whether grade is currently used
+  - `created_at`, `updated_at` (DateTimeField): Timestamps
+
+**Relationships**
+- `harvest_harvestevent` ← `harvest_harvestlot` (CASCADE)
+- `harvest_harvestevent` ← `harvest_harvestwaste` (CASCADE)
+- `batch_batchcontainerassignment` ← `harvest_harvestevent` (PROTECT)
+- `batch_batch` ← `harvest_harvestevent` (PROTECT)
+- `infrastructure_geography` ← `harvest_harvestevent` (PROTECT)
+- `harvest_productgrade` ← `harvest_harvestlot` (PROTECT)
+
+**Constraints**
+- Unique constraints on harvest event document references
+- Weight validations (gutted ≤ live, fillet ≤ gutted)
+- Foreign key constraints ensure batch traceability
+
+**Additional Considerations**
+- **Regulatory Compliance**: Complete audit trail from egg to plate
+- **Yield Analytics**: Automatic calculation of processing yields and recovery rates
+- **Quality Control**: Product grading ensures consistent quality standards
+- **Economic Tracking**: Integration with finance app for harvest profitability analysis
+- **Scalability**: Support for high-volume harvest operations with efficient indexing
+- **Auditing**: All harvest operations tracked with django-simple-history
+
+#### 4.10 Scenario Planning (scenario app - IMPLEMENTED)
 
 The Scenario Planning app’s data model enables aquaculture managers to create, manage, and analyze hypothetical scenarios for salmon farming operations, projecting key metrics like fish growth, population, biomass, and feed consumption. It reuses existing models like `batch_lifecyclestage`, introduces normalized tables for integrity and querying, and integrates with apps like `batch` for real-time data initialization. The design ensures scalability for large projection datasets, supports audit logging for traceability, and matches the implementation complexity of Broodstock Management.
 
