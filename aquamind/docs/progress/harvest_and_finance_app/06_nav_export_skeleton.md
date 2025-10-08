@@ -65,7 +65,7 @@ Routes registered via `router.register(..., basename='finance-nav-exports')`.
 - ViewSet / endpoints + serializers.  
 - Sample CSV format in code docstring & design spec.  
 - Unit + integration tests.  
-- OpenAPI diff committed; Schemathesis passes.
+- OpenAPI diff committed; API regression suite stays green.
 
 ---
 
@@ -75,7 +75,7 @@ Routes registered via `router.register(..., basename='finance-nav-exports')`.
 - [ ] Batch creation sets linked IC transactions to `exported`.  
 - [ ] GET download returns a well-formed CSV with header + at least one detail line.  
 - [ ] Re-calling POST with identical filter set returns **400** unless `force=true` param supplied (idempotency guard).  
-- [ ] OpenAPI schema validates & contract tests green.  
+- [ ] OpenAPI schema validates & API regression suite green.  
 - [ ] Roles: only FINANCE / ADMIN may create or download exports (403 otherwise).
 
 ---

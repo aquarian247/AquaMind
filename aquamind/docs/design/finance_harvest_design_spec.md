@@ -204,7 +204,7 @@ Secure bucket / file-share. Filename: `NAV_IC_{company}_{YYYYMMDD}_{export_id}.c
 • FK chains ensure traceability batch → harvest → finance facts.  
 • Row-level access (geography/subsidiary) leverages existing RBAC [4].  
 • `django-simple-history` on new models.  
-• Schemathesis contract tests, explicit basenames, kebab-case [5].
+• API regression suite (`tests/api`), explicit basenames, kebab-case [5].
 
 ---
 

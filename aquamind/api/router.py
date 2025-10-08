@@ -40,10 +40,10 @@ urlpatterns = [
     # API endpoints for each app
     # ------------------------------------------------------------------
     # NOTE:
-    # Infrastructure endpoints were **temporarily disabled** during Phase-4
-    # contract-unification to eliminate duplicate URL patterns that caused
-    # 404 noise in Schemathesis.  Now that the router duplication issue is
-    # resolved we restore them via a single explicit `path()` include.
+    # Infrastructure endpoints were temporarily disabled during Phase-4
+    # contract-unification to eliminate duplicate URL patterns. Now that the
+    # router duplication issue is resolved we restore them via a single
+    # explicit `path()` include.
     # ------------------------------------------------------------------
     path('environmental/', include(environmental_router.urls)),
     path('batch/', include(batch_router.urls)),

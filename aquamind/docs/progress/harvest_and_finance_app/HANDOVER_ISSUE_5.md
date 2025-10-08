@@ -28,7 +28,7 @@
 - Deliver NAV export skeleton (GitHub Issue 59): batch pending `IntercompanyTransaction` rows into journal files.
 - Core deliverables: `NavExportBatch` / `NavExportLine` models + migrations, export service to assemble lines & mark transactions `exported`, CSV generator, and read/write endpoints (`POST /api/v1/finance/nav-exports/`, `GET /api/v1/finance/nav-exports/{id}/download`).
 - RBAC remains FINANCE/ADMIN only; enforce idempotency guard (duplicate filter sets should 400 unless `force=true`).
-- OpenAPI + Schemathesis must cover new endpoints; update design spec NAV section and master plan checkbox when done.
+- OpenAPI + API regression suite must cover new endpoints; update design spec NAV section and master plan checkbox when done.
 
 ## Recommended Next Steps
 1. Rebase `features/harvest-and-finance` onto latest `main`; rerun targeted finance tests after rebase.

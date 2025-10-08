@@ -1,5 +1,6 @@
 """Tests verifying BI views and supporting indexes for finance data."""
 
+import unittest
 from decimal import Decimal
 
 from django.db import connection
@@ -23,6 +24,7 @@ from apps.infrastructure.models.station import FreshwaterStation
 from apps.users.models import Subsidiary
 
 
+@unittest.skipIf(connection.vendor == 'sqlite', 'BI views not created for SQLite')
 class FinanceBIViewsTests(TestCase):
     """Integration tests for BI-facing database views."""
 

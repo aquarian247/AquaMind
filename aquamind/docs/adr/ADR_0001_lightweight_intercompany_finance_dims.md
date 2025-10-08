@@ -63,7 +63,7 @@ The finance program requires:
 - [x] ADR documented (`docs/adr/ADR_0001_lightweight_intercompany_finance_dims.md`).
 - [ ] Design spec updated with finance dimension ownership.
 - [ ] Implementation plan links to this ADR.
-- [ ] Schemathesis & API standards revalidated in later phases.
+- [ ] API regression suite & API standards revalidated in later phases.
 
 ## Follow-up / Open Decisions
 

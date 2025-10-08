@@ -2,7 +2,9 @@
 
 from decimal import Decimal
 
+from django.db import connection
 from rest_framework import status
+from unittest import skipIf
 
 from apps.finance.models import NavExportLine
 from apps.users.models import Role
@@ -10,6 +12,7 @@ from tests.api.test_finance_read_apis import FinanceAPITestDataMixin
 from tests.base import BaseAPITestCase
 
 
+@skipIf(connection.vendor == "sqlite", "Finance API tests require PostgreSQL features")
 class FinanceNavExportPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
     def setUp(self):
         super().setUp()
@@ -25,6 +28,7 @@ class FinanceNavExportPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+@skipIf(connection.vendor == "sqlite", "Finance API tests require PostgreSQL features")
 class FinanceNavExportAPITest(FinanceAPITestDataMixin, BaseAPITestCase):
     def setUp(self):
         super().setUp()

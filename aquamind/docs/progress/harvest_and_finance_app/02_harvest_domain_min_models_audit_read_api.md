@@ -55,7 +55,7 @@ Implement Serializers, ViewSets, routers in **kebab-case** with **explicit basen
 - [ ] `python manage.py migrate` applies & rolls back cleanly.  
 - [ ] History tables exist for all harvest models.  
 - [ ] Endpoints list & filter correctly; **no POST/PUT/PATCH/DELETE** allowed.  
-- [ ] OpenAPI regenerates without conflicts; Schemathesis contract tests pass.  
+- [ ] OpenAPI regenerates without conflicts; API regression suite passes.
 - [ ] Routers comply with standards (kebab-case path, explicit basename).  
 
 ---

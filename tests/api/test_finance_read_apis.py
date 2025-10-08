@@ -3,8 +3,10 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from django.db import connection
 from django.utils import timezone
 from rest_framework import status
+from unittest import skipIf
 
 from apps.batch.models import Batch, BatchContainerAssignment, LifeCycleStage, Species
 from apps.finance.models import (
@@ -181,6 +183,7 @@ class FinanceAPITestDataMixin:
         )
 
 
+@skipIf(connection.vendor == "sqlite", "Finance API tests require PostgreSQL features")
 class FinanceAPIPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
     """Ensures finance endpoints enforce RBAC."""
 
@@ -198,6 +201,7 @@ class FinanceAPIPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+@skipIf(connection.vendor == "sqlite", "Finance API tests require PostgreSQL features")
 class FinanceFactsAPITest(FinanceAPITestDataMixin, BaseAPITestCase):
     """Validates finance facts read API behaviour."""
 
@@ -252,6 +256,7 @@ class FinanceFactsAPITest(FinanceAPITestDataMixin, BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
+@skipIf(connection.vendor == "sqlite", "Finance API tests require PostgreSQL features")
 class FinanceIntercompanyAPITest(FinanceAPITestDataMixin, BaseAPITestCase):
     """Validates intercompany transaction API behaviour."""
 

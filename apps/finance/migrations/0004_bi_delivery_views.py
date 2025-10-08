@@ -63,6 +63,35 @@ DROP INDEX IF EXISTS ix_fact_harvest_event_date;
 """
 
 
+def create_views_and_indexes(apps, schema_editor):
+    if schema_editor.connection.vendor == "sqlite":
+        return
+
+    statements = [CREATE_VW_FACT_HARVEST, CREATE_VW_INTERCOMPANY]
+    for stmt in statements:
+        schema_editor.execute(stmt)
+
+    for stmt in CREATE_INDEXES.strip().split(";\n\n"):
+        sql = stmt.strip()
+        if sql:
+            schema_editor.execute(sql)
+
+
+def drop_views_and_indexes(apps, schema_editor):
+    if schema_editor.connection.vendor == "sqlite":
+        return
+
+    for stmt in DROP_INDEXES.strip().split(";\n"):
+        sql = stmt.strip()
+        if sql:
+            schema_editor.execute(sql)
+
+    for stmt in DROP_VIEWS.strip().split(";\n"):
+        sql = stmt.strip()
+        if sql:
+            schema_editor.execute(sql)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -70,7 +99,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql=CREATE_VW_FACT_HARVEST, reverse_sql="DROP VIEW IF EXISTS vw_fact_harvest"),
-        migrations.RunSQL(sql=CREATE_VW_INTERCOMPANY, reverse_sql="DROP VIEW IF EXISTS vw_intercompany_transactions"),
-        migrations.RunSQL(sql=CREATE_INDEXES, reverse_sql=DROP_INDEXES),
+        migrations.RunPython(create_views_and_indexes, drop_views_and_indexes),
     ]

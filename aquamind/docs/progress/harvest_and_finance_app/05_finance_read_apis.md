@@ -55,7 +55,7 @@ Always open these before coding or reviewing to avoid context rot.
   - Filtering combinations (AND logic).  
   - Pagination & ordering.  
   - 403 for non-FINANCE roles; 405 for write attempts.  
-- Updated OpenAPI (`api/openapi.yaml`) and passing Schemathesis contract run.
+- Updated OpenAPI (`api/openapi.yaml`) and API regression suite stays green.
 
 ---
 
@@ -67,7 +67,7 @@ Always open these before coding or reviewing to avoid context rot.
 - [ ] Ordering by `event_date` (asc/desc) or other allowed fields.  
 - [ ] All write verbs (POST/PUT/PATCH/DELETE) return **405**.  
 - [ ] Unauthorized user receives **403**; user with `UserProfile.role in {FINANCE, ADMIN}` succeeds.  
-- [ ] Contract tests (Schemathesis) pass; OpenAPI schema validates.
+- [ ] API regression suite passes; OpenAPI schema validates.
 
 ---
 
@@ -109,7 +109,7 @@ Always open these before coding or reviewing to avoid context rot.
 5. **Testing Tips**  
    - Create fixture user with role `FINANCE`.  
    - Use `reverse()` + query params to assert filter intersections.  
-   - Schemathesis: ensure examples in serializer `Meta.examples`.
+- API regression: ensure examples in serializer `Meta.examples`.
 
 ---
 
@@ -123,7 +123,7 @@ Always open these before coding or reviewing to avoid context rot.
 ## 8 PR Checklist  
 
 - [ ] Serializers, ViewSets, routers added.  
-- [ ] Unit & contract tests green.  
+- [ ] Unit & API regression tests green.
 - [ ] OpenAPI regenerated & committed.  
 - [ ] Docs updated (design spec + master plan checkbox).  
 - [ ] PR description: what changed, how to test, risk/rollback.  

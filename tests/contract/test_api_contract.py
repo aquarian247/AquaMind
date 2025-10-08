@@ -68,10 +68,7 @@ from apps.inventory.api.viewsets.stock import FeedStockViewSet
 from apps.inventory.api.viewsets.summary import BatchFeedingSummaryViewSet
 from apps.inventory.api.viewsets.feed import FeedViewSet
 from apps.inventory.api.viewsets.purchase import FeedPurchaseViewSet
-from apps.scenario.api.viewsets import (
-    ScenarioViewSet, TGCModelViewSet, FCRModelViewSet, MortalityModelViewSet,
-    TemperatureProfileViewSet, BiologicalConstraintsViewSet
-)
+from apps.scenario.api import viewsets as scenario_viewsets
 from apps.users.views import UserViewSet
 
 # Import router configuration

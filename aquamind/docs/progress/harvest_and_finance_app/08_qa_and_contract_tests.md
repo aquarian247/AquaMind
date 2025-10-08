@@ -6,7 +6,7 @@ _Master plan reference_: `docs/progress/harvest_and_finance_app/IMPLEMENTATION_P
 
 ## 1 Summary  
 Final quality gate for the Harvest + Finance side-quest.  
-Run **end-to-end tests**, regenerate **OpenAPI**, execute **Schemathesis** contract tests, and ensure documentation is fully aligned. Nothing merges until this issue passes.
+Run **end-to-end tests**, regenerate **OpenAPI**, execute the **API regression suite**, and ensure documentation is fully aligned. Nothing merges until this issue passes.
 
 ---
 
@@ -36,7 +36,7 @@ Open every one of these at the start of the session to prevent context rot.
   - 403/405 edge-cases.  
 - **OpenAPI & Contract**  
   - Regenerate schema (`spectacular`) and commit.  
-  - Run Schemathesis with hooks; max examples ≥ 10; zero failures.  
+  - Execute `python manage.py test tests.api` (or targeted modules) to validate API behaviour.  
 
 ### 3.2 Documentation  
 - Update design spec with any final field or route tweaks.  
@@ -44,8 +44,8 @@ Open every one of these at the start of the session to prevent context rot.
 - Mark **Issue checkboxes** in master plan.
 
 ### 3.3 CI Integration  
-- Extend test matrix to include `apps/finance`, `apps/harvest` tests.  
-- Add job step: `schemathesis run --hypothesis-max-examples=10 api/openapi.yaml`.  
+- Extend test matrix to include `apps/finance`, `apps/harvest`, and `tests/api`.  
+- Ensure OpenAPI validation workflow runs after regeneration.  
 - Ensure `finance_project` CLI runs against test DB in CI to catch migrations.
 
 ---
@@ -60,7 +60,7 @@ Open every one of these at the start of the session to prevent context rot.
 
 ## 5 Acceptance Criteria  
 - [ ] All new endpoints, projections, and export flows covered by tests (≥ 90 % lines in new apps).  
-- [ ] Schemathesis contract run passes with zero errors.  
+- [ ] API regression suite (`python manage.py test tests.api`) passes with zero errors.  
 - [ ] `python manage.py spectacular --file api/openapi.yaml` produces spec with no path conflicts.  
 - [ ] Design spec & ADR cross-referenced; BI guide linked where relevant.  
 - [ ] CI status is green on PR; no warnings from linters or typing.  
@@ -84,9 +84,9 @@ Open every one of these at the start of the session to prevent context rot.
 4. **Fast Tests**  
    - Use in-memory SQLite for unit tests; Postgres for integration via test container.  
    - Mark slow tests with `@pytest.mark.slow` and exclude from default run.  
-5. **Schemathesis Setup**  
-   - Import auth hooks from `aquamind.utils.schemathesis_hooks`.  
-   - Limit examples but cover all tag groups (`--hypothesis-max-examples=10`).  
+5. **API Regression Strategy**  
+   - Leverage `tests/api` modules for high-value endpoints; expand coverage where gaps exist.  
+   - Use `BaseAPITestCase` helpers for consistent auth and URL construction.  
 
 ---
 
