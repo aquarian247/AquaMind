@@ -103,7 +103,7 @@ Responsibilities
 
 - [ ] Models & migrations added.  
 - [ ] CLI command & docs in `README.md`.  
-- [ ] Tests green (`pytest` / `manage.py test`).  
+- [ ] Tests green (`python manage.py test`).  
 - [ ] OpenAPI regenerated & committed.  
 - [ ] Master plan checkbox updated & issue linked.  
 - [ ] Risk & rollback section in PR description.  

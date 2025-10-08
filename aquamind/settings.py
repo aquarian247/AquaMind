@@ -65,6 +65,8 @@ LOCAL_APPS = [
     'apps.broodstock',
     'apps.scenario',
     'apps.operational',
+    'apps.harvest',
+    'apps.finance',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -350,6 +352,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Broodstock defaults
 BROODSTOCK_DEFAULTS = {
     'AVG_FISH_WEIGHT_KG': 10.0,
+}
+
+NAV_ACCOUNT_MAP = {
+    "sales_account": "4000",
+    "balancing_account": "3000",
 }
 
 # ------------------------------------------------------------------

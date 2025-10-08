@@ -20,6 +20,8 @@ from apps.broodstock.api.routers import router as broodstock_router
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.scenario.api.routers import router as scenario_router
 from apps.operational.api.routers import router as operational_router
+from apps.harvest.api.routers import router as harvest_router
+from apps.finance.api.routers import router as finance_router
 # from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
@@ -38,10 +40,10 @@ urlpatterns = [
     # API endpoints for each app
     # ------------------------------------------------------------------
     # NOTE:
-    # Infrastructure endpoints were **temporarily disabled** during Phase-4
-    # contract-unification to eliminate duplicate URL patterns that caused
-    # 404 noise in Schemathesis.  Now that the router duplication issue is
-    # resolved we restore them via a single explicit `path()` include.
+    # Infrastructure endpoints were temporarily disabled during Phase-4
+    # contract-unification to eliminate duplicate URL patterns. Now that the
+    # router duplication issue is resolved we restore them via a single
+    # explicit `path()` include.
     # ------------------------------------------------------------------
     path('environmental/', include(environmental_router.urls)),
     path('batch/', include(batch_router.urls)),
@@ -52,5 +54,7 @@ urlpatterns = [
     path('infrastructure/', include(infrastructure_router.urls)),
     path('scenario/', include(scenario_router.urls)),
     path('operational/', include(operational_router.urls)),
+    path('operational/', include(harvest_router.urls)),
+    path('finance/', include(finance_router.urls)),
     path('users/', include('apps.users.urls')),
 ]

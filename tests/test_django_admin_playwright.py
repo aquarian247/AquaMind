@@ -15,12 +15,21 @@ Test Categories:
 """
 
 import pytest
-from playwright.sync_api import Page, expect
 from datetime import datetime, timedelta
 import random
 import string
 
+# Try to import Playwright - skip tests if not available
+try:
+    from playwright.sync_api import Page, expect
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    Page = None
+    expect = None
 
+
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestAquaMindAdminAuthentication:
     """Test authentication and basic navigation"""
     
@@ -64,6 +73,7 @@ class TestAquaMindAdminAuthentication:
         expect(page.locator('text=Broodstock Management')).to_be_visible()
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestBatchManagement:
     """Test Batch Management functionality"""
     
@@ -150,6 +160,7 @@ class TestBatchManagement:
         expect(page.locator(f'td:has-text("{batch_number}")')).to_be_visible()
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestInfrastructureManagement:
     """Test Infrastructure Management functionality"""
     
@@ -175,6 +186,7 @@ class TestInfrastructureManagement:
         expect(page).to_have_title("Select sensor to change | Django site admin")
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestHealthMonitoring:
     """Test Health Monitoring functionality"""
     
@@ -200,6 +212,7 @@ class TestHealthMonitoring:
         expect(page).to_have_title("Select journal entry to change | Django site admin")
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestInventoryManagement:
     """Test Feed and Inventory Management functionality"""
     
@@ -225,6 +238,7 @@ class TestInventoryManagement:
         expect(page).to_have_title("Select feeding event to change | Django site admin")
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestDataValidation:
     """Test data validation and integrity"""
     
@@ -265,6 +279,7 @@ class TestDataValidation:
         expect(page.locator('text=This field is required')).to_be_visible()
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestUIUXFeatures:
     """Test UI/UX features"""
     
@@ -307,6 +322,7 @@ class TestUIUXFeatures:
         expect(page.locator('a:has-text("Batchs")')).to_be_visible()
 
 
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestPerformance:
     """Test performance aspects"""
     

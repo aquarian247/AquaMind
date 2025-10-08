@@ -46,6 +46,11 @@ class HealthSamplingAggregationTest(TestCase):
             population_count=1000,
             avg_weight_g=Decimal("100.0")
         )
+
+        # Align sampling_date with assignment to avoid validation failures when
+        # the hard-coded date would precede the dynamically generated
+        # assignment_date (which depends on the current day).
+        self.sampling_date = self.assignment.assignment_date.isoformat()
         
         # Create health parameters
         self.param_gill = HealthParameter.objects.create(
@@ -61,7 +66,7 @@ class HealthSamplingAggregationTest(TestCase):
         url = '/api/v1/health/health-sampling-events/'
         data = {
             'assignment': self.assignment.id,
-            'sampling_date': '2025-10-04',
+            'sampling_date': self.sampling_date,
             'number_of_fish_sampled': 3,
             'individual_fish_observations': [
                 {
@@ -119,7 +124,7 @@ class HealthSamplingAggregationTest(TestCase):
         url = '/api/v1/health/health-sampling-events/'
         data = {
             'assignment': self.assignment.id,
-            'sampling_date': '2025-10-04',
+            'sampling_date': self.sampling_date,
             'number_of_fish_sampled': 4,
             'individual_fish_observations': [
                 {
@@ -180,7 +185,7 @@ class HealthSamplingAggregationTest(TestCase):
         url = '/api/v1/health/health-sampling-events/'
         data = {
             'assignment': self.assignment.id,
-            'sampling_date': '2025-10-04',
+            'sampling_date': self.sampling_date,
             'number_of_fish_sampled': 0,
             'individual_fish_observations': []
         }
@@ -202,7 +207,7 @@ class HealthSamplingAggregationTest(TestCase):
         url = '/api/v1/health/health-sampling-events/'
         data = {
             'assignment': self.assignment.id,
-            'sampling_date': '2025-10-04',
+            'sampling_date': self.sampling_date,
             'number_of_fish_sampled': 2,
             'individual_fish_observations': [
                 {

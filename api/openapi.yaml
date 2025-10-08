@@ -9597,6 +9597,306 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/finance/facts/harvests/:
+    get:
+      operationId: api_v1_finance_facts_harvests_list
+      description: Retrieve projected harvest facts with optional filters.
+      summary: List finance harvest facts
+      parameters:
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by originating batch ID.
+      - in: query
+        name: company
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by finance company ID.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive lower bound for event date.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive upper bound for event date.
+      - in: query
+        name: grade
+        schema:
+          type: string
+        description: Filter by product grade code (case insensitive).
+      - in: query
+        name: ordering
+        schema:
+          type: string
+        description: Ordering fields, e.g. '-event_date' or 'event_date'.
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: site
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by finance site ID.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFactHarvestList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/finance/facts/harvests/{fact_id}/:
+    get:
+      operationId: api_v1_finance_facts_harvests_retrieve
+      description: Read-only access to finance harvest facts.
+      parameters:
+      - in: path
+        name: fact_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Unique finance fact identifier.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactHarvest'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/finance/intercompany/transactions/:
+    get:
+      operationId: api_v1_finance_intercompany_transactions_list
+      description: Retrieve detected intercompany transactions with optional filters.
+      summary: List intercompany transactions
+      parameters:
+      - in: query
+        name: company
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by finance company ID participating in the policy.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+        description: Inclusive lower bound for posting date.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+        description: Inclusive upper bound for posting date.
+      - in: query
+        name: ordering
+        schema:
+          type: string
+        description: Ordering fields, e.g. '-posting_date'.
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: state
+        schema:
+          type: string
+        description: Filter by transaction state (pending, exported, posted).
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntercompanyTransactionList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/finance/intercompany/transactions/{tx_id}/:
+    get:
+      operationId: api_v1_finance_intercompany_transactions_retrieve
+      description: Read-only access to intercompany transactions.
+      parameters:
+      - in: path
+        name: tx_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Unique intercompany transaction identifier.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntercompanyTransaction'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/finance/nav-exports/:
+    post:
+      operationId: api_v1_finance_nav_exports_create
+      description: Batch pending intercompany transactions into a NAV journal.
+      summary: Create NAV export batch
+      parameters:
+      - in: query
+        name: force
+        schema:
+          type: boolean
+        description: Set true to regenerate an existing batch for the same filters.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NavExportBatchCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NavExportBatchCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NavExportBatchCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavExportBatch'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/finance/nav-exports/{batch_id}/download/:
+    get:
+      operationId: api_v1_finance_nav_exports_download_retrieve
+      description: Create NAV export batches and stream journal files.
+      summary: Download NAV export batch
+      parameters:
+      - in: path
+        name: batch_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this nav export batch.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: CSV journal file
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/health/fish-parameter-scores/:
     get:
       operationId: api_v1_health_fish_parameter_scores_list
@@ -21009,6 +21309,228 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/operational/harvest-events/:
+    get:
+      operationId: api_v1_operational_harvest_events_list
+      description: Retrieve harvest events with optional filtering by batch, assignment,
+        destination, date range, or document reference.
+      summary: List harvest events
+      parameters:
+      - in: query
+        name: assignment
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by assignment ID.
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by batch ID.
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: Include events on or after this ISO 8601 timestamp.
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Include events on or before this ISO 8601 timestamp.
+      - in: query
+        name: dest_geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter events by destination geography ID.
+      - in: query
+        name: dest_subsidiary
+        schema:
+          type: string
+        description: Filter events by destination subsidiary code.
+      - in: query
+        name: document_ref
+        schema:
+          type: string
+        description: Filter events whose document reference contains this value (case-insensitive).
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHarvestEventList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/operational/harvest-events/{id}/:
+    get:
+      operationId: api_v1_operational_harvest_events_retrieve
+      description: Read-only access to harvest events.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this harvest event.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HarvestEvent'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/operational/harvest-lots/:
+    get:
+      operationId: api_v1_operational_harvest_lots_list
+      description: Retrieve harvest lots with optional filtering by event or product
+        grade.
+      summary: List harvest lots
+      parameters:
+      - in: query
+        name: event
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter lots by harvest event ID.
+      - in: query
+        name: grade
+        schema:
+          type: string
+        description: Filter lots by product grade code (case insensitive).
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: product_grade
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter lots by product grade ID.
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHarvestLotList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/operational/harvest-lots/{id}/:
+    get:
+      operationId: api_v1_operational_harvest_lots_retrieve
+      description: Read-only access to harvest lots.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this harvest lot.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HarvestLot'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: api_v1_scenario_biological_constraints_list
@@ -26336,6 +26858,48 @@ components:
       - data_type
       - file
       - profile_name
+    CompanySummary:
+      type: object
+      description: Compact representation of a finance company.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        display_name:
+          type: string
+          readOnly: true
+        subsidiary:
+          enum:
+          - BS
+          - FW
+          - FM
+          - LG
+          - ALL
+          type: string
+          description: |-
+            * `BS` - Broodstock
+            * `FW` - Freshwater
+            * `FM` - Farming
+            * `LG` - Logistics
+            * `ALL` - All Subsidiaries
+          x-spec-enum-id: 4e135cac36bd030a
+          readOnly: true
+        geography:
+          type: string
+          readOnly: true
+          nullable: true
+        currency:
+          type: string
+          readOnly: true
+          nullable: true
+      required:
+      - currency
+      - display_name
+      - geography
+      - id
+      - subsidiary
     CompositionNestedBatch:
       type: object
       description: Minimal serializer for nested Batch representation.
@@ -27441,6 +28005,81 @@ components:
       required:
       - series
       - unit
+    FactHarvest:
+      type: object
+      description: Read-only serializer for projected harvest facts.
+      properties:
+        fact_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        lot:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event_date:
+          type: string
+          format: date-time
+          readOnly: true
+        quantity_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        unit_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch:
+          type: integer
+          readOnly: true
+          description: Identifier of the originating batch.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanySummary'
+          readOnly: true
+          description: Finance company details.
+        site:
+          allOf:
+          - $ref: '#/components/schemas/SiteSummary'
+          readOnly: true
+          description: Finance site details.
+        product_grade:
+          allOf:
+          - $ref: '#/components/schemas/ProductGradeSummary'
+          readOnly: true
+          description: Product grade metadata for the lot.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - batch
+      - company
+      - created_at
+      - event
+      - event_date
+      - fact_id
+      - lot
+      - product_grade
+      - quantity_kg
+      - site
+      - unit_count
+      - updated_at
     Feed:
       type: object
       description: |-
@@ -28402,6 +29041,24 @@ components:
       - parameter_name
       - score
       - updated_at
+    FishParameterScoreInput:
+      type: object
+      description: Input serializer for nested fish parameter scores.
+      properties:
+        parameter:
+          type: integer
+          description: ID of the active health parameter being scored.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        score:
+          type: integer
+          maximum: 5
+          minimum: 1
+          description: Score value (typically 1-5) representing the health assessment
+            for this parameter.
+      required:
+      - parameter
+      - score
     FreshwaterStation:
       type: object
       description: Serializer for the FreshwaterStation model.
@@ -28983,6 +29640,182 @@ components:
       - history_user
       - name
       - updated_at
+    HarvestEvent:
+      type: object
+      description: Read-only serializer for harvest events.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event_date:
+          type: string
+          format: date-time
+          readOnly: true
+        batch:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+          description: Batch number associated with this harvest event.
+        assignment:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment_container:
+          type: string
+          readOnly: true
+          description: Name of the container linked to the batch assignment at harvest
+            time.
+        dest_geography:
+          type: integer
+          readOnly: true
+          nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        dest_geography_name:
+          type: string
+          readOnly: true
+          description: Display name of the destination geography.
+        dest_subsidiary:
+          enum:
+          - BS
+          - FW
+          - FM
+          - LG
+          - ALL
+          - null
+          type: string
+          description: |-
+            * `BS` - Broodstock
+            * `FW` - Freshwater
+            * `FM` - Farming
+            * `LG` - Logistics
+            * `ALL` - All Subsidiaries
+          x-spec-enum-id: 4e135cac36bd030a
+          readOnly: true
+          nullable: true
+        dest_subsidiary_display:
+          type: string
+          readOnly: true
+          description: Human readable destination subsidiary label.
+        document_ref:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignment
+      - assignment_container
+      - batch
+      - batch_number
+      - created_at
+      - dest_geography
+      - dest_geography_name
+      - dest_subsidiary
+      - dest_subsidiary_display
+      - document_ref
+      - event_date
+      - id
+      - updated_at
+    HarvestLot:
+      type: object
+      description: Read-only serializer for harvest lots.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event_date:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of the harvest event that produced this lot.
+        batch:
+          type: integer
+          readOnly: true
+          description: Batch identifier associated with the harvest event.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+          description: Batch number tied to the harvest event.
+        product_grade:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        product_grade_code:
+          type: string
+          readOnly: true
+          description: Code representing the product grade.
+        product_grade_name:
+          type: string
+          readOnly: true
+          description: Human readable product grade name.
+        live_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        gutted_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+          nullable: true
+        fillet_weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+          nullable: true
+        unit_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - batch
+      - batch_number
+      - created_at
+      - event
+      - event_date
+      - fillet_weight_kg
+      - gutted_weight_kg
+      - id
+      - live_weight_kg
+      - product_grade
+      - product_grade_code
+      - product_grade_name
+      - unit_count
+      - updated_at
     HealthCheckResponse:
       type: object
       description: Serializer for health check API response.
@@ -29401,8 +30234,7 @@ components:
         individual_fish_observations:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/IndividualFishObservationInput'
           writeOnly: true
         avg_length_cm:
           type: string
@@ -29524,6 +30356,7 @@ components:
           minimum: -9223372036854775808
         sampling_event:
           type: integer
+          nullable: true
           description: The sampling event this fish observation belongs to.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -29535,11 +30368,13 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
           description: Weight of the fish in grams.
         length_cm:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
           description: Length of the fish in centimeters.
         parameter_scores:
           type: array
@@ -29557,9 +30392,142 @@ components:
       - calculated_k_factor
       - fish_identifier
       - id
-      - length_cm
-      - sampling_event
-      - weight_g
+    IndividualFishObservationInput:
+      type: object
+      description: Input serializer for nested individual fish observations.
+      properties:
+        fish_identifier:
+          type: string
+          description: Unique identifier for the individual fish within this sampling
+            event.
+        weight_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Weight of the fish in grams.
+        length_cm:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Length of the fish in centimeters.
+        parameter_scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/FishParameterScoreInput'
+          description: List of parameter scores for this fish observation.
+      required:
+      - fish_identifier
+    IntercompanyPolicySummary:
+      type: object
+      description: Compact representation of an intercompany pricing policy.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        method:
+          enum:
+          - market
+          - cost_plus
+          - standard
+          type: string
+          description: |-
+            * `market` - Market
+            * `cost_plus` - Cost Plus
+            * `standard` - Standard
+          x-spec-enum-id: c688a7224c952b7c
+          readOnly: true
+        markup_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          readOnly: true
+          nullable: true
+        from_company:
+          allOf:
+          - $ref: '#/components/schemas/CompanySummary'
+          readOnly: true
+        to_company:
+          allOf:
+          - $ref: '#/components/schemas/CompanySummary'
+          readOnly: true
+        product_grade:
+          allOf:
+          - $ref: '#/components/schemas/ProductGradeSummary'
+          readOnly: true
+      required:
+      - from_company
+      - id
+      - markup_percent
+      - method
+      - product_grade
+      - to_company
+    IntercompanyTransaction:
+      type: object
+      description: Read-only serializer for intercompany transactions.
+      properties:
+        tx_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        event:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        posting_date:
+          type: string
+          format: date
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        currency:
+          type: string
+          readOnly: true
+          nullable: true
+        state:
+          enum:
+          - pending
+          - exported
+          - posted
+          type: string
+          description: |-
+            * `pending` - Pending
+            * `exported` - Exported
+            * `posted` - Posted
+          x-spec-enum-id: f2d313ec5acca255
+          readOnly: true
+        policy:
+          allOf:
+          - $ref: '#/components/schemas/IntercompanyPolicySummary'
+          readOnly: true
+          description: Policy metadata including participating companies.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - currency
+      - event
+      - policy
+      - posting_date
+      - state
+      - tx_id
+      - updated_at
     JournalEntry:
       type: object
       description: |-
@@ -30529,6 +31497,87 @@ components:
       - history_id
       - history_type
       - history_user
+    NavExportBatch:
+      type: object
+      description: Read serializer for NAV export batches.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanySummary'
+          readOnly: true
+        date_from:
+          type: string
+          format: date
+          readOnly: true
+        date_to:
+          type: string
+          format: date
+          readOnly: true
+        posting_date:
+          type: string
+          format: date
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+          nullable: true
+        state:
+          enum:
+          - draft
+          - exported
+          type: string
+          description: |-
+            * `draft` - Draft
+            * `exported` - Exported
+          x-spec-enum-id: 4efe7997950a96e0
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        line_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - company
+      - created_at
+      - currency
+      - date_from
+      - date_to
+      - id
+      - line_count
+      - posting_date
+      - state
+      - updated_at
+    NavExportBatchCreate:
+      type: object
+      description: Validates NAV export batch creation payloads.
+      properties:
+        company:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+      required:
+      - company
+      - date_from
+      - date_to
     NestedContainer:
       type: object
       description: Minimal serializer for nested Container representation.
@@ -31361,6 +32410,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FCRTrends'
+    PaginatedFactHarvestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactHarvest'
     PaginatedFeedContainerHistoryList:
       type: object
       required:
@@ -31861,6 +32935,56 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Hall'
+    PaginatedHarvestEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestEvent'
+    PaginatedHarvestLotList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestLot'
     PaginatedHealthLabSampleHistoryList:
       type: object
       required:
@@ -31986,6 +33110,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IndividualFishObservation'
+    PaginatedIntercompanyTransactionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntercompanyTransaction'
     PaginatedJournalEntryHistoryList:
       type: object
       required:
@@ -34943,8 +36092,7 @@ components:
         individual_fish_observations:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/IndividualFishObservationInput'
           writeOnly: true
         avg_length_cm:
           type: string
@@ -35049,6 +36197,7 @@ components:
           minimum: -9223372036854775808
         sampling_event:
           type: integer
+          nullable: true
           description: The sampling event this fish observation belongs to.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -35060,11 +36209,13 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
           description: Weight of the fish in grams.
         length_cm:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
           description: Length of the fish in centimeters.
         parameter_scores:
           type: array
@@ -36384,6 +37535,25 @@ components:
       - day_length_hours
       - id
       - updated_at
+    ProductGradeSummary:
+      type: object
+      description: Compact representation of a harvest product grade.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        code:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - code
+      - id
+      - name
     SampleType:
       type: object
       description: |-
@@ -37017,6 +38187,44 @@ components:
       - name
       - sensor_type
       - updated_at
+    SiteSummary:
+      type: object
+      description: Compact representation of a finance site.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        name:
+          type: string
+          readOnly: true
+        source_model:
+          enum:
+          - station
+          - area
+          type: string
+          description: |-
+            * `station` - Freshwater Station
+            * `area` - Area
+          x-spec-enum-id: 59fa3e5f2f12f4c5
+          readOnly: true
+        source_pk:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        company_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - company_id
+      - id
+      - name
+      - source_model
+      - source_pk
     Species:
       type: object
       description: Serializer for the Species model.

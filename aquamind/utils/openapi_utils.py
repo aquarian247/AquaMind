@@ -78,12 +78,12 @@ def ensure_global_security(
 ) -> Dict[str, Any]:
     """Ensure a *global* ``security`` requirement exists in the OpenAPI spec.
 
-    Some tooling (including Schemathesis) relies on a top-level ``security``
-    block to decide which authentication headers to send by default.  While
+    Contract tooling and API clients rely on a top-level ``security`` block to
+    decide which authentication headers to send by default. While
     drf-spectacular infers ``components.securitySchemes`` from DRF
-    authentication classes, it will emit the top-level list only if *every*
-    view explicitly declares a requirement—an easily missed detail that
-    results in anonymous requests during contract testing.
+    authentication classes, it only emits the top-level list when every view
+    declares a requirement—an easily missed detail that can lead to anonymous
+    requests during automated testing.
 
     This hook ensures that the schema always contains::
 
@@ -194,8 +194,8 @@ def add_standard_responses(
             # ------------------------------------------------------------------
             # This development endpoint is *intentionally* anonymous (`{}` in the
             # security array) but it can still return **401** when presented with
-            # a *malformed* or expired token in the `Authorization` header that
-            # Schemathesis fuzzes.  Ensure the 401 is documented so
+            # a *malformed* or expired token in the `Authorization` header during
+            # automated testing. Ensure the 401 is documented so
             # status-code-conformance does not fail.
             if path == "/api/v1/auth/dev-auth/":
                 _ensure_response(responses, "401", "Unauthorized")
@@ -228,8 +228,8 @@ def fix_action_response_types(  # noqa: D202
 
     Many DRF ``@action(detail=False)`` endpoints are *list* actions that return
     **arrays** but drf-spectacular frequently documents them with the serializer
-    for a *single* object.  Schemathesis then flags a type-mismatch when the
-    implementation legitimately returns ``[]``.
+    for a *single* object. This hook prevents type mismatches when the
+    implementation legitimately returns ``[]`` during automated testing.
 
     This hook looks for well-known list-action suffixes (``/recent/``,
     ``/stats/``, ``/by_batch/`` …) and, *for GET operations only*, wraps any
@@ -407,10 +407,10 @@ def prune_legacy_paths(  # noqa: D202
     Why remove the whole prefix?
     ----------------------------
     During **Phase 4 – API Contract Unification** the *infrastructure* API
-    surface was migrated to the new batch-centric design.  The underlying
+    surface was migrated to the new batch-centric design. The underlying
     Django routers have been deleted, yet drf-spectacular still discovers the
-    (now-stale) viewsets via historical imports, leading to hundreds of `404`
-    failures in Schemathesis runs.
+    (now-stale) viewsets via historical imports, producing schema noise during
+    automated testing.
 
     Stripping the entire prefix at schema-generation time guarantees the
     contract reflects only live endpoints without needing to micro-manage an

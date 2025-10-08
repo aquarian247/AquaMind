@@ -46,6 +46,61 @@ class FishParameterScoreSerializer(HealthBaseSerializer):
         read_only_fields = ['id', 'parameter_name', 'created_at', 'updated_at']
 
 
+class FishParameterScoreInputSerializer(serializers.Serializer):
+    """Input serializer for nested fish parameter scores."""
+
+    parameter = serializers.PrimaryKeyRelatedField(
+        queryset=HealthParameter.objects.filter(is_active=True),
+        help_text="ID of the active health parameter being scored."
+    )
+    score = serializers.IntegerField(
+        min_value=1,
+        max_value=5,
+        help_text="Score value (typically 1-5) representing the health assessment for this parameter."
+    )
+
+
+class IndividualFishObservationInputSerializer(HealthDecimalFieldsMixin, serializers.Serializer):
+    """Input serializer for nested individual fish observations."""
+
+    fish_identifier = serializers.CharField(
+        help_text="Unique identifier for the individual fish within this sampling event."
+    )
+    weight_g = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Weight of the fish in grams."
+    )
+    length_cm = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Length of the fish in centimeters."
+    )
+    parameter_scores = FishParameterScoreInputSerializer(
+        many=True,
+        required=False,
+        help_text="List of parameter scores for this fish observation."
+    )
+
+    def validate(self, data):
+        """Ensure positive decimal values where provided."""
+        weight_g = data.get('weight_g')
+        length_cm = data.get('length_cm')
+
+        if weight_g is not None:
+            data['weight_g'] = self.validate_positive_decimal(weight_g, 'weight_g')
+
+        if length_cm is not None:
+            data['length_cm'] = self.validate_positive_decimal(length_cm, 'length_cm')
+
+        data['fish_identifier'] = str(data['fish_identifier'])
+        return data
+
+
 class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealthModelMixin, HealthBaseSerializer):
     """Serializer for IndividualFishObservation model.
     
@@ -63,6 +118,8 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
     )
     sampling_event = serializers.PrimaryKeyRelatedField(
         queryset=HealthSamplingEvent.objects.all(),
+        required=False,
+        allow_null=True,
         help_text="The sampling event this fish observation belongs to."
     )
     fish_identifier = serializers.CharField(
@@ -71,11 +128,15 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
     weight_g = serializers.DecimalField(
         max_digits=10, 
         decimal_places=2,
+        required=False,
+        allow_null=True,
         help_text="Weight of the fish in grams."
     )
     length_cm = serializers.DecimalField(
         max_digits=10, 
         decimal_places=2,
+        required=False,
+        allow_null=True,
         help_text="Length of the fish in centimeters."
     )
 
@@ -119,10 +180,15 @@ class IndividualFishObservationSerializer(HealthDecimalFieldsMixin, NestedHealth
 
         # Validate weight and length if provided
         if weight_g is not None:
-            self.validate_positive_decimal(weight_g, 'weight_g')
+            data['weight_g'] = self.validate_positive_decimal(weight_g, 'weight_g')
         
         if length_cm is not None:
-            self.validate_positive_decimal(length_cm, 'length_cm')
+            data['length_cm'] = self.validate_positive_decimal(length_cm, 'length_cm')
+
+        if not data.get('sampling_event') and not self.instance:
+            raise serializers.ValidationError({
+                'sampling_event': "This field is required when creating observations directly."
+            })
 
         return data
 
@@ -192,8 +258,8 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
     This serializer handles complex nested data structures for fish health sampling events,
     including individual fish observations and their parameter scores.
     """
-    individual_fish_observations = serializers.ListField(
-        child=serializers.DictField(),
+    individual_fish_observations = IndividualFishObservationInputSerializer(
+        many=True,
         required=False,
         write_only=True
     )
@@ -329,34 +395,18 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
         
         # Create individual fish observations (children of the sampling event)
         for fish_data in individual_fish_observations_data:
-            # Ensure fish_identifier is a string for consistency
-            if 'fish_identifier' in fish_data and not isinstance(fish_data['fish_identifier'], str):
-                fish_data['fish_identifier'] = str(fish_data['fish_identifier'])
-            
-            # Extract parameter scores data if present (grandchildren of the sampling event)
             parameter_scores_data = fish_data.pop('parameter_scores', [])
-            
-            # Create the fish observation with a reference to the parent sampling_event
+
             fish_observation = IndividualFishObservation.objects.create(
                 sampling_event=health_sampling_event,
                 **fish_data
             )
-            
-            # Create parameter scores for this fish observation
+
             for score_data in parameter_scores_data:
-                # Ensure parameter is a valid HealthParameter instance
-                parameter_id = score_data.pop('parameter', None)
-                if parameter_id:
-                    try:
-                        parameter = HealthParameter.objects.get(id=parameter_id)
-                        FishParameterScore.objects.create(
-                            individual_fish_observation=fish_observation,
-                            parameter=parameter,
-                            **score_data
-                        )
-                    except HealthParameter.DoesNotExist:
-                        # Log the error but continue processing to avoid losing other valid data
-                        print(f"HealthParameter with id {parameter_id} does not exist")
+                FishParameterScore.objects.create(
+                    individual_fish_observation=fish_observation,
+                    **score_data
+                )
         
         # Calculate aggregate metrics (avg weight, length, etc.) based on individual observations
         # Always calculate metrics after creation to ensure data consistency
