@@ -34,23 +34,31 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`batch_lifecyclestage`**: Lifecycle stage modifications
 - **`batch_batchcomposition`**: Batch composition tracking
 
-**Broodstock App (5 models)**
-- **`broodstock_batchparentage`**: Egg-to-batch lineage tracking
-- **`broodstock_breedingpair`**: Breeding pair assignments and outcomes
-- **`broodstock_eggproduction`**: Internal egg production records
-- **`broodstock_fishmovement`**: Individual fish movements between containers
-- **`broodstock_broodstockfish`**: Individual broodstock fish records
+**Broodstock App (10 models with HistoricalRecords(), 10 historical tables currently active)**
+- **`broodstock_batchparentage`**: Egg-to-batch lineage tracking ✓
+- **`broodstock_breedingpair`**: Breeding pair assignments and outcomes ✓
+- **`broodstock_breedingplan`**: Breeding strategy definitions ✓
+- **`broodstock_breedingtraitpriority`**: Trait prioritization for breeding plans ✓
+- **`broodstock_broodstockfish`**: Individual broodstock fish records ✓
+- **`broodstock_eggproduction`**: Internal/external egg production records ✓
+- **`broodstock_eggsupplier`**: External egg supplier information ✓
+- **`broodstock_externaleggbatch`**: External egg acquisition details ✓
+- **`broodstock_fishmovement`**: Individual fish movements between containers ✓
+- **`broodstock_maintenancetask`**: Container maintenance task tracking ✓
 
-**Health App (9 models)**
-- **`health_healthlabsample`**: Laboratory sample tracking and results
-- **`health_journalentry`**: Health observation and treatment entries
-- **`health_licecount`**: Lice population monitoring
-- **`health_mortalityrecord`**: Health-related mortality documentation
-- **`health_treatment`**: Medical treatment administration
+**Health App (12 models with HistoricalRecords(), 10 historical tables currently active)**
+- **`health_fishparameterscore`**: Health parameter scores for individual fish observations
+- **`health_healthlabsample`**: Laboratory sample tracking and results ✓
+- **`health_healthparameter`**: Health assessment parameters ✓
+- **`health_healthsamplingevent`**: Detailed health sampling sessions ✓
+- **`health_individualfishobservation`**: Individual fish health observations ✓
+- **`health_journalentry`**: Health observation and treatment entries ✓
+- **`health_licecount`**: Lice population monitoring ✓
+- **`health_mortalityreason`**: Mortality cause categorization
+- **`health_mortalityrecord`**: Health-related mortality documentation ✓
+- **`health_sampletype`**: Sample type definitions for lab testing
+- **`health_treatment`**: Medical treatment administration ✓
 - **`health_vaccinationtype`**: Vaccination type definitions
-- **`health_healthparameter`**: Health assessment parameters
-- **`health_healthsamplingevent`**: Detailed health sampling sessions
-- **`health_individualfishobservation`**: Individual fish health observations
 
 **Infrastructure App (8 models)**
 - **`infrastructure_container`**: Container modifications and status changes
@@ -93,10 +101,11 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`harvest_harvestlot`**: Individual harvest lot management
 - **`harvest_harvestwaste`**: Harvest waste tracking
 
-**Users App (1 model)**
+**Users App (2 models)**
+- **`auth_user`**: User account changes
 - **`users_userprofile`**: User profile modifications
 
-#### Historical Tables (50 Total)
+#### Historical Tables (57 Total - All currently active)
 All historical tables follow the naming convention `{app}_historical{model}` and include:
 - Complete field-level change tracking
 - User attribution (`history_user_id`)
@@ -209,17 +218,60 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 
+#### Historical Tables (Audit Trail)
+All infrastructure models implement django-simple-history for comprehensive change tracking and regulatory compliance. Each model creates a corresponding historical table following the naming convention `{app}_historical{model}`.
+
+- **`infrastructure_historicalgeography`**
+  - Mirrors `infrastructure_geography` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
+
+- **`infrastructure_historicalarea`**
+  - Mirrors `infrastructure_area` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalfreshwaterstation`**
+  - Mirrors `infrastructure_freshwaterstation` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalhall`**
+  - Mirrors `infrastructure_hall` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalcontainertype`**
+  - Mirrors `infrastructure_containertype` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalcontainer`**
+  - Mirrors `infrastructure_container` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalsensor`**
+  - Mirrors `infrastructure_sensor` plus history tracking fields
+  - Same history fields as above
+
+- **`infrastructure_historicalfeedcontainer`**
+  - Mirrors `infrastructure_feedcontainer` plus history tracking fields
+  - Same history fields as above
+
 #### Relationships (Inferred `on_delete` where script failed)
 - `infrastructure_geography` ← `infrastructure_area` (PROTECT)
-- `infrastructure_area` ← `infrastructure_freshwaterstation` (CASCADE)
+- `infrastructure_geography` ← `infrastructure_freshwaterstation` (PROTECT)
 - `infrastructure_freshwaterstation` ← `infrastructure_hall` (CASCADE)
 - `infrastructure_hall` ← `infrastructure_container` (CASCADE)
-- `infrastructure_area` ← `infrastructure_container` (CASCADE) # If applicable
+- `infrastructure_area` ← `infrastructure_container` (CASCADE)
 - `infrastructure_containertype` ← `infrastructure_container` (PROTECT)
 - `infrastructure_container` ← `infrastructure_sensor` (CASCADE)
-- `infrastructure_freshwaterstation` ← `infrastructure_feedcontainer` (CASCADE)
-- `infrastructure_area` ← `infrastructure_feedcontainer` (CASCADE) # If applicable
-- `environmental_environmentalparameter` ← `infrastructure_sensor` (PROTECT)
+- `infrastructure_hall` ← `infrastructure_feedcontainer` (CASCADE)
+- `infrastructure_area` ← `infrastructure_feedcontainer` (CASCADE)
+- `infrastructure_container` ← `broodstock_maintenancetask` (CASCADE, related_name='maintenance_tasks')
+- `infrastructure_container` ← `broodstock_broodstockfish` (PROTECT, related_name='broodstock_fish')
+- `infrastructure_container` ← `broodstock_fishmovement` (PROTECT, from_container, related_name='fish_movements_from')
+- `infrastructure_container` ← `broodstock_fishmovement` (PROTECT, to_container, related_name='fish_movements_to')
+- `infrastructure_freshwaterstation` ← `broodstock_eggproduction` (SET_NULL, related_name='egg_productions')
 
 ### 4.2 Batch Management (`batch` app)
 **Purpose**: Tracks fish batches through their lifecycle.
@@ -321,18 +373,43 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 - **`batch_batchhistory`** (Likely handled by audit logging tools like django-auditlog, may not be a separate model)
 - **`batch_batchmedia`** (Potentially generic relation via ContentType or dedicated model)
 
+#### Historical Tables (Audit Trail)
+All batch models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
+
+- **`batch_historicalbatch`**
+  - All fields from `batch_batch` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change)
+- **`batch_historicalbatchcontainerassignment`**
+  - All fields from `batch_batchcontainerassignment` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalbatchtransfer`**
+  - All fields from `batch_batchtransfer` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalgrowthsample`**
+  - All fields from `batch_growthsample` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalmortalityevent`**
+  - All fields from `batch_mortalityevent` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalbatchcomposition`** (Note: Table creation pending - model has `history = HistoricalRecords()` but migration may not have run)
+
 #### Relationships (Inferred `on_delete` where script failed)
 - `batch_species` ← `batch_batch` (PROTECT)
-- `batch_lifecyclestage` ← `batch_batch` (PROTECT, for `current_stage_id`)
+- `batch_lifecyclestage` ← `batch_batch` (PROTECT, for `lifecycle_stage_id`)
 - `batch_batch` ← `batch_batchcontainerassignment` (CASCADE)
 - `infrastructure_container` ← `batch_batchcontainerassignment` (PROTECT)
 - `batch_lifecyclestage` ← `batch_batchcontainerassignment` (PROTECT)
 - `batch_batch` ← `batch_batchcomposition` (CASCADE, both FKs)
-- `batch_batch` ← `batch_batchtransfer` (CASCADE)
-- `infrastructure_container` ← `batch_batchtransfer` (PROTECT, both FKs)
-- `batch_batchcontainerassignment` ← `batch_mortalityevent` (CASCADE)
-- `health_mortalityreason` ← `batch_mortalityevent` (PROTECT)
+- `batch_batch` ← `batch_batchtransfer` (PROTECT, source_batch and destination_batch FKs)
+- `batch_batchcontainerassignment` ← `batch_batchtransfer` (PROTECT, source_assignment and destination_assignment FKs)
+- `batch_lifecyclestage` ← `batch_batchtransfer` (PROTECT, source_lifecycle_stage and destination_lifecycle_stage FKs)
+- `batch_batch` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
+- `batch_batch` ← `broodstock_batchparentage` (CASCADE, related_name='parentage')
 
 ### 4.3 Feed and Inventory Management (`inventory` app)
 **Purpose**: Manages feed resources, inventory, feeding events, and recommendations.
@@ -457,11 +534,51 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 - `users_customuser` ← `inventory_feedingevent` (PROTECT, related_name='feeding_entries')
 - `inventory_feedstock` ← `inventory_feedingevent` (SET_NULL)
 - `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE, related_name='feeding_summaries')
+- `batch_batch` ← `inventory_containerfeedingsummary` (CASCADE, related_name='container_feeding_summaries')
+- `batch_batchcontainerassignment` ← `inventory_containerfeedingsummary` (CASCADE, related_name='feeding_summaries')
+
+#### Historical Tables (Audit Trail)
+All inventory models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
+
+**Currently Active Historical Tables (7 total):**
+- **`inventory_historicalfeed`**
+  - All fields from `inventory_feed` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
+- **`inventory_historicalfeedpurchase`**
+  - All fields from `inventory_feedpurchase` plus history tracking fields
+  - Same history fields as above
+- **`inventory_historicalfeedstock`**
+  - All fields from `inventory_feedstock` plus history tracking fields
+  - Same history fields as above
+- **`inventory_historicalfeedingevent`**
+  - All fields from `inventory_feedingevent` plus history tracking fields
+  - Same history fields as above
+- **`inventory_historicalfeedcontainerstock`**
+  - All fields from `inventory_feedcontainerstock` plus history tracking fields
+  - Same history fields as above
+- **`inventory_historicalcontainerfeedingsummary`**
+  - All fields from `inventory_containerfeedingsummary` plus history tracking fields
+  - Same history fields as above
+- **`inventory_historicalbatchfeedingsummary`**
+  - All fields from `inventory_batchfeedingsummary` plus history tracking fields
+  - Same history fields as above
 
 ### 4.4 Health Monitoring (`health` app)
 **Purpose**: Tracks health observations, treatments, mortality, sampling events, and lab results.
 
 #### Tables
+- **`health_sampletype`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
+- **`health_mortalityreason`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
 - **`health_journalentry`**
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='journal_entries')
@@ -472,7 +589,7 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `severity`: varchar(10) (Choices: 'low', 'medium', 'high', default='low', nullable, blank=True)
   - `description`: text
   - `resolution_status`: boolean (default=False)
-  - `resolution_notes`: text (blank=True)
+  - `resolution_notes`: text (NOT NULL)
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `verbose_name_plural = "Journal Entries"`, `ordering = ['-entry_date']`
@@ -520,7 +637,7 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - id: bigint (PK, auto-increment)
   - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`.id, on_delete=CASCADE, related_name='parameter_scores')
   - `parameter_id`: bigint (FK to `health_healthparameter`.id, on_delete=PROTECT, related_name='fish_scores')
-  - `score`: integer (validators: MinValueValidator(1), MaxValueValidator(5), help_text="Score from 1 (best) to 5 (worst).")
+  - `score`: smallint (validators: MinValueValidator(1), MaxValueValidator(5), help_text="Score from 1 (best) to 5 (worst).")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `unique_together = ('individual_fish_observation', 'parameter')`, `ordering = ['individual_fish_observation', 'parameter']`, `verbose_name = "Fish Parameter Score", `verbose_name_plural = "Fish Parameter Scores"`
@@ -533,10 +650,10 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='mortality_records')
   - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='mortality_records', nullable, blank=True)
-  - `event_date`: timestamptz (auto_now_add=True)
+  - `event_date`: timestamptz
   - `count`: positive integer
   - `reason_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, related_name='mortality_records')
-  - `notes`: text (blank=True)
+  - `notes`: text (NOT NULL)
   - Meta: `verbose_name_plural = "Mortality Records"`, `ordering = ['-event_date']`
 - **`health_licecount`**
   - id: bigint (PK, auto-increment)
@@ -548,7 +665,7 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `adult_male_count`: positive integer (default=0)
   - `juvenile_count`: positive integer (default=0)
   - `fish_sampled`: positive integer (default=1)
-  - `notes`: text (blank=True)
+  - `notes`: text (NOT NULL)
   - Meta: `verbose_name_plural = "Lice Counts"`, `ordering = ['-count_date']`
 - **`health_vaccinationtype`**
   - id: bigint (PK, auto-increment)
@@ -603,9 +720,9 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 - `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE, related_name='individual_fish_observations')
 - `health_individualfishobservation` ← `health_fishparameterscore` (CASCADE, related_name='parameter_scores')
 - `health_healthparameter` ← `health_fishparameterscore` (PROTECT, related_name='fish_scores')
+- `health_mortalityreason` ← `health_mortalityrecord` (PROTECT, related_name='mortality_records')
 - `batch_batch` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
 - `infrastructure_container` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
-- `health_mortalityreason` ← `health_mortalityrecord` (SET_NULL, related_name='mortality_records')
 - `batch_batch` ← `health_licecount` (CASCADE, related_name='lice_counts')
 - `infrastructure_container` ← `health_licecount` (CASCADE, related_name='lice_counts')
 - `users_customuser` ← `health_licecount` (SET_NULL, related_name='lice_counts')
@@ -617,6 +734,42 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 - `batch_batchcontainerassignment` ← `health_healthlabsample` (PROTECT, related_name='lab_samples')
 - `health_sampletype` ← `health_healthlabsample` (PROTECT, related_name='lab_samples')
 - `users_customuser` ← `health_healthlabsample` (SET_NULL, related_name='recorded_lab_samples')
+
+#### Historical Tables (Audit Trail)
+All health models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
+
+**Currently Active Historical Tables (All 10):**
+- **`health_historicalfishparameterscore`**
+  - All fields from `health_fishparameterscore` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
+- **`health_historicalhealthlabsample`**
+  - All fields from `health_healthlabsample` plus history tracking fields
+  - Same history fields as above
+- **`health_historicalhealthparameter`**
+  - All fields from `health_healthparameter` plus history tracking fields
+  - Same history fields as above
+- **`health_historicalhealthsamplingevent`**
+  - All fields from `health_healthsamplingevent` plus history tracking fields
+  - Same history fields as above
+- **`health_historicalindividualfishobservation`**
+  - All fields from `health_individualfishobservation` plus history tracking fields
+  - Same history fields as above
+- **`health_historicaljournalentry`**
+  - All fields from `health_journalentry` plus history tracking fields
+  - Same history fields as above
+- **`health_historicallicecount`**
+  - All fields from `health_licecount` plus history tracking fields
+  - Same history fields as above
+- **`health_historicalmortalityrecord`**
+  - All fields from `health_mortalityrecord` plus history tracking fields
+  - Same history fields as above
+- **`health_historicaltreatment`**
+  - All fields from `health_treatment` plus history tracking fields
+  - Same history fields as above
 
 ### 4.5 Environmental Monitoring (`environmental` app)
 **Purpose**: Captures time-series data for environmental conditions.
@@ -695,15 +848,17 @@ All historical tables follow the naming convention `{app}_historical{model}` and
 #### Tables
 - **`finance_dimcompany`**
   - `company_id`: bigint (PK, auto-increment)
-  - `display_name`: varchar(100) (Unique)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT, related_name='finance_companies')
+  - `subsidiary`: varchar(3) (choices from Subsidiary enum)
+  - `display_name`: varchar(100)
+  - `currency`: varchar(3) (nullable)
+  - `nav_company_code`: varchar(50) (nullable)
 - **`finance_dimsite`**
   - `site_id`: bigint (PK, auto-increment)
-  - `site_name`: varchar(100) (Unique)
-  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=CASCADE)
-  - `created_at`: timestamptz
-  - `updated_at`: timestamptz
+  - `source_model`: varchar(16) (choices: 'STATION', 'AREA')
+  - `source_pk`: integer (positive integer)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT, related_name='sites')
+  - `site_name`: varchar(100)
 - **`finance_factharvest`**
   - `fact_id`: bigint (PK, auto-increment)
   - `event_date`: timestamptz
@@ -763,33 +918,86 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `updated_at`: timestamptz
 
 #### Historical Tables (Audit Trail)
-All finance models are tracked with django-simple-history, creating corresponding historical tables with standard fields (`history_id`, `history_date`, `history_type`, `history_user_id`, `history_change_reason`).
+**5 of 7 finance models** are tracked with django-simple-history for regulatory compliance and operational transparency. Historical tables follow the naming convention `{app}_historical{model}` and include standard audit fields.
 
-#### Views
-- **`vw_fact_harvest`**
-  - Combines harvest facts with product grades, companies, and sites for reporting
-  - Columns: fact_id, event_date, quantity_kg, unit_count, product_grade_code, company, site_name, batch_id
-- **`vw_intercompany_transactions`**
-  - Provides intercompany transaction details with company and product information
-  - Columns: tx_id, posting_date, state, from_company, to_company, product_grade_code, amount, currency
+**Tracked Models (5 total):**
+- **`finance_factharvest`** → `finance_historicalfactharvest`
+- **`finance_intercompanypolicy`** → `finance_historicalintercompanypolicy`
+- **`finance_intercompanytransaction`** → `finance_historicalintercompanytransaction`
+- **`finance_navexportbatch`** → `finance_historicalnavexportbatch`
+- **`finance_navexportline`** → `finance_historicalnavexportline`
+
+**Non-tracked Models (2 total):**
+- `finance_dimcompany` (dimension table, changes infrequent)
+- `finance_dimsite` (dimension table, changes infrequent)
+
+**Historical Table Structure** (all historical tables):
+- `history_id`: integer (PK, auto-increment)
+- `history_date`: timestamptz (timestamp of change)
+- `history_change_reason`: varchar (optional reason for change, nullable)
+- `history_type`: varchar (+, ~, - for create/update/delete)
+- `history_user_id`: integer (FK to `auth_user`, nullable)
+- *Plus all fields from the original model*
+
+#### BI Views
+- **`vw_fact_harvest`** (Business Intelligence View)
+  - **Purpose**: Combines harvest facts with product grades, companies, and sites for reporting and analytics
+  - **Columns**:
+    - `fact_id`: bigint (references `finance_factharvest.fact_id`)
+    - `event_date`: timestamptz (harvest event timestamp)
+    - `quantity_kg`: numeric (harvest quantity in kilograms)
+    - `unit_count`: integer (number of individual units harvested)
+    - `product_grade_code`: varchar (product grade code from harvest system)
+    - `company`: varchar (company display name)
+    - `site_name`: varchar (operational site name)
+    - `batch_id`: integer (batch identifier for traceability)
+- **`vw_intercompany_transactions`** (Business Intelligence View)
+  - **Purpose**: Provides intercompany transaction details with company and product information for financial reporting
+  - **Columns**:
+    - `tx_id`: bigint (references `finance_intercompanytransaction.tx_id`)
+    - `posting_date`: date (accounting posting date)
+    - `state`: varchar (transaction state: 'pending', 'exported', 'posted')
+    - `from_company`: varchar (source company display name)
+    - `to_company`: varchar (destination company display name)
+    - `product_grade_code`: varchar (product grade code)
+    - `amount`: numeric (transaction amount)
+    - `currency`: varchar (currency code, 3 characters)
 
 #### Relationships
-- `finance_dimcompany` ← `finance_dimsite` (CASCADE)
-- `finance_dimcompany` ← `finance_factharvest` (PROTECT)
-- `finance_dimsite` ← `finance_factharvest` (PROTECT)
-- `harvest_harvestevent` ← `finance_factharvest` (PROTECT)
-- `harvest_harvestlot` ← `finance_factharvest` (PROTECT)
-- `harvest_productgrade` ← `finance_factharvest` (PROTECT)
-- `finance_dimcompany` ← `finance_intercompanypolicy` (PROTECT, both from/to)
-- `harvest_productgrade` ← `finance_intercompanypolicy` (PROTECT)
-- `harvest_harvestevent` ← `finance_intercompanytransaction` (PROTECT)
-- `finance_intercompanypolicy` ← `finance_intercompanytransaction` (PROTECT)
-- `finance_dimcompany` ← `finance_navexportbatch` (PROTECT)
-- `finance_navexportbatch` ← `finance_navexportline` (CASCADE)
-- `finance_dimcompany` ← `finance_navexportline` (PROTECT)
-- `finance_dimsite` ← `finance_navexportline` (PROTECT)
-- `harvest_productgrade` ← `finance_navexportline` (PROTECT)
-- `finance_intercompanytransaction` ← `finance_navexportline` (PROTECT)
+**Dimension Tables:**
+- `infrastructure_geography` ← `finance_dimcompany` (PROTECT, related_name='finance_companies')
+- `finance_dimcompany` ← `finance_dimsite` (PROTECT, related_name='sites')
+
+**Fact Tables:**
+- `finance_dimcompany` ← `finance_factharvest` (PROTECT, related_name='fact_harvests')
+- `finance_dimsite` ← `finance_factharvest` (PROTECT, related_name='fact_harvests')
+- `harvest_harvestevent` ← `finance_factharvest` (PROTECT, related_name='finance_facts')
+- `harvest_harvestlot` ← `finance_factharvest` (PROTECT, related_name='finance_fact', unique=True)
+- `harvest_productgrade` ← `finance_factharvest` (PROTECT, related_name='finance_facts')
+
+**Intercompany Policies:**
+- `finance_dimcompany` ← `finance_intercompanypolicy` (PROTECT, from_company, related_name='policies_outbound')
+- `finance_dimcompany` ← `finance_intercompanypolicy` (PROTECT, to_company, related_name='policies_inbound')
+- `harvest_productgrade` ← `finance_intercompanypolicy` (PROTECT, related_name='intercompany_policies')
+
+**Intercompany Transactions:**
+- `harvest_harvestevent` ← `finance_intercompanytransaction` (PROTECT, related_name='intercompany_transactions')
+- `finance_intercompanypolicy` ← `finance_intercompanytransaction` (PROTECT, related_name='transactions')
+
+**NAV Export System:**
+- `finance_dimcompany` ← `finance_navexportbatch` (PROTECT, related_name='nav_export_batches')
+- `finance_navexportbatch` ← `finance_navexportline` (CASCADE, related_name='lines')
+- `finance_dimcompany` ← `finance_navexportline` (PROTECT, related_name='nav_export_lines')
+- `finance_dimsite` ← `finance_navexportline` (PROTECT, related_name='nav_export_lines')
+- `harvest_productgrade` ← `finance_navexportline` (PROTECT, related_name='nav_export_lines')
+- `finance_intercompanytransaction` ← `finance_navexportline` (PROTECT, related_name='nav_export_lines')
+
+**Historical Table Relationships:**
+- `auth_user` ← `finance_historicalfactharvest` (SET_NULL, history_user_id)
+- `auth_user` ← `finance_historicalintercompanypolicy` (SET_NULL, history_user_id)
+- `auth_user` ← `finance_historicalintercompanytransaction` (SET_NULL, history_user_id)
+- `auth_user` ← `finance_historicalnavexportbatch` (SET_NULL, history_user_id)
+- `auth_user` ← `finance_historicalnavexportline` (SET_NULL, history_user_id)
 
 ### 4.7 User Management (`auth` and `users` apps)
 **Purpose**: Manages user accounts and access control.
@@ -834,193 +1042,156 @@ All finance models are tracked with django-simple-history, creating correspondin
 - `auth_user` ↔ `auth_group` (ManyToMany)
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
+- `auth_user` ← `broodstock_maintenancetask` (SET_NULL, created_by, related_name='created_maintenance_tasks')
+- `auth_user` ← `broodstock_breedingplan` (SET_NULL, created_by, related_name='breeding_plans')
+- `auth_user` ← `broodstock_fishmovement` (SET_NULL, moved_by, related_name='fish_movements')
+- `auth_user` ← `health_journalentry` (PROTECT, user, related_name='journal_entries')
+- `auth_user` ← `health_healthsamplingevent` (SET_NULL, sampled_by, related_name='health_sampling_events_conducted')
+- `auth_user` ← `health_licecount` (SET_NULL, user, related_name='lice_counts')
+- `auth_user` ← `health_treatment` (SET_NULL, user, related_name='treatments')
+- `auth_user` ← `health_healthlabsample` (SET_NULL, recorded_by, related_name='recorded_lab_samples')
+- `auth_user` ← `inventory_feedingevent` (PROTECT, recorded_by, related_name='feeding_entries')
+- `auth_user` ← `environmental_environmentalreading` (SET_NULL, recorded_by)
+- `auth_user` ← `scenario_scenario` (PROTECT, created_by)
 
-#### 4.7 TimescaleDB Hypertables (Implemented)
+#### Historical Tables (Audit Trail)
+All user models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
 
-**Purpose**: Efficient time-series data management for environmental monitoring and weather data.
-
-**Implemented TimescaleDB Hypertables**:
-- **`environmental_environmentalreading`**: Environmental sensor readings
-  - **Partitioning**: By `reading_time` (timestamp with time zone)
-  - **Compression**: Enabled after 7 days, segmented by `container_id, parameter_id`
-  - **Chunks**: 123 active chunks with data automatically migrated
-- **`environmental_weatherdata`**: Weather station data
-  - **Partitioning**: By `timestamp` (timestamp with time zone)
-  - **Compression**: Enabled after 7 days, segmented by `area_id`
-  - **Chunks**: 0 chunks (empty table ready for data)
-
-**Benefits**:
-- Sub-second query performance for environmental data queries
-- Automatic data compression (70-90% reduction) for historical readings
-- Efficient storage of high-frequency sensor data
-- Built-in time-bucket aggregation functions
-- Automatic chunk management and retention policies
+**Currently Active Historical Tables (2 total):**
+- **`auth_historicaluser`**
+  - All fields from `auth_user` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
+- **`users_historicaluserprofile`**
+  - All fields from `users_userprofile` plus history tracking fields
+  - Same history fields as above
 
 #### 4.8 Broodstock Management (broodstock app - IMPLEMENTED)
 
-The Broodstock Management app’s data model supports comprehensive management of broodstock containers, fish populations, breeding operations, egg production/acquisition, environmental monitoring, and batch traceability. It reuses existing models like `infrastructure_container`, introduces normalized tables for better integrity and querying, and integrates with apps like `environmental` and `health`. The design ensures flexible traceability for internal eggs (broodstock to batch) and external eggs (supplier to batch), matching the implementation complexity of Scenario Planning. It also supports end-to-end traceability to harvest events, leveraging existing batch models and audit logging for regulatory compliance.
+The Broodstock Management app provides comprehensive tracking of broodstock fish populations, breeding operations, egg production (both internal and external), and complete traceability from broodstock to harvest batches. It integrates with infrastructure, batch, environmental, and health apps for end-to-end aquaculture lifecycle management.
 
 **Core Entities and Attributes**
 
-- **infrastructure_container** (Reused for Broodstock Containers)  
-  - `container_id` (PK): Unique identifier.  
-  - `location` (CharField, max_length=100): Physical location (e.g., "Site A, Building 2, Room 5").  
-  - `capacity` (IntegerField): Maximum fish capacity (e.g., 500).  
-  - `containertype_id` (FK): Link to `infrastructure_containertype` (e.g., "broodstock").  
-  - `status` (CharField, max_length=20, choices=[("active", "Active"), ("maintenance", "Under Maintenance"), ("quarantine", "Quarantine"), ("inactive", "Inactive")]): Container status.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_maintenancetask`**
+  - `id`: bigint (PK, auto-increment)
+  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=CASCADE, related_name='maintenance_tasks')
+  - `task_type`: varchar(50) (choices: 'cleaning', 'repair', 'inspection', 'upgrade')
+  - `scheduled_date`: timestamptz
+  - `completed_date`: timestamptz (nullable)
+  - `notes`: text (blank=True)
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **MaintenanceTask** (New Table for Container Maintenance)  
-  - `task_id` (PK): Unique identifier.  
-  - `container_id` (FK): Link to `infrastructure_container`.  
-  - `task_type` (CharField, max_length=50, choices=[("cleaning", "Cleaning"), ("repair", "Repair"), ("inspection", "Inspection"), ("upgrade", "Equipment Upgrade")]): Type of task.  
-  - `scheduled_date` (DateTimeField): Planned execution date.  
-  - `completed_date` (DateTimeField, nullable): Actual completion date.  
-  - `notes` (TextField, nullable): Additional details (e.g., "Replaced filter").  
-  - `created_by` (FK): Link to `auth_user`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_broodstockfish`**
+  - `id`: bigint (PK, auto-increment)
+  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT, related_name='broodstock_fish')
+  - `traits`: jsonb (default={}, blank=True)
+  - `health_status`: varchar(20) (choices: 'healthy', 'monitored', 'sick', 'deceased', default='healthy')
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **BroodstockFish** (New Table for Individual Fish)  
-  - `fish_id` (PK): Unique identifier.  
-  - `container_id` (FK): Link to `infrastructure_container` (where `containertype="broodstock"`).  
-  - `traits` (JSONField, nullable, default={}): Basic traits (e.g., {"growth_rate": "high", "size": "large"}).  
-  - `health_status` (CharField, max_length=20, choices=[("healthy", "Healthy"), ("monitored", "Monitored"), ("sick", "Sick"), ("deceased", "Deceased")]): Current health, synced with `health_journalentry`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_fishmovement`**
+  - `id`: bigint (PK, auto-increment)
+  - `fish_id`: bigint (FK to `broodstock_broodstockfish`, on_delete=CASCADE, related_name='movements')
+  - `from_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT, related_name='fish_movements_from')
+  - `to_container_id`: bigint (FK to `infrastructure_container`, on_delete=PROTECT, related_name='fish_movements_to')
+  - `movement_date`: timestamptz (db_index=True, default=timezone.now)
+  - `moved_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `notes`: text (blank=True)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **FishMovement** (New Table for Tracking Movements)  
-  - `movement_id` (PK): Unique identifier.  
-  - `fish_id` (FK): Link to `BroodstockFish`.  
-  - `from_container_id` (FK): Link to `infrastructure_container`.  
-  - `to_container_id` (FK): Link to `infrastructure_container`.  
-  - `movement_date` (DateTimeField): Date of movement.  
-  - `moved_by` (FK): Link to `auth_user`.  
-  - `notes` (TextField, nullable): Details (e.g., "Moved for breeding").  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_breedingplan`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `start_date`: timestamptz
+  - `end_date`: timestamptz
+  - `objectives`: text (blank=True)
+  - `geneticist_notes`: text (blank=True)
+  - `breeder_instructions`: text (blank=True)
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **BreedingPlan** (New Table for Breeding Strategies)  
-  - `plan_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=100): Plan name (e.g., "Winter 2023 Breeding").  
-  - `start_date` (DateTimeField): Plan start date.  
-  - `end_date` (DateTimeField): Plan end date.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_breedingtraitpriority`**
+  - `id`: bigint (PK, auto-increment)
+  - `plan_id`: bigint (FK to `broodstock_breedingplan`, on_delete=CASCADE, related_name='trait_priorities')
+  - `trait_name`: varchar(50) (choices: 'growth_rate', 'disease_resistance', 'size', 'fertility')
+  - `priority_weight`: numeric (validators: MinValueValidator(0), MaxValueValidator(1))
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **BreedingTraitPriority** (New Table for Trait Prioritization)  
-  - `priority_id` (PK): Unique identifier.  
-  - `plan_id` (FK): Link to `BreedingPlan`.  
-  - `trait_name` (CharField, max_length=50, choices=[("growth_rate", "Growth Rate"), ("disease_resistance", "Disease Resistance"), ("size", "Size"), ("fertility", "Fertility")]): Trait identifier.  
-  - `priority_weight` (FloatField, min_value=0, max_value=1): Weight (e.g., 0.7).  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_breedingpair`**
+  - `id`: bigint (PK, auto-increment)
+  - `plan_id`: bigint (FK to `broodstock_breedingplan`, on_delete=CASCADE, related_name='breeding_pairs')
+  - `male_fish_id`: bigint (FK to `broodstock_broodstockfish`, on_delete=PROTECT, related_name='breeding_pairs_as_male')
+  - `female_fish_id`: bigint (FK to `broodstock_broodstockfish`, on_delete=PROTECT, related_name='breeding_pairs_as_female')
+  - `pairing_date`: timestamptz (default=timezone.now)
+  - `progeny_count`: integer (nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **BreedingPair** (New Table for Pair Assignments)  
-  - `pair_id` (PK): Unique identifier.  
-  - `plan_id` (FK): Link to `BreedingPlan`.  
-  - `male_fish_id` (FK): Link to `BroodstockFish`.  
-  - `female_fish_id` (FK): Link to `BroodstockFish`.  
-  - `pairing_date` (DateTimeField): Date of pairing.  
-  - `progeny_count` (IntegerField, nullable): Number of offspring produced.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_eggproduction`**
+  - `id`: bigint (PK, auto-increment)
+  - `pair_id`: bigint (FK to `broodstock_breedingpair`, on_delete=PROTECT, nullable, related_name='egg_productions')
+  - `egg_batch_id`: varchar(50) (unique=True)
+  - `egg_count`: integer (validators: MinValueValidator(0))
+  - `production_date`: timestamptz (default=timezone.now)
+  - `destination_station_id`: bigint (FK to `infrastructure_freshwaterstation`, on_delete=SET_NULL, nullable)
+  - `source_type`: varchar(20) (choices: 'internal', 'external')
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **EggProduction** (New Table for Egg Tracking)  
-  - `egg_production_id` (PK): Unique identifier.  
-  - `pair_id` (FK, nullable): Link to `BreedingPair` (null for external eggs).  
-  - `egg_batch_id` (CharField, max_length=50, unique): Unique egg batch identifier (e.g., "EB20231001").  
-  - `egg_count` (IntegerField, min_value=0): Number of eggs (e.g., 10,000).  
-  - `production_date` (DateTimeField): Date produced or acquired.  
-  - `destination_station_id` (FK, nullable): Link to `infrastructure_freshwaterstation`.  
-  - `source_type` (CharField, max_length=20, choices=[("internal", "Internal"), ("external", "External")]): Egg source.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_eggsupplier`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (unique=True)
+  - `contact_details`: text
+  - `certifications`: text (blank=True)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **EggSupplier** (New Table for External Suppliers)  
-  - `supplier_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=100): Supplier name (e.g., "NorthSea Eggs").  
-  - `contact_details` (TextField): Contact info (e.g., phone, email).  
-  - `certifications` (TextField, nullable): Certifications (e.g., "ISO 9001").  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_externaleggbatch`**
+  - `id`: bigint (PK, auto-increment)
+  - `egg_production_id`: bigint (OneToOne to `broodstock_eggproduction`, on_delete=CASCADE, related_name='external_batch')
+  - `supplier_id`: bigint (FK to `broodstock_eggsupplier`, on_delete=PROTECT, related_name='egg_batches')
+  - `batch_number`: varchar(50)
+  - `provenance_data`: text (blank=True)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
 
-- **ExternalEggBatch** (New Table for External Eggs)  
-  - `external_batch_id` (PK): Unique identifier.  
-  - `egg_production_id` (FK): Link to `EggProduction` (where `source_type="external"`).  
-  - `supplier_id` (FK): Link to `EggSupplier`.  
-  - `batch_number` (CharField, max_length=50): Supplier’s batch ID (e.g., "S789-2023").  
-  - `provenance_data` (TextField, nullable): Details (e.g., "Sourced from Farm X").  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`broodstock_batchparentage`**
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE, related_name='parentage')
+  - `egg_production_id`: bigint (FK to `broodstock_eggproduction`, on_delete=PROTECT, related_name='batch_assignments')
+  - `assignment_date`: timestamptz (default=timezone.now)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+  - Meta: unique_together = ['batch', 'egg_production']
 
-- **BatchParentage** (New Table for Egg-to-Batch Links)  
-  - `batch_id` (FK, PK): Link to `batch_batch`.  
-  - `egg_production_id` (FK, PK): Link to `EggProduction`.  
-  - `assignment_date` (DateTimeField): Date eggs assigned to batch.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+**Historical Tables (Audit Trail)**
+All broodstock models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
 
-- **EnvironmentalReading** (Reused from `environmental` App)  
-  - `reading_id` (PK): Unique identifier.  
-  - `container_id` (FK): Link to `infrastructure_container`.  
-  - `parameter_type` (CharField, max_length=50): Type (e.g., "temperature").  
-  - `value` (FloatField): Measured value (e.g., 22.5).  
-  - `timestamp` (DateTimeField): Reading time.  
-  - `source` (CharField, max_length=50): Sensor or manual entry ID.  
-  - `recorded_by` (FK, nullable): Link to `auth_user`.  
-  - `created_at`, `updated_at` (DateTimeField): Timestamps.
+**Currently Active Historical Tables (All 10):**
+- **`broodstock_historicalbatchparentage`**
+- **`broodstock_historicalbreedingpair`**
+- **`broodstock_historicalbreedingplan`**
+- **`broodstock_historicalbreedingtraitpriority`**
+- **`broodstock_historicalbroodstockfish`**
+- **`broodstock_historicaleggproduction`**
+- **`broodstock_historicaleggsupplier`**
+- **`broodstock_historicalexternaleggbatch`**
+- **`broodstock_historicalfishmovement`**
+- **`broodstock_historicalmaintenancetask`**
 
-- **EnvironmentalSchedule** (Reused/Extended from `environmental`)  
-  - `schedule_id` (PK): Unique identifier.  
-  - `container_id` (FK): Link to `infrastructure_container`.  
-  - `name` (CharField, max_length=100): Schedule name (e.g., "Summer Photoperiod").  
-  - `parameter_type` (CharField, max_length=50, choices=[("temperature", "Temperature"), ("photoperiod", "Photoperiod"), ("pH", "pH")]): Parameter.  
-  - `start_time`, `end_time` (DateTimeField): Schedule duration.  
-  - `target_value` (FloatField): Target (e.g., 12 hours light).  
-  - `created_at`, `updated_at` (DateTimeField): Timestamps.
-
-- **Scenario** (Reused from Scenario Planning)  
-  - `scenario_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=100): Scenario name.  
-  - `description` (TextField, nullable): Scenario details.  
-  - `parameters` (JSONField): Broodstock-specific params (e.g., {"egg_target": 10000, "source": "external"}).  
-  - `start_date`, `end_date` (DateTimeField): Scenario timeframe.  
-  - `created_by` (FK): Link to `auth_user`.  
-  - `created_at`, `updated_at` (DateTimeField): Timestamps.
-
-**Relationships**  
-- **infrastructure_container** to **BroodstockFish**: One-to-many (one container holds many fish).  
-- **infrastructure_container** to **MaintenanceTask**: One-to-many (one container has many tasks).  
-- **infrastructure_container** to **EnvironmentalReading**: One-to-many (one container has many readings).  
-- **infrastructure_container** to **EnvironmentalSchedule**: One-to-many (one container has many schedules).  
-- **BreedingPlan** to **BreedingTraitPriority**: One-to-many (one plan has many priorities).  
-- **BreedingPlan** to **BreedingPair**: One-to-many (one plan includes many pairs).  
-- **BreedingPair** to **BroodstockFish**: Many-to-two (each pair links one male and one female).  
-- **BreedingPair** to **EggProduction**: One-to-many (one pair produces multiple egg batches).  
-- **EggProduction** to **BatchParentage**: One-to-many (one egg batch may link to multiple batches if split).  
-- **EggProduction** to **ExternalEggBatch**: One-to-one (one external egg record per acquisition).  
-- **EggSupplier** to **ExternalEggBatch**: One-to-many (one supplier provides many batches).  
-- **BatchParentage** to **batch_batch**: Many-to-one (multiple egg batches may contribute to one batch).
-
-**Constraints**  
-- Unique constraint on `egg_batch_id` in `EggProduction`.  
-- Foreign key constraints enforce referential integrity (e.g., `container_id`, `fish_id`, `egg_production_id`).  
-- `source_type` in `EggProduction` restricted to "internal" or "external" via choices.  
-- `pair_id` in `EggProduction` nullable for external eggs; non-null for internal eggs.  
-- `progeny_count` in `BreedingPair` nullable until eggs are produced.  
-- `destination_station_id` in `EggProduction` nullable if eggs are stored before assignment.  
-
-**Additional Considerations**  
-- **Harvest Traceability**: Leverage existing `batch_batch` and related models (e.g., `batch_batchtransfer`, `batch_mortalityevent`) to track batches to harvest. If explicit harvest events are needed, consider a `HarvestEvent` model (e.g., `harvest_id`, `batch_id`, `harvest_date`, `yield_kg`) to extend traceability to processed fish, but this can be deferred unless required by regulations.  
-- **Health Integration**: Sync `BroodstockFish.health_status` with `health_journalentry` via a foreign key or API call, ensuring health events (e.g., treatments) are recorded consistently.  
-- **Scalability**: Support 10,000+ fish and egg batches with indexes on `container_id`, `fish_id`, `egg_batch_id`, and `batch_id`. Use table partitioning for `EnvironmentalReading` if data volume exceeds 10M rows.  
-- **Auditing**: Apply `django-auditlog` to `EggProduction`, `BatchParentage`, `BreedingPair`, `FishMovement`, and `MaintenanceTask` to ensure immutable lineage and operational records.  
-- **Validation**: Enforce field constraints (e.g., `egg_count >= 0`, `priority_weight` between 0-1) via model validation. Ensure `containertype="broodstock"` for `BroodstockFish` container assignments.  
-- **TimescaleDB**: Utilize TimescaleDB hypertables for `EnvironmentalReading` to optimize time-series queries, with partitioning by `timestamp`.  
-- **JSON Fields**: Keep `traits` and `parameters` minimal, with structured formats (e.g., key-value pairs) and partial indexes for frequent queries.  
-- **Mobile Sync**: Ensure offline data entries (e.g., movements, egg logs) include temporary IDs, resolving conflicts during sync with server-side validation.
+**Additional Considerations**
+- **Regulatory Compliance**: Complete audit trail from broodstock selection through harvest for Faroese and Scottish salmon regulations
+- **Health Integration**: `BroodstockFish.health_status` integrates with `health_journalentry` for comprehensive health tracking
+- **Scalability**: Supports 10,000+ broodstock fish with efficient indexing on container and fish relationships
+- **Validation**: Strict validation ensures internal eggs have breeding pairs, external eggs do not
+- **Traceability**: End-to-end traceability from individual broodstock fish through egg production to harvest batches
 
 #### 4.9 Harvest Management (harvest app - IMPLEMENTED)
 
@@ -1028,49 +1199,68 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 
 **Core Entities and Attributes**
 
-- **harvest_harvestevent** (Harvest Event Tracking)
-  - `id` (PK): Unique identifier
-  - `assignment_id` (FK): Link to batch container assignment
-  - `batch_id` (FK): Link to batch
-  - `event_date` (DateTimeField): When harvest occurred
-  - `dest_subsidiary` (CharField, nullable): Destination subsidiary
-  - `dest_geography_id` (FK, nullable): Destination geography
-  - `document_ref` (CharField): Regulatory document reference
-  - `created_at`, `updated_at` (DateTimeField): Timestamps
+- **`harvest_harvestevent`** (Harvest Event Tracking)
+  - `id`: bigint (PK, auto-increment)
+  - `event_date`: timestamptz (db_index=True)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`, on_delete=PROTECT)
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=PROTECT)
+  - `dest_geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT, nullable)
+  - `dest_subsidiary`: varchar(3) (choices from Subsidiary enum, nullable)
+  - `document_ref`: varchar(100)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 
-- **harvest_harvestlot** (Individual Lot Management)
-  - `id` (PK): Unique identifier
-  - `event_id` (FK): Link to harvest event
-  - `product_grade_id` (FK): Product grade classification
-  - `live_weight_kg` (Decimal): Live weight before processing
-  - `gutted_weight_kg` (Decimal, nullable): Weight after gutting
-  - `fillet_weight_kg` (Decimal, nullable): Final fillet weight
-  - `unit_count` (Integer): Number of individual fish/units
-  - `created_at`, `updated_at` (DateTimeField): Timestamps
+- **`harvest_harvestlot`** (Individual Lot Management)
+  - `id`: bigint (PK, auto-increment)
+  - `event_id`: bigint (FK to `harvest_harvestevent`, on_delete=CASCADE)
+  - `product_grade_id`: bigint (FK to `harvest_productgrade`, on_delete=PROTECT)
+  - `live_weight_kg`: numeric(12,3) (validators: MinValueValidator(0))
+  - `gutted_weight_kg`: numeric(12,3) (nullable, validators: MinValueValidator(0))
+  - `fillet_weight_kg`: numeric(12,3) (nullable, validators: MinValueValidator(0))
+  - `unit_count`: integer (positive integer)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 
-- **harvest_harvestwaste** (Waste Tracking)
-  - `id` (PK): Unique identifier
-  - `event_id` (FK): Link to harvest event
-  - `category` (CharField): Waste category (heads, frames, etc.)
-  - `weight_kg` (Decimal): Waste weight
-  - `created_at`, `updated_at` (DateTimeField): Timestamps
+- **`harvest_harvestwaste`** (Waste Tracking)
+  - `id`: bigint (PK, auto-increment)
+  - `event_id`: bigint (FK to `harvest_harvestevent`, on_delete=CASCADE)
+  - `category`: varchar(50)
+  - `weight_kg`: numeric(12,3) (validators: MinValueValidator(0))
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 
-- **harvest_productgrade** (Product Grading)
-  - `id` (PK): Unique identifier
-  - `name` (CharField): Grade name (Prime, Standard, etc.)
-  - `description` (TextField): Grade specifications
-  - `min_weight_g` (Integer, nullable): Minimum weight threshold
-  - `max_weight_g` (Integer, nullable): Maximum weight threshold
-  - `is_active` (Boolean): Whether grade is currently used
-  - `created_at`, `updated_at` (DateTimeField): Timestamps
+- **`harvest_productgrade`** (Product Grading)
+  - `id`: bigint (PK, auto-increment)
+  - `code`: varchar(50) (Unique)
+  - `name`: varchar(100)
+  - `description`: text
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 
 **Relationships**
-- `harvest_harvestevent` ← `harvest_harvestlot` (CASCADE)
-- `harvest_harvestevent` ← `harvest_harvestwaste` (CASCADE)
-- `batch_batchcontainerassignment` ← `harvest_harvestevent` (PROTECT)
-- `batch_batch` ← `harvest_harvestevent` (PROTECT)
-- `infrastructure_geography` ← `harvest_harvestevent` (PROTECT)
-- `harvest_productgrade` ← `harvest_harvestlot` (PROTECT)
+**Internal Harvest App Relationships:**
+- `harvest_harvestevent` ← `harvest_harvestlot` (CASCADE, related_name='lots')
+- `harvest_harvestevent` ← `harvest_harvestwaste` (CASCADE, related_name='waste_entries')
+- `harvest_productgrade` ← `harvest_harvestlot` (PROTECT, related_name='lots')
+
+**Cross-App Relationships:**
+- `batch_batch` ← `harvest_harvestevent` (PROTECT, related_name='harvest_events')
+- `batch_batchcontainerassignment` ← `harvest_harvestevent` (PROTECT, related_name='harvest_events')
+- `infrastructure_geography` ← `harvest_harvestevent` (PROTECT, related_name='destination_harvest_events')
+
+**Finance App Integration:**
+- `harvest_harvestevent` ← `finance_factharvest` (PROTECT, related_name='finance_facts')
+- `harvest_harvestlot` ← `finance_factharvest` (PROTECT, related_name='finance_fact', unique=True)
+- `harvest_productgrade` ← `finance_factharvest` (PROTECT, related_name='finance_facts')
+- `harvest_harvestevent` ← `finance_intercompanytransaction` (PROTECT, related_name='intercompany_transactions')
+- `harvest_productgrade` ← `finance_intercompanypolicy` (PROTECT, related_name='intercompany_policies')
+- `harvest_productgrade` ← `finance_navexportline` (PROTECT, related_name='nav_export_lines')
+
+**Historical Table Relationships:**
+- `auth_user` ← `harvest_historicalharvestevent` (SET_NULL, history_user_id)
+- `auth_user` ← `harvest_historicalharvestlot` (SET_NULL, history_user_id)
+- `auth_user` ← `harvest_historicalharvestwaste` (SET_NULL, history_user_id)
+- `auth_user` ← `harvest_historicalproductgrade` (SET_NULL, history_user_id)
 
 **Constraints**
 - Unique constraints on harvest event document references
@@ -1078,12 +1268,12 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - Foreign key constraints ensure batch traceability
 
 **Additional Considerations**
-- **Regulatory Compliance**: Complete audit trail from egg to plate
+- **Regulatory Compliance**: Complete audit trail from egg to plate for Faroese and Scottish salmon regulations
 - **Yield Analytics**: Automatic calculation of processing yields and recovery rates
-- **Quality Control**: Product grading ensures consistent quality standards
+- **Quality Control**: Product grading by code ensures consistent quality standards
 - **Economic Tracking**: Integration with finance app for harvest profitability analysis
-- **Scalability**: Support for high-volume harvest operations with efficient indexing
-- **Auditing**: All harvest operations tracked with django-simple-history
+- **Scalability**: Support for high-volume harvest operations with efficient indexing on event_date
+- **Traceability**: End-to-end traceability from batch through harvest lots to finance facts
 
 #### 4.10 Scenario Planning (scenario app - IMPLEMENTED)
 
@@ -1243,3 +1433,24 @@ The Scenario Planning app’s data model enables aquaculture managers to create,
 - **TimescaleDB Setup**: Ensure `timescaledb` extension is enabled. Use Django migrations (potentially with `RunSQL`) or manual commands (`SELECT create_hypertable(...)`) to manage hypertables.
 - **Calculated Fields**: Fields like `batch_batchcontainerassignment.biomass_kg` are calculated in the application logic (e.g., model `save()` method or serializers), not stored directly unless denormalized.
 - **User Profile**: Access extended user information via `user.userprofile`. Geography is linked via FK, subsidiary requires clarification (FK or CharField?).
+
+## 8. TimescaleDB Hypertables (Implemented)
+
+**Purpose**: Efficient time-series data management for environmental monitoring and weather data.
+
+**Implemented TimescaleDB Hypertables**:
+- **`environmental_environmentalreading`**: Environmental sensor readings
+  - **Partitioning**: By `reading_time` (timestamp with time zone)
+  - **Compression**: Enabled after 7 days, segmented by `container_id, parameter_id`
+  - **Chunks**: 123 active chunks with data automatically migrated
+- **`environmental_weatherdata`**: Weather station data
+  - **Partitioning**: By `timestamp` (timestamp with time zone)
+  - **Compression**: Enabled after 7 days, segmented by `area_id`
+  - **Chunks**: 0 chunks (empty table ready for data)
+
+**Benefits**:
+- Sub-second query performance for environmental data queries
+- Automatic data compression (70-90% reduction) for historical readings
+- Efficient storage of high-frequency sensor data
+- Built-in time-bucket aggregation functions
+- Automatic chunk management and retention policies
