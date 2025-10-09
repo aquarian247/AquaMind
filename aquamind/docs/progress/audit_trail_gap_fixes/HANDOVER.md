@@ -27,9 +27,9 @@
 - Ensure documentation moves remain confined to `aquamind/docs/deprecated/` unless explicitly requested otherwise.
 
 ## Suggested Next Steps
-1. Audit Scenario models/viewsets (use shell report helper in playbook), add missing history and migrations, run targeted tests.
-2. Repeat for Harvest, then Users/Environmental per priority.
-3. After code complete, regenerate schema and run `python manage.py test --settings=aquamind.settings_ci` for full coverage.
+1. Audit Harvest models/viewsets (use shell report helper in playbook), add missing history and migrations, run targeted tests.
+2. Repeat for Users. We skip Scenario and Environmental. Not necessary. 
+3. After code complete, regenerate schema and run `python manage.py test --settings=aquamind.settings_ci` and `python manage.py test` for full coverage.
 4. Draft compliance report and prep PR (include migrations + schema).
 
 ## Helpful References
