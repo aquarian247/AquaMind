@@ -25,7 +25,7 @@ import django
 django.setup()
 
 from django.db import connection
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, F
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.inventory.models import FeedingEvent
 from apps.health.models import JournalEntry, MortalityRecord
