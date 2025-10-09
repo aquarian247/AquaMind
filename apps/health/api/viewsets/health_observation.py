@@ -19,6 +19,7 @@ from apps.health.api.serializers import (
     IndividualFishObservationSerializer,
     FishParameterScoreSerializer
 )
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import (
     UserAssignmentMixin,
     OptimizedQuerysetMixin,
@@ -27,11 +28,13 @@ from ..mixins import (
 )
 
 
-class HealthParameterViewSet(StandardFilterMixin, viewsets.ModelViewSet):
+class HealthParameterViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Health Parameters.
     
     Provides CRUD operations for health parameters used in fish health assessments.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = HealthParameter.objects.all()
     serializer_class = HealthParameterSerializer
@@ -46,7 +49,7 @@ class HealthParameterViewSet(StandardFilterMixin, viewsets.ModelViewSet):
                      'description_score_3', 'description_score_4', 'description_score_5']
 
 
-class HealthSamplingEventViewSet(UserAssignmentMixin, OptimizedQuerysetMixin, 
+class HealthSamplingEventViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 
                                 StandardFilterMixin, CalculateAggregatesMixin,
                                 viewsets.ModelViewSet):
     """
@@ -55,6 +58,8 @@ class HealthSamplingEventViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
     Provides CRUD operations for health sampling events, including nested
     individual fish observations and parameter scores. Also provides an
     action to calculate aggregate metrics.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = HealthSamplingEvent.objects.all()
     serializer_class = HealthSamplingEventSerializer
@@ -76,12 +81,14 @@ class HealthSamplingEventViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
     search_fields = ['notes']
 
 
-class IndividualFishObservationViewSet(OptimizedQuerysetMixin, StandardFilterMixin, 
+class IndividualFishObservationViewSet(HistoryReasonMixin, OptimizedQuerysetMixin, StandardFilterMixin, 
                                       viewsets.ModelViewSet):
     """
     API endpoint for managing Individual Fish Observations.
     
     Provides CRUD operations for individual fish observations within a health sampling event.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = IndividualFishObservation.objects.all()
     serializer_class = IndividualFishObservationSerializer
@@ -98,12 +105,14 @@ class IndividualFishObservationViewSet(OptimizedQuerysetMixin, StandardFilterMix
     }
 
 
-class FishParameterScoreViewSet(OptimizedQuerysetMixin, StandardFilterMixin, 
+class FishParameterScoreViewSet(HistoryReasonMixin, OptimizedQuerysetMixin, StandardFilterMixin, 
                                viewsets.ModelViewSet):
     """
     API endpoint for managing Fish Parameter Scores.
     
     Provides CRUD operations for parameter scores assigned to individual fish observations.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = FishParameterScore.objects.all()
     serializer_class = FishParameterScoreSerializer

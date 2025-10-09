@@ -9904,6 +9904,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: individual_fish_observation__id
@@ -9975,6 +9977,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -10014,6 +10018,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10049,6 +10055,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10098,6 +10106,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10146,6 +10156,8 @@ paths:
         API endpoint for managing Fish Parameter Scores.
 
         Provides CRUD operations for parameter scores assigned to individual fish observations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10179,6 +10191,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch_container_assignment__batch__id
@@ -10268,6 +10282,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -10308,6 +10324,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10344,6 +10362,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10394,6 +10414,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10443,6 +10465,8 @@ paths:
 
         Provides CRUD operations and filtering for lab samples. Handles creation
         with historical batch-container assignment lookup based on the sample date.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10475,6 +10499,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: is_active
@@ -10528,6 +10554,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -10567,6 +10595,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10602,6 +10632,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10651,6 +10683,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10699,6 +10733,8 @@ paths:
         API endpoint for managing Health Parameters.
 
         Provides CRUD operations for health parameters used in fish health assessments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10733,6 +10769,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: assignment__batch__id
@@ -10809,6 +10847,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -10850,6 +10890,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10887,6 +10929,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10938,6 +10982,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -10988,6 +11034,8 @@ paths:
         Provides CRUD operations for health sampling events, including nested
         individual fish observations and parameter scores. Also provides an
         action to calculate aggregate metrics.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -11755,6 +11803,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: fish_identifier
@@ -11810,6 +11860,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -11849,6 +11901,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -11884,6 +11938,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -11933,6 +11989,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -11981,6 +12039,8 @@ paths:
         API endpoint for managing Individual Fish Observations.
 
         Provides CRUD operations for individual fish observations within a health sampling event.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12014,6 +12074,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch__id
@@ -12110,6 +12172,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -12150,6 +12214,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12186,6 +12252,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12236,6 +12304,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12285,6 +12355,8 @@ paths:
 
         Provides CRUD operations for journal entries, which track observations
         and notes about fish health.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12320,6 +12392,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: adult_female_count
@@ -12469,6 +12542,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -12511,6 +12585,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12549,6 +12624,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12601,6 +12677,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12652,6 +12729,7 @@ paths:
         in fish populations.
 
         Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12684,6 +12762,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: name
@@ -12733,6 +12813,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -12772,6 +12854,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12807,6 +12891,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12856,6 +12942,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12904,6 +12992,8 @@ paths:
         API endpoint for managing Mortality Reasons.
 
         Provides CRUD operations for mortality reasons used in mortality records.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12939,6 +13029,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch
@@ -13034,6 +13125,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13076,6 +13168,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13114,6 +13207,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13166,6 +13260,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13217,6 +13312,7 @@ paths:
         and their causes.
 
         Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13249,6 +13345,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: name
@@ -13298,6 +13396,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13337,6 +13437,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13372,6 +13474,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13421,6 +13525,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13469,6 +13575,8 @@ paths:
         API endpoint for managing Sample Types.
 
         Provides CRUD operations for sample types used in lab testing.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13502,6 +13610,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch__id
@@ -13645,6 +13755,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13685,6 +13797,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13721,6 +13835,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13771,6 +13887,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13820,6 +13938,8 @@ paths:
 
         Provides CRUD operations for treatments, which track medical interventions
         for fish populations.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13852,6 +13972,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: manufacturer
@@ -13909,6 +14031,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13948,6 +14072,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13983,6 +14109,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -14032,6 +14160,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -14080,6 +14210,8 @@ paths:
         API endpoint for managing Vaccination Types.
 
         Provides CRUD operations for vaccination types used in treatments.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id

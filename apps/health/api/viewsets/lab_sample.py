@@ -10,14 +10,17 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from apps.health.models import SampleType, HealthLabSample
 from apps.health.api.serializers import SampleTypeSerializer, HealthLabSampleSerializer
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
 
 
-class SampleTypeViewSet(StandardFilterMixin, viewsets.ModelViewSet):
+class SampleTypeViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Sample Types.
     
     Provides CRUD operations for sample types used in lab testing.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = SampleType.objects.all()
     serializer_class = SampleTypeSerializer
@@ -30,13 +33,15 @@ class SampleTypeViewSet(StandardFilterMixin, viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
 
-class HealthLabSampleViewSet(UserAssignmentMixin, OptimizedQuerysetMixin, 
+class HealthLabSampleViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 
                             StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Health Lab Samples.
     
     Provides CRUD operations and filtering for lab samples. Handles creation
     with historical batch-container assignment lookup based on the sample date.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = HealthLabSample.objects.all().order_by('-sample_date', '-created_at')
     serializer_class = HealthLabSampleSerializer

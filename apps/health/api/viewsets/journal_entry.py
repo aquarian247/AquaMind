@@ -9,16 +9,19 @@ from rest_framework import viewsets, permissions
 
 from apps.health.models import JournalEntry
 from apps.health.api.serializers import JournalEntrySerializer
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
 
 
-class JournalEntryViewSet(UserAssignmentMixin, OptimizedQuerysetMixin, 
+class JournalEntryViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 
                          StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Journal Entries.
     
     Provides CRUD operations for journal entries, which track observations
     and notes about fish health.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer

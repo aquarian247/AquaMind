@@ -9,14 +9,17 @@ from rest_framework import viewsets, permissions
 
 from apps.health.models import VaccinationType, Treatment
 from apps.health.api.serializers import VaccinationTypeSerializer, TreatmentSerializer
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
 
 
-class VaccinationTypeViewSet(StandardFilterMixin, viewsets.ModelViewSet):
+class VaccinationTypeViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Vaccination Types.
     
     Provides CRUD operations for vaccination types used in treatments.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = VaccinationType.objects.all()
     serializer_class = VaccinationTypeSerializer
@@ -30,13 +33,15 @@ class VaccinationTypeViewSet(StandardFilterMixin, viewsets.ModelViewSet):
     search_fields = ['name', 'manufacturer', 'dosage', 'description']
 
 
-class TreatmentViewSet(UserAssignmentMixin, OptimizedQuerysetMixin, 
+class TreatmentViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 
                       StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Treatments.
     
     Provides CRUD operations for treatments, which track medical interventions
     for fish populations.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = Treatment.objects.all()
     serializer_class = TreatmentSerializer

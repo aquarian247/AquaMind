@@ -13,14 +13,17 @@ from apps.health.api.serializers import (
     MortalityRecordSerializer, 
     LiceCountSerializer
 )
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
 
 
-class MortalityReasonViewSet(StandardFilterMixin, viewsets.ModelViewSet):
+class MortalityReasonViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Mortality Reasons.
     
     Provides CRUD operations for mortality reasons used in mortality records.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = MortalityReason.objects.all()
     serializer_class = MortalityReasonSerializer
@@ -45,7 +48,7 @@ class MortalityReasonViewSet(StandardFilterMixin, viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
 
-class MortalityRecordViewSet(OptimizedQuerysetMixin,
+class MortalityRecordViewSet(HistoryReasonMixin, OptimizedQuerysetMixin,
                             StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Mortality Records.
@@ -54,6 +57,7 @@ class MortalityRecordViewSet(OptimizedQuerysetMixin,
     and their causes.
 
     Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = MortalityRecord.objects.all()
     serializer_class = MortalityRecordSerializer
@@ -74,7 +78,7 @@ class MortalityRecordViewSet(OptimizedQuerysetMixin,
     search_fields = ['notes']
 
 
-class LiceCountViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
+class LiceCountViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin,
                       StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Lice Counts.
@@ -83,6 +87,7 @@ class LiceCountViewSet(UserAssignmentMixin, OptimizedQuerysetMixin,
     in fish populations.
 
     Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = LiceCount.objects.all()
     serializer_class = LiceCountSerializer

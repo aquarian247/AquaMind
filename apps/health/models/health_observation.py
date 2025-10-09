@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import BatchContainerAssignment
 
@@ -47,6 +48,8 @@ class HealthParameter(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         """Return a string representation of the health parameter."""
@@ -147,6 +150,8 @@ class HealthSamplingEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['-sampling_date', '-created_at']
@@ -274,6 +279,8 @@ class IndividualFishObservation(models.Model):
     # notes field removed as it doesn't exist in the database schema
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
 
     class Meta:
         unique_together = ('sampling_event', 'fish_identifier')
