@@ -6,6 +6,8 @@ These viewsets provide CRUD operations for growth sample management.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -15,14 +17,15 @@ from apps.batch.api.serializers import GrowthSampleSerializer
 from apps.batch.api.filters.growth import GrowthSampleFilter
 
 
-class GrowthSampleViewSet(viewsets.ModelViewSet):
+class GrowthSampleViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Growth Samples from aquaculture batches.
 
     Growth samples record the average weight of organisms in a batch (or a specific
     container assignment of a batch) on a particular date. This data is essential
     for tracking growth, calculating feed conversion ratios, and making management decisions.
-    This endpoint provides full CRUD operations for growth samples.
+    This endpoint provides full CRUD operations for growth samples. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).

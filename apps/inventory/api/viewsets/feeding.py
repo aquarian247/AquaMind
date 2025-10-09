@@ -21,12 +21,13 @@ from apps.inventory.api.filters.feeding import FeedingEventFilter
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 
-class FeedingEventViewSet(viewsets.ModelViewSet):
+class FeedingEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Feeding Events in aquaculture operations.
 
     Feeding events record the amount of feed given to batches in specific containers
-    on particular dates. This endpoint provides full CRUD operations for feeding events.
+    on particular dates. This endpoint provides full CRUD operations for feeding events
+    and uses HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `batch`: ID of the batch being fed.

@@ -6,6 +6,8 @@ These viewsets provide CRUD operations for species and lifecycle stage managemen
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -15,13 +17,14 @@ from apps.batch.api.serializers import SpeciesSerializer, LifeCycleStageSerializ
 from apps.batch.api.filters.species import SpeciesFilter, LifeCycleStageFilter
 
 
-class SpeciesViewSet(viewsets.ModelViewSet):
+class SpeciesViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing aquaculture Species.
 
     Provides CRUD operations for species, including filtering by name
     and scientific name, searching across name, scientific name, and description,
-    and ordering by name, scientific name, or creation date.
+    and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+    to capture audit change reasons.
     """
     # NOTE: Authentication temporarily disabled in development to allow
     # the React frontend (which currently has no login flow) to access
@@ -45,14 +48,15 @@ class SpeciesViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-class LifeCycleStageViewSet(viewsets.ModelViewSet):
+class LifeCycleStageViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Species Life Cycle Stages.
 
     Provides CRUD operations for life cycle stages, specific to a species.
     Allows filtering by name, species, and order.
     Supports searching across name, description, and species name.
-    Ordering can be done by species name, order, name, or creation date.
+    Ordering can be done by species name, order, name, or creation date. Uses
+    HistoryReasonMixin to capture audit change reasons.
     """
     # authentication_classes = [TokenAuthentication, JWTAuthentication]
     # permission_classes = [IsAuthenticated]

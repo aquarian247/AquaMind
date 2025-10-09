@@ -8,12 +8,13 @@ from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import FilterSet
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.container import Container
 from apps.infrastructure.api.serializers.container import ContainerSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from aquamind.utils.history_mixins import HistoryReasonMixin
 
 
 class ContainerFilter(FilterSet):
@@ -29,14 +30,15 @@ class ContainerFilter(FilterSet):
             'active': ['exact']
         }
 
-class ContainerViewSet(viewsets.ModelViewSet):
+class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Containers within the aquaculture facility.
 
     Containers represent physical units (e.g., tanks, ponds, cages) used for
     holding aquatic organisms. They are associated with a specific container type,
     and can be located within a Hall and an Area. This endpoint allows for
-    full CRUD operations on Container instances.
+    full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+    audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the container.

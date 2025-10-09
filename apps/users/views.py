@@ -3,6 +3,7 @@ from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from .serializers import (
     UserSerializer,
     UserCreateSerializer,
@@ -25,9 +26,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed, created, edited or deleted.
+    API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
     
     Provides CRUD operations for users with appropriate permission checks.
     """
@@ -157,9 +158,9 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
+class UserProfileView(HistoryReasonMixin, generics.RetrieveUpdateAPIView):
     """
-    API endpoint to view and update the user's profile.
+    API endpoint to view and update the user's profile with audit change reasons.
     
     Allows users to view and update their own profile information.
     """

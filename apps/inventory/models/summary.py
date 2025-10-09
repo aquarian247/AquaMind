@@ -3,6 +3,7 @@ Batch feeding summary model for the inventory app.
 """
 from django.db import models
 from django.db.models import Sum, Avg
+from simple_history.models import HistoricalRecords
 
 from apps.batch.models import Batch
 from .feeding import FeedingEvent
@@ -88,6 +89,8 @@ class ContainerFeedingSummary(TimestampedModelMixin, models.Model):
         default=0,
         help_text="Number of feeding events contributing to this summary"
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['container_assignment', '-period_end']
@@ -190,6 +193,8 @@ class BatchFeedingSummary(TimestampedModelMixin, models.Model):
         blank=True,
         help_text="Total biomass gain (same as total_growth_kg for consistency)"
     )
+
+    history = HistoricalRecords()
 
     # Overall confidence and quality indicators
     overall_confidence_level = models.CharField(

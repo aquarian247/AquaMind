@@ -4,15 +4,18 @@ Feed purchase viewset for the inventory app.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.inventory.models import FeedPurchase
 from apps.inventory.api.serializers.purchase import FeedPurchaseSerializer
 
 
-class FeedPurchaseViewSet(viewsets.ModelViewSet):
+class FeedPurchaseViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     ViewSet for FeedPurchase model.
 
-    Provides CRUD operations for feed purchase records.
+    Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+    to capture audit change reasons.
     """
     queryset = FeedPurchase.objects.all()
     serializer_class = FeedPurchaseSerializer

@@ -9,6 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -25,14 +27,15 @@ from apps.batch.api.filters.assignments import BatchContainerAssignmentFilter
 from .mixins import LocationFilterMixin
 
 
-class BatchContainerAssignmentViewSet(LocationFilterMixin, viewsets.ModelViewSet):
+class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Batch Container Assignments.
 
     This endpoint handles the assignment of batches (or parts of batches)
     to specific containers (e.g., tanks, ponds, cages) at a given point in time.
     It records the population count and biomass within that container.
-    Provides full CRUD operations for these assignments.
+    Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+    to capture audit change reasons.
 
     An assignment can be marked as inactive when a batch is moved out of a container.
 

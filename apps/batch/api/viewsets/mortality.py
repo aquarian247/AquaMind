@@ -6,6 +6,8 @@ These viewsets provide CRUD operations for mortality event management.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -15,13 +17,14 @@ from apps.batch.api.serializers import MortalityEventSerializer
 from apps.batch.api.filters.mortality import MortalityEventFilter
 
 
-class MortalityEventViewSet(viewsets.ModelViewSet):
+class MortalityEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Mortality Events in aquaculture batches.
 
     Mortality events record the number of deaths in a batch on a specific date,
     along with the suspected cause and any relevant notes. This endpoint
-    provides full CRUD operations for mortality events.
+    provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+    to capture audit change reasons.
 
     **Filtering:**
     - `batch`: ID of the batch associated with the mortality event.

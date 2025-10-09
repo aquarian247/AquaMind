@@ -210,7 +210,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -323,7 +324,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -380,7 +382,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -433,7 +436,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -500,7 +504,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -566,7 +571,8 @@ paths:
         This endpoint defines the composition of a 'mixed' batch, detailing what
         percentage and quantity (population/biomass) of it comes from various
         'source' batches. This is crucial for traceability when batches are merged.
-        Provides full CRUD operations for batch composition records.
+        Provides full CRUD operations for batch composition records. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `mixed_batch`: ID of the resulting mixed batch.
@@ -838,7 +844,8 @@ paths:
 
         Provides full CRUD operations for batches, including detailed filtering,
         searching, and ordering capabilities. Batches represent groups of aquatic
-        organisms managed together through their lifecycle.
+        organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+        capture audit change reasons.
 
         **Filtering:**
         - `batch_number`: Exact match.
@@ -898,7 +905,8 @@ paths:
 
         Provides full CRUD operations for batches, including detailed filtering,
         searching, and ordering capabilities. Batches represent groups of aquatic
-        organisms managed together through their lifecycle.
+        organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+        capture audit change reasons.
 
         **Filtering:**
         - `batch_number`: Exact match.
@@ -972,7 +980,8 @@ paths:
 
         Provides full CRUD operations for batches, including detailed filtering,
         searching, and ordering capabilities. Batches represent groups of aquatic
-        organisms managed together through their lifecycle.
+        organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+        capture audit change reasons.
 
         **Filtering:**
         - `batch_number`: Exact match.
@@ -1045,7 +1054,8 @@ paths:
 
         Provides full CRUD operations for batches, including detailed filtering,
         searching, and ordering capabilities. Batches represent groups of aquatic
-        organisms managed together through their lifecycle.
+        organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+        capture audit change reasons.
 
         **Filtering:**
         - `batch_number`: Exact match.
@@ -1233,7 +1243,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1401,7 +1412,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1464,7 +1476,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1523,7 +1536,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1596,7 +1610,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1668,7 +1683,8 @@ paths:
         This endpoint handles the assignment of batches (or parts of batches)
         to specific containers (e.g., tanks, ponds, cages) at a given point in time.
         It records the population count and biomass within that container.
-        Provides full CRUD operations for these assignments.
+        Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -1835,7 +1851,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1976,7 +1993,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2033,7 +2051,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2086,7 +2105,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2153,7 +2173,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2219,7 +2240,8 @@ paths:
         Growth samples record the average weight of organisms in a batch (or a specific
         container assignment of a batch) on a particular date. This data is essential
         for tracking growth, calculating feed conversion ratios, and making management decisions.
-        This endpoint provides full CRUD operations for growth samples.
+        This endpoint provides full CRUD operations for growth samples. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2945,7 +2967,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: query
         name: name
@@ -3031,7 +3054,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       tags:
       - api
       requestBody:
@@ -3073,7 +3097,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3111,7 +3136,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3163,7 +3189,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3214,7 +3241,8 @@ paths:
         Provides CRUD operations for life cycle stages, specific to a species.
         Allows filtering by name, species, and order.
         Supports searching across name, description, and species name.
-        Ordering can be done by species name, order, name, or creation date.
+        Ordering can be done by species name, order, name, or creation date. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3248,7 +3276,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3411,7 +3440,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3468,7 +3498,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3521,7 +3552,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3588,7 +3620,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3654,7 +3687,8 @@ paths:
 
         Mortality events record the number of deaths in a batch on a specific date,
         along with the suspected cause and any relevant notes. This endpoint
-        provides full CRUD operations for mortality events.
+        provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+        to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch associated with the mortality event.
@@ -3704,7 +3738,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: query
         name: description_contains
@@ -3773,7 +3808,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       tags:
       - api
       requestBody:
@@ -3814,7 +3850,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3851,7 +3888,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3902,7 +3940,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3952,7 +3991,8 @@ paths:
 
         Provides CRUD operations for species, including filtering by name
         and scientific name, searching across name, scientific name, and description,
-        and ordering by name, scientific name, or creation date.
+        and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -3986,7 +4026,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4163,7 +4204,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4224,7 +4266,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4281,7 +4324,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4352,7 +4396,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4422,7 +4467,8 @@ paths:
 
         Batch transfers record the movement of organisms between batches or changes
         in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers.
+        This endpoint provides full CRUD operations for batch transfers. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `source_batch`: ID of the source batch.
@@ -4471,7 +4517,8 @@ paths:
   /api/v1/broodstock/batch-parentages/:
     get:
       operationId: api_v1_broodstock_batch_parentages_list
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: query
         name: assignment_date
@@ -4526,7 +4573,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_batch_parentages_create
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -4562,7 +4610,8 @@ paths:
   /api/v1/broodstock/batch-parentages/{id}/:
     get:
       operationId: api_v1_broodstock_batch_parentages_retrieve
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -4594,7 +4643,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_batch_parentages_update
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -4640,7 +4690,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_batch_parentages_partial_update
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -4685,7 +4736,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_batch_parentages_destroy
-      description: ViewSet for batch parentage.
+      description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -4780,7 +4832,8 @@ paths:
   /api/v1/broodstock/breeding-pairs/:
     get:
       operationId: api_v1_broodstock_breeding_pairs_list
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: query
         name: female_fish
@@ -4847,7 +4900,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_breeding_pairs_create
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       tags:
       - api
       requestBody:
@@ -4883,7 +4937,8 @@ paths:
   /api/v1/broodstock/breeding-pairs/{id}/:
     get:
       operationId: api_v1_broodstock_breeding_pairs_retrieve
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -4915,7 +4970,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_breeding_pairs_update
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -4961,7 +5017,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_breeding_pairs_partial_update
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -5006,7 +5063,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_breeding_pairs_destroy
-      description: ViewSet for breeding pairs.
+      description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -5082,7 +5140,8 @@ paths:
   /api/v1/broodstock/breeding-plans/:
     get:
       operationId: api_v1_broodstock_breeding_plans_list
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       parameters:
       - in: query
         name: end_date
@@ -5136,7 +5195,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_breeding_plans_create
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -5172,7 +5232,8 @@ paths:
   /api/v1/broodstock/breeding-plans/{id}/:
     get:
       operationId: api_v1_broodstock_breeding_plans_retrieve
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5204,7 +5265,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_breeding_plans_update
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5250,7 +5312,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_breeding_plans_partial_update
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5295,7 +5358,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_breeding_plans_destroy
-      description: ViewSet for breeding plans.
+      description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5348,7 +5412,8 @@ paths:
   /api/v1/broodstock/egg-productions/:
     get:
       operationId: api_v1_broodstock_egg_productions_list
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: query
         name: destination_station
@@ -5422,7 +5487,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_egg_productions_create
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -5458,7 +5524,8 @@ paths:
   /api/v1/broodstock/egg-productions/{id}/:
     get:
       operationId: api_v1_broodstock_egg_productions_retrieve
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5490,7 +5557,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_egg_productions_update
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5536,7 +5604,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_egg_productions_partial_update
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5581,7 +5650,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_egg_productions_destroy
-      description: ViewSet for egg production.
+      description: ViewSet for egg production with HistoryReasonMixin ensuring audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -5695,7 +5765,8 @@ paths:
   /api/v1/broodstock/egg-suppliers/:
     get:
       operationId: api_v1_broodstock_egg_suppliers_list
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       parameters:
       - name: ordering
         required: false
@@ -5739,7 +5810,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_egg_suppliers_create
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       tags:
       - api
       requestBody:
@@ -5775,7 +5847,8 @@ paths:
   /api/v1/broodstock/egg-suppliers/{id}/:
     get:
       operationId: api_v1_broodstock_egg_suppliers_retrieve
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       parameters:
       - in: path
         name: id
@@ -5807,7 +5880,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_egg_suppliers_update
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       parameters:
       - in: path
         name: id
@@ -5853,7 +5927,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_egg_suppliers_partial_update
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       parameters:
       - in: path
         name: id
@@ -5898,7 +5973,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_egg_suppliers_destroy
-      description: ViewSet for egg suppliers.
+      description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
+        reasons.
       parameters:
       - in: path
         name: id
@@ -5927,7 +6003,8 @@ paths:
   /api/v1/broodstock/external-egg-batches/:
     get:
       operationId: api_v1_broodstock_external_egg_batches_list
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: query
         name: egg_production
@@ -5983,7 +6060,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_external_egg_batches_create
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -6019,7 +6097,8 @@ paths:
   /api/v1/broodstock/external-egg-batches/{id}/:
     get:
       operationId: api_v1_broodstock_external_egg_batches_retrieve
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6051,7 +6130,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_external_egg_batches_update
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6097,7 +6177,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_external_egg_batches_partial_update
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6142,7 +6223,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_external_egg_batches_destroy
-      description: ViewSet for external egg batches.
+      description: ViewSet for external egg batches using HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6171,7 +6253,8 @@ paths:
   /api/v1/broodstock/fish/:
     get:
       operationId: api_v1_broodstock_fish_list
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       parameters:
       - in: query
         name: container
@@ -6238,7 +6321,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_fish_create
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -6274,7 +6358,8 @@ paths:
   /api/v1/broodstock/fish-movements/:
     get:
       operationId: api_v1_broodstock_fish_movements_list
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: query
         name: fish
@@ -6341,7 +6426,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_fish_movements_create
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       tags:
       - api
       requestBody:
@@ -6377,7 +6463,8 @@ paths:
   /api/v1/broodstock/fish-movements/{id}/:
     get:
       operationId: api_v1_broodstock_fish_movements_retrieve
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6409,7 +6496,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_fish_movements_update
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6455,7 +6543,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_fish_movements_partial_update
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6500,7 +6589,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_fish_movements_destroy
-      description: ViewSet for fish movements.
+      description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6565,7 +6655,8 @@ paths:
   /api/v1/broodstock/fish/{id}/:
     get:
       operationId: api_v1_broodstock_fish_retrieve
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6597,7 +6688,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_fish_update
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6643,7 +6735,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_fish_partial_update
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -6688,7 +6781,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_fish_destroy
-      description: ViewSet for broodstock fish.
+      description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
+        change reasons.
       parameters:
       - in: path
         name: id
@@ -7470,7 +7564,8 @@ paths:
   /api/v1/broodstock/maintenance-tasks/:
     get:
       operationId: api_v1_broodstock_maintenance_tasks_list
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: query
         name: completed_date
@@ -7542,7 +7637,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_maintenance_tasks_create
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       tags:
       - api
       requestBody:
@@ -7578,7 +7674,8 @@ paths:
   /api/v1/broodstock/maintenance-tasks/{id}/:
     get:
       operationId: api_v1_broodstock_maintenance_tasks_retrieve
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -7610,7 +7707,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_maintenance_tasks_update
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -7656,7 +7754,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_maintenance_tasks_partial_update
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -7701,7 +7800,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_maintenance_tasks_destroy
-      description: ViewSet for maintenance tasks.
+      description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -7801,7 +7901,8 @@ paths:
   /api/v1/broodstock/trait-priorities/:
     get:
       operationId: api_v1_broodstock_trait_priorities_list
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       parameters:
       - name: ordering
         required: false
@@ -7862,7 +7963,8 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_broodstock_trait_priorities_create
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       tags:
       - api
       requestBody:
@@ -7898,7 +8000,8 @@ paths:
   /api/v1/broodstock/trait-priorities/{id}/:
     get:
       operationId: api_v1_broodstock_trait_priorities_retrieve
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       parameters:
       - in: path
         name: id
@@ -7930,7 +8033,8 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_broodstock_trait_priorities_update
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       parameters:
       - in: path
         name: id
@@ -7976,7 +8080,8 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_broodstock_trait_priorities_partial_update
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       parameters:
       - in: path
         name: id
@@ -8021,7 +8126,8 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_trait_priorities_destroy
-      description: ViewSet for breeding trait priorities.
+      description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
+        support.
       parameters:
       - in: path
         name: id
@@ -14245,7 +14351,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14338,7 +14444,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14394,7 +14500,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14446,7 +14552,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14512,7 +14618,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14577,7 +14683,7 @@ paths:
 
         Areas represent distinct geographical or functional zones within a larger geography
         (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-        on Area instances.
+        on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the area.
@@ -14694,7 +14800,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -14775,7 +14882,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -14829,7 +14937,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -14879,7 +14988,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -14943,7 +15053,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -15006,7 +15117,8 @@ paths:
 
         Container Types define the characteristics and categories of different containers
         used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-        This endpoint allows for full CRUD operations on ContainerType instances.
+        This endpoint allows for full CRUD operations on ContainerType instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container type.
@@ -15054,7 +15166,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15172,7 +15285,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15234,7 +15348,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15292,7 +15407,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15364,7 +15480,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15435,7 +15552,8 @@ paths:
         Containers represent physical units (e.g., tanks, ponds, cages) used for
         holding aquatic organisms. They are associated with a specific container type,
         and can be located within a Hall and an Area. This endpoint allows for
-        full CRUD operations on Container instances.
+        full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+        audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the container.
@@ -15490,7 +15608,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15626,7 +15745,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15688,7 +15808,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15746,7 +15867,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15818,7 +15940,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15889,7 +16012,8 @@ paths:
         Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
         storing feed. They can be associated with a specific container type (defining
         its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-        This endpoint allows for full CRUD operations on FeedContainer instances.
+        This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the feed container.
@@ -15945,6 +16069,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16053,6 +16178,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16113,6 +16239,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16169,6 +16296,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16239,6 +16367,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16308,6 +16437,7 @@ paths:
         such as wells, boreholes, or municipal supplies. They can be categorized by type
         and associated with a specific geographical location.
         This endpoint allows for full CRUD operations on FreshwaterStation instances.
+        Uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the freshwater station.
@@ -16404,7 +16534,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16470,7 +16601,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16524,7 +16656,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16574,7 +16707,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16638,7 +16772,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16701,7 +16836,8 @@ paths:
         operations, such as countries, regions, specific water bodies, or custom zones.
         These can be used to associate other entities (like facilities or environmental
         readings) with a spatial context.
-        This endpoint allows for full CRUD operations on Geography instances.
+        This endpoint allows for full CRUD operations on Geography instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the geography.
@@ -16784,7 +16920,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -16875,7 +17012,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -16933,7 +17071,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -16987,7 +17126,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -17055,7 +17195,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -17122,7 +17263,8 @@ paths:
         Halls represent distinct buildings or sections within the facility,
         often containing multiple containers or systems. They can be associated
         with a Freshwater Station.
-        This endpoint allows for full CRUD operations on Hall instances.
+        This endpoint allows for full CRUD operations on Hall instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the hall.
@@ -18338,7 +18480,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18455,7 +18598,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18516,7 +18660,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18573,7 +18718,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18644,7 +18790,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18714,7 +18861,8 @@ paths:
         Sensors are devices used to monitor various environmental parameters (e.g., temperature,
         pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
         type, have a unique serial number, and be associated with a manufacturer.
-        This endpoint allows for full CRUD operations on Sensor instances.
+        This endpoint allows for full CRUD operations on Sensor instances. Uses
+        HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `name`: Filter by the exact name of the sensor.
@@ -18931,7 +19079,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: query
         name: entry_date
@@ -19018,7 +19167,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       tags:
       - api
       requestBody:
@@ -19058,7 +19208,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19094,7 +19245,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19144,7 +19296,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19193,7 +19346,8 @@ paths:
         API endpoint for managing Feed Container Stock.
 
         Provides CRUD operations for feed container stock entries,
-        supporting FIFO inventory tracking.
+        supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+        audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19342,7 +19496,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: query
         name: feed
@@ -19404,7 +19559,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       tags:
       - api
       requestBody:
@@ -19443,7 +19599,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19478,7 +19635,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19527,7 +19685,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19575,7 +19734,8 @@ paths:
       description: |-
         ViewSet for FeedPurchase model.
 
-        Provides CRUD operations for feed purchase records.
+        Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+        to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19607,7 +19767,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: query
         name: feed
@@ -19660,7 +19821,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       tags:
       - api
       requestBody:
@@ -19699,7 +19861,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19734,7 +19897,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19783,7 +19947,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19831,7 +19996,8 @@ paths:
       description: |-
         ViewSet for FeedStock model.
 
-        Provides CRUD operations for feed stock levels in feed containers.
+        Provides CRUD operations for feed stock levels in feed containers. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -19888,7 +20054,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20070,7 +20237,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20128,7 +20296,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20182,7 +20351,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20250,7 +20420,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20317,7 +20488,8 @@ paths:
         API endpoint for managing Feeding Events in aquaculture operations.
 
         Feeding events record the amount of feed given to batches in specific containers
-        on particular dates. This endpoint provides full CRUD operations for feeding events.
+        on particular dates. This endpoint provides full CRUD operations for feeding events
+        and uses HistoryReasonMixin to capture audit change reasons.
 
         **Filtering:**
         - `batch`: ID of the batch being fed.
@@ -20621,7 +20793,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: query
         name: brand
@@ -20676,7 +20849,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       tags:
       - api
       requestBody:
@@ -20715,7 +20889,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -20750,7 +20925,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -20799,7 +20975,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -20847,7 +21024,8 @@ paths:
       description: |-
         ViewSet for Feed model.
 
-        Provides CRUD operations for feed types used in aquaculture operations.
+        Provides CRUD operations for feed types used in aquaculture operations. Uses
+        HistoryReasonMixin to capture audit change reasons.
       parameters:
       - in: path
         name: id
@@ -24589,7 +24767,7 @@ paths:
     get:
       operationId: api_v1_users_auth_profile_retrieve
       description: |-
-        API endpoint to view and update the user's profile.
+        API endpoint to view and update the user's profile with audit change reasons.
 
         Allows users to view and update their own profile information.
       tags:
@@ -24613,7 +24791,7 @@ paths:
     put:
       operationId: api_v1_users_auth_profile_update
       description: |-
-        API endpoint to view and update the user's profile.
+        API endpoint to view and update the user's profile with audit change reasons.
 
         Allows users to view and update their own profile information.
       tags:
@@ -24650,7 +24828,7 @@ paths:
     patch:
       operationId: api_v1_users_auth_profile_partial_update
       description: |-
-        API endpoint to view and update the user's profile.
+        API endpoint to view and update the user's profile with audit change reasons.
 
         Allows users to view and update their own profile information.
       tags:
@@ -24937,7 +25115,7 @@ paths:
     get:
       operationId: api_v1_users_users_list
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       parameters:
@@ -24984,7 +25162,7 @@ paths:
     post:
       operationId: api_v1_users_users_create
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       tags:
@@ -25023,7 +25201,7 @@ paths:
     get:
       operationId: api_v1_users_users_retrieve
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       parameters:
@@ -25058,7 +25236,7 @@ paths:
     put:
       operationId: api_v1_users_users_update
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       parameters:
@@ -25107,7 +25285,7 @@ paths:
     patch:
       operationId: api_v1_users_users_partial_update
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       parameters:
@@ -25155,7 +25333,7 @@ paths:
     delete:
       operationId: api_v1_users_users_destroy
       description: |-
-        API endpoint that allows users to be viewed, created, edited or deleted.
+        API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
         Provides CRUD operations for users with appropriate permission checks.
       parameters:

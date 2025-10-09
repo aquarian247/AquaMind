@@ -13,6 +13,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.inventory.models import FeedContainerStock
 from apps.inventory.api.serializers import (
     FeedContainerStockSerializer,
@@ -21,12 +23,13 @@ from apps.inventory.api.serializers import (
 from apps.inventory.services import FIFOInventoryService
 
 
-class FeedContainerStockViewSet(viewsets.ModelViewSet):
+class FeedContainerStockViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Feed Container Stock.
     
     Provides CRUD operations for feed container stock entries,
-    supporting FIFO inventory tracking.
+    supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+    audit change reasons.
     """
     queryset = FeedContainerStock.objects.select_related(
         'feed_container', 'feed_purchase', 'feed_purchase__feed'

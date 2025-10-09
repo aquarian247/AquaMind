@@ -8,6 +8,8 @@ from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import FilterSet
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.sensor import Sensor
 from apps.infrastructure.api.serializers.sensor import SensorSerializer
 
@@ -24,14 +26,15 @@ class SensorFilter(FilterSet):
             'active': ['exact']
         }
 
-class SensorViewSet(viewsets.ModelViewSet):
+class SensorViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Sensors within the aquaculture facility.
 
     Sensors are devices used to monitor various environmental parameters (e.g., temperature,
     pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
     type, have a unique serial number, and be associated with a manufacturer.
-    This endpoint allows for full CRUD operations on Sensor instances.
+    This endpoint allows for full CRUD operations on Sensor instances. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the sensor.

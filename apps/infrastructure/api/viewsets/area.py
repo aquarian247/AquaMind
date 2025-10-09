@@ -20,6 +20,8 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
@@ -38,13 +40,13 @@ class AreaFilter(FilterSet):
         }
 
 
-class AreaViewSet(viewsets.ModelViewSet):
+class AreaViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Areas within the aquaculture facility.
 
     Areas represent distinct geographical or functional zones within a larger geography
     (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-    on Area instances.
+    on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the area.

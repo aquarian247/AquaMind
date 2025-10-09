@@ -63,6 +63,7 @@ class MaintenanceTask(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['-scheduled_date']
@@ -224,6 +225,7 @@ class BreedingPlan(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['-start_date']
@@ -271,6 +273,7 @@ class BreedingTraitPriority(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         unique_together = ['plan', 'trait_name']
@@ -422,6 +425,7 @@ class EggSupplier(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['name']
@@ -461,6 +465,7 @@ class ExternalEggBatch(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['-created_at']
