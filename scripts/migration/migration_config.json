@@ -1,0 +1,111 @@
+{
+  "fishtalk": {
+    "driver": "{ODBC Driver 17 for SQL Server}",
+    "server": "FISHTALK_SERVER",
+    "database": "FishTalk",
+    "uid": "username",
+    "pwd": "password",
+    "port": 1433
+  },
+  "aquamind": {
+    "database": "aquamind_db",
+    "host": "localhost",
+    "port": 5432,
+    "user": "postgres",
+    "password": "adminpass1234"
+  },
+  "migration": {
+    "batch_size": 1000,
+    "active_only": true,
+    "cutoff_date": "2023-01-01",
+    "dry_run": false,
+    "parallel_workers": 4,
+    "log_level": "INFO",
+    "timezone": "Europe/London",
+    "validate_after_load": true
+  },
+  "phases": {
+    "infrastructure": {
+      "enabled": true,
+      "order": 1,
+      "entities": ["sites", "locations", "units", "sensors"]
+    },
+    "batches": {
+      "enabled": true,
+      "order": 2,
+      "entities": ["projects", "individuals", "transfers"]
+    },
+    "inventory": {
+      "enabled": true,
+      "order": 3,
+      "entities": ["feed_types", "feeding_events", "fcr_calculations"]
+    },
+    "health": {
+      "enabled": true,
+      "order": 4,
+      "entities": ["health_logs", "mortality", "treatments", "vaccinations"]
+    },
+    "environmental": {
+      "enabled": true,
+      "order": 5,
+      "entities": ["sensor_readings", "weather_data"],
+      "months_to_migrate": 12
+    },
+    "broodstock": {
+      "enabled": true,
+      "order": 6,
+      "entities": ["broodstock_fish", "breeding_pairs", "egg_production"]
+    },
+    "financial": {
+      "enabled": false,
+      "order": 7,
+      "entities": ["harvest_events", "intercompany_transactions"],
+      "note": "Enable if financial data migration is required"
+    }
+  },
+  "mapping_overrides": {
+    "species": {
+      "Salmon": "Atlantic Salmon",
+      "Trout": "Rainbow Trout",
+      "Cod": "Atlantic Cod"
+    },
+    "lifecycle_stages": {
+      "Alevin": "Fry",
+      "Grower": "Adult",
+      "Harvest": "Adult"
+    },
+    "container_types": {
+      "Cage": "PEN",
+      "Incubator": "TRAY"
+    },
+    "user_roles": {
+      "Administrator": "Admin",
+      "Viewer": "Operator"
+    }
+  },
+  "validation": {
+    "strict_mode": true,
+    "allow_duplicates": false,
+    "skip_invalid_references": true,
+    "log_validation_errors": true,
+    "max_error_threshold": 100
+  },
+  "rollback": {
+    "enabled": true,
+    "checkpoint_frequency": 1000,
+    "backup_before_migration": true
+  },
+  "notifications": {
+    "email_on_completion": false,
+    "email_recipients": ["admin@example.com"],
+    "slack_webhook": "",
+    "send_summary_report": true
+  },
+  "performance": {
+    "use_bulk_insert": true,
+    "commit_frequency": 500,
+    "memory_limit_mb": 2048,
+    "query_timeout_seconds": 300
+  }
+}
+
