@@ -15,6 +15,8 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.broodstock.models import (
     MaintenanceTask, BroodstockFish, FishMovement, BreedingPlan,
     BreedingTraitPriority, BreedingPair, EggProduction, EggSupplier,
@@ -28,9 +30,10 @@ from apps.broodstock.serializers import (
 )
 
 
-class MaintenanceTaskViewSet(viewsets.ModelViewSet):
-    """ViewSet for maintenance tasks."""
-    
+class MaintenanceTaskViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons."""
+
+    user_field = 'created_by'
     queryset = MaintenanceTask.objects.all()
     serializer_class = MaintenanceTaskSerializer
     permission_classes = [IsAuthenticated]
@@ -39,10 +42,6 @@ class MaintenanceTaskViewSet(viewsets.ModelViewSet):
     search_fields = ['notes', 'container__name']
     ordering_fields = ['scheduled_date', 'created_at']
     ordering = ['-scheduled_date']
-    
-    def perform_create(self, serializer):
-        """Set the created_by field to the current user."""
-        serializer.save(created_by=self.request.user)
     
     @action(detail=False, methods=['get'])
     def overdue(self, request):
@@ -69,9 +68,9 @@ class MaintenanceTaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class BroodstockFishViewSet(viewsets.ModelViewSet):
-    """ViewSet for broodstock fish."""
-    
+class BroodstockFishViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons."""
+
     queryset = BroodstockFish.objects.all()
     serializer_class = BroodstockFishSerializer
     permission_classes = [IsAuthenticated]
@@ -118,9 +117,10 @@ class BroodstockFishViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class FishMovementViewSet(viewsets.ModelViewSet):
-    """ViewSet for fish movements."""
-    
+class FishMovementViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons."""
+
+    user_field = 'moved_by'
     queryset = FishMovement.objects.all()
     serializer_class = FishMovementSerializer
     permission_classes = [IsAuthenticated]
@@ -135,10 +135,6 @@ class FishMovementViewSet(viewsets.ModelViewSet):
         return super().get_queryset().select_related(
             'fish', 'from_container', 'to_container', 'moved_by'
         )
-    
-    def perform_create(self, serializer):
-        """Set the moved_by field to the current user."""
-        serializer.save(moved_by=self.request.user)
     
     @action(detail=False, methods=['post'])
     def bulk_transfer(self, request):
@@ -172,9 +168,10 @@ class FishMovementViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class BreedingPlanViewSet(viewsets.ModelViewSet):
-    """ViewSet for breeding plans."""
-    
+class BreedingPlanViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons."""
+
+    user_field = 'created_by'
     queryset = BreedingPlan.objects.all()
     serializer_class = BreedingPlanSerializer
     permission_classes = [IsAuthenticated]
@@ -188,10 +185,6 @@ class BreedingPlanViewSet(viewsets.ModelViewSet):
         """Optimize queryset with prefetch_related."""
         return super().get_queryset().prefetch_related('trait_priorities')
     
-    def perform_create(self, serializer):
-        """Set the created_by field to the current user."""
-        serializer.save(created_by=self.request.user)
-    
     @action(detail=False, methods=['get'])
     def active(self, request):
         """Get all currently active breeding plans."""
@@ -204,9 +197,9 @@ class BreedingPlanViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class BreedingTraitPriorityViewSet(viewsets.ModelViewSet):
-    """ViewSet for breeding trait priorities."""
-    
+class BreedingTraitPriorityViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for breeding trait priorities with HistoryReasonMixin auditing support."""
+
     queryset = BreedingTraitPriority.objects.all()
     serializer_class = BreedingTraitPrioritySerializer
     permission_classes = [IsAuthenticated]
@@ -216,9 +209,9 @@ class BreedingTraitPriorityViewSet(viewsets.ModelViewSet):
     ordering = ['-priority_weight']
 
 
-class BreedingPairViewSet(viewsets.ModelViewSet):
-    """ViewSet for breeding pairs."""
-    
+class BreedingPairViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons."""
+
     queryset = BreedingPair.objects.all()
     serializer_class = BreedingPairSerializer
     permission_classes = [IsAuthenticated]
@@ -252,9 +245,9 @@ class BreedingPairViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class EggSupplierViewSet(viewsets.ModelViewSet):
-    """ViewSet for egg suppliers."""
-    
+class EggSupplierViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons."""
+
     queryset = EggSupplier.objects.all()
     serializer_class = EggSupplierSerializer
     permission_classes = [IsAuthenticated]
@@ -264,9 +257,9 @@ class EggSupplierViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
 
-class EggProductionViewSet(viewsets.ModelViewSet):
-    """ViewSet for egg production."""
-    
+class EggProductionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons."""
+
     queryset = EggProduction.objects.all()
     serializer_class = EggProductionSerializer
     permission_classes = [IsAuthenticated]
@@ -450,9 +443,9 @@ class EggProductionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ExternalEggBatchViewSet(viewsets.ModelViewSet):
-    """ViewSet for external egg batches."""
-    
+class ExternalEggBatchViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for external egg batches using HistoryReasonMixin for audit change reasons."""
+
     queryset = ExternalEggBatch.objects.all()
     serializer_class = ExternalEggBatchSerializer
     permission_classes = [IsAuthenticated]
@@ -469,9 +462,9 @@ class ExternalEggBatchViewSet(viewsets.ModelViewSet):
         )
 
 
-class BatchParentageViewSet(viewsets.ModelViewSet):
-    """ViewSet for batch parentage."""
-    
+class BatchParentageViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons."""
+
     queryset = BatchParentage.objects.all()
     serializer_class = BatchParentageSerializer
     permission_classes = [IsAuthenticated]

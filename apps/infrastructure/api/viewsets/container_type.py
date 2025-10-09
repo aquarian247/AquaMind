@@ -7,16 +7,19 @@ This module defines the viewset for the ContainerType model.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.container_type import ContainerType
 from apps.infrastructure.api.serializers.container_type import ContainerTypeSerializer
 
-class ContainerTypeViewSet(viewsets.ModelViewSet):
+class ContainerTypeViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Container Types.
 
     Container Types define the characteristics and categories of different containers
     used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-    This endpoint allows for full CRUD operations on ContainerType instances.
+    This endpoint allows for full CRUD operations on ContainerType instances. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the container type.

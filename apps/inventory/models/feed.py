@@ -2,6 +2,7 @@
 Feed model for the inventory app.
 """
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from apps.inventory.utils import (
     TimestampedModelMixin, ActiveModelMixin, DecimalFieldMixin
@@ -46,6 +47,8 @@ class Feed(TimestampedModelMixin, ActiveModelMixin, models.Model):
         help_text="Carbohydrate content percentage"
     )
     description = models.TextField(blank=True)
+
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name_plural = "Feed"

@@ -8,6 +8,8 @@ from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import FilterSet
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.feed_container import FeedContainer
 from apps.infrastructure.api.serializers.feed_container import FeedContainerSerializer
 
@@ -25,14 +27,15 @@ class FeedContainerFilter(FilterSet):
             'active': ['exact']
         }
 
-class FeedContainerViewSet(viewsets.ModelViewSet):
+class FeedContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Feed Containers within the aquaculture facility.
 
     Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
     storing feed. They can be associated with a specific container type (defining
     its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-    This endpoint allows for full CRUD operations on FeedContainer instances.
+    This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the feed container.

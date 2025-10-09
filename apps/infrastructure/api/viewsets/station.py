@@ -14,6 +14,8 @@ from django.views.decorators.cache import cache_page
 from django.db.models import Count, Sum
 from drf_spectacular.utils import extend_schema
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.station import FreshwaterStation
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.container import Container
@@ -34,7 +36,7 @@ class FreshwaterStationFilter(FilterSet):
         }
 
 
-class FreshwaterStationViewSet(viewsets.ModelViewSet):
+class FreshwaterStationViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Freshwater Stations.
 
@@ -42,6 +44,7 @@ class FreshwaterStationViewSet(viewsets.ModelViewSet):
     such as wells, boreholes, or municipal supplies. They can be categorized by type
     and associated with a specific geographical location.
     This endpoint allows for full CRUD operations on FreshwaterStation instances.
+    Uses HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the freshwater station.

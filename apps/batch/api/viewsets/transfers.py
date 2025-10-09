@@ -6,6 +6,8 @@ These viewsets provide CRUD operations for batch transfer management.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -15,13 +17,14 @@ from apps.batch.api.serializers import BatchTransferSerializer
 from apps.batch.api.filters.transfers import BatchTransferFilter
 
 
-class BatchTransferViewSet(viewsets.ModelViewSet):
+class BatchTransferViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Batch Transfers.
 
     Batch transfers record the movement of organisms between batches or changes
     in their lifecycle stage or container assignment within the same batch.
-    This endpoint provides full CRUD operations for batch transfers.
+    This endpoint provides full CRUD operations for batch transfers. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `source_batch`: ID of the source batch.

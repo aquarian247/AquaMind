@@ -57,7 +57,11 @@ class HistoryReasonMixin:
         
         instance = serializer.save(**kwargs)
         # For new instances, we need to refresh the instance to get the latest historical record
-        instance.refresh_from_db()
+        if hasattr(instance, 'history'):
+            try:
+                instance.refresh_from_db()
+            except instance.__class__.DoesNotExist:
+                pass
         if hasattr(instance, 'history') and instance.history.exists():
             latest_history = instance.history.latest()
             if latest_history:

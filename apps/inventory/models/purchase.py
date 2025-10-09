@@ -2,6 +2,7 @@
 Feed purchase model for the inventory app.
 """
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from .feed import Feed
 from apps.inventory.utils import TimestampedModelMixin, DecimalFieldMixin
@@ -33,6 +34,8 @@ class FeedPurchase(TimestampedModelMixin, models.Model):
     )
     expiry_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)
+
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['-purchase_date']

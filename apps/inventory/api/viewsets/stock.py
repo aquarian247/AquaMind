@@ -7,15 +7,18 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.inventory.models import FeedStock
 from apps.inventory.api.serializers.stock import FeedStockSerializer
 
 
-class FeedStockViewSet(viewsets.ModelViewSet):
+class FeedStockViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     ViewSet for FeedStock model.
 
-    Provides CRUD operations for feed stock levels in feed containers.
+    Provides CRUD operations for feed stock levels in feed containers. Uses
+    HistoryReasonMixin to capture audit change reasons.
     """
     queryset = FeedStock.objects.all()
     serializer_class = FeedStockSerializer

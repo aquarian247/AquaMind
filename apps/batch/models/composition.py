@@ -7,6 +7,7 @@ and relationships between the original source batches and the new mixed batch.
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 
 class BatchComposition(models.Model):
@@ -36,6 +37,7 @@ class BatchComposition(models.Model):
         help_text="Biomass from this source batch in the mixed batch"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['-percentage']

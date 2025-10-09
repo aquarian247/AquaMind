@@ -6,6 +6,8 @@ These viewsets provide CRUD operations for batch composition management.
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -15,14 +17,15 @@ from apps.batch.api.serializers import BatchCompositionSerializer
 from apps.batch.api.filters.composition import BatchCompositionFilter
 
 
-class BatchCompositionViewSet(viewsets.ModelViewSet):
+class BatchCompositionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Batch Compositions.
 
     This endpoint defines the composition of a 'mixed' batch, detailing what
     percentage and quantity (population/biomass) of it comes from various
     'source' batches. This is crucial for traceability when batches are merged.
-    Provides full CRUD operations for batch composition records.
+    Provides full CRUD operations for batch composition records. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `mixed_batch`: ID of the resulting mixed batch.

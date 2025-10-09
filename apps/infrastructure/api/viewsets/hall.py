@@ -21,6 +21,8 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
@@ -39,14 +41,15 @@ class HallFilter(FilterSet):
         }
 
 
-class HallViewSet(viewsets.ModelViewSet):
+class HallViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Halls within the aquaculture facility.
 
     Halls represent distinct buildings or sections within the facility,
     often containing multiple containers or systems. They can be associated
     with a Freshwater Station.
-    This endpoint allows for full CRUD operations on Hall instances.
+    This endpoint allows for full CRUD operations on Hall instances. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the hall.

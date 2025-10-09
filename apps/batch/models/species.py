@@ -5,6 +5,7 @@ These models define the fish species that are managed in the aquaculture system
 and their lifecycle stages (egg, fry, parr, smolt, etc.).
 """
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class Species(models.Model):
@@ -51,6 +52,7 @@ class Species(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         verbose_name_plural = "Species"
@@ -99,6 +101,7 @@ class LifeCycleStage(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['species', 'order']

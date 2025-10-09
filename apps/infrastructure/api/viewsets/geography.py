@@ -15,6 +15,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from apps.infrastructure.models.geography import Geography
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.models.station import FreshwaterStation
@@ -26,7 +28,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-class GeographyViewSet(viewsets.ModelViewSet):
+class GeographyViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Geographical locations or zones.
 
@@ -34,7 +36,8 @@ class GeographyViewSet(viewsets.ModelViewSet):
     operations, such as countries, regions, specific water bodies, or custom zones.
     These can be used to associate other entities (like facilities or environmental
     readings) with a spatial context.
-    This endpoint allows for full CRUD operations on Geography instances.
+    This endpoint allows for full CRUD operations on Geography instances. Uses
+    HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `name`: Filter by the exact name of the geography.

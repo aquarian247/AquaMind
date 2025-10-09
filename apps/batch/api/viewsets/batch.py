@@ -8,6 +8,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, F, Case, When, Q
 from decimal import Decimal
 
+from aquamind.utils.history_mixins import HistoryReasonMixin
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -18,13 +20,14 @@ from apps.batch.api.filters.batch import BatchFilter
 from .mixins import BatchAnalyticsMixin
 
 
-class BatchViewSet(BatchAnalyticsMixin, viewsets.ModelViewSet):
+class BatchViewSet(HistoryReasonMixin, BatchAnalyticsMixin, viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 
     Provides full CRUD operations for batches, including detailed filtering,
     searching, and ordering capabilities. Batches represent groups of aquatic
-    organisms managed together through their lifecycle.
+    organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+    capture audit change reasons.
 
     **Filtering:**
     - `batch_number`: Exact match.

@@ -4,6 +4,7 @@ Feed container stock model for FIFO inventory tracking.
 from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models import FeedContainer
 from .purchase import FeedPurchase
@@ -35,6 +36,7 @@ class FeedContainerStock(TimestampedModelMixin, models.Model):
     entry_date = models.DateTimeField(
         help_text="Date and time when this feed batch was added to the container"
     )
+    history = HistoricalRecords()
     
     class Meta:
         ordering = ['feed_container', 'entry_date']  # FIFO order
