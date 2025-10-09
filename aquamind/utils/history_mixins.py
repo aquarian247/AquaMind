@@ -47,8 +47,15 @@ class HistoryReasonMixin:
 
         This method saves the instance and updates the change reason
         to indicate it was created via API by the current user.
+        
+        Compatible with UserAssignmentMixin: Auto-populates user field if viewset has user_field attribute.
         """
-        instance = serializer.save()
+        # Check if viewset has a user_field (for UserAssignmentMixin compatibility)
+        kwargs = {}
+        if hasattr(self, 'user_field') and self.request.user.is_authenticated:
+            kwargs[self.user_field] = self.request.user
+        
+        instance = serializer.save(**kwargs)
         # For new instances, we need to refresh the instance to get the latest historical record
         instance.refresh_from_db()
         if hasattr(instance, 'history') and instance.history.exists():
