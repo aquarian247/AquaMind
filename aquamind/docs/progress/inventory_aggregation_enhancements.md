@@ -684,21 +684,316 @@ npm run build  # Ensure no TypeScript errors
 ## Phase 8: Performance Validation & Documentation
 
 ### Task 8.1: Performance Benchmarking
-**File**: `apps/inventory/tests/test_performance.py` (NEW)  
-**Effort**: 1 hour
+**File**: `apps/inventory/tests/performance/test_finance_performance.py` (NEW)  
+**Effort**: 2 hours  
+**Note**: Performance tests are SEPARATE from unit tests - run less frequently, use realistic data
 
-**Benchmark Tests**:
+**Test Structure**:
 ```python
-def test_finance_report_performance_10k_events(self):
-    """Finance report with 10,000 events should complete < 2s."""
-    # Create 10k feeding events across multiple dimensions
-    # Time the finance_report endpoint
-    # Assert < 2 seconds
+"""
+Performance tests for finance reporting.
+
+These tests use realistic data structures with proper relationships
+and are separate from unit tests to avoid slowing down regular test runs.
+
+Run with: python manage.py test apps.inventory.tests.performance
+Skip with: @unittest.skip("Performance test - run manually")
+"""
+
+class FinanceReportPerformanceTest(TestCase):
+    """
+    Performance validation for finance reporting with realistic data.
     
-def test_query_count_optimization(self):
-    """Finance report should use < 10 database queries."""
-    # Use django-debug-toolbar or assertNumQueries
-    # Verify efficient query patterns
+    Uses complete relationship chains:
+    - Geography → Area → Container
+    - Batch → BatchContainerAssignment → Container
+    - Feed → FeedPurchase → FeedContainerStock → FeedContainer
+    - FeedingEvent with proper batch_assignment and calculated costs
+    """
+    
+    @classmethod
+    def setUpClass(cls):
+        """
+        Create realistic test infrastructure ONCE for all performance tests.
+        
+        Creates:
+        - 2 geographies (Scotland, Faroe Islands)
+        - 6 areas (3 per geography)
+        - 1 freshwater station with 2 halls
+        - 30 containers (5 per area)
+        - 5 feed types with varying nutritional profiles
+        - 5 feed purchases (one per feed type)
+        - FeedContainerStock entries (FIFO inventory)
+        - 10 batches with proper BatchContainerAssignments
+        """
+        super().setUpClass()
+        
+        # Geography/Area hierarchy
+        cls.scotland = Geography.objects.create(name="Scotland")
+        cls.faroe = Geography.objects.create(name="Faroe Islands")
+        
+        cls.areas = []
+        for geo in [cls.scotland, cls.faroe]:
+            for i in range(3):
+                area = Area.objects.create(
+                    name=f"{geo.name} Area {i+1}",
+                    geography=geo,
+                    latitude=Decimal('57.0') + i,
+                    longitude=Decimal('-3.0') - i,
+                    max_biomass=Decimal('50000.0')
+                )
+                cls.areas.append(area)
+        
+        # Freshwater station/hall (for hall-based filtering tests)
+        cls.station = FreshwaterStation.objects.create(
+            name="Test Station",
+            geography=cls.scotland,
+            station_type="HATCHERY",
+            latitude=Decimal('57.5'),
+            longitude=Decimal('-3.5')
+        )
+        cls.halls = [
+            Hall.objects.create(
+                name=f"Hall {i+1}",
+                freshwater_station=cls.station
+            )
+            for i in range(2)
+        ]
+        
+        # Containers (area-based + hall-based)
+        cls.container_type = ContainerType.objects.create(
+            name="Standard Tank",
+            category="TANK",
+            max_volume_m3=Decimal('200.0')
+        )
+        
+        cls.containers = []
+        # Area-based containers
+        for area in cls.areas:
+            for i in range(5):
+                container = Container.objects.create(
+                    name=f"{area.name} Tank {i+1}",
+                    container_type=cls.container_type,
+                    area=area,
+                    volume_m3=Decimal('100.0'),
+                    max_biomass_kg=Decimal('5000.0')
+                )
+                cls.containers.append(container)
+        
+        # Hall-based containers
+        for hall in cls.halls:
+            for i in range(2):
+                container = Container.objects.create(
+                    name=f"{hall.name} Tank {i+1}",
+                    container_type=cls.container_type,
+                    hall=hall,
+                    volume_m3=Decimal('100.0'),
+                    max_biomass_kg=Decimal('5000.0')
+                )
+                cls.containers.append(container)
+        
+        # Feeds with varying nutritional profiles
+        cls.feeds_with_purchases = []
+        nutritional_profiles = [
+            ("Premium Starter", "Supplier A", 50, 22, Decimal('7.50')),
+            ("Growth Feed", "Supplier B", 46, 20, Decimal('6.50')),
+            ("Standard Feed", "Supplier A", 42, 16, Decimal('5.50')),
+            ("Economy Feed", "Supplier C", 38, 12, Decimal('4.50')),
+            ("Finishing Feed", "Supplier B", 36, 10, Decimal('4.00')),
+        ]
+        
+        for name, supplier, protein, fat, cost in nutritional_profiles:
+            feed = Feed.objects.create(
+                name=name,
+                brand=supplier,
+                size_category="MEDIUM",
+                protein_percentage=Decimal(str(protein)),
+                fat_percentage=Decimal(str(fat))
+            )
+            
+            purchase = FeedPurchase.objects.create(
+                feed=feed,
+                quantity_kg=Decimal('100000.0'),  # Large purchase
+                cost_per_kg=cost,
+                supplier=supplier,
+                purchase_date=timezone.now().date() - timedelta(days=60),
+                batch_number=f"BATCH-{name[:3].upper()}-001"
+            )
+            
+            cls.feeds_with_purchases.append((feed, purchase, cost))
+        
+        # Create feed containers and stock
+        cls.feed_containers = []
+        for area in cls.areas[:3]:  # 3 feed containers
+            feed_container = FeedContainer.objects.create(
+                name=f"{area.name} Feed Silo",
+                area=area,
+                capacity_kg=Decimal('50000.0')
+            )
+            cls.feed_containers.append(feed_container)
+            
+            # Add each feed type to this container (FIFO inventory)
+            for feed, purchase, cost in cls.feeds_with_purchases:
+                FeedContainerStock.objects.create(
+                    feed_container=feed_container,
+                    feed_purchase=purchase,
+                    quantity_kg=Decimal('10000.0'),
+                    entry_date=timezone.now() - timedelta(days=30)
+                )
+        
+        # Create batches with proper container assignments
+        cls.species = Species.objects.create(
+            name="Atlantic Salmon",
+            scientific_name="Salmo salar"
+        )
+        cls.lifecycle_stage = LifeCycleStage.objects.create(
+            name="Smolt",
+            species=cls.species,
+            order=1
+        )
+        
+        cls.batches_with_assignments = []
+        for i, container in enumerate(cls.containers[:10]):  # 10 active batches
+            batch = Batch.objects.create(
+                batch_number=f"PERF-BATCH-{i+1:04d}",
+                species=cls.species,
+                lifecycle_stage=cls.lifecycle_stage,
+                start_date=timezone.now().date() - timedelta(days=90),
+                status='ACTIVE'
+            )
+            
+            assignment = BatchContainerAssignment.objects.create(
+                batch=batch,
+                container=container,
+                lifecycle_stage=cls.lifecycle_stage,
+                population_count=10000 + (i * 500),
+                avg_weight_g=Decimal('100.0') + i,
+                biomass_kg=Decimal('1000.0') + (i * 50),
+                assignment_date=timezone.now().date() - timedelta(days=60),
+                is_active=True
+            )
+            
+            cls.batches_with_assignments.append((batch, assignment, container))
+    
+    def test_finance_report_performance_10k_events(self):
+        """
+        Finance report with 10,000 events should complete < 2s.
+        
+        Tests realistic scenario with proper relationships:
+        - 10 batches with BatchContainerAssignments
+        - 5 feed types with FeedPurchases
+        - Geographic distribution across 6 areas, 2 geographies
+        - Date spread across 365 days
+        - Proper cost calculation from purchase data
+        """
+        # Bulk create 10k feeding events with realistic distribution
+        events = []
+        base_date = timezone.now().date()
+        
+        for i in range(10000):
+            # Distribute across batches, feeds, and dates realistically
+            batch, assignment, container = self.batches_with_assignments[i % 10]
+            feed, purchase, cost_per_kg = self.feeds_with_purchases[i % 5]
+            
+            # Vary amounts and costs
+            amount_kg = Decimal('8.0') + (Decimal(i % 20) / 10)  # 8.0 to 9.9 kg
+            calculated_cost = amount_kg * cost_per_kg
+            
+            events.append(FeedingEvent(
+                batch=batch,
+                batch_assignment=assignment,
+                container=container,
+                feed=feed,
+                feeding_date=base_date - timedelta(days=(i % 365)),
+                feeding_time=timezone.now().time(),
+                amount_kg=amount_kg,
+                batch_biomass_kg=assignment.biomass_kg,
+                feed_cost=calculated_cost,
+                method=['MANUAL', 'AUTOMATIC', 'BROADCAST'][i % 3]
+            ))
+        
+        # Bulk create with batching
+        FeedingEvent.objects.bulk_create(events, batch_size=1000)
+        
+        # Verify data created
+        total_events = FeedingEvent.objects.count()
+        self.assertEqual(total_events, 10000)
+        
+        # Test performance with complex filter
+        import time
+        start = time.time()
+        
+        response = self.client.get('/api/v1/inventory/feeding-events/finance_report/', {
+            'start_date': (base_date - timedelta(days=90)).isoformat(),
+            'end_date': base_date.isoformat(),
+            'geography': self.scotland.id,
+            'feed__protein_percentage__gte': 40,
+            'include_breakdowns': 'true',
+            'include_time_series': 'false'
+        })
+        
+        duration = time.time() - start
+        
+        # Performance assertions
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(duration, 2.0, f"Response took {duration:.2f}s, expected < 2s")
+        
+        # Verify data integrity
+        self.assertGreater(response.data['summary']['events_count'], 0)
+        self.assertGreater(len(response.data['by_feed_type']), 0)
+    
+    def test_query_count_optimization(self):
+        """Finance report should use < 10 database queries."""
+        # Only create 100 events for query count test (faster)
+        events = []
+        base_date = timezone.now().date()
+        
+        for i in range(100):
+            batch, assignment, container = self.batches_with_assignments[i % 10]
+            feed, purchase, cost = self.feeds_with_purchases[i % 5]
+            
+            events.append(FeedingEvent(
+                batch=batch,
+                batch_assignment=assignment,
+                container=container,
+                feed=feed,
+                feeding_date=base_date - timedelta(days=(i % 30)),
+                feeding_time=timezone.now().time(),
+                amount_kg=Decimal('10.0'),
+                batch_biomass_kg=assignment.biomass_kg,
+                feed_cost=Decimal('50.0'),
+                method='MANUAL'
+            ))
+        
+        FeedingEvent.objects.bulk_create(events, batch_size=100)
+        
+        # Test query count
+        from django.test.utils import override_settings
+        from django.db import connection
+        from django.test import utils
+        
+        with self.assertNumQueries(10):  # Max 10 queries
+            response = self.client.get('/api/v1/inventory/feeding-events/finance_report/', {
+                'start_date': (base_date - timedelta(days=30)).isoformat(),
+                'end_date': base_date.isoformat(),
+                'include_breakdowns': 'true'
+            })
+            
+            self.assertEqual(response.status_code, 200)
+```
+
+**Test Execution**:
+```bash
+# Regular unit tests (fast, run always)
+python manage.py test apps.inventory.tests.test_filters
+python manage.py test apps.inventory.tests.test_services
+python manage.py test apps.inventory.tests.test_finance_api
+
+# Performance tests (slow, run occasionally)
+python manage.py test apps.inventory.tests.performance
+
+# Or skip during development
+python manage.py test apps.inventory --exclude-tag=performance
 ```
 
 ---
