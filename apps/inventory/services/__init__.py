@@ -8,8 +8,10 @@ This package contains business logic services for inventory management.
 
 from .fifo_service import FIFOInventoryService
 from .fcr_service import FCRCalculationService
+from .finance_reporting_service import FinanceReportingService
 
 __all__ = [
     'FIFOInventoryService',
     'FCRCalculationService',
+    'FinanceReportingService',
 ]
