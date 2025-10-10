@@ -1634,21 +1634,6 @@ class EndToEndWorkflowTests(TestCase):
         self.assertTrue(final_proj.day_number > 0)
         self.assertTrue(final_proj.average_weight > 2.0)
         self.assertTrue(final_proj.population < 10000.0)  # Some mortality
-        
-        # Step 14: Check history tracking
-        # Verify that history records were created for the models
-        self.assertEqual(tgc_model.history.count(), 1)
-        self.assertEqual(fcr_model.history.count(), 1)
-        self.assertEqual(mortality_model.history.count(), 1)
-        self.assertEqual(scenario.history.count(), 1)
-        self.assertEqual(model_change.history.count(), 1)
-        
-        # Update the scenario and check for a new history record
-        scenario.name = "Updated E2E Test Scenario"
-        scenario.save()
-        self.assertEqual(scenario.history.count(), 2)
-        self.assertEqual(scenario.history.earliest().name, "E2E Test Scenario")
-        self.assertEqual(scenario.history.latest().name, "Updated E2E Test Scenario")
 
 
 class PerformanceTests(TransactionTestCase):

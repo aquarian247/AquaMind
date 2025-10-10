@@ -26,14 +26,6 @@ BiologicalConstraintsViewSet = viewsets_module.BiologicalConstraintsViewSet
 ScenarioViewSet = viewsets_module.ScenarioViewSet
 DataEntryViewSet = viewsets_module.DataEntryViewSet
 
-from .viewsets.history import (
-    FCRModelHistoryViewSet,
-    MortalityModelHistoryViewSet,
-    ScenarioHistoryViewSet,
-    ScenarioModelChangeHistoryViewSet,
-    TGCModelHistoryViewSet,
-)
-
 # Create router
 router = routers.DefaultRouter()
 
@@ -45,13 +37,6 @@ router.register(r'mortality-models', MortalityModelViewSet, basename='mortality-
 router.register(r'biological-constraints', BiologicalConstraintsViewSet, basename='biological-constraints')
 router.register(r'scenarios', ScenarioViewSet, basename='scenario')
 router.register(r'data-entry', DataEntryViewSet, basename='data-entry')
-
-# Register history endpoints
-router.register(r'history/tgc-models', TGCModelHistoryViewSet, basename='tgc-model-history')
-router.register(r'history/fcr-models', FCRModelHistoryViewSet, basename='fcr-model-history')
-router.register(r'history/mortality-models', MortalityModelHistoryViewSet, basename='mortality-model-history')
-router.register(r'history/scenarios', ScenarioHistoryViewSet, basename='scenario-history')
-router.register(r'history/scenario-model-changes', ScenarioModelChangeHistoryViewSet, basename='scenario-model-change-history')
 
 # The router will generate the following URL patterns:
 # 

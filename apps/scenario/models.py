@@ -8,7 +8,6 @@ biological models (TGC, FCR, and mortality models).
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
-from simple_history.models import HistoricalRecords
 
 User = get_user_model()
 
@@ -122,8 +121,6 @@ class TGCModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking for regulatory compliance
-    history = HistoricalRecords()
     
     class Meta:
         verbose_name = "TGC Model"
@@ -150,8 +147,6 @@ class FCRModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking for regulatory compliance
-    history = HistoricalRecords()
     
     class Meta:
         verbose_name = "FCR Model"
@@ -229,8 +224,6 @@ class MortalityModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking for regulatory compliance
-    history = HistoricalRecords()
     
     class Meta:
         verbose_name = "Mortality Model"
@@ -317,8 +310,6 @@ class Scenario(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking for regulatory compliance
-    history = HistoricalRecords()
     
     class Meta:
         db_table = 'scenario'
@@ -415,8 +406,6 @@ class ScenarioModelChange(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking for regulatory compliance
-    history = HistoricalRecords()
     
     class Meta:
         verbose_name = "Scenario Model Change"

@@ -174,20 +174,6 @@ class TGCModelTests(TestCase):
         self.assertEqual(self.profile.tgc_models.count(), 1)
         self.assertEqual(self.profile.tgc_models.first(), self.tgc_model)
 
-    def test_history_tracking(self):
-        """Test history tracking for TGCModel."""
-        # Check that history record was created
-        self.assertEqual(self.tgc_model.history.count(), 1)
-
-        # Update the model and check for new history record
-        self.tgc_model.tgc_value = 0.030
-        self.tgc_model.save()
-        self.assertEqual(self.tgc_model.history.count(), 2)
-
-        # Check that history record contains the old value
-        self.assertEqual(self.tgc_model.history.earliest().tgc_value, 0.025)
-        self.assertEqual(self.tgc_model.history.latest().tgc_value, 0.030)
-
 
 class FCRModelTests(TestCase):
     """Tests for the FCRModel and FCRModelStage models."""
@@ -269,20 +255,6 @@ class FCRModelTests(TestCase):
                 duration_days=60
             )
 
-    def test_fcr_model_history_tracking(self):
-        """Test history tracking for FCRModel."""
-        # Check that history record was created
-        self.assertEqual(self.fcr_model.history.count(), 1)
-
-        # Update the model and check for new history record
-        self.fcr_model.name = "Updated FCR Model"
-        self.fcr_model.save()
-        self.assertEqual(self.fcr_model.history.count(), 2)
-
-        # Check that history record contains the old value
-        self.assertEqual(self.fcr_model.history.earliest().name, "Test FCR Model")
-        self.assertEqual(self.fcr_model.history.latest().name, "Updated FCR Model")
-
 
 class MortalityModelTests(TestCase):
     """Tests for the MortalityModel model."""
@@ -359,20 +331,6 @@ class MortalityModelTests(TestCase):
                 frequency="weekly",
                 rate=0.5
             )
-
-    def test_history_tracking(self):
-        """Test history tracking for MortalityModel."""
-        # Check that history record was created
-        self.assertEqual(self.mortality_model.history.count(), 1)
-
-        # Update the model and check for new history record
-        self.mortality_model.rate = 0.2
-        self.mortality_model.save()
-        self.assertEqual(self.mortality_model.history.count(), 2)
-
-        # Check that history record contains the old value
-        self.assertEqual(self.mortality_model.history.earliest().rate, 0.1)
-        self.assertEqual(self.mortality_model.history.latest().rate, 0.2)
 
 
 class ScenarioModelTests(TestCase):
@@ -621,20 +579,6 @@ class ScenarioModelTests(TestCase):
         self.assertEqual(self.scenario.biological_constraints, self.constraints)
         self.assertEqual(self.scenario.created_by, self.user)
 
-    def test_history_tracking(self):
-        """Test history tracking for Scenario."""
-        # Check that history record was created
-        self.assertEqual(self.scenario.history.count(), 1)
-
-        # Update the scenario and check for new history record
-        self.scenario.initial_count = 12000
-        self.scenario.save()
-        self.assertEqual(self.scenario.history.count(), 2)
-
-        # Check that history record contains the old value
-        self.assertEqual(self.scenario.history.earliest().initial_count, 10000)
-        self.assertEqual(self.scenario.history.latest().initial_count, 12000)
-
 
 class ScenarioModelChangeTests(TestCase):
     """Tests for the ScenarioModelChange model."""
@@ -781,20 +725,6 @@ class ScenarioModelChangeTests(TestCase):
         self.assertIsNone(mortality_change.new_tgc_model)
         self.assertIsNone(mortality_change.new_fcr_model)
         self.assertEqual(mortality_change.new_mortality_model, self.mortality_model2)
-
-    def test_history_tracking(self):
-        """Test history tracking for ScenarioModelChange."""
-        # Check that history record was created
-        self.assertEqual(self.model_change.history.count(), 1)
-
-        # Update the model change and check for new history record
-        self.model_change.change_day = 100
-        self.model_change.save()
-        self.assertEqual(self.model_change.history.count(), 2)
-
-        # Check that history record contains the old value
-        self.assertEqual(self.model_change.history.earliest().change_day, 90)
-        self.assertEqual(self.model_change.history.latest().change_day, 100)
 
 
 class BiologicalConstraintsTests(TestCase):

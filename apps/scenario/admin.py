@@ -5,7 +5,6 @@ Provides comprehensive admin interface for managing scenario configurations,
 biological models, and projections.
 """
 from django.contrib import admin
-from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel, 
     FCRModelStage, MortalityModel, Scenario, ScenarioModelChange,
@@ -45,7 +44,7 @@ class TemperatureProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(TGCModel)
-class TGCModelAdmin(SimpleHistoryAdmin):
+class TGCModelAdmin(admin.ModelAdmin):
     """Admin configuration for TGC Models with history tracking."""
     list_display = ('name', 'location', 'release_period', 'tgc_value', 'profile')
     list_filter = ('location', 'release_period', 'profile')
@@ -76,7 +75,7 @@ class FCRModelStageInline(admin.TabularInline):
 
 
 @admin.register(FCRModel)
-class FCRModelAdmin(SimpleHistoryAdmin):
+class FCRModelAdmin(admin.ModelAdmin):
     """Admin configuration for FCR Models with history tracking."""
     list_display = ('name', 'get_stage_count', 'created_at')
     search_fields = ('name',)
@@ -100,7 +99,7 @@ class FCRModelAdmin(SimpleHistoryAdmin):
 
 
 @admin.register(MortalityModel)
-class MortalityModelAdmin(SimpleHistoryAdmin):
+class MortalityModelAdmin(admin.ModelAdmin):
     """Admin configuration for Mortality Models with history tracking."""
     list_display = ('name', 'rate', 'frequency', 'created_at')
     list_filter = ('frequency',)
@@ -128,7 +127,7 @@ class ScenarioModelChangeInline(admin.TabularInline):
 
 
 @admin.register(Scenario)
-class ScenarioAdmin(SimpleHistoryAdmin):
+class ScenarioAdmin(admin.ModelAdmin):
     """Admin configuration for Scenarios with history tracking."""
     list_display = ('name', 'start_date', 'duration_days', 'initial_count', 
                     'tgc_model', 'created_by', 'created_at')
@@ -221,7 +220,7 @@ class FCRModelStageAdmin(admin.ModelAdmin):
 
 
 @admin.register(ScenarioModelChange)
-class ScenarioModelChangeAdmin(SimpleHistoryAdmin):
+class ScenarioModelChangeAdmin(admin.ModelAdmin):
     """Standalone admin for scenario model changes."""
     list_display = ('scenario', 'change_day', 'get_changes_summary')
     list_filter = ('scenario', 'change_day')
@@ -302,7 +301,7 @@ class TGCModelStageInline(admin.TabularInline):
 # Update the existing TGCModelAdmin to include stage overrides
 admin.site.unregister(TGCModel)
 @admin.register(TGCModel)
-class TGCModelAdminEnhanced(SimpleHistoryAdmin):
+class TGCModelAdminEnhanced(admin.ModelAdmin):
     """Enhanced TGC Model admin with stage overrides."""
     list_display = ('name', 'location', 'release_period', 'tgc_value', 'profile', 'has_stage_overrides')
     list_filter = ('location', 'release_period', 'profile')
@@ -368,7 +367,7 @@ class MortalityModelStageInline(admin.TabularInline):
 # Update the existing MortalityModelAdmin to include stage overrides
 admin.site.unregister(MortalityModel)
 @admin.register(MortalityModel)
-class MortalityModelAdminEnhanced(SimpleHistoryAdmin):
+class MortalityModelAdminEnhanced(admin.ModelAdmin):
     """Enhanced Mortality Model admin with stage overrides."""
     list_display = ('name', 'rate', 'frequency', 'has_stage_overrides', 'created_at')
     list_filter = ('frequency',)
@@ -397,7 +396,7 @@ class MortalityModelAdminEnhanced(SimpleHistoryAdmin):
 # Update Scenario admin to show biological constraints
 admin.site.unregister(Scenario)
 @admin.register(Scenario)
-class ScenarioAdminEnhanced(SimpleHistoryAdmin):
+class ScenarioAdminEnhanced(admin.ModelAdmin):
     """Enhanced Scenario admin with biological constraints."""
     list_display = ('name', 'start_date', 'duration_days', 'initial_count', 
                     'tgc_model', 'biological_constraints', 'created_by', 'created_at')

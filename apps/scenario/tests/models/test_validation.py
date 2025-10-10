@@ -1006,17 +1006,3 @@ class ScenarioModelChangeValidationTests(TestCase):
                 **{k: v for k, v in self.valid_data.items() if k != "scenario"}
             )
     
-    def test_history_tracking(self):
-        """Test history tracking for model changes."""
-        # Create a model change
-        change = ScenarioModelChange.objects.create(**self.valid_data)
-        
-        # Check history record was created
-        self.assertEqual(change.history.count(), 1)
-        
-        # Update and check for new history record
-        change.change_day = 100
-        change.save()
-        self.assertEqual(change.history.count(), 2)
-        self.assertEqual(change.history.earliest().change_day, 90)
-        self.assertEqual(change.history.latest().change_day, 100)
