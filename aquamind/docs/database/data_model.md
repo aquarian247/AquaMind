@@ -70,10 +70,9 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`infrastructure_freshwaterstation`**: Freshwater station management
 - **`infrastructure_hall`**: Facility hall definitions
 
-**Inventory App (7 models)**
+**Inventory App (6 models)**
 - **`inventory_feed`**: Feed type and specification changes
 - **`inventory_feedpurchase`**: Feed procurement and supplier tracking
-- **`inventory_feedstock`**: Feed stock level monitoring
 - **`inventory_feedingevent`**: Feeding event documentation
 - **`inventory_containerfeedingsummary`**: Container-level feeding summaries
 - **`inventory_batchfeedingsummary`**: Batch-level feeding and FCR analysis
@@ -401,7 +400,7 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `batch_batch` ← `broodstock_batchparentage` (CASCADE, related_name='parentage')
 
 ### 4.3 Feed and Inventory Management (`inventory` app)
-**Purpose**: Manages feed resources, inventory, feeding events, and recommendations.
+**Purpose**: Manages feed resources, FIFO inventory tracking, feeding events, and FCR calculations.
 
 #### Tables
 - **`inventory_feed`**
@@ -431,29 +430,19 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['-purchase_date']`
-- **`inventory_feedstock`**
-  - `id`: bigint (PK, auto-increment)
-  - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='stock_levels')
-  - `feed_container_id`: bigint (FK to `infrastructure_feedcontainer`.`id`, on_delete=CASCADE, related_name='feed_stocks')
-  - `current_quantity_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Current amount of feed in stock (kg)")
-  - `reorder_threshold_kg`: decimal(10,2) (validators: MinValueValidator(0), help_text="Threshold for reordering (kg)")
-  - `updated_at`: timestamptz (auto_now=True)
-  - `notes`: text (blank=True)
-  - Meta: `unique_together = ['feed', 'feed_container']`
 - **`inventory_feedingevent`**
   - `id`: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, related_name='feeding_events')
   - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='feeding_events')
   - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known.")
   - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='applied_in_feedings')
-  - `feed_stock_id`: bigint (FK to `inventory_feedstock`.`id`, on_delete=SET_NULL, nullable, blank=True)
   - `recorded_by_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', nullable, blank=True, help_text="User who recorded or performed the feeding.")
   - `feeding_date`: date
   - `feeding_time`: time
   - `amount_kg`: decimal(10,4) (validators: MinValueValidator(0.0001), help_text="Amount of feed used in kilograms")
   - `batch_biomass_kg`: decimal(10,2) (help_text="Estimated batch biomass at time of feeding (kg)")
   - `feeding_percentage`: decimal(8,6) (nullable, blank=True, help_text="Feed amount as percentage of biomass (auto-calculated)")
-  - `feed_cost`: decimal(10,2) (nullable, blank=True, help_text="Calculated cost of feed used in this feeding event")
+  - `feed_cost`: decimal(10,2) (nullable, blank=True, help_text="Calculated cost of feed used (tracked via FIFO system)")
   - `method`: varchar(20) (choices available for feeding method)
   - `notes`: text
   - `created_at`: timestamptz (auto_now_add=True)
@@ -512,8 +501,6 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 
 #### Relationships
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')
-- `inventory_feed` ← `inventory_feedstock` (PROTECT, related_name='stock_levels')
-- `infrastructure_feedcontainer` ← `inventory_feedstock` (CASCADE, related_name='feed_stocks')
 - `infrastructure_feedcontainer` ← `inventory_feedcontainerstock` (CASCADE, related_name='container_stocks')
 - `inventory_feedpurchase` ← `inventory_feedcontainerstock` (CASCADE, related_name='container_stocks')
 - `batch_batch` ← `inventory_feedingevent` (PROTECT, related_name='feeding_events')
@@ -521,7 +508,6 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `batch_batchcontainerassignment` ← `inventory_feedingevent` (SET_NULL, related_name='explicit_feeding_events')
 - `inventory_feed` ← `inventory_feedingevent` (PROTECT, related_name='applied_in_feedings')
 - `users_customuser` ← `inventory_feedingevent` (PROTECT, related_name='feeding_entries')
-- `inventory_feedstock` ← `inventory_feedingevent` (SET_NULL)
 - `batch_batch` ← `inventory_batchfeedingsummary` (CASCADE, related_name='feeding_summaries')
 - `batch_batch` ← `inventory_containerfeedingsummary` (CASCADE, related_name='container_feeding_summaries')
 - `batch_batchcontainerassignment` ← `inventory_containerfeedingsummary` (CASCADE, related_name='feeding_summaries')
@@ -529,7 +515,7 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 #### Historical Tables (Audit Trail)
 All inventory models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
 
-**Currently Active Historical Tables (7 total):**
+**Currently Active Historical Tables (6 total):**
 - **`inventory_historicalfeed`**
   - All fields from `inventory_feed` plus history tracking fields
   - `history_id`: integer (PK, auto-increment)
@@ -539,9 +525,6 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - `history_user_id`: integer (FK to user who made change, nullable)
 - **`inventory_historicalfeedpurchase`**
   - All fields from `inventory_feedpurchase` plus history tracking fields
-  - Same history fields as above
-- **`inventory_historicalfeedstock`**
-  - All fields from `inventory_feedstock` plus history tracking fields
   - Same history fields as above
 - **`inventory_historicalfeedingevent`**
   - All fields from `inventory_feedingevent` plus history tracking fields

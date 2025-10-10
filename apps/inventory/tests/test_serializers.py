@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from apps.batch.models import Batch, BatchContainerAssignment, LifeCycleStage, Species
 from apps.infrastructure.models import Container, ContainerType, Area, Geography, FeedContainer
-from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent
+from apps.inventory.models import Feed, FeedPurchase, FeedingEvent
 from apps.inventory.api.serializers.utils import ReadWriteFieldsMixin, StandardErrorMixin, NestedModelMixin
 from apps.inventory.api.serializers.base import (
     InventoryBaseSerializer, TimestampedModelSerializer, 
@@ -16,12 +16,11 @@ from apps.inventory.api.serializers.base import (
     FeedingBaseSerializer
 )
 from apps.inventory.api.serializers.validation import (
-    validate_feed_stock_quantity, validate_batch_assignment_relationship,
+    validate_batch_assignment_relationship,
     validate_date_range, validate_batch_exists
 )
 from apps.inventory.api.serializers.feed import FeedSerializer
 from apps.inventory.api.serializers.purchase import FeedPurchaseSerializer
-from apps.inventory.api.serializers.stock import FeedStockSerializer
 from apps.inventory.api.serializers.feeding import FeedingEventSerializer
 from apps.inventory.api.serializers.summary import BatchFeedingSummarySerializer
 
@@ -301,7 +300,7 @@ class FeedingEventSerializerTest(TestCase):
             biomass_kg=Decimal("200.0")
         )
         
-        # Create feed and feed stock
+        # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
             brand="Test Brand",
@@ -312,12 +311,6 @@ class FeedingEventSerializerTest(TestCase):
             area=self.area,
             capacity_kg=Decimal("500.0")
         )
-        self.feed_stock = FeedStock.objects.create(
-            feed=self.feed,
-            feed_container=self.feed_container,
-            current_quantity_kg=Decimal("100.0"),
-            reorder_threshold_kg=Decimal("20.0")
-        )
         
         # Create feeding event
         self.feeding_event = FeedingEvent.objects.create(
@@ -325,7 +318,6 @@ class FeedingEventSerializerTest(TestCase):
             batch_assignment=self.assignment,
             container=self.container,
             feed=self.feed,
-            feed_stock=self.feed_stock,
             feeding_date=timezone.now().date(),
             feeding_time=timezone.now().time(),
             amount_kg=Decimal("5.0"),
@@ -347,7 +339,6 @@ class FeedingEventSerializerTest(TestCase):
         self.assertEqual(data['container_name'], str(self.container))
         self.assertEqual(data['feed'], self.feed.id)
         self.assertEqual(data['feed_name'], str(self.feed))
-        self.assertEqual(data['feed_stock'], self.feed_stock.id)
         self.assertEqual(data['amount_kg'], '5.0000')  # Expect 4 decimal places
         self.assertEqual(data['batch_biomass_kg'], '200.00')  # Expect 2 decimal places
         self.assertEqual(data['method'], self.feeding_event.method)
@@ -387,45 +378,6 @@ class FeedingEventSerializerTest(TestCase):
             'feeding_date': timezone.now().date().isoformat(),
             'feeding_time': timezone.now().time().isoformat(),
             'amount_kg': '5.0',
-            'batch_biomass_kg': '200.0',
-            'method': 'MANUAL'
-        })
-        self.assertTrue(serializer.is_valid())
-    
-    def test_validation_feed_stock_quantity(self):
-        """Test validation of feed stock quantity."""
-        # Test with insufficient feed stock (invalid)
-        self.feed_stock.current_quantity_kg = Decimal("2.0")  
-        self.feed_stock.save()
-        
-        serializer = FeedingEventSerializer(data={
-            'batch': self.batch.id,
-            'batch_assignment': self.assignment.id,
-            'container': self.container.id,
-            'feed': self.feed.id,
-            'feed_stock': self.feed_stock.id,
-            'feeding_date': timezone.now().date().isoformat(),
-            'feeding_time': timezone.now().time().isoformat(),
-            'amount_kg': '5.0',  
-            'batch_biomass_kg': '200.0',
-            'method': 'MANUAL'
-        })
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('Not enough feed in stock', str(serializer.errors))
-        
-        # Test with sufficient feed stock (valid)
-        self.feed_stock.current_quantity_kg = Decimal("10.0")  
-        self.feed_stock.save()
-        
-        serializer = FeedingEventSerializer(data={
-            'batch': self.batch.id,
-            'batch_assignment': self.assignment.id,
-            'container': self.container.id,
-            'feed': self.feed.id,
-            'feed_stock': self.feed_stock.id,
-            'feeding_date': timezone.now().date().isoformat(),
-            'feeding_time': timezone.now().time().isoformat(),
-            'amount_kg': '5.0',  
             'batch_biomass_kg': '200.0',
             'method': 'MANUAL'
         })
@@ -489,7 +441,7 @@ class ValidationFunctionsTest(TestCase):
             biomass_kg=Decimal("200.0")
         )
         
-        # Create feed and feed stock
+        # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
             brand="Test Brand",
@@ -500,30 +452,6 @@ class ValidationFunctionsTest(TestCase):
             area=self.area,
             capacity_kg=Decimal("500.0")
         )
-        self.feed_stock = FeedStock.objects.create(
-            feed=self.feed,
-            feed_container=self.feed_container,
-            current_quantity_kg=Decimal("100.0"),
-            reorder_threshold_kg=Decimal("20.0")
-        )
-    
-    def test_validate_feed_stock_quantity(self):
-        """Test the validate_feed_stock_quantity function."""
-        # Test with sufficient stock
-        try:
-            validate_feed_stock_quantity(self.feed_stock, Decimal("50.0"))
-        except ValidationError:
-            self.fail("validate_feed_stock_quantity raised ValidationError unexpectedly!")
-        
-        # Test with insufficient stock
-        with self.assertRaises(ValidationError):
-            validate_feed_stock_quantity(self.feed_stock, Decimal("150.0"))
-        
-        # Test with None feed_stock
-        try:
-            validate_feed_stock_quantity(None, Decimal("50.0"))
-        except ValidationError:
-            self.fail("validate_feed_stock_quantity raised ValidationError unexpectedly!")
     
     def test_validate_batch_assignment_relationship(self):
         """Test the validate_batch_assignment_relationship function."""

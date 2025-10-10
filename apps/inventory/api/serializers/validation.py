@@ -10,30 +10,6 @@ from rest_framework import serializers
 from apps.batch.models import Batch
 
 
-def validate_feed_stock_quantity(feed_stock, amount_kg):
-    """
-    Validate that there is enough stock for a feeding event.
-
-    Args:
-        feed_stock: FeedStock instance
-        amount_kg: Amount of feed in kg to validate
-
-    Raises:
-        serializers.ValidationError: If there is not enough feed in stock
-    """
-    if not feed_stock:
-        return
-
-    # Convert to Decimal if not already
-    if not isinstance(amount_kg, Decimal):
-        amount_kg = Decimal(str(amount_kg))
-
-    if feed_stock.current_quantity_kg < amount_kg:
-        raise serializers.ValidationError(
-            "Not enough feed in stock for this feeding event"
-        )
-
-
 def validate_batch_assignment_relationship(batch, batch_assignment):
     """
     Validate that a batch assignment belongs to the specified batch.

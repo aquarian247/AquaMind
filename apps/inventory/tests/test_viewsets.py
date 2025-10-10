@@ -11,11 +11,7 @@ User = get_user_model()
 
 from apps.batch.models import Batch, BatchContainerAssignment, LifeCycleStage, Species
 from apps.infrastructure.models import Container, ContainerType, Area, Geography, FeedContainer
-from apps.inventory.models import Feed, FeedPurchase, FeedStock, FeedingEvent
-
-
-# We'll use patching instead of a test-specific model
-# This allows us to use the real FeedStock model but avoid database issues with missing timestamp fields
+from apps.inventory.models import Feed, FeedPurchase, FeedingEvent
 
 
 def get_api_url(app_name, endpoint, detail=False, **kwargs):
@@ -185,9 +181,7 @@ class FeedPurchaseViewSetTest(TestCase):
 class FeedingEventViewSetTest(TestCase):
     """Tests for the FeedingEventViewSet."""
 
-    @mock.patch('apps.inventory.models.stock.FeedStock.save')
-    @mock.patch('apps.inventory.models.stock.FeedStock.full_clean')
-    def setUp(self, mock_full_clean, mock_save):
+    def setUp(self):
         """Set up test data."""
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpass')
@@ -207,7 +201,7 @@ class FeedingEventViewSetTest(TestCase):
         self.container_type = ContainerType.objects.create(
             name="Test Container Type",
             category="TANK",
-            max_volume_m3=Decimal("200.0")  # Add required field
+            max_volume_m3=Decimal("200.0")
         )
         self.container = Container.objects.create(
             name="Test Container",
@@ -244,7 +238,7 @@ class FeedingEventViewSetTest(TestCase):
             biomass_kg=Decimal("200.0")
         )
 
-        # Create feed and feed stock
+        # Create feed
         self.feed = Feed.objects.create(
             name="Test Feed",
             brand="Test Brand",
@@ -255,34 +249,20 @@ class FeedingEventViewSetTest(TestCase):
             area=self.area,
             capacity_kg=Decimal("500.0")
         )
-        # Create a FeedStock instance directly without using objects.create
-        # to avoid the database insert with created_at/updated_at fields
-        self.feed_stock = FeedStock(
-            id=1,
-            feed=self.feed,
-            feed_container=self.feed_container,
-            current_quantity_kg=Decimal("100.0"),
-            reorder_threshold_kg=Decimal("20.0")
-        )
-        # Don't call save() as it would try to insert into the database
 
-        # Create feeding event using a mock to avoid database issues
-        with mock.patch('apps.inventory.models.FeedingEvent.objects.create') as mock_create:
-            mock_create.return_value = FeedingEvent(
-                id=1,
-                batch=self.batch,
-                batch_assignment=self.assignment,
-                container=self.container,
-                feed=self.feed,
-                feed_stock=self.feed_stock,
-                feeding_date=timezone.now().date(),
-                feeding_time=timezone.now().time(),
-                amount_kg=Decimal("5.0"),
-                batch_biomass_kg=Decimal("200.0"),
-                method="MANUAL",
-                notes="Test feeding event"
-            )
-            self.feeding_event = FeedingEvent.objects.create()
+        # Create feeding event
+        self.feeding_event = FeedingEvent.objects.create(
+            batch=self.batch,
+            batch_assignment=self.assignment,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=timezone.now().date(),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("5.0"),
+            batch_biomass_kg=Decimal("200.0"),
+            method="MANUAL",
+            notes="Test feeding event"
+        )
 
         self.url = get_api_url('inventory', 'feeding-events')
         self.detail_url = get_api_url('inventory', 'feeding-events', detail=True, pk=self.feeding_event.id)
@@ -299,7 +279,6 @@ class FeedingEventViewSetTest(TestCase):
             'container_name': str(self.container),
             'feed': self.feed.id,
             'feed_name': str(self.feed),
-            'feed_stock': self.feed_stock.id,
             'feeding_date': self.feeding_event.feeding_date.isoformat(),
             'feeding_time': self.feeding_event.feeding_time.isoformat(),
             'amount_kg': str(self.feeding_event.amount_kg),
@@ -351,7 +330,6 @@ class FeedingEventViewSetTest(TestCase):
             'container_name': str(self.container),
             'feed': self.feed.id,
             'feed_name': str(self.feed),
-            'feed_stock': self.feed_stock.id,
             'feeding_date': self.feeding_event.feeding_date.isoformat(),
             'feeding_time': self.feeding_event.feeding_time.isoformat(),
             'amount_kg': str(self.feeding_event.amount_kg),
@@ -368,15 +346,11 @@ class FeedingEventViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['method'], self.feeding_event.method)
 
-    @mock.patch('apps.inventory.api.serializers.validation.validate_feed_stock_quantity')
     @mock.patch('apps.inventory.models.FeedingEvent.objects.create')
     @mock.patch('rest_framework.response.Response')
     @mock.patch('apps.inventory.api.viewsets.FeedingEventViewSet.get_serializer')
-    def test_create_feeding_event(self, mock_get_serializer, mock_response, mock_create, mock_validate):
+    def test_create_feeding_event(self, mock_get_serializer, mock_response, mock_create):
         """Test that a feeding event can be created."""
-        # Setup mocks
-        mock_validate.return_value = None  # No validation error
-
         # Create a mock response object for the created FeedingEvent
         new_feeding_event = FeedingEvent(
             id=2,
@@ -384,7 +358,6 @@ class FeedingEventViewSetTest(TestCase):
             batch_assignment=self.assignment,
             container=self.container,
             feed=self.feed,
-            feed_stock=self.feed_stock,
             feeding_date=timezone.now().date(),
             feeding_time=timezone.now().time(),
             amount_kg=Decimal("3.0"),
@@ -400,7 +373,6 @@ class FeedingEventViewSetTest(TestCase):
             'batch_assignment_id': self.assignment.id,
             'container_id': self.container.id,
             'feed_id': self.feed.id,
-            'feed_stock_id': self.feed_stock.id,
             'feeding_date': timezone.now().date().isoformat(),
             'feeding_time': timezone.now().time().isoformat(),
             'amount_kg': '3.0',
@@ -422,7 +394,6 @@ class FeedingEventViewSetTest(TestCase):
             'container_name': str(self.container),
             'feed': self.feed.id,
             'feed_name': str(self.feed),
-            'feed_stock': self.feed_stock.id,
             'feeding_date': timezone.now().date().isoformat(),
             'feeding_time': timezone.now().time().isoformat(),
             'amount_kg': '3.0',
@@ -499,16 +470,10 @@ class FeedingEventSummaryTest(TestCase):
             start_date=timezone.now().date() - timedelta(days=10),
         )
 
-        # Feed / FeedContainer / FeedStock
+        # Feed / FeedContainer
         self.feed = Feed.objects.create(name="Feed-A", brand="Brand", size_category="SMALL")
         self.feed_container = FeedContainer.objects.create(
             name="Feeder-1", area=self.area, capacity_kg=Decimal("200.0")
-        )
-        self.feed_stock = FeedStock.objects.create(
-            feed=self.feed,
-            feed_container=self.feed_container,
-            current_quantity_kg=Decimal("100.0"),
-            reorder_threshold_kg=Decimal("10.0"),
         )
 
         # URL helper
@@ -530,7 +495,6 @@ class FeedingEventSummaryTest(TestCase):
             batch=batch or self.batch,
             container=container or self.container,
             feed=self.feed,
-            feed_stock=self.feed_stock,
             feeding_date=date,
             feeding_time=timezone.now().time(),
             amount_kg=Decimal(str(amount_kg)),

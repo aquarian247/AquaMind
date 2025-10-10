@@ -7,18 +7,7 @@ for historical records across inventory models with historical tracking.
 
 import django_filters as filters
 from aquamind.utils.history_utils import HistoryFilter
-from apps.inventory.models import (
-    FeedStock,
-    FeedingEvent
-)
-
-
-class FeedStockHistoryFilter(HistoryFilter):
-    """Filter class for FeedStock historical records."""
-
-    class Meta:
-        model = FeedStock.history.model
-        fields = ['feed', 'feed_container']
+from apps.inventory.models import FeedingEvent
 
 
 class FeedingEventHistoryFilter(HistoryFilter):

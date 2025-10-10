@@ -18,7 +18,7 @@ from rest_framework.test import APIClient
 
 from apps.infrastructure.models import Geography, Area, ContainerType, Container, FeedContainer
 from apps.batch.models import Species, LifeCycleStage, Batch
-from apps.inventory.models import Feed, FeedStock, FeedingEvent
+from apps.inventory.models import Feed, FeedingEvent
 from apps.users.models import User
 
 
@@ -80,16 +80,10 @@ class FeedingEventSummaryRangeTest(APITestCase):
             start_date=timezone.now().date() - timedelta(days=10),
         )
 
-        # Feed / FeedContainer / FeedStock
+        # Feed / FeedContainer
         self.feed = Feed.objects.create(name="Feed-A", brand="Brand", size_category="SMALL")
         self.feed_container = FeedContainer.objects.create(
             name="Feeder-1", area=self.area, capacity_kg=Decimal("200.0")
-        )
-        self.feed_stock = FeedStock.objects.create(
-            feed=self.feed,
-            feed_container=self.feed_container,
-            current_quantity_kg=Decimal("100.0"),
-            reorder_threshold_kg=Decimal("10.0"),
         )
 
         # URL helper
@@ -107,7 +101,6 @@ class FeedingEventSummaryRangeTest(APITestCase):
             batch=batch or self.batch,
             container=container or self.container,
             feed=self.feed,
-            feed_stock=self.feed_stock,
             feeding_date=date,
             feeding_time=timezone.now().time(),
             amount_kg=Decimal(str(amount_kg)),

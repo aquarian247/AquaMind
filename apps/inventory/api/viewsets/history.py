@@ -7,25 +7,9 @@ for inventory models with filtering and pagination.
 
 from aquamind.utils.history_utils import HistoryViewSet
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from apps.inventory.models import (
-    FeedStock,
-    FeedingEvent
-)
-from ..serializers.history import (
-    FeedStockHistorySerializer,
-    FeedingEventHistorySerializer
-)
-from ..filters.history import (
-    FeedStockHistoryFilter,
-    FeedingEventHistoryFilter
-)
-
-
-class FeedStockHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
-    """ViewSet for FeedStock historical records."""
-    queryset = FeedStock.history.all()
-    serializer_class = FeedStockHistorySerializer
-    filterset_class = FeedStockHistoryFilter
+from apps.inventory.models import FeedingEvent
+from ..serializers.history import FeedingEventHistorySerializer
+from ..filters.history import FeedingEventHistoryFilter
 
 
 class FeedingEventHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):

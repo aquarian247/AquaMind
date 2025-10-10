@@ -8,10 +8,10 @@ AquaMind is an aquaculture management system designed to optimize operations for
 ### 1.2 Scope
 This PRD defines the functional and non-functional requirements for AquaMind, covering core operations, broodstock management, operational planning, regulatory compliance, and audit trail capabilities. It outlines a phased approach to development, aligning with business goals, user needs, and the `implementation plan and progress.md`. The system shall integrate with external systems (e.g., WonderWare for sensor data, OpenWeatherMap for weather data), comply with regulatory standards in the Faroe Islands and Scotland, and accurately reflect the implemented schema defined in `docs/data model.md`.
 
-**Note on Audit Capabilities**: The system implements comprehensive audit trails through django-simple-history for regulatory compliance, providing complete change tracking for critical models (Batch, Container, FeedStock). Advanced audit analytics functionality was removed during development to prioritize system stability and core operational features.
+**Note on Audit Capabilities**: The system implements comprehensive audit trails through django-simple-history for regulatory compliance, providing complete change tracking for critical models (Batch, Container, FeedContainerStock). Advanced audit analytics functionality was removed during development to prioritize system stability and core operational features.
 
 ### 1.3 Business Drivers
-- **Operational Efficiency**: Streamline batch lifecycle management (`batch_batch`, `batch_batchcontainerassignment`), resource allocation (`infrastructure_container`), and inventory tracking (`inventory_feedstock`) across subsidiaries.
+- **Operational Efficiency**: Streamline batch lifecycle management (`batch_batch`, `batch_batchcontainerassignment`), resource allocation (`infrastructure_container`), and inventory tracking (`inventory_feedcontainerstock`) across subsidiaries.
 - **Regulatory Compliance**: Ensure adherence to environmental, health, and financial regulations through comprehensive audit trails and change tracking in multiple jurisdictions.
 - **Data Accuracy**: Maintain precise feed conversion ratio (FCR) calculations using standardized `fcr` field with decimal(5,3) precision for accurate performance tracking.
 - **Genetic Improvement**: Support broodstock management and breeding programs to enhance fish quality, disease resistance, and growth rates (Planned Phase 2/3).
@@ -122,10 +122,13 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Feed cost calculations shall be automatically applied to feeding events (`inventory_feedingevent.feed_cost`) using FIFO methodology, ensuring accurate cost attribution without manual intervention.
 
   - **Feed Stock Management and Monitoring**:
-    - The system shall maintain real-time stock levels via `inventory_feedstock` linked to `infrastructure_feedcontainer`, tracking current quantities, reorder thresholds, and last updated timestamps.
-    - Stock levels shall be automatically updated based on feed additions (purchases) and consumption (feeding events), maintaining accuracy across all containers.
-    - The system shall generate low-stock alerts when quantities fall below configurable thresholds (percentage of container capacity or absolute values), enabling proactive procurement planning.
-    - Historical stock level trends shall be available for analysis, supporting consumption pattern identification and inventory optimization.
+    - The system shall provide real-time stock level aggregation from `inventory_feedcontainerstock` records, calculating total quantities per feed type per container by summing active stock entries.
+    - Historical stock level trends shall be available via audit trails on `inventory_feedcontainerstock`, enabling comprehensive analysis of feed additions, consumption patterns, and inventory movements over time.
+    - Stock visibility shall be provided through comprehensive aggregation endpoints including:
+      - Total feed quantities and values across all containers
+      - Breakdown by feed type showing quantities, costs, and distribution
+      - Breakdown by container showing total stock and feed type diversity
+      - Filtering by feed type, container, and date ranges for targeted analysis
 
   - **Feeding Event Management and Optimization**:
     - The system shall log detailed feeding events via `inventory_feedingevent`, capturing batch assignments, feed types, quantities, feeding methods (manual, automatic, broadcast), batch biomass at feeding time, and calculated feeding percentages.
@@ -188,12 +191,12 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - FCR trends are visualized over time with comparisons across batches and feed types.
     - Feeding summaries can be generated on-demand or automatically for performance reporting.
 
-- **User Story (Stock Management)**: As a Logistics Manager, I want to monitor feed stock levels and receive alerts so that I can plan purchases and prevent stockouts.
+- **User Story (Stock Management)**: As a Logistics Manager, I want to monitor feed stock levels so that I can plan purchases and prevent stockouts.
   - **Acceptance Criteria**:
-    - The UI displays current stock levels per container with visual indicators for low stock conditions.
-    - Alerts are generated when stock falls below configurable thresholds, considering consumption rates.
-    - Historical stock trends are available for consumption pattern analysis and procurement planning.
-    - Stock updates occur automatically based on feed additions and consumption events.
+    - The UI displays current stock levels per container aggregated from FIFO inventory entries.
+    - Stock summaries show total quantities, values, and breakdown by feed type.
+    - Historical stock trends are available for consumption pattern analysis via audit trails.
+    - Stock queries can be filtered by container, feed type, and date ranges for procurement planning.
 
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
 - **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations, general health logging, and quantified health/growth metrics.
