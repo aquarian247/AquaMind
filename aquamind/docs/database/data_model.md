@@ -20,7 +20,7 @@ This document defines the data model for AquaMind, an aquaculture management sys
 ## 3. Audit Trail Implementation
 
 ### 3.1 Django Simple History Integration
-AquaMind implements comprehensive audit trails using django-simple-history to track changes to critical models for regulatory compliance and operational transparency. The system provides complete Create/Update/Delete (CUD) logging across all major business domains.
+AquaMind implements comprehensive audit trails using django-simple-history to track changes to critical models for regulatory compliance and operational transparency. The system provides complete Create/Update/Delete (CUD) logging across key business domains.
 
 #### Tracked Models by App
 
@@ -82,17 +82,6 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 **Operational App (0 models)**
 - No operational models currently tracked
 
-**Scenario App (9 models)**
-- **`scenario_scenario`**: Scenario planning configurations
-- **`scenario_scenariomodelchange`**: Mid-scenario model adjustments
-- **`scenario_scenarioprojection`**: Daily projection calculations
-- **`scenario_temperatureprofile`**: Temperature profile definitions
-- **`scenario_temperaturereading`**: Temperature data points
-- **`scenario_tgcmodel`**: Thermal Growth Coefficient models
-- **`scenario_fcrmodel`**: Feed Conversion Ratio models
-- **`scenario_fcrmodelstage`**: Stage-specific FCR values
-- **`scenario_mortalitymodel`**: Mortality rate models
-
 **Environmental App (0 models)**
 - Environmental readings use TimescaleDB hypertables but are excluded from audit trails
 
@@ -105,7 +94,7 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`auth_user`**: User account changes
 - **`users_userprofile`**: User profile modifications
 
-#### Historical Tables (57 Total - All currently active)
+#### Historical Tables (All currently active)
 All historical tables follow the naming convention `{app}_historical{model}` and include:
 - Complete field-level change tracking
 - User attribution (`history_user_id`)
@@ -1275,138 +1264,177 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - **Scalability**: Support for high-volume harvest operations with efficient indexing on event_date
 - **Traceability**: End-to-end traceability from batch through harvest lots to finance facts
 
-#### 4.10 Scenario Planning (scenario app - IMPLEMENTED)
+#### 4.10 Scenario Planning (`scenario` app)
+**Purpose**: Provides configurable biological models and simulation tooling for growth, feed, and mortality projections. Scenario tables store configuration, stage-specific overrides, constraint sets, and derived projection rows. No scenario model currently uses django-simple-history.
 
-The Scenario Planning app’s data model enables aquaculture managers to create, manage, and analyze hypothetical scenarios for salmon farming operations, projecting key metrics like fish growth, population, biomass, and feed consumption. It reuses existing models like `batch_lifecyclestage`, introduces normalized tables for integrity and querying, and integrates with apps like `batch` for real-time data initialization. The design ensures scalability for large projection datasets, supports audit logging for traceability, and matches the implementation complexity of Broodstock Management.
+#### Tables
+- **`scenario_temperatureprofile`**
+  - `profile_id`: bigint (PK, auto-increment)
+  - `name`: varchar(255) (Unique)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['name']`
 
-**Core Entities and Attributes**
+- **`scenario_temperaturereading`**
+  - `reading_id`: bigint (PK, auto-increment)
+  - `profile_id`: bigint (FK to `scenario_temperatureprofile`, on_delete=CASCADE, related_name='readings')
+  - `reading_date`: date (unique together with `profile_id`)
+  - `temperature`: double precision
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
 
-- **TemperatureProfile** (New Table for Temperature Profiles)  
-  - `profile_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=255): Descriptive name (e.g., "Faroe Islands Winter").  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_tgcmodel`**
+  - `model_id`: bigint (PK, auto-increment)
+  - `name`: varchar(255) (Unique)
+  - `location`: varchar(255)
+  - `release_period`: varchar(255)
+  - `tgc_value`: double precision (validators: MinValueValidator(0))
+  - `exponent_n`: double precision (default=0.33)
+  - `exponent_m`: double precision (default=0.66)
+  - `profile_id`: bigint (FK to `scenario_temperatureprofile`, on_delete=PROTECT, related_name='tgc_models')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['name']`
 
-- **TemperatureReading** (New Table for Temperature Data)  
-  - `reading_id` (PK): Unique identifier.  
-  - `profile_id` (FK): Link to `TemperatureProfile`.  
-  - `reading_date` (DateField): Date of the reading.  
-  - `temperature` (FloatField): Value in degrees Celsius (e.g., 12.5).  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_fcrmodel`**
+  - `model_id`: bigint (PK, auto-increment)
+  - `name`: varchar(255) (Unique)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['name']`
 
-- **TGCModel** (New Table for TGC Models)  
-  - `model_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=255): Model name (e.g., "Scotland April TGC").  
-  - `location` (CharField, max_length=255): Location (e.g., "Scotland Site 1").  
-  - `release_period` (CharField, max_length=255): Release timing (e.g., "April").  
-  - `tgc_value` (FloatField): TGC coefficient (e.g., 0.025).  
-  - `exponent_n` (FloatField): Temperature exponent (e.g., 0.33).  
-  - `exponent_m` (FloatField): Weight exponent (e.g., 0.66).  
-  - `profile_id` (FK): Link to `TemperatureProfile`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_fcrmodelstage`**
+  - `id`: bigint (PK, auto-increment)
+  - `model_id`: bigint (FK to `scenario_fcrmodel`, on_delete=CASCADE, related_name='stages')
+  - `stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT, related_name='fcr_stages')
+  - `fcr_value`: double precision (validators: MinValueValidator(0))
+  - `duration_days`: integer (validators: MinValueValidator(1))
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = ['model', 'stage']`, `ordering = ['model', 'stage']`
 
-- **FCRModel** (New Table for FCR Models)  
-  - `model_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=255): Model name (e.g., "Standard FCR").  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_mortalitymodel`**
+  - `model_id`: bigint (PK, auto-increment)
+  - `name`: varchar(255) (Unique)
+  - `frequency`: varchar(10) (choices: 'daily', 'weekly')
+  - `rate`: double precision (validators: MinValueValidator(0), MaxValueValidator(100))
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `ordering = ['name']`
 
-- **FCRModelStage** (New Table for FCR per Stage)  
-  - `model_id` (FK, PK): Link to `FCRModel`.  
-  - `stage_id` (FK, PK): Link to `batch_lifecyclestage`.  
-  - `fcr_value` (FloatField, min_value=0): FCR for the stage (e.g., 1.2).  
-  - `duration_days` (IntegerField, min_value=1): Stage duration in days (e.g., 90).  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario`**
+  - `scenario_id`: bigint (PK, auto-increment)
+  - `name`: varchar(255)
+  - `start_date`: date
+  - `duration_days`: integer (validators: MinValueValidator(1))
+  - `initial_count`: integer (validators: MinValueValidator(1))
+  - `genotype`: varchar(255)
+  - `supplier`: varchar(255)
+  - `initial_weight`: double precision (nullable, validators: MinValueValidator(0))
+  - `tgc_model_id`: bigint (FK to `scenario_tgcmodel`, on_delete=PROTECT, related_name='scenarios')
+  - `fcr_model_id`: bigint (FK to `scenario_fcrmodel`, on_delete=PROTECT, related_name='scenarios')
+  - `mortality_model_id`: bigint (FK to `scenario_mortalitymodel`, on_delete=PROTECT, related_name='scenarios')
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=SET_NULL, null=True, blank=True, related_name='scenarios')
+  - `biological_constraints_id`: bigint (FK to `scenario_biological_constraints`, on_delete=SET_NULL, null=True, blank=True)
+  - `created_by_id`: integer (FK to `users_customuser`, on_delete=SET_NULL, null=True, related_name='created_scenarios')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `db_table = 'scenario'`, indexes on `start_date` and `created_by`
 
-- **MortalityModel** (New Table for Mortality Models)  
-  - `model_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=255): Model name (e.g., "Low Mortality").  
-  - `frequency` (CharField, max_length=10, choices=[("daily", "Daily"), ("weekly", "Weekly")]): Rate application frequency.  
-  - `rate` (FloatField, min_value=0, max_value=100): Mortality rate percentage (e.g., 0.1).  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_scenariomodelchange`**
+  - `change_id`: bigint (PK, auto-increment)
+  - `scenario_id`: bigint (FK to `scenario`, on_delete=CASCADE, related_name='model_changes')
+  - `change_day`: integer (validators: MinValueValidator(1))
+  - `new_tgc_model_id`: bigint (FK to `scenario_tgcmodel`, on_delete=PROTECT, null=True, blank=True, related_name='scenario_changes')
+  - `new_fcr_model_id`: bigint (FK to `scenario_fcrmodel`, on_delete=PROTECT, null=True, blank=True, related_name='scenario_changes')
+  - `new_mortality_model_id`: bigint (FK to `scenario_mortalitymodel`, on_delete=PROTECT, null=True, blank=True, related_name='scenario_changes')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Validation requires at least one replacement model and bounds `change_day` to the scenario duration
 
-- **Scenario** (New Table for Scenario Configurations)  
-  - `scenario_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=255): Scenario name (e.g., "Scotland April Sim").  
-  - `start_date` (DateField): Simulation start date.  
-  - `duration_days` (IntegerField, min_value=1): Total simulation days (e.g., 900).  
-  - `initial_count` (IntegerField, min_value=1): Initial fish count (e.g., 10000).  
-  - `genotype` (CharField, max_length=255): Fish genotype (e.g., "SalmoBreed").  
-  - `supplier` (CharField, max_length=255): Fish supplier (e.g., "AquaGen").  
-  - `initial_weight` (FloatField, nullable, min_value=0): Initial weight in grams (e.g., 50).  
-  - `tgc_model_id` (FK): Link to `TGCModel`.  
-  - `fcr_model_id` (FK): Link to `FCRModel`.  
-  - `mortality_model_id` (FK): Link to `MortalityModel`.  
-  - `batch_id` (FK, nullable): Link to `batch_batch` for real-data initialization.  
-  - `created_by` (FK): Link to `auth_user`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_scenarioprojection`**
+  - `projection_id`: bigint (PK, auto-increment)
+  - `scenario_id`: bigint (FK to `scenario`, on_delete=CASCADE, related_name='projections')
+  - `projection_date`: date
+  - `day_number`: integer (validators: MinValueValidator(0))
+  - `average_weight`: double precision (validators: MinValueValidator(0))
+  - `population`: double precision (validators: MinValueValidator(0))
+  - `biomass`: double precision (validators: MinValueValidator(0))
+  - `daily_feed`: double precision (validators: MinValueValidator(0))
+  - `cumulative_feed`: double precision (validators: MinValueValidator(0))
+  - `temperature`: double precision
+  - `current_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT, related_name='scenario_projections')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Indexes on (`scenario_id`, `projection_date`) and (`scenario_id`, `day_number`)
 
-- **ScenarioModelChange** (New Table for Model Changes)  
-  - `change_id` (PK): Unique identifier.  
-  - `scenario_id` (FK): Link to `Scenario`.  
-  - `change_day` (IntegerField, min_value=0): Day of change (e.g., 180).  
-  - `new_tgc_model_id` (FK, nullable): Link to new `TGCModel`.  
-  - `new_fcr_model_id` (FK, nullable): Link to new `FCRModel`.  
-  - `new_mortality_model_id` (FK, nullable): Link to new `MortalityModel`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_biological_constraints`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `description`: text (blank=True)
+  - `is_active`: boolean (default=True)
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - `created_by_id`: integer (FK to `users_customuser`, on_delete=SET_NULL, null=True, related_name='created_constraints')
+  - Meta: includes `can_manage_biological_constraints` permission
 
-- **ScenarioProjection** (New Table for Daily Projections)  
-  - `projection_id` (PK): Unique identifier.  
-  - `scenario_id` (FK): Link to `Scenario`.  
-  - `projection_date` (DateField): Projection date.  
-  - `day_number` (IntegerField, min_value=0): Day offset from start (e.g., 45).  
-  - `average_weight` (FloatField, min_value=0): Fish weight in grams (e.g., 250.5).  
-  - `population` (FloatField, min_value=0): Fish count (e.g., 9950.3).  
-  - `biomass` (FloatField, min_value=0): Biomass in kilograms (e.g., 2491.2).  
-  - `daily_feed` (FloatField, min_value=0): Daily feed in kilograms (e.g., 30.5).  
-  - `cumulative_feed` (FloatField, min_value=0): Total feed in kilograms (e.g., 1200.7).  
-  - `temperature` (FloatField): Temperature in Celsius (e.g., 12.8).  
-  - `current_stage_id` (FK): Link to `batch_lifecyclestage`.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_stage_constraint`**
+  - `id`: bigint (PK, auto-increment)
+  - `constraint_set_id`: bigint (FK to `scenario_biological_constraints`, on_delete=CASCADE, related_name='stage_constraints')
+  - `lifecycle_stage`: varchar(20) (choices from `LifecycleStageChoices`)
+  - `min_weight_g`: decimal(10,2)
+  - `max_weight_g`: decimal(10,2)
+  - `min_temperature_c`: decimal(5,2) (nullable)
+  - `max_temperature_c`: decimal(5,2) (nullable)
+  - `typical_duration_days`: integer (nullable)
+  - `max_freshwater_weight_g`: decimal(10,2) (nullable)
+  - Meta: `unique_together = ['constraint_set', 'lifecycle_stage']`
 
-- **batch_lifecyclestage** (Reused for Lifecycle Stages)  
-  - `stage_id` (PK): Unique identifier.  
-  - `name` (CharField, max_length=100): Stage name (e.g., "Smolt").  
-  - `description` (TextField, nullable): Stage details.  
-  - `created_at` (DateTimeField): Creation timestamp.  
-  - `updated_at` (DateTimeField): Last update timestamp.
+- **`scenario_tgc_model_stage`**
+  - `id`: bigint (PK, auto-increment)
+  - `tgc_model_id`: bigint (FK to `scenario_tgcmodel`, on_delete=CASCADE, related_name='stage_overrides')
+  - `lifecycle_stage`: varchar(20) (choices from `LifecycleStageChoices`)
+  - `tgc_value`: decimal(6,4)
+  - `temperature_exponent`: decimal(4,2) (default=1.0)
+  - `weight_exponent`: decimal(4,2) (default=0.333)
+  - Meta: `unique_together = ['tgc_model', 'lifecycle_stage']`
 
-**Relationships**  
-- **TemperatureProfile** to **TemperatureReading**: One-to-many (one profile has many readings).  
-- **TemperatureProfile** to **TGCModel**: One-to-many (one profile used by many models).  
-- **TGCModel** to **Scenario**: One-to-many (one model used in many scenarios).  
-- **FCRModel** to **FCRModelStage**: One-to-many (one model defines many stages).  
-- **FCRModel** to **Scenario**: One-to-many (one model used in many scenarios).  
-- **MortalityModel** to **Scenario**: One-to-many (one model used in many scenarios).  
-- **Scenario** to **ScenarioModelChange**: One-to-many (one scenario has many changes).  
-- **Scenario** to **ScenarioProjection**: One-to-many (one scenario generates many projections).  
-- **batch_lifecyclestage** to **FCRModelStage**: One-to-many (one stage used in many FCR models).  
-- **batch_lifecyclestage** to **ScenarioProjection**: One-to-many (one stage applies to many projection days).  
-- **batch_batch** to **Scenario**: One-to-many (one batch initializes many scenarios).
+- **`scenario_fcr_model_stage_override`**
+  - `id`: bigint (PK, auto-increment)
+  - `fcr_stage_id`: bigint (FK to `scenario_fcrmodelstage`, on_delete=CASCADE, related_name='overrides')
+  - `min_weight_g`: decimal(10,2)
+  - `max_weight_g`: decimal(10,2)
+  - `fcr_value`: decimal(5,3)
+  - Meta: default ordering by `min_weight_g`
 
-**Constraints**  
-- Unique constraint on `name` in `TemperatureProfile`, `TGCModel`, `FCRModel`, and `MortalityModel`.  
-- Foreign key constraints enforce referential integrity (e.g., `profile_id`, `model_id`, `scenario_id`).  
-- `frequency` in `MortalityModel` restricted to "daily" or "weekly" via choices.  
-- `rate` in `MortalityModel` between 0 and 100.  
-- `change_day` in `ScenarioModelChange` nullable or between 0 and `Scenario.duration_days - 1`.  
-- `initial_count` and `duration_days` in `Scenario` must be positive.  
+- **`scenario_mortality_model_stage`**
+  - `id`: bigint (PK, auto-increment)
+  - `mortality_model_id`: bigint (FK to `scenario_mortalitymodel`, on_delete=CASCADE, related_name='stage_overrides')
+  - `lifecycle_stage`: varchar(20) (choices from `LifecycleStageChoices`)
+  - `daily_rate_percent`: decimal(5,3)
+  - `weekly_rate_percent`: decimal(5,3) (nullable; calculated from `daily_rate_percent` when omitted)
+  - Meta: `unique_together = ['mortality_model', 'lifecycle_stage']`
 
-**Additional Considerations**  
-- **Scalability**: Handle large datasets in `ScenarioProjection` (e.g., 900+ rows per scenario) with indexes on `scenario_id` and `projection_date`. Use TimescaleDB hypertables for `ScenarioProjection`, partitioned by `projection_date`, if data exceeds 1M rows.  
-- **Auditing**: Apply `django-auditlog` to `Scenario`, `ScenarioModelChange`, `TGCModel`, `FCRModel`, and `MortalityModel` for traceability and compliance.  
-- **Validation**: Enforce constraints via model validation (e.g., `fcr_value > 0`, `initial_weight >= 0` or null, `rate` between 0-100).  
-- **Integration**: Link `batch_id` in `Scenario` to `batch_batch` for real-time data; optionally sync `TemperatureReading` with `environmental_reading`.  
-- **TimescaleDB**: Optimize `ScenarioProjection` with hypertables for time-series efficiency.  
-- **JSON Fields**: Avoid JSON fields to maintain normalization; all data is structured.  
-- **Mobile Sync**: Support offline scenario creation with temporary IDs, resolving conflicts during server sync.
+#### Relationships
+- `scenario_temperatureprofile` ← `scenario_temperaturereading` (CASCADE, related_name='readings')
+- `scenario_temperatureprofile` ← `scenario_tgcmodel` (PROTECT, related_name='tgc_models')
+- `scenario_tgcmodel` ← `scenario_tgc_model_stage` (CASCADE, related_name='stage_overrides')
+- `scenario_fcrmodel` ← `scenario_fcrmodelstage` (CASCADE, related_name='stages')
+- `scenario_fcrmodelstage` ← `scenario_fcr_model_stage_override` (CASCADE, related_name='overrides')
+- `scenario_mortalitymodel` ← `scenario_mortality_model_stage` (CASCADE, related_name='stage_overrides')
+- `scenario` ← `scenario_scenariomodelchange` (CASCADE, related_name='model_changes')
+- `scenario` ← `scenario_scenarioprojection` (CASCADE, related_name='projections')
+- `scenario_biological_constraints` ← `scenario` (SET_NULL)
+- `scenario_biological_constraints` ← `scenario_stage_constraint` (CASCADE, related_name='stage_constraints')
+- `batch_batch` ← `scenario` (SET_NULL, related_name='scenarios')
+- `users_customuser` ← `scenario` (SET_NULL, related_name='created_scenarios')
+
+#### Additional Considerations
+- `Scenario.clean()` validates the initial weight against linked constraint sets and enforces a 0.1g minimum when no constraints apply.
+- `StageConstraint.clean()` and `FCRModelStageOverride.clean()` ensure minimum values remain below their corresponding maximums.
+- `ScenarioModelChange.clean()` requires at least one replacement model and restricts `change_day` to the range `[1, scenario.duration_days]`.
+- `MortalityModelStage.save()` auto-populates weekly rates from the stored daily rate when left blank.
+- Scenario models no longer register `HistoricalRecords`; history endpoints are not exposed for this app.
 
 ## 5. Planned Data Model Domains (Not Yet Implemented)
 
