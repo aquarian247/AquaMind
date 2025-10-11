@@ -426,69 +426,103 @@ class UpdatedSummaryEndpointTest(TestCase):
     """Test updated summary endpoint includes total_feed_cost."""
 
     def setUp(self):
-        """Create minimal test data."""
-        # Clear any existing feeding events to ensure clean state
-        from apps.inventory.models import FeedingEvent
-        FeedingEvent.objects.all().delete()
-        
+        """Create minimal test data with unique names to avoid conflicts."""
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.user = User.objects.create_user(
+            username='summary-test-user',
+            password='testpass'
+        )
         self.client.force_authenticate(user=self.user)
         
-        # Create minimal infrastructure
-        geography = Geography.objects.create(name="Test")
-        area = Area.objects.create(
-            name="Test Area", geography=geography,
-            latitude=Decimal("0"), longitude=Decimal("0"),
+        # Create minimal infrastructure with unique names
+        self.geography = Geography.objects.create(name="Summary-Test-Geography")
+        self.area = Area.objects.create(
+            name="Summary-Test-Area",
+            geography=self.geography,
+            latitude=Decimal("0"),
+            longitude=Decimal("0"),
             max_biomass=Decimal("1000.0")
         )
-        container_type = ContainerType.objects.create(
-            name="Tank", category="TANK", max_volume_m3=Decimal("100.0")
+        self.container_type = ContainerType.objects.create(
+            name="Summary-Test-Tank-Type",
+            category="TANK",
+            max_volume_m3=Decimal("100.0")
         )
-        container = Container.objects.create(
-            name="Tank", container_type=container_type, area=area,
-            volume_m3=Decimal("50.0"), max_biomass_kg=Decimal("500.0")
+        self.container = Container.objects.create(
+            name="Summary-Test-Container",
+            container_type=self.container_type,
+            area=self.area,
+            volume_m3=Decimal("50.0"),
+            max_biomass_kg=Decimal("500.0")
         )
         
-        # Create batch and feed
-        species = Species.objects.create(name="Salmon", scientific_name="Salmo")
-        lifecycle_stage = LifeCycleStage.objects.create(name="Smolt", species=species, order=1)
-        batch = Batch.objects.create(
-            batch_number="SUMMARY-TEST-001", species=species, lifecycle_stage=lifecycle_stage,
+        # Create batch and feed with unique names
+        self.species = Species.objects.create(
+            name="Summary-Test-Salmon",
+            scientific_name="Salmo summary"
+        )
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name="Summary-Test-Smolt",
+            species=self.species,
+            order=1
+        )
+        self.batch = Batch.objects.create(
+            batch_number="SUMMARY-TEST-BATCH-001",
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
             start_date=timezone.now().date()
         )
-        feed = Feed.objects.create(
-            name="Test Feed", brand="Brand", size_category="MEDIUM"
+        self.feed = Feed.objects.create(
+            name="Summary-Test-Feed",
+            brand="Summary-Test-Brand",
+            size_category="MEDIUM"
         )
         
-        # Create feeding events
-        today = timezone.now().date()
-        FeedingEvent.objects.create(
-            batch=batch, container=container, feed=feed,
-            feeding_date=today, feeding_time=timezone.now().time(),
-            amount_kg=Decimal("10.0"), batch_biomass_kg=Decimal("100.0"),
-            feed_cost=Decimal("50.00"), method="MANUAL"
+        # Create feeding events for TODAY only
+        self.today = timezone.now().date()
+        self.event1 = FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=self.today,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("10.0"),
+            batch_biomass_kg=Decimal("100.0"),
+            feed_cost=Decimal("50.00"),
+            method="MANUAL"
         )
-        FeedingEvent.objects.create(
-            batch=batch, container=container, feed=feed,
-            feeding_date=today, feeding_time=timezone.now().time(),
-            amount_kg=Decimal("15.0"), batch_biomass_kg=Decimal("100.0"),
-            feed_cost=Decimal("75.00"), method="MANUAL"
+        self.event2 = FeedingEvent.objects.create(
+            batch=self.batch,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=self.today,
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("15.0"),
+            batch_biomass_kg=Decimal("100.0"),
+            feed_cost=Decimal("75.00"),
+            method="MANUAL"
         )
 
     def test_summary_endpoint_includes_cost(self):
         """Test summary endpoint now includes total_feed_cost."""
         url = get_api_url('inventory', 'feeding-events/summary')
-        today = timezone.now().date()
         
-        # Debug: Count events in database
+        # Verify we have exactly 2 events in database before API call
         from apps.inventory.models import FeedingEvent
-        total_events = FeedingEvent.objects.count()
-        today_events = FeedingEvent.objects.filter(feeding_date=today).count()
+        events_before = FeedingEvent.objects.filter(
+            batch=self.batch,
+            feeding_date=self.today
+        ).count()
+        self.assertEqual(
+            events_before,
+            2,
+            f"setUp should create 2 events, found {events_before}"
+        )
         
         response = self.client.get(url, {
-            'start_date': today.isoformat(),
-            'end_date': today.isoformat()
+            'start_date': self.today.isoformat(),
+            'end_date': self.today.isoformat(),
+            'batch': self.batch.id,  # Filter by THIS batch to avoid contamination
         })
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -498,14 +532,12 @@ class UpdatedSummaryEndpointTest(TestCase):
         self.assertIn('total_feed_kg', response.data)
         self.assertIn('total_feed_cost', response.data)  # NEW FIELD
         
-        # Debug output if test would fail
-        if response.data['events_count'] != 2:
-            print(f"\nDEBUG: Total events in DB: {total_events}")
-            print(f"DEBUG: Events with today's date: {today_events}")
-            print(f"DEBUG: Response events_count: {response.data['events_count']}")
-        
         # Verify correct values
-        self.assertEqual(response.data['events_count'], 2)
+        self.assertEqual(
+            response.data['events_count'],
+            2,
+            f"Expected 2 events but got {response.data['events_count']}"
+        )
         self.assertEqual(response.data['total_feed_kg'], 25.0)  # 10 + 15
         self.assertEqual(response.data['total_feed_cost'], 125.0)  # 50 + 75
 
