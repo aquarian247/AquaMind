@@ -427,6 +427,10 @@ class UpdatedSummaryEndpointTest(TestCase):
 
     def setUp(self):
         """Create minimal test data."""
+        # Clear any existing feeding events to ensure clean state
+        from apps.inventory.models import FeedingEvent
+        FeedingEvent.objects.all().delete()
+        
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.force_authenticate(user=self.user)
@@ -450,7 +454,7 @@ class UpdatedSummaryEndpointTest(TestCase):
         species = Species.objects.create(name="Salmon", scientific_name="Salmo")
         lifecycle_stage = LifeCycleStage.objects.create(name="Smolt", species=species, order=1)
         batch = Batch.objects.create(
-            batch_number="TEST001", species=species, lifecycle_stage=lifecycle_stage,
+            batch_number="SUMMARY-TEST-001", species=species, lifecycle_stage=lifecycle_stage,
             start_date=timezone.now().date()
         )
         feed = Feed.objects.create(
@@ -477,6 +481,11 @@ class UpdatedSummaryEndpointTest(TestCase):
         url = get_api_url('inventory', 'feeding-events/summary')
         today = timezone.now().date()
         
+        # Debug: Count events in database
+        from apps.inventory.models import FeedingEvent
+        total_events = FeedingEvent.objects.count()
+        today_events = FeedingEvent.objects.filter(feeding_date=today).count()
+        
         response = self.client.get(url, {
             'start_date': today.isoformat(),
             'end_date': today.isoformat()
@@ -488,6 +497,12 @@ class UpdatedSummaryEndpointTest(TestCase):
         self.assertIn('events_count', response.data)
         self.assertIn('total_feed_kg', response.data)
         self.assertIn('total_feed_cost', response.data)  # NEW FIELD
+        
+        # Debug output if test would fail
+        if response.data['events_count'] != 2:
+            print(f"\nDEBUG: Total events in DB: {total_events}")
+            print(f"DEBUG: Events with today's date: {today_events}")
+            print(f"DEBUG: Response events_count: {response.data['events_count']}")
         
         # Verify correct values
         self.assertEqual(response.data['events_count'], 2)

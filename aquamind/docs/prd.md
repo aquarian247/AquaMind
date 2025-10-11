@@ -152,6 +152,14 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - The system shall provide comprehensive inventory analytics including consumption patterns, cost trends, FCR performance, and stock optimization recommendations.
     - Reports shall be generated for feed usage by batch, container, time period, and feed type, supporting operational analysis and cost management.
     - The system shall support export capabilities for inventory data, feeding summaries, and cost reports in multiple formats (PDF, CSV, Excel).
+    - The system shall provide multi-dimensional finance reporting with the ability to filter feeding events by:
+      - Geographic dimensions (geography, area, freshwater station, hall, container)
+      - Feed properties (protein %, fat %, carbohydrate %, brand, size category)
+      - Cost ranges (min/max feed cost per event)
+      - Date ranges (start/end dates for reporting periods)
+    - Finance reports shall include aggregated summaries (total feed kg, total cost, event counts) with optional breakdowns by feed type, geography, area, and container.
+    - Time series analysis shall be available with daily, weekly, and monthly grouping options for trend visualization and pattern identification.
+    - All finance report queries shall maintain performance targets (< 2 seconds for 10,000+ events, < 10 database queries) through optimized query construction.
 
 - **Behavior**:
   - FIFO inventory operations shall maintain strict chronological order, automatically consuming oldest feed batches first and calculating costs based on original purchase prices.
@@ -197,6 +205,14 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Stock summaries show total quantities, values, and breakdown by feed type.
     - Historical stock trends are available for consumption pattern analysis via audit trails.
     - Stock queries can be filtered by container, feed type, and date ranges for procurement planning.
+
+- **User Story (Multi-Dimensional Finance Reporting)**: As a Finance Manager, I want to analyze feed costs across multiple dimensions simultaneously so that I can identify cost optimization opportunities and understand spending patterns by location, feed type, and time period.
+  - **Acceptance Criteria**:
+    - The system provides a finance report endpoint that filters feeding events by geography, area, feed properties (protein %, fat %, brand), cost ranges, and date ranges.
+    - Reports include aggregated totals (total feed kg, total cost, event count) and breakdowns by feed type, geography, area, and container.
+    - Time series data is available with daily, weekly, or monthly grouping for trend analysis.
+    - Complex queries combining multiple filters (e.g., "Scotland + protein > 45% + last 30 days") return accurate results within 2 seconds for datasets containing 10,000+ feeding events.
+    - Report data enables cost analysis questions like "How much did we spend on high-protein feed in Scotland last quarter?" or "Which supplier's feed is most cost-effective for our Faroe Islands operations?"
 
 #### 3.1.4 Health Monitoring (Medical Journal - `health` app)
 - **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations, general health logging, and quantified health/growth metrics.
