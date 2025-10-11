@@ -64,7 +64,6 @@ from apps.health.api.viewsets import (
 )
 from apps.inventory.api.viewsets.container_stock import FeedContainerStockViewSet
 from apps.inventory.api.viewsets.feeding import FeedingEventViewSet
-from apps.inventory.api.viewsets.stock import FeedStockViewSet
 from apps.inventory.api.viewsets.summary import BatchFeedingSummaryViewSet
 from apps.inventory.api.viewsets.feed import FeedViewSet
 from apps.inventory.api.viewsets.purchase import FeedPurchaseViewSet

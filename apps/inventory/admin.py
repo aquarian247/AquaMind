@@ -1,7 +1,7 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 from apps.inventory.models import (
-    Feed, FeedPurchase, FeedStock, FeedingEvent, BatchFeedingSummary,
+    Feed, FeedPurchase, FeedingEvent, BatchFeedingSummary,
     ContainerFeedingSummary, FeedContainerStock
 )
 
@@ -31,20 +31,6 @@ class FeedPurchaseAdmin(SimpleHistoryAdmin):
     ]
     search_fields = [
         'supplier', 'batch_number', 'notes'
-    ]
-
-
-@admin.register(FeedStock)
-class FeedStockAdmin(SimpleHistoryAdmin):
-    list_display = [
-        'feed', 'feed_container', 
-        'current_quantity_kg', 'reorder_threshold_kg', 'updated_at'
-    ]
-    list_filter = [
-        'feed', 'feed_container'
-    ]
-    search_fields = [
-        'feed__name', 'feed_container__name'
     ]
 
 

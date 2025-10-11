@@ -19490,6 +19490,108 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/inventory/feed-container-stock/summary/:
+    get:
+      operationId: api_v1_inventory_feed_container_stock_summary_retrieve
+      description: |-
+        Get comprehensive stock summary with aggregations.
+
+        Provides:
+        - Total quantity and value across all stock
+        - Breakdown by feed type
+        - Breakdown by container
+
+        Query parameters:
+        - feed_container_id: Filter by specific container
+        - feed_type_id: Filter by specific feed type
+      parameters:
+      - in: query
+        name: feed_container_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by specific feed container ID
+      - in: query
+        name: feed_type_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by specific feed type ID
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_quantity_kg:
+                    type: number
+                    description: Total feed quantity in kg
+                  total_value:
+                    type: number
+                    description: Total value of feed stock
+                  unique_feed_types:
+                    type: integer
+                    description: Number of different feed types in stock
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  unique_containers:
+                    type: integer
+                    description: Number of containers with stock
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  by_feed_type:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        feed_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        feed_name:
+                          type: string
+                        total_quantity_kg:
+                          type: number
+                        total_value:
+                          type: number
+                        container_count:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                  by_container:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        container_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        container_name:
+                          type: string
+                        total_quantity_kg:
+                          type: number
+                        total_value:
+                          type: number
+                        feed_type_count:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/inventory/feed-purchases/:
     get:
       operationId: api_v1_inventory_feed_purchases_list
@@ -19761,292 +19863,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-  /api/v1/inventory/feed-stocks/:
-    get:
-      operationId: api_v1_inventory_feed_stocks_list
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      parameters:
-      - in: query
-        name: feed
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: feed_container
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedFeedStockList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    post:
-      operationId: api_v1_inventory_feed_stocks_create
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-        required: true
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedStock'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/inventory/feed-stocks/{id}/:
-    get:
-      operationId: api_v1_inventory_feed_stocks_retrieve
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed stock.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedStock'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-    put:
-      operationId: api_v1_inventory_feed_stocks_update
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed stock.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/FeedStock'
-        required: true
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedStock'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    patch:
-      operationId: api_v1_inventory_feed_stocks_partial_update
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed stock.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedStock'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedStock'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedStock'
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedStock'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    delete:
-      operationId: api_v1_inventory_feed_stocks_destroy
-      description: |-
-        ViewSet for FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this feed stock.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/inventory/feed-stocks/low_stock/:
-    get:
-      operationId: api_v1_inventory_feed_stocks_low_stock_retrieve
-      description: Return feed stocks that are below reorder threshold.
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FeedStock'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
   /api/v1/inventory/feeding-events/:
     get:
       operationId: api_v1_inventory_feeding_events_list
@@ -20079,10 +19895,30 @@ paths:
         name: amount_max
         schema:
           type: number
+        description: Maximum feed amount in kg
       - in: query
         name: amount_min
         schema:
           type: number
+        description: Minimum feed amount in kg
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID (via container → area)
+      - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple area IDs (comma-separated)
+        explode: false
+        style: form
       - in: query
         name: batch
         schema:
@@ -20132,6 +19968,45 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: feed__brand
+        schema:
+          type: string
+        description: Filter by exact feed brand (case-insensitive)
+      - in: query
+        name: feed__brand__icontains
+        schema:
+          type: string
+        description: Filter by partial brand name (case-insensitive)
+      - in: query
+        name: feed__brand__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by multiple brands (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: feed__carbohydrate_percentage__gte
+        schema:
+          type: number
+        description: Minimum carbohydrate percentage (0-100)
+      - in: query
+        name: feed__carbohydrate_percentage__lte
+        schema:
+          type: number
+        description: Maximum carbohydrate percentage (0-100)
+      - in: query
+        name: feed__fat_percentage__gte
+        schema:
+          type: number
+        description: Minimum fat percentage (0-100)
+      - in: query
+        name: feed__fat_percentage__lte
+        schema:
+          type: number
+        description: Maximum fat percentage (0-100)
+      - in: query
         name: feed__in
         schema:
           type: array
@@ -20142,6 +20017,64 @@ paths:
         description: Multiple values may be separated by commas.
         explode: false
         style: form
+      - in: query
+        name: feed__protein_percentage__gte
+        schema:
+          type: number
+        description: Minimum protein percentage (0-100)
+      - in: query
+        name: feed__protein_percentage__lte
+        schema:
+          type: number
+        description: Maximum protein percentage (0-100)
+      - in: query
+        name: feed__size_category
+        schema:
+          type: string
+          x-spec-enum-id: 0ead716df78cf17d
+          enum:
+          - LARGE
+          - MEDIUM
+          - MICRO
+          - SMALL
+        description: |-
+          Filter by feed size category
+
+          * `MICRO` - Micro
+          * `SMALL` - Small
+          * `MEDIUM` - Medium
+          * `LARGE` - Large
+      - in: query
+        name: feed__size_category__in
+        schema:
+          type: array
+          items:
+            type: string
+            x-spec-enum-id: 0ead716df78cf17d
+            enum:
+            - LARGE
+            - MEDIUM
+            - MICRO
+            - SMALL
+        description: |-
+          Filter by multiple size categories
+
+          * `MICRO` - Micro
+          * `SMALL` - Small
+          * `MEDIUM` - Medium
+          * `LARGE` - Large
+        explode: true
+        style: form
+      - in: query
+        name: feed_cost__gte
+        schema:
+          type: number
+        description: Minimum feed cost for the event
+      - in: query
+        name: feed_cost__lte
+        schema:
+          type: number
+        description: Maximum feed cost for the event
       - in: query
         name: feed_name
         schema:
@@ -20156,11 +20089,67 @@ paths:
         schema:
           type: string
           format: date
+        description: Filter feeding events on or after this date (YYYY-MM-DD)
       - in: query
         name: feeding_date_before
         schema:
           type: string
           format: date
+        description: Filter feeding events on or before this date (YYYY-MM-DD)
+      - in: query
+        name: freshwater_station
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by freshwater station ID (via container → hall → station)
+      - in: query
+        name: freshwater_station__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple freshwater station IDs (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID (via container → area → geography)
+      - in: query
+        name: geography__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple geography IDs (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: hall
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by hall ID (via container → hall)
+      - in: query
+        name: hall__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple hall IDs (comma-separated)
+        explode: false
+        style: form
       - in: query
         name: method
         schema:
@@ -20542,10 +20531,30 @@ paths:
         name: amount_max
         schema:
           type: number
+        description: Maximum feed amount in kg
       - in: query
         name: amount_min
         schema:
           type: number
+        description: Minimum feed amount in kg
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID (via container → area)
+      - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple area IDs (comma-separated)
+        explode: false
+        style: form
       - in: query
         name: batch
         schema:
@@ -20603,6 +20612,45 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       - in: query
+        name: feed__brand
+        schema:
+          type: string
+        description: Filter by exact feed brand (case-insensitive)
+      - in: query
+        name: feed__brand__icontains
+        schema:
+          type: string
+        description: Filter by partial brand name (case-insensitive)
+      - in: query
+        name: feed__brand__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by multiple brands (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: feed__carbohydrate_percentage__gte
+        schema:
+          type: number
+        description: Minimum carbohydrate percentage (0-100)
+      - in: query
+        name: feed__carbohydrate_percentage__lte
+        schema:
+          type: number
+        description: Maximum carbohydrate percentage (0-100)
+      - in: query
+        name: feed__fat_percentage__gte
+        schema:
+          type: number
+        description: Minimum fat percentage (0-100)
+      - in: query
+        name: feed__fat_percentage__lte
+        schema:
+          type: number
+        description: Maximum fat percentage (0-100)
+      - in: query
         name: feed__in
         schema:
           type: array
@@ -20613,6 +20661,64 @@ paths:
         description: Multiple values may be separated by commas.
         explode: false
         style: form
+      - in: query
+        name: feed__protein_percentage__gte
+        schema:
+          type: number
+        description: Minimum protein percentage (0-100)
+      - in: query
+        name: feed__protein_percentage__lte
+        schema:
+          type: number
+        description: Maximum protein percentage (0-100)
+      - in: query
+        name: feed__size_category
+        schema:
+          type: string
+          x-spec-enum-id: 0ead716df78cf17d
+          enum:
+          - LARGE
+          - MEDIUM
+          - MICRO
+          - SMALL
+        description: |-
+          Filter by feed size category
+
+          * `MICRO` - Micro
+          * `SMALL` - Small
+          * `MEDIUM` - Medium
+          * `LARGE` - Large
+      - in: query
+        name: feed__size_category__in
+        schema:
+          type: array
+          items:
+            type: string
+            x-spec-enum-id: 0ead716df78cf17d
+            enum:
+            - LARGE
+            - MEDIUM
+            - MICRO
+            - SMALL
+        description: |-
+          Filter by multiple size categories
+
+          * `MICRO` - Micro
+          * `SMALL` - Small
+          * `MEDIUM` - Medium
+          * `LARGE` - Large
+        explode: true
+        style: form
+      - in: query
+        name: feed_cost__gte
+        schema:
+          type: number
+        description: Minimum feed cost for the event
+      - in: query
+        name: feed_cost__lte
+        schema:
+          type: number
+        description: Maximum feed cost for the event
       - in: query
         name: feed_name
         schema:
@@ -20627,11 +20733,67 @@ paths:
         schema:
           type: string
           format: date
+        description: Filter feeding events on or after this date (YYYY-MM-DD)
       - in: query
         name: feeding_date_before
         schema:
           type: string
           format: date
+        description: Filter feeding events on or before this date (YYYY-MM-DD)
+      - in: query
+        name: freshwater_station
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by freshwater station ID (via container → hall → station)
+      - in: query
+        name: freshwater_station__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple freshwater station IDs (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID (via container → area → geography)
+      - in: query
+        name: geography__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple geography IDs (comma-separated)
+        explode: false
+        style: form
+      - in: query
+        name: hall
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by hall ID (via container → hall)
+      - in: query
+        name: hall__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple hall IDs (comma-separated)
+        explode: false
+        style: form
       - in: query
         name: method
         schema:
@@ -20704,6 +20866,245 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
+  /api/v1/inventory/feeding-events/finance_report/:
+    get:
+      operationId: feeding-events-finance-report
+      description: "\n        Provides detailed feed usage and cost analysis with\
+        \ multi-dimensional filtering.\n        \n        Supports filtering by:\n\
+        \        - Time periods (date ranges via feeding_date_after/before)\n    \
+        \    - Geography (geography, area, freshwater_station, hall, container)\n\
+        \        - Feed properties (protein %, fat %, carb %, brand, size category)\n\
+        \        - Cost ranges (feed_cost)\n        - Feed types (feed, feed__in)\n\
+        \        \n        Returns aggregated totals and optional breakdowns by selected\
+        \ dimensions.\n        All filters from FeedingEventFilter are supported.\n\
+        \        "
+      summary: Comprehensive finance report with flexible filtering and aggregations
+      parameters:
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID
+      - in: query
+        name: area__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple area IDs (comma-separated)
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for report period (YYYY-MM-DD) - REQUIRED
+        required: true
+      - in: query
+        name: feed
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by feed type ID
+      - in: query
+        name: feed__brand
+        schema:
+          type: string
+        description: Filter by exact brand name (case-insensitive)
+      - in: query
+        name: feed__brand__icontains
+        schema:
+          type: string
+        description: Filter by partial brand name (case-insensitive)
+      - in: query
+        name: feed__fat_percentage__gte
+        schema:
+          type: number
+          format: double
+        description: Minimum fat percentage (0-100)
+      - in: query
+        name: feed__fat_percentage__lte
+        schema:
+          type: number
+          format: double
+        description: Maximum fat percentage (0-100)
+      - in: query
+        name: feed__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple feed type IDs (comma-separated)
+      - in: query
+        name: feed__protein_percentage__gte
+        schema:
+          type: number
+          format: double
+        description: Minimum protein percentage (0-100)
+      - in: query
+        name: feed__protein_percentage__lte
+        schema:
+          type: number
+          format: double
+        description: Maximum protein percentage (0-100)
+      - in: query
+        name: feed__size_category
+        schema:
+          type: string
+        description: Filter by size category (MICRO, SMALL, MEDIUM, LARGE)
+      - in: query
+        name: feed_cost__gte
+        schema:
+          type: number
+          format: double
+        description: Minimum feed cost per event
+      - in: query
+        name: feed_cost__lte
+        schema:
+          type: number
+          format: double
+        description: Maximum feed cost per event
+      - in: query
+        name: freshwater_station
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by freshwater station ID
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID (e.g., 1=Scotland, 2=Faroe Islands)
+      - in: query
+        name: geography__in
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+        description: Filter by multiple geography IDs (comma-separated)
+      - in: query
+        name: group_by
+        schema:
+          type: string
+        description: 'Primary grouping for time series: ''day'', ''week'', or ''month'''
+      - in: query
+        name: include_breakdowns
+        schema:
+          type: boolean
+        description: 'Include dimensional breakdowns (default: true)'
+      - in: query
+        name: include_time_series
+        schema:
+          type: boolean
+        description: 'Include time series data (default: false)'
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for report period (YYYY-MM-DD) - REQUIRED
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      total_feed_kg:
+                        type: number
+                      total_feed_cost:
+                        type: number
+                      events_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      date_range:
+                        type: object
+                        properties:
+                          start:
+                            type: string
+                            format: date
+                          end:
+                            type: string
+                            format: date
+                  by_feed_type:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        feed_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        feed_name:
+                          type: string
+                        brand:
+                          type: string
+                        protein_percentage:
+                          type: number
+                        fat_percentage:
+                          type: number
+                        total_kg:
+                          type: number
+                        total_cost:
+                          type: number
+                        events_count:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                  by_geography:
+                    type: array
+                  by_area:
+                    type: array
+                  by_container:
+                    type: array
+                  time_series:
+                    type: array
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  detail:
+                    type: string
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
   /api/v1/inventory/feeding-events/summary/:
     get:
       operationId: feeding-events-summary
@@ -20766,9 +21167,13 @@ paths:
                   total_feed_kg:
                     type: number
                     description: Total feed amount in kg
+                  total_feed_cost:
+                    type: number
+                    description: Total feed cost
                 required:
                 - events_count
                 - total_feed_kg
+                - total_feed_cost
           description: ''
         '400':
           content:
@@ -21043,128 +21448,6 @@ paths:
       responses:
         '204':
           description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/inventory/history/feed-stocks/:
-    get:
-      operationId: listInventoryFeedStockHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: feed
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: feed_container
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedFeedStockHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/inventory/history/feed-stocks/{history_id}/:
-    get:
-      operationId: retrieveInventoryFeedStockHistoryDetail
-      description: ViewSet for FeedStock historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical feed stock.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeedStockHistory'
-          description: ''
         '404':
           description: Not Found
         '401':
@@ -22481,636 +22764,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/FCRModel'
           description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/scenario/history/fcr-models/:
-    get:
-      operationId: listScenarioFCRModelHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - in: query
-        name: name
-        schema:
-          type: string
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedFCRModelHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/scenario/history/fcr-models/{history_id}/:
-    get:
-      operationId: retrieveScenarioFCRModelHistoryDetail
-      description: ViewSet for FCRModel historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical FCR Model.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FCRModelHistory'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/scenario/history/mortality-models/:
-    get:
-      operationId: listScenarioMortalityModelHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: frequency
-        schema:
-          type: string
-          x-spec-enum-id: 08c46281c65a0e09
-          enum:
-          - daily
-          - weekly
-        description: |-
-          Rate application frequency
-
-          * `daily` - Daily
-          * `weekly` - Weekly
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - in: query
-        name: name
-        schema:
-          type: string
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedMortalityModelHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/scenario/history/mortality-models/{history_id}/:
-    get:
-      operationId: retrieveScenarioMortalityModelHistoryDetail
-      description: ViewSet for MortalityModel historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical Mortality
-          Model.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MortalityModelHistory'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/scenario/history/scenario-model-changes/:
-    get:
-      operationId: listScenarioScenarioModelChangeHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: change_day
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - in: query
-        name: new_fcr_model
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: new_mortality_model
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: new_tgc_model
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: scenario
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedScenarioModelChangeHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/scenario/history/scenario-model-changes/{history_id}/:
-    get:
-      operationId: retrieveScenarioScenarioModelChangeHistoryDetail
-      description: ViewSet for ScenarioModelChange historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical Scenario Model
-          Change.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScenarioModelChangeHistory'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/scenario/history/scenarios/:
-    get:
-      operationId: listScenarioScenarioHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: created_by
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - in: query
-        name: name
-        schema:
-          type: string
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      - in: query
-        name: start_date
-        schema:
-          type: string
-          format: date
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedScenarioHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/scenario/history/scenarios/{history_id}/:
-    get:
-      operationId: retrieveScenarioScenarioHistoryDetail
-      description: ViewSet for Scenario historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical Scenario.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScenarioHistory'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/scenario/history/tgc-models/:
-    get:
-      operationId: listScenarioTGCModelHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - in: query
-        name: location
-        schema:
-          type: string
-      - in: query
-        name: name
-        schema:
-          type: string
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: release_period
-        schema:
-          type: string
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedTGCModelHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/scenario/history/tgc-models/{history_id}/:
-    get:
-      operationId: retrieveScenarioTGCModelHistoryDetail
-      description: ViewSet for TGCModel historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical TGC Model.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TGCModelHistory'
-          description: ''
-        '404':
-          description: Not Found
         '401':
           description: Unauthorized
         '403':
@@ -28167,58 +27820,6 @@ components:
       - stages
       - total_duration
       - updated_at
-    FCRModelHistory:
-      type: object
-      description: History serializer for FCRModel model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        model_id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        name:
-          type: string
-          description: Model name (e.g., 'Standard FCR')
-          maxLength: 255
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - created_at
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - name
-      - updated_at
     FCRModelStage:
       type: object
       description: Enhanced serializer for FCR model stages.
@@ -28802,127 +28403,6 @@ components:
       - quantity_kg
       - supplier
       - updated_at
-    FeedStock:
-      type: object
-      description: |-
-        Serializer for the FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers.
-      properties:
-        id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_name:
-          type: string
-          readOnly: true
-        feed_container:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_container_name:
-          type: string
-          readOnly: true
-        current_quantity_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Current amount of feed in stock (kg)
-        reorder_threshold_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Threshold for reordering (kg)
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        notes:
-          type: string
-        needs_reorder:
-          type: boolean
-          readOnly: true
-      required:
-      - current_quantity_kg
-      - feed
-      - feed_container
-      - feed_container_name
-      - feed_name
-      - id
-      - needs_reorder
-      - reorder_threshold_kg
-      - updated_at
-    FeedStockHistory:
-      type: object
-      description: History serializer for FeedStock model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        current_quantity_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Current amount of feed in stock (kg)
-        reorder_threshold_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Threshold for reordering (kg)
-        notes:
-          type: string
-        feed:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_container:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - current_quantity_kg
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - reorder_threshold_kg
-      - updated_at
     FeedingEvent:
       type: object
       description: |-
@@ -28966,12 +28446,6 @@ components:
         feed_name:
           type: string
           readOnly: true
-        feed_stock:
-          type: integer
-          nullable: true
-          description: Stock source for this feed
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
         feeding_date:
           type: string
           format: date
@@ -29147,12 +28621,6 @@ components:
           type: integer
           nullable: true
           description: Feed type used
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_stock:
-          type: integer
-          nullable: true
-          description: Stock source for this feed
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         recorded_by:
@@ -31551,77 +31019,6 @@ components:
       - rate
       - stage_overrides
       - updated_at
-    MortalityModelHistory:
-      type: object
-      description: History serializer for MortalityModel model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        model_id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        name:
-          type: string
-          description: Model name (e.g., 'Low Mortality')
-          maxLength: 255
-        frequency:
-          enum:
-          - daily
-          - weekly
-          type: string
-          x-spec-enum-id: 08c46281c65a0e09
-          description: |-
-            Rate application frequency
-
-            * `daily` - Daily
-            * `weekly` - Weekly
-        rate:
-          type: number
-          format: double
-          maximum: 100
-          minimum: 0
-          description: Mortality rate percentage (e.g., 0.1)
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - created_at
-      - frequency
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - name
-      - rate
-      - updated_at
     MortalityModelStage:
       type: object
       description: Serializer for stage-specific mortality rates.
@@ -32645,31 +32042,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ExternalEggBatch'
-    PaginatedFCRModelHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FCRModelHistory'
     PaginatedFCRModelList:
       type: object
       required:
@@ -32870,56 +32242,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeedPurchase'
-    PaginatedFeedStockHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FeedStockHistory'
-    PaginatedFeedStockList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/FeedStock'
     PaginatedFeedingEventHistoryList:
       type: object
       required:
@@ -33645,31 +32967,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MortalityEvent'
-    PaginatedMortalityModelHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/MortalityModelHistory'
     PaginatedMortalityModelList:
       type: object
       required:
@@ -33820,31 +33117,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SampleType'
-    PaginatedScenarioHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/ScenarioHistory'
     PaginatedScenarioList:
       type: object
       required:
@@ -33870,31 +33142,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Scenario'
-    PaginatedScenarioModelChangeHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/ScenarioModelChangeHistory'
     PaginatedScenarioProjectionList:
       type: object
       required:
@@ -34020,31 +33267,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StageTransitionEnvironmental'
-    PaginatedTGCModelHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/TGCModelHistory'
     PaginatedTGCModelList:
       type: object
       required:
@@ -35667,51 +34889,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    PatchedFeedStock:
-      type: object
-      description: |-
-        Serializer for the FeedStock model.
-
-        Provides CRUD operations for feed stock levels in feed containers.
-      properties:
-        id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_name:
-          type: string
-          readOnly: true
-        feed_container:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        feed_container_name:
-          type: string
-          readOnly: true
-        current_quantity_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Current amount of feed in stock (kg)
-        reorder_threshold_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Threshold for reordering (kg)
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        notes:
-          type: string
-        needs_reorder:
-          type: boolean
-          readOnly: true
     PatchedFeedingEvent:
       type: object
       description: |-
@@ -35755,12 +34932,6 @@ components:
         feed_name:
           type: string
           readOnly: true
-        feed_stock:
-          type: integer
-          nullable: true
-          description: Stock source for this feed
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
         feeding_date:
           type: string
           format: date
@@ -38011,123 +37182,6 @@ components:
       - supplier
       - tgc_model
       - updated_at
-    ScenarioHistory:
-      type: object
-      description: History serializer for Scenario model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        scenario_id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        name:
-          type: string
-          description: Scenario name (e.g., 'Scotland April Sim')
-          maxLength: 255
-        start_date:
-          type: string
-          format: date
-          description: Simulation start date
-        duration_days:
-          type: integer
-          maximum: 2147483647
-          minimum: 1
-          description: Total simulation days (e.g., 900)
-        initial_count:
-          type: integer
-          maximum: 2147483647
-          minimum: 1
-          description: Initial fish count (e.g., 10000)
-        genotype:
-          type: string
-          description: Fish genotype (e.g., 'SalmoBreed')
-          maxLength: 255
-        supplier:
-          type: string
-          description: Fish supplier (e.g., 'AquaGen')
-          maxLength: 255
-        initial_weight:
-          type: number
-          format: double
-          minimum: 0
-          nullable: true
-          description: Initial weight in grams (e.g., 50)
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        tgc_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        fcr_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        mortality_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        batch:
-          type: integer
-          nullable: true
-          description: Optional link to existing batch for real-data initialization
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        biological_constraints:
-          type: integer
-          nullable: true
-          description: Biological constraints to use for validation
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        created_by:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - created_at
-      - duration_days
-      - genotype
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - initial_count
-      - name
-      - start_date
-      - supplier
-      - updated_at
     ScenarioModelChange:
       type: object
       description: Serializer for scenario model changes.
@@ -38165,79 +37219,6 @@ components:
       - change_day
       - change_description
       - change_id
-    ScenarioModelChangeHistory:
-      type: object
-      description: History serializer for ScenarioModelChange model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        change_id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        change_day:
-          type: integer
-          maximum: 2147483647
-          minimum: 1
-          description: Day of change (e.g., 180). Day 1 is the first simulation day.
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        scenario:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        new_tgc_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        new_fcr_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        new_mortality_model:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - change_day
-      - created_at
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - updated_at
     ScenarioProjection:
       type: object
       description: Serializer for scenario projection entries.
@@ -38736,87 +37717,6 @@ components:
       - profile_name
       - release_period
       - stage_overrides
-      - tgc_value
-      - updated_at
-    TGCModelHistory:
-      type: object
-      description: History serializer for TGCModel model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        model_id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
-        name:
-          type: string
-          description: Model name (e.g., 'Scotland April TGC')
-          maxLength: 255
-        location:
-          type: string
-          description: Location (e.g., 'Scotland Site 1')
-          maxLength: 255
-        release_period:
-          type: string
-          description: Release timing (e.g., 'April')
-          maxLength: 255
-        tgc_value:
-          type: number
-          format: double
-          minimum: 0
-          description: TGC coefficient (e.g., 0.025)
-        exponent_n:
-          type: number
-          format: double
-          description: Temperature exponent (e.g., 0.33)
-        exponent_m:
-          type: number
-          format: double
-          description: Weight exponent (e.g., 0.66)
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        profile:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - created_at
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - location
-      - name
-      - release_period
       - tgc_value
       - updated_at
     TGCModelStage:

@@ -7,18 +7,7 @@ for inventory models with historical tracking, exposing change tracking informat
 
 from rest_framework import serializers
 from aquamind.utils.history_utils import HistorySerializer
-from apps.inventory.models import (
-    FeedStock,
-    FeedingEvent
-)
-
-
-class FeedStockHistorySerializer(HistorySerializer):
-    """History serializer for FeedStock model."""
-
-    class Meta:
-        model = FeedStock.history.model
-        fields = '__all__'
+from apps.inventory.models import FeedingEvent
 
 
 class FeedingEventHistorySerializer(HistorySerializer):

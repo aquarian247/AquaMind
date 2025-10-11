@@ -9,9 +9,8 @@ from simple_history.models import HistoricalRecords
 from apps.batch.models import Batch, BatchContainerAssignment
 from apps.infrastructure.models import Container
 from .feed import Feed
-from .stock import FeedStock
 from apps.inventory.utils import (
-    TimestampedModelMixin, DecimalFieldMixin, validate_stock_quantity,
+    TimestampedModelMixin, DecimalFieldMixin,
     calculate_feeding_percentage
 )
 
@@ -51,14 +50,6 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
         on_delete=models.PROTECT,
         related_name='feeding_events',
         help_text="Feed type used"
-    )
-    feed_stock = models.ForeignKey(
-        FeedStock,
-        on_delete=models.SET_NULL,
-        related_name='feeding_events',
-        null=True,
-        blank=True,
-        help_text="Stock source for this feed"
     )
     feeding_date = models.DateField()
     feeding_time = models.TimeField()
@@ -118,35 +109,12 @@ class FeedingEvent(TimestampedModelMixin, models.Model):
 
         return calculate_feeding_percentage(self.amount_kg, self.batch_biomass_kg)
 
-    def validate_stock_quantity(self):
-        """
-        Validate that there is enough stock for this feeding event.
-
-        Returns:
-            True if valid, False otherwise
-        """
-        return validate_stock_quantity(self.feed_stock, self.amount_kg)
-
     def save(self, *args, **kwargs):
         """
-        Override save to calculate feeding percentage and update feed stock.
+        Override save to calculate feeding percentage.
         """
         # Calculate feeding percentage if biomass is provided
         self.feeding_percentage = self.calculate_feeding_percentage()
-
-        # Update feed stock if provided
-        if self.feed_stock and hasattr(self, '_original_amount_kg'):
-            # If this is an update, restore the original amount to the stock first
-            if self._original_amount_kg:
-                self.feed_stock.current_quantity_kg += self._original_amount_kg
-
-            # Subtract the new amount
-            self.feed_stock.current_quantity_kg -= self.amount_kg
-            self.feed_stock.save()
-        elif self.feed_stock:
-            # For new records, just subtract the amount
-            self.feed_stock.current_quantity_kg -= self.amount_kg
-            self.feed_stock.save()
 
         super().save(*args, **kwargs)
 

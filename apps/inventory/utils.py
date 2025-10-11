@@ -55,25 +55,6 @@ def calculate_feeding_percentage(amount_kg, biomass_kg):
     return format_decimal((amount_kg / biomass_kg) * Decimal('100.0'), 2)
 
 
-def validate_stock_quantity(feed_stock, amount_kg):
-    """
-    Validate that there is enough stock for a feeding event.
-
-    Args:
-        feed_stock: FeedStock instance
-        amount_kg: Amount of feed in kg to validate
-
-    Returns:
-        True if valid, False otherwise
-    """
-    if not feed_stock:
-        return True
-
-    # Convert to Decimal if not already
-    if not isinstance(amount_kg, Decimal):
-        amount_kg = Decimal(str(amount_kg))
-
-    return feed_stock.current_quantity_kg >= amount_kg
 
 
 class TimestampedModelMixin(models.Model):

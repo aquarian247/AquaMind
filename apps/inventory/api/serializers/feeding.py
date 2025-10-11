@@ -11,7 +11,7 @@ from apps.inventory.api.serializers.base import (
     FeedingBaseSerializer, TimestampedModelSerializer
 )
 from apps.inventory.api.serializers.validation import (
-    validate_batch_assignment_relationship, validate_feed_stock_quantity
+    validate_batch_assignment_relationship
 )
 from apps.inventory.services.fifo_service import FIFOInventoryService
 
@@ -59,7 +59,7 @@ class FeedingEventSerializer(
         fields = [
             'id', 'batch', 'batch_name', 'batch_assignment',
             'container', 'container_name',
-            'feed', 'feed_name', 'feed_stock', 'feeding_date',
+            'feed', 'feed_name', 'feeding_date',
             'feeding_time', 'amount_kg',
             'batch_biomass_kg', 'feeding_percentage',
             'feed_cost', 'method',
@@ -108,17 +108,13 @@ class FeedingEventSerializer(
                 data['batch'], data['batch_assignment']
             )
 
-        # Validate feed stock quantity
-        if ('feed_stock' in data and data['feed_stock'] and
-                'amount_kg' in data):
-            validate_feed_stock_quantity(data['feed_stock'], data['amount_kg'])
-
         return data
 
     @transaction.atomic
     def create(self, validated_data):
         """
-        Create a FeedingEvent with auto-calculated fields and FIFO cost tracking.
+        Create a FeedingEvent with auto-calculated fields.
+        Feed cost calculation is tracked separately via FIFO inventory system.
         """
         # Calculate feeding percentage
         amount_kg = validated_data['amount_kg']
@@ -126,25 +122,9 @@ class FeedingEventSerializer(
         feeding_percentage = (amount_kg / batch_biomass_kg) * 100
         validated_data['feeding_percentage'] = feeding_percentage
 
-        # Calculate feed cost using FIFO if feed_stock is provided
-        feed_cost = Decimal('0.00')
-        feed_stock = validated_data.get('feed_stock')
-        if feed_stock:
-            try:
-                # Use FIFO service to consume feed and get cost
-                feed_cost = FIFOInventoryService.consume_feed_fifo(
-                    container=feed_stock.feed_container,
-                    amount_kg=amount_kg
-                )
-            except Exception as e:
-                # Fallback to simple stock deduction if FIFO fails
-                feed_stock.current_quantity_kg -= amount_kg
-                feed_stock.save()
-                # Estimate cost based on average purchase price
-                # This is a fallback - in production you'd want better error handling
-                feed_cost = amount_kg * Decimal('5.00')  # Default cost per kg
-        
-        validated_data['feed_cost'] = feed_cost
+        # Feed cost tracking happens via FeedContainerStock FIFO system
+        # Set to 0 for now - cost is derived from FeedContainerStock consumption
+        validated_data['feed_cost'] = Decimal('0.00')
 
         # Create the feeding event
         feeding_event = FeedingEvent.objects.create(**validated_data)
