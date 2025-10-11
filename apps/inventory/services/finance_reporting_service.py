@@ -121,12 +121,17 @@ class FinanceReportingService:
         ).annotate(
             total_kg=Sum('amount_kg'),
             total_cost=Sum('feed_cost'),
-            events_count=Count('id'),
-            avg_cost_per_kg=Avg('feed_cost') / Avg('amount_kg')
+            events_count=Count('id')
         ).order_by('-total_kg')
         
         results = []
         for item in breakdown:
+            total_kg = float(item['total_kg'] or 0)
+            total_cost = float(item['total_cost'] or 0)
+            
+            # Calculate weighted average cost per kg
+            avg_cost_per_kg = (total_cost / total_kg) if total_kg > 0 else 0
+            
             results.append({
                 'feed_id': item['feed__id'],
                 'feed_name': item['feed__name'],
@@ -135,10 +140,10 @@ class FinanceReportingService:
                 'fat_percentage': float(item['feed__fat_percentage']) if item['feed__fat_percentage'] else None,
                 'carbohydrate_percentage': float(item['feed__carbohydrate_percentage']) if item['feed__carbohydrate_percentage'] else None,
                 'size_category': item['feed__size_category'],
-                'total_kg': float(item['total_kg'] or 0),
-                'total_cost': float(item['total_cost'] or 0),
+                'total_kg': total_kg,
+                'total_cost': total_cost,
                 'events_count': item['events_count'] or 0,
-                'avg_cost_per_kg': float(item['avg_cost_per_kg'] or 0)
+                'avg_cost_per_kg': avg_cost_per_kg
             })
         
         return results
