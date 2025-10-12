@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from apps.infrastructure.models import Container, Area, Sensor
 from apps.batch.models import Batch
@@ -47,6 +48,8 @@ class EnvironmentalParameter(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    history = HistoricalRecords()
     
     def __str__(self):
         return f"{self.name} ({self.unit})"
@@ -121,6 +124,8 @@ class PhotoperiodData(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    history = HistoricalRecords()
+    
     class Meta:
         unique_together = ('area', 'date')
         indexes = [
@@ -194,6 +199,8 @@ class StageTransitionEnvironmental(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    history = HistoricalRecords()
     
     def __str__(self):
         return f"Environmental conditions for transfer {self.batch_transfer.id} at {self.batch_transfer.transfer_date}"

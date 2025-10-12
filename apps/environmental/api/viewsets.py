@@ -9,6 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from aquamind.utils.history_mixins import HistoryReasonMixin
 from django_filters import FilterSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -82,8 +83,12 @@ class WeatherDataFilter(FilterSet):
         }
 
 
-class EnvironmentalParameterViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing EnvironmentalParameter instances."""
+class EnvironmentalParameterViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and editing EnvironmentalParameter instances.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+    """
     
     # Explicitly override authentication to prevent SessionAuthentication fallback
     authentication_classes = [TokenAuthentication, JWTAuthentication]
@@ -98,11 +103,12 @@ class EnvironmentalParameterViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
 
-class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
+class EnvironmentalReadingViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     ViewSet for viewing and editing EnvironmentalReading instances.
     
     Includes special filtering and aggregation methods for time-series data.
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     
     # Explicitly override authentication to prevent SessionAuthentication fallback
@@ -354,8 +360,12 @@ class EnvironmentalReadingViewSet(viewsets.ModelViewSet):
         return Response(aggregation)
 
 
-class PhotoperiodDataViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing PhotoperiodData instances."""
+class PhotoperiodDataViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and editing PhotoperiodData instances.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+    """
     
     # Explicitly override authentication to prevent SessionAuthentication fallback
     authentication_classes = [TokenAuthentication, JWTAuthentication]
@@ -388,11 +398,12 @@ class PhotoperiodDataViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class WeatherDataViewSet(viewsets.ModelViewSet):
+class WeatherDataViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     ViewSet for viewing and editing WeatherData instances.
     
     Includes special filtering and aggregation methods for time-series data.
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     
     # Explicitly override authentication to prevent SessionAuthentication fallback
@@ -526,8 +537,12 @@ class WeatherDataViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class StageTransitionEnvironmentalViewSet(viewsets.ModelViewSet):
-    """ViewSet for viewing and editing StageTransitionEnvironmental instances."""
+class StageTransitionEnvironmentalViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and editing StageTransitionEnvironmental instances.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+    """
     
     # Explicitly override authentication to prevent SessionAuthentication fallback
     authentication_classes = [TokenAuthentication, JWTAuthentication]
