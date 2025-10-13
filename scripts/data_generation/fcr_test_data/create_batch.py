@@ -46,13 +46,12 @@ def create_species_and_stages():
 
     # Create lifecycle stages
     stages = [
-        ('Egg', 'Egg stage', 1),
-        ('Alevin', 'Alevin stage', 2),
-        ('Fry', 'Fry stage', 3),
-        ('Parr', 'Parr stage', 4),
-        ('Smolt', 'Smolt stage', 5),
-        ('Post-Smolt', 'Post-Smolt stage', 6),
-        ('Adult', 'Adult stage', 7),
+        ('Egg&Alevin', 'Egg & Alevin stage', 1),
+        ('Fry', 'Fry stage', 2),
+        ('Parr', 'Parr stage', 3),
+        ('Smolt', 'Smolt stage', 4),
+        ('Post-Smolt', 'Post-Smolt stage', 5),
+        ('Adult', 'Adult stage', 6),
     ]
 
     lifecycle_stages = {}
@@ -82,7 +81,7 @@ def create_batch(species, lifecycle_stages):
         batch_number="TEST-2024-001",
         defaults={
             'species': species,
-            'lifecycle_stage': lifecycle_stages['Egg'],
+            'lifecycle_stage': lifecycle_stages['Egg&Alevin'],
             'status': 'ACTIVE',
             'batch_type': 'STANDARD',
             'start_date': start_date,
@@ -102,7 +101,7 @@ def get_containers_by_stage():
     print("Retrieving containers...")
 
     containers_by_stage = {
-        'Egg': Container.objects.filter(
+        'Egg&Alevin': Container.objects.filter(
             hall__name__startswith='Hall A',
             container_type__name__contains='Egg'
         )[:10],  # 10 containers for eggs
@@ -141,7 +140,7 @@ def distribute_batch_to_containers(batch, lifecycle_stages, containers_by_stage)
 
     # Stage progression timeline
     stage_timeline = {
-        'Egg': {'days': 90, 'population_per_container': total_eggs // 10},  # Evenly distributed to 10 containers
+        'Egg&Alevin': {'days': 90, 'population_per_container': total_eggs // 10},  # Evenly distributed to 10 containers
         'Fry': {'days': 90, 'population_per_container': total_eggs // 10},
         'Parr': {'days': 90, 'population_per_container': total_eggs // 10},
         'Smolt': {'days': 90, 'population_per_container': total_eggs // 10},
@@ -170,8 +169,8 @@ def distribute_batch_to_containers(batch, lifecycle_stages, containers_by_stage)
                 container=container,
                 lifecycle_stage=stage,
                 population_count=pop_per_container,
-                avg_weight_g=Decimal('0.001') if stage_name == 'Egg' else Decimal('0.1') if stage_name == 'Fry' else Decimal('1.0'),  # Initial weights
-                biomass_kg=Decimal(str(pop_per_container)) * (Decimal('0.001') if stage_name == 'Egg' else Decimal('0.1') if stage_name == 'Fry' else Decimal('1.0')) / 1000,
+                avg_weight_g=Decimal('0.001') if stage_name == 'Egg&Alevin' else Decimal('0.1') if stage_name == 'Fry' else Decimal('1.0'),  # Initial weights
+                biomass_kg=Decimal(str(pop_per_container)) * (Decimal('0.001') if stage_name == 'Egg&Alevin' else Decimal('0.1') if stage_name == 'Fry' else Decimal('1.0')) / 1000,
                 assignment_date=current_date,
                 is_active=True,
                 notes=f'{stage_name} assignment #{i+1}'
