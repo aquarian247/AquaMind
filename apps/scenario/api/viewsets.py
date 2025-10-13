@@ -18,6 +18,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.types import OpenApiTypes
+from aquamind.utils.history_mixins import HistoryReasonMixin
 
 from apps.scenario.models import (
     TemperatureProfile, TGCModel, FCRModel, MortalityModel,
@@ -45,8 +46,8 @@ from apps.scenario.api.serializers import (
 )
 
 
-class TemperatureProfileViewSet(viewsets.ModelViewSet):
-    """ViewSet for temperature profiles."""
+class TemperatureProfileViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for temperature profiles with audit trail support."""
     
     queryset = TemperatureProfile.objects.annotate(
         reading_count=Count('readings')
@@ -206,8 +207,8 @@ class TemperatureProfileViewSet(viewsets.ModelViewSet):
         })
 
 
-class TGCModelViewSet(viewsets.ModelViewSet):
-    """Enhanced ViewSet for TGC models."""
+class TGCModelViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """Enhanced ViewSet for TGC models with audit trail support."""
     
     queryset = TGCModel.objects.select_related('profile').prefetch_related('stage_overrides')
     serializer_class = TGCModelSerializer
@@ -292,8 +293,8 @@ class TGCModelViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class FCRModelViewSet(viewsets.ModelViewSet):
-    """Enhanced ViewSet for FCR models."""
+class FCRModelViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """Enhanced ViewSet for FCR models with audit trail support."""
     
     queryset = FCRModel.objects.prefetch_related('stages__stage', 'stages__overrides')
     serializer_class = FCRModelSerializer
@@ -358,8 +359,8 @@ class FCRModelViewSet(viewsets.ModelViewSet):
         return Response(summary)
 
 
-class MortalityModelViewSet(viewsets.ModelViewSet):
-    """Enhanced ViewSet for mortality models."""
+class MortalityModelViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """Enhanced ViewSet for mortality models with audit trail support."""
     
     queryset = MortalityModel.objects.prefetch_related('stage_overrides')
     serializer_class = MortalityModelSerializer
@@ -403,8 +404,8 @@ class MortalityModelViewSet(viewsets.ModelViewSet):
         return Response(templates)
 
 
-class BiologicalConstraintsViewSet(viewsets.ModelViewSet):
-    """ViewSet for biological constraints."""
+class BiologicalConstraintsViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """ViewSet for biological constraints with audit trail support."""
     
     queryset = BiologicalConstraints.objects.prefetch_related('stage_constraints')
     serializer_class = BiologicalConstraintsSerializer
@@ -421,8 +422,8 @@ class BiologicalConstraintsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ScenarioViewSet(viewsets.ModelViewSet):
-    """Enhanced ViewSet for scenarios."""
+class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+    """Enhanced ViewSet for scenarios with audit trail support."""
     
     queryset = Scenario.objects.select_related(
         'tgc_model', 'fcr_model', 'mortality_model', 'batch', 
