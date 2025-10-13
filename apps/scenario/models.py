@@ -320,8 +320,11 @@ class Scenario(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # History tracking
-    history = HistoricalRecords()
+    # NOTE: No HistoricalRecords on Scenario to prevent massive table bloat
+    # Audit trail preserved via:
+    # 1. created_by, created_at, updated_at timestamps
+    # 2. HistoricalRecords on referenced models (TGC, FCR, Mortality)
+    # 3. Django admin logs for create/delete operations
     
     class Meta:
         db_table = 'scenario'
