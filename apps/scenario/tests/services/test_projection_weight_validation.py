@@ -53,7 +53,7 @@ class ProjectionEngineWeightValidationTestCase(TestCase):
         for day_offset in range(365):
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=date(2024, 1, 1) + timedelta(days=day_offset),
+                day_number=day_offset + 1,  # 1-based day numbers
                 temperature=12.0
             )
 

@@ -200,8 +200,8 @@ class TemperatureProfileViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                 'avg': sum(temps) / len(temps),
                 'count': len(temps),
                 'date_range': {
-                    'start': readings.order_by('reading_date').first().reading_date,
-                    'end': readings.order_by('reading_date').last().reading_date
+                    'start': readings.order_by('day_number').first().day_number,
+                    'end': readings.order_by('day_number').last().day_number
                 }
             }
         })

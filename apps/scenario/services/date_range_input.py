@@ -286,12 +286,12 @@ class DateRangeInputService:
         # Create profile
         profile = TemperatureProfile.objects.create(name=profile_name)
         
-        # Create readings
+        # Create readings with day numbers (not dates)
         readings = []
-        for data in daily_values:
+        for idx, data in enumerate(daily_values, start=1):
             reading = TemperatureReading(
                 profile=profile,
-                reading_date=data['date'],
+                day_number=idx,  # CHANGED: Use sequence index, not data['date']
                 temperature=data['value']
             )
             readings.append(reading)

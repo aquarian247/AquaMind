@@ -12,8 +12,14 @@ class TemperatureReadingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TemperatureReading
-        fields = ["reading_id", "reading_date", "temperature"]
+        fields = ["reading_id", "day_number", "temperature"]
         read_only_fields = ["reading_id"]
+
+    def validate_day_number(self, value):  # CHANGED FROM validate_reading_date
+        """Ensure day number is positive."""
+        if value < 1:
+            raise serializers.ValidationError("Day number must be 1 or greater")
+        return value
 
     def validate_temperature(self, value):
         """Validate temperature is within reasonable range."""
@@ -47,15 +53,15 @@ class TemperatureProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["profile_id", "created_at", "updated_at"]
 
     def get_date_range(self, obj) -> Optional[Dict[str, Any]]:
-        """Get the date range of readings."""
-        readings = obj.readings.order_by("reading_date")
+        """Get the day range of readings."""
+        readings = obj.readings.order_by("day_number")
         if readings.exists():
             first = readings.first()
             last = readings.last()
             return {
-                "start": first.reading_date,
-                "end": last.reading_date,
-                "days": (last.reading_date - first.reading_date).days + 1,
+                "start": first.day_number,
+                "end": last.day_number,
+                "days": last.day_number - first.day_number + 1,
             }
         return None
 

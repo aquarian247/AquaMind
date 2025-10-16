@@ -33,11 +33,10 @@ class TGCCalculatorTests(TestCase):
         )
         
         # Add temperature readings (10°C constant for simplicity)
-        start_date = date(2024, 1, 1)
         for i in range(365):
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=10.0
             )
         
@@ -109,21 +108,19 @@ class TGCCalculatorTests(TestCase):
         )
         
         # Only add readings for every 7th day
-        start_date = date(2024, 1, 1)
         for i in range(0, 30, 7):
+            day_number = i + 1  # Convert to 1-based day numbers
             TemperatureReading.objects.create(
                 profile=sparse_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=day_number,
                 temperature=8.0 + i * 0.1  # Gradually increasing
             )
-        
+
         # Update calculator to use sparse profile
         self.calculator.temperature_profile = sparse_profile
-        
-        # Test interpolation for a date between readings
-        interpolated_temp = self.calculator._get_temperature_for_date(
-            start_date + timedelta(days=3)  # Between day 0 and day 7
-        )
+
+        # Test interpolation for a day between readings
+        interpolated_temp = self.calculator._get_temperature_for_day(4)  # Between day 1 and day 8
         
         # Should be between 8.0 and 8.7
         self.assertGreater(interpolated_temp, 8.0)
@@ -526,11 +523,10 @@ class ProjectionEngineTests(TestCase):
         )
 
         # Add temperature readings (10°C constant)
-        start_date = date(2024, 1, 1)
         for i in range(365):
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=10.0
             )
 
@@ -587,6 +583,7 @@ class ProjectionEngineTests(TestCase):
         )
 
         # Create scenario
+        start_date = date(2024, 1, 1)
         self.scenario = Scenario.objects.create(
             name='Test Scenario',
             genotype='Test Genotype',

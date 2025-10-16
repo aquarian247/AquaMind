@@ -213,7 +213,7 @@ class ProjectionEngine:
             self._apply_model_changes(current_date)
             
             # Get temperature for the day
-            temperature = self.tgc_calculator._get_temperature_for_date(current_date)
+            temperature = self.tgc_calculator._get_temperature_for_day(day_number)
             
             # Calculate growth (only if stage has external feeding)
             if self._stage_has_external_feeding(current_stage):

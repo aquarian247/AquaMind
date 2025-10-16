@@ -333,7 +333,13 @@ class BulkDataImportService:
         if len(dates) != len(set(dates)):
             self.errors.append("Duplicate dates found in CSV")
 
+        # Sort by date to establish day sequence
         temperature_data.sort(key=lambda item: item['date'])
+
+        # Convert dates to day numbers (starting from 1)
+        for idx, data in enumerate(temperature_data, start=1):
+            data['day_number'] = idx
+
         self.preview_data = temperature_data[:10]
 
     def _parse_date(self, date_str: str) -> Optional[date]:
@@ -384,7 +390,7 @@ class BulkDataImportService:
         for data in temperature_data:
             reading = TemperatureReading(
                 profile=profile,
-                reading_date=data['date'],
+                day_number=data['day_number'],  # CHANGED: Use sequence index, not date
                 temperature=data['temperature']
             )
             readings.append(reading)
@@ -395,9 +401,9 @@ class BulkDataImportService:
         return {
             'profile': profile,
             'readings_count': len(readings),
-            'date_range': {
-                'start': temperature_data[0]['date'],
-                'end': temperature_data[-1]['date']
+            'day_range': {
+                'start': temperature_data[0]['day_number'],
+                'end': temperature_data[-1]['day_number']
             }
         }
 

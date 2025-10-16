@@ -48,11 +48,10 @@ class BaseScenarioAPITestCase(BaseAPITestCase):
         )
         
         # Add temperature readings
-        start_date = date.today()
         for i in range(365):
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=10 + (i % 10) * 0.5  # Vary between 10-15°C
             )
         

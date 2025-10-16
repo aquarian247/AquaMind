@@ -246,52 +246,55 @@ class TGCCalculator:
         
         return max(1, int(math.ceil(days)))
     
-    def _get_temperature_for_date(self, target_date: date) -> float:
+    def _get_temperature_for_day(self, day_number: int) -> float:
         """
-        Get temperature from profile for a specific date.
-        
+        Get temperature from profile for a specific day number.
+
         Args:
-            target_date: Date to get temperature for
-            
+            day_number: Relative day number (1-based) from scenario start
+
         Returns:
             Temperature in Celsius, or 10.0 as default
         """
         if not self.temperature_profile:
             return 10.0  # Default temperature
-        
+
         try:
+            # Direct lookup by day number
             reading = self.temperature_profile.readings.filter(
-                reading_date=target_date
+                day_number=day_number
             ).first()
-            
+
             if reading:
                 return float(reading.temperature)
-            
-            # If no exact match, try to interpolate
+
+            # If no exact match, try to interpolate between adjacent days
             before = self.temperature_profile.readings.filter(
-                reading_date__lt=target_date
-            ).order_by('-reading_date').first()
-            
+                day_number__lt=day_number
+            ).order_by('-day_number').first()
+
             after = self.temperature_profile.readings.filter(
-                reading_date__gt=target_date
-            ).order_by('reading_date').first()
-            
+                day_number__gt=day_number
+            ).order_by('day_number').first()
+
             if before and after:
-                # Linear interpolation
-                days_total = (after.reading_date - before.reading_date).days
-                days_from_before = (target_date - before.reading_date).days
-                
+                # Linear interpolation between days
+                days_total = after.day_number - before.day_number
+                days_from_before = day_number - before.day_number
+
                 temp_diff = float(after.temperature - before.temperature)
                 interpolated = float(before.temperature) + (temp_diff * days_from_before / days_total)
-                
+
                 return round(interpolated, 2)
             elif before:
+                # Use last known temperature
                 return float(before.temperature)
             elif after:
+                # Use next known temperature
                 return float(after.temperature)
             else:
                 return 10.0  # Default if no data
-                
+
         except Exception:
             return 10.0  # Default on any error
     

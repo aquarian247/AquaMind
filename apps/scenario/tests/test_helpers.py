@@ -162,13 +162,12 @@ def create_test_temperature_profile(name: Optional[str] = None,
     profile_name = name or f"Test Temperature Profile {generate_unique_id()}"
     profile = TemperatureProfile.objects.create(name=profile_name)
     
-    # Add temperature readings
-    start_date = date.today()
-    for i in range(days):
+    # Add temperature readings with day numbers
+    for day_num in range(1, days + 1):  # CHANGED: 1-based day numbers
         TemperatureReading.objects.create(
             profile=profile,
-            reading_date=start_date + timedelta(days=i),
-            temperature=10 + (i % 10) * 0.5  # Vary between 10-15°C
+            day_number=day_num,  # CHANGED FROM reading_date
+            temperature=10 + ((day_num - 1) % 10) * 0.5  # Vary between 10-15°C
         )
     
     return profile

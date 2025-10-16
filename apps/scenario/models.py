@@ -55,8 +55,9 @@ class TemperatureProfile(models.Model):
 class TemperatureReading(models.Model):
     """
     Individual temperature reading for a temperature profile.
-    
-    Stores daily temperature values that make up a complete temperature profile.
+
+    Stores daily temperature values using RELATIVE day numbers (1, 2, 3, ...)
+    for reusability across scenarios with different start dates.
     """
     reading_id = models.BigAutoField(primary_key=True)
     profile = models.ForeignKey(
@@ -64,23 +65,24 @@ class TemperatureReading(models.Model):
         on_delete=models.CASCADE,
         related_name='readings'
     )
-    reading_date = models.DateField(
-        help_text="Date of the temperature reading"
+    day_number = models.IntegerField(
+        help_text="Relative day number (1-900) in the temperature profile",
+        validators=[MinValueValidator(1)]
     )
     temperature = models.FloatField(
         help_text="Temperature value in degrees Celsius (e.g., 12.5)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "Temperature Reading"
         verbose_name_plural = "Temperature Readings"
-        ordering = ['profile', 'reading_date']
-        unique_together = ['profile', 'reading_date']
-    
+        ordering = ['profile', 'day_number']
+        unique_together = ['profile', 'day_number']
+
     def __str__(self):
-        return f"{self.profile.name} - {self.reading_date}: {self.temperature}°C"
+        return f"{self.profile.name} - Day {self.day_number}: {self.temperature}°C"
 
 
 class TGCModel(models.Model):

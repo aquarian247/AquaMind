@@ -20,8 +20,8 @@ class TemperatureReadingInline(admin.TabularInline):
     """Inline admin for temperature readings within a profile."""
     model = TemperatureReading
     extra = 1
-    fields = ('reading_date', 'temperature')
-    ordering = ['reading_date']
+    fields = ('day_number', 'temperature')
+    ordering = ['day_number']
 
 
 @admin.register(TemperatureProfile)
@@ -204,9 +204,9 @@ class ScenarioProjectionAdmin(admin.ModelAdmin):
 @admin.register(TemperatureReading)
 class TemperatureReadingAdmin(admin.ModelAdmin):
     """Standalone admin for temperature readings."""
-    list_display = ('profile', 'reading_date', 'temperature')
-    list_filter = ('profile', 'reading_date')
-    date_hierarchy = 'reading_date'
+    list_display = ('profile', 'day_number', 'temperature')
+    list_filter = ('profile',)
+    ordering = ['profile', 'day_number']
     search_fields = ('profile__name',)
 
 

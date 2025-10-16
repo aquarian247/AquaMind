@@ -112,12 +112,11 @@ class ScenarioWorkflowTests(TestCase):
         )
         
         # Add temperature readings
-        start_date = date.today()
         for i in range(365):  # One year of data
             temp = 10.0 + 5.0 * (1 + (i % 365) / 182.5)  # Seasonal variation
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=temp
             )
         
@@ -1361,8 +1360,8 @@ class ScenarioWorkflowTests(TestCase):
         
         # Verify the values
         for i in range(30):
-            reading_date = start_date + timedelta(days=i)
-            reading = readings.get(reading_date=reading_date)
+            day_number = i + 1  # 1-based day numbers
+            reading = readings.get(day_number=day_number)
             self.assertEqual(reading.temperature, 10 + i % 5)
 
     def test_biological_constraint_enforcement(self):
@@ -1474,12 +1473,11 @@ class EndToEndWorkflowTests(TestCase):
         )
         
         # Add temperature readings
-        start_date = date.today()
         for i in range(365):  # One year of data
             temp = 10.0 + 5.0 * (1 + (i % 365) / 182.5)  # Seasonal variation
             TemperatureReading.objects.create(
                 profile=temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=temp
             )
         
@@ -1684,12 +1682,11 @@ class PerformanceTests(TransactionTestCase):
         )
         
         # Add temperature readings for 3 years
-        start_date = date.today()
         for i in range(3 * 365):  # Three years of data
             temp = 10.0 + 5.0 * (1 + (i % 365) / 182.5)  # Seasonal variation
             TemperatureReading.objects.create(
                 profile=self.temp_profile,
-                reading_date=start_date + timedelta(days=i),
+                day_number=i + 1,  # 1-based day numbers
                 temperature=temp
             )
         

@@ -34,7 +34,7 @@ class ScenarioModelChangeValidationTestCase(TestCase):
         )
         TemperatureReading.objects.create(
             profile=self.temp_profile,
-            reading_date=date(2024, 1, 1),
+            day_number=1,
             temperature=12.0
         )
 

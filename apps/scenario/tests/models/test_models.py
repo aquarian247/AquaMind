@@ -73,13 +73,13 @@ class TemperatureReadingModelTests(TestCase):
         )
         self.reading = TemperatureReading.objects.create(
             profile=self.profile,
-            reading_date=date.today(),
+            day_number=1,
             temperature=12.5
         )
 
     def test_string_representation(self):
         """Test the string representation of a TemperatureReading."""
-        expected = f"Test Temperature Profile - {date.today()}: 12.5°C"
+        expected = "Test Temperature Profile - Day 1: 12.5°C"
         self.assertEqual(str(self.reading), expected)
 
     def test_profile_relationship(self):
@@ -89,11 +89,11 @@ class TemperatureReadingModelTests(TestCase):
         self.assertEqual(self.profile.readings.first(), self.reading)
 
     def test_unique_together_constraint(self):
-        """Test that profile and reading_date must be unique together."""
+        """Test that profile and day_number must be unique together."""
         with self.assertRaises(IntegrityError):
             TemperatureReading.objects.create(
                 profile=self.profile,
-                reading_date=date.today(),
+                day_number=1,
                 temperature=13.0
             )
 
@@ -104,15 +104,15 @@ class TemperatureReadingModelTests(TestCase):
         for i, temp in enumerate(valid_temps):
             reading = TemperatureReading(
                 profile=self.profile,
-                # ensure each reading_date is unique by offsetting with loop index
-                # +1 to avoid clashing with the reading created in setUp (day 0)
-                reading_date=date.today() + timedelta(days=i + 1),
+                # ensure each day_number is unique by offsetting with loop index
+                # +1 to avoid clashing with the reading created in setUp (day 1)
+                day_number=i + 2,
                 temperature=temp
             )
             reading.full_clean()  # Should not raise ValidationError
             reading.save()
 
-        # Temperature readings should be ordered by date
+        # Temperature readings should be ordered by day_number
         readings = self.profile.readings.all()
         self.assertEqual(len(readings), len(valid_temps) + 1)  # +1 for the setUp reading
 
