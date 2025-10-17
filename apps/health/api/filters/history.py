@@ -10,6 +10,7 @@ from aquamind.utils.history_utils import HistoryFilter
 from apps.health.models import (
     JournalEntry,
     LiceCount,
+    LiceType,
     MortalityRecord,
     Treatment,
     HealthLabSample
@@ -29,7 +30,15 @@ class LiceCountHistoryFilter(HistoryFilter):
 
     class Meta:
         model = LiceCount.history.model
-        fields = ['batch', 'container']
+        fields = ['batch', 'container', 'lice_type']
+
+
+class LiceTypeHistoryFilter(HistoryFilter):
+    """Filter class for LiceType historical records."""
+
+    class Meta:
+        model = LiceType.history.model
+        fields = ['species', 'gender', 'development_stage', 'is_active']
 
 
 class MortalityRecordHistoryFilter(HistoryFilter):

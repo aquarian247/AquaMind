@@ -28,6 +28,7 @@ from .viewsets import (
 from .viewsets.history import (
     JournalEntryHistoryViewSet,
     LiceCountHistoryViewSet,
+    LiceTypeHistoryViewSet,
     MortalityRecordHistoryViewSet,
     TreatmentHistoryViewSet,
     HealthLabSampleHistoryViewSet
@@ -54,5 +55,6 @@ router.register(r'health-lab-samples', HealthLabSampleViewSet, basename='health-
 router.register(r'history/journal-entries', JournalEntryHistoryViewSet, basename='journal-entry-history')
 router.register(r'history/mortality-records', MortalityRecordHistoryViewSet, basename='mortality-record-history')
 router.register(r'history/lice-counts', LiceCountHistoryViewSet, basename='lice-count-history')
+router.register(r'history/lice-types', LiceTypeHistoryViewSet, basename='lice-type-history')
 router.register(r'history/treatments', TreatmentHistoryViewSet, basename='treatment-history')
 router.register(r'history/health-lab-samples', HealthLabSampleHistoryViewSet, basename='health-lab-sample-history')

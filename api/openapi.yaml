@@ -11627,6 +11627,12 @@ paths:
         schema:
           type: string
         description: Filter by username of the user who made the change
+      - in: query
+        name: lice_type
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       - name: ordering
         required: false
         in: query
@@ -11691,6 +11697,143 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LiceCountHistory'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/health/history/lice-types/:
+    get:
+      operationId: api_v1_health_history_lice_types_list
+      description: List historical records with enhanced OpenAPI documentation.
+      parameters:
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date-time
+        description: Filter records from this date onwards (inclusive)
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date-time
+        description: Filter records up to this date (inclusive)
+      - in: query
+        name: development_stage
+        schema:
+          type: string
+      - in: query
+        name: gender
+        schema:
+          type: string
+          x-spec-enum-id: ba8f323269531b10
+          enum:
+          - female
+          - male
+          - unknown
+        description: |-
+          Gender classification of the lice.
+
+          * `male` - Male
+          * `female` - Female
+          * `unknown` - Unknown
+      - in: query
+        name: history_type
+        schema:
+          type: string
+          x-spec-enum-id: c2e35addebb4f5da
+          enum:
+          - +
+          - '-'
+          - '~'
+        description: |-
+          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
+
+          * `+` - Created
+          * `~` - Updated
+          * `-` - Deleted
+      - in: query
+        name: history_user
+        schema:
+          type: string
+        description: Filter by username of the user who made the change
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: species
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLiceTypeHistoryList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/health/history/lice-types/{history_id}/:
+    get:
+      operationId: api_v1_health_history_lice_types_retrieve
+      description: ViewSet for LiceType historical records.
+      parameters:
+      - in: path
+        name: history_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this historical Lice Type.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiceTypeHistory'
           description: ''
         '404':
           description: Not Found
@@ -31167,6 +31310,84 @@ components:
       - id
       - is_active
       - species
+    LiceTypeHistory:
+      type: object
+      description: History serializer for LiceType model.
+      properties:
+        history_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        history_user:
+          type: string
+          readOnly: true
+          description: User who made the change
+        history_date:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When the change was made
+        history_type:
+          type: string
+          readOnly: true
+          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
+        history_change_reason:
+          type: string
+          readOnly: true
+          description: Reason for the change
+        id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        species:
+          type: string
+          description: Scientific name of the lice species (e.g., Lepeophtheirus salmonis,
+            Caligus elongatus).
+          maxLength: 100
+        gender:
+          enum:
+          - male
+          - female
+          - unknown
+          type: string
+          x-spec-enum-id: ba8f323269531b10
+          description: |-
+            Gender classification of the lice.
+
+            * `male` - Male
+            * `female` - Female
+            * `unknown` - Unknown
+        development_stage:
+          type: string
+          description: Development stage (e.g., copepodid, chalimus, pre-adult, adult).
+          maxLength: 50
+        description:
+          type: string
+          description: Additional description or notes about this lice type classification.
+        is_active:
+          type: boolean
+          description: Whether this lice type is currently tracked.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - development_stage
+      - gender
+      - history_change_reason
+      - history_date
+      - history_id
+      - history_type
+      - history_user
+      - species
+      - updated_at
     LifeCycleStage:
       type: object
       description: Serializer for the LifeCycleStage model.
@@ -33386,6 +33607,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiceCount'
+    PaginatedLiceTypeHistoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiceTypeHistory'
     PaginatedLiceTypeList:
       type: object
       required:

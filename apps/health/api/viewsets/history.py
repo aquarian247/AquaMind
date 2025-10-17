@@ -10,6 +10,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from apps.health.models import (
     JournalEntry,
     LiceCount,
+    LiceType,
     MortalityRecord,
     Treatment,
     HealthLabSample
@@ -17,6 +18,7 @@ from apps.health.models import (
 from ..serializers.history import (
     JournalEntryHistorySerializer,
     LiceCountHistorySerializer,
+    LiceTypeHistorySerializer,
     MortalityRecordHistorySerializer,
     TreatmentHistorySerializer,
     HealthLabSampleHistorySerializer
@@ -24,6 +26,7 @@ from ..serializers.history import (
 from ..filters.history import (
     JournalEntryHistoryFilter,
     LiceCountHistoryFilter,
+    LiceTypeHistoryFilter,
     MortalityRecordHistoryFilter,
     TreatmentHistoryFilter,
     HealthLabSampleHistoryFilter
@@ -42,6 +45,13 @@ class LiceCountHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
     queryset = LiceCount.history.all()
     serializer_class = LiceCountHistorySerializer
     filterset_class = LiceCountHistoryFilter
+
+
+class LiceTypeHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
+    """ViewSet for LiceType historical records."""
+    queryset = LiceType.history.all()
+    serializer_class = LiceTypeHistorySerializer
+    filterset_class = LiceTypeHistoryFilter
 
 
 class MortalityRecordHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):

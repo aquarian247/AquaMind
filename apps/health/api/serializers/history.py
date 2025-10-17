@@ -10,6 +10,7 @@ from aquamind.utils.history_utils import HistorySerializer
 from apps.health.models import (
     JournalEntry,
     LiceCount,
+    LiceType,
     MortalityRecord,
     Treatment,
     HealthLabSample
@@ -29,6 +30,14 @@ class LiceCountHistorySerializer(HistorySerializer):
 
     class Meta:
         model = LiceCount.history.model
+        fields = '__all__'
+
+
+class LiceTypeHistorySerializer(HistorySerializer):
+    """History serializer for LiceType model."""
+
+    class Meta:
+        model = LiceType.history.model
         fields = '__all__'
 
 
