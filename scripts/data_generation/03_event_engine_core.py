@@ -8,7 +8,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
 
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.insert(0, project_root)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
 django.setup()
@@ -35,9 +35,17 @@ class EventEngine:
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
-        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0}
+        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0}
         self.current_stage_start_day = 0
-        self.stage_durations = {'Egg&Alevin': 90, 'Fry': 90, 'Parr': 90, 'Smolt': 90, 'Post-Smolt': 90}
+        # Realistic lifecycle stage durations (total: ~900 days)
+        self.stage_durations = {
+            'Egg&Alevin': 90,   # 90 days, no feed
+            'Fry': 90,          # 90 days
+            'Parr': 90,         # 90 days
+            'Smolt': 90,        # 90 days
+            'Post-Smolt': 90,   # 90 days
+            'Adult': 450        # 450 days (major change from implicit infinite)
+        }
         
     def init(self):
         print(f"\n{'='*80}")
@@ -56,6 +64,55 @@ class EventEngine:
         print(f"✓ Station: {self.station.name}")
         print(f"✓ Sea Area: {self.sea_area.name}")
         print(f"✓ Duration: {self.duration} days\n")
+    
+    def find_available_containers(self, hall=None, area=None, count=10):
+        """
+        Find available (unoccupied) containers in a hall or area.
+        Thread-safe for parallel execution using row-level locks.
+        
+        Args:
+            hall: Hall object to search in (for freshwater stages)
+            area: Area object to search in (for sea stages)
+            count: Number of containers needed
+            
+        Returns:
+            List of available Container objects, or empty list if insufficient
+        """
+        from django.db import transaction
+        
+        # CRITICAL: Must be called within an atomic transaction to use select_for_update
+        # Get occupied container IDs with row-level lock to prevent concurrent access
+        occupied_ids = set(
+            BatchContainerAssignment.objects.select_for_update(skip_locked=True).filter(
+                is_active=True
+            ).values_list('container_id', flat=True)
+        )
+        
+        # Find available containers with lock to prevent race condition
+        if hall:
+            available = Container.objects.select_for_update(skip_locked=True).filter(
+                hall=hall,
+                active=True
+            ).exclude(
+                id__in=occupied_ids
+            ).order_by('name')[:count * 2]  # Get extra to account for simultaneous claims
+        elif area:
+            available = Container.objects.select_for_update(skip_locked=True).filter(
+                area=area,
+                active=True
+            ).exclude(
+                id__in=occupied_ids
+            ).order_by('name')[:count * 2]  # Get extra to account for simultaneous claims
+        else:
+            return []
+        
+        available_list = list(available)[:count]  # Take only what we need
+        
+        if len(available_list) < count:
+            # Not enough available containers
+            return []
+        
+        return available_list
         
     def create_batch(self):
         print(f"{'='*80}")
@@ -76,18 +133,27 @@ class EventEngine:
         )
         
         hall_a = Hall.objects.filter(freshwater_station=self.station, name__contains="-Hall-A").first()
-        containers = Container.objects.filter(hall=hall_a).order_by('name')[:10]
-        eggs_per = self.initial_eggs // 10
         
-        self.assignments = []
-        for cont in containers:
-            a = BatchContainerAssignment.objects.create(
-                batch=self.batch, container=cont, lifecycle_stage=self.stages[0],
-                assignment_date=self.start_date, population_count=eggs_per,
-                avg_weight_g=Decimal('0.1'), biomass_kg=Decimal(str(eggs_per * 0.1 / 1000)),
-                is_active=True
-            )
-            self.assignments.append(a)
+        # Use database transaction with row-level locking to prevent race conditions
+        from django.db import transaction
+        
+        with transaction.atomic():
+            containers = self.find_available_containers(hall=hall_a, count=10)
+            
+            if not containers:
+                raise Exception(f"Insufficient available containers in {hall_a.name}. Need 10, infrastructure may be saturated.")
+            
+            eggs_per = self.initial_eggs // 10
+            
+            self.assignments = []
+            for cont in containers:
+                a = BatchContainerAssignment.objects.create(
+                    batch=self.batch, container=cont, lifecycle_stage=self.stages[0],
+                    assignment_date=self.start_date, population_count=eggs_per,
+                    avg_weight_g=Decimal('0.1'), biomass_kg=Decimal(str(eggs_per * 0.1 / 1000)),
+                    is_active=True
+                )
+                self.assignments.append(a)
         
         print(f"✓ Batch: {self.batch.batch_number}")
         print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
@@ -105,6 +171,7 @@ class EventEngine:
         self.mortality_check()
         self.feed_events(16)
         self.growth_update()
+        self.lice_update()  # Weekly lice sampling (Adult stage only)
         
         if self.stats['days'] % 30 == 0:
             self.health_journal()
@@ -298,6 +365,116 @@ class EventEngine:
                 )
                 self.stats['growth'] += 1
     
+    def lice_update(self):
+        """
+        Generate lice counts for Adult stage batches in sea cages.
+        Uses normalized format (lice_type + count_value) with realistic distributions.
+        Sampling frequency: Every 7 days (weekly monitoring)
+        """
+        # Only track lice in Adult stage (sea cages)
+        if self.batch.lifecycle_stage.name != 'Adult':
+            return
+        
+        # Sample weekly (every 7 days)
+        if self.stats['days'] % 7 != 0:
+            return
+        
+        # Get all lice types from database (should be 15 types)
+        lice_types = list(LiceType.objects.all())
+        if not lice_types:
+            return  # Skip if lice types not populated
+        
+        # Organize lice types by species and stage for realistic distribution
+        lsalmonis_types = [lt for lt in lice_types if lt.species == 'Lepeophtheirus salmonis']
+        caligus_types = [lt for lt in lice_types if lt.species == 'Caligus elongatus']
+        
+        # Sample 20 fish per container (industry standard)
+        fish_sampled = 20
+        
+        # Detection methods with weights (manual microscopy most common)
+        detection_methods = ['manual', 'visual', 'automated', 'camera']
+        detection_weights = [0.7, 0.2, 0.05, 0.05]
+        
+        # Generate counts for each active assignment (container)
+        for a in self.assignments:
+            # Realistic lice pressure scenarios based on stage timing
+            days_in_adult = self.stats['days'] - self.current_stage_start_day
+            
+            # Lice pressure increases over time in Adult stage
+            if days_in_adult < 90:  # First 3 months - low pressure
+                pressure_multiplier = 0.5
+            elif days_in_adult < 180:  # Months 3-6 - moderate pressure
+                pressure_multiplier = 1.0
+            elif days_in_adult < 360:  # Months 6-12 - high pressure
+                pressure_multiplier = 1.8
+            else:  # After 12 months - very high pressure
+                pressure_multiplier = 2.5
+            
+            # Select detection method for this sampling
+            detection_method = random.choices(detection_methods, weights=detection_weights)[0]
+            
+            # Confidence levels by method
+            confidence_map = {'automated': 0.98, 'manual': 0.95, 'camera': 0.90, 'visual': 0.75}
+            confidence = Decimal(str(confidence_map[detection_method]))
+            
+            # Generate L. salmonis counts (primary species, ~85% of total lice)
+            # Focus on adult females (regulatory concern)
+            lsalmonis_adult_female = next((lt for lt in lsalmonis_types 
+                                          if lt.gender == 'female' and lt.development_stage == 'adult'), None)
+            lsalmonis_adult_male = next((lt for lt in lsalmonis_types 
+                                        if lt.gender == 'male' and lt.development_stage == 'adult'), None)
+            lsalmonis_chalimus = next((lt for lt in lsalmonis_types 
+                                      if lt.development_stage == 'chalimus'), None)
+            lsalmonis_preadult = next((lt for lt in lsalmonis_types 
+                                      if lt.development_stage == 'pre-adult'), None)
+            
+            # Generate realistic counts (average 0.3-2.0 lice per fish depending on pressure)
+            base_count_per_fish = 0.3 + (random.random() * 1.7) * pressure_multiplier
+            total_lice = int(base_count_per_fish * fish_sampled)
+            
+            # Distribute across life stages (typical ratios)
+            adult_female_count = int(total_lice * 0.35)  # 35% - Regulatory focus
+            adult_male_count = int(total_lice * 0.25)    # 25%
+            chalimus_count = int(total_lice * 0.30)      # 30% - Juveniles
+            preadult_count = int(total_lice * 0.10)      # 10%
+            
+            # Create lice count records (normalized format)
+            lice_records = []
+            
+            if adult_female_count > 0 and lsalmonis_adult_female:
+                lice_records.append((lsalmonis_adult_female, adult_female_count))
+            
+            if adult_male_count > 0 and lsalmonis_adult_male:
+                lice_records.append((lsalmonis_adult_male, adult_male_count))
+            
+            if chalimus_count > 0 and lsalmonis_chalimus:
+                lice_records.append((lsalmonis_chalimus, chalimus_count))
+            
+            if preadult_count > 0 and lsalmonis_preadult:
+                lice_records.append((lsalmonis_preadult, preadult_count))
+            
+            # Add occasional Caligus elongatus (secondary species, ~15% of samples)
+            if random.random() < 0.15 and caligus_types:
+                caligus_adult = random.choice(caligus_types)
+                caligus_count = random.randint(1, int(total_lice * 0.20))
+                lice_records.append((caligus_adult, caligus_count))
+            
+            # Bulk create all lice count records for this sample
+            for lice_type, count_value in lice_records:
+                LiceCount.objects.create(
+                    batch=self.batch,
+                    container=a.container,
+                    user=self.user,
+                    count_date=timezone.make_aware(datetime.combine(self.current_date, time(hour=10))),
+                    lice_type=lice_type,
+                    count_value=count_value,
+                    detection_method=detection_method,
+                    confidence_level=confidence,
+                    fish_sampled=fish_sampled,
+                    notes=f"Weekly monitoring - Day {self.stats['days']}"
+                )
+                self.stats['lice'] += 1
+    
     def check_stage_transition(self):
         """Check if batch should transition to next lifecycle stage"""
         days_in_stage = self.stats['days'] - self.current_stage_start_day
@@ -315,13 +492,93 @@ class EventEngine:
             if current_idx is not None and current_idx < len(self.stages) - 1:
                 next_stage = self.stages[current_idx + 1]
                 print(f"\n  → Stage Transition: {current_stage_name} → {next_stage.name}")
+                
+                # Map stage to hall letter (halls are specialized by stage)
+                stage_to_hall = {
+                    'Egg&Alevin': 'A',
+                    'Fry': 'B',
+                    'Parr': 'C',
+                    'Smolt': 'D',
+                    'Post-Smolt': 'E',
+                    'Adult': None  # Sea cages, not halls
+                }
+                
+                # Close out old assignments
+                old_assignments = list(self.assignments)
+                for a in old_assignments:
+                    a.is_active = False
+                    a.departure_date = self.current_date
+                    a.save()
+                
+                # Move to new containers based on stage
+                new_hall_letter = stage_to_hall.get(next_stage.name)
+                
+                if new_hall_letter:
+                    # Freshwater stage - find appropriate hall
+                    new_hall = Hall.objects.filter(
+                        freshwater_station=self.station,
+                        name__contains=f"-Hall-{new_hall_letter}"
+                    ).first()
+                    
+                    if new_hall:
+                        # Use transaction for atomic container allocation
+                        from django.db import transaction
+                        with transaction.atomic():
+                            new_containers = self.find_available_containers(hall=new_hall, count=10)
+                            
+                            if not new_containers:
+                                raise Exception(f"Insufficient available containers in {new_hall.name} for stage transition to {next_stage.name}")
+                            
+                            # Create new assignments in new hall
+                            fish_per_container = old_assignments[0].population_count
+                            avg_weight = old_assignments[0].avg_weight_g
+                            
+                            self.assignments = []
+                            for cont in new_containers:
+                                new_assignment = BatchContainerAssignment.objects.create(
+                                    batch=self.batch,
+                                    container=cont,
+                                    lifecycle_stage=next_stage,
+                                    assignment_date=self.current_date,
+                                    population_count=fish_per_container,
+                                    avg_weight_g=avg_weight,
+                                    biomass_kg=Decimal(str(fish_per_container * float(avg_weight) / 1000)),
+                                    is_active=True
+                                )
+                                self.assignments.append(new_assignment)
+                        
+                        print(f"  → Moved to {new_hall.name} ({len(self.assignments)} containers)")
+                else:
+                    # Adult stage - move to sea cages
+                    from django.db import transaction
+                    with transaction.atomic():
+                        sea_containers = self.find_available_containers(area=self.sea_area, count=10)
+                        
+                        if not sea_containers:
+                            raise Exception(f"Insufficient available sea cages in {self.sea_area.name} for stage transition to {next_stage.name}")
+                        
+                        fish_per_container = old_assignments[0].population_count
+                        avg_weight = old_assignments[0].avg_weight_g
+                        
+                        self.assignments = []
+                        for cont in sea_containers:
+                            new_assignment = BatchContainerAssignment.objects.create(
+                                batch=self.batch,
+                                container=cont,
+                                lifecycle_stage=next_stage,
+                                assignment_date=self.current_date,
+                                population_count=fish_per_container,
+                                avg_weight_g=avg_weight,
+                                biomass_kg=Decimal(str(fish_per_container * float(avg_weight) / 1000)),
+                                is_active=True
+                            )
+                            self.assignments.append(new_assignment)
+                    
+                    print(f"  → Moved to Sea Cages in {self.sea_area.name} ({len(self.assignments)} containers)")
+                
+                # Update batch stage
                 self.batch.lifecycle_stage = next_stage
                 self.batch.save()
-                
-                # Update all assignments
-                for a in self.assignments:
-                    a.lifecycle_stage = next_stage
-                    a.save()
                 
                 self.current_stage_start_day = self.stats['days']
     
@@ -454,6 +711,7 @@ class EventEngine:
             print(f"  Feeding: {self.stats['feed']:,}")
             print(f"  Mortality: {self.stats['mort']:,}")
             print(f"  Growth Samples: {self.stats['growth']:,}")
+            print(f"  Lice Counts: {self.stats['lice']:,} (Adult stage weekly)")
             print(f"  Feed Purchases: {self.stats['purchases']:,}")
             
             # Final batch stats

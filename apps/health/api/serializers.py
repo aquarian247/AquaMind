@@ -22,7 +22,7 @@ from .serializers.health_observation import (
 from .serializers.lab_sample import HealthLabSampleSerializer, SampleTypeSerializer
 from .serializers.treatment import TreatmentSerializer
 from .serializers.vaccination import VaccinationTypeSerializer
-from .serializers.mortality import MortalityReasonSerializer, MortalityRecordSerializer, LiceCountSerializer
+from .serializers.mortality import MortalityReasonSerializer, MortalityRecordSerializer, LiceCountSerializer, LiceTypeSerializer
 
 # Re-export all serializers to maintain backward compatibility
 __all__ = [
@@ -38,4 +38,5 @@ __all__ = [
     'MortalityReasonSerializer',
     'MortalityRecordSerializer',
     'LiceCountSerializer',
+    'LiceTypeSerializer',
 ]

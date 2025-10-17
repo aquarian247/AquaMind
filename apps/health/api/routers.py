@@ -19,6 +19,7 @@ from .viewsets import (
     MortalityReasonViewSet,
     MortalityRecordViewSet,
     LiceCountViewSet,
+    LiceTypeViewSet,
     
     # Treatment viewsets
     VaccinationTypeViewSet,
@@ -37,6 +38,7 @@ router.register(r'journal-entries', JournalEntryViewSet, basename='journal-entry
 router.register(r'mortality-reasons', MortalityReasonViewSet, basename='mortality-reason')
 router.register(r'mortality-records', MortalityRecordViewSet, basename='mortality-record')
 router.register(r'lice-counts', LiceCountViewSet, basename='lice-count')
+router.register(r'lice-types', LiceTypeViewSet, basename='lice-type')
 router.register(r'vaccination-types', VaccinationTypeViewSet, basename='vaccination-type')
 router.register(r'treatments', TreatmentViewSet, basename='treatment')
 router.register(r'sample-types', SampleTypeViewSet, basename='sample-type')

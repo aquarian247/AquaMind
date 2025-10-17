@@ -7,7 +7,6 @@ This module defines models related to mortality records and lice counts.
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 import logging
 
@@ -190,7 +189,11 @@ class MortalityRecord(models.Model):
 
 
 class LiceCount(models.Model):
-    """Model for recording sea lice counts."""
+    """Model for recording sea lice counts.
+
+    Supports both legacy format (aggregate counts by gender/maturity)
+    and new normalized format (per-type counts with detailed tracking).
+    """
     batch = models.ForeignKey(
         Batch, on_delete=models.CASCADE, related_name='lice_counts',
         help_text="The batch being counted."
@@ -206,15 +209,70 @@ class LiceCount(models.Model):
         help_text="User who performed the count."
     )
     count_date = models.DateTimeField(default=timezone.now)
+
+    # Legacy fields - maintained for backward compatibility
     adult_female_count = models.PositiveIntegerField(
-        help_text="Number of adult female lice counted."
+        default=0,
+        help_text=(
+            "[LEGACY] Adult female lice counted. "
+            "Use lice_type_counts for new data."
+        )
     )
     adult_male_count = models.PositiveIntegerField(
-        help_text="Number of adult male lice counted."
+        default=0,
+        help_text=(
+            "[LEGACY] Adult male lice counted. "
+            "Use lice_type_counts for new data."
+        )
     )
     juvenile_count = models.PositiveIntegerField(
-        help_text="Number of juvenile lice counted."
+        default=0,
+        help_text=(
+            "[LEGACY] Juvenile lice counted. "
+            "Use lice_type_counts for new data."
+        )
     )
+
+    # New normalized fields
+    lice_type = models.ForeignKey(
+        'LiceType',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='lice_counts',
+        help_text=(
+            "Normalized lice type classification "
+            "(species, gender, development stage)."
+        )
+    )
+    count_value = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Count for lice type. Use with lice_type field."
+    )
+    detection_method = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=[
+            ('automated', 'Automated Detection'),
+            ('manual', 'Manual Visual Count'),
+            ('visual', 'Visual Estimation'),
+            ('camera', 'Camera-based Detection')
+        ],
+        help_text="Method used to detect and count lice."
+    )
+    confidence_level = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=(
+            "Confidence level (0.00-1.00), "
+            "where 1.00 is highest confidence."
+        )
+    )
+
     fish_sampled = models.PositiveIntegerField(
         help_text="Number of fish sampled for the count."
     )
@@ -230,18 +288,104 @@ class LiceCount(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        """Return a string representation of the lice count."""
-        total_count = self.adult_female_count + self.adult_male_count + self.juvenile_count
-        return f"Lice Count: {total_count} on {self.count_date.strftime('%Y-%m-%d')}"
+        """Return string representation of the lice count."""
+        date_str = self.count_date.strftime('%Y-%m-%d')
+        if self.lice_type and self.count_value is not None:
+            return (
+                f"Lice Count: {self.count_value} {self.lice_type} "
+                f"on {date_str}"
+            )
+        else:
+            total = (
+                self.adult_female_count +
+                self.adult_male_count +
+                self.juvenile_count
+            )
+            return f"Lice Count: {total} on {date_str}"
+
+    def clean(self):
+        """Validate lice count data."""
+        from django.core.exceptions import ValidationError
+
+        # Check that either legacy OR new format is used, not both
+        has_legacy_data = any([
+            self.adult_female_count > 0,
+            self.adult_male_count > 0,
+            self.juvenile_count > 0
+        ])
+        has_new_data = (
+            self.lice_type is not None and
+            self.count_value is not None
+        )
+
+        if has_legacy_data and has_new_data:
+            raise ValidationError(
+                "Cannot use both legacy counts "
+                "(adult_female_count, adult_male_count, "
+                "juvenile_count) and new normalized format "
+                "(lice_type + count_value) in same record. "
+                "Please use one format only."
+            )
+
+        if not has_legacy_data and not has_new_data:
+            raise ValidationError(
+                "Must provide either legacy counts "
+                "(adult_female_count, adult_male_count, "
+                "juvenile_count) or new format "
+                "(lice_type + count_value)."
+            )
+
+        # Validate new format completeness
+        if (
+            (self.lice_type is not None) !=
+            (self.count_value is not None)
+        ):
+            raise ValidationError(
+                "Both lice_type and count_value "
+                "must be provided together."
+            )
+
+        # Validate confidence level range
+        if self.confidence_level is not None:
+            if not (0.0 <= self.confidence_level <= 1.0):
+                raise ValidationError({
+                    'confidence_level': (
+                        'Confidence level must be '
+                        'between 0.00 and 1.00.'
+                    )
+                })
 
     @property
     def average_per_fish(self):
-        """Calculate the average number of lice per fish.
+        """Calculate average lice per fish.
 
         Returns:
-            float: The average number of lice per fish, or 0 if no fish were sampled.
+            float: Average lice per fish, or 0 if no fish sampled.
         """
         if self.fish_sampled > 0:
-            total_lice = self.adult_female_count + self.adult_male_count + self.juvenile_count
+            # Use new format if available
+            if self.count_value is not None:
+                return self.count_value / self.fish_sampled
+            # Fall back to legacy format
+            total_lice = (
+                self.adult_female_count +
+                self.adult_male_count +
+                self.juvenile_count
+            )
             return total_lice / self.fish_sampled
         return 0
+
+    @property
+    def total_count(self):
+        """Get total lice count regardless of format used.
+
+        Returns:
+            int: Total lice counted.
+        """
+        if self.count_value is not None:
+            return self.count_value
+        return (
+            self.adult_female_count +
+            self.adult_male_count +
+            self.juvenile_count
+        )

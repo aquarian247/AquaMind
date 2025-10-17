@@ -627,17 +627,38 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - `reason_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, related_name='mortality_records')
   - `notes`: text (NOT NULL)
   - Meta: `verbose_name_plural = "Mortality Records"`, `ordering = ['-event_date']`
-- **`health_licecount`**
+- **`health_licetype`** (New: Normalized lice classification lookup)
+  - `id`: bigint (PK, auto-increment)
+  - `species`: varchar(100) (help_text="Scientific name (e.g., Lepeophtheirus salmonis)")
+  - `gender`: varchar(20) (choices: 'male', 'female', 'unknown')
+  - `development_stage`: varchar(50) (e.g., copepodid, chalimus, pre-adult, adult)
+  - `description`: text (blank=True, help_text="Description of this lice type")
+  - `is_active`: boolean (default=True, help_text="Currently tracked in system")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = [['species', 'gender', 'development_stage']]`, `ordering = ['species', 'development_stage', 'gender']`
+  - Indexes: `species + development_stage`, `is_active`
+- **`health_licecount`** (Enhanced: Supports legacy and normalized formats)
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='lice_counts')
-  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='lice_counts', nullable, blank=True)
-  - `user_id`: integer (FK to `users_customuser`.id, on_delete=SET_NULL, nullable, related_name='lice_counts')
-  - `count_date`: timestamptz (auto_now_add=True)
-  - `adult_female_count`: positive integer (default=0)
-  - `adult_male_count`: positive integer (default=0)
-  - `juvenile_count`: positive integer (default=0)
-  - `fish_sampled`: positive integer (default=1)
-  - `notes`: text (NOT NULL)
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=SET_NULL, related_name='lice_counts', nullable, blank=True)
+  - `user_id`: integer (FK to `users_customuser`.id, on_delete=PROTECT, related_name='lice_counts')
+  - `count_date`: timestamptz (default=timezone.now)
+  - **Legacy Fields (Deprecated - use lice_type + count_value for new records):**
+    - `adult_female_count`: positive integer (default=0)
+    - `adult_male_count`: positive integer (default=0)
+    - `juvenile_count`: positive integer (default=0)
+  - **New Normalized Fields (Recommended):**
+    - `lice_type_id`: bigint (FK to `health_licetype`.id, on_delete=PROTECT, nullable, related_name='lice_counts')
+    - `count_value`: positive integer (nullable, help_text="Count for specific lice type")
+    - `detection_method`: varchar(50) (nullable, choices: automated, manual, visual, camera)
+    - `confidence_level`: decimal(3,2) (nullable, help_text="0.00-1.00 confidence score")
+  - **Common Fields:**
+    - `fish_sampled`: positive integer (help_text="Number of fish sampled")
+    - `notes`: text (blank=True)
+  - **Computed Properties:**
+    - `total_count`: Returns count regardless of format (new count_value or sum of legacy fields)
+    - `average_per_fish`: Returns total_count / fish_sampled
   - Meta: `verbose_name_plural = "Lice Counts"`, `ordering = ['-count_date']`
 - **`health_vaccinationtype`**
   - id: bigint (PK, auto-increment)
@@ -696,8 +717,9 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 - `batch_batch` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
 - `infrastructure_container` ← `health_mortalityrecord` (CASCADE, related_name='mortality_records')
 - `batch_batch` ← `health_licecount` (CASCADE, related_name='lice_counts')
-- `infrastructure_container` ← `health_licecount` (CASCADE, related_name='lice_counts')
-- `users_customuser` ← `health_licecount` (SET_NULL, related_name='lice_counts')
+- `infrastructure_container` ← `health_licecount` (SET_NULL, related_name='lice_counts')
+- `users_customuser` ← `health_licecount` (PROTECT, related_name='lice_counts')
+- `health_licetype` ← `health_licecount` (PROTECT, related_name='lice_counts')
 - `batch_batch` ← `health_treatment` (CASCADE, related_name='treatments')
 - `infrastructure_container` ← `health_treatment` (CASCADE, related_name='treatments')
 - `batch_batchcontainerassignment` ← `health_treatment` (CASCADE, related_name='treatments')
@@ -710,7 +732,14 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 #### Historical Tables (Audit Trail)
 All health models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
 
-**Currently Active Historical Tables (All 10):**
+**Currently Active Historical Tables (11 total - added LiceType):**
+- **`health_historicallicetype`**
+  - All fields from `health_licetype` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
 - **`health_historicalfishparameterscore`**
   - All fields from `health_fishparameterscore` plus history tracking fields
   - `history_id`: integer (PK, auto-increment)

@@ -20,7 +20,10 @@ from .health_observation import (
 )
 from .journal_entry import JournalEntrySerializer
 from .lab_sample import SampleTypeSerializer, HealthLabSampleSerializer
-from .mortality import MortalityReasonSerializer, MortalityRecordSerializer, LiceCountSerializer
+from .mortality import (
+    MortalityReasonSerializer, MortalityRecordSerializer,
+    LiceCountSerializer, LiceTypeSerializer
+)
 from .vaccination import VaccinationTypeSerializer
 from .treatment import TreatmentSerializer
 
@@ -55,9 +58,10 @@ __all__ = [
     'MortalityReasonSerializer',
     'MortalityRecordSerializer',
     'LiceCountSerializer',
+    'LiceTypeSerializer',
     'VaccinationTypeSerializer',
     'TreatmentSerializer',
-    
+
     # Validation functions
     'validate_health_parameter_score',
     'validate_sample_size',

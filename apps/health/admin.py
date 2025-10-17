@@ -2,7 +2,7 @@ from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
 from .models import (
-    JournalEntry, MortalityReason, LiceCount, MortalityRecord, Treatment,
+    JournalEntry, MortalityReason, LiceCount, LiceType, MortalityRecord, Treatment,
     SampleType,
     HealthParameter,
     HealthSamplingEvent,
@@ -41,12 +41,51 @@ class MortalityReasonAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description')
     search_fields = ('reason', 'description')
 
+@admin.register(LiceType)
+class LiceTypeAdmin(SimpleHistoryAdmin):
+    list_display = ('species', 'gender', 'development_stage', 'is_active', 'created_at')
+    list_filter = ('species', 'gender', 'development_stage', 'is_active')
+    search_fields = ('species', 'development_stage', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('species', 'gender', 'development_stage', 'is_active')
+        }),
+        ('Description', {
+            'fields': ('description',),
+        }),
+        ('Audit', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
 @admin.register(LiceCount)
 class LiceCountAdmin(SimpleHistoryAdmin):
-    list_display = ('batch', 'container', 'count_date', 'average_per_fish', 'notes')
-    list_filter = ('count_date',)
+    list_display = ('batch', 'container', 'count_date', 'lice_type', 'total_count', 'average_per_fish', 'detection_method')
+    list_filter = ('count_date', 'lice_type__species', 'lice_type__development_stage', 'detection_method')
     search_fields = ('notes', 'batch__batch_number', 'container__name')
-    autocomplete_fields = ['batch', 'container', 'user']
+    autocomplete_fields = ['batch', 'container', 'user', 'lice_type']
+    readonly_fields = ('total_count', 'average_per_fish')
+    fieldsets = (
+        (None, {
+            'fields': ('batch', 'container', 'user', 'fish_sampled', 'notes')
+        }),
+        ('New Normalized Format (Recommended)', {
+            'fields': ('lice_type', 'count_value', 'detection_method', 'confidence_level'),
+            'description': 'Use this format for new lice counts with detailed species/stage tracking.'
+        }),
+        ('Legacy Format (Deprecated)', {
+            'fields': ('adult_female_count', 'adult_male_count', 'juvenile_count'),
+            'classes': ('collapse',),
+            'description': 'Legacy aggregate counts. Use normalized format for new records.'
+        }),
+        ('Calculated Fields', {
+            'fields': ('total_count', 'average_per_fish'),
+            'classes': ('collapse',)
+        }),
+    )
 
 @admin.register(MortalityRecord)
 class MortalityRecordAdmin(SimpleHistoryAdmin):

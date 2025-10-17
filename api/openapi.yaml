@@ -12560,11 +12560,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: query
         name: adult_female_count
@@ -12630,6 +12631,24 @@ paths:
           type: string
           format: date-time
       - in: query
+        name: count_value
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: count_value__gte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: count_value__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
         name: fish_sampled
         schema:
           type: integer
@@ -12661,6 +12680,12 @@ paths:
           minimum: -9223372036854775808
       - in: query
         name: juvenile_count__lte
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: lice_type
         schema:
           type: integer
           maximum: 9223372036854775807
@@ -12710,11 +12735,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -12753,11 +12779,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12792,11 +12819,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12845,11 +12873,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12897,11 +12926,12 @@ paths:
       description: |-
         API endpoint for managing Lice Counts.
 
-        Provides CRUD operations for lice counts, which track sea lice infestations
-        in fish populations.
+        Provides CRUD operations for lice counts, which track sea
+        lice infestations in fish populations.
 
-        Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin is appropriate here as LiceCount
+        has a user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -12927,15 +12957,293 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/health/lice-counts/summary/:
+    get:
+      operationId: api_v1_health_lice_counts_summary_retrieve
+      description: Get aggregated lice summary with optional geography, area, and
+        date filtering.
+      parameters:
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for filtering (YYYY-MM-DD)
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for filtering (YYYY-MM-DD)
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_counts:
+                    type: integer
+                    description: Total lice counted
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  average_per_fish:
+                    type: number
+                    description: Average lice per fish
+                  fish_sampled:
+                    type: integer
+                    description: Total fish sampled
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  by_species:
+                    type: object
+                    description: Counts grouped by species
+                    additionalProperties:
+                      type: integer
+                  by_development_stage:
+                    type: object
+                    description: Counts by development stage
+                    additionalProperties:
+                      type: integer
+                  alert_level:
+                    type: string
+                    enum:
+                    - good
+                    - warning
+                    - critical
+                    description: Alert level by thresholds
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/health/lice-counts/trends/:
+    get:
+      operationId: api_v1_health_lice_counts_trends_retrieve
+      description: Get lice count trends over time with weekly or monthly aggregation.
+      parameters:
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by area ID
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for trends (YYYY-MM-DD). Defaults to today.
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID
+      - in: query
+        name: interval
+        schema:
+          type: string
+          enum:
+          - monthly
+          - weekly
+        description: 'Interval: weekly or monthly'
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for trends (YYYY-MM-DD). Defaults to 1 year ago.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trends:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        period:
+                          type: string
+                          description: Week or month identifier
+                        average_per_fish:
+                          type: number
+                        total_counts:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        fish_sampled:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/health/lice-types/:
+    get:
+      operationId: api_v1_health_lice_types_list
+      description: |-
+        API endpoint for Lice Type classifications (Read-Only).
+
+        Provides access to normalized lice type lookup table with
+        species, gender, and development stage classifications. This
+        is a read-only endpoint; new lice types are managed by
+        administrators through Django admin.
+      parameters:
+      - in: query
+        name: development_stage
+        schema:
+          type: string
+      - in: query
+        name: development_stage__icontains
+        schema:
+          type: string
+      - in: query
+        name: gender
+        schema:
+          type: string
+          x-spec-enum-id: ba8f323269531b10
+          enum:
+          - female
+          - male
+          - unknown
+        description: |-
+          Gender classification of the lice.
+
+          * `male` - Male
+          * `female` - Female
+          * `unknown` - Unknown
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: species
+        schema:
+          type: string
+      - in: query
+        name: species__icontains
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLiceTypeList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/health/lice-types/{id}/:
+    get:
+      operationId: api_v1_health_lice_types_retrieve
+      description: |-
+        API endpoint for Lice Type classifications (Read-Only).
+
+        Provides access to normalized lice type lookup table with
+        species, gender, and development stage classifications. This
+        is a read-only endpoint; new lice types are managed by
+        administrators through Django admin.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Lice Type.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiceType'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/health/mortality-reasons/:
     get:
       operationId: api_v1_health_mortality_reasons_list
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       parameters:
       - in: query
         name: name
@@ -12984,9 +13292,11 @@ paths:
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13025,9 +13335,11 @@ paths:
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13062,9 +13374,11 @@ paths:
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13113,9 +13427,11 @@ paths:
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13163,9 +13479,11 @@ paths:
       description: |-
         API endpoint for managing Mortality Reasons.
 
-        Provides CRUD operations for mortality reasons used in mortality records.
+        Provides CRUD operations for mortality reasons used in
+        mortality records.
 
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Uses HistoryReasonMixin to automatically capture change
+        reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13197,11 +13515,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch
@@ -13293,11 +13612,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -13336,11 +13656,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13375,11 +13696,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13428,11 +13750,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -13480,11 +13803,12 @@ paths:
       description: |-
         API endpoint for managing Mortality Records.
 
-        Provides CRUD operations for mortality records, which track fish deaths
-        and their causes.
+        Provides CRUD operations for mortality records, which track
+        fish deaths and their causes.
 
-        Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+        Note: UserAssignmentMixin removed as MortalityRecord has
+        no user field. Uses HistoryReasonMixin to automatically
+        capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -30557,10 +30881,12 @@ components:
     LiceCount:
       type: object
       description: |-
-        Serializer for the LiceCount model.
+        Serializer for LiceCount model.
 
-        Uses HealthBaseSerializer for consistent error handling and field management.
-        Records sea lice counts for monitoring parasite loads in fish populations.
+        Records sea lice counts for monitoring parasite loads.
+
+        Supports legacy format (adult_female_count, adult_male_count,
+        juvenile_count) and new normalized format (lice_type + count_value).
       properties:
         id:
           type: integer
@@ -30591,19 +30917,65 @@ components:
           description: Date and time when the lice count was performed (auto-set).
         adult_female_count:
           type: integer
-          description: Number of adult female lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Adult female lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
         adult_male_count:
           type: integer
-          description: Number of adult male lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Adult male lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
         juvenile_count:
           type: integer
-          description: Number of juvenile lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Juvenile lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
+        lice_type:
+          type: integer
+          nullable: true
+          description: Normalized lice type (species + gender + development stage).
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        lice_type_details:
+          allOf:
+          - $ref: '#/components/schemas/LiceType'
+          readOnly: true
+          description: Detailed lice type classification information.
+        count_value:
+          type: integer
+          nullable: true
+          description: Count for the specific lice type.
+          minimum: 0
+          maximum: 9223372036854775807
+        detection_method:
+          enum:
+          - automated
+          - manual
+          - visual
+          - camera
+          - null
+          type: string
+          x-spec-enum-id: de99d8cd91fcfe23
+          nullable: true
+          description: |-
+            Method used to detect and count lice.
+
+            * `automated` - Automated Detection
+            * `manual` - Manual Visual Count
+            * `visual` - Visual Estimation
+            * `camera` - Camera-based Detection
+        confidence_level:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          nullable: true
+          description: Confidence level (0.00-1.00, where 1.00 is highest confidence).
         fish_sampled:
           type: integer
           description: Number of fish examined during this lice count.
@@ -30619,15 +30991,20 @@ components:
           readOnly: true
           description: Calculated average number of lice per fish (total count / fish
             sampled).
+        total_count:
+          type: integer
+          readOnly: true
+          description: Total lice count regardless of tracking format.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       required:
-      - adult_female_count
-      - adult_male_count
       - average_per_fish
       - batch
       - count_date
       - fish_sampled
       - id
-      - juvenile_count
+      - lice_type_details
+      - total_count
       - user
     LiceCountHistory:
       type: object
@@ -30667,17 +31044,50 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
-          description: Number of adult female lice counted.
+          description: '[LEGACY] Adult female lice counted. Use lice_type_counts for
+            new data.'
         adult_male_count:
           type: integer
           maximum: 2147483647
           minimum: 0
-          description: Number of adult male lice counted.
+          description: '[LEGACY] Adult male lice counted. Use lice_type_counts for
+            new data.'
         juvenile_count:
           type: integer
           maximum: 2147483647
           minimum: 0
-          description: Number of juvenile lice counted.
+          description: '[LEGACY] Juvenile lice counted. Use lice_type_counts for new
+            data.'
+        count_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Count for lice type. Use with lice_type field.
+        detection_method:
+          enum:
+          - automated
+          - manual
+          - visual
+          - camera
+          - ''
+          - null
+          type: string
+          x-spec-enum-id: de99d8cd91fcfe23
+          nullable: true
+          description: |-
+            Method used to detect and count lice.
+
+            * `automated` - Automated Detection
+            * `manual` - Manual Visual Count
+            * `visual` - Visual Estimation
+            * `camera` - Camera-based Detection
+        confidence_level:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          nullable: true
+          description: Confidence level (0.00-1.00), where 1.00 is highest confidence.
         fish_sampled:
           type: integer
           maximum: 2147483647
@@ -30704,16 +31114,59 @@ components:
           description: User who performed the count.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        lice_type:
+          type: integer
+          nullable: true
+          description: Normalized lice type classification (species, gender, development
+            stage).
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       required:
-      - adult_female_count
-      - adult_male_count
       - fish_sampled
       - history_change_reason
       - history_date
       - history_id
       - history_type
       - history_user
-      - juvenile_count
+    LiceType:
+      type: object
+      description: |-
+        Serializer for LiceType model.
+
+        Provides read-only access to normalized lice type classifications.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        species:
+          type: string
+          readOnly: true
+          description: Scientific name of the lice species.
+        gender:
+          type: string
+          readOnly: true
+          description: Gender classification (male, female, unknown).
+        development_stage:
+          type: string
+          readOnly: true
+          description: Development stage (copepodid, chalimus, pre-adult, adult, juvenile).
+        description:
+          type: string
+          readOnly: true
+          description: Description of lice type and characteristics.
+        is_active:
+          type: boolean
+          readOnly: true
+          description: Whether this lice type is currently tracked.
+      required:
+      - description
+      - development_stage
+      - gender
+      - id
+      - is_active
+      - species
     LifeCycleStage:
       type: object
       description: Serializer for the LifeCycleStage model.
@@ -32933,6 +33386,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LiceCount'
+    PaginatedLiceTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiceType'
     PaginatedLifeCycleStageList:
       type: object
       required:
@@ -35844,10 +36322,12 @@ components:
     PatchedLiceCount:
       type: object
       description: |-
-        Serializer for the LiceCount model.
+        Serializer for LiceCount model.
 
-        Uses HealthBaseSerializer for consistent error handling and field management.
-        Records sea lice counts for monitoring parasite loads in fish populations.
+        Records sea lice counts for monitoring parasite loads.
+
+        Supports legacy format (adult_female_count, adult_male_count,
+        juvenile_count) and new normalized format (lice_type + count_value).
       properties:
         id:
           type: integer
@@ -35878,19 +36358,65 @@ components:
           description: Date and time when the lice count was performed (auto-set).
         adult_female_count:
           type: integer
-          description: Number of adult female lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Adult female lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
         adult_male_count:
           type: integer
-          description: Number of adult male lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Adult male lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
         juvenile_count:
           type: integer
-          description: Number of juvenile lice counted across all sampled fish.
+          default: 0
+          description: '[LEGACY] Juvenile lice count. Use lice_type + count_value
+            for new records.'
           minimum: 0
           maximum: 9223372036854775807
+        lice_type:
+          type: integer
+          nullable: true
+          description: Normalized lice type (species + gender + development stage).
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        lice_type_details:
+          allOf:
+          - $ref: '#/components/schemas/LiceType'
+          readOnly: true
+          description: Detailed lice type classification information.
+        count_value:
+          type: integer
+          nullable: true
+          description: Count for the specific lice type.
+          minimum: 0
+          maximum: 9223372036854775807
+        detection_method:
+          enum:
+          - automated
+          - manual
+          - visual
+          - camera
+          - null
+          type: string
+          x-spec-enum-id: de99d8cd91fcfe23
+          nullable: true
+          description: |-
+            Method used to detect and count lice.
+
+            * `automated` - Automated Detection
+            * `manual` - Manual Visual Count
+            * `visual` - Visual Estimation
+            * `camera` - Camera-based Detection
+        confidence_level:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          nullable: true
+          description: Confidence level (0.00-1.00, where 1.00 is highest confidence).
         fish_sampled:
           type: integer
           description: Number of fish examined during this lice count.
@@ -35906,6 +36432,12 @@ components:
           readOnly: true
           description: Calculated average number of lice per fish (total count / fish
             sampled).
+        total_count:
+          type: integer
+          readOnly: true
+          description: Total lice count regardless of tracking format.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
     PatchedLifeCycleStage:
       type: object
       description: Serializer for the LifeCycleStage model.

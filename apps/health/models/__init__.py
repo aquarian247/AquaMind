@@ -12,6 +12,7 @@ from .lab_sample import HealthLabSample, SampleType
 from .treatment import Treatment
 from .vaccination import VaccinationType
 from .mortality import MortalityReason, MortalityRecord, LiceCount
+from .lice_type import LiceType
 
 __all__ = [
     'JournalEntry',
@@ -26,4 +27,5 @@ __all__ = [
     'MortalityReason',
     'MortalityRecord',
     'LiceCount',
+    'LiceType',
 ]

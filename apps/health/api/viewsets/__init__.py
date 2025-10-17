@@ -13,7 +13,7 @@ from .health_observation import (
 )
 from .journal_entry import JournalEntryViewSet
 from .lab_sample import SampleTypeViewSet, HealthLabSampleViewSet
-from .mortality import MortalityReasonViewSet, MortalityRecordViewSet, LiceCountViewSet
+from .mortality import MortalityReasonViewSet, MortalityRecordViewSet, LiceCountViewSet, LiceTypeViewSet
 from .treatment import VaccinationTypeViewSet, TreatmentViewSet
 
 # For backward compatibility
@@ -28,6 +28,7 @@ __all__ = [
     'MortalityReasonViewSet',
     'MortalityRecordViewSet',
     'LiceCountViewSet',
+    'LiceTypeViewSet',
     'VaccinationTypeViewSet',
     'TreatmentViewSet'
 ]
