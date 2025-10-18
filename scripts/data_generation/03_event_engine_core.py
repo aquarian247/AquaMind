@@ -65,14 +65,14 @@ class EventEngine:
         print(f"✓ Sea Area: {self.sea_area.name}")
         print(f"✓ Duration: {self.duration} days\n")
     
-    def find_available_containers(self, hall=None, area=None, count=10):
+    def find_available_containers(self, hall=None, geography=None, count=10):
         """
-        Find available (unoccupied) containers in a hall or area.
+        Find available (unoccupied) containers in a hall or across all sea areas in a geography.
         Thread-safe for parallel execution using row-level locks.
         
         Args:
             hall: Hall object to search in (for freshwater stages)
-            area: Area object to search in (for sea stages)
+            geography: Geography object to search ALL sea areas (for Adult stage)
             count: Number of containers needed
             
         Returns:
@@ -96,13 +96,14 @@ class EventEngine:
             ).exclude(
                 id__in=occupied_ids
             ).order_by('name')[:count * 2]  # Get extra to account for simultaneous claims
-        elif area:
+        elif geography:
+            # For sea stage: search across ALL sea areas in this geography
             available = Container.objects.select_for_update(skip_locked=True).filter(
-                area=area,
+                area__geography=geography,
                 active=True
             ).exclude(
                 id__in=occupied_ids
-            ).order_by('name')[:count * 2]  # Get extra to account for simultaneous claims
+            ).order_by('area__name', 'name')[:count * 2]  # Get extra to account for simultaneous claims
         else:
             return []
         
@@ -549,13 +550,13 @@ class EventEngine:
                         
                         print(f"  → Moved to {new_hall.name} ({len(self.assignments)} containers)")
                 else:
-                    # Adult stage - move to sea cages
+                    # Adult stage - move to sea cages across ALL areas in geography
                     from django.db import transaction
                     with transaction.atomic():
-                        sea_containers = self.find_available_containers(area=self.sea_area, count=10)
+                        sea_containers = self.find_available_containers(geography=self.geo, count=10)
                         
                         if not sea_containers:
-                            raise Exception(f"Insufficient available sea cages in {self.sea_area.name} for stage transition to {next_stage.name}")
+                            raise Exception(f"Insufficient available sea cages in {self.geo.name} for stage transition to {next_stage.name}")
                         
                         fish_per_container = old_assignments[0].population_count
                         avg_weight = old_assignments[0].avg_weight_g
@@ -574,7 +575,9 @@ class EventEngine:
                             )
                             self.assignments.append(new_assignment)
                     
-                    print(f"  → Moved to Sea Cages in {self.sea_area.name} ({len(self.assignments)} containers)")
+                    # Show which sea areas were used
+                    areas_used = set(a.container.area.name for a in self.assignments)
+                    print(f"  → Moved to Sea Cages in {self.geo.name} ({len(self.assignments)} containers across {len(areas_used)} areas)")
                 
                 # Update batch stage
                 self.batch.lifecycle_stage = next_stage
