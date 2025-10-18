@@ -13,6 +13,8 @@ from .viewsets import (
     BatchContainerAssignmentViewSet,
     BatchCompositionViewSet,
     BatchTransferViewSet,
+    BatchTransferWorkflowViewSet,
+    TransferActionViewSet,
     MortalityEventViewSet,
     GrowthSampleViewSet
 )
@@ -32,6 +34,8 @@ router.register(r'batches', BatchViewSet, basename='batch')
 router.register(r'container-assignments', BatchContainerAssignmentViewSet, basename='batch-container-assignment')
 router.register(r'batch-compositions', BatchCompositionViewSet, basename='batch-composition')
 router.register(r'transfers', BatchTransferViewSet, basename='batch-transfer')
+router.register(r'transfer-workflows', BatchTransferWorkflowViewSet, basename='transfer-workflow')
+router.register(r'transfer-actions', TransferActionViewSet, basename='transfer-action')
 router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-event')
 router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-sample')
 

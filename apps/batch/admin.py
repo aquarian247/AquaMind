@@ -4,6 +4,8 @@ from .models import (
     Batch,
     BatchContainerAssignment,
     BatchTransfer,
+    BatchTransferWorkflow,
+    TransferAction,
     GrowthSample,
     LifeCycleStage,
     MortalityEvent,
@@ -238,5 +240,196 @@ class GrowthSampleAdmin(SimpleHistoryAdmin):
         }),
         ('Additional Information', {
             'fields': ('notes', 'created_at', 'updated_at')
+        }),
+    )
+
+
+class TransferActionInline(admin.TabularInline):
+    """Inline admin for TransferAction."""
+    model = TransferAction
+    extra = 0
+    fields = (
+        'action_number',
+        'source_assignment',
+        'dest_assignment',
+        'transferred_count',
+        'status',
+        'planned_date',
+        'actual_execution_date',
+    )
+    readonly_fields = ('actual_execution_date',)
+    ordering = ['action_number']
+
+
+@admin.register(BatchTransferWorkflow)
+class BatchTransferWorkflowAdmin(SimpleHistoryAdmin):
+    """Admin interface for the BatchTransferWorkflow model."""
+    list_display = (
+        'workflow_number',
+        'batch',
+        'workflow_type',
+        'status',
+        'completion_percentage',
+        'planned_start_date',
+        'actual_start_date',
+        'is_intercompany',
+    )
+    list_filter = (
+        'status',
+        'workflow_type',
+        'is_intercompany',
+        'planned_start_date',
+    )
+    search_fields = (
+        'workflow_number',
+        'batch__batch_number',
+        'notes',
+    )
+    date_hierarchy = 'planned_start_date'
+    readonly_fields = (
+        'actual_start_date',
+        'actual_completion_date',
+        'total_source_count',
+        'total_transferred_count',
+        'total_mortality_count',
+        'total_biomass_kg',
+        'total_actions_planned',
+        'actions_completed',
+        'completion_percentage',
+        'created_at',
+        'updated_at',
+    )
+    inlines = [TransferActionInline]
+    fieldsets = (
+        (None, {
+            'fields': (
+                'workflow_number',
+                'batch',
+                'workflow_type',
+                'status',
+            )
+        }),
+        ('Lifecycle Context', {
+            'fields': (
+                'source_lifecycle_stage',
+                'dest_lifecycle_stage',
+            )
+        }),
+        ('Timeline', {
+            'fields': (
+                'planned_start_date',
+                'planned_completion_date',
+                'actual_start_date',
+                'actual_completion_date',
+            )
+        }),
+        ('Progress Tracking', {
+            'fields': (
+                'total_actions_planned',
+                'actions_completed',
+                'completion_percentage',
+            )
+        }),
+        ('Summary Metrics', {
+            'fields': (
+                'total_source_count',
+                'total_transferred_count',
+                'total_mortality_count',
+                'total_biomass_kg',
+            )
+        }),
+        ('Finance Integration', {
+            'fields': (
+                'is_intercompany',
+                'source_subsidiary',
+                'dest_subsidiary',
+                'finance_transaction',
+            )
+        }),
+        ('Audit & Notes', {
+            'fields': (
+                'initiated_by',
+                'completed_by',
+                'notes',
+                'cancellation_reason',
+                'created_at',
+                'updated_at',
+            )
+        }),
+    )
+
+
+@admin.register(TransferAction)
+class TransferActionAdmin(SimpleHistoryAdmin):
+    """Admin interface for the TransferAction model."""
+    list_display = (
+        'workflow',
+        'action_number',
+        'source_assignment',
+        'dest_assignment',
+        'transferred_count',
+        'status',
+        'planned_date',
+        'actual_execution_date',
+    )
+    list_filter = (
+        'status',
+        'transfer_method',
+        'planned_date',
+        'actual_execution_date',
+    )
+    search_fields = (
+        'workflow__workflow_number',
+        'notes',
+    )
+    date_hierarchy = 'actual_execution_date'
+    readonly_fields = (
+        'actual_execution_date',
+        'created_at',
+        'updated_at',
+    )
+    fieldsets = (
+        (None, {
+            'fields': (
+                'workflow',
+                'action_number',
+                'status',
+            )
+        }),
+        ('Source & Destination', {
+            'fields': (
+                'source_assignment',
+                'dest_assignment',
+            )
+        }),
+        ('Transfer Details', {
+            'fields': (
+                'source_population_before',
+                'transferred_count',
+                'mortality_during_transfer',
+                'transferred_biomass_kg',
+                'transfer_method',
+            )
+        }),
+        ('Timeline', {
+            'fields': (
+                'planned_date',
+                'actual_execution_date',
+                'execution_duration_minutes',
+            )
+        }),
+        ('Environmental Conditions', {
+            'fields': (
+                'water_temp_c',
+                'oxygen_level',
+            )
+        }),
+        ('Execution', {
+            'fields': (
+                'executed_by',
+                'notes',
+                'created_at',
+                'updated_at',
+            )
         }),
     )
