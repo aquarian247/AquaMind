@@ -253,7 +253,11 @@ class BatchTransferWorkflow(models.Model):
                 Decimal(self.actions_completed) / 
                 Decimal(self.total_actions_planned) * 100
             )
-            self.save(update_fields=['completion_percentage', 'updated_at'])
+            self.save(update_fields=[
+                'actions_completed',
+                'completion_percentage',
+                'updated_at'
+            ])
     
     def recalculate_totals(self):
         """Recalculate summary metrics from all actions"""
