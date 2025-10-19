@@ -24,12 +24,14 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 
 #### Tracked Models by App
 
-**Batch App (8 models)**
+**Batch App (10 models)**
 - **`batch_batch`**: Complete change history for batch lifecycle management
 - **`batch_batchcontainerassignment`**: Container assignment changes and biomass updates
 - **`batch_growthsample`**: Growth sampling and weight measurements
 - **`batch_mortalityevent`**: Mortality tracking and cause documentation
 - **`batch_batchtransfer`**: Batch transfers between containers
+- **`batch_batchtransferworkflow`**: Multi-day transfer workflow orchestration with state machine ✓
+- **`batch_transferaction`**: Individual container-to-container transfer actions within workflows ✓
 - **`batch_species`**: Species definition changes
 - **`batch_lifecyclestage`**: Lifecycle stage modifications
 - **`batch_batchcomposition`**: Batch composition tracking
@@ -334,6 +336,49 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `notes`: text (NOT NULL)
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
+- **`batch_batchtransferworkflow`** # Orchestrates multi-day, multi-container transfer operations
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `workflow_number`: varchar(50) (Unique, NOT NULL) # e.g., "TRF-2024-001"
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, NOT NULL) # Batch being transferred
+  - `workflow_type`: varchar(50) (NOT NULL) # LIFECYCLE_TRANSITION, CONTAINER_REDISTRIBUTION, EMERGENCY_CASCADE, HARVEST_PREP
+  - `status`: varchar(20) (NOT NULL, default: 'DRAFT') # DRAFT, PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  - `source_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, nullable) # For LIFECYCLE_TRANSITION
+  - `dest_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, nullable) # For LIFECYCLE_TRANSITION
+  - `planned_start_date`: date (NOT NULL) # When workflow is expected to begin
+  - `actual_start_date`: date (nullable) # When first action was executed
+  - `actual_completion_date`: date (nullable) # When workflow completed
+  - `total_actions_planned`: integer (NOT NULL, default: 0) # Total number of actions in workflow
+  - `actions_completed`: integer (NOT NULL, default: 0) # Number of completed actions
+  - `completion_percentage`: decimal(5, 2) (NOT NULL, default: 0.00) # Auto-calculated progress
+  - `is_intercompany`: boolean (NOT NULL, default: False) # Crosses subsidiary boundaries
+  - `estimated_total_value`: decimal(12, 2) (nullable) # For intercompany transfers
+  - `finance_transaction_id`: bigint (FK to `finance_intercompanytransaction`.`id`, on_delete=SET_NULL, nullable) # Linked transaction
+  - `initiated_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, NOT NULL) # User who created workflow
+  - `notes`: text (NOT NULL, default: '')
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
+  - Meta: `ordering = ['-created_at']`, `indexes = ['workflow_number', 'batch_id', 'status', 'workflow_type']`
+- **`batch_transferaction`** # Individual container-to-container movements within a workflow
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `workflow_id`: bigint (FK to `batch_batchtransferworkflow`.`id`, on_delete=CASCADE, NOT NULL)
+  - `action_number`: integer (NOT NULL) # Sequential number within workflow (1, 2, 3...)
+  - `status`: varchar(20) (NOT NULL, default: 'PENDING') # PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED
+  - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, NOT NULL) # Source container assignment
+  - `dest_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, NOT NULL) # Destination container assignment
+  - `source_population_before`: integer (NOT NULL) # Population in source before action
+  - `transferred_count`: integer (NOT NULL) # Number of fish to transfer
+  - `transferred_biomass_kg`: decimal(10, 2) (NOT NULL) # Biomass being transferred
+  - `mortality_during_transfer`: integer (nullable) # Mortalities during execution
+  - `transfer_method`: varchar(20) (nullable) # NET, PUMP, GRAVITY, MANUAL
+  - `water_temp_c`: decimal(5, 2) (nullable) # Water temperature during transfer
+  - `oxygen_level`: decimal(5, 2) (nullable) # Oxygen level (mg/L) during transfer
+  - `execution_duration_minutes`: integer (nullable) # How long the transfer took
+  - `actual_execution_date`: date (nullable) # When action was executed
+  - `executed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=SET_NULL, nullable) # User who executed action
+  - `notes`: text (NOT NULL, default: '')
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
+  - Meta: `ordering = ['workflow_id', 'action_number']`, `unique_together = [['workflow_id', 'action_number']]`
 - **`batch_mortalityevent`**
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, NOT NULL) # Link to the batch experiencing mortality
@@ -383,6 +428,12 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - **`batch_historicalmortalityevent`**
   - All fields from `batch_mortalityevent` plus history tracking fields
   - Same history fields as above
+- **`batch_historicalbatchtransferworkflow`**
+  - All fields from `batch_batchtransferworkflow` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicaltransferaction`**
+  - All fields from `batch_transferaction` plus history tracking fields
+  - Same history fields as above
 - **`batch_historicalbatchcomposition`** (Note: Table creation pending - model has `history = HistoricalRecords()` but migration may not have run)
 
 #### Relationships (Inferred `on_delete` where script failed)
@@ -395,6 +446,13 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `batch_batch` ← `batch_batchtransfer` (PROTECT, source_batch and destination_batch FKs)
 - `batch_batchcontainerassignment` ← `batch_batchtransfer` (PROTECT, source_assignment and destination_assignment FKs)
 - `batch_lifecyclestage` ← `batch_batchtransfer` (PROTECT, source_lifecycle_stage and destination_lifecycle_stage FKs)
+- `batch_batch` ← `batch_batchtransferworkflow` (PROTECT)
+- `batch_lifecyclestage` ← `batch_batchtransferworkflow` (PROTECT, source_lifecycle_stage and dest_lifecycle_stage FKs)
+- `finance_intercompanytransaction` ← `batch_batchtransferworkflow` (SET_NULL, finance_transaction FK)
+- `auth_user` ← `batch_batchtransferworkflow` (PROTECT, initiated_by FK)
+- `batch_batchtransferworkflow` ← `batch_transferaction` (CASCADE)
+- `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, source_assignment and dest_assignment FKs)
+- `auth_user` ← `batch_transferaction` (SET_NULL, executed_by FK)
 - `batch_batch` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 - `batch_batch` ← `broodstock_batchparentage` (CASCADE, related_name='parentage')

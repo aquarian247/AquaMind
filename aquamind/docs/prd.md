@@ -99,6 +99,45 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - The K-factor is updated whenever `avg_weight_g`, `avg_length_cm`, or `std_deviation_length` changes.
     - An alert is generated if the K-factor falls below a configurable threshold (e.g., K < 0.8).
 
+#### 3.1.2.1 Transfer Workflow Architecture (`batch` app)
+- **Purpose**: To orchestrate and track multi-day, multi-container batch transfer operations with state management, progress tracking, and finance integration support, addressing real-world scenarios like gradual lifecycle transitions, cascading emergency transfers, and freshwater-to-sea voyages.
+- **Functionality**:
+  - **Workflow Orchestration**:
+    - The system shall manage transfer workflows via `batch_batchtransferworkflow`, tracking multi-step transfer operations that span days or weeks with state machine progression: DRAFT → PLANNED → IN_PROGRESS → COMPLETED/CANCELLED.
+    - Workflows shall support four primary transfer types: LIFECYCLE_TRANSITION (gradual stage transitions), CONTAINER_REDISTRIBUTION (rebalancing), EMERGENCY_CASCADE (urgent multi-stage moves), and HARVEST_PREP (pre-harvest movements).
+    - The system shall automatically track workflow progress via `total_actions_planned`, `actions_completed`, and `completion_percentage` fields, auto-transitioning to COMPLETED when all actions finish.
+  - **Action Execution Tracking**:
+    - The system shall track individual container-to-container movements via `batch_transferaction`, each linked to specific source and destination `batch_batchcontainerassignment` records.
+    - Actions shall progress through states: PENDING → IN_PROGRESS → COMPLETED/FAILED/SKIPPED with detailed execution metadata including mortality counts, transfer methods (NET/PUMP/GRAVITY/MANUAL), environmental conditions (water temperature, oxygen levels), and execution duration.
+    - The system shall support mobile-optimized execution for ship crew during sea transfers, capturing real-time operational data.
+  - **Finance Integration Support**:
+    - The system shall automatically detect intercompany transfers by comparing container locations (source vs destination company via `infrastructure_container` → `infrastructure_site` → `finance_dimcompany` relationships).
+    - Workflows shall link to `finance_intercompanytransaction` records when transfers cross subsidiary boundaries, enabling financial transaction tracking and manager approvals.
+    - The system shall calculate estimated transfer values based on transferred biomass and intercompany pricing policies (`finance_intercompanypolicy`).
+  - **Advanced Filtering and Querying**:
+    - The system shall provide 32+ filter parameters for workflows including status, batch, workflow type, date ranges, lifecycle stages, intercompany status, and completion percentage ranges.
+    - API endpoints shall support custom actions: `plan()` (transition DRAFT → PLANNED), `cancel()` (workflow cancellation), `complete()` (manual completion), `detect_intercompany()` (finance detection), and `approve_finance()` (transaction approval).
+    - Action-level endpoints shall support: `execute()` (record execution with mortality/conditions), `skip()` (bypass action), `rollback()` (undo execution), and `retry()` (re-attempt failed action).
+- **Behavior**:
+  - Planning a workflow (`plan()` action) shall validate all actions, ensure container availability, and transition status to PLANNED, making it ready for execution.
+  - Executing an action shall update source/destination assignment populations, create corresponding `batch_batchtransfer` records for audit trails, and automatically progress workflow status when all actions complete.
+  - Intercompany detection shall run automatically during workflow planning and create finance transactions in PENDING state awaiting manager approval.
+  - Workflow cancellation shall validate that no actions are IN_PROGRESS or COMPLETED before allowing cancellation, preserving data integrity.
+- **Justification**: Addresses critical operational gaps where legacy `batch_batchtransfer` model assumes instantaneous transfers, while real-world operations span days/weeks with complex multi-container coordination. Enables finance team to track inter-subsidiary asset movements and ensures ship crew can execute transfers with proper mobile workflows during long voyages. Supports regulatory compliance through comprehensive workflow audit trails via django-simple-history.
+- **User Story**: As a Freshwater Manager, I want to plan and track a gradual lifecycle transition from Fry to Parr spanning 2 weeks across 10 containers so that I can coordinate the multi-day operation and monitor completion progress.
+  - **Acceptance Criteria**:
+    - The UI provides a workflow creation wizard allowing selection of batch, workflow type (LIFECYCLE_TRANSITION), source/dest lifecycle stages, and planned start date.
+    - Manager can add multiple actions (source container → dest container pairs) to the workflow in DRAFT status.
+    - Workflow planning validates container availability and transitions status to PLANNED with visible progress tracking (e.g., "0/10 actions completed, 0%").
+    - Ship crew can execute individual actions via mobile-optimized dialogs, recording mortality, transfer method, and environmental conditions.
+    - Workflow automatically transitions to COMPLETED when all 10 actions finish, with complete audit trail via `batch_historicalbatchtransferworkflow` and `batch_historicaltransferaction`.
+- **User Story**: As a Farming Manager, I want to approve intercompany transfer transactions created by freshwater-to-sea transfers so that I can ensure proper financial accounting for smolt deliveries.
+  - **Acceptance Criteria**:
+    - System automatically detects workflows crossing company boundaries (Freshwater → Farming subsidiaries) and creates linked `finance_intercompanytransaction` records.
+    - Workflow detail page displays finance summary showing estimated value based on transferred biomass and pricing policy (e.g., "€15,625 - 500kg @ €31.25/kg").
+    - Farming Manager sees pending approval dashboard with transaction details and can approve/reject with one click.
+    - Approved transactions transition to POSTED status and sync to financial systems, with complete audit trail.
+
 #### 3.1.3 Feed and Inventory Management (`inventory` app)
 - **Purpose**: To comprehensively manage feed resources, optimize feeding practices, ensure accurate cost tracking, and support data-driven feeding decisions for optimal batch growth and operational efficiency.
 - **Functionality**:
