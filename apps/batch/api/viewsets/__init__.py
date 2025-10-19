@@ -9,6 +9,8 @@ from .history import *
 from .species import SpeciesViewSet, LifeCycleStageViewSet
 from .batch import BatchViewSet
 from .transfers import BatchTransferViewSet
+from .workflows import BatchTransferWorkflowViewSet
+from .workflow_actions import TransferActionViewSet
 from .mortality import MortalityEventViewSet
 from .assignments import BatchContainerAssignmentViewSet
 from .composition import BatchCompositionViewSet
