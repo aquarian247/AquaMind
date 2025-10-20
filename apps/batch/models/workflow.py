@@ -356,29 +356,40 @@ class BatchTransferWorkflow(models.Model):
         """
         Create IntercompanyTransaction when transfer completes.
         Called automatically when workflow transitions to COMPLETED.
+        
+        Uses TransferFinanceService to:
+        - Lookup pricing policy
+        - Calculate transfer value
+        - Create transaction in PENDING state
         """
         if not self.is_intercompany or self.finance_transaction:
             return
         
         # Import here to avoid circular dependency
-        from apps.finance.models import IntercompanyTransaction
+        from apps.finance.services.transfer_finance import (
+            TransferFinanceService,
+            TransferFinanceError,
+        )
+        import logging
         
-        # Calculate transfer value (simplified - would need pricing policy)
-        if self.total_transferred_count > 0 and self.total_biomass_kg > 0:
-            avg_weight_kg = self.total_biomass_kg / self.total_transferred_count
-            
-            # TODO: Get proper intercompany pricing policy
-            # For now, use a placeholder calculation
-            estimated_price_per_kg = Decimal('8.50')  # Placeholder
-            
-            transaction = IntercompanyTransaction.objects.create(
-                posting_date=self.actual_completion_date or timezone.now().date(),
-                amount=self.total_biomass_kg * estimated_price_per_kg,
-                currency='EUR',
-                state='PENDING',
-                # TODO: Link to harvest event if applicable
-                # TODO: Link to proper pricing policy
-            )
+        logger = logging.getLogger(__name__)
+        
+        try:
+            service = TransferFinanceService(self)
+            transaction = service.create_transaction()
             
             self.finance_transaction = transaction
             self.save(update_fields=['finance_transaction', 'updated_at'])
+            
+            logger.info(
+                f"Created intercompany transaction {transaction.tx_id} "
+                f"for workflow {self.workflow_number}"
+            )
+            
+        except TransferFinanceError as e:
+            logger.error(
+                f"Failed to create intercompany transaction for workflow "
+                f"{self.workflow_number}: {e}"
+            )
+            # Don't raise - workflow is still COMPLETED
+            # Finance team can create transaction manually if needed

@@ -68,39 +68,132 @@ class FactHarvestAdmin(admin.ModelAdmin):
 class IntercompanyPolicyAdmin(admin.ModelAdmin):
     list_display = (
         "policy_id",
+        "pricing_basis",
         "from_company",
         "to_company",
         "product_grade",
+        "lifecycle_stage",
         "method",
+        "price_per_kg",
         "markup_percent",
     )
-    list_filter = ("method", "from_company__geography", "to_company__geography")
+    list_filter = (
+        "pricing_basis",
+        "method",
+        "from_company__geography",
+        "to_company__geography",
+    )
     search_fields = (
         "from_company__display_name",
         "to_company__display_name",
         "product_grade__code",
+        "lifecycle_stage__stage_name",
     )
-    ordering = ("from_company__geography__name", "product_grade__code")
+    ordering = ("from_company__geography__name", "pricing_basis")
+    fieldsets = (
+        (
+            "Companies",
+            {
+                "fields": ("from_company", "to_company"),
+            },
+        ),
+        (
+            "Pricing Configuration",
+            {
+                "fields": (
+                    "pricing_basis",
+                    "product_grade",
+                    "lifecycle_stage",
+                    "method",
+                    "price_per_kg",
+                    "markup_percent",
+                ),
+                "description": (
+                    "Use product_grade for harvest transactions "
+                    "or lifecycle_stage for transfer workflows"
+                ),
+            },
+        ),
+        (
+            "Audit",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(IntercompanyTransaction)
 class IntercompanyTransactionAdmin(admin.ModelAdmin):
     list_display = (
         "tx_id",
-        "event",
-        "policy",
+        "source_type",
         "posting_date",
         "state",
         "amount",
         "currency",
+        "approved_by",
     )
-    list_filter = ("state", "posting_date")
+    list_filter = ("state", "posting_date", "content_type")
     search_fields = (
-        "event__batch__batch_number",
         "policy__from_company__display_name",
         "policy__to_company__display_name",
+        "approved_by__username",
     )
     ordering = ("-posting_date",)
+    fieldsets = (
+        (
+            "Source",
+            {
+                "fields": (
+                    "content_type",
+                    "object_id",
+                    "source_display",
+                    "event",
+                ),
+                "description": (
+                    "Polymorphic source: HarvestEvent or "
+                    "BatchTransferWorkflow. "
+                    "Legacy event field kept for backward compatibility."
+                ),
+            },
+        ),
+        (
+            "Transaction Details",
+            {
+                "fields": (
+                    "policy",
+                    "posting_date",
+                    "amount",
+                    "currency",
+                ),
+            },
+        ),
+        (
+            "State & Approval",
+            {
+                "fields": (
+                    "state",
+                    "approved_by",
+                    "approval_date",
+                ),
+            },
+        ),
+        (
+            "Audit",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+    readonly_fields = (
+        "source_display",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(NavExportBatch)
