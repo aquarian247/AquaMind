@@ -69,6 +69,8 @@ class BatchTransferWorkflowListSerializer(
             'total_actions_planned',
             'actions_completed',
             'completion_percentage',
+            'initiated_by',
+            'initiated_by_username',
             'created_at',
         ]
 
@@ -118,6 +120,8 @@ class BatchTransferWorkflowDetailSerializer(
             'total_actions_planned',
             'actions_completed',
             'completion_percentage',
+            'initiated_by',
+            'completed_by',
             'created_at',
             'updated_at',
         ]
