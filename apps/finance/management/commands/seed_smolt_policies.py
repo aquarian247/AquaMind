@@ -151,7 +151,7 @@ class Command(BaseCommand):
         # Get lifecycle stage
         try:
             lifecycle_stage = LifeCycleStage.objects.get(
-                stage_name=stage_name
+                name=stage_name
             )
         except LifeCycleStage.DoesNotExist:
             self.stdout.write(self.style.WARNING(
