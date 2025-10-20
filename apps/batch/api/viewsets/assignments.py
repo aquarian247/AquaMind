@@ -151,8 +151,9 @@ class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, v
                 "properties": {
                     "active_biomass_kg": {"type": "number", "description": "Total biomass in kg for active assignments"},
                     "count": {"type": "integer", "description": "Total number of assignments matching filters"},
+                    "total_population": {"type": "integer", "description": "Total fish population count across all assignments"},
                 },
-                "required": ["active_biomass_kg", "count"],
+                "required": ["active_biomass_kg", "count", "total_population"],
             },
             400: {
                 "type": "object",
@@ -194,7 +195,8 @@ class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, v
         ---------------
         {
             "active_biomass_kg": number,
-            "count": integer
+            "count": integer,
+            "total_population": integer
         }
         """
         is_active_param = request.query_params.get("is_active", "true").lower()
@@ -208,11 +210,13 @@ class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, v
         aggregates = assignments.aggregate(
             active_biomass_kg=Sum("biomass_kg"),
             count=Count("id"),
+            total_population=Sum("population_count"),
         )
 
         return Response(
             {
                 "active_biomass_kg": float(aggregates["active_biomass_kg"] or 0),
                 "count": aggregates["count"] or 0,
+                "total_population": aggregates["total_population"] or 0,
             }
         )

@@ -355,3 +355,4 @@ After implementation:
 - **Backward compatible** - existing manual status updates still work
 - **Performance impact**: Minimal - O(1) query on assignment save
 
+
