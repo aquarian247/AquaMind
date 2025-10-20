@@ -73,25 +73,30 @@ These transfers **do NOT** create financial transactions:
 
 **Scenario**: Transfer 10 Post-Smolt tanks to sea over 2 weeks
 
-**Steps**:
+**Two Entry Points**:
 
-1. **Navigate** to batch detail page
-2. **Click** "Transfer Workflows" tab or sidebar link
-3. **View** existing workflows or click "Create New"
-4. **Select** workflow type: "Lifecycle Transition"
-5. **Choose** source stage: Post-Smolt → dest stage: Adult
-6. **Set** planned start date: October 20, 2024
-7. **System** creates workflow in DRAFT status
-8. **Add Actions** (can add later or now):
-   - Source: Tank PS-01 → Dest: Ring A-15 (500 fish, 25 kg)
-   - Source: Tank PS-02 → Dest: Ring A-16 (480 fish, 24 kg)
-   - ...repeat for all 10 tanks
-9. **Review** summary:
-   - Total: 10 actions, 5,000 fish, 250 kg
-   - Status: Intercompany detected ⚠️
-   - Estimated value: 42,000 NOK
-10. **Click** "Plan Workflow"
-11. **Result**: Workflow → PLANNED status, ready for execution
+#### **Option A: From Batch Detail Page** (Recommended)
+1. **Navigate** to batch detail page (e.g., SCO-2024-001)
+2. **Click** "Transfers" tab
+3. **View** existing workflows for this batch
+4. **Click** "Create Workflow" button (Note: Currently shows "coming soon" - workflow must be created via API or admin for now)
+
+#### **Option B: From Transfer Workflows Page**
+1. **Click** "Transfer Workflows" in sidebar
+2. **Click** batch dropdown filter
+3. **Select** your batch from dropdown (e.g., "SCO-2024-001 - Atlantic Salmon")
+4. **View** workflows for that batch
+5. **Click** "Create New" (Note: Wizard UI coming in next phase)
+
+**Current Limitation**: Workflow creation wizard is not yet implemented in UI. For now, workflows must be created via:
+- Django Admin: Batch → Transfer Workflows → Add
+- API: `POST /api/v1/batch/transfer-workflows/`
+- Python script/shell
+
+**When Wizard Is Complete** (Future):
+- Create workflow in UI with multi-step wizard
+- Add actions with source/dest container selection
+- Review and plan in one flow
 
 ---
 
