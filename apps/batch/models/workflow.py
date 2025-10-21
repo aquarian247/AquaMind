@@ -291,6 +291,9 @@ class BatchTransferWorkflow(models.Model):
             from django.core.exceptions import ValidationError
             raise ValidationError("Cannot plan workflow with zero actions")
         
+        # Detect if this is an intercompany transfer
+        self.detect_intercompany()
+        
         self.status = 'PLANNED'
         self.save(update_fields=['status', 'updated_at'])
     
