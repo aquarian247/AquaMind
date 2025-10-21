@@ -178,19 +178,23 @@ class TransferFinanceService:
             - pricing_basis = LIFECYCLE
             - from_company = source_company
             - to_company = dest_company
-            - lifecycle_stage = dest_lifecycle_stage
+            - lifecycle_stage = SOURCE lifecycle stage (what's being sold)
+        
+        Note: We use source_lifecycle_stage because that's what's being
+        transferred/sold. E.g., Post-Smolt pricing for Post-Smolt fish,
+        even though they'll become Adult in the destination.
         """
-        if not self.workflow.dest_lifecycle_stage:
+        if not self.workflow.source_lifecycle_stage:
             raise InvalidTransferDataError(
                 f"Workflow {self.workflow.workflow_number} has no "
-                "destination lifecycle stage"
+                "source lifecycle stage"
             )
         
         policy = IntercompanyPolicy.objects.filter(
             from_company=self.source_company,
             to_company=self.dest_company,
             pricing_basis=IntercompanyPolicy.PricingBasis.LIFECYCLE,
-            lifecycle_stage=self.workflow.dest_lifecycle_stage,
+            lifecycle_stage=self.workflow.source_lifecycle_stage,
         ).first()
         
         if not policy:
@@ -198,7 +202,7 @@ class TransferFinanceService:
                 f"No pricing policy found for transfer: "
                 f"{self.source_company.display_name} → "
                 f"{self.dest_company.display_name} "
-                f"(lifecycle: {self.workflow.dest_lifecycle_stage.name})"
+                f"(lifecycle: {self.workflow.source_lifecycle_stage.name})"
             )
         
         return policy
