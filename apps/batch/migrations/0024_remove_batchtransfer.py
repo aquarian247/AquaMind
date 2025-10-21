@@ -1,5 +1,18 @@
 # Generated migration to remove deprecated BatchTransfer model
-from django.db import migrations
+from django.db import migrations, connection
+
+
+def drop_batchtransfer_tables(apps, schema_editor):
+    """Drop BatchTransfer tables with database-specific syntax."""
+    with connection.cursor() as cursor:
+        # SQLite doesn't support CASCADE in DROP TABLE
+        if connection.vendor == 'sqlite':
+            cursor.execute("DROP TABLE IF EXISTS batch_batchtransfer")
+            cursor.execute("DROP TABLE IF EXISTS batch_historicalbatchtransfer")
+        else:
+            # PostgreSQL supports CASCADE
+            cursor.execute("DROP TABLE IF EXISTS batch_batchtransfer CASCADE")
+            cursor.execute("DROP TABLE IF EXISTS batch_historicalbatchtransfer CASCADE")
 
 
 class Migration(migrations.Migration):
@@ -9,14 +22,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Drop the tables directly (development environment - no production data)
-        migrations.RunSQL(
-            sql="""
-                -- Drop tables with CASCADE to handle any remaining foreign keys
-                DROP TABLE IF EXISTS batch_batchtransfer CASCADE;
-                DROP TABLE IF EXISTS batch_historicalbatchtransfer CASCADE;
-            """,
-            reverse_sql=migrations.RunSQL.noop,
+        migrations.RunPython(
+            drop_batchtransfer_tables,
+            reverse_code=migrations.RunPython.noop,
         ),
     ]
 
