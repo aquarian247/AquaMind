@@ -198,7 +198,7 @@ class TransferFinanceService:
                 f"No pricing policy found for transfer: "
                 f"{self.source_company.display_name} → "
                 f"{self.dest_company.display_name} "
-                f"(lifecycle: {self.workflow.dest_lifecycle_stage.stage_name})"
+                f"(lifecycle: {self.workflow.dest_lifecycle_stage.name})"
             )
         
         return policy

@@ -205,7 +205,11 @@ class WorkflowBackfiller:
             workflow.recalculate_totals()
             workflow.save()
 
-            # Detect and create finance transaction if intercompany
+            # Detect intercompany AFTER actions are created
+            workflow.detect_intercompany()
+            workflow.refresh_from_db()
+
+            # Create finance transaction if intercompany
             if workflow.is_intercompany:
                 self._handle_finance_transaction(workflow)
 
@@ -251,9 +255,7 @@ class WorkflowBackfiller:
             notes='Backfilled from historical assignment data',
         )
 
-        # Detect intercompany
-        workflow.detect_intercompany()
-
+        # Note: detect_intercompany() called AFTER actions are created
         return workflow
 
     def _create_actions(
