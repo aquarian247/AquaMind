@@ -209,8 +209,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/environmental/parameters/{id}/:
-    get:
-      operationId: api_v1_environmental_parameters_retrieve
+    patch:
+      operationId: api_v1_environmental_parameters_partial_update
       description: |-
         ViewSet for viewing and editing EnvironmentalParameter instances.
 
@@ -226,6 +226,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -244,6 +255,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_environmental_parameters_update
       description: |-
@@ -293,8 +306,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_environmental_parameters_partial_update
+    get:
+      operationId: api_v1_environmental_parameters_retrieve
       description: |-
         ViewSet for viewing and editing EnvironmentalParameter instances.
 
@@ -310,17 +323,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalParameter'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -339,8 +341,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_parameters_destroy
       description: |-
@@ -668,8 +668,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/environmental/readings/{id}/:
-    get:
-      operationId: api_v1_environmental_readings_retrieve
+    patch:
+      operationId: api_v1_environmental_readings_partial_update
       description: |-
         ViewSet for viewing and editing EnvironmentalReading instances.
 
@@ -686,6 +686,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalReading'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalReading'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEnvironmentalReading'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -704,6 +715,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_environmental_readings_update
       description: |-
@@ -754,8 +767,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_environmental_readings_partial_update
+    get:
+      operationId: api_v1_environmental_readings_retrieve
       description: |-
         ViewSet for viewing and editing EnvironmentalReading instances.
 
@@ -772,17 +785,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalReading'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalReading'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEnvironmentalReading'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -801,8 +803,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_readings_destroy
       description: |-
@@ -948,8 +948,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/environmental/photoperiod/{id}/:
-    get:
-      operationId: api_v1_environmental_photoperiod_retrieve
+    patch:
+      operationId: api_v1_environmental_photoperiod_partial_update
       description: |-
         ViewSet for viewing and editing PhotoperiodData instances.
 
@@ -965,6 +965,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoperiodData'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoperiodData'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPhotoperiodData'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -983,6 +994,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_environmental_photoperiod_update
       description: |-
@@ -1032,8 +1045,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_environmental_photoperiod_partial_update
+    get:
+      operationId: api_v1_environmental_photoperiod_retrieve
       description: |-
         ViewSet for viewing and editing PhotoperiodData instances.
 
@@ -1049,17 +1062,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedPhotoperiodData'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedPhotoperiodData'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedPhotoperiodData'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -1078,8 +1080,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_photoperiod_destroy
       description: |-
@@ -1303,8 +1303,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/environmental/weather/{id}/:
-    get:
-      operationId: api_v1_environmental_weather_retrieve
+    patch:
+      operationId: api_v1_environmental_weather_partial_update
       description: |-
         ViewSet for viewing and editing WeatherData instances.
 
@@ -1321,6 +1321,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWeatherData'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWeatherData'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWeatherData'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -1339,6 +1350,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_environmental_weather_update
       description: |-
@@ -1389,8 +1402,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_environmental_weather_partial_update
+    get:
+      operationId: api_v1_environmental_weather_retrieve
       description: |-
         ViewSet for viewing and editing WeatherData instances.
 
@@ -1407,17 +1420,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedWeatherData'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedWeatherData'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedWeatherData'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -1436,8 +1438,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_weather_destroy
       description: |-
@@ -1479,7 +1479,7 @@ paths:
         Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
-        name: batch_transfer
+        name: batch_transfer_workflow
         schema:
           type: integer
           maximum: 9223372036854775807
@@ -1563,8 +1563,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/environmental/stage-transitions/{id}/:
-    get:
-      operationId: api_v1_environmental_stage_transitions_retrieve
+    patch:
+      operationId: api_v1_environmental_stage_transitions_partial_update
       description: |-
         ViewSet for viewing and editing StageTransitionEnvironmental instances.
 
@@ -1580,6 +1580,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -1598,6 +1609,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_environmental_stage_transitions_update
       description: |-
@@ -1647,8 +1660,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_environmental_stage_transitions_partial_update
+    get:
+      operationId: api_v1_environmental_stage_transitions_retrieve
       description: |-
         ViewSet for viewing and editing StageTransitionEnvironmental instances.
 
@@ -1664,17 +1677,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedStageTransitionEnvironmental'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -1693,8 +1695,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_stage_transitions_destroy
       description: |-
@@ -1839,8 +1839,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/species/{id}/:
-    get:
-      operationId: api_v1_batch_species_retrieve
+    patch:
+      operationId: api_v1_batch_species_partial_update
       description: |-
         API endpoint for managing aquaculture Species.
 
@@ -1859,6 +1859,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecies'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecies'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecies'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -1877,6 +1888,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_species_update
       description: |-
@@ -1929,8 +1942,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_species_partial_update
+    get:
+      operationId: api_v1_batch_species_retrieve
       description: |-
         API endpoint for managing aquaculture Species.
 
@@ -1949,17 +1962,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedSpecies'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedSpecies'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedSpecies'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -1978,8 +1980,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_species_destroy
       description: |-
@@ -2145,8 +2145,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/lifecycle-stages/{id}/:
-    get:
-      operationId: api_v1_batch_lifecycle_stages_retrieve
+    patch:
+      operationId: api_v1_batch_lifecycle_stages_partial_update
       description: |-
         API endpoint for managing Species Life Cycle Stages.
 
@@ -2166,6 +2166,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLifeCycleStage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLifeCycleStage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLifeCycleStage'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -2184,6 +2195,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_lifecycle_stages_update
       description: |-
@@ -2237,8 +2250,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_lifecycle_stages_partial_update
+    get:
+      operationId: api_v1_batch_lifecycle_stages_retrieve
       description: |-
         API endpoint for managing Species Life Cycle Stages.
 
@@ -2258,17 +2271,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedLifeCycleStage'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedLifeCycleStage'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedLifeCycleStage'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -2287,8 +2289,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_lifecycle_stages_destroy
       description: |-
@@ -2727,8 +2727,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/batch/batches/{id}/:
-    get:
-      operationId: api_v1_batch_batches_retrieve
+    patch:
+      operationId: api_v1_batch_batches_partial_update
       description: |-
         API endpoint for comprehensive management of aquaculture Batches.
 
@@ -2770,6 +2770,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBatch'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -2788,6 +2799,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_batches_update
       description: |-
@@ -2863,8 +2876,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_batches_partial_update
+    get:
+      operationId: api_v1_batch_batches_retrieve
       description: |-
         API endpoint for comprehensive management of aquaculture Batches.
 
@@ -2906,17 +2919,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatch'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatch'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatch'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -2935,8 +2937,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_batches_destroy
       description: |-
@@ -3429,8 +3429,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/batch/container-assignments/{id}/:
-    get:
-      operationId: api_v1_batch_container_assignments_retrieve
+    patch:
+      operationId: api_v1_batch_container_assignments_partial_update
       description: |-
         API endpoint for managing Batch Container Assignments.
 
@@ -3471,6 +3471,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -3489,6 +3500,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_container_assignments_update
       description: |-
@@ -3563,8 +3576,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_container_assignments_partial_update
+    get:
+      operationId: api_v1_batch_container_assignments_retrieve
       description: |-
         API endpoint for managing Batch Container Assignments.
 
@@ -3605,17 +3618,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchContainerAssignment'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -3634,8 +3636,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_container_assignments_destroy
       description: |-
@@ -3865,8 +3865,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/batch-compositions/{id}/:
-    get:
-      operationId: api_v1_batch_batch_compositions_retrieve
+    patch:
+      operationId: api_v1_batch_batch_compositions_partial_update
       description: |-
         API endpoint for managing Batch Compositions.
 
@@ -3901,6 +3901,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchComposition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchComposition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchComposition'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -3919,6 +3930,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_batch_compositions_update
       description: |-
@@ -3987,8 +4000,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_batch_compositions_partial_update
+    get:
+      operationId: api_v1_batch_batch_compositions_retrieve
       description: |-
         API endpoint for managing Batch Compositions.
 
@@ -4023,17 +4036,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchComposition'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchComposition'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchComposition'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -4052,8 +4054,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_batch_compositions_destroy
       description: |-
@@ -4087,502 +4087,6 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         description: A unique integer value identifying this batch composition.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '204':
-          description: No response body
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/batch/transfers/:
-    get:
-      operationId: api_v1_batch_transfers_list
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: query
-        name: biomass_max
-        schema:
-          type: number
-      - in: query
-        name: biomass_min
-        schema:
-          type: number
-      - in: query
-        name: destination_assignment
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: destination_batch
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: destination_batch_number
-        schema:
-          type: string
-      - in: query
-        name: destination_lifecycle_stage
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: population_max
-        schema:
-          type: number
-      - in: query
-        name: population_min
-        schema:
-          type: number
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      - in: query
-        name: source_assignment
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: source_batch
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: source_batch_number
-        schema:
-          type: string
-      - in: query
-        name: source_lifecycle_stage
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: transfer_date_after
-        schema:
-          type: string
-          format: date
-      - in: query
-        name: transfer_date_before
-        schema:
-          type: string
-          format: date
-      - in: query
-        name: transfer_type
-        schema:
-          type: string
-          x-spec-enum-id: 84d720b57a7d7b00
-          enum:
-          - CONTAINER
-          - LIFECYCLE
-          - MERGE
-          - MIXED_TRANSFER
-          - SPLIT
-        description: |-
-          * `CONTAINER` - Container Transfer
-          * `LIFECYCLE` - Lifecycle Stage Change
-          * `SPLIT` - Batch Split
-          * `MERGE` - Batch Merge
-          * `MIXED_TRANSFER` - Mixed Batch Transfer
-      - in: query
-        name: transfer_type_in
-        schema:
-          type: array
-          items:
-            type: string
-            x-spec-enum-id: 84d720b57a7d7b00
-            enum:
-            - CONTAINER
-            - LIFECYCLE
-            - MERGE
-            - MIXED_TRANSFER
-            - SPLIT
-        description: |-
-          * `CONTAINER` - Container Transfer
-          * `LIFECYCLE` - Lifecycle Stage Change
-          * `SPLIT` - Batch Split
-          * `MERGE` - Batch Merge
-          * `MIXED_TRANSFER` - Mixed Batch Transfer
-        explode: true
-        style: form
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedBatchTransferList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    post:
-      operationId: api_v1_batch_transfers_create
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-        required: true
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BatchTransfer'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/batch/transfers/{id}/:
-    get:
-      operationId: api_v1_batch_transfers_retrieve
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch transfer.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BatchTransfer'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-    put:
-      operationId: api_v1_batch_transfers_update
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch transfer.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BatchTransfer'
-        required: true
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BatchTransfer'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_transfers_partial_update
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch transfer.
-        required: true
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransfer'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransfer'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransfer'
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BatchTransfer'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-    delete:
-      operationId: api_v1_batch_transfers_destroy
-      description: |-
-        API endpoint for managing Batch Transfers.
-
-        Batch transfers record the movement of organisms between batches or changes
-        in their lifecycle stage or container assignment within the same batch.
-        This endpoint provides full CRUD operations for batch transfers. Uses
-        HistoryReasonMixin to capture audit change reasons.
-
-        **Filtering:**
-        - `source_batch`: ID of the source batch.
-        - `destination_batch`: ID of the destination batch.
-        - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-        - `source_lifecycle_stage`: ID of the source lifecycle stage.
-        - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-        - `source_assignment`: ID of the source batch container assignment.
-        - `destination_assignment`: ID of the destination batch container assignment.
-
-        **Searching:**
-        - `source_batch__batch_number`: Batch number of the source batch.
-        - `destination_batch__batch_number`: Batch number of the destination batch.
-        - `notes`: Notes associated with the transfer.
-
-        **Ordering:**
-        - `transfer_date` (default: descending)
-        - `source_batch__batch_number`
-        - `transfer_type`
-        - `created_at`
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this batch transfer.
         required: true
       tags:
       - api
@@ -4889,8 +4393,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/transfer-workflows/{id}/:
-    get:
-      operationId: api_v1_batch_transfer_workflows_retrieve
+    patch:
+      operationId: api_v1_batch_transfer_workflows_partial_update
       description: |-
         API endpoint for managing Batch Transfer Workflows.
 
@@ -4934,6 +4438,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -4952,6 +4467,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_transfer_workflows_update
       description: |-
@@ -5029,8 +4546,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_transfer_workflows_partial_update
+    get:
+      operationId: api_v1_batch_transfer_workflows_retrieve
       description: |-
         API endpoint for managing Batch Transfer Workflows.
 
@@ -5074,17 +4591,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchTransferWorkflowDetail'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -5103,8 +4609,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_transfer_workflows_destroy
       description: |-
@@ -5643,8 +5147,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/transfer-actions/{id}/:
-    get:
-      operationId: api_v1_batch_transfer_actions_retrieve
+    patch:
+      operationId: api_v1_batch_transfer_actions_partial_update
       description: |-
         API endpoint for managing Transfer Actions.
 
@@ -5686,6 +5190,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTransferActionDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTransferActionDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTransferActionDetail'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -5704,6 +5219,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_transfer_actions_update
       description: |-
@@ -5779,8 +5296,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_transfer_actions_partial_update
+    get:
+      operationId: api_v1_batch_transfer_actions_retrieve
       description: |-
         API endpoint for managing Transfer Actions.
 
@@ -5822,17 +5339,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTransferActionDetail'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTransferActionDetail'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTransferActionDetail'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -5851,8 +5357,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_transfer_actions_destroy
       description: |-
@@ -6347,8 +5851,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/mortality-events/{id}/:
-    get:
-      operationId: api_v1_batch_mortality_events_retrieve
+    patch:
+      operationId: api_v1_batch_mortality_events_partial_update
       description: |-
         API endpoint for managing Mortality Events in aquaculture batches.
 
@@ -6383,6 +5887,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -6401,6 +5916,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_mortality_events_update
       description: |-
@@ -6469,8 +5986,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_mortality_events_partial_update
+    get:
+      operationId: api_v1_batch_mortality_events_retrieve
       description: |-
         API endpoint for managing Mortality Events in aquaculture batches.
 
@@ -6505,17 +6022,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityEvent'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityEvent'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -6534,8 +6040,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_mortality_events_destroy
       description: |-
@@ -6787,8 +6291,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/batch/growth-samples/{id}/:
-    get:
-      operationId: api_v1_batch_growth_samples_retrieve
+    patch:
+      operationId: api_v1_batch_growth_samples_partial_update
       description: |-
         API endpoint for managing Growth Samples from aquaculture batches.
 
@@ -6823,6 +6327,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowthSample'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowthSample'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowthSample'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -6841,6 +6356,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_batch_growth_samples_update
       description: |-
@@ -6909,8 +6426,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_batch_growth_samples_partial_update
+    get:
+      operationId: api_v1_batch_growth_samples_retrieve
       description: |-
         API endpoint for managing Growth Samples from aquaculture batches.
 
@@ -6945,17 +6462,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedGrowthSample'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedGrowthSample'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedGrowthSample'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -6974,8 +6480,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_batch_growth_samples_destroy
       description: |-
@@ -7296,145 +6800,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BatchContainerAssignmentHistory'
-          description: ''
-        '404':
-          description: Not Found
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-  /api/v1/batch/history/transfers/:
-    get:
-      operationId: listBatchBatchTransferHistory
-      description: List historical records with enhanced OpenAPI documentation.
-      parameters:
-      - in: query
-        name: date_from
-        schema:
-          type: string
-          format: date-time
-        description: Filter records from this date onwards (inclusive)
-      - in: query
-        name: date_to
-        schema:
-          type: string
-          format: date-time
-        description: Filter records up to this date (inclusive)
-      - in: query
-        name: destination_batch
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: history_type
-        schema:
-          type: string
-          x-spec-enum-id: c2e35addebb4f5da
-          enum:
-          - +
-          - '-'
-          - '~'
-        description: |-
-          Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-
-          * `+` - Created
-          * `~` - Updated
-          * `-` - Deleted
-      - in: query
-        name: history_user
-        schema:
-          type: string
-        description: Filter by username of the user who made the change
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      - in: query
-        name: source_batch
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      - in: query
-        name: transfer_type
-        schema:
-          type: string
-          x-spec-enum-id: 84d720b57a7d7b00
-          enum:
-          - CONTAINER
-          - LIFECYCLE
-          - MERGE
-          - MIXED_TRANSFER
-          - SPLIT
-        description: |-
-          * `CONTAINER` - Container Transfer
-          * `LIFECYCLE` - Lifecycle Stage Change
-          * `SPLIT` - Batch Split
-          * `MERGE` - Batch Merge
-          * `MIXED_TRANSFER` - Mixed Batch Transfer
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedBatchTransferHistoryList'
-          description: ''
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '500':
-          description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
-  /api/v1/batch/history/transfers/{history_id}/:
-    get:
-      operationId: retrieveBatchBatchTransferHistoryDetail
-      description: ViewSet for BatchTransfer historical records.
-      parameters:
-      - in: path
-        name: history_id
-        schema:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        description: A unique integer value identifying this historical batch transfer.
-        required: true
-      tags:
-      - api
-      security:
-      - jwtAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BatchTransferHistory'
           description: ''
         '404':
           description: Not Found
@@ -7799,8 +7164,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/inventory/feeds/{id}/:
-    get:
-      operationId: api_v1_inventory_feeds_retrieve
+    patch:
+      operationId: api_v1_inventory_feeds_partial_update
       description: |-
         ViewSet for Feed model.
 
@@ -7817,6 +7182,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeed'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeed'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeed'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -7835,6 +7211,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_inventory_feeds_update
       description: |-
@@ -7885,8 +7263,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_inventory_feeds_partial_update
+    get:
+      operationId: api_v1_inventory_feeds_retrieve
       description: |-
         ViewSet for Feed model.
 
@@ -7903,17 +7281,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeed'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeed'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeed'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -7932,8 +7299,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_inventory_feeds_destroy
       description: |-
@@ -8070,8 +7435,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/inventory/feed-purchases/{id}/:
-    get:
-      operationId: api_v1_inventory_feed_purchases_retrieve
+    patch:
+      operationId: api_v1_inventory_feed_purchases_partial_update
       description: |-
         ViewSet for FeedPurchase model.
 
@@ -8088,6 +7453,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedPurchase'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedPurchase'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedPurchase'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -8106,6 +7482,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_inventory_feed_purchases_update
       description: |-
@@ -8156,8 +7534,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_inventory_feed_purchases_partial_update
+    get:
+      operationId: api_v1_inventory_feed_purchases_retrieve
       description: |-
         ViewSet for FeedPurchase model.
 
@@ -8174,17 +7552,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedPurchase'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedPurchase'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedPurchase'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -8203,8 +7570,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_inventory_feed_purchases_destroy
       description: |-
@@ -9323,8 +8688,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/inventory/feeding-events/{id}/:
-    get:
-      operationId: api_v1_inventory_feeding_events_retrieve
+    patch:
+      operationId: api_v1_inventory_feeding_events_partial_update
       description: |-
         API endpoint for managing Feeding Events in aquaculture operations.
 
@@ -9360,6 +8725,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedingEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedingEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedingEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -9378,6 +8754,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_inventory_feeding_events_update
       description: |-
@@ -9447,8 +8825,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_inventory_feeding_events_partial_update
+    get:
+      operationId: api_v1_inventory_feeding_events_retrieve
       description: |-
         API endpoint for managing Feeding Events in aquaculture operations.
 
@@ -9484,17 +8862,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedingEvent'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedingEvent'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedingEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -9513,8 +8880,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_inventory_feeding_events_destroy
       description: |-
@@ -10080,8 +9445,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/inventory/feed-container-stock/{id}/:
-    get:
-      operationId: api_v1_inventory_feed_container_stock_retrieve
+    patch:
+      operationId: api_v1_inventory_feed_container_stock_partial_update
       description: |-
         API endpoint for managing Feed Container Stock.
 
@@ -10099,6 +9464,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainerStock'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainerStock'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainerStock'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10117,6 +9493,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_inventory_feed_container_stock_update
       description: |-
@@ -10168,8 +9546,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_inventory_feed_container_stock_partial_update
+    get:
+      operationId: api_v1_inventory_feed_container_stock_retrieve
       description: |-
         API endpoint for managing Feed Container Stock.
 
@@ -10187,17 +9565,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainerStock'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainerStock'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainerStock'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10216,8 +9583,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_inventory_feed_container_stock_destroy
       description: |-
@@ -10527,8 +9892,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/journal-entries/{id}/:
-    get:
-      operationId: api_v1_health_journal_entries_retrieve
+    patch:
+      operationId: api_v1_health_journal_entries_partial_update
       description: |-
         API endpoint for managing Journal Entries.
 
@@ -10547,6 +9912,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJournalEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJournalEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJournalEntry'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10565,6 +9941,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_journal_entries_update
       description: |-
@@ -10617,8 +9995,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_journal_entries_partial_update
+    get:
+      operationId: api_v1_health_journal_entries_retrieve
       description: |-
         API endpoint for managing Journal Entries.
 
@@ -10637,17 +10015,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedJournalEntry'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedJournalEntry'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedJournalEntry'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10666,8 +10033,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_journal_entries_destroy
       description: |-
@@ -10799,8 +10164,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/mortality-reasons/{id}/:
-    get:
-      operationId: api_v1_health_mortality_reasons_retrieve
+    patch:
+      operationId: api_v1_health_mortality_reasons_partial_update
       description: |-
         API endpoint for managing Mortality Reasons.
 
@@ -10820,6 +10185,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityReason'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityReason'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityReason'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10838,6 +10214,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_mortality_reasons_update
       description: |-
@@ -10891,8 +10269,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_mortality_reasons_partial_update
+    get:
+      operationId: api_v1_health_mortality_reasons_retrieve
       description: |-
         API endpoint for managing Mortality Reasons.
 
@@ -10912,17 +10290,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityReason'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityReason'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityReason'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -10941,8 +10308,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_mortality_reasons_destroy
       description: |-
@@ -11120,8 +10485,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/mortality-records/{id}/:
-    get:
-      operationId: api_v1_health_mortality_records_retrieve
+    patch:
+      operationId: api_v1_health_mortality_records_partial_update
       description: |-
         API endpoint for managing Mortality Records.
 
@@ -11142,6 +10507,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityRecord'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityRecord'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityRecord'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -11160,6 +10536,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_mortality_records_update
       description: |-
@@ -11214,8 +10592,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_mortality_records_partial_update
+    get:
+      operationId: api_v1_health_mortality_records_retrieve
       description: |-
         API endpoint for managing Mortality Records.
 
@@ -11236,17 +10614,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityRecord'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityRecord'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityRecord'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -11265,8 +10632,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_mortality_records_destroy
       description: |-
@@ -11680,8 +11045,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/health/lice-counts/{id}/:
-    get:
-      operationId: api_v1_health_lice_counts_retrieve
+    patch:
+      operationId: api_v1_health_lice_counts_partial_update
       description: |-
         API endpoint for managing Lice Counts.
 
@@ -11702,6 +11067,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLiceCount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLiceCount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLiceCount'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -11720,6 +11096,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_lice_counts_update
       description: |-
@@ -11774,8 +11152,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_lice_counts_partial_update
+    get:
+      operationId: api_v1_health_lice_counts_retrieve
       description: |-
         API endpoint for managing Lice Counts.
 
@@ -11796,17 +11174,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedLiceCount'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedLiceCount'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedLiceCount'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -11825,8 +11192,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_lice_counts_destroy
       description: |-
@@ -12083,8 +11448,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/vaccination-types/{id}/:
-    get:
-      operationId: api_v1_health_vaccination_types_retrieve
+    patch:
+      operationId: api_v1_health_vaccination_types_partial_update
       description: |-
         API endpoint for managing Vaccination Types.
 
@@ -12102,6 +11467,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVaccinationType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVaccinationType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVaccinationType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12120,6 +11496,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_vaccination_types_update
       description: |-
@@ -12171,8 +11549,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_vaccination_types_partial_update
+    get:
+      operationId: api_v1_health_vaccination_types_retrieve
       description: |-
         API endpoint for managing Vaccination Types.
 
@@ -12190,17 +11568,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedVaccinationType'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedVaccinationType'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedVaccinationType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12219,8 +11586,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_vaccination_types_destroy
       description: |-
@@ -12442,8 +11807,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/treatments/{id}/:
-    get:
-      operationId: api_v1_health_treatments_retrieve
+    patch:
+      operationId: api_v1_health_treatments_partial_update
       description: |-
         API endpoint for managing Treatments.
 
@@ -12462,6 +11827,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTreatment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTreatment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTreatment'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12480,6 +11856,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_treatments_update
       description: |-
@@ -12532,8 +11910,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_treatments_partial_update
+    get:
+      operationId: api_v1_health_treatments_retrieve
       description: |-
         API endpoint for managing Treatments.
 
@@ -12552,17 +11930,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTreatment'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTreatment'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTreatment'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12581,8 +11948,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_treatments_destroy
       description: |-
@@ -12710,8 +12075,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/sample-types/{id}/:
-    get:
-      operationId: api_v1_health_sample_types_retrieve
+    patch:
+      operationId: api_v1_health_sample_types_partial_update
       description: |-
         API endpoint for managing Sample Types.
 
@@ -12729,6 +12094,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSampleType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSampleType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSampleType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12747,6 +12123,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_sample_types_update
       description: |-
@@ -12798,8 +12176,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_sample_types_partial_update
+    get:
+      operationId: api_v1_health_sample_types_retrieve
       description: |-
         API endpoint for managing Sample Types.
 
@@ -12817,17 +12195,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedSampleType'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedSampleType'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedSampleType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -12846,8 +12213,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_sample_types_destroy
       description: |-
@@ -12978,8 +12343,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/health-parameters/{id}/:
-    get:
-      operationId: api_v1_health_health_parameters_retrieve
+    patch:
+      operationId: api_v1_health_health_parameters_partial_update
       description: |-
         API endpoint for managing Health Parameters.
 
@@ -12997,6 +12362,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthParameter'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthParameter'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthParameter'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13015,6 +12391,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_health_parameters_update
       description: |-
@@ -13066,8 +12444,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_health_parameters_partial_update
+    get:
+      operationId: api_v1_health_health_parameters_retrieve
       description: |-
         API endpoint for managing Health Parameters.
 
@@ -13085,17 +12463,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthParameter'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthParameter'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthParameter'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13114,8 +12481,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_health_parameters_destroy
       description: |-
@@ -13271,8 +12636,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/health-sampling-events/{id}/:
-    get:
-      operationId: api_v1_health_health_sampling_events_retrieve
+    patch:
+      operationId: api_v1_health_health_sampling_events_partial_update
       description: |-
         API endpoint for managing Health Sampling Events.
 
@@ -13292,6 +12657,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13310,6 +12686,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_health_sampling_events_update
       description: |-
@@ -13363,8 +12741,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_health_sampling_events_partial_update
+    get:
+      operationId: api_v1_health_health_sampling_events_retrieve
       description: |-
         API endpoint for managing Health Sampling Events.
 
@@ -13384,17 +12762,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthSamplingEvent'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13413,8 +12780,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_health_sampling_events_destroy
       description: |-
@@ -13604,8 +12969,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/individual-fish-observations/{id}/:
-    get:
-      operationId: api_v1_health_individual_fish_observations_retrieve
+    patch:
+      operationId: api_v1_health_individual_fish_observations_partial_update
       description: |-
         API endpoint for managing Individual Fish Observations.
 
@@ -13623,6 +12988,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedIndividualFishObservation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedIndividualFishObservation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedIndividualFishObservation'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13641,6 +13017,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_individual_fish_observations_update
       description: |-
@@ -13692,8 +13070,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_individual_fish_observations_partial_update
+    get:
+      operationId: api_v1_health_individual_fish_observations_retrieve
       description: |-
         API endpoint for managing Individual Fish Observations.
 
@@ -13711,17 +13089,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedIndividualFishObservation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedIndividualFishObservation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedIndividualFishObservation'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13740,8 +13107,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_individual_fish_observations_destroy
       description: |-
@@ -13890,8 +13255,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/fish-parameter-scores/{id}/:
-    get:
-      operationId: api_v1_health_fish_parameter_scores_retrieve
+    patch:
+      operationId: api_v1_health_fish_parameter_scores_partial_update
       description: |-
         API endpoint for managing Fish Parameter Scores.
 
@@ -13909,6 +13274,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFishParameterScore'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFishParameterScore'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFishParameterScore'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -13927,6 +13303,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_fish_parameter_scores_update
       description: |-
@@ -13978,8 +13356,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_fish_parameter_scores_partial_update
+    get:
+      operationId: api_v1_health_fish_parameter_scores_retrieve
       description: |-
         API endpoint for managing Fish Parameter Scores.
 
@@ -13997,17 +13375,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFishParameterScore'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFishParameterScore'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFishParameterScore'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -14026,8 +13393,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_fish_parameter_scores_destroy
       description: |-
@@ -14195,8 +13560,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/health/health-lab-samples/{id}/:
-    get:
-      operationId: api_v1_health_health_lab_samples_retrieve
+    patch:
+      operationId: api_v1_health_health_lab_samples_partial_update
       description: |-
         API endpoint for managing Health Lab Samples.
 
@@ -14215,6 +13580,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthLabSample'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthLabSample'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHealthLabSample'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -14233,6 +13609,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_health_health_lab_samples_update
       description: |-
@@ -14285,8 +13663,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_health_health_lab_samples_partial_update
+    get:
+      operationId: api_v1_health_health_lab_samples_retrieve
       description: |-
         API endpoint for managing Health Lab Samples.
 
@@ -14305,17 +13683,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthLabSample'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthLabSample'
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedHealthLabSample'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -14334,8 +13701,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_health_health_lab_samples_destroy
       description: |-
@@ -15328,8 +14693,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/broodstock/maintenance-tasks/{id}/:
-    get:
-      operationId: api_v1_broodstock_maintenance_tasks_retrieve
+    patch:
+      operationId: api_v1_broodstock_maintenance_tasks_partial_update
       description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
         audit change reasons.
       parameters:
@@ -15343,6 +14708,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaintenanceTask'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaintenanceTask'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaintenanceTask'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -15361,6 +14737,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_maintenance_tasks_update
       description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
@@ -15408,8 +14786,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_maintenance_tasks_partial_update
+    get:
+      operationId: api_v1_broodstock_maintenance_tasks_retrieve
       description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
         audit change reasons.
       parameters:
@@ -15423,17 +14801,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMaintenanceTask'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedMaintenanceTask'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedMaintenanceTask'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -15452,8 +14819,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_maintenance_tasks_destroy
       description: ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture
@@ -15736,8 +15101,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/broodstock/fish/{id}/:
-    get:
-      operationId: api_v1_broodstock_fish_retrieve
+    patch:
+      operationId: api_v1_broodstock_fish_partial_update
       description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
         change reasons.
       parameters:
@@ -15751,6 +15116,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBroodstockFish'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBroodstockFish'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBroodstockFish'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -15769,6 +15145,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_fish_update
       description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
@@ -15816,8 +15194,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_fish_partial_update
+    get:
+      operationId: api_v1_broodstock_fish_retrieve
       description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
         change reasons.
       parameters:
@@ -15831,17 +15209,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBroodstockFish'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBroodstockFish'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBroodstockFish'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -15860,8 +15227,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_fish_destroy
       description: ViewSet for broodstock fish with HistoryReasonMixin providing audit
@@ -16033,8 +15398,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/fish-movements/{id}/:
-    get:
-      operationId: api_v1_broodstock_fish_movements_retrieve
+    patch:
+      operationId: api_v1_broodstock_fish_movements_partial_update
       description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
         change reasons.
       parameters:
@@ -16048,6 +15413,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFishMovement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFishMovement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFishMovement'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16066,6 +15442,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_fish_movements_update
       description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
@@ -16113,8 +15491,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_fish_movements_partial_update
+    get:
+      operationId: api_v1_broodstock_fish_movements_retrieve
       description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
         change reasons.
       parameters:
@@ -16128,17 +15506,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFishMovement'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFishMovement'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFishMovement'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16157,8 +15524,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_fish_movements_destroy
       description: ViewSet for fish movements leveraging HistoryReasonMixin for audit
@@ -16305,8 +15670,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/broodstock/breeding-plans/{id}/:
-    get:
-      operationId: api_v1_broodstock_breeding_plans_retrieve
+    patch:
+      operationId: api_v1_broodstock_breeding_plans_partial_update
       description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
         change reasons.
       parameters:
@@ -16320,6 +15685,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPlan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPlan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPlan'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16338,6 +15714,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_breeding_plans_update
       description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
@@ -16385,8 +15763,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_breeding_plans_partial_update
+    get:
+      operationId: api_v1_broodstock_breeding_plans_retrieve
       description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
         change reasons.
       parameters:
@@ -16400,17 +15778,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPlan'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPlan'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPlan'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16429,8 +15796,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_breeding_plans_destroy
       description: ViewSet for breeding plans with HistoryReasonMixin-driven audit
@@ -16560,8 +15925,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/trait-priorities/{id}/:
-    get:
-      operationId: api_v1_broodstock_trait_priorities_retrieve
+    patch:
+      operationId: api_v1_broodstock_trait_priorities_partial_update
       description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
         support.
       parameters:
@@ -16575,6 +15940,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16593,6 +15969,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_trait_priorities_update
       description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
@@ -16640,8 +16018,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_trait_priorities_partial_update
+    get:
+      operationId: api_v1_broodstock_trait_priorities_retrieve
       description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
         support.
       parameters:
@@ -16655,17 +16033,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingTraitPriority'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16684,8 +16051,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_trait_priorities_destroy
       description: ViewSet for breeding trait priorities with HistoryReasonMixin auditing
@@ -16821,8 +16186,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/breeding-pairs/{id}/:
-    get:
-      operationId: api_v1_broodstock_breeding_pairs_retrieve
+    patch:
+      operationId: api_v1_broodstock_breeding_pairs_partial_update
       description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
         audit change reasons.
       parameters:
@@ -16836,6 +16201,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBreedingPair'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16854,6 +16230,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_breeding_pairs_update
       description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
@@ -16901,8 +16279,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_breeding_pairs_partial_update
+    get:
+      operationId: api_v1_broodstock_breeding_pairs_retrieve
       description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
         audit change reasons.
       parameters:
@@ -16916,17 +16294,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPair'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPair'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBreedingPair'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -16945,8 +16312,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_breeding_pairs_destroy
       description: ViewSet for breeding pairs leveraging HistoryReasonMixin to capture
@@ -17106,8 +16471,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/egg-suppliers/{id}/:
-    get:
-      operationId: api_v1_broodstock_egg_suppliers_retrieve
+    patch:
+      operationId: api_v1_broodstock_egg_suppliers_partial_update
       description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
         reasons.
       parameters:
@@ -17121,6 +16486,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEggSupplier'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEggSupplier'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEggSupplier'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17139,6 +16515,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_egg_suppliers_update
       description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
@@ -17186,8 +16564,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_egg_suppliers_partial_update
+    get:
+      operationId: api_v1_broodstock_egg_suppliers_retrieve
       description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
         reasons.
       parameters:
@@ -17201,17 +16579,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEggSupplier'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEggSupplier'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEggSupplier'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17230,8 +16597,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_egg_suppliers_destroy
       description: ViewSet for egg suppliers using HistoryReasonMixin for audit change
@@ -17459,8 +16824,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/egg-productions/{id}/:
-    get:
-      operationId: api_v1_broodstock_egg_productions_retrieve
+    patch:
+      operationId: api_v1_broodstock_egg_productions_partial_update
       description: ViewSet for egg production with HistoryReasonMixin ensuring audit
         change reasons.
       parameters:
@@ -17474,6 +16839,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEggProduction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEggProduction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEggProduction'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17482,7 +16858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EggProductionDetail'
+                $ref: '#/components/schemas/EggProduction'
           description: ''
         '404':
           description: Not Found
@@ -17492,6 +16868,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_egg_productions_update
       description: ViewSet for egg production with HistoryReasonMixin ensuring audit
@@ -17539,8 +16917,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_egg_productions_partial_update
+    get:
+      operationId: api_v1_broodstock_egg_productions_retrieve
       description: ViewSet for egg production with HistoryReasonMixin ensuring audit
         change reasons.
       parameters:
@@ -17554,17 +16932,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEggProduction'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEggProduction'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEggProduction'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17573,7 +16940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EggProduction'
+                $ref: '#/components/schemas/EggProductionDetail'
           description: ''
         '404':
           description: Not Found
@@ -17583,8 +16950,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_egg_productions_destroy
       description: ViewSet for egg production with HistoryReasonMixin ensuring audit
@@ -17709,8 +17074,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/external-egg-batches/{id}/:
-    get:
-      operationId: api_v1_broodstock_external_egg_batches_retrieve
+    patch:
+      operationId: api_v1_broodstock_external_egg_batches_partial_update
       description: ViewSet for external egg batches using HistoryReasonMixin for audit
         change reasons.
       parameters:
@@ -17724,6 +17089,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedExternalEggBatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedExternalEggBatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedExternalEggBatch'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17742,6 +17118,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_external_egg_batches_update
       description: ViewSet for external egg batches using HistoryReasonMixin for audit
@@ -17789,8 +17167,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_external_egg_batches_partial_update
+    get:
+      operationId: api_v1_broodstock_external_egg_batches_retrieve
       description: ViewSet for external egg batches using HistoryReasonMixin for audit
         change reasons.
       parameters:
@@ -17804,17 +17182,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedExternalEggBatch'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedExternalEggBatch'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedExternalEggBatch'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -17833,8 +17200,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_external_egg_batches_destroy
       description: ViewSet for external egg batches using HistoryReasonMixin for audit
@@ -18024,8 +17389,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/broodstock/batch-parentages/{id}/:
-    get:
-      operationId: api_v1_broodstock_batch_parentages_retrieve
+    patch:
+      operationId: api_v1_broodstock_batch_parentages_partial_update
       description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
         change reasons.
       parameters:
@@ -18039,6 +17404,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchParentage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchParentage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBatchParentage'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -18057,6 +17433,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_broodstock_batch_parentages_update
       description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
@@ -18104,8 +17482,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_broodstock_batch_parentages_partial_update
+    get:
+      operationId: api_v1_broodstock_batch_parentages_retrieve
       description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
         change reasons.
       parameters:
@@ -18119,17 +17497,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchParentage'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchParentage'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBatchParentage'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -18148,8 +17515,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_broodstock_batch_parentages_destroy
       description: ViewSet for batch parentage with HistoryReasonMixin ensuring audit
@@ -18955,8 +18320,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/geographies/{id}/:
-    get:
-      operationId: api_v1_infrastructure_geographies_retrieve
+    patch:
+      operationId: api_v1_infrastructure_geographies_partial_update
       description: |-
         API endpoint for managing Geographical locations or zones.
 
@@ -18988,6 +18353,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGeography'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGeography'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGeography'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -19006,6 +18382,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_geographies_update
       description: |-
@@ -19071,8 +18449,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_geographies_partial_update
+    get:
+      operationId: api_v1_infrastructure_geographies_retrieve
       description: |-
         API endpoint for managing Geographical locations or zones.
 
@@ -19104,17 +18482,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedGeography'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedGeography'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedGeography'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -19133,8 +18500,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_geographies_destroy
       description: |-
@@ -19369,8 +18734,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/areas/{id}/:
-    get:
-      operationId: api_v1_infrastructure_areas_retrieve
+    patch:
+      operationId: api_v1_infrastructure_areas_partial_update
       description: |-
         API endpoint for managing Areas within the aquaculture facility.
 
@@ -19403,6 +18768,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedArea'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedArea'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedArea'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -19421,6 +18797,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_areas_update
       description: |-
@@ -19487,8 +18865,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_areas_partial_update
+    get:
+      operationId: api_v1_infrastructure_areas_retrieve
       description: |-
         API endpoint for managing Areas within the aquaculture facility.
 
@@ -19521,17 +18899,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedArea'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedArea'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedArea'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -19550,8 +18917,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_areas_destroy
       description: |-
@@ -19839,8 +19204,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/freshwater-stations/{id}/:
-    get:
-      operationId: api_v1_infrastructure_freshwater_stations_retrieve
+    patch:
+      operationId: api_v1_infrastructure_freshwater_stations_partial_update
       description: |-
         API endpoint for managing Freshwater Stations.
 
@@ -19878,6 +19243,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFreshwaterStation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFreshwaterStation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFreshwaterStation'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -19896,6 +19272,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_freshwater_stations_update
       description: |-
@@ -19967,8 +19345,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_freshwater_stations_partial_update
+    get:
+      operationId: api_v1_infrastructure_freshwater_stations_retrieve
       description: |-
         API endpoint for managing Freshwater Stations.
 
@@ -20006,17 +19384,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFreshwaterStation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFreshwaterStation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFreshwaterStation'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -20035,8 +19402,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_freshwater_stations_destroy
       description: |-
@@ -20285,8 +19650,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/halls/{id}/:
-    get:
-      operationId: api_v1_infrastructure_halls_retrieve
+    patch:
+      operationId: api_v1_infrastructure_halls_partial_update
       description: |-
         API endpoint for managing Halls within the aquaculture facility.
 
@@ -20322,6 +19687,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHall'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedHall'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedHall'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -20340,6 +19716,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_halls_update
       description: |-
@@ -20409,8 +19787,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_halls_partial_update
+    get:
+      operationId: api_v1_infrastructure_halls_retrieve
       description: |-
         API endpoint for managing Halls within the aquaculture facility.
 
@@ -20446,17 +19824,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedHall'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedHall'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedHall'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -20475,8 +19842,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_halls_destroy
       description: |-
@@ -20728,8 +20093,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/container-types/{id}/:
-    get:
-      operationId: api_v1_infrastructure_container_types_retrieve
+    patch:
+      operationId: api_v1_infrastructure_container_types_partial_update
       description: |-
         API endpoint for managing Container Types.
 
@@ -20761,6 +20126,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContainerType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedContainerType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContainerType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -20779,6 +20155,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_container_types_update
       description: |-
@@ -20844,8 +20222,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_container_types_partial_update
+    get:
+      operationId: api_v1_infrastructure_container_types_retrieve
       description: |-
         API endpoint for managing Container Types.
 
@@ -20877,17 +20255,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedContainerType'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedContainerType'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedContainerType'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -20906,8 +20273,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_container_types_destroy
       description: |-
@@ -21138,8 +20503,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/containers/{id}/:
-    get:
-      operationId: api_v1_infrastructure_containers_retrieve
+    patch:
+      operationId: api_v1_infrastructure_containers_partial_update
       description: |-
         API endpoint for managing Containers within the aquaculture facility.
 
@@ -21179,6 +20544,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContainer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedContainer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContainer'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -21197,6 +20573,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_containers_update
       description: |-
@@ -21270,8 +20648,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_containers_partial_update
+    get:
+      operationId: api_v1_infrastructure_containers_retrieve
       description: |-
         API endpoint for managing Containers within the aquaculture facility.
 
@@ -21311,17 +20689,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedContainer'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedContainer'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedContainer'
       security:
       - tokenAuth: []
       - jwtAuth: []
@@ -21340,8 +20707,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_containers_destroy
       description: |-
@@ -21578,8 +20943,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/sensors/{id}/:
-    get:
-      operationId: api_v1_infrastructure_sensors_retrieve
+    patch:
+      operationId: api_v1_infrastructure_sensors_partial_update
       description: |-
         API endpoint for managing Sensors within the aquaculture facility.
 
@@ -21618,6 +20983,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSensor'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSensor'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSensor'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -21636,6 +21012,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_sensors_update
       description: |-
@@ -21708,8 +21086,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_sensors_partial_update
+    get:
+      operationId: api_v1_infrastructure_sensors_retrieve
       description: |-
         API endpoint for managing Sensors within the aquaculture facility.
 
@@ -21748,17 +21126,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedSensor'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedSensor'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedSensor'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -21777,8 +21144,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_sensors_destroy
       description: |-
@@ -22034,8 +21399,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/infrastructure/feed-containers/{id}/:
-    get:
-      operationId: api_v1_infrastructure_feed_containers_retrieve
+    patch:
+      operationId: api_v1_infrastructure_feed_containers_partial_update
       description: |-
         API endpoint for managing Feed Containers within the aquaculture facility.
 
@@ -22075,6 +21440,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedContainer'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -22093,6 +21469,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_infrastructure_feed_containers_update
       description: |-
@@ -22166,8 +21544,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_infrastructure_feed_containers_partial_update
+    get:
+      operationId: api_v1_infrastructure_feed_containers_retrieve
       description: |-
         API endpoint for managing Feed Containers within the aquaculture facility.
 
@@ -22207,17 +21585,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainer'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainer'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeedContainer'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -22236,8 +21603,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_infrastructure_feed_containers_destroy
       description: |-
@@ -23587,8 +22952,8 @@ paths:
         '400':
           description: Bad request (validation error)
   /api/v1/scenario/temperature-profiles/{profile_id}/:
-    get:
-      operationId: api_v1_scenario_temperature_profiles_retrieve
+    patch:
+      operationId: api_v1_scenario_temperature_profiles_partial_update
       description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
@@ -23601,6 +22966,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTemperatureProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTemperatureProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTemperatureProfile'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -23619,6 +22995,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_temperature_profiles_update
       description: ViewSet for temperature profiles with audit trail support.
@@ -23665,8 +23043,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_temperature_profiles_partial_update
+    get:
+      operationId: api_v1_scenario_temperature_profiles_retrieve
       description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
@@ -23679,17 +23057,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTemperatureProfile'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTemperatureProfile'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTemperatureProfile'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -23708,8 +23075,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_temperature_profiles_destroy
       description: ViewSet for temperature profiles with audit trail support.
@@ -23882,8 +23247,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/scenario/tgc-models/{model_id}/:
-    get:
-      operationId: api_v1_scenario_tgc_models_retrieve
+    patch:
+      operationId: api_v1_scenario_tgc_models_partial_update
       description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
@@ -23896,6 +23261,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTGCModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTGCModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTGCModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -23914,6 +23290,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_tgc_models_update
       description: Enhanced ViewSet for TGC models with audit trail support.
@@ -23960,8 +23338,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_tgc_models_partial_update
+    get:
+      operationId: api_v1_scenario_tgc_models_retrieve
       description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
@@ -23974,17 +23352,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTGCModel'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTGCModel'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTGCModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24003,8 +23370,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_tgc_models_destroy
       description: Enhanced ViewSet for TGC models with audit trail support.
@@ -24183,8 +23548,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/scenario/fcr-models/{model_id}/:
-    get:
-      operationId: api_v1_scenario_fcr_models_retrieve
+    patch:
+      operationId: api_v1_scenario_fcr_models_partial_update
       description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
@@ -24197,6 +23562,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFCRModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFCRModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFCRModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24215,6 +23591,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_fcr_models_update
       description: Enhanced ViewSet for FCR models with audit trail support.
@@ -24261,8 +23639,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_fcr_models_partial_update
+    get:
+      operationId: api_v1_scenario_fcr_models_retrieve
       description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
@@ -24275,17 +23653,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFCRModel'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFCRModel'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFCRModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24304,8 +23671,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_fcr_models_destroy
       description: Enhanced ViewSet for FCR models with audit trail support.
@@ -24483,8 +23848,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/scenario/mortality-models/{model_id}/:
-    get:
-      operationId: api_v1_scenario_mortality_models_retrieve
+    patch:
+      operationId: api_v1_scenario_mortality_models_partial_update
       description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
@@ -24497,6 +23862,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityModel'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityModel'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMortalityModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24515,6 +23891,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_mortality_models_update
       description: Enhanced ViewSet for mortality models with audit trail support.
@@ -24561,8 +23939,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_mortality_models_partial_update
+    get:
+      operationId: api_v1_scenario_mortality_models_retrieve
       description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
@@ -24575,17 +23953,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityModel'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityModel'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedMortalityModel'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24604,8 +23971,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_mortality_models_destroy
       description: Enhanced ViewSet for mortality models with audit trail support.
@@ -24737,8 +24102,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/scenario/biological-constraints/{id}/:
-    get:
-      operationId: api_v1_scenario_biological_constraints_retrieve
+    patch:
+      operationId: api_v1_scenario_biological_constraints_partial_update
       description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
@@ -24752,6 +24117,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBiologicalConstraints'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBiologicalConstraints'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBiologicalConstraints'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24770,6 +24146,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_biological_constraints_update
       description: ViewSet for biological constraints with audit trail support.
@@ -24817,8 +24195,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_biological_constraints_partial_update
+    get:
+      operationId: api_v1_scenario_biological_constraints_retrieve
       description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
@@ -24832,17 +24210,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBiologicalConstraints'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedBiologicalConstraints'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedBiologicalConstraints'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -24861,8 +24228,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_biological_constraints_destroy
       description: ViewSet for biological constraints with audit trail support.
@@ -25098,8 +24463,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/scenario/scenarios/{scenario_id}/:
-    get:
-      operationId: api_v1_scenario_scenarios_retrieve
+    patch:
+      operationId: api_v1_scenario_scenarios_partial_update
       description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
@@ -25112,6 +24477,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScenario'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedScenario'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedScenario'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -25130,6 +24506,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_scenario_scenarios_update
       description: Enhanced ViewSet for scenarios with audit trail support.
@@ -25176,8 +24554,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_scenario_scenarios_partial_update
+    get:
+      operationId: api_v1_scenario_scenarios_retrieve
       description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
@@ -25190,17 +24568,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedScenario'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedScenario'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedScenario'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -25219,8 +24586,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_scenarios_destroy
       description: Enhanced ViewSet for scenarios with audit trail support.
@@ -26967,8 +26332,8 @@ paths:
         '500':
           description: Internal Server Error
   /api/v1/users/users/{id}/:
-    get:
-      operationId: api_v1_users_users_retrieve
+    patch:
+      operationId: api_v1_users_users_partial_update
       description: |-
         API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
@@ -26984,6 +26349,17 @@ paths:
         required: true
       tags:
       - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -27002,6 +26378,8 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
     put:
       operationId: api_v1_users_users_update
       description: |-
@@ -27051,8 +26429,8 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
-    patch:
-      operationId: api_v1_users_users_partial_update
+    get:
+      operationId: api_v1_users_users_retrieve
       description: |-
         API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
 
@@ -27068,17 +26446,6 @@ paths:
         required: true
       tags:
       - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUser'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUser'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUser'
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -27097,8 +26464,6 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
     delete:
       operationId: api_v1_users_users_destroy
       description: |-
@@ -28388,295 +27753,6 @@ components:
       - history_type
       - history_user
       - updated_at
-    BatchTransfer:
-      type: object
-      description: Serializer for the BatchTransfer model.
-      properties:
-        id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_batch_number:
-          type: string
-          readOnly: true
-        destination_batch_number:
-          type: string
-          readOnly: true
-        transfer_type_display:
-          type: string
-          readOnly: true
-        source_lifecycle_stage_name:
-          type: string
-          readOnly: true
-        destination_lifecycle_stage_name:
-          type: string
-          readOnly: true
-        source_container_name:
-          type: string
-          readOnly: true
-        destination_container_name:
-          type: string
-          readOnly: true
-        source_batch_info:
-          type: object
-          additionalProperties: {}
-          nullable: true
-          description: Get basic source batch information.
-          readOnly: true
-        destination_batch_info:
-          type: object
-          additionalProperties: {}
-          nullable: true
-          description: Get basic destination batch information.
-          readOnly: true
-        transfer_type:
-          enum:
-          - CONTAINER
-          - LIFECYCLE
-          - SPLIT
-          - MERGE
-          - MIXED_TRANSFER
-          type: string
-          description: |-
-            * `CONTAINER` - Container Transfer
-            * `LIFECYCLE` - Lifecycle Stage Change
-            * `SPLIT` - Batch Split
-            * `MERGE` - Batch Merge
-            * `MIXED_TRANSFER` - Mixed Batch Transfer
-          x-spec-enum-id: 84d720b57a7d7b00
-        transfer_date:
-          type: string
-          format: date
-        source_count:
-          type: integer
-          description: Population count before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        transferred_count:
-          type: integer
-          description: Number of fish transferred
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        mortality_count:
-          type: integer
-          description: Number of mortalities during transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass before transfer in kg
-        transferred_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass transferred in kg
-        is_emergency_mixing:
-          type: boolean
-          description: Whether this was an emergency mixing of different batches
-        notes:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        source_batch:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_batch:
-          type: integer
-          nullable: true
-          description: Destination batch for merges or new batch for splits; may be
-            null for simple transfers
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_assignment:
-          type: integer
-          nullable: true
-          description: Source batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_assignment:
-          type: integer
-          nullable: true
-          description: Destination batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_lifecycle_stage:
-          type: integer
-          description: Lifecycle stage before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_lifecycle_stage:
-          type: integer
-          nullable: true
-          description: New lifecycle stage after transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - created_at
-      - destination_batch_info
-      - destination_batch_number
-      - destination_container_name
-      - destination_lifecycle_stage_name
-      - id
-      - source_batch
-      - source_batch_info
-      - source_batch_number
-      - source_biomass_kg
-      - source_container_name
-      - source_count
-      - source_lifecycle_stage
-      - source_lifecycle_stage_name
-      - transfer_date
-      - transfer_type
-      - transfer_type_display
-      - transferred_biomass_kg
-      - transferred_count
-      - updated_at
-    BatchTransferHistory:
-      type: object
-      description: History serializer for BatchTransfer model.
-      properties:
-        history_id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        history_user:
-          type: string
-          readOnly: true
-          description: User who made the change
-        history_date:
-          type: string
-          format: date-time
-          readOnly: true
-          description: When the change was made
-        history_type:
-          type: string
-          readOnly: true
-          description: 'Type of change: + (Created), ~ (Updated), - (Deleted)'
-        history_change_reason:
-          type: string
-          readOnly: true
-          description: Reason for the change
-        id:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        transfer_type:
-          enum:
-          - CONTAINER
-          - LIFECYCLE
-          - SPLIT
-          - MERGE
-          - MIXED_TRANSFER
-          type: string
-          description: |-
-            * `CONTAINER` - Container Transfer
-            * `LIFECYCLE` - Lifecycle Stage Change
-            * `SPLIT` - Batch Split
-            * `MERGE` - Batch Merge
-            * `MIXED_TRANSFER` - Mixed Batch Transfer
-          x-spec-enum-id: 84d720b57a7d7b00
-        transfer_date:
-          type: string
-          format: date
-        source_count:
-          type: integer
-          description: Population count before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        transferred_count:
-          type: integer
-          description: Number of fish transferred
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        mortality_count:
-          type: integer
-          description: Number of mortalities during transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass before transfer in kg
-        transferred_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass transferred in kg
-        is_emergency_mixing:
-          type: boolean
-          description: Whether this was an emergency mixing of different batches
-        notes:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        source_batch:
-          type: integer
-          nullable: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_batch:
-          type: integer
-          nullable: true
-          description: Destination batch for merges or new batch for splits; may be
-            null for simple transfers
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_assignment:
-          type: integer
-          nullable: true
-          description: Source batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_assignment:
-          type: integer
-          nullable: true
-          description: Destination batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_lifecycle_stage:
-          type: integer
-          nullable: true
-          description: Lifecycle stage before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_lifecycle_stage:
-          type: integer
-          nullable: true
-          description: New lifecycle stage after transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-      required:
-      - created_at
-      - history_change_reason
-      - history_date
-      - history_id
-      - history_type
-      - history_user
-      - source_biomass_kg
-      - source_count
-      - transfer_date
-      - transfer_type
-      - transferred_biomass_kg
-      - transferred_count
-      - updated_at
     BatchTransferWorkflowCreate:
       type: object
       description: |-
@@ -28864,11 +27940,13 @@ components:
           minimum: -9223372036854775808
         initiated_by:
           type: integer
+          readOnly: true
           description: User who created this workflow
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         completed_by:
           type: integer
+          readOnly: true
           nullable: true
           description: User who completed this workflow
           maximum: 9223372036854775807
@@ -28881,6 +27959,7 @@ components:
       - batch
       - batch_info
       - batch_number
+      - completed_by
       - completed_by_username
       - completion_percentage
       - created_at
@@ -29085,11 +28164,13 @@ components:
           minimum: -9223372036854775808
         initiated_by:
           type: integer
+          readOnly: true
           description: User who created this workflow
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         completed_by:
           type: integer
+          readOnly: true
           nullable: true
           description: User who completed this workflow
           maximum: 9223372036854775807
@@ -29102,6 +28183,7 @@ components:
       - batch
       - batch_info
       - batch_number
+      - completed_by
       - completed_by_username
       - completion_percentage
       - created_at
@@ -29237,6 +28319,7 @@ components:
           description: Whether this transfer crosses subsidiary boundaries
         initiated_by:
           type: integer
+          readOnly: true
           description: User who created this workflow
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -34737,56 +33820,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BatchParentage'
-    PaginatedBatchTransferHistoryList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/BatchTransferHistory'
-    PaginatedBatchTransferList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/BatchTransfer'
     PaginatedBatchTransferWorkflowListList:
       type: object
       required:
@@ -37083,138 +36116,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    PatchedBatchTransfer:
-      type: object
-      description: Serializer for the BatchTransfer model.
-      properties:
-        id:
-          type: integer
-          readOnly: true
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_batch_number:
-          type: string
-          readOnly: true
-        destination_batch_number:
-          type: string
-          readOnly: true
-        transfer_type_display:
-          type: string
-          readOnly: true
-        source_lifecycle_stage_name:
-          type: string
-          readOnly: true
-        destination_lifecycle_stage_name:
-          type: string
-          readOnly: true
-        source_container_name:
-          type: string
-          readOnly: true
-        destination_container_name:
-          type: string
-          readOnly: true
-        source_batch_info:
-          type: object
-          additionalProperties: {}
-          nullable: true
-          description: Get basic source batch information.
-          readOnly: true
-        destination_batch_info:
-          type: object
-          additionalProperties: {}
-          nullable: true
-          description: Get basic destination batch information.
-          readOnly: true
-        transfer_type:
-          enum:
-          - CONTAINER
-          - LIFECYCLE
-          - SPLIT
-          - MERGE
-          - MIXED_TRANSFER
-          type: string
-          description: |-
-            * `CONTAINER` - Container Transfer
-            * `LIFECYCLE` - Lifecycle Stage Change
-            * `SPLIT` - Batch Split
-            * `MERGE` - Batch Merge
-            * `MIXED_TRANSFER` - Mixed Batch Transfer
-          x-spec-enum-id: 84d720b57a7d7b00
-        transfer_date:
-          type: string
-          format: date
-        source_count:
-          type: integer
-          description: Population count before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        transferred_count:
-          type: integer
-          description: Number of fish transferred
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        mortality_count:
-          type: integer
-          description: Number of mortalities during transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass before transfer in kg
-        transferred_biomass_kg:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          description: Biomass transferred in kg
-        is_emergency_mixing:
-          type: boolean
-          description: Whether this was an emergency mixing of different batches
-        notes:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        source_batch:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_batch:
-          type: integer
-          nullable: true
-          description: Destination batch for merges or new batch for splits; may be
-            null for simple transfers
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_assignment:
-          type: integer
-          nullable: true
-          description: Source batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_assignment:
-          type: integer
-          nullable: true
-          description: Destination batch-container assignment
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        source_lifecycle_stage:
-          type: integer
-          description: Lifecycle stage before transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-        destination_lifecycle_stage:
-          type: integer
-          nullable: true
-          description: New lifecycle stage after transfer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
     PatchedBatchTransferWorkflowDetail:
       type: object
       description: Full serializer for workflow detail views with nested actions.
@@ -37400,11 +36301,13 @@ components:
           minimum: -9223372036854775808
         initiated_by:
           type: integer
+          readOnly: true
           description: User who created this workflow
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         completed_by:
           type: integer
+          readOnly: true
           nullable: true
           description: User who completed this workflow
           maximum: 9223372036854775807
@@ -39985,16 +38888,16 @@ components:
           readOnly: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        batch_transfer_id:
+        batch_transfer_workflow_id:
           type: integer
           readOnly: true
-          description: ID of the batch transfer this environmental record is associated
-            with.
+          description: ID of the batch transfer workflow this environmental record
+            is associated with.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        batch_transfer:
+        batch_transfer_workflow:
           type: integer
-          description: The batch transfer this environmental record is associated
+          description: The batch transfer workflow this environmental record is associated
             with.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -41267,16 +40170,16 @@ components:
           readOnly: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        batch_transfer_id:
+        batch_transfer_workflow_id:
           type: integer
           readOnly: true
-          description: ID of the batch transfer this environmental record is associated
-            with.
+          description: ID of the batch transfer workflow this environmental record
+            is associated with.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        batch_transfer:
+        batch_transfer_workflow:
           type: integer
-          description: The batch transfer this environmental record is associated
+          description: The batch transfer workflow this environmental record is associated
             with.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -41321,8 +40224,8 @@ components:
           format: date-time
           readOnly: true
       required:
-      - batch_transfer
-      - batch_transfer_id
+      - batch_transfer_workflow
+      - batch_transfer_workflow_id
       - created_at
       - id
       - updated_at

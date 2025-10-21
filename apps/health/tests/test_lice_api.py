@@ -42,6 +42,14 @@ class LiceTypeAPITest(TestCase):
                 'description': 'Gravid adult female salmon louse'
             }
         )
+        self.adult_male, _ = LiceType.objects.get_or_create(
+            species='Lepeophtheirus salmonis',
+            gender='male',
+            development_stage='adult',
+            defaults={
+                'description': 'Adult male salmon louse'
+            }
+        )
         self.juvenile, _ = LiceType.objects.get_or_create(
             species='Unknown',
             gender='unknown',

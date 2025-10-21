@@ -7,7 +7,6 @@ This package contains all serializers related to fish batch management, includin
 - Batch tracking
 - Container assignments
 - Batch compositions
-- Transfers between containers (legacy)
 - Transfer workflows (new architecture)
 - Transfer actions (workflow execution)
 - Mortality events
@@ -25,7 +24,6 @@ from apps.batch.api.serializers.assignment import (
     BatchContainerAssignmentSerializer
 )
 from apps.batch.api.serializers.composition import BatchCompositionSerializer
-from apps.batch.api.serializers.transfer import BatchTransferSerializer
 from apps.batch.api.serializers.workflow import (
     BatchTransferWorkflowListSerializer,
     BatchTransferWorkflowDetailSerializer,
@@ -63,7 +61,6 @@ __all__ = [
     'BatchSerializer',
     'BatchContainerAssignmentSerializer',
     'BatchCompositionSerializer',
-    'BatchTransferSerializer',
     'BatchTransferWorkflowListSerializer',
     'BatchTransferWorkflowDetailSerializer',
     'BatchTransferWorkflowCreateSerializer',

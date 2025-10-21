@@ -165,8 +165,15 @@ class FinanceAPITestDataMixin:
             to_company=cls.dest_company,
             product_grade=cls.grade_a,
         )
+        
+        # Get content type for polymorphic relationship
+        from django.contrib.contenttypes.models import ContentType
+        harvest_event_ct = ContentType.objects.get_for_model(HarvestEvent)
+        
         cls.tx_pending = IntercompanyTransaction.objects.create(
             event=cls.event_recent,
+            content_type=harvest_event_ct,
+            object_id=cls.event_recent.id,
             policy=cls.policy,
             posting_date=cls.event_recent.event_date.date(),
             amount=Decimal("1500.00"),
@@ -175,6 +182,8 @@ class FinanceAPITestDataMixin:
         )
         cls.tx_exported = IntercompanyTransaction.objects.create(
             event=cls.event_older,
+            content_type=harvest_event_ct,
+            object_id=cls.event_older.id,
             policy=cls.policy,
             posting_date=cls.event_older.event_date.date(),
             amount=Decimal("800.00"),

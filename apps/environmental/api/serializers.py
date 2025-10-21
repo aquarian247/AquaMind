@@ -7,7 +7,7 @@ Includes special handling for TimescaleDB hypertable models.
 from decimal import Decimal
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
-from apps.batch.models import Batch, BatchTransfer
+from apps.batch.models import Batch, BatchTransferWorkflow
 from apps.environmental.models import (
     EnvironmentalParameter,
     EnvironmentalReading,
@@ -358,15 +358,15 @@ class StageTransitionEnvironmentalSerializer(serializers.ModelSerializer):
     which is critical for tracking environmental factors during transitions.
     """
     
-    batch_transfer_id = serializers.ReadOnlyField(
-        source='batch_transfer.id',
-        help_text="ID of the batch transfer this environmental record is associated with."
+    batch_transfer_workflow_id = serializers.ReadOnlyField(
+        source='batch_transfer_workflow.id',
+        help_text="ID of the batch transfer workflow this environmental record is associated with."
     )
     
     # Additional fields with help_text
-    batch_transfer = serializers.PrimaryKeyRelatedField(
-        queryset=BatchTransfer.objects.all(),
-        help_text="The batch transfer this environmental record is associated with."
+    batch_transfer_workflow = serializers.PrimaryKeyRelatedField(
+        queryset=BatchTransferWorkflow.objects.all(),
+        help_text="The batch transfer workflow this environmental record is associated with."
     )
     
     temperature = serializers.DecimalField(

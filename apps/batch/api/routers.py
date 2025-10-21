@@ -12,7 +12,6 @@ from .viewsets import (
     BatchViewSet,
     BatchContainerAssignmentViewSet,
     BatchCompositionViewSet,
-    BatchTransferViewSet,
     BatchTransferWorkflowViewSet,
     TransferActionViewSet,
     MortalityEventViewSet,
@@ -21,7 +20,6 @@ from .viewsets import (
 from .viewsets.history import (
     BatchHistoryViewSet,
     BatchContainerAssignmentHistoryViewSet,
-    BatchTransferHistoryViewSet,
     MortalityEventHistoryViewSet,
     GrowthSampleHistoryViewSet
 )
@@ -33,7 +31,6 @@ router.register(r'lifecycle-stages', LifeCycleStageViewSet, basename='lifecycle-
 router.register(r'batches', BatchViewSet, basename='batch')
 router.register(r'container-assignments', BatchContainerAssignmentViewSet, basename='batch-container-assignment')
 router.register(r'batch-compositions', BatchCompositionViewSet, basename='batch-composition')
-router.register(r'transfers', BatchTransferViewSet, basename='batch-transfer')
 router.register(r'transfer-workflows', BatchTransferWorkflowViewSet, basename='transfer-workflow')
 router.register(r'transfer-actions', TransferActionViewSet, basename='transfer-action')
 router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-event')
@@ -42,7 +39,6 @@ router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-sample'
 # Register history endpoints
 router.register(r'history/batches', BatchHistoryViewSet, basename='batch-history')
 router.register(r'history/container-assignments', BatchContainerAssignmentHistoryViewSet, basename='batch-container-assignment-history')
-router.register(r'history/transfers', BatchTransferHistoryViewSet, basename='batch-transfer-history')
 router.register(r'history/mortality-events', MortalityEventHistoryViewSet, basename='mortality-event-history')
 router.register(r'history/growth-samples', GrowthSampleHistoryViewSet, basename='growth-sample-history')
 

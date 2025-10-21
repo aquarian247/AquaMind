@@ -10,7 +10,6 @@ from aquamind.utils.history_utils import HistoryFilter
 from apps.batch.models import (
     Batch,
     BatchContainerAssignment,
-    BatchTransfer,
     MortalityEvent,
     GrowthSample
 )
@@ -30,14 +29,6 @@ class BatchContainerAssignmentHistoryFilter(HistoryFilter):
     class Meta:
         model = BatchContainerAssignment.history.model
         fields = ['batch', 'container', 'lifecycle_stage']
-
-
-class BatchTransferHistoryFilter(HistoryFilter):
-    """Filter class for BatchTransfer historical records."""
-
-    class Meta:
-        model = BatchTransfer.history.model
-        fields = ['source_batch', 'destination_batch', 'transfer_type']
 
 
 class MortalityEventHistoryFilter(HistoryFilter):

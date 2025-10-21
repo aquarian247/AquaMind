@@ -368,3 +368,5 @@ class BatchSerializer(serializers.ModelSerializer):
 **Result**: ✅ **System now works correctly end-to-end from harvest to batch completion!** 🚀
 
 
+
+

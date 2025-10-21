@@ -69,7 +69,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall track batches (`batch_batch`) through defined lifecycle stages (`batch_lifecyclestage` records: e.g., Egg, Fry, Parr, Smolt, Post-Smolt, Adult).
   - The system shall support assigning portions of batches to specific containers at specific lifecycle stages using the `batch_batchcontainerassignment` model. This model tracks `population_count`, `avg_weight_g`, and the `lifecycle_stage_id` for that specific assignment.
   - The system shall calculate derived metrics like `biomass_kg` (within `BatchContainerAssignment.save()` or serializers: `population_count * avg_weight_g / 1000`).
-  - The system shall log batch transfers between containers using `batch_batchtransfer`, recording `from_container_id`, `to_container_id`, `population_count`, `transfer_type`, etc.
+  - The system shall orchestrate multi-day batch transfers using `batch_batchtransferworkflow` and `batch_transferaction`, providing state management, progress tracking, and finance integration (see section 3.1.2.1).
   - The system shall track growth via `batch_growthsample` records (linked to `batch_batchcontainerassignment`). Mortality is tracked via `batch_mortalityevent`.
   - The system shall calculate Fulton's Condition Factor (K-factor) for each growth sample using the formula \(K = 100 \times \frac{W}{L^3}\), where \(W\) is the average weight in grams (`batch_growthsample.avg_weight_g`) and \(L\) is the average length in centimeters (`batch_growthsample.avg_length_cm`) for that specific sample.
   - The K-factor shall be stored in the existing `condition_factor` field on the `batch_growthsample` model.
@@ -77,8 +77,8 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall simulate, for testing purposes, a full lifecycle (approx. 850-900 days) with stage-appropriate container transitions, involving creation of new `BatchContainerAssignment` records upon stage changes or transfers (Ref: `simulate_full_lifecycle.py` script).
   - Batch history will be managed via audit logging tools (e.g., `django-auditlog`). Media attachments (`batch_batchmedia`) might use generic relations or a dedicated media model.
 - **Behavior**:
-  - Batch lifecycle stage transitions typically trigger the creation of new `BatchContainerAssignment` records or `BatchTransfer` records to reflect the change in location or status.
-  - Transfers (`batch_batchtransfer`) shall require user confirmation and log the reason (`batch_batchtransfer.reason`).
+  - Batch lifecycle stage transitions typically trigger the creation of transfer workflows (`batch_batchtransferworkflow`) with individual transfer actions (`batch_transferaction`) to reflect the change in location or status.
+  - Workflows shall progress through states (DRAFT → PLANNED → IN_PROGRESS → COMPLETED) and require user confirmation before execution.
   - Biomass calculations (`batch_batchcontainerassignment.biomass_kg`) shall update automatically when relevant fields (`population_count`, `avg_weight_g`) are modified.
   - The K-factor (`batch_growthsample.condition_factor`) shall be calculated automatically within the `GrowthSample` model's `save` method whenever `avg_weight_g` and calculated `avg_length_cm` are available for a sample.
 - **Justification**: Provides complete visibility into batch lifecycles and container assignments, enabling precise management, accurate biomass tracking, and traceability. Allows for granular health assessment through the K-factor calculated at the time of sampling for specific container assignments.
@@ -86,7 +86,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Acceptance Criteria**:
     - The UI displays the active `batch_batchcontainerassignment` records for a selected `batch_batch`.
     - Each assignment detail view shows the linked `infrastructure_container`, `population_count`, `avg_weight_g`, calculated `biomass_kg`, and the specific `batch_lifecyclestage` for that assignment.
-    - Transfers (`batch_batchtransfer`) between containers are logged with timestamps, reasons, and user details.
+    - Transfer workflows (`batch_batchtransferworkflow`) and their actions (`batch_transferaction`) are logged with timestamps, execution details, environmental conditions, and user attribution.
     - Growth patterns (`batch_growthsample` data) are visualized in a chart showing stage transitions over time.
 - **User Story**: As a Manager, I want to view batch history (via audit logs) so that I can trace its movements and significant changes.
   - **Acceptance Criteria**:
@@ -120,10 +120,10 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Action-level endpoints shall support: `execute()` (record execution with mortality/conditions), `skip()` (bypass action), `rollback()` (undo execution), and `retry()` (re-attempt failed action).
 - **Behavior**:
   - Planning a workflow (`plan()` action) shall validate all actions, ensure container availability, and transition status to PLANNED, making it ready for execution.
-  - Executing an action shall update source/destination assignment populations, create corresponding `batch_batchtransfer` records for audit trails, and automatically progress workflow status when all actions complete.
+  - Executing an action shall update source/destination assignment populations, record execution details in `batch_transferaction`, and automatically progress workflow status when all actions complete.
   - Intercompany detection shall run automatically during workflow planning and create finance transactions in PENDING state awaiting manager approval.
   - Workflow cancellation shall validate that no actions are IN_PROGRESS or COMPLETED before allowing cancellation, preserving data integrity.
-- **Justification**: Addresses critical operational gaps where legacy `batch_batchtransfer` model assumes instantaneous transfers, while real-world operations span days/weeks with complex multi-container coordination. Enables finance team to track inter-subsidiary asset movements and ensures ship crew can execute transfers with proper mobile workflows during long voyages. Supports regulatory compliance through comprehensive workflow audit trails via django-simple-history.
+- **Justification**: Addresses critical operational gaps where instantaneous transfer models cannot represent real-world operations spanning days/weeks with complex multi-container coordination. The workflow system enables finance team to track inter-subsidiary asset movements and ensures ship crew can execute transfers with proper mobile workflows during long voyages. Supports regulatory compliance through comprehensive workflow audit trails via django-simple-history.
 - **User Story**: As a Freshwater Manager, I want to plan and track a gradual lifecycle transition from Fry to Parr spanning 2 weeks across 10 containers so that I can coordinate the multi-day operation and monitor completion progress.
   - **Acceptance Criteria**:
     - The UI provides a workflow creation wizard allowing selection of batch, workflow type (LIFECYCLE_TRANSITION), source/dest lifecycle stages, and planned start date.
@@ -700,7 +700,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 - **Functionality**:  
   - The system **shall standardize on `django-simple-history`** for model-level auditing.  
   - All meaningful business entities **shall be tracked** (non-exhaustive list):  
-    - **Batch**: `BatchTransfer`, `BatchContainerAssignment`, `GrowthSample`, `MortalityEvent`  
+    - **Batch**: `BatchTransferWorkflow`, `TransferAction`, `BatchContainerAssignment`, `GrowthSample`, `MortalityEvent`  
     - **Inventory**: `FeedingEvent`  
     - **Health**: `JournalEntry`, `HealthLabSample`, `MortalityRecord`, `LiceCount`, `Treatment`  
     - **Infrastructure**: `Geography`, `Area`, `FreshwaterStation`, `Hall`, `ContainerType`, `Sensor`, `FeedContainer`  

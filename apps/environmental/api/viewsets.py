@@ -551,13 +551,12 @@ class StageTransitionEnvironmentalViewSet(HistoryReasonMixin, viewsets.ModelView
     queryset = StageTransitionEnvironmental.objects.all()
     serializer_class = StageTransitionEnvironmentalSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['batch_transfer']
-    # Correct relationship paths: BatchTransfer has `source_batch` and `destination_batch`
-    # (not plain `batch`).  Searching by batch number is more stable than by name.
+    filterset_fields = ['batch_transfer_workflow']
+    # BatchTransferWorkflow has workflow_number and batch relationship
     search_fields = [
         'notes',
-        'batch_transfer__source_batch__batch_number',
-        'batch_transfer__destination_batch__batch_number',
+        'batch_transfer_workflow__workflow_number',
+        'batch_transfer_workflow__batch__batch_number',
     ]
     ordering_fields = ['created_at']
     ordering = ['-created_at']  # Default to most recent first

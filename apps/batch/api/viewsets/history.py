@@ -10,21 +10,18 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from apps.batch.models import (
     Batch,
     BatchContainerAssignment,
-    BatchTransfer,
     MortalityEvent,
     GrowthSample
 )
 from apps.batch.api.serializers.history import (
     BatchHistorySerializer,
     BatchContainerAssignmentHistorySerializer,
-    BatchTransferHistorySerializer,
     MortalityEventHistorySerializer,
     GrowthSampleHistorySerializer
 )
 from apps.batch.api.filters.history import (
     BatchHistoryFilter,
     BatchContainerAssignmentHistoryFilter,
-    BatchTransferHistoryFilter,
     MortalityEventHistoryFilter,
     GrowthSampleHistoryFilter
 )
@@ -57,21 +54,6 @@ class BatchContainerAssignmentHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSe
             return 'listBatchContainerAssignmentHistory'
         elif action == 'retrieve':
             return 'retrieveBatchContainerAssignmentHistory'
-        return super().get_operation_id(request, action)
-
-
-class BatchTransferHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
-    """ViewSet for BatchTransfer historical records."""
-    queryset = BatchTransfer.history.all()
-    serializer_class = BatchTransferHistorySerializer
-    filterset_class = BatchTransferHistoryFilter
-
-    def get_operation_id(self, request=None, action=None):
-        """Generate unique operation ID to resolve Spectacular collisions."""
-        if action == 'list':
-            return 'listBatchBatchTransferHistory'
-        elif action == 'retrieve':
-            return 'retrieveBatchBatchTransferHistory'
         return super().get_operation_id(request, action)
 
 

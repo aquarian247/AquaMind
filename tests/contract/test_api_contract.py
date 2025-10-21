@@ -37,7 +37,7 @@ from apps.batch.api.viewsets import (
     LifeCycleStageViewSet,
     BatchContainerAssignmentViewSet,
     BatchCompositionViewSet,
-    BatchTransferViewSet,
+    BatchTransferWorkflowViewSet,
     MortalityEventViewSet,
     GrowthSampleViewSet,
 )

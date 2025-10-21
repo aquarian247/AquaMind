@@ -3,7 +3,6 @@ from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     Batch,
     BatchContainerAssignment,
-    BatchTransfer,
     BatchTransferWorkflow,
     TransferAction,
     GrowthSample,
@@ -135,54 +134,6 @@ class BatchContainerAssignmentAdmin(SimpleHistoryAdmin):
         }),
         ('Population Details', {
             'fields': ('population_count', 'avg_weight_g', 'biomass_kg')
-        }),
-        ('Additional Information', {
-            'fields': ('notes', 'created_at', 'updated_at')
-        }),
-    )
-
-
-@admin.register(BatchTransfer)
-class BatchTransferAdmin(SimpleHistoryAdmin):
-    """Admin interface for the BatchTransfer model."""
-    list_display = (
-        'source_batch',
-        'transfer_type',
-        'transfer_date',
-        'transferred_count',
-        'mortality_count',
-    )
-    list_filter = ('transfer_type', 'transfer_date')
-    search_fields = (
-        'source_batch__batch_number',
-        'destination_batch__batch_number',
-        'notes',
-    )
-    date_hierarchy = 'transfer_date'
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {
-            'fields': (
-                'source_batch',
-                'destination_batch',
-                'transfer_type',
-                'transfer_date',
-            )
-        }),
-        ('Population Changes', {
-            'fields': ('source_count', 'transferred_count', 'mortality_count')
-        }),
-        ('Biomass', {
-            'fields': ('source_biomass_kg', 'transferred_biomass_kg')
-        }),
-        ('Lifecycle', {
-            'fields': (
-                'source_lifecycle_stage',
-                'destination_lifecycle_stage',
-            )
-        }),
-        ('Assignments', {
-            'fields': ('source_assignment', 'destination_assignment')
         }),
         ('Additional Information', {
             'fields': ('notes', 'created_at', 'updated_at')

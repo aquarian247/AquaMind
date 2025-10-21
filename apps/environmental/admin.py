@@ -83,9 +83,9 @@ class WeatherDataAdmin(admin.ModelAdmin):
 
 @admin.register(StageTransitionEnvironmental)
 class StageTransitionEnvironmentalAdmin(admin.ModelAdmin):
-    list_display = ('batch_transfer', 'temperature_display', 'oxygen_display', 'salinity_display', 'ph_display')
-    list_filter = ('batch_transfer__transfer_date',)
-    search_fields = ('batch_transfer__source_batch__batch_number', 'notes')
+    list_display = ('batch_transfer_workflow', 'temperature_display', 'oxygen_display', 'salinity_display', 'ph_display')
+    list_filter = ('batch_transfer_workflow__planned_start_date',)
+    search_fields = ('batch_transfer_workflow__workflow_number', 'batch_transfer_workflow__batch__batch_number', 'notes')
     
     def temperature_display(self, obj):
         return f"{float(obj.temperature):,.1f} °C" if obj.temperature is not None else "N/A"

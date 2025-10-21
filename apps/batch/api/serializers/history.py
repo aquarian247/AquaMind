@@ -10,7 +10,6 @@ from aquamind.utils.history_utils import HistorySerializer
 from apps.batch.models import (
     Batch,
     BatchContainerAssignment,
-    BatchTransfer,
     MortalityEvent,
     GrowthSample
 )
@@ -29,14 +28,6 @@ class BatchContainerAssignmentHistorySerializer(HistorySerializer):
 
     class Meta:
         model = BatchContainerAssignment.history.model
-        fields = '__all__'
-
-
-class BatchTransferHistorySerializer(HistorySerializer):
-    """History serializer for BatchTransfer model."""
-
-    class Meta:
-        model = BatchTransfer.history.model
         fields = '__all__'
 
 

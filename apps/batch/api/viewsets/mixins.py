@@ -5,7 +5,7 @@ These mixins contain complex business logic extracted from viewsets
 to improve maintainability and reduce cyclomatic complexity.
 """
 import math
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Avg, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from apps.batch.models import GrowthSample, MortalityEvent, BatchContainerAssignment
+from apps.batch.models import GrowthSample, MortalityEvent
 from rest_framework.exceptions import ValidationError
 
 
@@ -465,6 +465,443 @@ class BatchAnalyticsMixin:
             biomass_metrics.append(batch_biomass)
 
         return biomass_metrics
+
+
+class GeographyAggregationMixin:
+    """
+    Mixin containing geography-level aggregation methods for BatchViewSet.
+    
+    Provides endpoints to aggregate batch performance metrics across geographies.
+    """
+
+    @extend_schema(
+        operation_id="batch-geography-summary",
+        summary="Get aggregated growth, mortality, and feed metrics for batches in a geography",
+        description=(
+            "Returns geography-level aggregated metrics for all batches including:\n"
+            "- Growth metrics (TGC, SGR, average growth rate)\n"
+            "- Mortality metrics (total count, rate, breakdown by cause)\n"
+            "- Feed metrics (total feed, average FCR)\n\n"
+            "Useful for executive dashboards and geography-level performance monitoring."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="geography",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by geography ID. Required.",
+                required=True,
+            ),
+            OpenApiParameter(
+                name="start_date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter batches with activity after this date (ISO 8601 format: YYYY-MM-DD)",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="end_date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Filter batches with activity before this date (ISO 8601 format: YYYY-MM-DD)",
+                required=False,
+            ),
+        ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "geography_id": {"type": "integer"},
+                    "geography_name": {"type": "string"},
+                    "period_start": {"type": "string", "format": "date", "nullable": True},
+                    "period_end": {"type": "string", "format": "date", "nullable": True},
+                    "total_batches": {"type": "integer"},
+                    "growth_metrics": {
+                        "type": "object",
+                        "properties": {
+                            "avg_tgc": {"type": "number", "nullable": True},
+                            "avg_sgr": {"type": "number", "nullable": True},
+                            "avg_growth_rate_g_per_day": {"type": "number", "nullable": True},
+                            "avg_weight_g": {"type": "number"},
+                            "total_biomass_kg": {"type": "number"},
+                        },
+                    },
+                    "mortality_metrics": {
+                        "type": "object",
+                        "properties": {
+                            "total_count": {"type": "integer"},
+                            "total_biomass_kg": {"type": "number"},
+                            "avg_mortality_rate_percent": {"type": "number"},
+                            "by_cause": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cause": {"type": "string"},
+                                        "count": {"type": "integer"},
+                                        "percentage": {"type": "number"},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "feed_metrics": {
+                        "type": "object",
+                        "properties": {
+                            "total_feed_kg": {"type": "number"},
+                            "avg_fcr": {"type": "number", "nullable": True},
+                            "feed_cost_total": {"type": "number", "nullable": True},
+                        },
+                    },
+                },
+            },
+            400: {
+                "type": "object",
+                "properties": {
+                    "detail": {"type": "string"},
+                },
+                "description": "Validation error for invalid parameters",
+            },
+        },
+    )
+    @action(detail=False, methods=['get'], url_path='geography-summary')
+    def geography_summary(self, request):
+        """
+        Aggregate batch performance metrics at geography level.
+
+        Returns aggregated growth, mortality, and feed metrics across
+        all batches within a specified geography.
+
+        Query Parameters:
+        - geography (required): Geography ID
+        - start_date (optional): Filter by start date (ISO 8601)
+        - end_date (optional): Filter by end date (ISO 8601)
+        """
+        from apps.infrastructure.models import Geography
+        from apps.batch.models import BatchContainerAssignment
+        from datetime import datetime
+
+        # 1. Validate and get geography parameter
+        geography_id = request.query_params.get('geography')
+        if not geography_id:
+            raise ValidationError({
+                'geography': 'Geography parameter is required'
+            })
+
+        try:
+            geography_id = int(geography_id)
+            geography = Geography.objects.get(id=geography_id)
+        except (ValueError, TypeError):
+            raise ValidationError({
+                'geography': 'Invalid geography ID format'
+            })
+        except Geography.DoesNotExist:
+            raise ValidationError({'geography': 'Geography not found'})
+
+        # 2. Get date filters (optional)
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if start_date:
+            try:
+                start_date = datetime.strptime(
+                    start_date, '%Y-%m-%d'
+                ).date()
+            except ValueError:
+                raise ValidationError({
+                    'start_date': 'Invalid date format. Use YYYY-MM-DD'
+                })
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(
+                    end_date, '%Y-%m-%d'
+                ).date()
+            except ValueError:
+                raise ValidationError({
+                    'end_date': 'Invalid date format. Use YYYY-MM-DD'
+                })
+
+        # 3. Get batches in this geography
+        # Batches are linked to geography through container assignments
+        geo_filter = (
+            Q(container__hall__freshwater_station__geography_id=(
+                geography_id
+            )) |
+            Q(container__area__geography_id=geography_id)
+        )
+        batch_assignments = BatchContainerAssignment.objects.filter(
+            geo_filter,
+            is_active=True
+        ).select_related('batch', 'container')
+
+        # Apply date filters if provided
+        if start_date:
+            batch_assignments = batch_assignments.filter(
+                assignment_date__gte=start_date
+            )
+        if end_date:
+            batch_assignments = batch_assignments.filter(
+                assignment_date__lte=end_date
+            )
+
+        # Get unique batches
+        batches = self.get_queryset().filter(
+            id__in=batch_assignments.values_list(
+                'batch_id', flat=True
+            ).distinct()
+        )
+
+        total_batches = batches.count()
+
+        # 4. Calculate growth metrics
+        growth_metrics = self._calculate_geography_growth_metrics(batches)
+
+        # 5. Calculate mortality metrics
+        mortality_metrics = self._calculate_geography_mortality_metrics(
+            batches
+        )
+
+        # 6. Calculate feed metrics
+        feed_metrics = self._calculate_geography_feed_metrics(
+            batches, start_date, end_date
+        )
+
+        # 7. Build response
+        response_data = {
+            'geography_id': geography.id,
+            'geography_name': geography.name,
+            'period_start': (
+                start_date.isoformat() if start_date else None
+            ),
+            'period_end': end_date.isoformat() if end_date else None,
+            'total_batches': total_batches,
+            'growth_metrics': growth_metrics,
+            'mortality_metrics': mortality_metrics,
+            'feed_metrics': feed_metrics,
+        }
+
+        return Response(response_data)
+    
+    def _calculate_geography_growth_metrics(self, batches):
+        """Calculate aggregated growth metrics across batches."""
+        import math
+
+        # Calculate aggregate metrics from batches (always available)
+        total_biomass = sum(
+            float(b.calculated_biomass_kg) for b in batches
+        )
+        total_population = sum(
+            b.calculated_population_count for b in batches
+        )
+        avg_weight = (
+            (total_biomass * 1000 / total_population)
+            if total_population > 0 else 0.0
+        )
+
+        # Get all growth samples for these batches
+        growth_samples = GrowthSample.objects.filter(
+            assignment__batch__in=batches
+        ).select_related('assignment__batch').order_by(
+            'assignment__batch', 'sample_date'
+        )
+
+        if not growth_samples.exists():
+            # Return biomass but nulls for growth metrics
+            return {
+                'avg_tgc': None,
+                'avg_sgr': None,
+                'avg_growth_rate_g_per_day': None,
+                'avg_weight_g': round(avg_weight, 2),
+                'total_biomass_kg': round(total_biomass, 2),
+            }
+
+        # Calculate SGR for each batch that has multiple samples
+        sgr_values = []
+        growth_rates = []
+
+        # Group samples by batch
+        batch_samples = {}
+        for sample in growth_samples:
+            batch_id = sample.assignment.batch_id
+            if batch_id not in batch_samples:
+                batch_samples[batch_id] = []
+            batch_samples[batch_id].append(sample)
+
+        # Calculate metrics for each batch
+        for batch_id, samples in batch_samples.items():
+            if len(samples) >= 2:
+                # Sort by date
+                samples = sorted(samples, key=lambda s: s.sample_date)
+                first_sample = samples[0]
+                last_sample = samples[-1]
+
+                days_diff = (
+                    last_sample.sample_date - first_sample.sample_date
+                ).days
+                if days_diff > 0 and first_sample.avg_weight_g > 0:
+                    # Calculate SGR
+                    sgr = (
+                        math.log(float(last_sample.avg_weight_g)) -
+                        math.log(float(first_sample.avg_weight_g))
+                    ) / days_diff * 100
+                    sgr_values.append(sgr)
+
+                    # Calculate growth rate
+                    weight_gain = (
+                        last_sample.avg_weight_g -
+                        first_sample.avg_weight_g
+                    )
+                    growth_rate = weight_gain / days_diff
+                    growth_rates.append(float(growth_rate))
+
+        # Return aggregated growth metrics
+        return {
+            'avg_tgc': None,  # TGC requires temperature data
+            'avg_sgr': (
+                round(sum(sgr_values) / len(sgr_values), 2)
+                if sgr_values else None
+            ),
+            'avg_growth_rate_g_per_day': (
+                round(sum(growth_rates) / len(growth_rates), 2)
+                if growth_rates else None
+            ),
+            'avg_weight_g': round(avg_weight, 2),
+            'total_biomass_kg': round(total_biomass, 2),
+        }
+    
+    def _calculate_geography_mortality_metrics(self, batches):
+        """Calculate aggregated mortality metrics across batches."""
+        mortality_events = MortalityEvent.objects.filter(
+            batch__in=batches
+        )
+
+        total_mortality = mortality_events.aggregate(
+            total_count=Sum('count'),
+            total_biomass=Sum('biomass_kg')
+        )
+
+        total_count = total_mortality['total_count'] or 0
+        total_biomass = total_mortality['total_biomass'] or 0
+
+        # Calculate average mortality rate across batches
+        batch_mortality_rates = []
+        for batch in batches:
+            batch_mortality = batch.mortality_events.aggregate(
+                total=Sum('count')
+            )['total'] or 0
+            if batch_mortality > 0:
+                initial_pop = (
+                    batch.calculated_population_count + batch_mortality
+                )
+                if initial_pop > 0:
+                    rate = (batch_mortality / initial_pop) * 100
+                    batch_mortality_rates.append(rate)
+
+        avg_mortality_rate = (
+            round(
+                sum(batch_mortality_rates) / len(batch_mortality_rates),
+                2
+            )
+            if batch_mortality_rates else 0.0
+        )
+
+        # Get mortality by cause
+        by_cause = []
+        if total_count > 0:
+            mortality_by_cause = mortality_events.values(
+                'cause'
+            ).annotate(
+                count=Sum('count')
+            ).order_by('-count')
+
+            by_cause = [
+                {
+                    'cause': item['cause'],
+                    'count': item['count'],
+                    'percentage': round(
+                        (item['count'] / total_count) * 100, 2
+                    )
+                }
+                for item in mortality_by_cause
+            ]
+
+        return {
+            'total_count': total_count,
+            'total_biomass_kg': float(total_biomass),
+            'avg_mortality_rate_percent': avg_mortality_rate,
+            'by_cause': by_cause,
+        }
+    
+    def _calculate_geography_feed_metrics(
+        self, batches, start_date, end_date
+    ):
+        """Calculate aggregated feed metrics across batches."""
+        from apps.inventory.models import (
+            FeedingEvent, BatchFeedingSummary
+        )
+
+        # Try to get data from BatchFeedingSummary first
+        feed_summaries = BatchFeedingSummary.objects.filter(
+            batch__in=batches
+        )
+
+        if start_date:
+            feed_summaries = feed_summaries.filter(
+                period_start__gte=start_date
+            )
+        if end_date:
+            feed_summaries = feed_summaries.filter(
+                period_end__lte=end_date
+            )
+
+        if feed_summaries.exists():
+            # Use summary data
+            summary_aggregates = feed_summaries.aggregate(
+                total_feed=Sum('total_feed_kg'),
+                avg_fcr=Avg('fcr')
+            )
+
+            return {
+                'total_feed_kg': float(
+                    summary_aggregates['total_feed'] or 0
+                ),
+                'avg_fcr': (
+                    round(float(summary_aggregates['avg_fcr']), 2)
+                    if summary_aggregates['avg_fcr'] else None
+                ),
+                'feed_cost_total': None,  # Requires finance integration
+            }
+        else:
+            # Fall back to individual feeding events
+            feeding_events = FeedingEvent.objects.filter(
+                batch__in=batches
+            )
+
+            if start_date:
+                feeding_events = feeding_events.filter(
+                    feeding_date__gte=start_date
+                )
+            if end_date:
+                feeding_events = feeding_events.filter(
+                    feeding_date__lte=end_date
+                )
+
+            event_aggregates = feeding_events.aggregate(
+                total_feed=Sum('amount_kg'),
+                total_cost=Sum('feed_cost')
+            )
+
+            return {
+                'total_feed_kg': float(
+                    event_aggregates['total_feed'] or 0
+                ),
+                'avg_fcr': None,  # Not available from raw events
+                'feed_cost_total': (
+                    float(event_aggregates['total_cost'])
+                    if event_aggregates['total_cost'] else None
+                ),
+            }
 
 
 class LocationFilterMixin:

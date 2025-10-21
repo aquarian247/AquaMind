@@ -1,7 +1,7 @@
 # Aggregation Endpoints Catalog
 
 **Purpose:** Central reference for all aggregation, summary, metrics, trends, and analysis endpoints in AquaMind  
-**Last Updated:** October 18, 2025  
+**Last Updated:** October 20, 2025  
 **Auto-Generated:** From `api/openapi.yaml`
 
 ---
@@ -12,6 +12,7 @@
 |-----|----------|------|-------------|
 | **Batch** | `/api/v1/batch/batches/{id}/growth_analysis/` | Detail Analysis | Growth metrics over time for a batch |
 | **Batch** | `/api/v1/batch/batches/{id}/performance_metrics/` | Detail Analysis | Performance metrics (mortality, FCR, etc.) |
+| **Batch** | `/api/v1/batch/batches/geography-summary/` | Collection Summary | **NEW** Geography-level growth, mortality, feed metrics |
 | **Batch** | `/api/v1/batch/container-assignments/summary/` | Collection Summary | Biomass/population aggregates with filters |
 | **Health** | `/api/v1/health/lice-counts/summary/` | Collection Summary | Lice count aggregates by geography/area |
 | **Health** | `/api/v1/health/lice-counts/trends/` | Collection Trends | Historical lice trends (weekly/monthly) |
@@ -136,7 +137,100 @@ GET /api/v1/batch/batches/{id}/performance_metrics/
 
 ---
 
-#### 3. Container Assignments Summary (Collection)
+#### 3. Geography Summary (Collection) ✨ NEW
+```
+GET /api/v1/batch/batches/geography-summary/
+```
+
+**Operation ID:** `batch-geography-summary`
+
+**Description:** Aggregate batch performance metrics at geography level - growth, mortality, and feed metrics across all batches.
+
+**Query Parameters:**
+- `geography` (integer, required) - Geography ID to filter by
+- `start_date` (date, optional) - Filter batches with assignments after this date (ISO 8601)
+- `end_date` (date, optional) - Filter batches with assignments before this date (ISO 8601)
+
+**Response Schema:**
+```json
+{
+  "geography_id": "integer",
+  "geography_name": "string",
+  "period_start": "date|null",
+  "period_end": "date|null",
+  "total_batches": "integer",
+  "growth_metrics": {
+    "avg_tgc": "number|null",
+    "avg_sgr": "number",
+    "avg_growth_rate_g_per_day": "number",
+    "avg_weight_g": "number",
+    "total_biomass_kg": "number"
+  },
+  "mortality_metrics": {
+    "total_count": "integer",
+    "total_biomass_kg": "number",
+    "avg_mortality_rate_percent": "number",
+    "by_cause": [
+      {
+        "cause": "string",
+        "count": "integer",
+        "percentage": "number"
+      }
+    ]
+  },
+  "feed_metrics": {
+    "total_feed_kg": "number",
+    "avg_fcr": "number|null",
+    "feed_cost_total": "number|null"
+  }
+}
+```
+
+**Real Data Example (Faroe Islands):**
+```json
+{
+  "geography_id": 1,
+  "geography_name": "Faroe Islands",
+  "total_batches": 8,
+  "growth_metrics": {
+    "avg_sgr": 3.65,
+    "avg_growth_rate_g_per_day": 1.57,
+    "avg_weight_g": 633.67,
+    "total_biomass_kg": 13711589.73
+  },
+  "mortality_metrics": {
+    "total_count": 4649873,
+    "avg_mortality_rate_percent": 17.78
+  },
+  "feed_metrics": {
+    "total_feed_kg": 19353098.72,
+    "feed_cost_total": 44510545.71
+  }
+}
+```
+
+**Use Cases:**
+- **Executive Dashboard Overview Tab** (TGC, SGR, Growth Rate KPIs)
+- **Executive Dashboard Financial Tab** (Feed costs by geography)
+- Geography comparison views
+- Performance benchmarking across regions
+
+**Performance:**
+- ✅ Aggregates across all batches in geography (tested with 8 batches, 27M fish)
+- ✅ DB-level aggregation (Sum, Avg, Count)
+- ✅ Handles millions of records efficiently
+- ⚡ No caching yet (add @cache_page(60) when deploying)
+
+**Implementation Notes:**
+- Growth metrics calculated from GrowthSample records
+- Mortality aggregated from MortalityEvent records
+- Feed metrics from FeedingEvent or BatchFeedingSummary (prefers summaries)
+- TGC field reserved for future temperature integration
+- FCR from BatchFeedingSummary when available
+
+---
+
+#### 4. Container Assignments Summary (Collection)
 ```
 GET /api/v1/batch/container-assignments/summary/
 ```
@@ -173,7 +267,7 @@ GET /api/v1/batch/container-assignments/summary/
 
 ### **Health App**
 
-#### 4. Lice Counts Summary (Collection)
+#### 5. Lice Counts Summary (Collection)
 ```
 GET /api/v1/health/lice-counts/summary/
 ```
@@ -213,7 +307,7 @@ GET /api/v1/health/lice-counts/summary/
 
 ---
 
-#### 5. Lice Counts Trends (Collection)
+#### 6. Lice Counts Trends (Collection)
 ```
 GET /api/v1/health/lice-counts/trends/
 ```
@@ -255,7 +349,7 @@ GET /api/v1/health/lice-counts/trends/
 
 ### **Infrastructure App**
 
-#### 6. Area Summary (Detail)
+#### 7. Area Summary (Detail)
 ```
 GET /api/v1/infrastructure/areas/{id}/summary/
 ```
@@ -278,7 +372,7 @@ GET /api/v1/infrastructure/areas/{id}/summary/
 
 ---
 
-#### 7. Geography Summary (Detail)
+#### 8. Geography Summary (Detail)
 ```
 GET /api/v1/infrastructure/geographies/{id}/summary/
 ```
@@ -303,7 +397,7 @@ GET /api/v1/infrastructure/geographies/{id}/summary/
 
 ---
 
-#### 8. Freshwater Station Summary (Detail)
+#### 9. Freshwater Station Summary (Detail)
 ```
 GET /api/v1/infrastructure/freshwater-stations/{id}/summary/
 ```
@@ -328,7 +422,7 @@ GET /api/v1/infrastructure/freshwater-stations/{id}/summary/
 
 ---
 
-#### 9. Hall Summary (Detail)
+#### 10. Hall Summary (Detail)
 ```
 GET /api/v1/infrastructure/halls/{id}/summary/
 ```
@@ -353,7 +447,7 @@ GET /api/v1/infrastructure/halls/{id}/summary/
 
 ### **Inventory App**
 
-#### 10. Feed Container Stock Summary (Collection)
+#### 11. Feed Container Stock Summary (Collection)
 ```
 GET /api/v1/inventory/feed-container-stock/summary/
 ```
@@ -385,7 +479,7 @@ GET /api/v1/inventory/feed-container-stock/summary/
 
 ---
 
-#### 11. Feeding Events Summary (Collection)
+#### 12. Feeding Events Summary (Collection)
 ```
 GET /api/v1/inventory/feeding-events/summary/
 ```
@@ -415,7 +509,7 @@ GET /api/v1/inventory/feeding-events/summary/
 
 ### **Operational App**
 
-#### 12. FCR Trends (Collection)
+#### 13. FCR Trends (Collection)
 ```
 GET /api/v1/operational/fcr-trends/
 ```
@@ -431,7 +525,7 @@ GET /api/v1/operational/fcr-trends/
 
 ---
 
-#### 13. FCR Trends - Assignment Level
+#### 14. FCR Trends - Assignment Level
 ```
 GET /api/v1/operational/fcr-trends/assignment-trends/
 ```
@@ -447,7 +541,7 @@ GET /api/v1/operational/fcr-trends/assignment-trends/
 
 ---
 
-#### 14. FCR Trends - Batch Level
+#### 15. FCR Trends - Batch Level
 ```
 GET /api/v1/operational/fcr-trends/batch-trends/
 ```
@@ -463,7 +557,7 @@ GET /api/v1/operational/fcr-trends/batch-trends/
 
 ---
 
-#### 15. FCR Trends - Geography Level
+#### 16. FCR Trends - Geography Level
 ```
 GET /api/v1/operational/fcr-trends/geography-trends/
 ```
@@ -481,7 +575,7 @@ GET /api/v1/operational/fcr-trends/geography-trends/
 
 ### **Scenario App**
 
-#### 16. FCR Models Stage Summary
+#### 17. FCR Models Stage Summary
 ```
 GET /api/v1/scenario/fcr-models/stage-summary/
 ```
@@ -493,7 +587,7 @@ GET /api/v1/scenario/fcr-models/stage-summary/
 
 ---
 
-#### 17. Scenario Sensitivity Analysis (Detail)
+#### 18. Scenario Sensitivity Analysis (Detail)
 ```
 POST /api/v1/scenario/scenarios/{id}/sensitivity-analysis/
 ```
@@ -505,7 +599,7 @@ POST /api/v1/scenario/scenarios/{id}/sensitivity-analysis/
 
 ---
 
-#### 18. Scenario Summary Stats (Collection)
+#### 19. Scenario Summary Stats (Collection)
 ```
 GET /api/v1/scenario/scenarios/summary-stats/
 ```
@@ -601,33 +695,17 @@ grep -r "class.*Summary.*APIView\|class.*Aggregate.*View" apps/*/api/
 
 Based on current frontend needs:
 
-### **1. Geography-Level Growth Metrics** (High Priority)
+### **1. ~~Geography-Level Growth & Performance Metrics~~** ✅ COMPLETED
 ```
-GET /api/v1/batch/batches/geography-summary/
-  ?geography={id}
-  &start_date={date}
-  &end_date={date}
+GET /api/v1/batch/batches/geography-summary/  ✅ IMPLEMENTED
 ```
 
-**Needed for:** Executive Dashboard (TGC, SGR, Growth Rate KPIs)
-
-**Would aggregate:** `growth_analysis` data across all batches in geography
+**Status:** ✅ Deployed October 20, 2025  
+**See:** Endpoint #3 above
 
 ---
 
-### **2. Geography-Level Performance Summary** (High Priority)
-```
-GET /api/v1/batch/batches/geography-performance/
-  ?geography={id}
-```
-
-**Needed for:** Executive Dashboard (Mortality, FCR by geography)
-
-**Would aggregate:** `performance_metrics` data across all batches in geography
-
----
-
-### **3. Financial Summary by Geography** (Medium Priority)
+### **2. Financial Summary by Geography** (High Priority)
 ```
 GET /api/v1/finance/summary/
   ?geography={id}
@@ -664,6 +742,6 @@ GET /api/v1/finance/summary/
 
 ---
 
-**Last Verified:** October 18, 2025  
+**Last Verified:** October 20, 2025  
 **OpenAPI Spec Version:** Current production (`api/openapi.yaml`)
 

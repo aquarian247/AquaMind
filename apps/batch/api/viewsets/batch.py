@@ -17,10 +17,10 @@ from rest_framework.permissions import IsAuthenticated
 from apps.batch.models import Batch
 from apps.batch.api.serializers import BatchSerializer
 from apps.batch.api.filters.batch import BatchFilter
-from .mixins import BatchAnalyticsMixin
+from .mixins import BatchAnalyticsMixin, GeographyAggregationMixin
 
 
-class BatchViewSet(HistoryReasonMixin, BatchAnalyticsMixin, viewsets.ModelViewSet):
+class BatchViewSet(HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregationMixin, viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 

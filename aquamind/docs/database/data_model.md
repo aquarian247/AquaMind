@@ -24,12 +24,11 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 
 #### Tracked Models by App
 
-**Batch App (10 models)**
+**Batch App (9 models)**
 - **`batch_batch`**: Complete change history for batch lifecycle management
 - **`batch_batchcontainerassignment`**: Container assignment changes and biomass updates
 - **`batch_growthsample`**: Growth sampling and weight measurements
 - **`batch_mortalityevent`**: Mortality tracking and cause documentation
-- **`batch_batchtransfer`**: Batch transfers between containers
 - **`batch_batchtransferworkflow`**: Multi-day transfer workflow orchestration with state machine ✓
 - **`batch_transferaction`**: Individual container-to-container transfer actions within workflows ✓
 - **`batch_species`**: Species definition changes
@@ -317,26 +316,7 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `population_count`: integer (NOT NULL)
   - `biomass_kg`: numeric (NOT NULL)
   - `created_at`: timestamptz (NOT NULL)
-- **`batch_batchtransfer`** # Records movements or merging/splitting of batch components
-  - `id`: bigint (PK, auto-increment, NOT NULL)
-  - `transfer_type`: varchar (NOT NULL) # e.g., "MOVE", "SPLIT", "MERGE", "DEATH_TRANSFER"
-  - `transfer_date`: date (NOT NULL)
-  - `source_batch_id`: bigint (FK to `batch_batch`.`id`, NOT NULL)
-  - `source_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, NOT NULL)
-  - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, nullable) # Original assignment if applicable
-  - `source_count`: integer (NOT NULL) # Population count from source before transfer
-  - `source_biomass_kg`: numeric (NOT NULL) # Biomass from source before transfer
-  - `transferred_count`: integer (NOT NULL) # Population count actually transferred
-  - `transferred_biomass_kg`: numeric (NOT NULL) # Biomass actually transferred
-  - `mortality_count`: integer (NOT NULL) # Mortalities during this transfer event
-  - `destination_batch_id`: bigint (FK to `batch_batch`.`id`, nullable) # Target batch if different (e.g., for MERGE)
-  - `destination_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, nullable) # Target stage if different
-  - `destination_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, nullable) # Resulting new assignment if applicable
-  - `is_emergency_mixing`: boolean (NOT NULL, default: False)
-  - `notes`: text (NOT NULL)
-  - `created_at`: timestamptz (NOT NULL)
-  - `updated_at`: timestamptz (NOT NULL)
-- **`batch_batchtransferworkflow`** # Orchestrates multi-day, multi-container transfer operations
+- **`batch_batchtransferworkflow`** # Orchestrates multi-day, multi-container transfer operations (replaces legacy BatchTransfer)
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `workflow_number`: varchar(50) (Unique, NOT NULL) # e.g., "TRF-2024-001"
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, NOT NULL) # Batch being transferred
@@ -419,9 +399,6 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - **`batch_historicalbatchcontainerassignment`**
   - All fields from `batch_batchcontainerassignment` plus history tracking fields
   - Same history fields as above
-- **`batch_historicalbatchtransfer`**
-  - All fields from `batch_batchtransfer` plus history tracking fields
-  - Same history fields as above
 - **`batch_historicalgrowthsample`**
   - All fields from `batch_growthsample` plus history tracking fields
   - Same history fields as above
@@ -443,9 +420,6 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `infrastructure_container` ← `batch_batchcontainerassignment` (PROTECT)
 - `batch_lifecyclestage` ← `batch_batchcontainerassignment` (PROTECT)
 - `batch_batch` ← `batch_batchcomposition` (CASCADE, both FKs)
-- `batch_batch` ← `batch_batchtransfer` (PROTECT, source_batch and destination_batch FKs)
-- `batch_batchcontainerassignment` ← `batch_batchtransfer` (PROTECT, source_assignment and destination_assignment FKs)
-- `batch_lifecyclestage` ← `batch_batchtransfer` (PROTECT, source_lifecycle_stage and destination_lifecycle_stage FKs)
 - `batch_batch` ← `batch_batchtransferworkflow` (PROTECT)
 - `batch_lifecyclestage` ← `batch_batchtransferworkflow` (PROTECT, source_lifecycle_stage and dest_lifecycle_stage FKs)
 - `finance_intercompanytransaction` ← `batch_batchtransferworkflow` (SET_NULL, finance_transaction FK)
@@ -879,9 +853,9 @@ All health models with `history = HistoricalRecords()` create corresponding hist
   - `is_interpolated`: boolean (NOT NULL, default: False) # If data was calculated/interpolated vs directly measured
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
-- **`environmental_stagetransitionenvironmental`** # Records environmental conditions during a batch transfer
+- **`environmental_stagetransitionenvironmental`** # Records environmental conditions during a batch transfer workflow
   - `id`: bigint (PK, auto-increment, NOT NULL)
-  - `batch_transfer_id`: bigint (FK to `batch_batchtransfer`.`id`, Unique, NOT NULL)
+  - `batch_transfer_workflow_id`: bigint (FK to `batch_batchtransferworkflow`.`id`, NOT NULL)
   - `temperature`: numeric (nullable) # e.g., Celsius
   - `oxygen`: numeric (nullable) # e.g., mg/L
   - `salinity`: numeric (nullable) # e.g., ppt
@@ -899,7 +873,7 @@ All health models with `history = HistoricalRecords()` create corresponding hist
 - `auth_user` ← `environmental_environmentalreading` (`recorded_by_id`, SET_NULL)
 - `infrastructure_area` ← `environmental_weatherdata` (`area_id`, CASCADE)
 - `infrastructure_area` ← `environmental_photoperioddata` (`area_id`, CASCADE)
-- `batch_batchtransfer` ← `environmental_stagetransitionenvironmental` (`batch_transfer_id`, CASCADE)
+- `batch_batchtransferworkflow` ← `environmental_stagetransitionenvironmental` (`batch_transfer_workflow_id`, CASCADE)
 
 ### 4.6 Finance Management (`finance` app)
 **Purpose**: To track financial transactions, harvest events, and intercompany policies for regulatory compliance and operational reporting.

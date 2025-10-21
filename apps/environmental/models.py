@@ -188,9 +188,9 @@ class WeatherData(models.Model):
 class StageTransitionEnvironmental(models.Model):
     """
     Records environmental conditions during stage transitions of batches.
-    Links to batch transfers to record conditions when fish are moved.
+    Links to batch transfer workflows to record conditions when fish are moved.
     """
-    batch_transfer = models.OneToOneField('batch.BatchTransfer', on_delete=models.CASCADE, related_name='environmental_conditions')
+    batch_transfer_workflow = models.ForeignKey('batch.BatchTransferWorkflow', on_delete=models.CASCADE, related_name='environmental_conditions')
     temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Water temperature in °C")
     oxygen = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Dissolved oxygen in mg/L")
     salinity = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Salinity in ppt")
@@ -203,4 +203,4 @@ class StageTransitionEnvironmental(models.Model):
     history = HistoricalRecords()
     
     def __str__(self):
-        return f"Environmental conditions for transfer {self.batch_transfer.id} at {self.batch_transfer.transfer_date}"
+        return f"Environmental conditions for workflow {self.batch_transfer_workflow.workflow_number}"

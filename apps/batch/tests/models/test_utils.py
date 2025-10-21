@@ -14,7 +14,6 @@ from apps.batch.models import (
     BatchContainerAssignment,
     GrowthSample,
     MortalityEvent,
-    BatchTransfer
 )
 from apps.infrastructure.models import (
     Geography,
@@ -254,31 +253,3 @@ def create_test_mortality_event(
     )
 
 
-def create_test_batch_transfer(
-    source_batch=None,
-    destination_batch=None,
-    population_count=500,
-    avg_weight_g=Decimal("10.0"),
-    notes="Test batch transfer"
-):
-    """Create and return a test BatchTransfer."""
-    if not source_batch:
-        source_batch = create_test_batch(batch_number="BATCH001")
-        # Create an assignment for the source batch to ensure it has population
-        create_test_batch_container_assignment(
-            batch=source_batch,
-            population_count=1000,  # Ensure there's enough population to transfer
-            avg_weight_g=avg_weight_g
-        )
-    
-    if not destination_batch:
-        destination_batch = create_test_batch(batch_number="BATCH002")
-    
-    return BatchTransfer.objects.create(
-        source_batch=source_batch,
-        destination_batch=destination_batch,
-        transfer_date=date.today(),
-        population_count=population_count,
-        avg_weight_g=avg_weight_g,
-        notes=notes
-    )
