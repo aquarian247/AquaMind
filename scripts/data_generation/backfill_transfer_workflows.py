@@ -106,48 +106,88 @@ class WorkflowBackfiller:
         """Process a single batch."""
         print(f"\nProcessing Batch: {batch.batch_number} (ID: {batch.id})")
 
-        # Get all assignments ordered by stage and date
+        # Find actual completed transitions
+        # A transition is real when:
+        # 1. Source stage has CLOSED assignments (departure_date NOT NULL)
+        # 2. Dest stage assignments started on same day (assignment_date = departure_date)
+        transitions = self._find_completed_transitions(batch)
+        
+        if not transitions:
+            print(f"  ⊘ Skipped: No completed transitions")
+            return
+
+        print(f"  Found {len(transitions)} completed transition(s)")
+
+        # Create workflow for each transition
+        for transition in transitions:
+            self._create_workflow_for_transition(
+                batch,
+                transition['source_assignments'],
+                transition['dest_assignments'],
+            )
+
+        self.stats['batches_processed'] += 1
+
+    def _find_completed_transitions(self, batch):
+        """
+        Find actual completed transitions by detecting closed→opened pairs.
+        
+        A transition is real when:
+        1. Source assignments have departure_date (closed)
+        2. Dest assignments start on same date (assignment_date = departure_date)
+        3. Different lifecycle stages
+        
+        Returns:
+            List of dicts with 'source_assignments' and 'dest_assignments'
+        """
+        # Get all assignments
         assignments = batch.batch_assignments.select_related(
             'lifecycle_stage',
             'container',
             'container__hall',
             'container__area',
-        ).order_by('lifecycle_stage__order', 'assignment_date', 'id')
-
-        # Group by lifecycle stage
-        stage_groups = self._group_assignments_by_stage(assignments)
+        ).order_by('assignment_date', 'id')
         
-        if len(stage_groups) <= 1:
-            print(f"  ⊘ Skipped: Only {len(stage_groups)} lifecycle stage(s)")
-            return
-
-        # Find transitions and create workflows
-        stages_list = sorted(stage_groups.keys(), key=lambda x: x[1])  # Sort by order
-        
-        for i in range(len(stages_list) - 1):
-            source_stage_id, source_stage_order = stages_list[i]
-            dest_stage_id, dest_stage_order = stages_list[i + 1]
-            
-            source_assignments = stage_groups[(source_stage_id, source_stage_order)]
-            dest_assignments = stage_groups[(dest_stage_id, dest_stage_order)]
-            
-            self._create_workflow_for_transition(
-                batch,
-                source_assignments,
-                dest_assignments,
-            )
-
-        self.stats['batches_processed'] += 1
-
-    def _group_assignments_by_stage(self, assignments):
-        """Group assignments by lifecycle stage."""
-        stage_groups = defaultdict(list)
+        # Group by lifecycle stage AND whether they're closed
+        closed_by_stage = defaultdict(list)
+        opened_by_date_stage = defaultdict(list)
         
         for assignment in assignments:
-            key = (assignment.lifecycle_stage_id, assignment.lifecycle_stage.order)
-            stage_groups[key].append(assignment)
+            stage_id = assignment.lifecycle_stage_id
+            
+            # Track closed assignments
+            if assignment.departure_date:
+                closed_by_stage[stage_id].append(assignment)
+            
+            # Track when assignments opened (for matching)
+            key = (assignment.assignment_date, assignment.lifecycle_stage_id)
+            opened_by_date_stage[key].append(assignment)
         
-        return stage_groups
+        # Find transitions: closed source + opened dest on same date
+        transitions = []
+        
+        for source_stage_id, source_assignments in closed_by_stage.items():
+            # Group source assignments by departure date
+            by_departure = defaultdict(list)
+            for a in source_assignments:
+                by_departure[a.departure_date].append(a)
+            
+            # For each departure date, look for assignments that opened
+            for departure_date, src_group in by_departure.items():
+                # Find dest assignments that opened on this date
+                # (any stage different from source)
+                for dest_stage_id in opened_by_date_stage.keys():
+                    assignment_date, stage_id = dest_stage_id
+                    
+                    if assignment_date == departure_date and stage_id != source_stage_id:
+                        dest_group = opened_by_date_stage[dest_stage_id]
+                        
+                        transitions.append({
+                            'source_assignments': src_group,
+                            'dest_assignments': dest_group,
+                        })
+        
+        return transitions
 
     def _create_workflow_for_transition(
         self,
