@@ -981,40 +981,55 @@ class FCRCalculationService:
         """
         Get growth data for a specific container assignment.
 
-        Returns container-specific growth data, falling back to batch-level
-        if container-specific data is not available.
+        Calculates container-specific biomass growth using:
+        - Batch-level weight gain (from growth samples)
+        - Container-specific population count
         """
-        # Look for container-specific growth samples
+        # Look for growth samples for this batch (samples are typically batch-level, not container-specific)
         growth_samples = GrowthSample.objects.filter(
             assignment__batch=container_assignment.batch,
             sample_date__gte=period_start,
             sample_date__lte=period_end
         ).order_by('sample_date')
 
-        if growth_samples.exists():
-            # Calculate growth from container-specific samples
-            # Note: In practice, growth samples might not be container-specific
-            # This is a simplified implementation
-            first_sample = growth_samples.first()
-            last_sample = growth_samples.last()
+        if not growth_samples.exists():
+            # No growth data available
+            return None
 
-            if first_sample and last_sample and first_sample != last_sample:
-                # Estimate growth based on available data
-                # This is a placeholder - actual implementation would need
-                # more sophisticated biomass tracking per container
-                growth_kg = Decimal('0')  # Placeholder for container-specific growth
-                return {
-                    'starting_biomass': None,  # Would need container-specific biomass
-                    'ending_biomass': None,
-                    'growth_kg': growth_kg,
-                    'has_weighing_events': True,
-                    'data_points': growth_samples.count(),
-                }
+        first_sample = growth_samples.first()
+        last_sample = growth_samples.last()
 
-        # Fallback: estimate growth based on batch-level data and container proportion
-        return cls._estimate_container_growth_from_batch(
-            container_assignment, period_start, period_end
-        )
+        if first_sample == last_sample:
+            # Only one sample - can't calculate growth
+            return None
+
+        # Calculate weight gain per fish (from batch-level samples)
+        weight_gain_g = Decimal(str(last_sample.avg_weight_g)) - Decimal(str(first_sample.avg_weight_g))
+        
+        if weight_gain_g <= 0:
+            # No growth or negative growth in this period
+            return None
+        
+        # Use container-specific population for biomass calculation
+        container_population = container_assignment.population_count
+        
+        if container_population == 0:
+            return None
+        
+        # Calculate container-specific growth (weight gain × container population)
+        growth_kg = (weight_gain_g / Decimal('1000')) * Decimal(str(container_population))
+        
+        # Calculate starting and ending biomass for this container
+        starting_biomass = (Decimal(str(first_sample.avg_weight_g)) / Decimal('1000')) * Decimal(str(container_population))
+        ending_biomass = (Decimal(str(last_sample.avg_weight_g)) / Decimal('1000')) * Decimal(str(container_population))
+
+        return {
+            'starting_biomass': starting_biomass,
+            'ending_biomass': ending_biomass,
+            'growth_kg': growth_kg,
+            'has_weighing_events': True,
+            'data_points': growth_samples.count(),
+        }
 
     @classmethod
     def _estimate_container_growth_from_batch(
@@ -1078,6 +1093,8 @@ class FCRCalculationService:
     ) -> Optional[Dict[str, any]]:
         """
         Get growth data for a batch (used as fallback for containers).
+        
+        Calculates biomass growth based on weight gain per fish multiplied by population.
         """
         growth_samples = GrowthSample.objects.filter(
             assignment__batch=batch,
@@ -1096,13 +1113,33 @@ class FCRCalculationService:
             # Only one sample - can't calculate growth
             return None
 
-        # For now, use simple start/end calculation
-        # In practice, this would be more sophisticated
-        growth_kg = Decimal('0')  # Placeholder - would need proper biomass calculation
+        # Calculate weight gain per fish (in grams)
+        weight_gain_g = Decimal(str(last_sample.avg_weight_g)) - Decimal(str(first_sample.avg_weight_g))
+        
+        if weight_gain_g <= 0:
+            # No growth or negative growth in this period
+            return None
+        
+        # Get current population from active assignments
+        current_population = batch.batchcontainerassignment_set.filter(
+            is_active=True
+        ).aggregate(
+            total_pop=Sum('population_count')
+        )['total_pop'] or 0
+        
+        if current_population == 0:
+            return None
+        
+        # Calculate total biomass growth (weight gain per fish × population)
+        growth_kg = (weight_gain_g / Decimal('1000')) * Decimal(str(current_population))
+        
+        # Calculate starting and ending biomass estimates
+        starting_biomass = (Decimal(str(first_sample.avg_weight_g)) / Decimal('1000')) * Decimal(str(current_population))
+        ending_biomass = (Decimal(str(last_sample.avg_weight_g)) / Decimal('1000')) * Decimal(str(current_population))
 
         return {
-            'starting_biomass': None,  # Would need proper biomass tracking
-            'ending_biomass': None,
+            'starting_biomass': starting_biomass,
+            'ending_biomass': ending_biomass,
             'growth_kg': growth_kg,
             'has_weighing_events': True,
             'data_points': growth_samples.count(),
