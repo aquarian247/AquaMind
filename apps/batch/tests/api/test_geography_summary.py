@@ -7,6 +7,8 @@ batches within a geography.
 """
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
+from django.db.models.signals import post_save
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -189,6 +191,15 @@ class GeographySummaryTestCase(BaseAPITestCase):
             is_active=True
         )
         
+        # Disconnect FCR signals during test data creation
+        # This allows us to manually create specific summaries for testing
+        from apps.inventory.signals import (
+            recalculate_fcr_on_feeding_event,
+            update_fcr_on_growth_sample
+        )
+        
+        post_save.disconnect(update_fcr_on_growth_sample, sender=GrowthSample)
+        
         # Create growth samples for geography 1 batches
         self._create_growth_samples_for_batch(self.assignment1, [
             (30, Decimal('100.00'), Decimal('12.50')),
@@ -205,6 +216,9 @@ class GeographySummaryTestCase(BaseAPITestCase):
             (30, Decimal('150.00'), Decimal('16.00')),
             (20, Decimal('180.00'), Decimal('17.50')),
         ])
+        
+        # Reconnect the signal
+        post_save.connect(update_fcr_on_growth_sample, sender=GrowthSample)
         
         # Create mortality events
         MortalityEvent.objects.create(
@@ -250,7 +264,10 @@ class GeographySummaryTestCase(BaseAPITestCase):
             fat_percentage=Decimal('20.00')
         )
         
-        # Create feeding events for geography 1
+        # Disconnect FCR signal for feeding events during test setup
+        post_save.disconnect(recalculate_fcr_on_feeding_event, sender=FeedingEvent)
+        
+        # Create feeding events for geography 1 (without triggering FCR signals)
         FeedingEvent.objects.create(
             batch=self.batch1,
             batch_assignment=self.assignment1,
@@ -272,7 +289,11 @@ class GeographySummaryTestCase(BaseAPITestCase):
             batch_biomass_kg=Decimal('480.00')
         )
         
+        # Reconnect the feeding event signal
+        post_save.connect(recalculate_fcr_on_feeding_event, sender=FeedingEvent)
+        
         # Create batch feeding summaries for testing FCR
+        # (manually created since signals were disabled above)
         BatchFeedingSummary.objects.create(
             batch=self.batch1,
             period_start=date.today() - timedelta(days=30),
