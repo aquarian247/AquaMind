@@ -22,6 +22,12 @@ from apps.environmental.models import *
 from apps.inventory.models import *
 from apps.health.models import *
 from apps.harvest.models import HarvestEvent, HarvestLot, ProductGrade
+from apps.finance.models import FactHarvest, DimCompany, DimSite
+from apps.scenario.models import (
+    Scenario, TGCModel, FCRModel, MortalityModel, 
+    TemperatureProfile, TemperatureReading,
+    FCRModelStage
+)
 
 User = get_user_model()
 
@@ -35,7 +41,7 @@ class EventEngine:
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
-        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0}
+        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0}
         self.current_stage_start_day = 0
         # Realistic lifecycle stage durations (total: ~900 days)
         self.stage_durations = {
@@ -60,10 +66,173 @@ class EventEngine:
         self.user = User.objects.filter(username='system_admin').first() or User.objects.first()
         self.env_params = list(EnvironmentalParameter.objects.all())
         
+        # Initialize scenario models (shared across batches)
+        self._init_scenario_models()
+        
+        # Get finance dimensions
+        self._init_finance_dimensions()
+        
         print(f"✓ Geography: {self.geo.name}")
         print(f"✓ Station: {self.station.name}")
         print(f"✓ Sea Area: {self.sea_area.name}")
         print(f"✓ Duration: {self.duration} days\n")
+    
+    def _init_finance_dimensions(self):
+        """Initialize finance company and site dimensions."""
+        try:
+            # Get or create company for this geography
+            # Simplified: use geography + farming subsidiary
+            self.finance_company, _ = DimCompany.objects.get_or_create(
+                geography=self.geo,
+                subsidiary='FARMING',
+                defaults={
+                    'display_name': f'{self.geo.name} Farming',
+                    'currency': 'EUR' if 'Faroe' in self.geo.name else 'GBP'
+                }
+            )
+            
+            # Get or create site for freshwater station
+            if self.station:
+                self.finance_site_freshwater, _ = DimSite.objects.get_or_create(
+                    source_model='STATION',
+                    source_pk=self.station.id,
+                    defaults={
+                        'company': self.finance_company,
+                        'site_name': self.station.name
+                    }
+                )
+            
+            # Get or create site for sea area
+            if self.sea_area:
+                self.finance_site_sea, _ = DimSite.objects.get_or_create(
+                    source_model='AREA',
+                    source_pk=self.sea_area.id,
+                    defaults={
+                        'company': self.finance_company,
+                        'site_name': self.sea_area.name
+                    }
+                )
+            
+            print(f"✓ Finance dimensions ready: {self.finance_company.display_name}")
+            
+        except Exception as e:
+            print(f"⚠ Finance dimension setup failed: {e}")
+            self.finance_company = None
+            self.finance_site_freshwater = None
+            self.finance_site_sea = None
+    
+    def _init_scenario_models(self):
+        """
+        Initialize shared scenario models (TGC, FCR, Mortality, Temperature).
+        These are reused across all batches to avoid duplication.
+        """
+        is_faroe = 'Faroe' in self.geography_name
+        
+        # 1. Create temperature profiles (geography-specific for sea temps)
+        self.temp_profile = self._get_or_create_temperature_profile()
+        
+        # 2. Create/get TGC model
+        self.tgc_model, _ = TGCModel.objects.get_or_create(
+            name=f'{self.geography_name} Standard TGC',
+            defaults={
+                'location': self.geography_name,
+                'release_period': 'Year-round',
+                'tgc_value': 0.00245 if is_faroe else 0.00235,  # Faroe slightly better growth
+                'exponent_n': 0.33,  # Temperature exponent
+                'exponent_m': 0.66,  # Weight exponent
+                'profile': self.temp_profile
+            }
+        )
+        
+        # 3. Create/get FCR model with stage-specific values
+        self.fcr_model, created = FCRModel.objects.get_or_create(
+            name='Standard Atlantic Salmon FCR',
+            defaults={}
+        )
+        
+        if created:
+            # Add stage-specific FCR values
+            for stage in self.stages:
+                fcr_values = {
+                    'Egg&Alevin': (0.0, 90),   # No feed
+                    'Fry': (1.0, 90),
+                    'Parr': (1.1, 90),
+                    'Smolt': (1.0, 90),
+                    'Post-Smolt': (1.1, 90),
+                    'Adult': (1.2, 450)
+                }
+                fcr, duration = fcr_values.get(stage.name, (1.2, 90))
+                
+                FCRModelStage.objects.get_or_create(
+                    model=self.fcr_model,
+                    stage=stage,
+                    defaults={
+                        'fcr_value': fcr,
+                        'duration_days': duration
+                    }
+                )
+        
+        # 4. Create/get mortality model
+        self.mortality_model, _ = MortalityModel.objects.get_or_create(
+            name='Standard Mortality',
+            defaults={
+                'frequency': 'daily',
+                'rate': 0.03  # 0.03% daily (realistic avg)
+            }
+        )
+        
+        print(f"✓ Scenario models ready: TGC={self.tgc_model.tgc_value}, FCR=Standard, Mortality={self.mortality_model.rate}%")
+    
+    def _get_or_create_temperature_profile(self):
+        """
+        Create geography-specific temperature profile for sea stages.
+        Faroe Islands: Stable 8-11°C (Gulf Stream influence)
+        Scotland: Variable 6-14°C (more seasonal variation)
+        """
+        is_faroe = 'Faroe' in self.geography_name
+        profile_name = f'{self.geography_name} Sea Temperature'
+        
+        # Check if profile exists
+        profile = TemperatureProfile.objects.filter(name=profile_name).first()
+        if profile:
+            return profile
+        
+        # Create new profile with daily temps for 450-day Adult stage
+        profile = TemperatureProfile.objects.create(name=profile_name)
+        
+        # Generate realistic temperature curve
+        temps = []
+        for day in range(450):
+            if is_faroe:
+                # Faroe: Stable Gulf Stream temps (8-11°C, subtle seasonal)
+                base = 9.5
+                seasonal = 1.0 * np.sin(2 * np.pi * day / 365)
+                daily_var = random.uniform(-0.3, 0.3)
+                temp = base + seasonal + daily_var
+            else:
+                # Scotland: More variable (6-14°C, stronger seasonal)
+                base = 10.0
+                seasonal = 3.0 * np.sin(2 * np.pi * (day - 90) / 365)  # Peak in summer
+                daily_var = random.uniform(-0.5, 0.5)
+                temp = base + seasonal + daily_var
+            
+            temps.append(max(6.0, min(14.0, temp)))  # Clamp to realistic range
+        
+        # Bulk create temperature readings
+        readings = [
+            TemperatureReading(
+                profile=profile,
+                reading_date=date.today() + timedelta(days=i),
+                temperature=temps[i]
+            )
+            for i in range(450)
+        ]
+        TemperatureReading.objects.bulk_create(readings, batch_size=500)
+        
+        avg_temp = sum(temps) / len(temps)
+        print(f"✓ Created temperature profile: {profile_name} (avg: {avg_temp:.1f}°C)")
+        
+        return profile
     
     def find_available_containers(self, hall=None, geography=None, count=10):
         """
@@ -578,6 +747,9 @@ class EventEngine:
                     # Show which sea areas were used
                     areas_used = set(a.container.area.name for a in self.assignments)
                     print(f"  → Moved to Sea Cages in {self.geo.name} ({len(self.assignments)} containers across {len(areas_used)} areas)")
+                    
+                    # Create sea transition scenario (users care about forecasts at this point)
+                    self._create_sea_transition_scenario(self.current_date)
                 
                 # Update batch stage
                 self.batch.lifecycle_stage = next_stage
@@ -595,6 +767,85 @@ class EventEngine:
             description=f'Routine observation {a.lifecycle_stage.name}',
             resolution_status=False
         )
+    
+    def _generate_finance_harvest_facts(self):
+        """
+        Generate finance fact table entries from harvest events.
+        Creates FactHarvest records for financial reporting and BI.
+        """
+        if not hasattr(self, 'harvest_events') or not self.harvest_events:
+            return
+        
+        if not self.finance_company or not self.finance_site_sea:
+            print("  ⚠ Finance dimensions not available, skipping fact generation")
+            return
+        
+        try:
+            facts_created = 0
+            for event in self.harvest_events:
+                for lot in event.lots.all():
+                    FactHarvest.objects.create(
+                        event_date=event.event_date,
+                        quantity_kg=lot.live_weight_kg,
+                        unit_count=lot.unit_count,
+                        dim_batch_id=event.batch.id,
+                        dim_company=self.finance_company,
+                        dim_site=self.finance_site_sea,  # Harvest happens at sea
+                        event=event,
+                        lot=lot,
+                        product_grade=lot.product_grade
+                    )
+                    facts_created += 1
+            
+            print(f"✓ Generated {facts_created} finance harvest facts")
+            self.stats['finance_facts'] += facts_created
+            
+        except Exception as e:
+            print(f"  ⚠ Finance fact generation failed: {e}")
+            # Don't block harvest if finance fails
+    
+    def _create_sea_transition_scenario(self, transition_date):
+        """
+        Create a growth forecast scenario when batch transitions to Adult (sea) stage.
+        This gives users a realistic "From Batch" scenario at the key decision point.
+        
+        Uses shared models (TGC, FCR, Mortality, Temperature) to avoid duplication.
+        """
+        try:
+            # Get current batch metrics
+            current_pop = sum(a.population_count for a in self.assignments) if self.assignments else 0
+            current_weight = self.assignments[0].avg_weight_g if self.assignments else 0
+            
+            if current_pop == 0 or current_weight == 0:
+                print("  ⚠ Cannot create scenario: no population or weight data")
+                return
+            
+            # Create scenario linked to batch
+            scenario = Scenario.objects.create(
+                name=f"Sea Growth Forecast - {self.batch.batch_number}",
+                start_date=transition_date,
+                duration_days=450,  # Adult stage duration
+                initial_count=current_pop,
+                initial_weight=float(current_weight),
+                genotype=f"Standard {self.geography_name}",
+                supplier="Internal",
+                batch=self.batch,
+                tgc_model=self.tgc_model,
+                fcr_model=self.fcr_model,
+                mortality_model=self.mortality_model,
+                created_by=self.user
+            )
+            
+            print(f"  ✓ Created scenario: {scenario.name}")
+            print(f"    Initial: {current_pop:,} fish @ {current_weight:.0f}g")
+            print(f"    Duration: 450 days (Adult stage)")
+            print(f"    Models: {self.tgc_model.name}, {self.fcr_model.name}")
+            
+            self.stats['scenarios'] += 1
+            
+        except Exception as e:
+            print(f"  ⚠ Scenario creation failed: {e}")
+            # Don't block stage transition if scenario fails
     
     def harvest_batch(self):
         """Harvest the batch if it's in Adult stage and ready"""
@@ -681,11 +932,25 @@ class EventEngine:
             # Mark assignment as harvested (inactive)
             a.is_active = False
             a.save()
+            
+            # Store harvest event for finance fact generation
+            if not hasattr(self, 'harvest_events'):
+                self.harvest_events = []
+            self.harvest_events.append(event)
+        
+        # Set actual_end_date to stop age counter in UI
+        self.batch.actual_end_date = self.current_date
+        self.batch.save()
         
         print(f"✓ Harvested {harvest_count} containers")
         print(f"✓ Total fish harvested: {total_harvested:,}")
         print(f"✓ Average weight: {avg_weight:.0f}g")
-        print(f"✓ Total biomass: {sum(a.biomass_kg for a in self.assignments):,.0f}kg\n")
+        print(f"✓ Total biomass: {sum(a.biomass_kg for a in self.assignments):,.0f}kg")
+        print(f"✓ Batch age at harvest: {(self.current_date - self.batch.start_date).days} days")
+        
+        # Generate finance harvest facts
+        self._generate_finance_harvest_facts()
+        print()
     
     def run(self):
         try:
@@ -716,6 +981,8 @@ class EventEngine:
             print(f"  Growth Samples: {self.stats['growth']:,}")
             print(f"  Lice Counts: {self.stats['lice']:,} (Adult stage weekly)")
             print(f"  Feed Purchases: {self.stats['purchases']:,}")
+            print(f"  Scenarios: {self.stats['scenarios']:,} (sea transition forecast)")
+            print(f"  Finance Facts: {self.stats['finance_facts']:,} (harvest facts)")
             
             # Final batch stats
             final_pop = sum(a.population_count for a in self.assignments)

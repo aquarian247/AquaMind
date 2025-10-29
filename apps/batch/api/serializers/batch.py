@@ -45,6 +45,7 @@ class BatchSerializer(BatchBaseSerializer):
             'batch_type',
             'start_date',
             'expected_end_date',
+            'actual_end_date',
             'notes',
             'created_at',
             'updated_at',
@@ -75,6 +76,7 @@ class BatchSerializer(BatchBaseSerializer):
             'batch_type': {'help_text': "Type or category of the batch. Refer to model choices (e.g., 'Production', 'Experimental')."},
             'start_date': {'help_text': "Date when the batch officially started or was created (YYYY-MM-DD)."},
             'expected_end_date': {'help_text': "Anticipated end date for the batch (e.g., for harvest or transfer) (YYYY-MM-DD). Defaults to 30 days after start_date if not provided."},
+            'actual_end_date': {'help_text': "Actual end date when the batch was completed/harvested (YYYY-MM-DD). Used to freeze age counter in UI."},
             'notes': {'help_text': "Any general notes or comments about the batch (optional)."},
             'created_at': {'help_text': "Timestamp of when the batch record was created (read-only)."},
             'updated_at': {'help_text': "Timestamp of the last update to the batch record (read-only)."}
