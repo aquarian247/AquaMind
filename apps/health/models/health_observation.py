@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models import Avg, StdDev, Min, Max, Count
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
 from simple_history.models import HistoricalRecords
@@ -23,23 +24,20 @@ class HealthParameter(models.Model):
     name = models.CharField(
         max_length=100, 
         unique=True,
-        help_text="Name of the health parameter (e.g., Gill Health)."
+        help_text="Name of the health parameter (e.g., Gill Condition)."
     )
-    description_score_1 = models.TextField(
-        help_text="Description for score 1 (Best/Excellent)."
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="General description of this health parameter"
     )
-    description_score_2 = models.TextField(
-        help_text="Description for score 2 (Good)."
+    min_score = models.IntegerField(
+        default=0,
+        help_text="Minimum score value (inclusive)"
     )
-    description_score_3 = models.TextField(
-        help_text="Description for score 3 (Fair/Moderate)."
-    )
-    description_score_4 = models.TextField(
-        help_text="Description for score 4 (Poor/Severe)."
-    )
-    description_score_5 = models.TextField(
-        help_text="Description for score 5 (Worst/Critical).",
-        default=""
+    max_score = models.IntegerField(
+        default=3,
+        help_text="Maximum score value (inclusive)"
     )
     is_active = models.BooleanField(
         default=True,
@@ -51,9 +49,66 @@ class HealthParameter(models.Model):
 
     history = HistoricalRecords()
 
+    class Meta:
+        verbose_name = "Health Parameter"
+        verbose_name_plural = "Health Parameters"
+        ordering = ['name']
+
+    def clean(self):
+        """Validate that min_score is less than max_score."""
+        if self.min_score >= self.max_score:
+            raise ValidationError("min_score must be less than max_score")
+
     def __str__(self):
         """Return a string representation of the health parameter."""
         return self.name
+
+
+class ParameterScoreDefinition(models.Model):
+    """Defines what each score value means for a parameter."""
+    parameter = models.ForeignKey(
+        HealthParameter,
+        on_delete=models.CASCADE,
+        related_name='score_definitions'
+    )
+    score_value = models.IntegerField(
+        help_text="The numeric score value (e.g., 0, 1, 2, 3)"
+    )
+    label = models.CharField(
+        max_length=50,
+        help_text="Short label for this score (e.g., 'Excellent', 'Good')"
+    )
+    description = models.TextField(
+        help_text="Detailed description of what this score indicates"
+    )
+    display_order = models.IntegerField(
+        default=0,
+        help_text="Order to display this score (for sorting)"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    history = HistoricalRecords()
+    
+    class Meta:
+        verbose_name = "Parameter Score Definition"
+        verbose_name_plural = "Parameter Score Definitions"
+        unique_together = [['parameter', 'score_value']]
+        ordering = ['parameter', 'display_order', 'score_value']
+    
+    def clean(self):
+        """Validate score_value is within parameter's range."""
+        if self.parameter:
+            if not (self.parameter.min_score <= self.score_value <= self.parameter.max_score):
+                raise ValidationError(
+                    f"Score value must be between {self.parameter.min_score} "
+                    f"and {self.parameter.max_score}"
+                )
+    
+    def __str__(self):
+        """Return a string representation of the score definition."""
+        return f"{self.parameter.name} - {self.score_value}: {self.label}"
 
 
 class HealthSamplingEvent(models.Model):
@@ -304,20 +359,32 @@ class FishParameterScore(models.Model):
     parameter = models.ForeignKey(
         HealthParameter, 
         on_delete=models.PROTECT,
+        related_name='fish_scores',
         help_text="The health parameter being scored."
     )
-    score = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score from 1 (best) to 5 (worst)."
+    score = models.SmallIntegerField(
+        help_text="Score value - range defined by parameter's min_score/max_score"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    history = HistoricalRecords()
+
     class Meta:
-        unique_together = ('individual_fish_observation', 'parameter')
+        unique_together = [['individual_fish_observation', 'parameter']]
         ordering = ['individual_fish_observation', 'parameter']
         verbose_name = "Fish Parameter Score"
         verbose_name_plural = "Fish Parameter Scores"
+
+    def clean(self):
+        """Dynamic validation based on parameter's score range."""
+        if self.parameter:
+            if not (self.parameter.min_score <= self.score <= self.parameter.max_score):
+                raise ValidationError(
+                    f"{self.parameter.name} score must be between "
+                    f"{self.parameter.min_score} and {self.parameter.max_score}. "
+                    f"You entered {self.score}."
+                )
 
     def __str__(self):
         """Return a string representation of the fish parameter score."""

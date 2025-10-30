@@ -16,13 +16,14 @@ from apps.infrastructure.models import Area, Container, Geography, ContainerType
 from apps.batch.models import Batch, BatchContainerAssignment, Species, LifeCycleStage
  
 from apps.health.models import (
-    HealthParameter, JournalEntry, 
+    HealthParameter, ParameterScoreDefinition, JournalEntry, 
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore
 )
 from apps.health.api.serializers import (
     HealthParameterSerializer,
+    ParameterScoreDefinitionSerializer,
     JournalEntrySerializer, 
     HealthSamplingEventSerializer,
     IndividualFishObservationSerializer,
@@ -33,35 +34,79 @@ User = get_user_model()
 
 
 class HealthParameterSerializerTestCase(TestCase):
-    """Test cases for the HealthParameterSerializer."""
+    """Test cases for the HealthParameterSerializer with new normalized structure."""
 
     @classmethod
     def setUpTestData(cls):
-        # Create a parameter for testing
+        # Create a parameter with new schema
         cls.parameter = HealthParameter.objects.create(
             name='Test Parameter',
-            description_score_1='Poor',
-            description_score_2='Fair',
-            description_score_3='Average',
-            description_score_4='Good',
-            description_score_5='Excellent'
+            description='Test health parameter',
+            min_score=0,
+            max_score=3,
+            is_active=True
+        )
+        
+        # Create score definitions
+        ParameterScoreDefinition.objects.create(
+            parameter=cls.parameter,
+            score_value=0,
+            label='Excellent',
+            description='No issues detected',
+            display_order=0
+        )
+        ParameterScoreDefinition.objects.create(
+            parameter=cls.parameter,
+            score_value=1,
+            label='Good',
+            description='Minor issues',
+            display_order=1
+        )
+        ParameterScoreDefinition.objects.create(
+            parameter=cls.parameter,
+            score_value=2,
+            label='Fair',
+            description='Moderate issues',
+            display_order=2
+        )
+        ParameterScoreDefinition.objects.create(
+            parameter=cls.parameter,
+            score_value=3,
+            label='Poor',
+            description='Severe issues',
+            display_order=3
         )
 
-    def test_valid_parameter_serialization(self):
-        """Test valid serialization of HealthParameter."""
+    def test_parameter_with_score_definitions(self):
+        """Test serialization includes nested score definitions."""
+        serializer = HealthParameterSerializer(instance=self.parameter)
+        data = serializer.data
+        
+        self.assertEqual(data['name'], 'Test Parameter')
+        self.assertEqual(data['description'], 'Test health parameter')
+        self.assertEqual(data['min_score'], 0)
+        self.assertEqual(data['max_score'], 3)
+        self.assertEqual(len(data['score_definitions']), 4)
+        self.assertEqual(data['score_definitions'][0]['score_value'], 0)
+        self.assertEqual(data['score_definitions'][0]['label'], 'Excellent')
+        self.assertEqual(data['score_definitions'][1]['score_value'], 1)
+        self.assertEqual(data['score_definitions'][1]['label'], 'Good')
+    
+    def test_create_parameter(self):
+        """Test creating a new parameter."""
         data = {
-            'name': 'Fin Rot',
-            'description_score_1': 'No signs',
-            'description_score_2': 'Mild fraying',
-            'description_score_3': 'Moderate erosion',
-            'description_score_4': 'Significant damage',
-            'description_score_5': 'Complete erosion'
+            'name': 'Fin Condition Test',
+            'description': 'Assessment of fin integrity',
+            'min_score': 0,
+            'max_score': 3,
+            'is_active': True
         }
         serializer = HealthParameterSerializer(data=data)
         self.assertTrue(serializer.is_valid(), msg=serializer.errors)
         parameter = serializer.save()
-        self.assertEqual(parameter.name, 'Fin Rot')
-        self.assertEqual(parameter.description_score_5, 'Complete erosion')
+        self.assertEqual(parameter.name, 'Fin Condition Test')
+        self.assertEqual(parameter.min_score, 0)
+        self.assertEqual(parameter.max_score, 3)
 
 
 class JournalEntrySerializerTest(APITestCase):
@@ -111,7 +156,11 @@ class JournalEntrySerializerTest(APITestCase):
             population_count=2000,
             biomass_kg=Decimal('1000')
         )
-        cls.health_parameter = HealthParameter.objects.create(name='Skin Condition JE')
+        cls.health_parameter = HealthParameter.objects.create(
+            name='Skin Condition JE',
+            min_score=0,
+            max_score=3
+        )
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)
@@ -155,7 +204,11 @@ class HealthSamplingEventSerializerTestCase(APITestCase):
             batch=cls.batch, container=cls.container, lifecycle_stage=cls.lifecycle_stage,
             assignment_date=timezone.now().date(), population_count=500, biomass_kg=Decimal('250')
         )
-        cls.health_parameter = HealthParameter.objects.create(name='Gill Health HS')
+        cls.health_parameter = HealthParameter.objects.create(
+            name='Gill Health HS',
+            min_score=0,
+            max_score=3
+        )
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)
@@ -214,7 +267,11 @@ class IndividualFishObservationSerializerTestCase(APITestCase):
             sampled_by=cls.user,
             notes='Routine Check FO'
         )
-        cls.health_parameter = HealthParameter.objects.create(name='Fin Condition FO') # For potential scores if needed
+        cls.health_parameter = HealthParameter.objects.create(
+            name='Fin Condition FO',
+            min_score=0,
+            max_score=3
+        )
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)
@@ -270,7 +327,11 @@ class FishParameterScoreSerializerTestCase(APITestCase):
             weight_g=Decimal('120.0'),
             length_cm=Decimal('22.0')
         )
-        cls.health_parameter_ps = HealthParameter.objects.create(name='Skin Lesions PS')
+        cls.health_parameter_ps = HealthParameter.objects.create(
+            name='Skin Lesions PS',
+            min_score=0,
+            max_score=3
+        )
 
     def setUp(self):
         self.client.force_authenticate(user=self.user)

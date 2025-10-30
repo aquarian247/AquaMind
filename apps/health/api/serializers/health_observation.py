@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 
 from ...models import (
     HealthParameter,
+    ParameterScoreDefinition,
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore
@@ -20,6 +21,18 @@ from ..utils import (
     HealthDecimalFieldsMixin, NestedHealthModelMixin, UserAssignmentMixin
 )
 from .base import HealthBaseSerializer
+
+
+class ParameterScoreDefinitionSerializer(HealthBaseSerializer):
+    """Serializer for parameter score definitions."""
+    
+    class Meta:
+        model = ParameterScoreDefinition
+        fields = [
+            'id', 'parameter', 'score_value', 'label', 
+            'description', 'display_order', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class FishParameterScoreSerializer(HealthBaseSerializer):
@@ -47,17 +60,32 @@ class FishParameterScoreSerializer(HealthBaseSerializer):
 
 
 class FishParameterScoreInputSerializer(serializers.Serializer):
-    """Input serializer for nested fish parameter scores."""
+    """Input serializer for nested fish parameter scores.
+    
+    Note: Score validation is performed dynamically based on the parameter's min/max range.
+    """
 
     parameter = serializers.PrimaryKeyRelatedField(
         queryset=HealthParameter.objects.filter(is_active=True),
         help_text="ID of the active health parameter being scored."
     )
     score = serializers.IntegerField(
-        min_value=1,
-        max_value=5,
-        help_text="Score value (typically 1-5) representing the health assessment for this parameter."
+        help_text="Score value - range defined by parameter's min_score/max_score"
     )
+    
+    def validate(self, data):
+        """Validate score is within parameter's defined range."""
+        parameter = data.get('parameter')
+        score = data.get('score')
+        
+        if parameter and score is not None:
+            if not (parameter.min_score <= score <= parameter.max_score):
+                raise serializers.ValidationError({
+                    'score': f"{parameter.name} score must be between {parameter.min_score} "
+                             f"and {parameter.max_score}. You entered {score}."
+                })
+        
+        return data
 
 
 class IndividualFishObservationInputSerializer(HealthDecimalFieldsMixin, serializers.Serializer):
@@ -475,38 +503,22 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
 
 
 class HealthParameterSerializer(HealthBaseSerializer):
-    """Serializer for the HealthParameter model.
+    """Serializer for the HealthParameter model with nested score definitions.
     
     Uses HealthBaseSerializer for consistent error handling and field management.
+    Includes nested score_definitions for flexible parameter scoring.
     """
-    name = serializers.CharField(
-        help_text="Name of the health parameter (e.g., 'Gill Condition', 'Fin Condition')."
-    )
-    description_score_1 = serializers.CharField(
-        help_text="Description of what score 1 represents for this parameter."
-    )
-    description_score_2 = serializers.CharField(
-        help_text="Description of what score 2 represents for this parameter."
-    )
-    description_score_3 = serializers.CharField(
-        help_text="Description of what score 3 represents for this parameter."
-    )
-    description_score_4 = serializers.CharField(
-        help_text="Description of what score 4 represents for this parameter."
-    )
-    description_score_5 = serializers.CharField(
-        help_text="Description of what score 5 represents for this parameter."
-    )
-    is_active = serializers.BooleanField(
-        default=True,
-        help_text="Whether this parameter is currently active and available for scoring."
+    score_definitions = ParameterScoreDefinitionSerializer(
+        many=True, 
+        read_only=True,
+        help_text="Score definitions for this parameter (e.g., 0-3 scale with labels and descriptions)."
     )
     
     class Meta:
         model = HealthParameter
         fields = [
-            'id', 'name', 'description_score_1', 'description_score_2',
-            'description_score_3', 'description_score_4', 'description_score_5',
+            'id', 'name', 'description', 'min_score', 'max_score',
+            'score_definitions',  # Nested score definitions
             'is_active', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']

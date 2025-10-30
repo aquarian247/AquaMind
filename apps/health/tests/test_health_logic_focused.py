@@ -241,15 +241,13 @@ class HealthParameterLogicTest(TestCase):
     def test_health_parameter_str(self):
         """Test the string representation of a health parameter."""
         health_parameter = HealthParameter.objects.create(
-            name="Fin Condition",
-            description_score_1="Perfect fins, no damage",
-            description_score_2="Minor fin damage",
-            description_score_3="Moderate fin damage",
-            description_score_4="Severe fin damage",
-            description_score_5="Critical fin damage"
+            name="Test Fin Condition Logic",
+            description="Assessment of fin integrity",
+            min_score=0,
+            max_score=3
         )
         
-        self.assertEqual(str(health_parameter), "Fin Condition")
+        self.assertEqual(str(health_parameter), "Test Fin Condition Logic")
 
 
 class HealthLabSampleLogicTest(TestCase):

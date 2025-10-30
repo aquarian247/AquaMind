@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .viewsets import (
     # Health observation viewsets
     HealthParameterViewSet,
+    ParameterScoreDefinitionViewSet,
     HealthSamplingEventViewSet,
     IndividualFishObservationViewSet,
     FishParameterScoreViewSet,
@@ -44,6 +45,7 @@ router.register(r'vaccination-types', VaccinationTypeViewSet, basename='vaccinat
 router.register(r'treatments', TreatmentViewSet, basename='treatment')
 router.register(r'sample-types', SampleTypeViewSet, basename='sample-type')
 router.register(r'health-parameters', HealthParameterViewSet, basename='health-parameter')
+router.register(r'parameter-score-definitions', ParameterScoreDefinitionViewSet, basename='parameter-score-definition')
 
 # Register new health sampling viewsets
 router.register(r'health-sampling-events', HealthSamplingEventViewSet, basename='health-sampling-event')

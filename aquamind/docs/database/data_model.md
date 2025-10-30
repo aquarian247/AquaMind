@@ -599,15 +599,24 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - Meta: `verbose_name_plural = "Journal Entries"`, `ordering = ['-entry_date']`
 - **`health_healthparameter`**
   - id: bigint (PK, auto-increment)
-  - `name`: varchar(100) (Unique, help_text="Name of the health parameter (e.g., Gill Health).")
-  - `description_score_1`: text (help_text="Description for score 1 (Best/Excellent).")
-  - `description_score_2`: text (help_text="Description for score 2 (Good).")
-  - `description_score_3`: text (help_text="Description for score 3 (Fair/Moderate).")
-  - `description_score_4`: text (help_text="Description for score 4 (Poor/Severe).")
-  - `description_score_5`: text (help_text="Description for score 5 (Worst/Critical).", default="")
+  - `name`: varchar(100) (Unique, help_text="Name of the health parameter (e.g., Gill Condition).")
+  - `description`: text (nullable, blank=True, help_text="General description of this health parameter")
+  - `min_score`: integer (default=0, help_text="Minimum score value (inclusive)")
+  - `max_score`: integer (default=3, help_text="Maximum score value (inclusive)")
   - `is_active`: boolean (default=True, help_text="Is this parameter currently in use?")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `verbose_name = "Health Parameter"`, `verbose_name_plural = "Health Parameters"`, `ordering = ['name']`
+- **`health_parameterscoredefinition`**
+  - id: bigint (PK, auto-increment)
+  - `parameter_id`: bigint (FK to `health_healthparameter`.id, on_delete=CASCADE, related_name='score_definitions')
+  - `score_value`: integer (help_text="The numeric score value (e.g., 0, 1, 2, 3)")
+  - `label`: varchar(50) (help_text="Short label for this score (e.g., 'Excellent', 'Good')")
+  - `description`: text (help_text="Detailed description of what this score indicates")
+  - `display_order`: integer (default=0, help_text="Order to display this score (for sorting)")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `unique_together = [['parameter', 'score_value']]`, `ordering = ['parameter', 'display_order', 'score_value']`, `verbose_name = "Parameter Score Definition"`, `verbose_name_plural = "Parameter Score Definitions"`
 - **`health_healthsamplingevent`**
   - id: bigint (PK, auto-increment)
   - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=CASCADE, related_name='health_sampling_events')
@@ -641,10 +650,11 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - id: bigint (PK, auto-increment)
   - `individual_fish_observation_id`: bigint (FK to `health_individualfishobservation`.id, on_delete=CASCADE, related_name='parameter_scores')
   - `parameter_id`: bigint (FK to `health_healthparameter`.id, on_delete=PROTECT, related_name='fish_scores')
-  - `score`: smallint (validators: MinValueValidator(1), MaxValueValidator(5), help_text="Score from 1 (best) to 5 (worst).")
+  - `score`: smallint (help_text="Score value - range defined by parameter's min_score/max_score")
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
-  - Meta: `unique_together = ('individual_fish_observation', 'parameter')`, `ordering = ['individual_fish_observation', 'parameter']`, `verbose_name = "Fish Parameter Score", `verbose_name_plural = "Fish Parameter Scores"`
+  - Meta: `unique_together = [['individual_fish_observation', 'parameter']]`, `ordering = ['individual_fish_observation', 'parameter']`, `verbose_name = "Fish Parameter Score"`, `verbose_name_plural = "Fish Parameter Scores"`
+  - Note: Score validation is dynamic based on the parameter's min_score and max_score values
 - **`health_mortalityreason`**
   - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
@@ -740,6 +750,7 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 - `batch_batch` ← `health_journalentry` (CASCADE, related_name='journal_entries')
 - `infrastructure_container` ← `health_journalentry` (SET_NULL, related_name='journal_entries')
 - `users_customuser` ← `health_journalentry` (PROTECT, related_name='journal_entries')
+- `health_healthparameter` ← `health_parameterscoredefinition` (CASCADE, related_name='score_definitions')
 - `batch_batchcontainerassignment` ← `health_healthsamplingevent` (CASCADE, related_name='health_sampling_events')
 - `users_customuser` ← `health_healthsamplingevent` (SET_NULL, related_name='health_sampling_events_conducted')
 - `health_healthsamplingevent` ← `health_individualfishobservation` (CASCADE, related_name='individual_fish_observations')
@@ -764,7 +775,7 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 #### Historical Tables (Audit Trail)
 All health models with `history = HistoricalRecords()` create corresponding historical tables following the django-simple-history naming convention `{app}_historical{model}`. These tables track complete change history for regulatory compliance and operational transparency.
 
-**Currently Active Historical Tables (11 total - added LiceType):**
+**Currently Active Historical Tables (12 total):**
 - **`health_historicallicetype`**
   - All fields from `health_licetype` plus history tracking fields
   - `history_id`: integer (PK, auto-increment)
@@ -784,6 +795,9 @@ All health models with `history = HistoricalRecords()` create corresponding hist
   - Same history fields as above
 - **`health_historicalhealthparameter`**
   - All fields from `health_healthparameter` plus history tracking fields
+  - Same history fields as above
+- **`health_historicalparameterscoredefinition`**
+  - All fields from `health_parameterscoredefinition` plus history tracking fields
   - Same history fields as above
 - **`health_historicalhealthsamplingevent`**
   - All fields from `health_healthsamplingevent` plus history tracking fields

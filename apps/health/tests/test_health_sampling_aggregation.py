@@ -52,13 +52,11 @@ class HealthSamplingAggregationTest(TestCase):
         # assignment_date (which depends on the current day).
         self.sampling_date = self.assignment.assignment_date.isoformat()
         
-        # Create health parameters
+        # Create health parameters (with unique name to avoid migration conflicts)
         self.param_gill = HealthParameter.objects.create(
-            name='Gill Condition',
-            description_score_1='Excellent',
-            description_score_2='Good',
-            description_score_3='Fair',
-            description_score_4='Poor'
+            name='Test Gill Condition Aggregation',
+            min_score=0,
+            max_score=3
         )
     
     def test_aggregation_during_post_request(self):

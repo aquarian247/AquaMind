@@ -141,7 +141,11 @@ class HealthModelsTestCase(TestCase):
             raise
 
         try:
-            self.health_parameter = HealthParameter.objects.create(name='Skin Lesions', description_score_1='No lesions')
+            self.health_parameter = HealthParameter.objects.create(
+                name='Test Skin Lesions Models',
+                min_score=0,
+                max_score=3
+            )
             # print("HealthParameter created successfully")
         except Exception as e:
             print(f"Error creating HealthParameter: {e}")
@@ -149,11 +153,9 @@ class HealthModelsTestCase(TestCase):
 
         try:
             self.gill_health_param = HealthParameter.objects.create(
-                name='Gill Health',
-                description_score_1='Perfect gills, pink and healthy.',
-                description_score_2='Slight paleness or minor mucus.',
-                description_score_3='Noticeable lesions or heavy mucus.',
-                description_score_4='Severe damage, necrosis.'
+                name='Test Gill Health Models',
+                min_score=0,
+                max_score=3
             )
             # print("HealthParameter created successfully")
         except Exception as e:
@@ -177,15 +179,16 @@ class HealthModelsTestCase(TestCase):
 
     def test_health_parameter_creation(self):
         param = HealthParameter.objects.create(
-            name='Eye Condition',
-            description_score_1='Clear, bright eyes.',
-            description_score_2='Slight cloudiness.',
-            description_score_3='Significant cloudiness or bulging.',
-            description_score_4='Severe damage or loss of eye.'
+            name='Test Eye Condition Models Creation',
+            description='Assessment of eye clarity and damage',
+            min_score=0,
+            max_score=3
         )
-        self.assertEqual(param.name, 'Eye Condition')
+        self.assertEqual(param.name, 'Test Eye Condition Models Creation')
         self.assertTrue(param.is_active)
-        self.assertEqual(str(param), 'Eye Condition')
+        self.assertEqual(param.min_score, 0)
+        self.assertEqual(param.max_score, 3)
+        self.assertEqual(str(param), 'Test Eye Condition Models Creation')
 
     def test_mortality_reason_creation(self):
         reason = MortalityReason.objects.create(name='Disease', description='Infectious disease outbreak')

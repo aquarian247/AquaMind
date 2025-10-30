@@ -257,15 +257,14 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 - **Purpose**: To monitor and document the health of fish batches, ensuring timely interventions through detailed observations, general health logging, and quantified health/growth metrics.
 - **Functionality**:
   - **General Health Journaling**:
-    - The system shall track general health events via `health_journalentry` records, linked to specific batch assignments (`health_journalentry.assignment_id`). Entry types (`entry_type` field) include Observation, Diagnosis, Treatment, Vaccination.
-    - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, `health_vaccinationrecord` (all typically linked back to a `health_journalentry`).
-    - Veterinarians and authorized personnel (`users_userprofile.role`) shall be able to log `health_journalentry` records with rich text notes, and optionally attach pictures and videos (via a separate Media model or generic relations).
-    - For `health_journalentry` of type 'Observation', users can record scores for predefined `health_healthparameter`s using the `health_healthobservation` model, linking the journal entry to a parameter with a score (e.g., 1-5 scale).
+    - The system shall track general health events via `health_journalentry` records, linked to specific batches and containers. Entry categories include observation, issue, action, diagnosis, treatment, vaccination, and sample.
+    - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, `health_vaccinationrecord`.
+    - Veterinarians and authorized personnel shall be able to log `health_journalentry` records with rich text notes, and optionally attach pictures and videos (via a separate Media model or generic relations).
 
   - **Detailed Health Sampling & Growth Metrics**:
     - The system shall support creation of `health_healthsamplingevent` records, each representing a specific, detailed sampling session for a `batch_batchcontainerassignment`.
-    - Each `HealthSamplingEvent` can have multiple associated `health_individualfishobservation` records, capturing data for each fish sampled (e.g., weight, length, visual abnormalities, and specific parameter scores).
-    - For each `IndividualFishObservation`, users can record scores for predefined `health_healthparameter`s (e.g., Gill Condition, Skin Condition) using the `health_fishparameterscore` model, linking the individual fish's observation to a parameter with a score (1-5 scale).
+    - Each `HealthSamplingEvent` can have multiple associated `health_individualfishobservation` records, capturing data for each fish sampled (weight, length, and specific parameter scores).
+    - For each `IndividualFishObservation`, users can record scores for health parameters using the `health_fishparameterscore` model. Score ranges are defined per parameter (typically 0-3) with flexible configuration support.
     - Based on the collection of `IndividualFishObservation` data within a `HealthSamplingEvent`, the system shall automatically calculate and store the following aggregate growth metrics on the `HealthSamplingEvent` itself:
       - `avg_weight_g`, `std_dev_weight_g`, `min_weight_g`, `max_weight_g`
       - `avg_length_cm`, `std_dev_length_cm`, `min_length_cm`, `max_length_cm`
@@ -288,16 +287,63 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
       - `recorded_by`: User who recorded the lab sample results.
     - This allows for comprehensive tracking of diagnostic tests and external lab analyses, supplementing the on-site health monitoring.
 
-  - **Common Health Parameters** (applicable to both `HealthObservation` and `FishParameterScore` contexts):
-    - Gill Condition: Evaluates gill health.
-    - Eye Condition: Evaluates eye clarity and damage.
-    - Wounds: Measures skin lesions and severity.
-    - Fin Condition: Assesses fin erosion or damage.
-    - Body Condition: Evaluates overall physical shape and deformities.
-    - Swimming Behavior: Monitors activity levels and movement patterns.
-    - Appetite: Assesses feeding response.
-    - Mucous Membrane Condition: Evaluates mucus layer on skin.
-    - Color/Pigmentation: Monitors abnormal color changes.
+  - **Health Parameter Scoring System**:
+    - The system supports flexible health parameter assessment with configurable score ranges.
+    - Health parameters are defined in `health_healthparameter` with customizable min/max score values (default 0-3).
+    - Each parameter has multiple score definitions (`health_parameterscoredefinition`) that define what each numeric score means.
+    - Current standard uses 0-3 scale:
+      - 0: Excellent (no issues)
+      - 1: Good (minor issues)
+      - 2: Fair (moderate issues)
+      - 3: Poor (severe issues)
+    - Veterinarians can configure new parameters with different score ranges (e.g., 1-5, 0-10) as needed.
+    
+  - **Standard Health Parameters** (9 default parameters, each with 0-3 scoring):
+    - **Gill Condition**: Evaluates gill health and respiratory function
+      - 0: Healthy gills, pink color
+      - 1: Slight mucus buildup
+      - 2: Moderate inflammation
+      - 3: Severe inflammation
+    - **Eye Condition**: Evaluates eye clarity and damage
+      - 0: Clear, bright eyes
+      - 1: Slight cloudiness
+      - 2: Moderate cloudiness
+      - 3: Severe cloudiness/damage
+    - **Wounds/Lesions**: Measures skin lesions and severity
+      - 0: No wounds
+      - 1: Minor abrasions
+      - 2: Moderate wounds
+      - 3: Severe wounds/ulcers
+    - **Fin Condition**: Assesses fin integrity and erosion
+      - 0: Intact, healthy fins
+      - 1: Minor fraying
+      - 2: Moderate erosion
+      - 3: Severe erosion
+    - **Body Condition**: Evaluates overall physical shape and deformities
+      - 0: Robust, well-formed
+      - 1: Slight deformities
+      - 2: Moderate deformities
+      - 3: Severe deformities
+    - **Swimming Behavior**: Monitors activity levels and movement patterns
+      - 0: Active, normal swimming
+      - 1: Slightly lethargic
+      - 2: Moderately lethargic
+      - 3: Severely impaired
+    - **Appetite**: Assesses feeding response
+      - 0: Excellent feeding response
+      - 1: Good appetite
+      - 2: Reduced appetite
+      - 3: Poor appetite
+    - **Mucous Membrane**: Evaluates mucus layer on skin
+      - 0: Normal mucus layer
+      - 1: Slight excess mucus
+      - 2: Moderate excess mucus
+      - 3: Heavy excess mucus
+    - **Color/Pigmentation**: Monitors pigmentation and color abnormalities
+      - 0: Normal coloration
+      - 1: Slight color changes
+      - 2: Moderate discoloration
+      - 3: Severe discoloration
 
   - The system shall provide health trend analysis (e.g., mortality rates aggregated from `health_mortalityrecord`, lice prevalence from `health_licecount`, average health scores from `health_healthobservation` and `health_fishparameterscore`, and trends in calculated growth metrics from `HealthSamplingEvent`).
   - The system shall support predefined categories via `health_mortalityreason`, `health_vaccinationtype`, `health_sampletype`.

@@ -14,6 +14,7 @@ from .base import (
 # Import serializers from domain-specific modules
 from .health_observation import (
     HealthParameterSerializer,
+    ParameterScoreDefinitionSerializer,
     HealthSamplingEventSerializer,
     IndividualFishObservationSerializer,
     FishParameterScoreSerializer
@@ -49,6 +50,7 @@ __all__ = [
     
     # Serializers
     'HealthParameterSerializer',
+    'ParameterScoreDefinitionSerializer',
     'HealthSamplingEventSerializer',
     'IndividualFishObservationSerializer',
     'FishParameterScoreSerializer',

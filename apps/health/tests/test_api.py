@@ -128,20 +128,16 @@ class HealthAPITestCase(BaseAPITestCase):
             raise
 
         try:
-            # Add HealthParameter for testing observations
+            # Add HealthParameter for testing observations (with unique names to avoid migration conflicts)
             self.gill_health_param = HealthParameter.objects.create(
-                name='Gill Health',
-                description_score_1='Perfect',
-                description_score_2='Slight mucus',
-                description_score_3='Lesions',
-                description_score_4='Severe damage'
+                name='Test Gill Health API',
+                min_score=0,
+                max_score=3
             )
             self.eye_condition_param = HealthParameter.objects.create(
-                name='Eye Condition',
-                description_score_1='Clear',
-                description_score_2='Cloudy',
-                description_score_3='Bulging',
-                description_score_4='Lost'
+                name='Test Eye Condition API',
+                min_score=0,
+                max_score=3
             )
             print("Health Parameters created successfully")
         except Exception as e:

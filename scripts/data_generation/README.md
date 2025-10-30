@@ -92,6 +92,7 @@ Every piece of data must enable reconstruction of individual fish lifecycles:
 
 - ⏳ **Daily Environmental Generation**: 4-8 readings per BCA (O₂, CO₂, Temp, pH, NO₂, NO₃, NH₄, Salinity)
 - ⏳ **Health & Mortality Integration**: Daily mortality based on environmental conditions
+- ✅ **Health Assessments**: Veterinary parameter scoring every 15-20 days (see README_HEALTH_ASSESSMENTS.md)
 - ⏳ **Feed Management**: 4× daily feeding events with inventory tracking
 - ⏳ **Growth Calculations**: TGC-based growth with environmental factors
 - ⏳ **Biomass Updates**: Population × weight calculations for each BCA

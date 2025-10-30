@@ -7,6 +7,7 @@ This package contains viewsets for the Health app, organized by domain.
 # Import all viewsets for easy access
 from .health_observation import (
     HealthParameterViewSet,
+    ParameterScoreDefinitionViewSet,
     HealthSamplingEventViewSet,
     IndividualFishObservationViewSet,
     FishParameterScoreViewSet
@@ -19,6 +20,7 @@ from .treatment import VaccinationTypeViewSet, TreatmentViewSet
 # For backward compatibility
 __all__ = [
     'HealthParameterViewSet',
+    'ParameterScoreDefinitionViewSet',
     'HealthSamplingEventViewSet',
     'IndividualFishObservationViewSet',
     'FishParameterScoreViewSet',

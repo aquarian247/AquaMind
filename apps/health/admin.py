@@ -5,6 +5,7 @@ from .models import (
     JournalEntry, MortalityReason, LiceCount, LiceType, MortalityRecord, Treatment,
     SampleType,
     HealthParameter,
+    ParameterScoreDefinition,
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore,
@@ -111,20 +112,57 @@ class SampleTypeAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'description')
     search_fields = ('name', 'description')
 
-# Register HealthParameter
-@admin.register(HealthParameter)
-class HealthParameterAdmin(SimpleHistoryAdmin):
-    list_display = ('name', 'is_active', 'updated_at')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
+class ParameterScoreDefinitionInline(admin.TabularInline):
+    """Inline admin for parameter score definitions."""
+    model = ParameterScoreDefinition
+    extra = 1
+    fields = ('score_value', 'label', 'description', 'display_order')
+    ordering = ['display_order', 'score_value']
+
+
+@admin.register(ParameterScoreDefinition)
+class ParameterScoreDefinitionAdmin(SimpleHistoryAdmin):
+    """Admin for managing parameter score definitions."""
+    list_display = ('parameter', 'score_value', 'label', 'display_order', 'updated_at')
+    list_filter = ('parameter',)
+    search_fields = ('label', 'description', 'parameter__name')
+    autocomplete_fields = ['parameter']
+    ordering = ['parameter', 'display_order', 'score_value']
+    
     fieldsets = (
         (None, {
-            'fields': ('name', 'is_active')
+            'fields': ('parameter', 'score_value', 'label', 'description', 'display_order')
         }),
-        ('Score Descriptions (1=Good, 5=Bad)', {
-            'fields': ('description_score_1', 'description_score_2', 'description_score_3', 'description_score_4', 'description_score_5') 
+        ('Audit', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
         }),
     )
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(HealthParameter)
+class HealthParameterAdmin(SimpleHistoryAdmin):
+    """Admin for managing health parameters with nested score definitions."""
+    list_display = ('name', 'min_score', 'max_score', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'min_score', 'max_score')
+    search_fields = ('name', 'description')
+    inlines = [ParameterScoreDefinitionInline]
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description', 'is_active')
+        }),
+        ('Score Range', {
+            'fields': ('min_score', 'max_score'),
+            'description': 'Define the valid score range for this parameter (e.g., 0-3 for a 4-level scale). Score definitions are managed via the inline form below.'
+        }),
+        ('Audit', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
 
 class IndividualFishObservationInline(admin.TabularInline):
     model = IndividualFishObservation

@@ -9,12 +9,14 @@ from rest_framework import viewsets, permissions
 
 from apps.health.models import (
     HealthParameter,
+    ParameterScoreDefinition,
     HealthSamplingEvent,
     IndividualFishObservation,
     FishParameterScore
 )
 from apps.health.api.serializers import (
     HealthParameterSerializer,
+    ParameterScoreDefinitionSerializer,
     HealthSamplingEventSerializer,
     IndividualFishObservationSerializer,
     FishParameterScoreSerializer
@@ -28,11 +30,13 @@ from ..mixins import (
 )
 
 
-class HealthParameterViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.ModelViewSet):
+class HealthParameterViewSet(HistoryReasonMixin, OptimizedQuerysetMixin, StandardFilterMixin, 
+                            viewsets.ModelViewSet):
     """
     API endpoint for managing Health Parameters.
     
     Provides CRUD operations for health parameters used in fish health assessments.
+    Includes nested score definitions for flexible parameter scoring.
     
     Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
@@ -40,13 +44,43 @@ class HealthParameterViewSet(HistoryReasonMixin, StandardFilterMixin, viewsets.M
     serializer_class = HealthParameterSerializer
     permission_classes = [permissions.IsAuthenticated]
     
+    # OptimizedQuerysetMixin configuration
+    prefetch_related_fields = ['score_definitions']
+    
     # StandardFilterMixin configuration
     filterset_fields = {
         'is_active': ['exact'],
-        'name': ['exact', 'icontains']
+        'name': ['exact', 'icontains'],
+        'min_score': ['exact', 'gte', 'lte'],
+        'max_score': ['exact', 'gte', 'lte'],
     }
-    search_fields = ['name', 'description_score_1', 'description_score_2', 
-                     'description_score_3', 'description_score_4', 'description_score_5']
+    search_fields = ['name', 'description']
+
+
+class ParameterScoreDefinitionViewSet(HistoryReasonMixin, OptimizedQuerysetMixin, 
+                                     StandardFilterMixin, viewsets.ModelViewSet):
+    """
+    API endpoint for managing Parameter Score Definitions.
+    
+    Provides CRUD operations for score definitions that define what each numeric
+    score value means for a health parameter.
+    
+    Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+    """
+    queryset = ParameterScoreDefinition.objects.all()
+    serializer_class = ParameterScoreDefinitionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # OptimizedQuerysetMixin configuration
+    select_related_fields = ['parameter']
+    
+    # StandardFilterMixin configuration
+    filterset_fields = {
+        'parameter': ['exact'],
+        'parameter__id': ['exact'],
+        'score_value': ['exact', 'gte', 'lte'],
+    }
+    search_fields = ['label', 'description', 'parameter__name']
 
 
 class HealthSamplingEventViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 

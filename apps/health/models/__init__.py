@@ -6,7 +6,8 @@ This package contains all models related to health monitoring in the AquaMind sy
 
 from .journal_entry import JournalEntry
 from .health_observation import (
-    HealthParameter, HealthSamplingEvent, IndividualFishObservation, FishParameterScore
+    HealthParameter, ParameterScoreDefinition, HealthSamplingEvent, 
+    IndividualFishObservation, FishParameterScore
 )
 from .lab_sample import HealthLabSample, SampleType
 from .treatment import Treatment
@@ -17,6 +18,7 @@ from .lice_type import LiceType
 __all__ = [
     'JournalEntry',
     'HealthParameter',
+    'ParameterScoreDefinition',
     'HealthSamplingEvent',
     'IndividualFishObservation',
     'FishParameterScore',
