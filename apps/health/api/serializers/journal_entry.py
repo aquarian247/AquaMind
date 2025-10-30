@@ -44,14 +44,15 @@ class JournalEntrySerializer(HealthBaseSerializer):
         allow_null=True,
         help_text="Optional severity level of the incident or observation (e.g., 'low', 'medium', 'high')."
     )
-    resolution_status = serializers.CharField(
+    resolution_status = serializers.BooleanField(
+        default=False,
         required=False,
-        allow_null=True,
-        help_text="Current status of resolution for this entry (e.g., 'open', 'in progress', 'resolved')."
+        help_text="Whether the issue has been resolved or addressed."
     )
     resolution_notes = serializers.CharField(
         required=False,
         allow_null=True,
+        allow_blank=True,
         help_text="Notes on how the issue was resolved or is being addressed."
     )
 
