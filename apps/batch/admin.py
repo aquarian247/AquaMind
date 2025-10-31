@@ -6,6 +6,7 @@ from .models import (
     BatchTransferWorkflow,
     TransferAction,
     GrowthSample,
+    IndividualGrowthObservation,
     LifeCycleStage,
     MortalityEvent,
     Species,
@@ -193,6 +194,35 @@ class GrowthSampleAdmin(SimpleHistoryAdmin):
             'fields': ('notes', 'created_at', 'updated_at')
         }),
     )
+
+
+@admin.register(IndividualGrowthObservation)
+class IndividualGrowthObservationAdmin(SimpleHistoryAdmin):
+    """Admin interface for the IndividualGrowthObservation model."""
+    list_display = (
+        'growth_sample',
+        'fish_identifier',
+        'weight_g',
+        'length_cm',
+        'get_k_factor',
+    )
+    list_filter = (
+        'growth_sample__sample_date',
+        'growth_sample__assignment__batch__batch_number',
+    )
+    search_fields = (
+        'fish_identifier',
+        'growth_sample__assignment__batch__batch_number',
+    )
+    readonly_fields = ('created_at', 'updated_at', 'get_k_factor')
+    
+    def get_k_factor(self, obj):
+        """Calculate and display K-factor for the individual fish."""
+        if obj.weight_g and obj.length_cm and obj.length_cm > 0:
+            k_factor = (obj.weight_g / (obj.length_cm ** 3)) * 100
+            return f"{k_factor:.2f}"
+        return None
+    get_k_factor.short_description = 'K-Factor'
 
 
 class TransferActionInline(admin.TabularInline):

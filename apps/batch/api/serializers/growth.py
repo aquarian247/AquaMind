@@ -9,7 +9,8 @@ import statistics
 import decimal
 from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
-from apps.batch.models import GrowthSample  # BatchContainerAssignment not directly used
+from django.db import transaction
+from apps.batch.models import GrowthSample, IndividualGrowthObservation
 from typing import Dict, Any, Optional
 from apps.batch.api.serializers.utils import (
     NestedModelMixin, DecimalFieldsMixin, format_decimal
@@ -22,11 +23,35 @@ from apps.batch.api.serializers.validation import (
 from drf_spectacular.utils import extend_schema_field, extend_schema
 
 
+class IndividualGrowthObservationInputSerializer(serializers.Serializer):
+    """Input serializer for nested growth observations."""
+    fish_identifier = serializers.CharField(max_length=50)
+    weight_g = serializers.DecimalField(max_digits=10, decimal_places=2)
+    length_cm = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+
+class IndividualGrowthObservationSerializer(serializers.ModelSerializer):
+    """Serializer for displaying growth observations."""
+    calculated_k_factor = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = IndividualGrowthObservation
+        fields = ['id', 'fish_identifier', 'weight_g', 'length_cm', 'calculated_k_factor']
+    
+    def get_calculated_k_factor(self, obj):
+        """Calculate K-factor if weight and length are provided."""
+        if obj.weight_g and obj.length_cm and obj.length_cm > 0:
+            return (obj.weight_g / (obj.length_cm ** 3)) * 100
+        return None
+
+
 class GrowthSampleSerializer(
     NestedModelMixin, DecimalFieldsMixin, serializers.ModelSerializer
 ):
     """Serializer for GrowthSample model with calculated fields."""
     assignment_details = serializers.SerializerMethodField()
+    
+    # Legacy individual measurement lists (kept for backward compatibility)
     individual_lengths = serializers.ListField(
         child=serializers.DecimalField(
             max_digits=10, decimal_places=2, min_value=Decimal('0.01')
@@ -38,6 +63,22 @@ class GrowthSampleSerializer(
             max_digits=10, decimal_places=2, min_value=Decimal('0.01')
         ),
         write_only=True, required=False, allow_empty=True, max_length=1000
+    )
+    
+    # New nested observation handling
+    individual_observations = IndividualGrowthObservationInputSerializer(
+        many=True,
+        required=False,
+        write_only=True,
+        help_text="Individual fish observations to create (write-only, for POST/PUT)."
+    )
+    
+    # Read-only for displaying nested observations
+    fish_observations = IndividualGrowthObservationSerializer(
+        source='individual_observations',
+        many=True,
+        read_only=True,
+        help_text="Individual fish observations with K-factors (read-only, for GET)."
     )
 
     # Override sample_date to explicitly handle date conversion
@@ -51,17 +92,21 @@ class GrowthSampleSerializer(
             'sample_size', 'avg_weight_g', 'avg_length_cm',
             'std_deviation_weight', 'std_deviation_length', 'min_weight_g',
             'max_weight_g', 'condition_factor', 'notes', 'created_at',
-            'updated_at', 'individual_lengths', 'individual_weights'
+            'updated_at', 'individual_lengths', 'individual_weights',
+            'individual_observations',  # write-only field for creating nested objects
+            'fish_observations',  # read-only field for displaying nested objects
         ]
         read_only_fields = (
             'id',
             'assignment_details',  # Read-only representation
             'created_at',
-            'updated_at'
+            'updated_at',
+            'fish_observations',  # Read-only nested observations
         )
         extra_kwargs = {
             'assignment': {'required': False},  # Set via JournalEntry context
             'sample_date': {'required': False},  # From journal_entry.entry_date
+            'sample_size': {'required': False},  # Calc from individuals or manual
             'avg_weight_g': {'required': False},  # Calc if individuals given
             'avg_length_cm': {'required': False},  # Calc if individuals given
             'std_deviation_weight': {'required': False},  # Preserve if provided
@@ -285,8 +330,9 @@ class GrowthSampleSerializer(
             msg = "Invalid numeric data for K factor calculation."
             raise serializers.ValidationError({'individual_measurements': msg})
 
+    @transaction.atomic
     def create(self, validated_data):
-        """Create a new GrowthSample, processing individual measurements."""
+        """Create a new GrowthSample, processing individual measurements or observations."""
         if 'sample_date' not in validated_data:
             journal_entry = self.context.get('journal_entry')
             if journal_entry and hasattr(journal_entry, 'entry_date'):
@@ -295,6 +341,10 @@ class GrowthSampleSerializer(
                     entry_date.date() if hasattr(entry_date, 'date') else entry_date
                 )
 
+        # Extract nested individual observations
+        individual_observations_data = validated_data.pop('individual_observations', [])
+        
+        # Legacy individual measurements (for backward compatibility)
         validated_data.pop('individual_weights', None)
         validated_data.pop('individual_lengths', None)
 
@@ -302,10 +352,35 @@ class GrowthSampleSerializer(
            hasattr(validated_data['sample_date'], 'date'):
             validated_data['sample_date'] = validated_data['sample_date'].date()
 
-        return GrowthSample.objects.create(**validated_data)
+        # If creating with individual observations, set temporary sample_size
+        # (will be recalculated by calculate_aggregates)
+        if individual_observations_data and 'sample_size' not in validated_data:
+            validated_data['sample_size'] = 0
+            validated_data['avg_weight_g'] = Decimal('0.0')
 
+        # Create the growth sample
+        growth_sample = GrowthSample.objects.create(**validated_data)
+        
+        # Create individual observations if provided
+        if individual_observations_data:
+            for obs_data in individual_observations_data:
+                IndividualGrowthObservation.objects.create(
+                    growth_sample=growth_sample,
+                    **obs_data
+                )
+            
+            # Calculate aggregates from individual observations
+            growth_sample.calculate_aggregates()
+        
+        return growth_sample
+
+    @transaction.atomic
     def update(self, instance, validated_data):
-        """Update an existing GrowthSample."""
+        """Update an existing GrowthSample with nested individual observations."""
+        # Extract nested individual observations
+        individual_observations_data = validated_data.pop('individual_observations', None)
+        
+        # Legacy individual measurements (for backward compatibility)
         validated_data.pop('individual_lengths', None)
         validated_data.pop('individual_weights', None)
 
@@ -313,4 +388,24 @@ class GrowthSampleSerializer(
            hasattr(validated_data['sample_date'], 'date'):
             validated_data['sample_date'] = validated_data['sample_date'].date()
 
-        return super().update(instance, validated_data)
+        # Update the growth sample fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Update individual observations if provided
+        if individual_observations_data is not None:
+            # Replace strategy: Clear all existing observations and create new ones
+            instance.individual_observations.all().delete()
+            
+            # Create new observations with the updated data
+            for obs_data in individual_observations_data:
+                IndividualGrowthObservation.objects.create(
+                    growth_sample=instance,
+                    **obs_data
+                )
+            
+            # Recalculate aggregates from individual observations
+            instance.calculate_aggregates()
+        
+        return instance

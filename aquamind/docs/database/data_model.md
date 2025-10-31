@@ -24,10 +24,11 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 
 #### Tracked Models by App
 
-**Batch App (9 models)**
+**Batch App (10 models)**
 - **`batch_batch`**: Complete change history for batch lifecycle management
 - **`batch_batchcontainerassignment`**: Container assignment changes and biomass updates
 - **`batch_growthsample`**: Growth sampling and weight measurements
+- **`batch_individualgrowthobservation`**: Individual fish measurements within growth samples
 - **`batch_mortalityevent`**: Mortality tracking and cause documentation
 - **`batch_batchtransferworkflow`**: Multi-day transfer workflow orchestration with state machine ✓
 - **`batch_transferaction`**: Individual container-to-container transfer actions within workflows ✓
@@ -372,17 +373,26 @@ All infrastructure models implement django-simple-history for comprehensive chan
     - `id`: bigint (PK, auto-increment, NOT NULL)
     - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=CASCADE, NOT NULL)
     - `sample_date`: date (NOT NULL)
-    - `sample_size`: integer (NOT NULL) # Number of individuals sampled
-    - `avg_weight_g`: numeric (NOT NULL)
-    - `avg_length_cm`: numeric (nullable)
-    - `std_deviation_weight`: numeric (nullable)
-    - `std_deviation_length`: numeric (nullable)
-    - `min_weight_g`: numeric (nullable)
-    - `max_weight_g`: numeric (nullable)
-    - `condition_factor`: numeric (nullable) # e.g., Fulton's K
+    - `sample_size`: integer (NOT NULL) # Number of individuals sampled (auto-calculated from individual observations if provided)
+    - `avg_weight_g`: numeric (NOT NULL) # Auto-calculated from individual observations if provided
+    - `avg_length_cm`: numeric (nullable) # Auto-calculated from individual observations if provided
+    - `std_deviation_weight`: numeric (nullable) # Auto-calculated from individual observations if provided
+    - `std_deviation_length`: numeric (nullable) # Auto-calculated from individual observations if provided
+    - `min_weight_g`: numeric (nullable) # Auto-calculated from individual observations if provided
+    - `max_weight_g`: numeric (nullable) # Auto-calculated from individual observations if provided
+    - `condition_factor`: numeric (nullable) # Fulton's K-factor: K = 100 * (avg_weight_g / avg_length_cm³)
     - `notes`: text (nullable)
     - `created_at`: timestamptz (NOT NULL)
     - `updated_at`: timestamptz (NOT NULL)
+- **`batch_individualgrowthobservation`** # Individual fish measurements within a growth sample
+    - `id`: bigint (PK, auto-increment, NOT NULL)
+    - `growth_sample_id`: bigint (FK to `batch_growthsample`.`id`, on_delete=CASCADE, NOT NULL)
+    - `fish_identifier`: varchar(50) (NOT NULL) # Unique identifier for the fish within this sample (e.g., sequential number)
+    - `weight_g`: numeric (NOT NULL) # Weight in grams
+    - `length_cm`: numeric (NOT NULL) # Length in centimeters
+    - `created_at`: timestamptz (NOT NULL)
+    - `updated_at`: timestamptz (NOT NULL)
+    - **Unique Constraint**: `(growth_sample_id, fish_identifier)`
 - **`batch_batchhistory`** (Likely handled by audit logging tools like django-auditlog, may not be a separate model)
 - **`batch_batchmedia`** (Potentially generic relation via ContentType or dedicated model)
 
@@ -401,6 +411,9 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
   - Same history fields as above
 - **`batch_historicalgrowthsample`**
   - All fields from `batch_growthsample` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalindividualgrowthobservation`**
+  - All fields from `batch_individualgrowthobservation` plus history tracking fields
   - Same history fields as above
 - **`batch_historicalmortalityevent`**
   - All fields from `batch_mortalityevent` plus history tracking fields
@@ -429,6 +442,7 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `auth_user` ← `batch_transferaction` (SET_NULL, executed_by FK)
 - `batch_batch` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
+- `batch_growthsample` ← `batch_individualgrowthobservation` (CASCADE)
 - `batch_batch` ← `broodstock_batchparentage` (CASCADE, related_name='parentage')
 
 ### 4.3 Feed and Inventory Management (`inventory` app)

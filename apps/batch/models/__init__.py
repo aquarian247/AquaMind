@@ -10,6 +10,7 @@ This package contains all models related to fish batch management, including:
 - Transfer actions (workflow execution)
 - Mortality events
 - Growth samples
+- Individual growth observations
 """
 
 from apps.batch.models.species import Species, LifeCycleStage
@@ -20,6 +21,7 @@ from apps.batch.models.workflow import BatchTransferWorkflow
 from apps.batch.models.workflow_action import TransferAction
 from apps.batch.models.mortality import MortalityEvent
 from apps.batch.models.growth import GrowthSample
+from apps.batch.models.individual_growth_observation import IndividualGrowthObservation
 
 __all__ = [
     'Species',
@@ -31,4 +33,5 @@ __all__ = [
     'TransferAction',
     'MortalityEvent',
     'GrowthSample',
+    'IndividualGrowthObservation',
 ]
