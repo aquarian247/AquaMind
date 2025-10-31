@@ -527,12 +527,40 @@ class EventEngine:
             a.biomass_kg = Decimal(str(round(a.population_count * new_w / 1000, 2)))
             a.save()
             
+            # Weekly growth sampling (with individual fish observations)
             if self.stats['days'] % 7 == 0:
-                GrowthSample.objects.create(
-                    assignment=a, sample_date=self.current_date, sample_size=30,
-                    avg_weight_g=a.avg_weight_g,
-                    avg_length_cm=Decimal(str(round((new_w ** 0.33) * 5, 1)))
+                from apps.batch.models import IndividualGrowthObservation
+                from random import uniform
+                
+                # Create growth sample (initially with placeholder values)
+                growth_sample = GrowthSample.objects.create(
+                    assignment=a,
+                    sample_date=self.current_date,
+                    sample_size=0,  # Will be recalculated
+                    avg_weight_g=Decimal('0.0'),  # Will be recalculated
                 )
+                
+                # Generate individual fish observations (30 fish sample)
+                num_fish = 30
+                base_weight = float(new_w)
+                base_length = float((new_w ** 0.33) * 5)
+                
+                for fish_num in range(1, num_fish + 1):
+                    # Add realistic variation around batch average
+                    # Weight: ±15% variation
+                    fish_weight = base_weight * uniform(0.85, 1.15)
+                    # Length: ±10% variation
+                    fish_length = base_length * uniform(0.90, 1.10)
+                    
+                    IndividualGrowthObservation.objects.create(
+                        growth_sample=growth_sample,
+                        fish_identifier=str(fish_num),
+                        weight_g=Decimal(str(round(fish_weight, 2))),
+                        length_cm=Decimal(str(round(fish_length, 2)))
+                    )
+                
+                # Calculate aggregates from individual observations
+                growth_sample.calculate_aggregates()
                 self.stats['growth'] += 1
     
     def lice_update(self):
