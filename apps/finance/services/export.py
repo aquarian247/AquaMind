@@ -226,7 +226,12 @@ def _pending_transactions(request: ExportRequest):
 def _build_fact_map(
     company_id: int, transactions: Sequence[IntercompanyTransaction]
 ) -> dict[int, FactHarvest]:
-    event_ids = {tx.event_id for tx in transactions}
+    # Extract event IDs from polymorphic relationships
+    event_ids = set()
+    for tx in transactions:
+        if tx.content_type.model == 'harvestevent':
+            event_ids.add(tx.object_id)
+
     grade_ids = {tx.policy.product_grade_id for tx in transactions}
 
     facts = FactHarvest.objects.select_related(
@@ -244,7 +249,13 @@ def _build_fact_map(
 
     mapping: dict[int, FactHarvest] = {}
     for tx in transactions:
-        mapping[tx.pk] = fact_by_key.get((tx.event_id, tx.policy.product_grade_id))
+        if tx.content_type.model == 'harvestevent':
+            event_id = tx.object_id
+        else:
+            # For non-harvest transactions, skip (they won't have FactHarvest records)
+            mapping[tx.pk] = None
+            continue
+        mapping[tx.pk] = fact_by_key.get((event_id, tx.policy.product_grade_id))
     return mapping
 
 

@@ -3,6 +3,7 @@
 import unittest
 from decimal import Decimal
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase
 from django.utils import timezone
@@ -130,8 +131,14 @@ class FinanceBIViewsTests(TestCase):
             to_company=cls.dest_company,
             product_grade=cls.grade,
         )
+        # Get content type for HarvestEvent
+        harvest_event_ct = ContentType.objects.get(
+            app_label='harvest', model='harvestevent'
+        )
+
         cls.transaction = IntercompanyTransaction.objects.create(
-            event=cls.event,
+            content_type=harvest_event_ct,
+            object_id=cls.event.id,
             policy=cls.policy,
             posting_date=now.date(),
             amount=Decimal("1500.00"),

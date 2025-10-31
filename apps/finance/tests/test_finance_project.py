@@ -124,7 +124,7 @@ class FinanceProjectCommandTests(TestCase):
         tx = IntercompanyTransaction.objects.get()
         self.assertEqual(tx.policy.from_company, source_company)
         self.assertEqual(tx.policy.to_company, dest_company)
-        self.assertEqual(tx.event, event)
+        self.assertEqual(tx.source, event)  # Check polymorphic relationship
         self.assertEqual(tx.state, IntercompanyTransaction.State.PENDING)
         self.assertEqual(tx.posting_date, event.event_date.date())
 

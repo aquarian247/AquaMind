@@ -201,8 +201,15 @@ class Command(BaseCommand):
                 continue
 
             seen_policies.add(policy.pk)
+            # Get the content type for HarvestEvent
+            from django.contrib.contenttypes.models import ContentType
+            harvest_event_ct = ContentType.objects.get(
+                app_label='harvest', model='harvestevent'
+            )
+
             tx, created = IntercompanyTransaction.objects.get_or_create(
-                event=event,
+                content_type=harvest_event_ct,
+                object_id=event.id,
                 policy=policy,
                 defaults={
                     "posting_date": posting_date,
