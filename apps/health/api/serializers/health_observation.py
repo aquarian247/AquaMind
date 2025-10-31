@@ -286,10 +286,20 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
     This serializer handles complex nested data structures for fish health sampling events,
     including individual fish observations and their parameter scores.
     """
+    # Write-only for creating nested observations
     individual_fish_observations = IndividualFishObservationInputSerializer(
         many=True,
         required=False,
-        write_only=True
+        write_only=True,
+        help_text="Fish observations to create (write-only, for POST/PUT)."
+    )
+    
+    # Read-only for displaying nested observations
+    fish_observations = IndividualFishObservationSerializer(
+        source='individual_fish_observations',
+        many=True,
+        read_only=True,
+        help_text="Individual fish observations with parameter scores (read-only, for GET)."
     )
     
     # Read-only fields for displaying related data
@@ -304,6 +314,7 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
             'id', 'assignment', 'sampling_date', 'number_of_fish_sampled',
             'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
             'individual_fish_observations',  # write-only field for creating nested objects
+            'fish_observations',  # read-only field for displaying nested objects
             'avg_length_cm', 'std_dev_length_cm', 'min_length_cm', 'max_length_cm',
             'avg_k_factor', 'calculated_sample_size', 'notes', 'sampled_by',
             'batch_number', 'container_name', 'sampled_by_username'
@@ -311,7 +322,8 @@ class HealthSamplingEventSerializer(HealthDecimalFieldsMixin, NestedHealthModelM
         read_only_fields = [
             'id', 'avg_weight_g', 'std_dev_weight_g', 'min_weight_g', 'max_weight_g',
             'avg_length_cm', 'std_dev_length_cm', 'min_length_cm', 'max_length_cm',
-            'avg_k_factor', 'calculated_sample_size', 'batch_number', 'container_name', 'sampled_by_username'
+            'avg_k_factor', 'calculated_sample_size', 'batch_number', 'container_name', 
+            'sampled_by_username', 'fish_observations'
         ]
     
     def get_batch_number(self, obj) -> Optional[str]:
