@@ -11,7 +11,7 @@ from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
 from django.db import transaction
 from apps.batch.models import GrowthSample, IndividualGrowthObservation
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from apps.batch.api.serializers.utils import (
     NestedModelMixin, DecimalFieldsMixin, format_decimal
 )
@@ -20,7 +20,7 @@ from apps.batch.api.serializers.validation import (
     validate_sample_size_against_population,
     validate_min_max_weight
 )
-from drf_spectacular.utils import extend_schema_field, extend_schema
+from drf_spectacular.utils import extend_schema_field, extend_schema, OpenApiTypes
 
 
 class IndividualGrowthObservationInputSerializer(serializers.Serializer):
@@ -38,10 +38,11 @@ class IndividualGrowthObservationSerializer(serializers.ModelSerializer):
         model = IndividualGrowthObservation
         fields = ['id', 'fish_identifier', 'weight_g', 'length_cm', 'calculated_k_factor']
     
-    def get_calculated_k_factor(self, obj):
+    @extend_schema_field(OpenApiTypes.FLOAT)
+    def get_calculated_k_factor(self, obj) -> Optional[float]:
         """Calculate K-factor if weight and length are provided."""
         if obj.weight_g and obj.length_cm and obj.length_cm > 0:
-            return (obj.weight_g / (obj.length_cm ** 3)) * 100
+            return float((obj.weight_g / (obj.length_cm ** 3)) * 100)
         return None
 
 

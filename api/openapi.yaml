@@ -32567,7 +32567,9 @@ components:
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           description: Length in centimeters.
         calculated_k_factor:
-          type: string
+          type: number
+          format: float
+          description: Calculate K-factor if weight and length are provided.
           readOnly: true
       required:
       - calculated_k_factor
