@@ -10,6 +10,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
+from datetime import date
 
 from apps.users.models import UserProfile, Geography, Subsidiary, Role
 from apps.infrastructure.models import Geography as GeographyModel, Area, Container, ContainerType
@@ -83,7 +84,8 @@ class RBACGeographicIsolationTest(TestCase):
         )
         self.lifecycle_stage = LifeCycleStage.objects.create(
             name='Smolt',
-            order=4
+            order=4,
+            species=self.species
         )
         
         # Create batches
@@ -92,14 +94,16 @@ class RBACGeographicIsolationTest(TestCase):
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
             status='ACTIVE',
-            batch_type='STANDARD'
+            batch_type='STANDARD',
+            start_date=date.today()
         )
         self.batch_faroe = Batch.objects.create(
             batch_number='FAR-2024-001',
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
             status='ACTIVE',
-            batch_type='STANDARD'
+            batch_type='STANDARD',
+            start_date=date.today()
         )
         
         # Create batch container assignments
@@ -107,6 +111,7 @@ class RBACGeographicIsolationTest(TestCase):
             batch=self.batch_scotland,
             container=self.container_scotland,
             lifecycle_stage=self.lifecycle_stage,
+            assignment_date=date.today(),
             population_count=1000,
             avg_weight_g=50.0,
             biomass_kg=50.0
@@ -115,6 +120,7 @@ class RBACGeographicIsolationTest(TestCase):
             batch=self.batch_faroe,
             container=self.container_faroe,
             lifecycle_stage=self.lifecycle_stage,
+            assignment_date=date.today(),
             population_count=1000,
             avg_weight_g=50.0,
             biomass_kg=50.0
@@ -260,14 +266,16 @@ class RBACRoleBasedAccessTest(TestCase):
         )
         self.lifecycle_stage = LifeCycleStage.objects.create(
             name='Smolt',
-            order=4
+            order=4,
+            species=self.species
         )
         self.batch = Batch.objects.create(
             batch_number='TEST-2024-001',
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
             status='ACTIVE',
-            batch_type='STANDARD'
+            batch_type='STANDARD',
+            start_date=date.today()
         )
         
         # Create users with different roles
@@ -443,7 +451,8 @@ class RBACOperatorLocationTest(TestCase):
         )
         self.lifecycle_stage = LifeCycleStage.objects.create(
             name='Smolt',
-            order=4
+            order=4,
+            species=self.species
         )
         
         # Create batches in different areas
@@ -452,20 +461,23 @@ class RBACOperatorLocationTest(TestCase):
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
             status='ACTIVE',
-            batch_type='STANDARD'
+            batch_type='STANDARD',
+            start_date=date.today()
         )
         self.batch_area2 = Batch.objects.create(
             batch_number='AREA2-2024-001',
             species=self.species,
             lifecycle_stage=self.lifecycle_stage,
             status='ACTIVE',
-            batch_type='STANDARD'
+            batch_type='STANDARD',
+            start_date=date.today()
         )
         
         # Create batch container assignments
         BatchContainerAssignment.objects.create(
             batch=self.batch_area1,
             container=self.container_area1,
+            assignment_date=date.today(),
             population_count=1000,
             biomass_kg=500.0,
             avg_weight_g=500.0,
@@ -474,6 +486,7 @@ class RBACOperatorLocationTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch_area2,
             container=self.container_area2,
+            assignment_date=date.today(),
             population_count=1000,
             biomass_kg=500.0,
             avg_weight_g=500.0,
