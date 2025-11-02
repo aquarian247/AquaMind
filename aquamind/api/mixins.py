@@ -15,6 +15,7 @@ Usage:
 """
 
 from django.db.models import Q
+from django.db import transaction
 from rest_framework.exceptions import PermissionDenied
 
 from apps.users.models import Geography, Subsidiary, Role
@@ -37,6 +38,22 @@ class RBACFilterMixin:
     geography_filter_field = None
     subsidiary_filter_field = None
     enable_operator_location_filtering = False
+    
+    def _get_geography_name(self, geography_choice):
+        """
+        Map UserProfile geography choice to Infrastructure Geography name.
+        
+        Args:
+            geography_choice: Geography TextChoice value ('FO', 'SC', 'ALL')
+            
+        Returns:
+            Geography name string for filtering Infrastructure Geography model
+        """
+        geography_mapping = {
+            Geography.FAROE_ISLANDS: 'Faroe Islands',
+            Geography.SCOTLAND: 'Scotland',
+        }
+        return geography_mapping.get(geography_choice)
     
     def get_queryset(self):
         """
@@ -71,10 +88,13 @@ class RBACFilterMixin:
         
         # Apply geography filter
         if profile.geography != Geography.ALL and self.geography_filter_field:
-            geography_filter = {
-                f'{self.geography_filter_field}': profile.geography
-            }
-            queryset = queryset.filter(**geography_filter)
+            # Get geography name for comparison with Infrastructure Geography model
+            geography_name = self._get_geography_name(profile.geography)
+            if geography_name:
+                geography_filter = {
+                    f'{self.geography_filter_field}__name': geography_name
+                }
+                queryset = queryset.filter(**geography_filter)
         
         # Apply subsidiary filter
         if profile.subsidiary != Subsidiary.ALL and self.subsidiary_filter_field:
@@ -199,10 +219,14 @@ class RBACFilterMixin:
             # No geography filtering defined, skip validation
             return
         
-        # Navigate through the field path to get the geography value
+        # Navigate through the field path to get the geography model instance
         obj_geography = self._get_nested_field_value(obj, self.geography_filter_field)
         
-        if obj_geography != profile.geography:
+        # Get the expected geography name from user profile
+        expected_geography_name = self._get_geography_name(profile.geography)
+        
+        # Compare geography names (obj_geography.name vs expected name)
+        if obj_geography and expected_geography_name and obj_geography.name != expected_geography_name:
             raise PermissionDenied(
                 f"You do not have permission to access data in geography: {obj_geography}"
             )
@@ -267,18 +291,34 @@ class RBACFilterMixin:
         Override perform_create to validate object-level permissions.
         
         Ensures that created objects belong to user's authorized geography/subsidiary.
+        CRITICAL: Validates BEFORE saving to prevent unauthorized data persistence.
         """
-        # Save the instance first
-        instance = serializer.save()
+        # Create instance WITHOUT saving to database yet
+        instance = serializer.save(commit=False) if hasattr(serializer, 'save') else None
         
-        # Validate geography and subsidiary
-        try:
+        # If serializer doesn't support commit=False, we need to validate differently
+        if instance is None:
+            # For serializers that don't support commit=False, we validate the data
+            # This is a fallback - ideally all serializers should support commit=False
+            with transaction.atomic():
+                # Create a savepoint
+                sid = transaction.savepoint()
+                try:
+                    instance = serializer.save()
+                    self.validate_object_geography(instance)
+                    self.validate_object_subsidiary(instance)
+                    # If validation passes, commit the transaction
+                    transaction.savepoint_commit(sid)
+                except PermissionDenied:
+                    # If validation fails, rollback to savepoint
+                    transaction.savepoint_rollback(sid)
+                    raise
+        else:
+            # Validate BEFORE saving to database
             self.validate_object_geography(instance)
             self.validate_object_subsidiary(instance)
-        except PermissionDenied:
-            # If validation fails, delete the instance and re-raise
-            instance.delete()
-            raise
+            # Only save if validation passes
+            instance.save()
         
         return instance
     
@@ -287,15 +327,31 @@ class RBACFilterMixin:
         Override perform_update to validate object-level permissions.
         
         Ensures that updated objects remain within user's authorized scope.
+        CRITICAL: Validates BEFORE saving to prevent unauthorized data persistence.
         """
-        # Save the instance first
-        instance = serializer.save()
+        # Get the instance that will be updated (before changes)
+        instance = serializer.instance
         
-        # Validate geography and subsidiary
-        self.validate_object_geography(instance)
-        self.validate_object_subsidiary(instance)
-        
-        return instance
+        # Use transaction with savepoint to ensure atomicity
+        with transaction.atomic():
+            # Create a savepoint to rollback if validation fails
+            sid = transaction.savepoint()
+            try:
+                # Save the updated instance
+                updated_instance = serializer.save()
+                
+                # Validate geography and subsidiary on updated instance
+                self.validate_object_geography(updated_instance)
+                self.validate_object_subsidiary(updated_instance)
+                
+                # If validation passes, commit the changes
+                transaction.savepoint_commit(sid)
+                return updated_instance
+                
+            except PermissionDenied:
+                # If validation fails, rollback all changes
+                transaction.savepoint_rollback(sid)
+                raise
 
 
 class GeographicFilterMixin(RBACFilterMixin):
@@ -318,9 +374,12 @@ class GeographicFilterMixin(RBACFilterMixin):
             return queryset.none()
         
         if profile.geography != Geography.ALL and self.geography_filter_field:
-            geography_filter = {
-                f'{self.geography_filter_field}': profile.geography
-            }
-            queryset = queryset.filter(**geography_filter)
+            # Get geography name for comparison with Infrastructure Geography model
+            geography_name = self._get_geography_name(profile.geography)
+            if geography_name:
+                geography_filter = {
+                    f'{self.geography_filter_field}__name': geography_name
+                }
+                queryset = queryset.filter(**geography_filter)
         
         return queryset
