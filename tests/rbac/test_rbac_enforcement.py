@@ -13,7 +13,7 @@ from rest_framework import status
 
 from apps.users.models import UserProfile, Geography, Subsidiary, Role
 from apps.infrastructure.models import Geography as GeographyModel, Area, Container, ContainerType
-from apps.batch.models import Batch, Species, LifecycleStage, BatchContainerAssignment
+from apps.batch.models import Batch, Species, LifeCycleStage, BatchContainerAssignment
 from apps.health.models import JournalEntry
 
 User = get_user_model()
@@ -81,7 +81,7 @@ class RBACGeographicIsolationTest(TestCase):
             name='Atlantic Salmon',
             scientific_name='Salmo salar'
         )
-        self.lifecycle_stage = LifecycleStage.objects.create(
+        self.lifecycle_stage = LifeCycleStage.objects.create(
             name='Smolt',
             order=4
         )
@@ -258,7 +258,7 @@ class RBACRoleBasedAccessTest(TestCase):
             name='Atlantic Salmon',
             scientific_name='Salmo salar'
         )
-        self.lifecycle_stage = LifecycleStage.objects.create(
+        self.lifecycle_stage = LifeCycleStage.objects.create(
             name='Smolt',
             order=4
         )
