@@ -1087,22 +1087,63 @@ All health models with `history = HistoricalRecords()` create corresponding hist
 - **`auth_user_groups`** (ManyToMany link table)
 - **`auth_user_user_permissions`** (ManyToMany link table)
 - **`auth_group_permissions`** (ManyToMany link table)
-- **`users_userprofile`** (Custom profile model)
+- **`users_userprofile`** (Custom profile model - Enhanced with RBAC Phase 2)
   - `id`: bigint (PK, auto-increment)
   - `user_id`: integer (FK to `auth_user`, on_delete=CASCADE, unique=True) # One-to-One
-  - `role`: varchar(100) (nullable)
-  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=SET_NULL, nullable)
-  - `subsidiary`: varchar(100) (nullable) # Assuming this might be a choice field or simple text for now
-  - `phone_number`: varchar(20) (nullable)
+  - `full_name`: varchar(150) (blank=True)
+  - `phone`: varchar(20) (nullable)
+  - `profile_picture`: ImageField (nullable, upload_to='profile_pictures/')
+  - `job_title`: varchar(100) (nullable)
+  - `department`: varchar(100) (nullable)
+  - `role`: varchar(5) (choices: 'ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN', 'VIEW', default='VIEW')
+  - `geography`: varchar(3) (choices: 'FO', 'SC', 'ALL', default='ALL')
+  - `subsidiary`: varchar(3) (choices: 'BS', 'FW', 'FM', 'LG', 'ALL', default='ALL')
+  
+  # Phase 2 RBAC: Operator location assignments (M2M)
+  - `allowed_areas`: ManyToManyField to `infrastructure_area` (blank=True, related_name='permitted_users')
+  - `allowed_stations`: ManyToManyField to `infrastructure_freshwaterstation` (blank=True, related_name='permitted_users')
+  - `allowed_containers`: ManyToManyField to `infrastructure_container` (blank=True, related_name='permitted_users')
+  
+  # User preferences
+  - `language_preference`: varchar(5) (choices: 'en', 'fo', 'da', default='en')
+  - `date_format_preference`: varchar(10) (choices: 'DMY', 'MDY', 'YMD', default='DMY')
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
 
 #### Relationships
 - `auth_user` ← `users_userprofile` (CASCADE, One-to-One)
-- `infrastructure_geography` ← `users_userprofile` (SET_NULL)
 - `auth_user` ↔ `auth_group` (ManyToMany)
 - `auth_user` ↔ `auth_permission` (ManyToMany)
 - `auth_group` ↔ `auth_permission` (ManyToMany)
+
+#### Phase 2 RBAC: Operator Location Assignment Relationships
+- `infrastructure_area` ↔ `users_userprofile` (ManyToMany, related_name='permitted_users')
+- `infrastructure_freshwaterstation` ↔ `users_userprofile` (ManyToMany, related_name='permitted_users')
+- `infrastructure_container` ↔ `users_userprofile` (ManyToMany, related_name='permitted_users')
+
+#### RBAC API Enforcement
+The system implements comprehensive RBAC enforcement through:
+
+**RBACFilterMixin Architecture:**
+```python
+# Applied to ViewSets for automatic filtering
+class BatchViewSet(RBACFilterMixin, ModelViewSet):
+    geography_filter_field = 'batch_assignments__container__area__geography'
+    enable_operator_location_filtering = True  # Phase 2
+    permission_classes = [IsAuthenticated, IsOperator]
+```
+
+**Permission Classes:**
+- `IsOperator`: OPERATOR/MANAGER/Admin access to operational data
+- `IsHealthContributor`: VET/QA/Admin access to health data
+- `IsTreatmentEditor`: VET/Admin treatment modification, QA read-only
+- `IsFinanceUser`: FINANCE/Admin financial data access
+
+**Automatic Filtering Behavior:**
+1. **Geographic Filtering**: Users see only data in their assigned geography
+2. **Role-Based Access**: Health data restricted to VET/QA/Admin, treatments to VET/Admin
+3. **Location Filtering**: Operators see only data for assigned areas/stations/containers
+4. **Admin Override**: Superusers bypass all RBAC restrictions
 - `auth_user` ← `broodstock_maintenancetask` (SET_NULL, created_by, related_name='created_maintenance_tasks')
 - `auth_user` ← `broodstock_breedingplan` (SET_NULL, created_by, related_name='breeding_plans')
 - `auth_user` ← `broodstock_fishmovement` (SET_NULL, moved_by, related_name='fish_movements')
