@@ -382,8 +382,213 @@ class RBACObjectLevelValidationTest(TestCase):
         pass
 
 
+class RBACOperatorLocationTest(TestCase):
+    """
+    Test suite for verifying operator location-based access control (Phase 2).
+    
+    These tests ensure that operators can only access data for their assigned
+    areas, stations, and containers. Managers and Admins should see all data
+    within their geography.
+    """
+    
+    def setUp(self):
+        """Set up test data with multiple areas and operators."""
+        # Create geography
+        self.geo_scotland = GeographyModel.objects.create(
+            name='Scotland',
+            description='Scotland operations'
+        )
+        
+        # Create multiple areas
+        self.area_1 = Area.objects.create(
+            name='Scottish Area 1',
+            geography=self.geo_scotland,
+            latitude=56.0,
+            longitude=-4.0,
+            max_biomass=1000000
+        )
+        self.area_2 = Area.objects.create(
+            name='Scottish Area 2',
+            geography=self.geo_scotland,
+            latitude=56.5,
+            longitude=-4.5,
+            max_biomass=1000000
+        )
+        
+        # Create container type and containers
+        self.container_type = ContainerType.objects.create(
+            name='Test Tank',
+            category='TANK',
+            max_volume_m3=100
+        )
+        self.container_area1 = Container.objects.create(
+            name='Area 1 Tank 1',
+            container_type=self.container_type,
+            area=self.area_1,
+            volume_m3=100,
+            max_biomass_kg=10000
+        )
+        self.container_area2 = Container.objects.create(
+            name='Area 2 Tank 1',
+            container_type=self.container_type,
+            area=self.area_2,
+            volume_m3=100,
+            max_biomass_kg=10000
+        )
+        
+        # Create species and lifecycle stage
+        self.species = Species.objects.create(
+            name='Atlantic Salmon',
+            scientific_name='Salmo salar'
+        )
+        self.lifecycle_stage = LifeCycleStage.objects.create(
+            name='Smolt',
+            order=4
+        )
+        
+        # Create batches in different areas
+        self.batch_area1 = Batch.objects.create(
+            batch_number='AREA1-2024-001',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            status='ACTIVE',
+            batch_type='STANDARD'
+        )
+        self.batch_area2 = Batch.objects.create(
+            batch_number='AREA2-2024-001',
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            status='ACTIVE',
+            batch_type='STANDARD'
+        )
+        
+        # Create batch container assignments
+        BatchContainerAssignment.objects.create(
+            batch=self.batch_area1,
+            container=self.container_area1,
+            population_count=1000,
+            biomass_kg=500.0,
+            avg_weight_g=500.0,
+            is_active=True
+        )
+        BatchContainerAssignment.objects.create(
+            batch=self.batch_area2,
+            container=self.container_area2,
+            population_count=1000,
+            biomass_kg=500.0,
+            avg_weight_g=500.0,
+            is_active=True
+        )
+        
+        # Create operator assigned to Area 1 only
+        self.operator_area1 = User.objects.create_user(
+            username='operator_area1',
+            email='operator_area1@aquamind.io',
+            password='testpass123'
+        )
+        self.operator_area1.profile.geography = Geography.SCOTLAND
+        self.operator_area1.profile.role = Role.OPERATOR
+        self.operator_area1.profile.save()
+        # Assign to Area 1 only
+        self.operator_area1.profile.allowed_areas.add(self.area_1)
+        
+        # Create operator with no location assignments
+        self.operator_no_locations = User.objects.create_user(
+            username='operator_no_locations',
+            email='operator_no_locations@aquamind.io',
+            password='testpass123'
+        )
+        self.operator_no_locations.profile.geography = Geography.SCOTLAND
+        self.operator_no_locations.profile.role = Role.OPERATOR
+        self.operator_no_locations.profile.save()
+        
+        # Create manager (should see all areas in Scotland)
+        self.manager = User.objects.create_user(
+            username='manager_scotland',
+            email='manager@aquamind.io',
+            password='testpass123'
+        )
+        self.manager.profile.geography = Geography.SCOTLAND
+        self.manager.profile.role = Role.MANAGER
+        self.manager.profile.save()
+        
+        self.client = APIClient()
+    
+    def test_operator_sees_only_assigned_area_batches(self):
+        """
+        Test that operator assigned to Area 1 only sees Area 1 batches.
+        """
+        self.client.force_authenticate(user=self.operator_area1)
+        response = self.client.get('/api/v1/batch/batches/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should see only Area 1 batch
+        batch_numbers = [b['batch_number'] for b in response.data['results']]
+        self.assertIn('AREA1-2024-001', batch_numbers)
+        self.assertNotIn('AREA2-2024-001', batch_numbers)
+    
+    def test_operator_with_no_assignments_sees_nothing(self):
+        """
+        Test that operator with no location assignments sees no data.
+        """
+        self.client.force_authenticate(user=self.operator_no_locations)
+        response = self.client.get('/api/v1/batch/batches/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should see no batches
+        self.assertEqual(len(response.data['results']), 0)
+    
+    def test_manager_sees_all_batches_in_geography(self):
+        """
+        Test that manager sees all batches in their geography, regardless of area.
+        """
+        self.client.force_authenticate(user=self.manager)
+        response = self.client.get('/api/v1/batch/batches/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should see both Area 1 and Area 2 batches
+        batch_numbers = [b['batch_number'] for b in response.data['results']]
+        self.assertIn('AREA1-2024-001', batch_numbers)
+        self.assertIn('AREA2-2024-001', batch_numbers)
+    
+    def test_operator_can_add_multiple_area_assignments(self):
+        """
+        Test that operator assigned to multiple areas sees batches from all assigned areas.
+        """
+        # Assign operator to both areas
+        self.operator_area1.profile.allowed_areas.add(self.area_2)
+        
+        self.client.force_authenticate(user=self.operator_area1)
+        response = self.client.get('/api/v1/batch/batches/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should now see both batches
+        batch_numbers = [b['batch_number'] for b in response.data['results']]
+        self.assertIn('AREA1-2024-001', batch_numbers)
+        self.assertIn('AREA2-2024-001', batch_numbers)
+    
+    def test_operator_sees_only_assigned_container_assignments(self):
+        """
+        Test that operator sees only batch container assignments for their assigned areas.
+        """
+        self.client.force_authenticate(user=self.operator_area1)
+        response = self.client.get('/api/v1/batch/batch-container-assignments/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Should see only Area 1 container assignment
+        container_names = [a['container_details']['name'] for a in response.data['results']]
+        self.assertIn('Area 1 Tank 1', container_names)
+        self.assertNotIn('Area 2 Tank 1', container_names)
+
+
 # Note: Additional tests should be added for:
 # - Subsidiary filtering
 # - Treatment editing (VET only, QA read-only)
 # - Finance data access (Finance role only)
-# - Operator location restrictions (when implemented)
+# - Container-specific assignments (not just areas)
+# - Freshwater station assignments
