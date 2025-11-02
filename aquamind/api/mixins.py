@@ -94,8 +94,7 @@ class RBACFilterMixin:
         Apply fine-grained location filtering for operators.
         
         Operators should only see data for their assigned areas, stations, or containers.
-        This method should be overridden by subclasses to implement specific location
-        filtering logic.
+        Filters data based on M2M relationships: allowed_areas, allowed_stations, allowed_containers.
         
         Args:
             queryset: Base queryset to filter
@@ -104,9 +103,68 @@ class RBACFilterMixin:
         Returns:
             Filtered queryset for operator's assigned locations
         """
-        # Default implementation - to be overridden by subclasses
-        # For now, just return the queryset as-is
-        # Future: implement location filtering when M2M fields are added to UserProfile
+        # If no locations are assigned, operator sees nothing
+        # (Managers and Admins bypass this through role check above)
+        
+        area_ids = list(profile.allowed_areas.values_list('id', flat=True))
+        station_ids = list(profile.allowed_stations.values_list('id', flat=True))
+        container_ids = list(profile.allowed_containers.values_list('id', flat=True))
+        
+        # If no assignments at all, return empty queryset
+        if not area_ids and not station_ids and not container_ids:
+            return queryset.none()
+        
+        # Build filter conditions based on the model's location relationships
+        # This assumes the queryset model has relationships to containers, areas, or stations
+        # Subclasses can override this method for custom location filtering logic
+        
+        filters = Q()
+        
+        # Filter by assigned areas
+        if area_ids:
+            # Common patterns:
+            # - container__area_id__in (for models with direct container FK)
+            # - batch__batchcontainerassignment__container__area_id__in (for batch-related)
+            # - area_id__in (for models with direct area FK)
+            
+            if hasattr(queryset.model, 'container'):
+                filters |= Q(container__area_id__in=area_ids)
+            elif hasattr(queryset.model, 'area'):
+                filters |= Q(area_id__in=area_ids)
+            
+            # Try batch relationships
+            if hasattr(queryset.model, 'batch'):
+                filters |= Q(batch__batchcontainerassignment__container__area_id__in=area_ids)
+        
+        # Filter by assigned stations
+        if station_ids:
+            if hasattr(queryset.model, 'container'):
+                filters |= Q(container__hall__freshwater_station_id__in=station_ids)
+            elif hasattr(queryset.model, 'hall'):
+                filters |= Q(hall__freshwater_station_id__in=station_ids)
+            elif hasattr(queryset.model, 'freshwater_station'):
+                filters |= Q(freshwater_station_id__in=station_ids)
+            
+            # Try batch relationships
+            if hasattr(queryset.model, 'batch'):
+                filters |= Q(batch__batchcontainerassignment__container__hall__freshwater_station_id__in=station_ids)
+        
+        # Filter by assigned containers (most specific)
+        if container_ids:
+            if hasattr(queryset.model, 'container'):
+                filters |= Q(container_id__in=container_ids)
+            
+            # Try batch relationships
+            if hasattr(queryset.model, 'batch'):
+                filters |= Q(batch__batchcontainerassignment__container_id__in=container_ids)
+        
+        # Apply the filters if any were built
+        if filters:
+            queryset = queryset.filter(filters).distinct()
+        else:
+            # No matching relationships found, return empty
+            return queryset.none()
+        
         return queryset
     
     def validate_object_geography(self, obj):

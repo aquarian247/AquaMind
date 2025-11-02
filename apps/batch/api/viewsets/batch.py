@@ -65,6 +65,7 @@ class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, Geo
     
     # RBAC configuration - filter by geography through batch assignments -> container -> area
     geography_filter_field = 'batch_assignments__container__area__geography'
+    enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
 
     queryset = Batch.objects.annotate(
         _calculated_population_count=Sum(

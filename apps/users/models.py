@@ -83,6 +83,28 @@ class UserProfile(models.Model):
         help_text='User role and permission level'
     )
     
+    # Operator location assignments (Phase 2 RBAC)
+    allowed_areas = models.ManyToManyField(
+        'infrastructure.Area',
+        blank=True,
+        related_name='permitted_users',
+        help_text='Sea areas this operator is assigned to'
+    )
+    
+    allowed_stations = models.ManyToManyField(
+        'infrastructure.FreshwaterStation',
+        blank=True,
+        related_name='permitted_users',
+        help_text='Freshwater stations this operator is assigned to'
+    )
+    
+    allowed_containers = models.ManyToManyField(
+        'infrastructure.Container',
+        blank=True,
+        related_name='permitted_users',
+        help_text='Specific containers this operator is assigned to'
+    )
+    
     # User preferences
     language_preference = models.CharField(
         max_length=5,

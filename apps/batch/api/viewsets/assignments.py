@@ -71,6 +71,7 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
     
     # RBAC configuration - filter by geography through container -> area
     geography_filter_field = 'container__area__geography'
+    enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
 
     queryset = BatchContainerAssignment.objects.all()
     serializer_class = BatchContainerAssignmentSerializer
