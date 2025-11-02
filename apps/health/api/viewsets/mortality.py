@@ -25,6 +25,8 @@ from apps.health.api.serializers import (
     LiceCountSerializer,
     LiceTypeSerializer
 )
+from apps.health.api.permissions import IsHealthContributor
+from aquamind.api.mixins import RBACFilterMixin
 from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import (
     UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
@@ -39,14 +41,18 @@ class MortalityReasonViewSet(
     API endpoint for managing Mortality Reasons.
 
     Provides CRUD operations for mortality reasons used in
-    mortality records.
+    mortality records. Access restricted to health contributors.
+    
+    RBAC Enforcement:
+    - Permission: IsHealthContributor (VET/QA/Admin)
+    - No geographic filtering (mortality reasons are global reference data)
 
     Uses HistoryReasonMixin to automatically capture change
     reasons for audit trails.
     """
     queryset = MortalityReason.objects.all()
     serializer_class = MortalityReasonSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
 
     # StandardFilterMixin configuration
     filterset_fields = {
@@ -68,14 +74,19 @@ class MortalityReasonViewSet(
 
 
 class MortalityRecordViewSet(
-    HistoryReasonMixin, OptimizedQuerysetMixin,
+    RBACFilterMixin, HistoryReasonMixin, OptimizedQuerysetMixin,
     StandardFilterMixin, viewsets.ModelViewSet
 ):
     """
     API endpoint for managing Mortality Records.
 
     Provides CRUD operations for mortality records, which track
-    fish deaths and their causes.
+    fish deaths and their causes. Access restricted to health contributors.
+    
+    RBAC Enforcement:
+    - Permission: IsHealthContributor (VET/QA/Admin)
+    - Geographic Filtering: Users only see records for batches in their geography
+    - Object-level Validation: Prevents creating/updating records outside user's scope
 
     Note: UserAssignmentMixin removed as MortalityRecord has
     no user field. Uses HistoryReasonMixin to automatically
@@ -83,7 +94,10 @@ class MortalityRecordViewSet(
     """
     queryset = MortalityRecord.objects.all()
     serializer_class = MortalityRecordSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
+    
+    # RBAC configuration - filter by geography through batch -> container -> area
+    geography_filter_field = 'batch__batchcontainerassignment__container__area__geography'
 
     # OptimizedQuerysetMixin configuration
     select_related_fields = ['batch', 'container', 'reason']
@@ -101,12 +115,19 @@ class MortalityRecordViewSet(
 
 
 class LiceCountViewSet(
-    HistoryReasonMixin, UserAssignmentMixin,
+    RBACFilterMixin, HistoryReasonMixin, UserAssignmentMixin,
     OptimizedQuerysetMixin, StandardFilterMixin,
     viewsets.ModelViewSet
 ):
     """
     API endpoint for managing Lice Counts.
+    
+    Access restricted to health contributors (VET/QA/Admin).
+    
+    RBAC Enforcement:
+    - Permission: IsHealthContributor (VET/QA/Admin)
+    - Geographic Filtering: Users only see lice counts for batches in their geography
+    - Object-level Validation: Prevents creating/updating counts outside user's scope
 
     Provides CRUD operations for lice counts, which track sea
     lice infestations in fish populations.
@@ -117,7 +138,10 @@ class LiceCountViewSet(
     """
     queryset = LiceCount.objects.all()
     serializer_class = LiceCountSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
+    
+    # RBAC configuration - filter by geography through batch -> container -> area
+    geography_filter_field = 'batch__batchcontainerassignment__container__area__geography'
 
     # OptimizedQuerysetMixin configuration
     select_related_fields = ['user', 'batch', 'container']

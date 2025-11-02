@@ -9,23 +9,36 @@ from rest_framework import viewsets, permissions
 
 from apps.health.models import JournalEntry
 from apps.health.api.serializers import JournalEntrySerializer
+from apps.health.api.permissions import IsHealthContributor
+from aquamind.api.mixins import RBACFilterMixin
 from aquamind.utils.history_mixins import HistoryReasonMixin
 from ..mixins import UserAssignmentMixin, OptimizedQuerysetMixin, StandardFilterMixin
 
 
-class JournalEntryViewSet(HistoryReasonMixin, UserAssignmentMixin, OptimizedQuerysetMixin, 
-                         StandardFilterMixin, viewsets.ModelViewSet):
+class JournalEntryViewSet(RBACFilterMixin, HistoryReasonMixin, UserAssignmentMixin, 
+                         OptimizedQuerysetMixin, StandardFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Journal Entries.
     
     Provides CRUD operations for journal entries, which track observations
-    and notes about fish health.
+    and notes about fish health. Access is restricted to Veterinarians, QA
+    personnel, and Administrators.
+    
+    RBAC Enforcement:
+    - Permission: IsHealthContributor (VET/QA/Admin only)
+    - Geographic Filtering: Users only see entries for batches in their geography
+    - Object-level Validation: Prevents creating/updating entries outside user's scope
     
     Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
     """
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
+    
+    # RBAC configuration - filter by geography through batch -> container -> area
+    # JournalEntry has batch_id and optionally container_id
+    # We need to filter through the batch's container assignments to get geography
+    geography_filter_field = 'batch__batchcontainerassignment__container__area__geography'
     
     # OptimizedQuerysetMixin configuration
     select_related_fields = ['batch', 'container', 'user']
