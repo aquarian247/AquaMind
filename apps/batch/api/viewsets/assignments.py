@@ -9,6 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
+from aquamind.api.mixins import RBACFilterMixin
+from aquamind.api.permissions import IsOperator
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 from rest_framework.authentication import TokenAuthentication
@@ -27,15 +29,22 @@ from apps.batch.api.filters.assignments import BatchContainerAssignmentFilter
 from .mixins import LocationFilterMixin
 
 
-class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, viewsets.ModelViewSet):
+class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, LocationFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Batch Container Assignments.
 
     This endpoint handles the assignment of batches (or parts of batches)
     to specific containers (e.g., tanks, ponds, cages) at a given point in time.
     It records the population count and biomass within that container.
-    Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
-    to capture audit change reasons.
+    Provides full CRUD operations for these assignments. Access is restricted to
+    operational staff (Operators, Managers, and Admins).
+    
+    RBAC Enforcement:
+    - Permission: IsOperator (OPERATOR/MANAGER/Admin)
+    - Geographic Filtering: Users only see assignments in their geography
+    - Object-level Validation: Prevents creating/updating assignments outside user's scope
+    
+    Uses HistoryReasonMixin to capture audit change reasons.
 
     An assignment can be marked as inactive when a batch is moved out of a container.
 
@@ -58,8 +67,10 @@ class BatchContainerAssignmentViewSet(HistoryReasonMixin, LocationFilterMixin, v
     - `population_count`
     - `biomass_kg`
     """
-    # authentication_classes = [TokenAuthentication, JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOperator]
+    
+    # RBAC configuration - filter by geography through container -> area
+    geography_filter_field = 'container__area__geography'
 
     queryset = BatchContainerAssignment.objects.all()
     serializer_class = BatchContainerAssignmentSerializer
