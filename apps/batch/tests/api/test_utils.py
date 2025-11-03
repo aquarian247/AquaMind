@@ -30,6 +30,8 @@ def create_test_user(geography=UserGeography.SCOTLAND, role=Role.ADMIN,
     """
     Create and return a test user with UserProfile for API authentication.
     
+    Automatically creates matching Infrastructure Geography objects for RBAC compatibility.
+    
     Args:
         geography: Geography for RBAC (default: Scotland)
         role: Role for RBAC (default: Admin)
@@ -38,33 +40,80 @@ def create_test_user(geography=UserGeography.SCOTLAND, role=Role.ADMIN,
     Returns:
         User instance with UserProfile for RBAC compatibility
     """
+    # Ensure Infrastructure Geography exists for RBAC filtering
+    if geography != UserGeography.ALL:
+        get_or_create_rbac_geography(geography)
+    
     user = get_user_model().objects.create_user(
         username=username,
         password="testpass",
         email=f"{username}@example.com"
     )
     
-    # Create UserProfile for RBAC
-    UserProfile.objects.create(
-        user=user,
-        geography=geography,
-        role=role,
-        subsidiary=Subsidiary.ALL
-    )
+    # Update UserProfile for RBAC (signal already created it)
+    profile = user.profile
+    profile.geography = geography
+    profile.role = role
+    profile.subsidiary = Subsidiary.ALL
+    profile.save()
     
     return user
 
 
 def create_test_geography(name="Test Geography"):
-    """Create and return a test Geography."""
+    """
+    Create and return a test Infrastructure Geography.
+    
+    For RBAC compatibility, use standard geography names that match UserProfile choices:
+    - "Scotland" for UserGeography.SCOTLAND
+    - "Faroe Islands" for UserGeography.FAROE_ISLANDS
+    """
     geography, created = Geography.objects.get_or_create(name=name)
     return geography
 
 
-def create_test_freshwater_station(geography=None, name="Test Station"):
-    """Create and return a test FreshwaterStation."""
+def get_or_create_rbac_geography(user_geography_choice):
+    """
+    Get or create Infrastructure Geography matching UserProfile geography choice.
+    
+    This ensures RBAC filtering works correctly by creating Infrastructure Geography
+    objects with names that match the RBAC mixin's geography mapping.
+    
+    Args:
+        user_geography_choice: UserGeography choice (e.g., UserGeography.SCOTLAND)
+        
+    Returns:
+        Infrastructure Geography instance
+    """
+    geography_mapping = {
+        UserGeography.FAROE_ISLANDS: 'Faroe Islands',
+        UserGeography.SCOTLAND: 'Scotland',
+    }
+    
+    geography_name = geography_mapping.get(user_geography_choice)
+    if not geography_name:
+        # For ALL or unknown, create a default geography
+        geography_name = "Test Geography"
+    
+    return create_test_geography(name=geography_name)
+
+
+def create_test_freshwater_station(geography=None, name="Test Station", 
+                                  user_geography=UserGeography.SCOTLAND):
+    """
+    Create and return a test FreshwaterStation.
+    
+    Args:
+        geography: Infrastructure Geography instance (optional)
+        name: Station name
+        user_geography: UserGeography choice for RBAC compatibility (default: Scotland)
+    
+    Returns:
+        FreshwaterStation instance with RBAC-compatible geography
+    """
     if not geography:
-        geography = create_test_geography()
+        # Create RBAC-compatible geography matching user geography
+        geography = get_or_create_rbac_geography(user_geography)
     
     station, created = FreshwaterStation.objects.get_or_create(
         name=name,
@@ -100,10 +149,22 @@ def create_test_container_type(name="Test Tank"):
     return container_type
 
 
-def create_test_area(geography=None, name="Test Area"):
-    """Create and return a test Area."""
+def create_test_area(geography=None, name="Test Area", 
+                    user_geography=UserGeography.SCOTLAND):
+    """
+    Create and return a test Area.
+    
+    Args:
+        geography: Infrastructure Geography instance (optional)
+        name: Area name
+        user_geography: UserGeography choice for RBAC compatibility (default: Scotland)
+    
+    Returns:
+        Area instance with RBAC-compatible geography
+    """
     if not geography:
-        geography = create_test_geography()
+        # Create RBAC-compatible geography matching user geography
+        geography = get_or_create_rbac_geography(user_geography)
 
     area, created = Area.objects.get_or_create(
         name=name,

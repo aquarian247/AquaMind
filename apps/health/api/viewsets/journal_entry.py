@@ -35,10 +35,13 @@ class JournalEntryViewSet(RBACFilterMixin, HistoryReasonMixin, UserAssignmentMix
     serializer_class = JournalEntrySerializer
     permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
     
-    # RBAC configuration - filter by geography through batch -> container -> area
+    # RBAC configuration - filter by geography through batch
     # JournalEntry has batch_id and optionally container_id
     # We need to filter through the batch's container assignments to get geography
-    geography_filter_field = 'batch__batchcontainerassignment__container__area__geography'
+    geography_filter_fields = [
+        'batch__batch_assignments__container__area__geography',
+        'batch__batch_assignments__container__hall__freshwater_station__geography'
+    ]
     
     # OptimizedQuerysetMixin configuration
     select_related_fields = ['batch', 'container', 'user']

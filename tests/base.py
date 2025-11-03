@@ -103,13 +103,12 @@ class BaseAPITestCase(APITestCase):
             is_superuser=is_superuser
         )
         
-        # Create UserProfile for RBAC compatibility
-        UserProfile.objects.create(
-            user=user,
-            geography=geography,
-            role=role,
-            subsidiary=subsidiary
-        )
+        # Update UserProfile (signal already created it)
+        profile = user.profile
+        profile.geography = geography
+        profile.role = role
+        profile.subsidiary = subsidiary
+        profile.save()
         
         return user
     

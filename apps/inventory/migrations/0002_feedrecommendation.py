@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('batch', '0006_batchcontainerassignment_lifecycle_stage'),
+        ('batch', '0001_initial'),
         ('inventory', '0001_initial'),
     ]
 

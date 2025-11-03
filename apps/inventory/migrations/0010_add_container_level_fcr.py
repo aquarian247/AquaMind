@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("batch", "0017_add_last_weighing_date"),
+        ("batch", "0001_initial"),
         ("inventory", "0009_add_fcr_confidence_fields"),
     ]
 

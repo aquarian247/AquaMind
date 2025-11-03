@@ -36,6 +36,7 @@ class RBACFilterMixin:
     """
     
     geography_filter_field = None
+    geography_filter_fields = None  # Support multiple paths (list or tuple)
     subsidiary_filter_field = None
     enable_operator_location_filtering = False
     
@@ -87,14 +88,24 @@ class RBACFilterMixin:
             return queryset.none()
         
         # Apply geography filter
-        if profile.geography != Geography.ALL and self.geography_filter_field:
-            # Get geography name for comparison with Infrastructure Geography model
+        if profile.geography != Geography.ALL:
             geography_name = self._get_geography_name(profile.geography)
             if geography_name:
-                geography_filter = {
-                    f'{self.geography_filter_field}__name': geography_name
-                }
-                queryset = queryset.filter(**geography_filter)
+                # Support multiple geography filter paths (for models with multiple location types)
+                filter_paths = []
+                if self.geography_filter_fields:
+                    # Use multiple paths if provided
+                    filter_paths = self.geography_filter_fields if isinstance(self.geography_filter_fields, (list, tuple)) else [self.geography_filter_fields]
+                elif self.geography_filter_field:
+                    # Fall back to single path for backward compatibility
+                    filter_paths = [self.geography_filter_field]
+                
+                if filter_paths:
+                    # Build OR query for multiple paths (e.g., area__geography OR hall__station__geography)
+                    geography_filters = Q()
+                    for path in filter_paths:
+                        geography_filters |= Q(**{f'{path}__name': geography_name})
+                    queryset = queryset.filter(geography_filters)
         
         # Apply subsidiary filter
         if profile.subsidiary != Subsidiary.ALL and self.subsidiary_filter_field:
@@ -144,39 +155,52 @@ class RBACFilterMixin:
         if area_ids:
             # Common patterns:
             # - container__area_id__in (for models with direct container FK)
+            # - batch_assignments__container__area_id__in (for Batch model itself)
             # - batch__batchcontainerassignment__container__area_id__in (for batch-related)
             # - area_id__in (for models with direct area FK)
             
-            if hasattr(queryset.model, 'container'):
+            # Check if this IS the Batch model
+            from apps.batch.models import Batch
+            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+                filters |= Q(batch_assignments__container__area_id__in=area_ids)
+            elif hasattr(queryset.model, 'container'):
                 filters |= Q(container__area_id__in=area_ids)
             elif hasattr(queryset.model, 'area'):
                 filters |= Q(area_id__in=area_ids)
             
-            # Try batch relationships
+            # Try batch relationships for related models
             if hasattr(queryset.model, 'batch'):
-                filters |= Q(batch__batchcontainerassignment__container__area_id__in=area_ids)
+                filters |= Q(batch__batch_assignments__container__area_id__in=area_ids)
         
         # Filter by assigned stations
         if station_ids:
-            if hasattr(queryset.model, 'container'):
+            # Check if this IS the Batch model
+            from apps.batch.models import Batch
+            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+                filters |= Q(batch_assignments__container__hall__freshwater_station_id__in=station_ids)
+            elif hasattr(queryset.model, 'container'):
                 filters |= Q(container__hall__freshwater_station_id__in=station_ids)
             elif hasattr(queryset.model, 'hall'):
                 filters |= Q(hall__freshwater_station_id__in=station_ids)
             elif hasattr(queryset.model, 'freshwater_station'):
                 filters |= Q(freshwater_station_id__in=station_ids)
             
-            # Try batch relationships
+            # Try batch relationships for related models
             if hasattr(queryset.model, 'batch'):
-                filters |= Q(batch__batchcontainerassignment__container__hall__freshwater_station_id__in=station_ids)
+                filters |= Q(batch__batch_assignments__container__hall__freshwater_station_id__in=station_ids)
         
         # Filter by assigned containers (most specific)
         if container_ids:
-            if hasattr(queryset.model, 'container'):
+            # Check if this IS the Batch model
+            from apps.batch.models import Batch
+            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+                filters |= Q(batch_assignments__container_id__in=container_ids)
+            elif hasattr(queryset.model, 'container'):
                 filters |= Q(container_id__in=container_ids)
             
-            # Try batch relationships
+            # Try batch relationships for related models
             if hasattr(queryset.model, 'batch'):
-                filters |= Q(batch__batchcontainerassignment__container_id__in=container_ids)
+                filters |= Q(batch__batch_assignments__container_id__in=container_ids)
         
         # Apply the filters if any were built
         if filters:
@@ -291,34 +315,38 @@ class RBACFilterMixin:
         Override perform_create to validate object-level permissions.
         
         Ensures that created objects belong to user's authorized geography/subsidiary.
+        Also handles user assignment if the model has a user field.
         CRITICAL: Validates BEFORE saving to prevent unauthorized data persistence.
-        """
-        # Create instance WITHOUT saving to database yet
-        instance = serializer.save(commit=False) if hasattr(serializer, 'save') else None
         
-        # If serializer doesn't support commit=False, we need to validate differently
-        if instance is None:
-            # For serializers that don't support commit=False, we validate the data
-            # This is a fallback - ideally all serializers should support commit=False
-            with transaction.atomic():
-                # Create a savepoint
-                sid = transaction.savepoint()
-                try:
-                    instance = serializer.save()
-                    self.validate_object_geography(instance)
-                    self.validate_object_subsidiary(instance)
-                    # If validation passes, commit the transaction
-                    transaction.savepoint_commit(sid)
-                except PermissionDenied:
-                    # If validation fails, rollback to savepoint
-                    transaction.savepoint_rollback(sid)
-                    raise
-        else:
-            # Validate BEFORE saving to database
-            self.validate_object_geography(instance)
-            self.validate_object_subsidiary(instance)
-            # Only save if validation passes
-            instance.save()
+        Note: DRF serializers don't support commit=False. We use transactions with
+        savepoints to validate after save and rollback if validation fails.
+        """
+        # Prepare kwargs for save (including user assignment if needed)
+        save_kwargs = {}
+        
+        # Check if this viewset uses user assignment (from UserAssignmentMixin)
+        if hasattr(self, 'user_field') and self.request.user.is_authenticated:
+            user_field = getattr(self, 'user_field', 'user')
+            save_kwargs[user_field] = self.request.user
+        
+        # Use atomic transaction with savepoint for validation
+        with transaction.atomic():
+            # Create a savepoint before saving
+            sid = transaction.savepoint()
+            try:
+                # Save the instance (with user if applicable)
+                instance = serializer.save(**save_kwargs)
+                
+                # Validate the saved instance
+                self.validate_object_geography(instance)
+                self.validate_object_subsidiary(instance)
+                
+                # If validation passes, commit the savepoint
+                transaction.savepoint_commit(sid)
+            except PermissionDenied:
+                # If validation fails, rollback to savepoint
+                transaction.savepoint_rollback(sid)
+                raise
         
         return instance
     

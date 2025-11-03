@@ -69,14 +69,14 @@ class GeographySummaryTestCase(BaseAPITestCase):
             description="Parr stage"
         )
         
-        # Create geographies
-        self.geography1 = Geography.objects.create(
+        # Get or create geographies (may already exist from BaseAPITestCase)
+        self.geography1, _ = Geography.objects.get_or_create(
             name="Faroe Islands",
-            description="Test geography 1"
+            defaults={'description': "Test geography 1"}
         )
-        self.geography2 = Geography.objects.create(
+        self.geography2, _ = Geography.objects.get_or_create(
             name="Scotland",
-            description="Test geography 2"
+            defaults={'description': "Test geography 2"}
         )
         
         # Create infrastructure for geography 1

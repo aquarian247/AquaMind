@@ -46,13 +46,12 @@ def create_test_user(geography=UserGeography.SCOTLAND, role=Role.ADMIN,
         email=f"{username}@example.com"
     )
     
-    # Create UserProfile for RBAC
-    UserProfile.objects.create(
-        user=user,
-        geography=geography,
-        role=role,
-        subsidiary=Subsidiary.ALL
-    )
+    # Update UserProfile for RBAC (signal already created basic profile)
+    profile = user.profile
+    profile.geography = geography
+    profile.role = role
+    profile.subsidiary = Subsidiary.ALL
+    profile.save()
     
     return user
 

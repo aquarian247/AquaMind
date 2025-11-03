@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('batch', '0012_remove_growthsample_sampling_event_id_and_more'),
+        ('batch', '0001_initial'),
         ('health', '0014_healthsamplingevent_avg_k_factor_and_more'),
     ]
 

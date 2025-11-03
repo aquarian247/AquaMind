@@ -18,4 +18,7 @@ class UsersConfig(AppConfig):
         import apps.users.signals
 
         # Register User model for history tracking
-        register(get_user_model())
+        # Skip if already registered to avoid duplicate registration
+        User = get_user_model()
+        if not hasattr(User, 'history'):
+            register(User, app='apps.users', manager_name='history', table_name='auth_historicaluser')

@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("batch", "0021_add_history_to_observation_models"),
+        ("batch", "0001_initial"),
         ("health", "0018_historicaltreatment_historicalmortalityrecord_and_more"),
     ]
 

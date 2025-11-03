@@ -10,7 +10,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("batch", "0015_update_feedstock_timestamps"),
+        ("batch", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("infrastructure", "0005_update_feedstock_timestamps"),
         ("health", "0016_fix_nullable_fields"),

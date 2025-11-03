@@ -27,12 +27,12 @@ class RBACTestMixin:
             User instance with profile
         """
         user = User.objects.create_user(username=username, password='testpass123')
-        profile = UserProfile.objects.create(
-            user=user,
-            geography=geography,
-            role=role,
-            subsidiary=subsidiary
-        )
+        # Get profile created by signal
+        profile = user.profile
+        profile.geography = geography
+        profile.role = role
+        profile.subsidiary = subsidiary
+        profile.save()
         return user
     
     @classmethod
@@ -59,12 +59,12 @@ class RBACTestMixin:
     def create_superuser_with_profile(cls):
         """Create a superuser with profile (bypasses all RBAC)."""
         user = User.objects.create_superuser(username='superuser', password='testpass123', email='super@test.com')
-        UserProfile.objects.create(
-            user=user,
-            geography=Geography.ALL,
-            role=Role.ADMIN,
-            subsidiary=Subsidiary.ALL
-        )
+        # Update profile created by signal
+        profile = user.profile
+        profile.geography = Geography.ALL
+        profile.role = Role.ADMIN
+        profile.subsidiary = Subsidiary.ALL
+        profile.save()
         return user
 
 

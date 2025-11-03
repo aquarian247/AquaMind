@@ -65,7 +65,10 @@ class FeedingEventViewSet(RBACFilterMixin, HistoryReasonMixin, viewsets.ModelVie
     permission_classes = [permissions.IsAuthenticated, IsOperator]
     
     # RBAC configuration - filter by geography through container -> area
-    geography_filter_field = 'container__area__geography'
+    geography_filter_fields = [
+        'container__area__geography',
+        'container__hall__freshwater_station__geography'
+    ]
     enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
     filter_backends = [
         DjangoFilterBackend,

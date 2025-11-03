@@ -63,8 +63,12 @@ class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, Geo
     """
     permission_classes = [IsAuthenticated, IsOperator]
     
-    # RBAC configuration - filter by geography through batch assignments -> container -> area
-    geography_filter_field = 'batch_assignments__container__area__geography'
+    # RBAC configuration - filter by geography through batch assignments -> container
+    # Support both area-based and hall-based containers
+    geography_filter_fields = [
+        'batch_assignments__container__area__geography',  # Sea area containers
+        'batch_assignments__container__hall__freshwater_station__geography'  # Hall/station containers
+    ]
     enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
 
     queryset = Batch.objects.annotate(

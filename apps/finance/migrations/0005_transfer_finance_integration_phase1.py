@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
-        ('batch', '0023_batchtransferworkflow_historicaltransferaction_and_more'),
+        ('batch', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('finance', '0004_bi_delivery_views'),
     ]

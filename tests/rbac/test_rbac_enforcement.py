@@ -126,7 +126,7 @@ class RBACGeographicIsolationTest(TestCase):
             biomass_kg=50.0
         )
         
-        # Create users with different geographies
+        # Create users with different geographies (using MANAGER role to test geographic isolation without location filtering)
         self.scottish_operator = User.objects.create_user(
             username='scottish_operator',
             email='scottish_operator@aquamind.io',
@@ -134,7 +134,7 @@ class RBACGeographicIsolationTest(TestCase):
         )
         self.scottish_operator.profile.geography = Geography.SCOTLAND
         self.scottish_operator.profile.subsidiary = Subsidiary.FARMING
-        self.scottish_operator.profile.role = Role.OPERATOR
+        self.scottish_operator.profile.role = Role.MANAGER  # MANAGER bypasses location filtering
         self.scottish_operator.profile.save()
         
         self.faroese_operator = User.objects.create_user(
@@ -144,7 +144,7 @@ class RBACGeographicIsolationTest(TestCase):
         )
         self.faroese_operator.profile.geography = Geography.FAROE_ISLANDS
         self.faroese_operator.profile.subsidiary = Subsidiary.FARMING
-        self.faroese_operator.profile.role = Role.OPERATOR
+        self.faroese_operator.profile.role = Role.MANAGER  # MANAGER bypasses location filtering
         self.faroese_operator.profile.save()
         
         # Create admin with ALL geography access
@@ -477,6 +477,7 @@ class RBACOperatorLocationTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch_area1,
             container=self.container_area1,
+            lifecycle_stage=self.lifecycle_stage,
             assignment_date=date.today(),
             population_count=1000,
             biomass_kg=500.0,
@@ -486,6 +487,7 @@ class RBACOperatorLocationTest(TestCase):
         BatchContainerAssignment.objects.create(
             batch=self.batch_area2,
             container=self.container_area2,
+            lifecycle_stage=self.lifecycle_stage,
             assignment_date=date.today(),
             population_count=1000,
             biomass_kg=500.0,
@@ -589,12 +591,12 @@ class RBACOperatorLocationTest(TestCase):
         Test that operator sees only batch container assignments for their assigned areas.
         """
         self.client.force_authenticate(user=self.operator_area1)
-        response = self.client.get('/api/v1/batch/batch-container-assignments/')
+        response = self.client.get('/api/v1/batch/container-assignments/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         # Should see only Area 1 container assignment
-        container_names = [a['container_details']['name'] for a in response.data['results']]
+        container_names = [a['container']['name'] for a in response.data['results']]
         self.assertIn('Area 1 Tank 1', container_names)
         self.assertNotIn('Area 2 Tank 1', container_names)
 

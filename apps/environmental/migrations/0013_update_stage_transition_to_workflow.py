@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('environmental', '0012_add_history_to_models'),
-        ('batch', '0024_remove_batchtransfer'),
+        ('batch', '0001_initial'),
     ]
 
     operations = [

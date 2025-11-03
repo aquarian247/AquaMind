@@ -69,8 +69,12 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
     """
     permission_classes = [IsAuthenticated, IsOperator]
     
-    # RBAC configuration - filter by geography through container -> area
-    geography_filter_field = 'container__area__geography'
+    # RBAC configuration - filter by geography through container
+    # Support both area-based and hall-based containers
+    geography_filter_fields = [
+        'container__area__geography',  # Sea area containers
+        'container__hall__freshwater_station__geography'  # Hall/station containers
+    ]
     enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
 
     queryset = BatchContainerAssignment.objects.all()

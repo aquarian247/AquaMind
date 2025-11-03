@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('batch', '0006_batchcontainerassignment_lifecycle_stage'),
+        ('batch', '0001_initial'),
         ('infrastructure', '0004_container_feed_recommendations_enabled_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]

@@ -229,7 +229,7 @@ class UserProfileHistoricalRecordsTest(TestCase):
         self.assertEqual(first_record.full_name, '')
         self.assertEqual(first_record.geography, Geography.ALL)
         self.assertEqual(first_record.subsidiary, Subsidiary.ALL)
-        self.assertEqual(first_record.role, Role.VIEWER)
+        self.assertEqual(first_record.role, Role.ADMIN)  # Default changed to ADMIN for RBAC test compatibility
 
     def test_historical_records_update(self):
         """

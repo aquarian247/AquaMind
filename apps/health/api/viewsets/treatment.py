@@ -60,8 +60,11 @@ class TreatmentViewSet(RBACFilterMixin, HistoryReasonMixin, UserAssignmentMixin,
     serializer_class = TreatmentSerializer
     permission_classes = [permissions.IsAuthenticated, IsTreatmentEditor]
     
-    # RBAC configuration - filter by geography through batch -> container -> area
-    geography_filter_field = 'batch__batchcontainerassignment__container__area__geography'
+    # RBAC configuration - filter by geography through batch
+    geography_filter_fields = [
+        'batch__batch_assignments__container__area__geography',
+        'batch__batch_assignments__container__hall__freshwater_station__geography'
+    ]
     
     # OptimizedQuerysetMixin configuration
     select_related_fields = ['batch', 'container', 'batch_assignment', 'vaccination_type', 'user']

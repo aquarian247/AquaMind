@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("batch", "0015_update_feedstock_timestamps"),
+        ("batch", "0001_initial"),
         ("infrastructure", "0005_update_feedstock_timestamps"),
         ("inventory", "0003_remove_feed_recommendation"),
     ]

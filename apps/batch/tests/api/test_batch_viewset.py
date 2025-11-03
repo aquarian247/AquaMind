@@ -185,6 +185,15 @@ class BatchViewSetTest(BaseAPITestCase):
             batch_number="BATCH002"
         )
         
+        # Create assignment for other_batch (required for RBAC filtering)
+        create_test_batch_container_assignment(
+            batch=other_batch,
+            container=self.container,
+            lifecycle_stage=other_stage,
+            population_count=500,
+            avg_weight_g=Decimal("15.0")
+        )
+        
         # Define a fixed "today" for mocking to make date-based filters deterministic
         simulated_today = OriginalDate(2025, 1, 1) # Use OriginalDate to create the instance for clarity
 

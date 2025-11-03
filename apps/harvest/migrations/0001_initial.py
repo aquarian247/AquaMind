@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             "infrastructure",
             "0008_alter_area_options_alter_containertype_options_and_more",
         ),
-        ("batch", "0020_create_missing_historical_tables_part2"),
+        ("batch", "0001_initial"),
     ]
 
     operations = [
