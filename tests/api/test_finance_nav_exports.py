@@ -18,6 +18,16 @@ class FinanceNavExportPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
         super().setUp()
         self.export_url = self.get_api_url("finance", "nav-exports")
 
+        # Create a user without finance permissions (OPERATOR role)
+        self.non_finance_user = self._create_user(
+            username='nonfinance',
+            email='nonfinance@example.com',
+            password='testpass123',
+            role=Role.OPERATOR
+        )
+        # Switch to the non-finance user for permission tests
+        self.client.force_authenticate(user=self.non_finance_user)
+
     def test_nav_export_requires_finance_role(self):
         payload = {
             "company": self.source_company.company_id,

@@ -92,14 +92,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "batch_transfer",
+                    "batch_transfer_workflow",
                     models.ForeignKey(
                         blank=True,
                         db_constraint=False,
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="batch.batchtransfer",
+                        to="batch.batchtransferworkflow",
                     ),
                 ),
                 (

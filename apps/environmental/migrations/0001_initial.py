@@ -140,11 +140,11 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    "batch_transfer",
+                    "batch_transfer_workflow",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="environmental_conditions",
-                        to="batch.batchtransfer",
+                        to="batch.batchtransferworkflow",
                     ),
                 ),
             ],

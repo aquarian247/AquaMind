@@ -201,6 +201,16 @@ class FinanceAPIPermissionTest(FinanceAPITestDataMixin, BaseAPITestCase):
         self.facts_url = self.get_api_url("finance", "facts/harvests")
         self.tx_url = self.get_api_url("finance", "intercompany/transactions")
 
+        # Create a user without finance permissions (OPERATOR role)
+        self.non_finance_user = self._create_user(
+            username='nonfinance',
+            email='nonfinance@example.com',
+            password='testpass123',
+            role=Role.OPERATOR
+        )
+        # Switch to the non-finance user for permission tests
+        self.client.force_authenticate(user=self.non_finance_user)
+
     def test_finance_facts_requires_finance_role(self):
         response = self.client.get(self.facts_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
