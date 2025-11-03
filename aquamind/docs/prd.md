@@ -412,31 +412,117 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Users can compare trends across different containers or areas.
     - Exportable reports of raw or aggregated environmental data are available in CSV format.
 
-#### 3.1.6 User Management (`auth`, `users` apps)
-- **Purpose**: To manage user access and ensure data security across organizational dimensions using Django's built-in auth and a custom profile.
-- **Functionality**:
+#### 3.1.6 User Management and Role-Based Access Control (RBAC)
+**Status**: ✅ **IMPLEMENTED** - Phases 1 & 2 Complete
+
+- **Purpose**: To manage user access and ensure data security across organizational dimensions using comprehensive role-based access control with geographic isolation and fine-grained operator location assignment.
+
+- **Core Functionality**:
   - The system shall manage user accounts via `auth_user` extended by a one-to-one link to `users_userprofile`.
-  - Access control is based on role (`users_userprofile.role`), geography (`users_userprofile.geography_id` FK to `infrastructure_geography`), and subsidiary (`users_userprofile.subsidiary`). Permissions assigned via standard Django `auth_group` and `auth_permission`.
-  - Supported roles shall include Admin, Operator, Manager, Executive, and Veterinarian, mapped to appropriate permission groups.
-  - The system shall use JWT authentication (e.g., via `djangorestframework-simplejwt`) for secure API access.
-  - The system shall log user actions for audit purposes (e.g., via `django-auditlog` configured to track relevant models).
+  - Access control is enforced at three levels: **Role** → **Geography** → **Location Assignment**.
+  - The system shall use JWT authentication via `djangorestframework-simplejwt` for secure API access.
+  - Comprehensive audit trails via `django-simple-history` track all user profile changes for regulatory compliance.
+
+- **Role-Based Permissions** ✅ **IMPLEMENTED**:
+  - **Admin** (`ADMIN`): Full system access across all geographies and subsidiaries
+  - **Manager** (`MGR`): High-level operational access within assigned geography
+  - **Operator** (`OPR`): Day-to-day operational access, restricted by location assignments
+  - **Veterinarian** (`VET`): Full health data access and treatment authorization
+  - **QA** (`QA`): Health data access with read-only treatment permissions
+  - **Finance** (`FIN`): Financial data access with intercompany transaction management
+  - **Viewer** (`VIEW`): Read-only access within assigned geography
+
+- **Geographic Data Isolation** ✅ **IMPLEMENTED**:
+  - **Scotland** (`SC`): Users only access Scottish operational data
+  - **Faroe Islands** (`FO`): Users only access Faroese operational data  
+  - **All Geographies** (`ALL`): Executive/Admin access across regions
+  - Automatic queryset filtering enforced via `RBACFilterMixin` at API level
+  - Cross-geography data access prevented through object-level validation
+
+- **Subsidiary Filtering** (Planned - Complex lifecycle mapping required):
+  - **Broodstock** (`BS`): Breeding operations and genetic management
+  - **Freshwater** (`FW`): Freshwater lifecycle stages and station operations
+  - **Farming** (`FM`): Sea-based operations and grow-out phases
+  - **Logistics** (`LG`): Transport and supply chain operations
+  - **All Subsidiaries** (`ALL`): Cross-subsidiary operational oversight
+
+- **Fine-Grained Location Assignment** ✅ **IMPLEMENTED** (Phase 2):
+  - **Operator Location Restrictions**: Sea area operators only see their assigned areas; freshwater operators only see their assigned stations
+  - **M2M Relationships**: UserProfile includes `allowed_areas`, `allowed_stations`, and `allowed_containers` for precise operator assignment
+  - **Admin Interface**: Horizontal filter widgets in Django admin for easy location assignment management
+  - **Automatic Filtering**: Location-based queryset filtering via `RBACFilterMixin.apply_operator_location_filters()`
+  - **Manager Override**: Managers and higher roles bypass location restrictions (see all in geography)
+  - **Secure Defaults**: Operators with no assignments see no data (restrictive, not permissive)
+
+- **API-Level Enforcement** ✅ **IMPLEMENTED**:
+  - **Permission Classes**: `IsOperator`, `IsHealthContributor`, `IsTreatmentEditor` enforce functional access
+  - **Queryset Filtering**: `RBACFilterMixin` provides automatic geographic and location filtering
+  - **Object Validation**: Create/update operations validate against user's authorized scope
+  - **Health Data Restriction**: VET/QA/Admin required for health endpoints; VET/Admin only for treatments
+  - **Operational Data Restriction**: OPERATOR/MANAGER/Admin required for batch and inventory operations
+
+- **Implementation Architecture**:
+  ```python
+  # UserProfile model (users_userprofile)
+  class UserProfile(models.Model):
+      # Core RBAC fields
+      role = CharField(choices=Role.choices)
+      geography = CharField(choices=Geography.choices)
+      subsidiary = CharField(choices=Subsidiary.choices)
+      
+      # Phase 2: Operator location assignments
+      allowed_areas = ManyToManyField('infrastructure.Area')
+      allowed_stations = ManyToManyField('infrastructure.FreshwaterStation')
+      allowed_containers = ManyToManyField('infrastructure.Container')
+      
+  # Automatic API filtering via mixin
+  class BatchViewSet(RBACFilterMixin, ModelViewSet):
+      geography_filter_field = 'batch_assignments__container__area__geography'
+      enable_operator_location_filtering = True
+      permission_classes = [IsAuthenticated, IsOperator]
+  ```
+
 - **Behavior**:
-  - Users shall only see data relevant to their role, geography, and subsidiary, enforced consistently at the API level (e.g., overriding `get_queryset` in Views/ViewSets).
-  - Admins (`is_staff` or specific role group) shall have access to manage users and permissions via the Django admin interface or custom UI views.
-  - JWT tokens shall expire after a configured duration (e.g., 24 hours), requiring refresh or re-authentication.
-- **Justification**: Ensures data security and operational autonomy while supporting organizational structure.
-- **User Story**: As an Admin, I want to assign roles (via `auth_group`), geography, and subsidiary to a user (`users_userprofile`) so that they can access only relevant data.
+  - **Geographic Isolation**: Scottish users only see Scottish batches; Faroese users only see Faroese data
+  - **Role-Based Access**: Health data requires VET/QA/Admin role; treatments require VET/Admin
+  - **Location Filtering**: Operators see only data for assigned areas/stations/containers
+  - **Admin Override**: Superusers bypass all RBAC restrictions for system management
+  - **Audit Compliance**: All RBAC changes tracked via `django-simple-history` with user attribution
+
+- **Security Improvements**:
+  - **Before Implementation**: All authenticated users could access any data across geographies
+  - **After Implementation**: Complete data isolation with role-based functional restrictions
+  - **Cross-Geography Prevention**: Object-level validation prevents creation/modification outside user scope
+  - **Health Data Protection**: Medical data restricted to qualified personnel only
+
+- **Justification**: Ensures regulatory compliance, data security, and operational autonomy while supporting organizational structure and persona requirements.
+
+- **User Story**: As a Scottish Area Operator, I want to see only batches in my assigned area so that I can focus on my specific responsibilities.
   - **Acceptance Criteria**:
-    - The admin interface allows admins to create/edit `auth_user` and linked `users_userprofile` records, assigning them to appropriate `auth_group`s and setting geography/subsidiary.
-    - API endpoints consistently enforce permissions based on the user's profile and group memberships.
-    - User actions (CRUD operations on key models, logins) are logged with timestamps and details in the audit log.
-    - Attempts to access restricted data result in appropriate HTTP error responses (e.g., 403 Forbidden).
-- **User Story**: As a Manager, I want to access data for my subsidiary only so that I can focus on my operations.
+    - API returns only batches in assigned areas (automatic server-side filtering)
+    - Dashboard displays area-specific metrics without manual filtering
+    - Attempts to access other areas' data return 403 Forbidden
+    - Admin can assign/remove area access via Django admin interface
+
+- **User Story**: As a Veterinarian, I want to access health data and create treatments for batches in my geography so that I can manage animal welfare.
   - **Acceptance Criteria**:
-    - The UI components (lists, dashboards) automatically display data filtered by the logged-in user's `users_userprofile.subsidiary`.
-    - API requests are filtered server-side based on the authenticated user's profile.
-    - Attempts to manually access other subsidiaries' data via API are denied.
-    - Dashboards are pre-filtered or offer filters constrained by the user's profile.
+    - Health endpoints accessible with VET role (journal entries, lab samples, mortality records)
+    - Treatment creation/modification permitted for VET role
+    - QA users have read-only access to treatments
+    - Geographic filtering ensures access only to relevant batches
+
+- **User Story**: As an Admin, I want to assign operators to specific areas so that they can access location-appropriate data.
+  - **Acceptance Criteria**:
+    - Django admin provides horizontal filter widget for area/station/container assignment
+    - Location assignment changes are audited with user attribution
+    - Operators with no assignments see helpful empty state (not all data)
+    - Admin interface shows location assignment summary ("2 areas, 1 station")
+
+**Implementation Status**: 
+- Phase 1 (Geographic + Role-based): ✅ Complete (75% of total RBAC requirements)
+- Phase 2 (Operator Locations): ✅ Complete 
+- Phase 3 (Subsidiary Filtering): 📋 Planned (requires complex lifecycle stage mapping)
+- Performance Optimization: 📋 Next (database indexes for RBAC queries)
 
 #### 3.1.7 Operational Dashboards
 - **Purpose**: To provide real-time insights into operations, enabling informed decision-making.

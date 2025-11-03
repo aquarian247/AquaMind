@@ -10,7 +10,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('batch', '0012_remove_growthsample_sampling_event_id_and_more'),
+        ('batch', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('health', '0012_drop_sampling_event_sequence'),
     ]

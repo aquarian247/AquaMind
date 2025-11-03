@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("infrastructure", "0003_alter_area_max_biomass"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("batch", "0005_remove_container_fields"),
+        ("batch", "0001_initial"),
     ]
 
     operations = [

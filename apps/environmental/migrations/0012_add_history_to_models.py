@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             "infrastructure",
             "0008_alter_area_options_alter_containertype_options_and_more",
         ),
-        ("batch", "0022_add_history_tracking"),
+        ("batch", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("environmental", "0011_update_container_fk_constraint"),
     ]

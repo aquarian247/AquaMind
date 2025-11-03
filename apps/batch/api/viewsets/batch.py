@@ -8,6 +8,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, F, Case, When, Q
 from decimal import Decimal
 
+from aquamind.api.mixins import RBACFilterMixin
+from aquamind.api.permissions import IsOperator
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 from rest_framework.authentication import TokenAuthentication
@@ -20,14 +22,21 @@ from apps.batch.api.filters.batch import BatchFilter
 from .mixins import BatchAnalyticsMixin, GeographyAggregationMixin
 
 
-class BatchViewSet(HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregationMixin, viewsets.ModelViewSet):
+class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregationMixin, viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 
     Provides full CRUD operations for batches, including detailed filtering,
     searching, and ordering capabilities. Batches represent groups of aquatic
-    organisms managed together through their lifecycle. Uses HistoryReasonMixin to
-    capture audit change reasons.
+    organisms managed together through their lifecycle. Access is restricted to
+    operational staff (Operators, Managers, and Admins).
+    
+    RBAC Enforcement:
+    - Permission: IsOperator (OPERATOR/MANAGER/Admin)
+    - Geographic Filtering: Users only see batches in their geography
+    - Object-level Validation: Prevents creating/updating batches outside user's scope
+
+    Uses HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `batch_number`: Exact match.
@@ -52,8 +61,15 @@ class BatchViewSet(HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregation
     - `lifecycle_stage__name`
     - `created_at` (default: descending)
     """
-    # authentication_classes = [TokenAuthentication, JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOperator]
+    
+    # RBAC configuration - filter by geography through batch assignments -> container
+    # Support both area-based and hall-based containers
+    geography_filter_fields = [
+        'batch_assignments__container__area__geography',  # Sea area containers
+        'batch_assignments__container__hall__freshwater_station__geography'  # Hall/station containers
+    ]
+    enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
 
     queryset = Batch.objects.annotate(
         _calculated_population_count=Sum(

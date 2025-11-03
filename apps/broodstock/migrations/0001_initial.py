@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("infrastructure", "0007_add_container_history"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("batch", "0016_historicalbatch"),
+        ("batch", "0001_initial"),
     ]
 
     operations = [

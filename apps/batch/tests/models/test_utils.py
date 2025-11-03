@@ -24,15 +24,36 @@ from apps.infrastructure.models import (
     Container
 )
 from apps.health.models import MortalityReason
+from apps.users.models import UserProfile, Geography as UserGeography, Role, Subsidiary
 
 
-def create_test_user():
-    """Create and return a test user for API authentication."""
-    return get_user_model().objects.create_user(
-        username="testuser",
+def create_test_user(geography=UserGeography.SCOTLAND, role=Role.ADMIN, 
+                    username="testuser"):
+    """
+    Create and return a test user with UserProfile for model tests.
+    
+    Args:
+        geography: Geography for RBAC (default: Scotland)
+        role: Role for RBAC (default: Admin)
+        username: Username (default: testuser)
+    
+    Returns:
+        User instance with UserProfile for RBAC compatibility
+    """
+    user = get_user_model().objects.create_user(
+        username=username,
         password="testpass",
-        email="test@example.com"
+        email=f"{username}@example.com"
     )
+    
+    # Update UserProfile for RBAC (signal already created basic profile)
+    profile = user.profile
+    profile.geography = geography
+    profile.role = role
+    profile.subsidiary = Subsidiary.ALL
+    profile.save()
+    
+    return user
 
 
 def create_test_geography(name="Test Geography"):

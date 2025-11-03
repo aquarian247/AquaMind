@@ -30,8 +30,9 @@ class ContainerAssignmentsSummaryFiltersTestCase(BaseAPITestCase):
 
     def setUp(self):
         """Set up test data with complex location hierarchy."""
-        # Create a test user and authenticate
-        self.user = create_test_user()
+        # Create a test user with ALL geography access (these tests focus on endpoint filtering, not RBAC)
+        from apps.users.models import Geography
+        self.user = create_test_user(geography=Geography.ALL)
         self.client.force_authenticate(user=self.user)
 
         # Create species and lifecycle stage

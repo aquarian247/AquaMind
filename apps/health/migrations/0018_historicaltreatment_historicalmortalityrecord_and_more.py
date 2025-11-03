@@ -10,7 +10,7 @@ import simple_history.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("batch", "0017_add_last_weighing_date"),
+        ("batch", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("infrastructure", "0007_add_container_history"),
         (

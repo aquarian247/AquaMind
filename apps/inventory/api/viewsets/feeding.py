@@ -2,7 +2,7 @@
 Feeding event viewset for the inventory app.
 """
 import logging
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,18 +20,27 @@ from apps.inventory.models import FeedingEvent
 from apps.inventory.api.serializers.feeding import FeedingEventSerializer
 from apps.inventory.api.filters.feeding import FeedingEventFilter
 from apps.inventory.services import FinanceReportingService
+from aquamind.api.mixins import RBACFilterMixin
+from aquamind.api.permissions import IsOperator
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 logger = logging.getLogger(__name__)
 
 
-class FeedingEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
+class FeedingEventViewSet(RBACFilterMixin, HistoryReasonMixin, viewsets.ModelViewSet):
     """
     API endpoint for managing Feeding Events in aquaculture operations.
 
     Feeding events record the amount of feed given to batches in specific containers
-    on particular dates. This endpoint provides full CRUD operations for feeding events
-    and uses HistoryReasonMixin to capture audit change reasons.
+    on particular dates. This endpoint provides full CRUD operations for feeding events.
+    Access is restricted to operational staff (Operators, Managers, and Admins).
+    
+    RBAC Enforcement:
+    - Permission: IsOperator (OPERATOR/MANAGER/Admin)
+    - Geographic Filtering: Users only see feeding events in their geography
+    - Object-level Validation: Prevents creating/updating events outside user's scope
+    
+    Uses HistoryReasonMixin to capture audit change reasons.
 
     **Filtering:**
     - `batch`: ID of the batch being fed.
@@ -53,6 +62,14 @@ class FeedingEventViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     """
     queryset = FeedingEvent.objects.all()
     serializer_class = FeedingEventSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOperator]
+    
+    # RBAC configuration - filter by geography through container -> area
+    geography_filter_fields = [
+        'container__area__geography',
+        'container__hall__freshwater_station__geography'
+    ]
+    enable_operator_location_filtering = True  # Phase 2: Fine-grained operator filtering
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,

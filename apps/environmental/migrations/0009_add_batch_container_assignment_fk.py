@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("batch", "0016_historicalbatch"),
+        ("batch", "0001_initial"),
         ("environmental", "0008_alter_weatherdata_created_at"),
     ]
 
