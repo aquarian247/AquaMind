@@ -149,6 +149,10 @@ class RBACFilterMixin:
         # This assumes the queryset model has relationships to containers, areas, or stations
         # Subclasses can override this method for custom location filtering logic
         
+        # Import Batch model once to avoid redundant imports and potential circular import issues
+        from apps.batch.models import Batch
+        is_batch_model = queryset.model == Batch
+        
         filters = Q()
         
         # Filter by assigned areas
@@ -156,12 +160,10 @@ class RBACFilterMixin:
             # Common patterns:
             # - container__area_id__in (for models with direct container FK)
             # - batch_assignments__container__area_id__in (for Batch model itself)
-            # - batch__batchcontainerassignment__container__area_id__in (for batch-related)
+            # - batch__batch_assignments__container__area_id__in (for batch-related)
             # - area_id__in (for models with direct area FK)
             
-            # Check if this IS the Batch model
-            from apps.batch.models import Batch
-            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+            if is_batch_model:
                 filters |= Q(batch_assignments__container__area_id__in=area_ids)
             elif hasattr(queryset.model, 'container'):
                 filters |= Q(container__area_id__in=area_ids)
@@ -174,9 +176,7 @@ class RBACFilterMixin:
         
         # Filter by assigned stations
         if station_ids:
-            # Check if this IS the Batch model
-            from apps.batch.models import Batch
-            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+            if is_batch_model:
                 filters |= Q(batch_assignments__container__hall__freshwater_station_id__in=station_ids)
             elif hasattr(queryset.model, 'container'):
                 filters |= Q(container__hall__freshwater_station_id__in=station_ids)
@@ -191,9 +191,7 @@ class RBACFilterMixin:
         
         # Filter by assigned containers (most specific)
         if container_ids:
-            # Check if this IS the Batch model
-            from apps.batch.models import Batch
-            if queryset.model == Batch or queryset.model._meta.model_name == 'batch':
+            if is_batch_model:
                 filters |= Q(batch_assignments__container_id__in=container_ids)
             elif hasattr(queryset.model, 'container'):
                 filters |= Q(container_id__in=container_ids)

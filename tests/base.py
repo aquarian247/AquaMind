@@ -61,7 +61,9 @@ class BaseAPITestCase(APITestCase):
         """
         Set up test data and authenticate the test client.
         
-        Creates a test user and authenticates the client with that user.
+        Creates a test user with ADMIN role and authenticates the client with that user.
+        Tests explicitly set ADMIN role for backward compatibility since the default
+        is VIEWER (secure default for production).
         Override this method in subclasses to add additional setup,
         but be sure to call super().setUp() first.
         """
@@ -71,7 +73,8 @@ class BaseAPITestCase(APITestCase):
             email='test@example.com',
             password='testpass123',
             is_staff=False,
-            is_superuser=False
+            is_superuser=False,
+            role=Role.ADMIN  # Explicitly set ADMIN for tests (secure default is VIEWER)
         )
         self.client.force_authenticate(user=self.user)
         

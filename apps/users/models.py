@@ -79,7 +79,7 @@ class UserProfile(models.Model):
     role = models.CharField(
         max_length=5,
         choices=Role.choices,
-        default=Role.ADMIN,  # Changed to ADMIN for test compatibility
+        default=Role.VIEWER,
         help_text='User role and permission level'
     )
     
