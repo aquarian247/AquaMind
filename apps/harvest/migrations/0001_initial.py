@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             "infrastructure",
             "0008_alter_area_options_alter_containertype_options_and_more",
         ),
-        ("batch", "0001_initial"),
+        ("batch", "0002_add_multicontainer_models"),  # Need BatchContainerAssignment
     ]
 
     operations = [
