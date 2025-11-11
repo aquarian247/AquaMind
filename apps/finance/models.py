@@ -141,6 +141,7 @@ class IntercompanyPolicy(models.Model):
     class PricingBasis(models.TextChoices):
         GRADE = "grade", "Product Grade (Harvest)"
         LIFECYCLE = "lifecycle", "Lifecycle Stage (Transfer)"
+        EGG_DELIVERY = "egg_delivery", "Egg Delivery (Creation)"
 
     policy_id = models.BigAutoField(primary_key=True)
     from_company = models.ForeignKey(
@@ -208,6 +209,15 @@ class IntercompanyPolicy(models.Model):
         help_text="Fixed price per kg for STANDARD method",
     )
     
+    # Egg delivery pricing (for batch creation workflows)
+    price_per_thousand_eggs = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Fixed price per 1000 eggs for EGG_DELIVERY pricing_basis",
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -246,11 +256,16 @@ class IntercompanyPolicy(models.Model):
         is_lifecycle_basis = (
             self.pricing_basis == self.PricingBasis.LIFECYCLE
         )
+        is_egg_delivery_basis = (
+            self.pricing_basis == self.PricingBasis.EGG_DELIVERY
+        )
 
         if is_grade_basis:
             self._validate_grade_pricing()
         elif is_lifecycle_basis:
             self._validate_lifecycle_pricing()
+        elif is_egg_delivery_basis:
+            self._validate_egg_delivery_pricing()
 
     def _validate_grade_pricing(self):
         """Validate grade-based pricing fields."""
@@ -285,6 +300,30 @@ class IntercompanyPolicy(models.Model):
                     'pricing_basis is LIFECYCLE'
                 )
             })
+    
+    def _validate_egg_delivery_pricing(self):
+        """Validate egg delivery pricing fields."""
+        if not self.price_per_thousand_eggs:
+            raise ValidationError({
+                'price_per_thousand_eggs': (
+                    'Price per thousand eggs is required when '
+                    'pricing_basis is EGG_DELIVERY'
+                )
+            })
+        if self.product_grade:
+            raise ValidationError({
+                'product_grade': (
+                    'Product grade should not be set when '
+                    'pricing_basis is EGG_DELIVERY'
+                )
+            })
+        if self.lifecycle_stage:
+            raise ValidationError({
+                'lifecycle_stage': (
+                    'Lifecycle stage should not be set when '
+                    'pricing_basis is EGG_DELIVERY'
+                )
+            })
 
     def _validate_pricing_method(self):
         """Validate pricing method requirements."""
@@ -307,8 +346,12 @@ class IntercompanyPolicy(models.Model):
     def __str__(self) -> str:
         if self.pricing_basis == self.PricingBasis.GRADE:
             ref = f"grade={self.product_grade_id}"
-        else:
+        elif self.pricing_basis == self.PricingBasis.LIFECYCLE:
             ref = f"lifecycle={self.lifecycle_stage_id}"
+        elif self.pricing_basis == self.PricingBasis.EGG_DELIVERY:
+            ref = "egg_delivery"
+        else:
+            ref = "unknown"
         
         return (
             f"IntercompanyPolicy({self.from_company_id}->{self.to_company_id} "

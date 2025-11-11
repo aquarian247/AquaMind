@@ -211,20 +211,24 @@ class CreationAction(models.Model):
             actual_received = planned_eggs - doa
             self.egg_count_actual = actual_received
             
-            # Update destination assignment population
-            self.dest_assignment.population_count += actual_received
-            self.dest_assignment.is_active = True
-            self.dest_assignment.save(update_fields=['population_count', 'is_active'])
+            # Update destination assignment population (use F() for atomic increment)
+            from django.db.models import F
+            
+            BatchContainerAssignment.objects.filter(id=self.dest_assignment.id).update(
+                population_count=F('population_count') + actual_received,
+                is_active=True
+            )
+            # Refresh to get updated value
+            self.dest_assignment.refresh_from_db()
             
             # Mark action completed
             self.status = 'COMPLETED'
             self.save()
             
-            # Update workflow progress
+            # Update workflow progress counters
             self.workflow.actions_completed += 1
             self.workflow.total_eggs_received += actual_received
             self.workflow.total_mortality_on_arrival += doa
-            self.workflow.update_progress()
             
             # Update batch status if first action
             if self.workflow.actions_completed == 1:
@@ -232,7 +236,17 @@ class CreationAction(models.Model):
                 self.workflow.actual_start_date = self.actual_delivery_date
                 self.workflow.batch.status = 'RECEIVING'
                 self.workflow.batch.save(update_fields=['status'])
-                self.workflow.save(update_fields=['status', 'actual_start_date'])
+                self.workflow.save()  # Save all fields after first action
+            else:
+                # Just save counter updates
+                self.workflow.save(update_fields=[
+                    'actions_completed',
+                    'total_eggs_received', 
+                    'total_mortality_on_arrival',
+                ])
+            
+            # Update progress percentage (saves workflow again)
+            self.workflow.update_progress()
             
             # Check if workflow complete
             self.workflow.check_completion()

@@ -18,7 +18,7 @@ from apps.batch.models import BatchContainerAssignment
 from apps.batch.api.serializers.container_availability import ContainerAvailabilityResponseSerializer
 
 
-class ContainerAvailabilityViewSet(viewsets.ViewSet):
+class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for container availability forecasting.
     
@@ -29,6 +29,7 @@ class ContainerAvailabilityViewSet(viewsets.ViewSet):
     - Occupied beyond delivery date (conflict)
     """
     serializer_class = ContainerAvailabilityResponseSerializer
+    queryset = Container.objects.none()  # Required for ReadOnlyModelViewSet, but we override list()
     
     @extend_schema(
         operation_id='listContainerAvailability',
