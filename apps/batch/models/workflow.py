@@ -29,7 +29,6 @@ class BatchTransferWorkflow(models.Model):
         ('LIFECYCLE_TRANSITION', 'Lifecycle Stage Transition'),
         ('CONTAINER_REDISTRIBUTION', 'Container Redistribution'),
         ('EMERGENCY_CASCADE', 'Emergency Cascading Transfer'),
-        ('PARTIAL_HARVEST', 'Partial Harvest Preparation'),
     ]
     
     # Status Choices (State Machine)
