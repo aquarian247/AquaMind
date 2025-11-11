@@ -24,6 +24,8 @@ from .viewsets.history import (
     GrowthSampleHistoryViewSet
 )
 from .viewsets.container_availability import ContainerAvailabilityViewSet
+from .viewsets.workflow_creation import BatchCreationWorkflowViewSet
+from .viewsets.workflow_creation_action import CreationActionViewSet
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -34,6 +36,8 @@ router.register(r'container-assignments', BatchContainerAssignmentViewSet, basen
 router.register(r'batch-compositions', BatchCompositionViewSet, basename='batch-composition')
 router.register(r'transfer-workflows', BatchTransferWorkflowViewSet, basename='transfer-workflow')
 router.register(r'transfer-actions', TransferActionViewSet, basename='transfer-action')
+router.register(r'creation-workflows', BatchCreationWorkflowViewSet, basename='creation-workflow')
+router.register(r'creation-actions', CreationActionViewSet, basename='creation-action')
 router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-event')
 router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-sample')
 
