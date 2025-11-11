@@ -99,6 +99,11 @@ class LifeCycleStage(models.Model):
         blank=True,
         help_text="Maximum expected length in centimeters"
     )
+    typical_duration_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Typical duration for this stage (days) - used for capacity planning"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()

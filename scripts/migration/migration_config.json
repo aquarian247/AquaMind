@@ -1,10 +1,10 @@
 {
   "fishtalk": {
-    "driver": "{ODBC Driver 17 for SQL Server}",
-    "server": "FISHTALK_SERVER",
+    "driver": "{ODBC Driver 18 for SQL Server}",
+    "server": "localhost",
     "database": "FishTalk",
-    "uid": "username",
-    "pwd": "password",
+    "uid": "sa",
+    "pwd": "2).nV(Ze2TZ8",
     "port": 1433
   },
   "aquamind": {

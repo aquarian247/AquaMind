@@ -139,6 +139,17 @@ DATABASES = {
         'OPTIONS': {
             'options': '-c search_path=public -c client_encoding=utf8'
         }
+    },
+    'migr_dev': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'aquamind_db_migr_dev',
+        'USER': 'postgres',
+        'PASSWORD': 'adminpass1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        'OPTIONS': {
+            'options': '-c search_path=public -c client_encoding=utf8'
+        }
     }
 }
 

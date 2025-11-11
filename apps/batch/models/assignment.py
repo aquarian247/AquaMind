@@ -72,6 +72,33 @@ class BatchContainerAssignment(models.Model):
     def __str__(self):
         return f"{self.batch.batch_number} in {self.container.name} ({self.population_count} fish)"
     
+    @property
+    def expected_departure_date(self):
+        """
+        Calculate expected departure date based on lifecycle stage typical duration.
+        
+        Returns:
+            date: Expected departure date (assignment_date + typical_duration_days)
+            None: If lifecycle stage has no typical_duration_days defined
+        
+        Logic:
+            - If departure_date is set (actual departure), return that
+            - Otherwise, calculate: assignment_date + lifecycle_stage.typical_duration_days
+            - Used for container availability forecasting in workflow planning
+        """
+        from datetime import timedelta
+        
+        # If already departed, return actual departure date
+        if self.departure_date:
+            return self.departure_date
+        
+        # Calculate expected departure if typical duration is defined
+        if self.lifecycle_stage and self.lifecycle_stage.typical_duration_days:
+            return self.assignment_date + timedelta(days=self.lifecycle_stage.typical_duration_days)
+        
+        # No typical duration defined - cannot estimate
+        return None
+    
     def save(self, *args, **kwargs):
         """
         Overrides the default save method.

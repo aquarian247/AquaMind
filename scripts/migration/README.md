@@ -114,3 +114,11 @@ python manage.py migrate --database=migr_dev --verbosity=2
 
 For issues or questions, refer to the main migration documentation:
 `aquamind/docs/progress/migration/MIGRATION_FRAMEWORK_IMPLEMENTATION_SUMMARY.md`
+
+
+
+
+
+
+
+

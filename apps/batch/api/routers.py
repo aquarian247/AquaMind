@@ -23,6 +23,7 @@ from .viewsets.history import (
     MortalityEventHistoryViewSet,
     GrowthSampleHistoryViewSet
 )
+from .viewsets.container_availability import ContainerAvailabilityViewSet
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -35,6 +36,9 @@ router.register(r'transfer-workflows', BatchTransferWorkflowViewSet, basename='t
 router.register(r'transfer-actions', TransferActionViewSet, basename='transfer-action')
 router.register(r'mortality-events', MortalityEventViewSet, basename='mortality-event')
 router.register(r'growth-samples', GrowthSampleViewSet, basename='growth-sample')
+
+# Register container availability endpoint
+router.register(r'containers/availability', ContainerAvailabilityViewSet, basename='container-availability')
 
 # Register history endpoints
 router.register(r'history/batches', BatchHistoryViewSet, basename='batch-history')
