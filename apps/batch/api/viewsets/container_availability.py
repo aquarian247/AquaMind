@@ -10,9 +10,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Q, Sum, F
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.infrastructure.models import Container
 from apps.batch.models import BatchContainerAssignment
+from apps.batch.api.serializers.container_availability import ContainerAvailabilityResponseSerializer
 
 
 class ContainerAvailabilityViewSet(viewsets.ViewSet):
@@ -25,7 +28,59 @@ class ContainerAvailabilityViewSet(viewsets.ViewSet):
     - Occupied but will be empty by delivery date (available)
     - Occupied beyond delivery date (conflict)
     """
+    serializer_class = ContainerAvailabilityResponseSerializer
     
+    @extend_schema(
+        operation_id='listContainerAvailability',
+        summary='Get containers with timeline-aware availability forecasting',
+        description=(
+            'Returns containers enriched with occupancy forecasting for workflow planning. '
+            'Shows which containers are immediately available, will be available by delivery date, '
+            'or have conflicts (still occupied on delivery date).'
+        ),
+        parameters=[
+            OpenApiParameter(
+                name='geography',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description='Filter by geography ID'
+            ),
+            OpenApiParameter(
+                name='delivery_date',
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Date when action will execute (YYYY-MM-DD). Defaults to today.'
+            ),
+            OpenApiParameter(
+                name='container_type',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Filter by container type name (e.g. TANK, PEN, TRAY)'
+            ),
+            OpenApiParameter(
+                name='lifecycle_stage',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Filter by compatible lifecycle stage ID'
+            ),
+            OpenApiParameter(
+                name='include_occupied',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Include occupied containers (default: true)'
+            ),
+        ],
+        responses={
+            200: ContainerAvailabilityResponseSerializer,
+            400: OpenApiTypes.OBJECT,
+        },
+        tags=['batch']
+    )
     def list(self, request):
         """
         GET /api/v1/batch/containers/availability/
