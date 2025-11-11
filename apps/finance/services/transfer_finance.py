@@ -278,4 +278,155 @@ class TransferFinanceService:
         )
         
         return tx
+    
+    @staticmethod
+    def create_egg_delivery_transaction(creation_workflow) -> Optional[IntercompanyTransaction]:
+        """
+        Create an IntercompanyTransaction for internal egg delivery.
+        
+        Args:
+            creation_workflow: BatchCreationWorkflow instance
+        
+        Returns:
+            Created IntercompanyTransaction or None if not applicable
+        
+        Raises:
+            PricingPolicyNotFoundError: If no egg delivery policy found
+            InvalidTransferDataError: If workflow data is invalid
+        
+        Logic:
+            - Only for INTERNAL egg source (broodstock → freshwater)
+            - Uses EGG_DELIVERY pricing basis
+            - Amount = (total_eggs_received / 1000) × price_per_thousand_eggs
+        """
+        # Only create transaction for internal eggs
+        if creation_workflow.egg_source_type != 'INTERNAL':
+            logger.info(
+                f"Skipping transaction for workflow {creation_workflow.workflow_number}: "
+                "external egg source"
+            )
+            return None
+        
+        # Validate workflow is completed
+        if creation_workflow.status != 'COMPLETED':
+            raise InvalidTransferDataError(
+                f"Cannot create transaction for workflow {creation_workflow.workflow_number}: "
+                f"not completed (status: {creation_workflow.status})"
+            )
+        
+        if creation_workflow.total_eggs_received == 0:
+            raise InvalidTransferDataError(
+                f"Cannot create transaction for workflow {creation_workflow.workflow_number}: "
+                "no eggs received"
+            )
+        
+        with transaction.atomic():
+            # Determine companies
+            # Source: Company owning the broodstock facility (egg production)
+            # Dest: Company receiving eggs (freshwater station)
+            
+            dim_service = DimensionMappingService()
+            
+            # Get source company from egg production's destination station
+            if not creation_workflow.egg_production or not creation_workflow.egg_production.destination_station:
+                raise InvalidTransferDataError(
+                    f"Cannot determine source company for workflow {creation_workflow.workflow_number}: "
+                    "no egg_production or destination_station"
+                )
+            
+            source_company = dim_service.get_company_for_station(
+                creation_workflow.egg_production.destination_station
+            )
+            
+            if not source_company:
+                raise InvalidTransferDataError(
+                    f"Could not map broodstock station to company for workflow "
+                    f"{creation_workflow.workflow_number}"
+                )
+            
+            # Get destination company from first action's container
+            first_action = creation_workflow.actions.select_related(
+                'dest_assignment__container__hall__freshwater_station',
+                'dest_assignment__container__area'
+            ).first()
+            
+            if not first_action:
+                raise InvalidTransferDataError(
+                    f"Workflow {creation_workflow.workflow_number} has no actions"
+                )
+            
+            dest_container = first_action.dest_assignment.container
+            dest_company = None
+            
+            # Try hall-based container
+            if dest_container.hall and dest_container.hall.freshwater_station:
+                dest_company = dim_service.get_company_for_station(
+                    dest_container.hall.freshwater_station
+                )
+            # Try area-based container
+            elif dest_container.area and dest_container.area.geography:
+                dest_company = dim_service.get_company_for_geography(
+                    dest_container.area.geography,
+                    subsidiary='FW'  # Freshwater default
+                )
+            
+            if not dest_company:
+                raise InvalidTransferDataError(
+                    f"Could not determine destination company for workflow "
+                    f"{creation_workflow.workflow_number}"
+                )
+            
+            # Check if truly intercompany
+            if source_company.company_id == dest_company.company_id:
+                logger.info(
+                    f"Skipping transaction for workflow {creation_workflow.workflow_number}: "
+                    "same company (internal transfer)"
+                )
+                return None
+            
+            # Get pricing policy
+            policy = IntercompanyPolicy.objects.filter(
+                from_company=source_company,
+                to_company=dest_company,
+                pricing_basis=IntercompanyPolicy.PricingBasis.EGG_DELIVERY,
+            ).first()
+            
+            if not policy:
+                raise PricingPolicyNotFoundError(
+                    f"No EGG_DELIVERY pricing policy found: "
+                    f"{source_company.display_name} → {dest_company.display_name}"
+                )
+            
+            if not policy.price_per_thousand_eggs:
+                raise InvalidTransferDataError(
+                    f"Policy {policy.policy_id} has no price_per_thousand_eggs set"
+                )
+            
+            # Calculate amount: (eggs / 1000) × price_per_thousand
+            egg_thousands = Decimal(creation_workflow.total_eggs_received) / Decimal('1000')
+            amount = (egg_thousands * policy.price_per_thousand_eggs).quantize(Decimal('0.01'))
+            
+            # Create transaction
+            workflow_ct = ContentType.objects.get_for_model(creation_workflow.__class__)
+            currency = dest_company.currency or 'EUR'
+            posting_date = creation_workflow.actual_completion_date or timezone.now().date()
+            
+            tx = IntercompanyTransaction.objects.create(
+                content_type=workflow_ct,
+                object_id=creation_workflow.id,
+                policy=policy,
+                posting_date=posting_date,
+                amount=amount,
+                currency=currency,
+                state=IntercompanyTransaction.State.PENDING,
+            )
+            
+            logger.info(
+                f"Created egg delivery transaction {tx.tx_id} for "
+                f"workflow {creation_workflow.workflow_number}: "
+                f"{source_company.display_name} → {dest_company.display_name}, "
+                f"{amount} {currency} ({creation_workflow.total_eggs_received} eggs)"
+            )
+            
+            return tx
 
