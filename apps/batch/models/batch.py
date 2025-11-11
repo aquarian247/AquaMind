@@ -20,9 +20,12 @@ class Batch(models.Model):
     portions of batches across different containers simultaneously. It also supports tracking of mixed populations.
     """
     BATCH_STATUS_CHOICES = [
+        ('PLANNED', 'Planned - Awaiting Delivery'),
+        ('RECEIVING', 'Receiving - Partial Delivery'),
         ('ACTIVE', 'Active'),
         ('COMPLETED', 'Completed'),
         ('TERMINATED', 'Terminated'),
+        ('CANCELLED', 'Cancelled - Never Delivered'),
     ]
     
     BATCH_TYPE_CHOICES = [
