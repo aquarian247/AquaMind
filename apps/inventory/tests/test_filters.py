@@ -149,8 +149,10 @@ class FeedingEventFilterGeographicTest(TestCase):
         self.assertTrue(filterset.is_valid())
         results = list(filterset.qs)
         
-        self.assertEqual(len(results), 1)
+        # Should match both area-based (scotland_event) and hall-based (hall_event) containers in Scotland
+        self.assertEqual(len(results), 2)
         self.assertIn(self.scotland_event, results)
+        self.assertIn(self.hall_event, results)  # Hall's station is also in Scotland
         self.assertNotIn(self.faroe_event, results)
 
     def test_filter_by_geography_multiple(self):
@@ -161,8 +163,10 @@ class FeedingEventFilterGeographicTest(TestCase):
         self.assertTrue(filterset.is_valid())
         results = list(filterset.qs)
         
-        self.assertEqual(len(results), 2)
+        # Should return all 3 events: scotland_event + hall_event (both Scotland) + faroe_event
+        self.assertEqual(len(results), 3)
         self.assertIn(self.scotland_event, results)
+        self.assertIn(self.hall_event, results)
         self.assertIn(self.faroe_event, results)
 
     def test_filter_by_area(self):
