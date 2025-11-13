@@ -192,6 +192,34 @@ class FeedContainerStockViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                 description='Filter by specific feed type ID',
                 required=False,
             ),
+            OpenApiParameter(
+                name='geography',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter by geography ID (marine areas or freshwater stations)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='area',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter by area ID (marine sites)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='hall',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter by hall ID (freshwater facilities)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='freshwater_station',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter by freshwater station ID',
+                required=False,
+            ),
         ],
         responses={
             200: {
@@ -255,6 +283,45 @@ class FeedContainerStockViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         feed_type_id = request.query_params.get('feed_type_id')
         if feed_type_id:
             queryset = queryset.filter(feed_purchase__feed_id=feed_type_id)
+
+        geography = request.query_params.get('geography')
+        if geography:
+            try:
+                geography_id = int(geography)
+            except (TypeError, ValueError):
+                geography_id = None
+            if geography_id is not None:
+                queryset = queryset.filter(
+                    Q(feed_container__area__geography__id=geography_id) |
+                    Q(feed_container__hall__freshwater_station__geography__id=geography_id)
+                )
+
+        area = request.query_params.get('area')
+        if area:
+            try:
+                area_id = int(area)
+            except (TypeError, ValueError):
+                area_id = None
+            if area_id is not None:
+                queryset = queryset.filter(feed_container__area__id=area_id)
+
+        hall = request.query_params.get('hall')
+        if hall:
+            try:
+                hall_id = int(hall)
+            except (TypeError, ValueError):
+                hall_id = None
+            if hall_id is not None:
+                queryset = queryset.filter(feed_container__hall__id=hall_id)
+
+        freshwater_station = request.query_params.get('freshwater_station')
+        if freshwater_station:
+            try:
+                freshwater_station_id = int(freshwater_station)
+            except (TypeError, ValueError):
+                freshwater_station_id = None
+            if freshwater_station_id is not None:
+                queryset = queryset.filter(feed_container__hall__freshwater_station__id=freshwater_station_id)
         
         # Overall aggregates
         overall = queryset.aggregate(

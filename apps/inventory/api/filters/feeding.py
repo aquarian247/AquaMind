@@ -5,6 +5,7 @@ These filters provide advanced filtering for feeding event endpoints,
 including geographic, nutritional, and cost-based filtering for finance reporting.
 """
 import django_filters as filters
+from django.db.models import Q
 from django_filters import rest_framework as rest_filters
 from apps.inventory.models import FeedingEvent
 
@@ -61,11 +62,11 @@ class FeedingEventFilter(rest_filters.FilterSet):
     
     # Geography filters
     geography = filters.NumberFilter(
-        field_name='container__area__geography__id',
-        help_text="Filter by geography ID (via container → area → geography)"
+        method='filter_geography',
+        help_text="Filter by geography ID across marine areas and freshwater stations"
     )
     geography__in = filters.BaseInFilter(
-        field_name='container__area__geography__id',
+        method='filter_geography_in',
         help_text="Filter by multiple geography IDs (comma-separated)"
     )
     
@@ -222,3 +223,21 @@ class FeedingEventFilter(rest_filters.FilterSet):
             'feeding_date': ['exact'],
             'method': ['exact']
         }
+
+    def filter_geography(self, queryset, name, value):
+        """Filter events by geography across area and hall containers."""
+        if value in (None, ''):
+            return queryset
+        return queryset.filter(
+            Q(container__area__geography__id=value) |
+            Q(container__hall__freshwater_station__geography__id=value)
+        )
+
+    def filter_geography_in(self, queryset, name, value):
+        """Filter events by multiple geographies across area and hall containers."""
+        if not value:
+            return queryset
+        return queryset.filter(
+            Q(container__area__geography__id__in=value) |
+            Q(container__hall__freshwater_station__geography__id__in=value)
+        )

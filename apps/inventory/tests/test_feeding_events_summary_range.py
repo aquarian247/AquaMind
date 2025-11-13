@@ -12,11 +12,12 @@ from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.core.cache import cache
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.infrastructure.models import Geography, Area, ContainerType, Container, FeedContainer
+from apps.infrastructure.models import Geography, Area, ContainerType, Container, FeedContainer, FreshwaterStation, Hall
 from apps.batch.models import Species, LifeCycleStage, Batch
 from apps.inventory.models import Feed, FeedingEvent
 from apps.users.models import User
@@ -39,9 +40,14 @@ class FeedingEventSummaryRangeTest(APITestCase):
         """Create minimal fixture data for testing."""
         # Ensure clean slate for each test
         FeedingEvent.objects.all().delete()
+        cache.clear()  # Clear Django cache to prevent cross-test contamination
 
         self.client = APIClient()
-        self.user = User.objects.create_user(username="summary_range_user", password="p@ssword")
+        # Create user - profile with ADMIN/ALL access created automatically via signal
+        self.user = User.objects.create_user(
+            username="summary_range_user",
+            password="p@ssword"
+        )
         self.client.force_authenticate(user=self.user)
 
         # Geography → Area
@@ -52,6 +58,21 @@ class FeedingEventSummaryRangeTest(APITestCase):
             latitude=0,
             longitude=0,
             max_biomass=Decimal("5000.0"),
+        )
+
+        # Secondary geography via freshwater station + hall
+        self.second_geography = Geography.objects.create(name="Geo-2")
+        self.freshwater_station = FreshwaterStation.objects.create(
+            name="Station-1",
+            station_type="FRESHWATER",
+            geography=self.second_geography,
+            latitude=0,
+            longitude=0,
+        )
+        self.hall = Hall.objects.create(
+            name="Hall-1",
+            freshwater_station=self.freshwater_station,
+            description="",
         )
 
         # ContainerType → Container
@@ -66,6 +87,13 @@ class FeedingEventSummaryRangeTest(APITestCase):
             area=self.area,
             volume_m3=Decimal("50.0"),
             max_biomass_kg=Decimal("800.0"),
+        )
+        self.hall_container = Container.objects.create(
+            name="Hall-Tank-1",
+            container_type=self.container_type,
+            hall=self.hall,
+            volume_m3=Decimal("55.0"),
+            max_biomass_kg=Decimal("850.0"),
         )
 
         # Species / Stage / Batch
@@ -111,6 +139,7 @@ class FeedingEventSummaryRangeTest(APITestCase):
     def test_single_day_range_equals_date_filter(self):
         """Single-day range (start_date == end_date) equals date= result."""
         FeedingEvent.objects.all().delete()
+        cache.clear()  # Ensure no cached responses interfere
         today = timezone.now().date()
 
         # Create event for today
@@ -238,6 +267,62 @@ class FeedingEventSummaryRangeTest(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["events_count"], 1)
         self.assertEqual(resp.data["total_feed_kg"], 20.0)
+
+    def test_geography_and_location_filters(self):
+        """Geography, hall, and station filters narrow the summary results."""
+        FeedingEvent.objects.all().delete()
+        today = timezone.now().date()
+
+        # Create events in marine area and freshwater hall
+        self._create_feeding_event(date=today, amount_kg=12.5, container=self.container)
+        self._create_feeding_event(date=today, amount_kg=15.0, container=self.hall_container)
+
+        baseline = self.client.get(f"{self.summary_url}?date={today.isoformat()}")
+        self.assertEqual(baseline.status_code, status.HTTP_200_OK)
+        self.assertEqual(baseline.data["events_count"], 2)
+        self.assertEqual(baseline.data["total_feed_kg"], 27.5)
+
+        marine_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&geography={self.geography.id}"
+        )
+        self.assertEqual(marine_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(marine_resp.data["events_count"], 1)
+        self.assertEqual(marine_resp.data["total_feed_kg"], 12.5)
+
+        freshwater_geo_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&geography={self.second_geography.id}"
+        )
+        self.assertEqual(freshwater_geo_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(freshwater_geo_resp.data["events_count"], 1)
+        self.assertEqual(freshwater_geo_resp.data["total_feed_kg"], 15.0)
+
+        area_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&area={self.area.id}"
+        )
+        self.assertEqual(area_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(area_resp.data["events_count"], 1)
+        self.assertEqual(area_resp.data["total_feed_kg"], 12.5)
+
+        hall_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&hall={self.hall.id}"
+        )
+        self.assertEqual(hall_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(hall_resp.data["events_count"], 1)
+        self.assertEqual(hall_resp.data["total_feed_kg"], 15.0)
+
+        station_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&freshwater_station={self.freshwater_station.id}"
+        )
+        self.assertEqual(station_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(station_resp.data["events_count"], 1)
+        self.assertEqual(station_resp.data["total_feed_kg"], 15.0)
+
+        multi_resp = self.client.get(
+            f"{self.summary_url}?date={today.isoformat()}&container__in={self.container.id},{self.hall_container.id}"
+        )
+        self.assertEqual(multi_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(multi_resp.data["events_count"], 2)
+        self.assertEqual(multi_resp.data["total_feed_kg"], 27.5)
 
     def test_invalid_date_format(self):
         """Invalid date format returns 400."""

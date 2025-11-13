@@ -151,6 +151,69 @@ class FeedingEventViewSet(RBACFilterMixin, HistoryReasonMixin, viewsets.ModelVie
                 description="Filter by container ID.",
                 required=False,
             ),
+            OpenApiParameter(
+                name="container__in",
+                type={'type': 'array', 'items': {'type': 'integer'}},
+                location=OpenApiParameter.QUERY,
+                description="Filter by multiple container IDs (comma-separated).",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="geography",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by geography ID across area and freshwater contexts.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="geography__in",
+                type={'type': 'array', 'items': {'type': 'integer'}},
+                location=OpenApiParameter.QUERY,
+                description="Filter by multiple geography IDs (comma-separated).",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="area",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by area ID.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="area__in",
+                type={'type': 'array', 'items': {'type': 'integer'}},
+                location=OpenApiParameter.QUERY,
+                description="Filter by multiple area IDs (comma-separated).",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="hall",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by hall ID.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="hall__in",
+                type={'type': 'array', 'items': {'type': 'integer'}},
+                location=OpenApiParameter.QUERY,
+                description="Filter by multiple hall IDs (comma-separated).",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="freshwater_station",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Filter by freshwater station ID.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="freshwater_station__in",
+                type={'type': 'array', 'items': {'type': 'integer'}},
+                location=OpenApiParameter.QUERY,
+                description="Filter by multiple freshwater station IDs (comma-separated).",
+                required=False,
+            ),
         ],
         responses={
             200: {
@@ -184,6 +247,11 @@ class FeedingEventViewSet(RBACFilterMixin, HistoryReasonMixin, viewsets.ModelVie
         end_date     : End date for range filtering (YYYY-MM-DD)
         batch        : Batch ID to filter by
         container    : Container ID to filter by
+        container__in: Multiple container IDs (comma-separated)
+        geography    : Geography ID (matches marine areas or freshwater stations)
+        area         : Area ID for marine sites
+        hall         : Hall ID for freshwater facilities
+        freshwater_station : Freshwater station ID
 
         Date Filtering Rules
         -------------------
@@ -202,7 +270,7 @@ class FeedingEventViewSet(RBACFilterMixin, HistoryReasonMixin, viewsets.ModelVie
         }
         """
         # Base queryset
-        qs = self.get_queryset()
+        qs = self.filter_queryset(self.get_queryset())
 
         # --- Filter by date or date range ------------------------------------
         # Check for date range parameters
