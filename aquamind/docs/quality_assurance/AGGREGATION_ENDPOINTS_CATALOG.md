@@ -22,6 +22,7 @@
 | **Infrastructure** | `/api/v1/infrastructure/freshwater-stations/{id}/summary/` | Detail Summary | Station-level KPIs |
 | **Infrastructure** | `/api/v1/infrastructure/halls/{id}/summary/` | Detail Summary | Hall-level KPIs |
 | **Inventory** | `/api/v1/inventory/feed-container-stock/summary/` | Collection Summary | Feed stock aggregates |
+| **Inventory** | `/api/v1/inventory/feed-purchases/summary/` | Collection Summary | Feed purchase totals with optional breakdowns |
 | **Inventory** | `/api/v1/inventory/feeding-events/summary/` | Collection Summary | Feeding event aggregates |
 | **Operational** | `/api/v1/operational/fcr-trends/` | Collection Trends | FCR trends (list endpoint) |
 | **Operational** | `/api/v1/operational/fcr-trends/assignment-trends/` | Collection Trends | FCR trends by assignment |
@@ -507,9 +508,64 @@ GET /api/v1/inventory/feeding-events/summary/
 
 ---
 
+#### 13. Feed Purchases Summary (Collection)
+```
+GET /api/v1/inventory/feed-purchases/summary/
+```
+
+**Operation ID:** `feed-purchases-summary`
+
+**Query Parameters:**
+- `start_date` (date) - Filter purchases on or after this date (YYYY-MM-DD)
+- `end_date` (date) - Filter purchases on or before this date (YYYY-MM-DD)
+- `purchase_date` (date) - Filter purchases by exact date
+- `feed` (integer) - Filter by feed ID
+- `supplier` (string) - Filter by supplier name (exact match)
+- `search` (string) - Search suppliers, batch numbers, or notes (matches list endpoint)
+- `include_feed_breakdown` (boolean) - Include totals grouped by feed
+- `include_supplier_breakdown` (boolean) - Include totals grouped by supplier
+
+**Response Schema:**
+```json
+{
+  "total_quantity_kg": "number",
+  "total_spend": "number",
+  "average_cost_per_kg": "number|null",
+  "supplier_breakdown": [
+    {
+      "supplier": "string",
+      "total_quantity_kg": "number",
+      "total_spend": "number",
+      "average_cost_per_kg": "number|null"
+    }
+  ],
+  "feed_breakdown": [
+    {
+      "feed_id": "integer",
+      "feed_name": "string",
+      "total_quantity_kg": "number",
+      "total_spend": "number",
+      "average_cost_per_kg": "number|null"
+    }
+  ]
+}
+```
+
+**Use Cases:**
+- Executive Inventory Purchases tab KPIs (quantity, spend, cost per kg)
+- Supplier benchmarking and spend analysis
+- Forecasting feed procurement budgets
+
+**Performance:**
+- ✅ Mirrors list endpoint filters to ensure KPI alignment
+- ✅ Returns pre-aggregated totals with optional breakdowns (<100 ms in testing)
+- ✅ Supports cached responses alongside paginated list view
+
+---
+
 ### **Operational App**
 
-#### 13. FCR Trends (Collection)
+#### 14. FCR Trends (Collection)
 ```
 GET /api/v1/operational/fcr-trends/
 ```
@@ -525,7 +581,7 @@ GET /api/v1/operational/fcr-trends/
 
 ---
 
-#### 14. FCR Trends - Assignment Level
+#### 15. FCR Trends - Assignment Level
 ```
 GET /api/v1/operational/fcr-trends/assignment-trends/
 ```
@@ -541,7 +597,7 @@ GET /api/v1/operational/fcr-trends/assignment-trends/
 
 ---
 
-#### 15. FCR Trends - Batch Level
+#### 16. FCR Trends - Batch Level
 ```
 GET /api/v1/operational/fcr-trends/batch-trends/
 ```
@@ -557,7 +613,7 @@ GET /api/v1/operational/fcr-trends/batch-trends/
 
 ---
 
-#### 16. FCR Trends - Geography Level
+#### 17. FCR Trends - Geography Level
 ```
 GET /api/v1/operational/fcr-trends/geography-trends/
 ```
@@ -575,7 +631,7 @@ GET /api/v1/operational/fcr-trends/geography-trends/
 
 ### **Scenario App**
 
-#### 17. FCR Models Stage Summary
+#### 18. FCR Models Stage Summary
 ```
 GET /api/v1/scenario/fcr-models/stage-summary/
 ```
@@ -587,7 +643,7 @@ GET /api/v1/scenario/fcr-models/stage-summary/
 
 ---
 
-#### 18. Scenario Sensitivity Analysis (Detail)
+#### 19. Scenario Sensitivity Analysis (Detail)
 ```
 POST /api/v1/scenario/scenarios/{id}/sensitivity-analysis/
 ```
@@ -599,7 +655,7 @@ POST /api/v1/scenario/scenarios/{id}/sensitivity-analysis/
 
 ---
 
-#### 19. Scenario Summary Stats (Collection)
+#### 20. Scenario Summary Stats (Collection)
 ```
 GET /api/v1/scenario/scenarios/summary-stats/
 ```

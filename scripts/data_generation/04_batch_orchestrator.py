@@ -125,41 +125,43 @@ class BatchOrchestrator:
     
     def generate_batch_schedule(self, batches_per_geo, start_date=None):
         """
-        Generate staggered batch start dates with realistic farm pipeline operation.
+        Generate staggered batch start dates with realistic 6-year operational history.
         
-        Strategy: 90-day stagger ensures batches flow through all lifecycle stages,
-        creating a continuous pipeline at each station (5 batches) + sea area.
+        Strategy: 30-day stagger starting 6 years ago creates both:
+        - Completed/harvested batches (>900 days old) = operational history
+        - Active batches in various stages (<900 days old) = current operations
+        
+        This simulates looking at a real farm database after years of operation.
         
         Args:
             batches_per_geo: Number of batches per geography
-            start_date: Base start date (defaults to calculated for stage coverage)
+            start_date: Base start date (defaults to 6 years ago)
         """
         import random
         today = date.today()
         
         if start_date is None:
-            # Calculate start date for realistic pipeline operation
-            # Compromise: 6-7 years of operation with 90-day stagger
-            # This gives ~26-28 batches per geography (52-56 total)
-            # Distribution: ~7-8 batches per stage across 7 stages
-            years_back = 6.5
-            days_back = int(years_back * 365)
+            # Calculate start date so:
+            # - First batches are completed (>900 days old)
+            # - Last batches are active in early stages
+            # With 30-day stagger and N batches: span = N × 30 days
+            # Start at: today - (span + buffer days)
+            # This ensures first batches are old enough to complete
+            stagger_days = 30
+            span_days = (batches_per_geo - 1) * stagger_days  # -1 because first batch is at day 0
+            buffer_days = 50  # Small buffer so youngest batch is in early stage (Egg or Fry)
+            days_back = span_days + buffer_days
             start_date = today - timedelta(days=days_back)
             
-            # Calculate actual batches we'll generate with this date range
-            # batches_per_geo will be capped by how many fit in the date range
-            max_batches_in_range = days_back // 90
-            if batches_per_geo > max_batches_in_range:
-                print(f"Note: Requested {batches_per_geo} batches/geo, but with 6.5 year range")
-                print(f"      and 90-day stagger, we can fit ~{max_batches_in_range} batches/geo")
-                print(f"      Adjusting to realistic operational timeline.\n")
+            years_back = days_back / 365
         
         print("\n" + "="*80)
-        print("GENERATING BATCH SCHEDULE (Realistic Pipeline Operation)")
+        print("GENERATING BATCH SCHEDULE (6-Year Operational History)")
         print("="*80 + "\n")
-        print(f"Pipeline Strategy: 90-day stagger for continuous stage flow")
+        print(f"Strategy: 30-day stagger creates completed + active batches")
+        print(f"Start: {start_date} ({years_back:.1f} years ago)")
         print(f"Today: {today}")
-        print()
+        print(f"Stagger: Every 30 days\n")
         
         schedule = []
         
@@ -167,7 +169,11 @@ class BatchOrchestrator:
             print(f"\n{geo_name}:")
             print("-" * 40)
             
-            # Stage distribution counters for this geography
+            # Status counters
+            status_counts = {
+                'Active': 0,
+                'Completed': 0
+            }
             stage_counts = {
                 'Egg&Alevin': 0,
                 'Fry': 0,
@@ -175,40 +181,44 @@ class BatchOrchestrator:
                 'Smolt': 0,
                 'Post-Smolt': 0,
                 'Adult': 0,
-                'Complete': 0
+                'Completed': 0
             }
             
             for i in range(batches_per_geo):
-                # Stagger batches every 90 days (one stage duration)
-                batch_start = start_date + timedelta(days=i * 90)
-                
-                # Skip batches starting after today
-                if batch_start >= today:
-                    continue
+                # Stagger batches every 30 days
+                batch_start = start_date + timedelta(days=i * 30)
                 
                 # Calculate duration: run up to TODAY
                 days_since_start = (today - batch_start).days
                 duration = min(900, days_since_start)
                 
-                # Determine current stage based on duration
-                if duration < 90:
+                # Determine current stage/status
+                if duration >= 900:
+                    current_stage = 'Completed'
+                    status = 'Completed'
+                elif duration < 90:
                     current_stage = 'Egg&Alevin'
+                    status = 'Active'
                 elif duration < 180:
                     current_stage = 'Fry'
+                    status = 'Active'
                 elif duration < 270:
                     current_stage = 'Parr'
+                    status = 'Active'
                 elif duration < 360:
                     current_stage = 'Smolt'
+                    status = 'Active'
                 elif duration < 450:
                     current_stage = 'Post-Smolt'
-                elif duration < 900:
+                    status = 'Active'
+                else:  # 450-900
                     current_stage = 'Adult'
-                else:
-                    current_stage = 'Complete'
+                    status = 'Active'
                 
+                status_counts[status] += 1
                 stage_counts[current_stage] += 1
                 
-                # Vary egg count for realism (3.0M - 3.8M)
+                # Vary egg count for realism
                 eggs = random.randint(3000000, 3800000)
                 
                 schedule.append({
@@ -217,41 +227,38 @@ class BatchOrchestrator:
                     'geography': geo_name,
                     'duration': duration,
                     'current_stage': current_stage,
-                    'days_in_current_stage': duration % 90 if duration < 900 else 'Complete'
+                    'status': status,
                 })
                 
-                # Show first 3 and last 2 per geography
+                # Show first 3, last 2, and status boundary
                 actual_count = len([b for b in schedule if b['geography'] == geo_name])
-                if actual_count <= 3 or i >= batches_per_geo - 2:
-                    days_in_stage = duration % 90 if duration < 900 else '-'
-                    print(f"  Batch {actual_count:3d}: {batch_start} | {eggs:,} eggs | {current_stage:12s} (Day {days_in_stage}/90 in stage)")
-                elif actual_count == 4:
+                if actual_count <= 3 or i >= batches_per_geo - 2 or (i > 0 and status != schedule[-2].get('status', '')):
+                    print(f"  Batch {actual_count:3d}: {batch_start} | {eggs:,} eggs | {duration:3d} days | {current_stage:12s} | {status}")
+                elif actual_count == 4 and schedule[-2].get('status', '') == status:
                     print(f"  ...")
             
-            # Show stage distribution for this geography
+            # Show distribution
             actual_batches = len([b for b in schedule if b['geography'] == geo_name])
             print(f"\n  Total Batches: {actual_batches}")
-            print(f"  Stage Distribution:")
-            for stage, count in stage_counts.items():
+            print(f"  Status Distribution:")
+            for status, count in status_counts.items():
                 if count > 0:
+                    print(f"    {status:15s}: {count:2d} batches ({count/actual_batches*100:.1f}%)")
+            print(f"  Active Stage Distribution:")
+            for stage, count in stage_counts.items():
+                if count > 0 and stage != 'Completed':
                     print(f"    {stage:15s}: {count:2d} batches")
         
         print(f"\n{'='*80}")
         print(f"Total Batches Scheduled: {len(schedule)}")
-        print(f"Date Range: {schedule[0]['start_date']} to {schedule[-1]['start_date']}")
         
-        # Overall stage distribution
-        print(f"\nOverall Stage Distribution (Both Geographies):")
-        all_stages = {}
-        for batch in schedule:
-            stage = batch['current_stage']
-            all_stages[stage] = all_stages.get(stage, 0) + 1
+        # Overall distribution
+        active_count = len([b for b in schedule if b['status'] == 'Active'])
+        completed_count = len([b for b in schedule if b['status'] == 'Completed'])
         
-        for stage in ['Egg&Alevin', 'Fry', 'Parr', 'Smolt', 'Post-Smolt', 'Adult', 'Complete']:
-            count = all_stages.get(stage, 0)
-            if count > 0:
-                pct = count / len(schedule) * 100
-                print(f"  {stage:15s}: {count:3d} batches ({pct:5.1f}%)")
+        print(f"\nOverall Distribution:")
+        print(f"  Active Batches:    {active_count:3d} ({active_count/len(schedule)*100:.1f}%)")
+        print(f"  Completed/Harvest: {completed_count:3d} ({completed_count/len(schedule)*100:.1f}%)")
         
         print()
         

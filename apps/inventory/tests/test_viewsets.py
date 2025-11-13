@@ -140,6 +140,7 @@ class FeedPurchaseViewSetTest(TestCase):
         self.purchase = FeedPurchase.objects.create(**self.purchase_data)
         self.url = get_api_url('inventory', 'feed-purchases')
         self.detail_url = get_api_url('inventory', 'feed-purchases', detail=True, pk=self.purchase.id)
+        self.summary_url = f"{self.url}summary/"
 
     def test_list_purchases(self):
         """Test that feed purchases can be listed."""
@@ -176,6 +177,88 @@ class FeedPurchaseViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(FeedPurchase.objects.count(), 2)
         self.assertEqual(response.data['supplier'], new_purchase_data['supplier'])
+
+    def test_summary_totals(self):
+        """Summary endpoint returns aggregated totals."""
+        second_feed = Feed.objects.create(
+            name='Grower Feed',
+            brand='Aquatic Co',
+            size_category='SMALL'
+        )
+        FeedPurchase.objects.create(
+            feed=second_feed,
+            purchase_date=timezone.now().date() - timedelta(days=1),
+            quantity_kg=Decimal('200.0'),
+            cost_per_kg=Decimal('4.0'),
+            supplier='Ocean Supplier',
+            batch_number='LOT789',
+            expiry_date=timezone.now().date() + timedelta(days=180),
+            notes='Second supplier purchase'
+        )
+
+        response = self.client.get(self.summary_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertAlmostEqual(response.data['total_quantity_kg'], 300.0)
+        self.assertAlmostEqual(response.data['total_spend'], 1300.0)
+        self.assertAlmostEqual(response.data['average_cost_per_kg'], 4.33)
+
+    def test_summary_breakdowns_included_when_requested(self):
+        """Summary endpoint returns breakdowns when flags are enabled."""
+        FeedPurchase.objects.create(
+            feed=self.feed,
+            purchase_date=timezone.now().date(),
+            quantity_kg=Decimal('50.0'),
+            cost_per_kg=Decimal('6.0'),
+            supplier='Alt Supplier',
+            batch_number='LOT456',
+            expiry_date=timezone.now().date() + timedelta(days=60),
+            notes='Additional purchase'
+        )
+
+        response = self.client.get(
+            self.summary_url,
+            {
+                'include_supplier_breakdown': 'true',
+                'include_feed_breakdown': 'true',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        suppliers = {entry['supplier'] for entry in response.data['supplier_breakdown']}
+        self.assertSetEqual(suppliers, {'Test Supplier', 'Alt Supplier'})
+        feeds = {entry['feed_id'] for entry in response.data['feed_breakdown']}
+        self.assertIn(self.feed.id, feeds)
+
+    def test_summary_respects_filters(self):
+        """Summary should honour feed and date filters."""
+        other_feed = Feed.objects.create(
+            name='Starter Feed',
+            brand='Aquatic Co',
+            size_category='MICRO'
+        )
+        FeedPurchase.objects.create(
+            feed=other_feed,
+            purchase_date=timezone.now().date() - timedelta(days=10),
+            quantity_kg=Decimal('400.0'),
+            cost_per_kg=Decimal('3.5'),
+            supplier='Filtered Supplier',
+            batch_number='LOT999',
+            expiry_date=timezone.now().date() + timedelta(days=30),
+            notes='Should be filtered out'
+        )
+
+        response = self.client.get(
+            self.summary_url,
+            {
+                'feed': self.feed.id,
+                'start_date': (timezone.now().date() - timedelta(days=3)).isoformat(),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Only the base purchase should remain
+        self.assertAlmostEqual(response.data['total_quantity_kg'], 100.0)
+        self.assertAlmostEqual(response.data['total_spend'], 500.0)
 
 
 class FeedingEventViewSetTest(TestCase):

@@ -28,6 +28,8 @@ from apps.scenario.models import (
     TemperatureProfile, TemperatureReading,
     FCRModelStage
 )
+# Explicit import to avoid ambiguity (FeedContainer is in infrastructure)
+from apps.infrastructure.models import FeedContainer
 
 User = get_user_model()
 
@@ -41,7 +43,7 @@ class EventEngine:
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
-        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0}
+        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0, 'transfer_workflows': 0}
         self.current_stage_start_day = 0
         # Realistic lifecycle stage durations (total: ~900 days)
         self.stage_durations = {
@@ -59,7 +61,19 @@ class EventEngine:
         print(f"{'='*80}\n")
         
         self.geo = Geography.objects.get(name=self.geography_name)
-        self.station = FreshwaterStation.objects.filter(geography=self.geo).first()
+        
+        # Use round-robin station selection to distribute batches across infrastructure
+        # This prevents multiple batches from competing for same containers
+        existing_batches_count = Batch.objects.count()  # Count ALL batches for round-robin
+        
+        all_stations = list(FreshwaterStation.objects.filter(geography=self.geo).order_by('name'))
+        if all_stations and len(all_stations) > 1:
+            station_idx = existing_batches_count % len(all_stations)
+            self.station = all_stations[station_idx]
+            print(f"✓ Using station {station_idx + 1}/{len(all_stations)} for infrastructure distribution")
+        else:
+            self.station = FreshwaterStation.objects.filter(geography=self.geo).first()
+        
         self.sea_area = Area.objects.filter(geography=self.geo).first()
         self.species = Species.objects.get(name="Atlantic Salmon")
         self.stages = list(LifeCycleStage.objects.filter(species=self.species).order_by('order'))
@@ -222,7 +236,7 @@ class EventEngine:
         readings = [
             TemperatureReading(
                 profile=profile,
-                reading_date=date.today() + timedelta(days=i),
+                day_number=i + 1,  # Use relative day numbers (1-450)
                 temperature=temps[i]
             )
             for i in range(450)
@@ -285,24 +299,75 @@ class EventEngine:
         return available_list
         
     def create_batch(self):
+        """
+        Create batch using BatchCreationWorkflow for full audit trail.
+        Simulates real user workflow: supplier → delivery → egg placement
+        """
         print(f"{'='*80}")
-        print("Creating Batch")
+        print("Creating Batch via Creation Workflow")
         print(f"{'='*80}\n")
+        
+        from apps.batch.models import BatchCreationWorkflow, CreationAction
+        from apps.broodstock.models import EggSupplier
         
         prefix = "FI" if "Faroe" in self.geography_name else "SCO"
         year = self.start_date.year
         existing = Batch.objects.filter(batch_number__startswith=f"{prefix}-{year}").count()
         batch_name = f"{prefix}-{year}-{existing + 1:03d}"
         
+        # Get or create egg supplier
+        supplier, _ = EggSupplier.objects.get_or_create(
+            name='AquaGen Norway' if 'Faroe' in self.geography_name else 'Marine Harvest Scotland',
+            defaults={
+                'contact_details': 'eggs@supplier.com',
+                'certifications': 'ASC Certified'
+            }
+        )
+        
+        # Create batch (initially PLANNED status)
         self.batch = Batch.objects.create(
             batch_number=batch_name,
             species=self.species,
             lifecycle_stage=self.stages[0],
             start_date=self.start_date,
+            status='PLANNED',  # Start as planned, will be ACTIVE after actions executed
             notes=f"Generated {datetime.now().date()}"
         )
         
-        hall_a = Hall.objects.filter(freshwater_station=self.station, name__contains="-Hall-A").first()
+        # Generate workflow number
+        last_workflow = BatchCreationWorkflow.objects.filter(
+            workflow_number__startswith=f'CRT-{year}-'
+        ).order_by('-workflow_number').first()
+        
+        if last_workflow:
+            last_num = int(last_workflow.workflow_number.split('-')[-1])
+            next_num = last_num + 1
+        else:
+            next_num = 1
+        
+        workflow_number = f'CRT-{year}-{next_num:03d}'
+        
+        # Create creation workflow
+        creation_workflow = BatchCreationWorkflow.objects.create(
+            workflow_number=workflow_number,
+            batch=self.batch,
+            egg_source_type='EXTERNAL',
+            external_supplier=supplier,
+            total_eggs_planned=self.initial_eggs,
+            status='IN_PROGRESS',  # Start in progress
+            planned_start_date=self.start_date,
+            planned_completion_date=self.start_date,
+            actual_start_date=self.start_date,
+            created_by=self.user,
+            notes=f'Automated batch creation: {batch_name}'
+        )
+        
+        # Find Hall-A (handle both "FI-FW-01-Hall-A" and "Hall A" naming)
+        hall_a = Hall.objects.filter(
+            freshwater_station=self.station
+        ).filter(
+            models.Q(name__contains="-Hall-A") | models.Q(name__contains="Hall A")
+        ).first()
         
         # Use database transaction with row-level locking to prevent race conditions
         from django.db import transaction
@@ -316,16 +381,51 @@ class EventEngine:
             eggs_per = self.initial_eggs // 10
             
             self.assignments = []
+            action_number = 1
+            
             for cont in containers:
-                a = BatchContainerAssignment.objects.create(
+                # Create assignment
+                assignment = BatchContainerAssignment.objects.create(
                     batch=self.batch, container=cont, lifecycle_stage=self.stages[0],
                     assignment_date=self.start_date, population_count=eggs_per,
                     avg_weight_g=Decimal('0.1'), biomass_kg=Decimal(str(eggs_per * 0.1 / 1000)),
                     is_active=True
                 )
-                self.assignments.append(a)
+                self.assignments.append(assignment)
+                
+                # Create creation action (documents egg delivery to this container)
+                CreationAction.objects.create(
+                    workflow=creation_workflow,
+                    action_number=action_number,
+                    dest_assignment=assignment,
+                    egg_count_planned=eggs_per,
+                    egg_count_actual=eggs_per,
+                    mortality_on_arrival=0,  # Healthy delivery
+                    status='COMPLETED',  # Auto-executed
+                    expected_delivery_date=self.start_date,
+                    actual_delivery_date=self.start_date,
+                    executed_by=self.user,
+                    delivery_method='TRANSPORT',
+                    egg_quality_score=5,  # Excellent quality
+                    notes=f'Egg delivery to {cont.name}'
+                )
+                action_number += 1
         
-        print(f"✓ Batch: {self.batch.batch_number}")
+        # Update workflow status
+        creation_workflow.total_actions = len(self.assignments)
+        creation_workflow.actions_completed = len(self.assignments)
+        creation_workflow.total_eggs_received = self.initial_eggs
+        creation_workflow.status = 'COMPLETED'
+        creation_workflow.actual_completion_date = self.start_date
+        creation_workflow.progress_percentage = Decimal('100.00')
+        creation_workflow.save()
+        
+        # Update batch to ACTIVE now that eggs are placed
+        self.batch.status = 'ACTIVE'
+        self.batch.save()
+        
+        print(f"✓ Creation Workflow: {workflow_number} ({len(self.assignments)} actions)")
+        print(f"✓ Batch: {self.batch.batch_number} (supplier: {supplier.name})")
         print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
         
     def process_day(self):
@@ -701,7 +801,7 @@ class EventEngine:
                     'Adult': None  # Sea cages, not halls
                 }
                 
-                # Close out old assignments
+                # Close out old assignments (will be linked to transfer workflow)
                 old_assignments = list(self.assignments)
                 for a in old_assignments:
                     a.is_active = False
@@ -712,10 +812,12 @@ class EventEngine:
                 new_hall_letter = stage_to_hall.get(next_stage.name)
                 
                 if new_hall_letter:
-                    # Freshwater stage - find appropriate hall
+                    # Freshwater stage - find appropriate hall (handle both naming formats)
                     new_hall = Hall.objects.filter(
-                        freshwater_station=self.station,
-                        name__contains=f"-Hall-{new_hall_letter}"
+                        freshwater_station=self.station
+                    ).filter(
+                        models.Q(name__contains=f"-Hall-{new_hall_letter}") | 
+                        models.Q(name__contains=f"Hall {new_hall_letter}")
                     ).first()
                     
                     if new_hall:
@@ -750,24 +852,37 @@ class EventEngine:
                     # Adult stage - move to sea cages across ALL areas in geography
                     from django.db import transaction
                     with transaction.atomic():
-                        sea_containers = self.find_available_containers(geography=self.geo, count=10)
-                        
+                        # Calculate total fish from all old assignments
+                        total_fish = sum(a.population_count for a in old_assignments)
+                        avg_weight = old_assignments[0].avg_weight_g
+
+                        # Estimate containers needed (target ~200,000 fish per container for adult salmon)
+                        target_fish_per_container = 200000
+                        containers_needed = max(10, (total_fish + target_fish_per_container - 1) // target_fish_per_container)
+
+                        # Find available sea containers (get more than needed to allow for distribution)
+                        sea_containers = self.find_available_containers(geography=self.geo, count=containers_needed)
+
                         if not sea_containers:
                             raise Exception(f"Insufficient available sea cages in {self.geo.name} for stage transition to {next_stage.name}")
-                        
-                        fish_per_container = old_assignments[0].population_count
-                        avg_weight = old_assignments[0].avg_weight_g
-                        
+
+                        # Distribute fish evenly across containers
+                        fish_per_container = total_fish // len(sea_containers)
+                        remainder = total_fish % len(sea_containers)
+
                         self.assignments = []
-                        for cont in sea_containers:
+                        for i, cont in enumerate(sea_containers):
+                            # Add one extra fish to first 'remainder' containers for even distribution
+                            container_fish = fish_per_container + (1 if i < remainder else 0)
+
                             new_assignment = BatchContainerAssignment.objects.create(
                                 batch=self.batch,
                                 container=cont,
                                 lifecycle_stage=next_stage,
                                 assignment_date=self.current_date,
-                                population_count=fish_per_container,
+                                population_count=container_fish,
                                 avg_weight_g=avg_weight,
-                                biomass_kg=Decimal(str(fish_per_container * float(avg_weight) / 1000)),
+                                biomass_kg=Decimal(str(container_fish * float(avg_weight) / 1000)),
                                 is_active=True
                             )
                             self.assignments.append(new_assignment)
@@ -778,6 +893,9 @@ class EventEngine:
                     
                     # Create sea transition scenario (users care about forecasts at this point)
                     self._create_sea_transition_scenario(self.current_date)
+                
+                # Create transfer workflow to document this transition (auditable action)
+                self._create_transfer_workflow(old_assignments, self.assignments, next_stage)
                 
                 # Update batch stage
                 self.batch.lifecycle_stage = next_stage
@@ -831,6 +949,114 @@ class EventEngine:
         except Exception as e:
             print(f"  ⚠ Finance fact generation failed: {e}")
             # Don't block harvest if finance fails
+    
+    def _create_transfer_workflow(self, source_assignments, dest_assignments, dest_stage):
+        """
+        Create BatchTransferWorkflow to document the stage transition.
+        Creates auditable record with TransferAction entries for each container movement.
+        
+        This simulates what a user would do through the UI and provides:
+        - Audit trail for regulatory compliance
+        - Data for Transfers tab in batch details
+        - Test data for transfer workflow features
+        """
+        try:
+            from apps.batch.models import BatchTransferWorkflow, TransferAction
+            
+            # Get source stage from old assignments
+            source_stage = source_assignments[0].lifecycle_stage
+            
+            # Generate workflow number (TRF-YYYY-###)
+            year = self.current_date.year
+            last_workflow = BatchTransferWorkflow.objects.filter(
+                workflow_number__startswith=f'TRF-{year}-'
+            ).order_by('-workflow_number').first()
+            
+            if last_workflow:
+                last_num = int(last_workflow.workflow_number.split('-')[-1])
+                next_num = last_num + 1
+            else:
+                next_num = 1
+            
+            workflow_number = f'TRF-{year}-{next_num:03d}'
+            
+            # Create workflow
+            workflow = BatchTransferWorkflow.objects.create(
+                workflow_number=workflow_number,
+                batch=self.batch,
+                workflow_type='LIFECYCLE_TRANSITION',
+                source_lifecycle_stage=source_stage,
+                dest_lifecycle_stage=dest_stage,
+                status='COMPLETED',  # Auto-executed, already complete
+                planned_start_date=self.current_date,
+                planned_completion_date=self.current_date,
+                actual_start_date=self.current_date,
+                actual_completion_date=self.current_date,
+                initiated_by=self.user,
+                completed_by=self.user,
+                notes=f'Automatic stage transition: {source_stage.name} → {dest_stage.name}',
+            )
+            
+            # Create transfer actions (pair source and dest containers)
+            # Sort both lists for consistent pairing
+            source_sorted = sorted(source_assignments, key=lambda a: a.container.name)
+            dest_sorted = sorted(dest_assignments, key=lambda a: a.container.name)
+            
+            # Pair containers (handle different counts)
+            action_number = 1
+            for i in range(max(len(source_sorted), len(dest_sorted))):
+                source_a = source_sorted[i] if i < len(source_sorted) else None
+                dest_a = dest_sorted[i] if i < len(dest_sorted) else None
+                
+                if source_a and dest_a:
+                    # Calculate mortality during transfer (population difference)
+                    source_pop = source_a.population_count
+                    transferred = dest_a.population_count
+                    mortality = max(0, source_pop - transferred)
+                    
+                    TransferAction.objects.create(
+                        workflow=workflow,
+                        action_number=action_number,
+                        source_assignment=source_a,
+                        dest_assignment=dest_a,
+                        source_population_before=source_pop,
+                        transferred_count=transferred,
+                        mortality_during_transfer=mortality,
+                        transferred_biomass_kg=dest_a.biomass_kg,
+                        status='COMPLETED',
+                        planned_date=self.current_date,
+                        actual_execution_date=self.current_date,
+                        executed_by=self.user,
+                        transfer_method='PUMP',  # Standard for stage transitions
+                        notes=f'Automated transfer {source_a.container.name} → {dest_a.container.name}',
+                    )
+                    action_number += 1
+            
+            # Update workflow totals
+            workflow.total_actions_planned = action_number - 1
+            workflow.actions_completed = action_number - 1
+            workflow.completion_percentage = Decimal('100.00')
+            workflow.save()
+            
+            # Detect intercompany (will set is_intercompany, source_subsidiary, dest_subsidiary)
+            workflow.detect_intercompany()
+            workflow.refresh_from_db()
+            
+            # Create finance transaction if intercompany (Post-Smolt → Adult)
+            if workflow.is_intercompany:
+                try:
+                    workflow._create_intercompany_transaction()
+                    if workflow.finance_transaction:
+                        print(f"  ✓ Finance transaction: {workflow.finance_transaction.tx_id}")
+                except Exception as e:
+                    print(f"  ⚠ Finance transaction failed: {e}")
+            
+            print(f"  ✓ Transfer workflow: {workflow_number} ({action_number - 1} actions)")
+            self.stats['transfer_workflows'] += 1
+            
+        except Exception as e:
+            print(f"  ⚠ Transfer workflow creation failed: {e}")
+            # Don't block transition if workflow creation fails
     
     def _create_sea_transition_scenario(self, transition_date):
         """
@@ -1009,6 +1235,7 @@ class EventEngine:
             print(f"  Growth Samples: {self.stats['growth']:,}")
             print(f"  Lice Counts: {self.stats['lice']:,} (Adult stage weekly)")
             print(f"  Feed Purchases: {self.stats['purchases']:,}")
+            print(f"  Transfer Workflows: {self.stats['transfer_workflows']:,} (stage transitions)")
             print(f"  Scenarios: {self.stats['scenarios']:,} (sea transition forecast)")
             print(f"  Finance Facts: {self.stats['finance_facts']:,} (harvest facts)")
             

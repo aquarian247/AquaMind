@@ -8,7 +8,6 @@ biological models (TGC, FCR, and mortality models).
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
-from simple_history.models import HistoricalRecords
 
 User = get_user_model()
 
@@ -39,10 +38,10 @@ class TemperatureProfile(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # History tracking
-    history = HistoricalRecords()
-    
+
+    # History tracking disabled (tables removed)
+    # history = HistoricalRecords()
+
     class Meta:
         verbose_name = "Temperature Profile"
         verbose_name_plural = "Temperature Profiles"
@@ -126,10 +125,10 @@ class TGCModel(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # History tracking
-    history = HistoricalRecords()
-    
+
+    # History tracking disabled (tables removed)
+    # history = HistoricalRecords()
+
     class Meta:
         verbose_name = "TGC Model"
         verbose_name_plural = "TGC Models"
@@ -154,10 +153,10 @@ class FCRModel(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # History tracking
-    history = HistoricalRecords()
-    
+
+    # History tracking disabled (tables removed)
+    # history = HistoricalRecords()
+
     class Meta:
         verbose_name = "FCR Model"
         verbose_name_plural = "FCR Models"
@@ -233,10 +232,10 @@ class MortalityModel(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # History tracking
-    history = HistoricalRecords()
-    
+
+    # History tracking disabled (tables removed)
+    # history = HistoricalRecords()
+
     class Meta:
         verbose_name = "Mortality Model"
         verbose_name_plural = "Mortality Models"
@@ -570,10 +569,10 @@ class BiologicalConstraints(models.Model):
         null=True,
         related_name='created_constraints'
     )
-    
-    # History tracking
-    history = HistoricalRecords()
-    
+
+    # History tracking disabled (tables removed)
+    # history = HistoricalRecords()
+
     class Meta:
         db_table = 'scenario_biological_constraints'
         verbose_name = "Biological Constraint Set"

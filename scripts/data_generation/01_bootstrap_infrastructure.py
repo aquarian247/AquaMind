@@ -237,7 +237,7 @@ def create_sea_area(geography, area_num, container_types):
         defaults={
             'latitude': Decimal('61.5') if geography.name == "Faroe Islands" else Decimal('57.0'),
             'longitude': Decimal('-6.5') if geography.name == "Faroe Islands" else Decimal('-5.0'),
-            'max_biomass': Decimal('1000000.0'),  # 1M kg capacity
+            'max_biomass': Decimal('5000000.0'),  # 5M kg capacity (500 tonnes)
             'active': True
         }
     )
@@ -258,7 +258,7 @@ def create_sea_area(geography, area_num, container_types):
                 'container_type': ring_type,
                 'area': area,
                 'volume_m3': ring_type.max_volume_m3,
-                'max_biomass_kg': ring_type.max_volume_m3 * Decimal('20.0'),  # Lower density for sea
+                'max_biomass_kg': Decimal('500000.0'),  # 500 tonnes per sea ring
                 'active': True
             }
         )
