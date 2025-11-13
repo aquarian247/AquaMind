@@ -203,8 +203,15 @@ class MortalityPopulationTests(TestCase):
         self.assertEqual(test_assignment2.population_count, 500)  # Unchanged
 
 
-class MortalityTransactionTests(TransactionTestCase):
-    """Test mortality operations with transaction rollback."""
+class MortalityTransactionTests(TestCase):
+    """Test mortality operations with transaction rollback.
+    
+    Note: Changed from TransactionTestCase to TestCase because:
+    - TransactionTestCase flushes DB with TRUNCATE after each test
+    - PostgreSQL requires TRUNCATE CASCADE for tables with FK constraints
+    - This test only needs transaction.atomic() testing, which works fine with TestCase
+    - TestCase uses transaction rollback (faster, no FK constraint issues)
+    """
 
     def setUp(self):
         self.species = create_test_species()
