@@ -81,6 +81,31 @@ class Treatment(models.Model):
         max_length=20, choices=OUTCOME_CHOICES, default='pending',
         help_text="Outcome of the treatment."
     )
+    
+    # Growth Assimilation Anchor Fields
+    includes_weighing = models.BooleanField(
+        default=False,
+        verbose_name="Includes Weighing",
+        help_text="Whether this treatment included fish weighing. Used as anchor for daily state calculations."
+    )
+    sampling_event = models.ForeignKey(
+        'HealthSamplingEvent',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='linked_treatments',
+        verbose_name="Sampling Event",
+        help_text="Linked health sampling event, if weights were recorded."
+    )
+    journal_entry = models.ForeignKey(
+        'JournalEntry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='linked_treatments',
+        verbose_name="Journal Entry",
+        help_text="Linked journal entry for traceability."
+    )
 
     class Meta:
         ordering = ['-treatment_date']

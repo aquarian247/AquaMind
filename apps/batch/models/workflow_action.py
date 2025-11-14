@@ -128,6 +128,59 @@ class TransferAction(models.Model):
         help_text="Oxygen level during transfer (mg/L)"
     )
     
+    # Measured Weight Data (for growth assimilation anchors)
+    measured_avg_weight_g = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Measured Average Weight (g)",
+        help_text="Measured average weight during transfer (grams). Used as anchor for daily state calculations."
+    )
+    measured_std_dev_weight_g = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Measured Std Dev Weight (g)",
+        help_text="Standard deviation of measured weights (grams)."
+    )
+    measured_sample_size = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Measured Sample Size",
+        help_text="Number of fish sampled for weight measurement."
+    )
+    measured_avg_length_cm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Measured Average Length (cm)",
+        help_text="Measured average length during transfer (cm)."
+    )
+    measured_notes = models.TextField(
+        blank=True,
+        verbose_name="Measurement Notes",
+        help_text="Notes about the weight measurements taken during transfer."
+    )
+    
+    # Selection Method Choices
+    SELECTION_METHOD_CHOICES = [
+        ('AVERAGE', 'Average - Representative Sample'),
+        ('LARGEST', 'Largest - Selection Bias Towards Larger Fish'),
+        ('SMALLEST', 'Smallest - Selection Bias Towards Smaller Fish'),
+    ]
+    
+    selection_method = models.CharField(
+        max_length=16,
+        choices=SELECTION_METHOD_CHOICES,
+        default='AVERAGE',
+        blank=True,
+        verbose_name="Selection Method",
+        help_text="Method used to select fish for transfer. Affects weight calculation bias."
+    )
+    
     # Execution Details
     executed_by = models.ForeignKey(
         User,
