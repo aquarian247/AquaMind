@@ -109,3 +109,5 @@ const totalInventoryValue = stockSummary?.total_value || 0;
 
 **Status:** Documented, ready for frontend fix
 
+
+
