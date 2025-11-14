@@ -59,17 +59,13 @@ SELECT add_compression_policy('batch_actualdailyassignmentstate',
 -- Check that hypertable is configured correctly
 
 SELECT 
+    hypertable_schema,
     hypertable_name,
-    chunk_time_interval,
     compression_enabled
 FROM timescaledb_information.hypertables 
 WHERE hypertable_name = 'batch_actualdailyassignmentstate';
 
 \echo ''
-\echo '✅ batch_actualdailyassignmentstate hypertable fully configured!'
-\echo ''
-\echo 'Expected Output:'
-\echo '  hypertable_name: batch_actualdailyassignmentstate'
-\echo '  chunk_time_interval: 14 days'
-\echo '  compression_enabled: t (true)'
+\echo 'Verification complete! Check output above.'
+\echo 'Expected: compression_enabled = t (true)'
 

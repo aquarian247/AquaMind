@@ -420,7 +420,11 @@ Definition of done: validated outputs; docs shipped; monitoring in place.
 - Selective sorting bias at transfers: captured via `selection_method`; default to population-weighted average when unknown.  
 - Missing sensors: fallback to scenario/area temperatures; lower confidence scoring.  
 - Storage growth: compression + retention (raw daily horizon configurable) + weekly aggregates for UI.  
-- Integration Overhead: Phase 8 is optional initially; test with mock planner data.  
+- Integration Overhead: Phase 8 is optional initially; test with mock planner data.
+
+#### Follow-up Items (Post-Phase 9)
+
+- **Environmental Hypertables**: `environmental_environmentalreading` and `environmental_weatherdata` are not yet configured as hypertables in dev (complex composite PKs for space partitioning). Current status: regular PostgreSQL tables work fine; temperature queries are direct (no CAGG). If performance becomes an issue, revisit with proper composite PK setup: (id, reading_time, sensor_id) for environmental_reading and (id, timestamp, area_id) for weather_data. Reference: existing migration attempts in `apps/environmental/migrations/0002`, `0003`, `0004`, `0006`, `0007`.  
 
 #### Acceptance Criteria (Summary)
 
