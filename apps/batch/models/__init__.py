@@ -24,6 +24,7 @@ from apps.batch.models.workflow_creation_action import CreationAction
 from apps.batch.models.mortality import MortalityEvent
 from apps.batch.models.growth import GrowthSample
 from apps.batch.models.individual_growth_observation import IndividualGrowthObservation
+from apps.batch.models.actual_daily_state import ActualDailyAssignmentState
 
 __all__ = [
     'Species',
@@ -38,4 +39,5 @@ __all__ = [
     'MortalityEvent',
     'GrowthSample',
     'IndividualGrowthObservation',
+    'ActualDailyAssignmentState',
 ]
