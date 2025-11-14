@@ -299,15 +299,26 @@ def recompute_actual_daily_state(assignment_id, start_date, end_date):
     update_batch_aggregates(batch.id, start_date, end_date)
 ```
 
-#### Phase 1 — Schema enhancements
+#### Phase 1 — Schema enhancements ✅ COMPLETE
 
-- [ ] Add measured_* fields to `batch_transferaction`; add `selection_method`.  
-- [ ] Add `includes_weighing` and links to `health_treatment`; add validation.  
-- [ ] Add `pinned_scenario_id` to `batch_batch` (FK to `scenario_scenario`, SET_NULL).  
-- [ ] Add optional `planned_activity_id` FK to `batch_actualdailyassignmentstate` (for linking completions as anchors).  
-- [ ] Tests: migrations forward/backward; validation rules.  
+- [x] Add measured_* fields to `batch_transferaction`; add `selection_method`.  
+- [x] Add `includes_weighing` and links to `health_treatment`; add validation.  
+- [x] Add `pinned_scenario_id` to `batch_batch` (FK to `scenario_scenario`, SET_NULL).  
+- [ ] Add optional `planned_activity_id` FK to `batch_actualdailyassignmentstate` (for linking completions as anchors). *(Deferred to Phase 8 - Production Planner Integration)*
+- [x] Tests: migrations forward/backward; validation rules.  
 
-Definition of done: migrations applied; API accepts new fields; tests pass.  
+**Definition of done**: migrations applied; API accepts new fields; tests pass. ✅
+
+**Completion Summary (Phase 1)**:
+- Created 3 migrations (batch/0031, batch/0032, health/0027)
+- Added 6 measured weight fields to TransferAction model
+- Added 3 weighing fields to Treatment model  
+- Added pinned_scenario field to Batch model
+- All fields nullable for backward compatibility
+- 9 schema validation tests pass
+- Database-agnostic (tested on PostgreSQL & SQLite)
+- Full test suite: 1223/1223 tests pass on both databases
+- Commits: ad5ae06, 554c075  
 
 #### Phase 2 — Hypertable + Temperature Daily CAGG
 
