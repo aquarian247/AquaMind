@@ -20,9 +20,10 @@ from apps.batch.models import Batch
 from apps.batch.api.serializers import BatchSerializer
 from apps.batch.api.filters.batch import BatchFilter
 from .mixins import BatchAnalyticsMixin, GeographyAggregationMixin
+from .growth_assimilation_mixin import GrowthAssimilationMixin
 
 
-class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregationMixin, viewsets.ModelViewSet):
+class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, GeographyAggregationMixin, GrowthAssimilationMixin, viewsets.ModelViewSet):
     """
     API endpoint for comprehensive management of aquaculture Batches.
 
