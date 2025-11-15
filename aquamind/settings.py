@@ -371,6 +371,39 @@ NAV_ACCOUNT_MAP = {
 }
 
 # ------------------------------------------------------------------
+# Celery Configuration (Issue #112 - Batch Growth Assimilation)
+# ------------------------------------------------------------------
+# Asynchronous task queue for background processing
+# Primary use: Real-time growth assimilation recomputation
+
+# Broker and result backend (Redis)
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+
+# Serialization settings
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Timezone and task tracking
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+
+# Task execution limits
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes max per task
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # Soft limit before hard kill
+
+# Result expiry
+CELERY_RESULT_EXPIRES = 3600  # 1 hour
+
+# Worker settings
+CELERY_WORKER_PREFETCH_MULTIPLIER = 4  # Number of tasks to prefetch per worker
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restart worker after N tasks (prevent memory leaks)
+
+# Task routing (future: can route different tasks to different queues)
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+
+# ------------------------------------------------------------------
 # Test configuration
 # ------------------------------------------------------------------
 # Use a custom test-runner that guarantees all PostgreSQL connections

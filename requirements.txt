@@ -34,5 +34,9 @@ radon==6.0.1
 flake8-cognitive-complexity==0.1.0
 # Contract testing (validates backend responses against OpenAPI spec)
 
+# Asynchronous task queue for background processing
+celery==5.4.0
+redis==5.0.1
+
 # Frontend (Vue.js will be installed separately)
 django-simple-history==3.8.0
