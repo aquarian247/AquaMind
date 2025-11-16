@@ -497,12 +497,17 @@ Definition of done: Calcs trigger planner activities; variances reported accurat
 
 #### Phase 9 — Backfill, Validation, and Rollout
 
+- [ ] **CLEANUP**: Resolve migration conflict (two duplicate 0034 migrations from test data gen)
+  - Remove: `0034_timescaledb_setup_skip_for_dev.py` (redundant with Phase 2 migration)
+  - Remove: `0034_update_daily_state_primary_key.py` (redundant with Phase 2 migration)
+  - Keep: `0034_setup_timescaledb_hypertable.py` (Phase 2, already applied and working)
+  - Verify: `python manage.py showmigrations batch` shows no unapplied migrations
 - [ ] Backfill selected long-lived batches; compare Actual vs growth samples and spot-check containers.  
 - [ ] Dashboard/metrics on recompute lag and data freshness; admin view of anchors.  
 - [ ] Documentation for operators/managers (what Actual means; anchors; selection_method).  
 - [ ] Update aquamind/docs/prd.md and aquamind/docs/database/data_model.md to reflect the changes made to the feature set and data model in AquaMind
 
-Definition of done: validated outputs; docs shipped; monitoring in place.  
+Definition of done: migrations clean; validated outputs; docs shipped; monitoring in place.  
 
 #### Risks and Mitigations
 
