@@ -228,7 +228,7 @@ def create_test_batch_container_assignment(
         lifecycle_stage=lifecycle_stage,
         population_count=population_count,
         avg_weight_g=avg_weight_g,
-        assignment_date=date.today(),
+        assignment_date=batch.start_date,  # Use batch start date for tests
         is_active=True,
         notes=notes
     )

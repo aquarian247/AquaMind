@@ -132,7 +132,7 @@ class GrowthAssimilationMixin:
             'growth_samples': self._get_growth_samples(batch, start_date, end_date, assignment_id),
             'scenario_projection': self._get_scenario_projection(scenario, start_date, end_date, granularity),
             'actual_daily_states': self._get_actual_daily_states(batch, start_date, end_date, assignment_id, granularity),
-            'container_assignments': self._get_container_assignments(batch),
+            'container_assignments': self._get_container_assignments(batch, start_date, end_date),
             'date_range': {
                 'start': start_date.isoformat(),
                 'end': end_date.isoformat(),
@@ -360,7 +360,11 @@ class GrowthAssimilationMixin:
         
         # Apply granularity (sample every Nth day if weekly)
         if granularity == 'weekly':
-            qs = qs.filter(day_number__mod=7)  # Every 7th day
+            # Python-side filtering for weekly sampling (every 7th day)
+            projections = list(qs)
+            projections = [projections[i] for i in range(0, len(projections), 7)]
+        else:
+            projections = qs
         
         return [
             {
@@ -370,7 +374,7 @@ class GrowthAssimilationMixin:
                 'population': proj.population,
                 'biomass_kg': float(proj.biomass_kg),
             }
-            for proj in qs
+            for proj in projections
         ]
     
     def _get_actual_daily_states(self, batch, start_date, end_date, assignment_id, granularity):
@@ -410,18 +414,28 @@ class GrowthAssimilationMixin:
             for state in states
         ]
     
-    def _get_container_assignments(self, batch):
-        """Get container assignments for batch (for drilldown UI)."""
+    def _get_container_assignments(self, batch, start_date, end_date):
+        """
+        Get container assignments for batch (for drilldown UI).
+        
+        Returns ALL assignments that overlap with the date range, not just active ones.
+        This is critical for frontend aggregation to avoid double-counting on transfer days.
+        """
+        from django.db.models import Q
+        
+        # Get all assignments that overlap with the date range
         assignments = batch.batch_assignments.filter(
-            is_active=True
-        ).select_related('container', 'lifecycle_stage')
+            assignment_date__lte=end_date
+        ).filter(
+            Q(departure_date__isnull=True) | Q(departure_date__gte=start_date)
+        ).select_related('container', 'lifecycle_stage').order_by('assignment_date')
         
         return [
             {
                 'id': assignment.id,
                 'container_name': assignment.container.name,
                 'container_type': assignment.container.container_type.name,
-                'arrival_date': assignment.arrival_date,
+                'arrival_date': assignment.assignment_date,
                 'departure_date': assignment.departure_date,
                 'population_count': assignment.population_count,
                 'avg_weight_g': float(assignment.avg_weight_g) if assignment.avg_weight_g else None,

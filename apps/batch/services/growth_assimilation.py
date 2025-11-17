@@ -23,6 +23,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.batch.models import (
@@ -152,6 +153,54 @@ class GrowthAssimilationEngine:
                 f"Adjusting to batch start date."
             )
             start_date = self.batch.start_date
+        
+        # CRITICAL: Don't compute states before assignment existed
+        if start_date < self.assignment.assignment_date:
+            logger.warning(
+                f"start_date ({start_date}) is before assignment start ({self.assignment.assignment_date}). "
+                f"Adjusting to assignment start date."
+            )
+            start_date = self.assignment.assignment_date
+            
+            # Check if adjusted range is still valid
+            if start_date > end_date:
+                logger.info(
+                    f"Assignment {self.assignment.id} has no valid range after adjusting for assignment_date "
+                    f"(adjusted start={start_date}, end={end_date}). Skipping."
+                )
+                return {
+                    'rows_created': 0,
+                    'rows_updated': 0,
+                    'anchors_found': 0,
+                    'errors': [],
+                    'skipped': True
+                }
+        
+        # Also validate end_date - STOP BEFORE DEPARTURE (not on departure day)
+        if self.assignment.departure_date and end_date >= self.assignment.departure_date:
+            # Stop computing the day BEFORE departure to avoid double-counting
+            # On departure day, the NEW assignment takes over
+            adjusted_end = self.assignment.departure_date - timedelta(days=1)
+            
+            # Edge case: If start_date >= adjusted_end, assignment has no valid range
+            if start_date > adjusted_end:
+                logger.info(
+                    f"Assignment {self.assignment.id} has no valid date range "
+                    f"(start={start_date}, departure={self.assignment.departure_date}). Skipping."
+                )
+                return {
+                    'rows_created': 0,
+                    'rows_updated': 0,
+                    'anchors_found': 0,
+                    'errors': [],
+                    'skipped': True
+                }
+            
+            logger.warning(
+                f"end_date ({end_date}) includes/exceeds assignment departure ({self.assignment.departure_date}). "
+                f"Adjusting to day before departure ({adjusted_end}) to avoid double-counting."
+            )
+            end_date = adjusted_end
         
         logger.info(f"Recomputing range [{start_date}, {end_date}] for assignment {self.assignment.id}")
         
@@ -528,10 +577,22 @@ class GrowthAssimilationEngine:
         # Step 9: Calculate observed FCR (if feed and growth occurred)
         observed_fcr = None
         biomass_gain = new_biomass - float(prev_biomass)  # Ensure float for calculation
-        if feed_kg > 0 and biomass_gain > 0:
+        
+        # Only calculate FCR if biomass gain is substantial (>1kg)
+        # FCR is meaningless for tiny fish (egg/alevin stage with <0.01kg gain)
+        MIN_BIOMASS_GAIN_FOR_FCR = 1.0  # kg
+        
+        if feed_kg > 0 and biomass_gain > MIN_BIOMASS_GAIN_FOR_FCR:
             observed_fcr = feed_kg / biomass_gain
+            # Cap absurdly high FCR values (data quality issues)
+            if observed_fcr > 10.0:
+                logger.warning(
+                    f"Unusually high FCR={observed_fcr:.2f} on {current_date} "
+                    f"(feed={feed_kg}kg, gain={biomass_gain:.3f}kg) - capping at 10.0"
+                )
+                observed_fcr = 10.0
             sources['fcr'] = 'observed'
-        elif biomass_gain > 0:
+        elif biomass_gain > MIN_BIOMASS_GAIN_FOR_FCR:
             # Use model FCR
             # Note: Will need to access FCRModel - defer to refinement
             sources['fcr'] = 'model'
@@ -918,7 +979,15 @@ def recompute_batch_assignments(
             batch=batch
         )
     else:
-        assignments = batch.batch_assignments.filter(is_active=True)
+        # Get ALL assignments that overlap with the date range (active or historical)
+        # An assignment is relevant if:
+        # - It started before or during the range (assignment_date <= end_date)
+        # - It didn't end before the range (departure_date is NULL or >= start_date)
+        assignments = batch.batch_assignments.filter(
+            assignment_date__lte=end_date
+        ).filter(
+            Q(departure_date__isnull=True) | Q(departure_date__gte=start_date)
+        )
     
     overall_stats = {
         'batch_id': batch_id,
@@ -934,10 +1003,13 @@ def recompute_batch_assignments(
             engine = GrowthAssimilationEngine(assignment)
             result = engine.recompute_range(start_date, end_date)
             
-            overall_stats['assignments_processed'] += 1
-            overall_stats['total_rows_created'] += result['rows_created']
-            overall_stats['total_rows_updated'] += result['rows_updated']
-            overall_stats['total_errors'] += len(result['errors'])
+            # Only count as processed if not skipped
+            if not result.get('skipped', False):
+                overall_stats['assignments_processed'] += 1
+                overall_stats['total_rows_created'] += result['rows_created']
+                overall_stats['total_rows_updated'] += result['rows_updated']
+                overall_stats['total_errors'] += len(result['errors'])
+            
             overall_stats['assignment_results'].append({
                 'assignment_id': assignment.id,
                 'result': result

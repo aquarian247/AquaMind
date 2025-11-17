@@ -110,10 +110,11 @@ class ActualDailyAssignmentState(models.Model):
         help_text="Daily feed in kilograms (actual or none)"
     )
     observed_fcr = models.DecimalField(
-        max_digits=6,
+        max_digits=8,
         decimal_places=3,
         null=True,
         blank=True,
+        validators=[MinValueValidator(Decimal('0.000'))],
         help_text="Observed Feed Conversion Ratio (if calculable)"
     )
     
@@ -185,4 +186,5 @@ class ActualDailyAssignmentState(models.Model):
         # This would need to query backwards to find the last anchor
         # Implementation deferred to Phase 3 (computation engine)
         return None
+
 

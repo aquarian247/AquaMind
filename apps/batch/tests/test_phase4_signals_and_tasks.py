@@ -120,8 +120,9 @@ class CeleryTaskTestCase(TestCase):
     
     def test_recompute_batch_window_task(self):
         """Test batch-level recompute task executes successfully."""
-        start_date = date(2024, 1, 1)
-        end_date = date(2024, 1, 5)
+        # Use batch's actual start date for valid test
+        start_date = self.batch.start_date
+        end_date = self.batch.start_date + timedelta(days=4)
         
         # Execute task
         result = recompute_batch_window(
