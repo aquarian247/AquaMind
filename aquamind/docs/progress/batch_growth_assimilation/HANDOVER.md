@@ -138,7 +138,7 @@ Implement the `_evaluate_planner_triggers()` hook (currently just logs).
 ## 🧠 Critical Context for Success
 
 ### Test Data Available
-- **Faroe Islands**: 33 batches, 456 assignments, 45,772 growth samples (COMPLETE)
+- **Faroe Islands**: 39 batches, 500+ assignments, 47,000+ growth samples (COMPLETE)
 - **Scotland**: Currently generating (don't interfere)
 - **Use Faroe Islands data for testing**
 

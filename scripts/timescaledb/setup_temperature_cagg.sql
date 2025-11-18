@@ -91,3 +91,5 @@ WHERE view_name = 'env_daily_temp_by_container';
 \echo '  SELECT avg_temp_c FROM env_daily_temp_by_container'
 \echo '  WHERE container_id = 123 AND day >= ''2023-01-01'''
 
+
+

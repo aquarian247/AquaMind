@@ -26,7 +26,7 @@ from apps.finance.models import FactHarvest, DimCompany, DimSite
 from apps.scenario.models import (
     Scenario, TGCModel, FCRModel, MortalityModel, 
     TemperatureProfile, TemperatureReading,
-    FCRModelStage
+    FCRModelStage, ScenarioProjection
 )
 # Explicit import to avoid ambiguity (FeedContainer is in infrastructure)
 from apps.infrastructure.models import FeedContainer
@@ -37,7 +37,7 @@ PROGRESS_DIR = Path(project_root) / 'aquamind' / 'docs' / 'progress' / 'test_dat
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
 
 class EventEngine:
-    def __init__(self, start_date, eggs, geography, duration=650):
+    def __init__(self, start_date, eggs, geography, duration=900):
         self.start_date = start_date
         self.current_date = start_date
         self.initial_eggs = eggs
@@ -45,7 +45,7 @@ class EventEngine:
         self.geography_name = geography
         self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0, 'transfer_workflows': 0}
         self.current_stage_start_day = 0
-        # Realistic lifecycle stage durations (total: ~900 days)
+        # Realistic lifecycle stage durations (total: 900 days)
         self.stage_durations = {
             'Egg&Alevin': 90,   # 90 days, no feed
             'Fry': 90,          # 90 days
@@ -95,10 +95,10 @@ class EventEngine:
         """Initialize finance company and site dimensions."""
         try:
             # Get or create company for this geography
-            # Simplified: use geography + farming subsidiary
+            # Simplified: use geography + farming subsidiary (FM = 3-char code)
             self.finance_company, _ = DimCompany.objects.get_or_create(
                 geography=self.geo,
-                subsidiary='FARMING',
+                subsidiary='FM',  # FIX: Use 3-char code, not full name
                 defaults={
                     'display_name': f'{self.geo.name} Farming',
                     'currency': 'EUR' if 'Faroe' in self.geo.name else 'GBP'
@@ -427,6 +427,8 @@ class EventEngine:
         print(f"✓ Creation Workflow: {workflow_number} ({len(self.assignments)} actions)")
         print(f"✓ Batch: {self.batch.batch_number} (supplier: {supplier.name})")
         print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
+        
+        # NOTE: Scenario will be created at Parr stage (Day 180) using "from batch" approach
         
     def process_day(self):
         self.assignments = list(BatchContainerAssignment.objects.filter(batch=self.batch, is_active=True))
@@ -840,7 +842,7 @@ class EventEngine:
                                     container=cont,
                                     lifecycle_stage=next_stage,
                                     assignment_date=self.current_date,
-                                    population_count=fish_per_container,
+                                    population_count=fish_per_container,  # Pre-populate for event engine
                                     avg_weight_g=avg_weight,
                                     biomass_kg=Decimal(str(fish_per_container * float(avg_weight) / 1000)),
                                     is_active=True
@@ -849,7 +851,7 @@ class EventEngine:
                         
                         print(f"  → Moved to {new_hall.name} ({len(self.assignments)} containers)")
                 else:
-                    # Adult stage - move to sea cages across ALL areas in geography
+                    # Adult stage - move to sea cages in SINGLE area (realistic distribution)
                     from django.db import transaction
                     with transaction.atomic():
                         # Calculate total fish from all old assignments
@@ -860,11 +862,41 @@ class EventEngine:
                         target_fish_per_container = 200000
                         containers_needed = max(10, (total_fish + target_fish_per_container - 1) // target_fish_per_container)
 
-                        # Find available sea containers (get more than needed to allow for distribution)
-                        sea_containers = self.find_available_containers(geography=self.geo, count=containers_needed)
+                        # FIX: SELECT SINGLE AREA using round-robin (batches rarely span multiple areas)
+                        existing_adult_batches = Batch.objects.filter(
+                            lifecycle_stage__name='Adult',
+                            batch_assignments__container__area__geography=self.geo
+                        ).distinct().count()
+                        
+                        all_areas = list(Area.objects.filter(geography=self.geo).order_by('name'))
+                        if not all_areas:
+                            raise Exception(f"No sea areas found in {self.geo.name}")
+                        
+                        area_idx = existing_adult_batches % len(all_areas)
+                        target_area = all_areas[area_idx]
+                        print(f"  → Selected area {area_idx + 1}/{len(all_areas)}: {target_area.name}")
 
-                        if not sea_containers:
-                            raise Exception(f"Insufficient available sea cages in {self.geo.name} for stage transition to {next_stage.name}")
+                        # Find available containers IN SELECTED AREA ONLY
+                        occupied_ids = set(
+                            BatchContainerAssignment.objects.select_for_update(skip_locked=True).filter(
+                                is_active=True
+                            ).values_list('container_id', flat=True)
+                        )
+                        
+                        sea_containers = Container.objects.select_for_update(skip_locked=True).filter(
+                            area=target_area,
+                            active=True
+                        ).exclude(
+                            id__in=occupied_ids
+                        ).order_by('name')[:containers_needed]
+                        
+                        sea_containers = list(sea_containers)
+
+                        if len(sea_containers) < containers_needed:
+                            raise Exception(
+                                f"Insufficient available sea cages in {target_area.name}. "
+                                f"Need {containers_needed}, found {len(sea_containers)}"
+                            )
 
                         # Distribute fish evenly across containers
                         fish_per_container = total_fish // len(sea_containers)
@@ -880,16 +912,14 @@ class EventEngine:
                                 container=cont,
                                 lifecycle_stage=next_stage,
                                 assignment_date=self.current_date,
-                                population_count=container_fish,
+                                population_count=container_fish,  # Pre-populate for event engine
                                 avg_weight_g=avg_weight,
                                 biomass_kg=Decimal(str(container_fish * float(avg_weight) / 1000)),
                                 is_active=True
                             )
                             self.assignments.append(new_assignment)
                     
-                    # Show which sea areas were used
-                    areas_used = set(a.container.area.name for a in self.assignments)
-                    print(f"  → Moved to Sea Cages in {self.geo.name} ({len(self.assignments)} containers across {len(areas_used)} areas)")
+                    print(f"  → Moved to {target_area.name} ({len(self.assignments)} sea containers)")
                     
                     # Create sea transition scenario (users care about forecasts at this point)
                     self._create_sea_transition_scenario(self.current_date)
@@ -902,6 +932,11 @@ class EventEngine:
                 self.batch.save()
                 
                 self.current_stage_start_day = self.stats['days']
+                
+                # Create from-batch scenario at Parr stage (Day 180) for growth analysis
+                if next_stage.name == 'Parr':
+                    print(f"\n  Creating from-batch scenario for growth analysis...")
+                    self._create_from_batch_scenario(stage_name='Parr')
     
     def health_journal(self):
         if not self.assignments: return
@@ -1058,6 +1093,89 @@ class EventEngine:
             print(f"  ⚠ Transfer workflow creation failed: {e}")
             # Don't block transition if workflow creation fails
     
+    def _create_from_batch_scenario(self, stage_name="Parr"):
+        """
+        Create "from batch" style growth forecast scenario at mid-lifecycle.
+        
+        Uses CURRENT batch state (not historical egg state) to project FORWARD.
+        This matches the "from_batch" API pattern and provides meaningful growth analysis.
+        
+        Called when batch reaches Parr stage (Day 180) - gives users a realistic
+        "mid-lifecycle forecast" showing projected growth to harvest.
+        
+        Args:
+            stage_name: Lifecycle stage name when scenario is created
+        
+        Required for Growth Analysis feature (Issue #112).
+        """
+        try:
+            # Get current batch state from active assignments
+            if not self.assignments:
+                return
+            
+            current_pop = sum(a.population_count for a in self.assignments)
+            current_weight = self.assignments[0].avg_weight_g
+            
+            if current_pop == 0 or not current_weight:
+                print(f"  ⚠ Cannot create from-batch scenario: no population or weight data")
+                return
+            
+            # Calculate remaining duration (to end of lifecycle)
+            days_elapsed = self.stats['days']
+            days_remaining = 900 - days_elapsed
+            
+            if days_remaining <= 0:
+                return  # Batch lifecycle complete
+            
+            # Create scenario starting from CURRENT state, projecting FORWARD
+            scenario = Scenario.objects.create(
+                name=f"From Batch ({stage_name}) - {self.batch.batch_number}",
+                start_date=self.current_date,  # Today, not batch start!
+                duration_days=days_remaining,   # Remaining lifecycle only
+                initial_count=current_pop,      # Current population
+                initial_weight=float(current_weight),  # Current weight
+                genotype=f"Standard {self.geography_name}",
+                supplier="Internal Broodstock",
+                batch=self.batch,
+                tgc_model=self.tgc_model,
+                fcr_model=self.fcr_model,
+                mortality_model=self.mortality_model,
+                created_by=self.user
+            )
+            
+            print(f"  ✓ Created from-batch scenario: {scenario.name}")
+            print(f"    Starting from: {current_pop:,} fish @ {float(current_weight):.1f}g ({stage_name})")
+            print(f"    Duration: {days_remaining} days (to harvest)")
+            
+            # Compute projection data
+            try:
+                from apps.scenario.services.calculations.projection_engine import ProjectionEngine
+                
+                print(f"    Computing projection data...")
+                engine = ProjectionEngine(scenario)
+                result = engine.run_projection(save_results=True)
+                
+                if result['success']:
+                    proj_count = ScenarioProjection.objects.filter(scenario=scenario).count()
+                    print(f"    ✓ Computed {proj_count} projection days")
+                    
+                    # Show expected harvest
+                    final_proj = ScenarioProjection.objects.filter(scenario=scenario).order_by('-day_number').first()
+                    if final_proj:
+                        print(f"    Projected harvest: {final_proj.average_weight:.0f}g, {final_proj.population:,.0f} fish")
+                else:
+                    print(f"    ⚠ Projection failed: {result.get('errors', [])}")
+                    
+            except Exception as proj_error:
+                print(f"    ⚠ Projection computation failed: {proj_error}")
+            
+            self.stats['scenarios'] += 1
+            
+        except Exception as e:
+            print(f"  ⚠ From-batch scenario creation failed: {e}")
+            import traceback
+            traceback.print_exc()
+    
     def _create_sea_transition_scenario(self, transition_date):
         """
         Create a growth forecast scenario when batch transitions to Adult (sea) stage.
@@ -1095,11 +1213,62 @@ class EventEngine:
             print(f"    Duration: 450 days (Adult stage)")
             print(f"    Models: {self.tgc_model.name}, {self.fcr_model.name}")
             
+            # Compute scenario projection data
+            try:
+                from apps.scenario.services.calculations.projection_engine import ProjectionEngine
+                
+                print(f"    Computing projection data...")
+                engine = ProjectionEngine(scenario)
+                result = engine.run_projection(save_results=True)
+                
+                if result['success']:
+                    print(f"    ✓ Computed {result['summary']['total_days']} projection days")
+                else:
+                    print(f"    ⚠ Projection failed: {result.get('errors', [])}")
+                    
+            except Exception as proj_error:
+                print(f"    ⚠ Projection computation failed: {proj_error}")
+            
             self.stats['scenarios'] += 1
             
         except Exception as e:
             print(f"  ⚠ Scenario creation failed: {e}")
             # Don't block stage transition if scenario fails
+    
+    def _recompute_growth_analysis(self):
+        """
+        Recompute ActualDailyAssignmentState for Growth Analysis.
+        
+        For test data generation, we do this ONCE at the end after all events
+        are recorded, rather than via Celery signals event-by-event.
+        
+        This generates the orange "Actual Daily State" line on Growth Analysis chart.
+        """
+        try:
+            from apps.batch.services.growth_assimilation import GrowthAssimilationService
+            
+            print(f"\n{'='*80}")
+            print("Recomputing Growth Analysis (Actual Daily States)")
+            print(f"{'='*80}\n")
+            
+            print(f"Computing ActualDailyAssignmentState records for {self.batch.batch_number}...")
+            
+            service = GrowthAssimilationService()
+            result = service.recompute_batch_daily_states(self.batch.id)
+            
+            if result.get('success'):
+                print(f"✓ Growth Analysis computed successfully")
+                print(f"  States created: {result.get('states_created', 0):,}")
+                print(f"  Assignments processed: {result.get('assignments_processed', 0)}")
+            else:
+                print(f"⚠ Growth Analysis computation had issues:")
+                for error in result.get('errors', []):
+                    print(f"  - {error}")
+                    
+        except Exception as e:
+            print(f"\n⚠ Growth Analysis computation failed: {e}")
+            print(f"   This is non-blocking - batch data is still valid")
+            print(f"   Can recompute manually later via API")
     
     def harvest_batch(self):
         """Harvest the batch if it's in Adult stage and ready"""
@@ -1221,6 +1390,9 @@ class EventEngine:
             
             # Check if batch is ready for harvest
             self.harvest_batch()
+            
+            # NOTE: Growth Analysis recompute happens at orchestrator level
+            # for all active batches, not per-batch (avoids duplicate work)
             
             print(f"\n{'='*80}")
             print("Complete!")

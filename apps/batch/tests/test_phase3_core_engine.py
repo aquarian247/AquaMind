@@ -298,3 +298,5 @@ class GrowthAssimilationCoreTestCase(TestCase):
         self.assertIn('weight', day1.sources)
         self.assertIn('temp', day1.confidence_scores)
 
+
+

@@ -129,3 +129,5 @@ class ActualDailyAssignmentStateSchemaTestCase(TestCase):
             result = cursor.fetchone()
             self.assertIsNotNone(result, "Table batch_actualdailyassignmentstate not found in database")
 
+
+

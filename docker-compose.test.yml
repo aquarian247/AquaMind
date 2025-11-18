@@ -206,7 +206,7 @@ services:
 
     # Health Check (verify worker is responsive)
     healthcheck:
-      test: ["CMD-SHELL", "celery -A aquamind inspect ping -d celery@$$HOSTNAME"]
+      test: [ "CMD-SHELL", "celery -A aquamind inspect ping -d celery@$$HOSTNAME" ]
       interval: 60s
       timeout: 10s
       retries: 3

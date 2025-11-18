@@ -117,7 +117,7 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 
 ### Asynchronous Processing Layer
 
-**Redis + Celery** (Added in Issue #112 - Phase 4)
+**Redis + Celery** 
 
 AquaMind uses **Redis** as a message broker and **Celery** as an asynchronous task queue to enable background processing without blocking user requests.
 

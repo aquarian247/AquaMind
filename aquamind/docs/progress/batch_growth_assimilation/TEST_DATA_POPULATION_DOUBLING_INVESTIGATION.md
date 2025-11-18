@@ -22,15 +22,21 @@ During Phase 7 testing, we discovered that **batch populations are consistently 
 
 ## 🎯 TL;DR for Next Agent
 
-**Real Issue (MUST FIX)**: 
-- ❌ Population doubling - Assignment metadata + Transfer counts both included
+**✅ INVESTIGATION COMPLETE - ROOT CAUSE CONFIRMED**
+
+**See Full Analysis**: [TEST_DATA_POPULATION_DOUBLING_ROOT_CAUSE_ANALYSIS.md](./TEST_DATA_POPULATION_DOUBLING_ROOT_CAUSE_ANALYSIS.md)
+
+**Root Cause**: Event engine (03_event_engine_core.py) pre-populates destination assignment `population_count` during stage transitions AND creates TransferAction records. Growth engine correctly adds BOTH, causing ~2x doubling.
+
+**Fix**: Change lines 843 and 883 in event engine to `population_count=0`
+
+**Status**: Ready for fix application and test data regeneration
 
 **NOT Bugs (Already Resolved)**:
 - ✅ Container count "discrepancy" - Batch spans 2 areas (11+3=14)
-- ✅ Workflow UI shows 10 actions - Likely displays first 10 of 14
+- ✅ Workflow UI shows 10 actions - Displays first 10 of 14 (pagination)
 - ✅ Multi-area support works correctly
-
-**Focus Investigation On**: Transfer workflow execution code (likely 2-4 hour fix)
+- ✅ Growth Analysis engine works correctly 
 
 ---
 

@@ -10,8 +10,13 @@ Signal Flow:
     → Signal handler (lightweight, just enqueues task)
     → Celery task (heavy computation in background)
     → ActualDailyAssignmentState updated
+    
+Test Data Generation:
+    Set SKIP_CELERY_SIGNALS=1 environment variable to disable Celery
+    task enqueueing during bulk data generation (prevents Redis connection spam).
 """
 import logging
+import os
 from django.db.models import Max
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -24,6 +29,9 @@ from apps.batch.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Check if Celery signals should be skipped (test data generation mode)
+SKIP_CELERY_SIGNALS = os.environ.get('SKIP_CELERY_SIGNALS') == '1'
 
 
 @receiver(post_save, sender=BatchContainerAssignment)
@@ -138,6 +146,10 @@ def on_growth_sample_saved(sender, instance, created, **kwargs):
         created: True if new instance, False if update
         **kwargs: Additional signal arguments
     """
+    # Skip during test data generation (env var check)
+    if SKIP_CELERY_SIGNALS:
+        return
+    
     if not created:
         # Only trigger on new samples, not updates
         logger.debug(f"Skipping recompute for GrowthSample update (id={instance.id})")
@@ -198,6 +210,10 @@ def on_transfer_completed(sender, instance, created, **kwargs):
         created: True if new instance, False if update
         **kwargs: Additional signal arguments
     """
+    # Skip during test data generation (env var check)
+    if SKIP_CELERY_SIGNALS:
+        return
+    
     # Check if this transfer has measured weight
     if not instance.measured_avg_weight_g:
         logger.debug(
@@ -283,6 +299,10 @@ def on_mortality_event(sender, instance, created, **kwargs):
         created: True if new instance, False if update
         **kwargs: Additional signal arguments
     """
+    # Skip during test data generation (env var check)
+    if SKIP_CELERY_SIGNALS:
+        return
+    
     if not created:
         # Only trigger on new events, not updates
         logger.debug(f"Skipping recompute for MortalityEvent update (id={instance.id})")
