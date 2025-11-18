@@ -362,11 +362,13 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - Meta: `ordering = ['workflow_id', 'action_number']`, `unique_together = [['workflow_id', 'action_number']]`
 - **`batch_mortalityevent`**
   - `id`: bigint (PK, auto-increment, NOT NULL)
-  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, NOT NULL) # Link to the batch experiencing mortality
+  - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, NOT NULL) # Link to the batch experiencing mortality
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, nullable) # Container-specific assignment where mortality occurred (enables precise tracking and eliminates proration)
   - `event_date`: date (NOT NULL)
   - `count`: integer (NOT NULL)
-  - `cause`: varchar(100) (NOT NULL) # e.g., Disease, Stress, Accident
-  - `description`: text (NOT NULL)
+  - `biomass_kg`: numeric(10,2) (NOT NULL) # Estimated biomass lost in kg
+  - `cause`: varchar(20) (NOT NULL) # e.g., DISEASE, HANDLING, PREDATION, ENVIRONMENTAL, UNKNOWN, OTHER
+  - `description`: text (blank=True)
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
 - **`batch_growthsample`**
@@ -677,7 +679,8 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 - **`health_mortalityrecord`**
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='mortality_records')
-  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=CASCADE, related_name='mortality_records', nullable, blank=True)
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=PROTECT, related_name='mortality_records', nullable) # Container-specific assignment where mortality occurred
+  - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=SET_NULL, related_name='mortality_records', nullable, blank=True)
   - `event_date`: timestamptz
   - `count`: positive integer
   - `reason_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, related_name='mortality_records')
@@ -697,6 +700,7 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
 - **`health_licecount`** (Enhanced: Supports legacy and normalized formats)
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='lice_counts')
+  - `assignment_id`: bigint (FK to `batch_batchcontainerassignment`.id, on_delete=PROTECT, related_name='lice_counts', nullable) # Container-specific assignment where lice count was recorded
   - `container_id`: bigint (FK to `infrastructure_container`.id, on_delete=SET_NULL, related_name='lice_counts', nullable, blank=True)
   - `user_id`: integer (FK to `users_customuser`.id, on_delete=PROTECT, related_name='lice_counts')
   - `count_date`: timestamptz (default=timezone.now)

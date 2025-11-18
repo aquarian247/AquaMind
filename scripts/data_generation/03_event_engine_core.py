@@ -86,6 +86,9 @@ class EventEngine:
         # Get finance dimensions
         self._init_finance_dimensions()
         
+        # Ensure feed inventory exists (auto-initialize if empty)
+        self._ensure_feed_inventory()
+        
         print(f"✓ Geography: {self.geo.name}")
         print(f"✓ Station: {self.station.name}")
         print(f"✓ Sea Area: {self.sea_area.name}")
@@ -134,6 +137,90 @@ class EventEngine:
             self.finance_company = None
             self.finance_site_freshwater = None
             self.finance_site_sea = None
+    
+    def _ensure_feed_inventory(self):
+        """
+        Ensure feed containers have initial stock.
+        Auto-initializes if database is empty (first batch scenario).
+        Idempotent: only runs once per database.
+        """
+        from django.db.models import Sum
+        
+        # Check total feed stock across all containers
+        total_stock = FeedContainerStock.objects.aggregate(
+            total=Sum('quantity_kg')
+        )['total'] or Decimal('0')
+        
+        if total_stock > 0:
+            # Already initialized, skip
+            return
+        
+        print(f"  🔄 Feed inventory empty - auto-initializing with ~3,730 tonnes...")
+        
+        # Get all active feed containers
+        feed_containers = FeedContainer.objects.filter(active=True)
+        if feed_containers.count() == 0:
+            print(f"  ⚠️  No feed containers found - skipping feed initialization")
+            return
+        
+        # Get feed types
+        feed_types = Feed.objects.filter(is_active=True)
+        if feed_types.count() == 0:
+            print(f"  ⚠️  No feed types found - skipping feed initialization")
+            return
+        
+        # Purchase date: 30 days ago
+        purchase_date = date.today() - timedelta(days=30)
+        suppliers = ['BioMar', 'Skretting', 'Cargill', 'Aller Aqua']
+        
+        created_purchases = 0
+        created_stock = 0
+        
+        # Pre-stock all feed containers
+        for idx, container in enumerate(feed_containers, 1):
+            # Select feed type based on container location
+            if 'Silo' in container.name or container.container_type == 'SILO':
+                # Freshwater silos: starter/grower feeds
+                feed = feed_types.filter(name__contains='Starter').first() or feed_types.first()
+                quantity_kg = Decimal('5000.0')  # 5 tonnes per silo
+                cost_per_kg = Decimal('2.50')
+            else:  # BARGE
+                # Sea barges: finisher feeds
+                feed = feed_types.filter(name__contains='Finisher').first() or feed_types.last()
+                quantity_kg = Decimal('25000.0')  # 25 tonnes per barge
+                cost_per_kg = Decimal('2.00')
+            
+            # Create purchase
+            supplier = suppliers[idx % len(suppliers)]
+            purchase = FeedPurchase.objects.create(
+                feed=feed,
+                purchase_date=purchase_date,
+                supplier=supplier,
+                batch_number=f"INIT-{purchase_date.strftime('%Y%m%d')}-{idx:04d}",
+                quantity_kg=quantity_kg,
+                cost_per_kg=cost_per_kg,
+                expiry_date=purchase_date + timedelta(days=365),
+                notes=f'Auto-initialized inventory for {container.name}'
+            )
+            created_purchases += 1
+            
+            # Create stock entry
+            FeedContainerStock.objects.create(
+                feed_container=container,
+                feed_purchase=purchase,
+                quantity_kg=quantity_kg,
+                entry_date=timezone.make_aware(
+                    datetime.combine(purchase_date, datetime.min.time())
+                )
+            )
+            created_stock += 1
+        
+        # Calculate total
+        total_inventory = FeedContainerStock.objects.aggregate(
+            total=Sum('quantity_kg')
+        )['total'] or Decimal('0')
+        
+        print(f"  ✅ Feed inventory initialized: {total_inventory/1000:.0f} tonnes ({created_purchases} purchases)")
     
     def _init_scenario_models(self):
         """
@@ -466,7 +553,9 @@ class EventEngine:
                         readings.append(EnvironmentalReading(
                             reading_time=timezone.make_aware(datetime.combine(self.current_date, time(hour=hour))),
                             sensor=sensor, parameter=param, value=val,
-                            container=a.container, batch=self.batch, is_manual=False
+                            container=a.container, batch=self.batch,
+                            batch_container_assignment=a,  # ← FIXED: Populate assignment FK
+                            is_manual=False
                         ))
         
         # Bulk insert (100x faster than individual creates)
@@ -572,6 +661,7 @@ class EventEngine:
                 
                 MortalityEvent.objects.create(
                     batch=self.batch,
+                    assignment=a,  # ← FIXED: Container-specific mortality tracking
                     event_date=self.current_date,
                     count=act,
                     biomass_kg=biomass_lost,

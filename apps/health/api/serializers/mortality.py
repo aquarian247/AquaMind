@@ -9,7 +9,7 @@ from rest_framework import serializers
 from django.core.validators import MinValueValidator, MaxValueValidator
 from typing import Optional
 
-from apps.batch.models import Batch
+from apps.batch.models import Batch, BatchContainerAssignment
 from apps.health.api.serializers.base import HealthBaseSerializer
 from apps.health.models import (
     LiceCount, LiceType, MortalityReason, MortalityRecord
@@ -148,6 +148,12 @@ class LiceCountSerializer(HealthBaseSerializer):
         queryset=Batch.objects.all(),
         help_text="The batch for which lice were counted."
     )
+    assignment = serializers.PrimaryKeyRelatedField(
+        queryset=BatchContainerAssignment.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Container-specific assignment where lice count was recorded."
+    )
     container = serializers.PrimaryKeyRelatedField(
         queryset=Container.objects.all(),
         required=False,
@@ -245,7 +251,7 @@ class LiceCountSerializer(HealthBaseSerializer):
     class Meta:
         model = LiceCount
         fields = [
-            'id', 'batch', 'container', 'user', 'count_date',
+            'id', 'batch', 'assignment', 'container', 'user', 'count_date',
             # Legacy fields
             'adult_female_count', 'adult_male_count',
             'juvenile_count',

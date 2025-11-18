@@ -466,6 +466,24 @@ class GrowthAssimilationEngine:
         # Get population
         initial_population = self.assignment.population_count
         
+        # Fix for Issue #112: Check if this assignment is a transfer destination
+        # If fish were transferred IN on the assignment date, the population_count
+        # already includes them (from event engine pre-population), so we need to
+        # start from 0 to avoid double-counting when _get_placements() adds them daily.
+        first_day_transfers = TransferAction.objects.filter(
+            dest_assignment=self.assignment,
+            actual_execution_date=self.assignment.assignment_date,
+            status='COMPLETED'
+        ).exists()
+        
+        if first_day_transfers:
+            # Transfer destination - start from 0, placements will add fish daily
+            logger.info(
+                f"Assignment {self.assignment.id} is transfer destination on {self.assignment.assignment_date}, "
+                f"starting from 0 population (was {initial_population}) to avoid double-counting"
+            )
+            initial_population = 0
+        
         # Calculate biomass
         initial_biomass = (initial_population * initial_weight) / 1000
         
@@ -748,12 +766,11 @@ class GrowthAssimilationEngine:
         """
         Get mortality count for a date.
         
-        Note: MortalityEvent is tracked at batch level, not assignment level.
-        For assignment-level calculations, we prorate batch mortality based on
-        this assignment's share of batch population.
+        MortalityEvent now tracks at assignment level, enabling direct queries
+        with full confidence (no proration needed).
         
         Priority:
-        1. Actual: Recorded MortalityEvent (prorated)
+        1. Actual: Recorded MortalityEvent (assignment-specific)
         2. Model: Stage-specific mortality rate from scenario
         
         Args:
@@ -764,25 +781,17 @@ class GrowthAssimilationEngine:
         Returns:
             Tuple of (mortality_count, source, confidence)
         """
-        # Try actual mortality events (at batch level)
+        # Try actual mortality events (assignment-specific)
         from django.db.models import Sum
         mortality_events = MortalityEvent.objects.filter(
-            batch=self.batch,
+            assignment=self.assignment,
             event_date=date
         )
         
-        actual_count = mortality_events.aggregate(Sum('count'))['count__sum']
-        if actual_count and actual_count > 0:
-            # Prorate mortality to this assignment based on population share
-            # Get batch total population on this date
-            batch_population = self._get_batch_population(date)
-            if batch_population > 0:
-                assignment_share = current_population / batch_population
-                prorated_mortality = int(round(actual_count * assignment_share))
-                return prorated_mortality, 'actual_prorated', 0.9
-            else:
-                # Fall back to model if batch population unknown
-                pass
+        actual_count = mortality_events.aggregate(Sum('count'))['count__sum'] or 0
+        if actual_count > 0:
+            # Direct assignment query - full confidence!
+            return actual_count, 'actual', 1.0
         
         # Use model
         stage_name = current_stage.name if current_stage else None

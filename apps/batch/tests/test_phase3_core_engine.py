@@ -213,6 +213,7 @@ class GrowthAssimilationCoreTestCase(TestCase):
         # Create mortality event
         MortalityEvent.objects.create(
             batch=self.batch,
+            assignment=self.assignment,
             event_date=date(2024, 1, 1),
             count=5,
             biomass_kg=Decimal('0.01')
@@ -224,7 +225,9 @@ class GrowthAssimilationCoreTestCase(TestCase):
             self.stage
         )
         
-        self.assertEqual(source, 'actual_prorated')
+        # After FK fix, should be 'actual' not 'actual_prorated'
+        self.assertEqual(source, 'actual')
+        self.assertEqual(confidence, 1.0)  # Full confidence now!
         self.assertGreater(mort_count, 0)
     
     def test_selection_bias_largest(self):

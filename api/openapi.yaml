@@ -1395,11 +1395,18 @@ paths:
       - jwtAuth: []
       - tokenAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Recompute task(s) enqueued successfully (synchronous
+                  in tests)
+          description: ''
         '202':
           content:
             application/json:
               schema:
-                description: Recompute task(s) enqueued successfully
+                description: Recompute task(s) enqueued successfully (async in production)
           description: ''
         '400':
           content:
@@ -35505,6 +35512,12 @@ components:
           description: The batch for which lice were counted.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         container:
           type: integer
           nullable: true
@@ -35707,6 +35720,12 @@ components:
           type: integer
           nullable: true
           description: The batch being counted.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container:
@@ -36060,6 +36079,12 @@ components:
           nullable: true
           description: Get basic batch information.
           readOnly: true
+        assignment_info:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: Get basic assignment information.
+          readOnly: true
         container_info:
           type: object
           additionalProperties: {}
@@ -36116,7 +36141,14 @@ components:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       required:
+      - assignment_info
       - batch
       - batch_info
       - batch_number
@@ -36203,6 +36235,12 @@ components:
         batch:
           type: integer
           nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       required:
@@ -36437,6 +36475,12 @@ components:
           type: integer
           nullable: true
           description: The batch experiencing mortality.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container:
@@ -41670,6 +41714,12 @@ components:
           description: The batch for which lice were counted.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         container:
           type: integer
           nullable: true
@@ -41916,6 +41966,12 @@ components:
           nullable: true
           description: Get basic batch information.
           readOnly: true
+        assignment_info:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: Get basic assignment information.
+          readOnly: true
         container_info:
           type: object
           additionalProperties: {}
@@ -41970,6 +42026,12 @@ components:
           readOnly: true
         batch:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
     PatchedMortalityModel:

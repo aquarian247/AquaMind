@@ -255,6 +255,7 @@ def create_test_growth_sample(
 
 def create_test_mortality_event(
     batch=None,
+    assignment=None,
     count=100,
     biomass_kg=Decimal("1.0"),
     cause="DISEASE",
@@ -264,8 +265,13 @@ def create_test_mortality_event(
     if not batch:
         batch = create_test_batch()
     
+    if not assignment:
+        # Create a default assignment for the batch
+        assignment = create_test_batch_container_assignment(batch=batch)
+    
     return MortalityEvent.objects.create(
         batch=batch,
+        assignment=assignment,
         event_date=date.today(),
         count=count,
         biomass_kg=biomass_kg,

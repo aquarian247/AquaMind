@@ -403,6 +403,12 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restart worker after N tasks (preven
 # Task routing (future: can route different tasks to different queues)
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 
+# Disable celery for tests - run tasks synchronously
+import sys
+if 'test' in sys.argv:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+
 # ------------------------------------------------------------------
 # Test configuration
 # ------------------------------------------------------------------

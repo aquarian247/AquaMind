@@ -200,7 +200,8 @@ class GrowthAssimilationMixin:
         ),
         request=ManualRecomputeSerializer,
         responses={
-            202: {"description": "Recompute task(s) enqueued successfully"},
+            200: {"description": "Recompute task(s) enqueued successfully (synchronous in tests)"},
+            202: {"description": "Recompute task(s) enqueued successfully (async in production)"},
             400: {"description": "Invalid date range or parameters"},
             403: {"description": "Permission denied"},
         }
