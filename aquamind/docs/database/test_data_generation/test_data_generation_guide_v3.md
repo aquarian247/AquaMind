@@ -146,10 +146,11 @@ python scripts/data_generation/01_initialize_scenario_master_data.py
 - Mortality (probabilistic, stage-specific rates)
 - Growth samples (weekly)
 - Stage transitions every 90 days with transfer workflows
-- "From batch" scenario creation at Parr stage (Day 180)
+- **Scenario creation at Day 1** (760-day projection to realistic harvest weight ~6kg)
 - Auto feed reordering when stock < 20%
 - Lice sampling (weekly in Adult stage)
 - Finance integration (harvest facts for completed batches)
+- **TGC Formula:** Industry-standard cube-root method with stage-specific values
 
 **Usage:**
 ```bash
@@ -761,10 +762,12 @@ Batch 85: Start 2025-09-29 → Duration 50 days → Active (Egg&Alevin)
 
 ### 3. Growth Analysis Requires Scenarios
 
-The Growth Engine (Issue #112) requires scenarios for TGC/mortality models:
-- Scenarios created at Day 180 (Parr transition)
-- Batches < 180 days old will error during Growth Analysis recompute
-- **This is expected behavior** - not a bug
+The Growth Assimilation Engine requires scenarios for TGC/mortality models:
+- **Scenarios created at Day 1** with 760-day projection (reaches ~6kg harvest weight)
+- Uses industry-standard cube-root TGC formula (Iwama & Tautz 1981)
+- Stage-specific TGC values: Fry(2.25), Parr(2.75), Adult(3.1)
+- Projects realistic S-curve growth avoiding theoretical weight caps
+- All batches have scenarios immediately (no minimum age requirement)
 
 ### 4. Celery Performance Impact
 
