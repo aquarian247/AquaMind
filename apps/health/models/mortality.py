@@ -6,6 +6,7 @@ This module defines models related to mortality records and lice counts.
 
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 import logging
