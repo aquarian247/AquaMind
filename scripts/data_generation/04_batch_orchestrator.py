@@ -183,7 +183,7 @@ class BatchOrchestrator:
                 # Stagger batches every N days
                 batch_start = start_date + timedelta(days=i * stagger_days)
                 
-                # Calculate duration: run up to TODAY
+                # Calculate duration: run up to TODAY (date-bounded)
                 days_since_start = (today - batch_start).days
                 duration = min(900, days_since_start)
                 

@@ -52,7 +52,7 @@ class EventEngine:
             'Parr': 90,         # 90 days
             'Smolt': 90,        # 90 days
             'Post-Smolt': 90,   # 90 days
-            'Adult': 450        # 450 days (major change from implicit infinite)
+            'Adult': 450        # 450 days (batches typically harvest ~day 450-550 by weight)
         }
         
         # Check if using pre-allocated schedule
@@ -1222,11 +1222,11 @@ class EventEngine:
             initial_pop = sum(a.population_count for a in self.assignments)
             initial_weight = self.assignments[0].avg_weight_g
             
-            # Create scenario for full 900-day lifecycle
+            # Create scenario for realistic harvest timeline (not full lifecycle)
             scenario = Scenario.objects.create(
                 name=f"Baseline Projection - {self.batch.batch_number}",
                 start_date=self.start_date,
-                duration_days=900,  # Full lifecycle projection
+                duration_days=760,  # Project to ~5-6kg (typical harvest weight)
                 initial_count=initial_pop,
                 initial_weight=float(initial_weight),
                 genotype=f"Standard {self.geography_name}",
@@ -1240,7 +1240,7 @@ class EventEngine:
             
             print(f"  ✓ Created baseline scenario: {scenario.name}")
             print(f"    Initial: {initial_pop:,} eggs @ {float(initial_weight):.2f}g")
-            print(f"    Duration: 900 days (full lifecycle projection)")
+            print(f"    Duration: 760 days (projects to ~5-6kg harvest weight)")
             
             # Compute projection data
             try:
