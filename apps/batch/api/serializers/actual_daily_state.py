@@ -36,9 +36,6 @@ class ActualDailyAssignmentStateSerializer(serializers.ModelSerializer):
             'confidence_scores',
             'lifecycle_stage',
             'observed_fcr',
-            'cumulative_feed_kg',
-            'transfers_in_count',
-            'transfers_out_count',
             'created_at',
             'updated_at',
         ]

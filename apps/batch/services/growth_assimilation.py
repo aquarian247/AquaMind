@@ -979,8 +979,13 @@ def recompute_batch_assignments(
         Dict with overall stats
     """
     from apps.batch.models import Batch
+    from django.utils import timezone
     
     batch = Batch.objects.get(id=batch_id)
+    
+    # Set default end_date if not provided
+    if end_date is None:
+        end_date = timezone.now().date()
     
     if assignment_ids:
         assignments = BatchContainerAssignment.objects.filter(

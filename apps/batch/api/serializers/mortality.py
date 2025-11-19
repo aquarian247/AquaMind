@@ -16,9 +16,9 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
     batch_number = serializers.StringRelatedField(source='batch', read_only=True)
     cause_display = serializers.CharField(source='get_cause_display', read_only=True)
     batch_info = serializers.SerializerMethodField()
-    assignment_info = serializers.SerializerMethodField()
-    container_info = serializers.SerializerMethodField()
-    reason_info = serializers.SerializerMethodField()
+    assignment_info = serializers.SerializerMethodField(required=False, allow_null=True)
+    container_info = serializers.SerializerMethodField(required=False, allow_null=True)
+    reason_info = serializers.SerializerMethodField(required=False, allow_null=True)
 
     class Meta:
         model = MortalityEvent
