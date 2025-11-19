@@ -39,6 +39,13 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 │                     Data Layer                              │
 │      PostgreSQL + TimescaleDB (Time-Series Extension)       │
 └─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│               Asynchronous Processing Layer                 │
+│         Redis (Message Broker) + Celery (Task Queue)        │
+│     Background tasks, event-driven recomputation, jobs      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Architecture Principles
@@ -48,6 +55,7 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 3. **RESTful API Design**: All client interactions occur through a well-defined REST API.
 4. **Role-Based Access Control**: Security is enforced at multiple levels based on user roles.
 5. **Time-Series Optimization**: Environmental and monitoring data leverages TimescaleDB for efficient storage and retrieval.
+6. **Event-Driven Processing**: Asynchronous task queue (Celery) enables background processing and real-time recomputation without blocking user requests.
 
 ## Component Architecture
 
@@ -100,6 +108,93 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 - Resource allocation
 - Operational dashboards
 - Planning and forecasting
+
+#### 9. Scenario App (`scenario`)
+- Growth projections and scenario modeling
+- TGC (Thermal Growth Coefficient) models
+- Mortality models and biological constraints
+- What-if analysis for production planning
+
+### Asynchronous Processing Layer
+
+**Redis + Celery** 
+
+AquaMind uses **Redis** as a message broker and **Celery** as an asynchronous task queue to enable background processing without blocking user requests.
+
+**Primary Use Case: Growth Assimilation (Batch Management)**
+
+When operational events occur (growth samples, transfers, treatments, mortality), the system must recompute daily "actual" states for affected batches. This computation:
+- Can take 1-5 seconds for large date ranges
+- Must reflect real measurements (not just projections)
+- Should not block the user who recorded the event
+
+**Architecture Flow:**
+
+```
+Operational Event (e.g., Growth Sample recorded)
+         ↓
+Django Signal Handler (lightweight - just enqueues task)
+         ↓
+Redis Message Broker (stores task with parameters)
+         ↓
+Celery Worker (background process - executes computation)
+         ↓
+Growth Assimilation Engine (TGC-based daily state calculation)
+         ↓
+ActualDailyAssignmentState (TimescaleDB hypertable - stores results)
+```
+
+**Components:**
+
+1. **Redis**
+   - Message broker for Celery task queue
+   - Cache backend for Django (session storage, deduplication)
+   - Deployment: Containerized (Docker) or native service
+   - Port: 6379 (default)
+
+2. **Celery Workers**
+   - Background processes that execute queued tasks
+   - Concurrency: 2-4 workers (dev), 4-8 workers (production)
+   - Tasks: Growth assimilation recomputation, scheduled jobs
+   - Monitoring: `celery -A aquamind inspect active`
+
+3. **Celery Beat** (optional, for scheduled tasks)
+   - Scheduler for periodic tasks (e.g., nightly catch-up jobs)
+   - Alternative: Cron jobs calling Django management commands
+
+**Key Tasks:**
+
+- `recompute_assignment_window`: Recompute daily states for one assignment (triggered by anchors: samples, transfers, treatments)
+- `recompute_batch_window`: Recompute daily states for entire batch (triggered by batch-level events: mortality)
+- Deduplication: Multiple events on same day → single recompute task (via Redis SET with TTL)
+
+**Integration Points:**
+
+| Event | Signal | Task | Window |
+|-------|--------|------|--------|
+| Growth sample recorded | `on_growth_sample_saved` | `recompute_assignment_window` | ±2 days |
+| Transfer with measured weight | `on_transfer_completed` | `recompute_assignment_window` | ±2 days |
+| Treatment with weighing | `on_treatment_with_weighing` | `recompute_assignment_window` | ±2 days |
+| Mortality event | `on_mortality_event` | `recompute_batch_window` | ±1 day |
+
+**Benefits:**
+
+- **Non-blocking**: User requests return immediately; computation happens in background
+- **Durability**: Tasks survive server restarts (stored in Redis)
+- **Retry logic**: Automatic retry on failure (max 3 retries with exponential backoff)
+- **Scalability**: Add more Celery workers to handle load
+- **Transparency**: Full provenance tracking (which data sources were used, confidence scores)
+
+**Nightly Catch-up Job:**
+
+A management command (`recompute_recent_daily_states`) runs nightly to catch any missed events:
+```bash
+# Via cron (production)
+python manage.py recompute_recent_daily_states --days 14
+
+# Via Celery Beat (future)
+CELERY_BEAT_SCHEDULE = {'nightly-catchup': {...}}
+```
 
 ### Data Flow Architecture
 
@@ -286,8 +381,10 @@ AquaMind is designed to be deployed in various environments with different confi
 
 ### Development Environment
 
-- Local Docker containers for development
+- Local Docker containers for development (or native services on M2 Max)
 - PostgreSQL with TimescaleDB extension
+- Redis for caching and Celery message broker
+- Celery workers for background task processing
 - Development-specific settings with DEBUG enabled
 
 ### Testing Environment
@@ -300,8 +397,11 @@ AquaMind is designed to be deployed in various environments with different confi
 
 - Containerized deployment with Docker
 - High-availability PostgreSQL with TimescaleDB
+- Redis clustering for message broker HA
+- Multiple Celery workers for horizontal scaling
 - Load balancing for API endpoints
 - Scheduled backups and monitoring
+- Health checks for all services (Django, Celery, Redis, PostgreSQL)
 
 ## Future Architecture Considerations
 
@@ -309,9 +409,11 @@ AquaMind is designed to be deployed in various environments with different confi
    - Potential to evolve certain components into microservices for better scaling
    - Candidates include: Environmental monitoring, Reporting engine
 
-2. **Real-time Data Processing**
-   - Addition of message queues for real-time data processing
-   - Event-driven architecture for alerts and notifications
+2. **Real-time Data Processing** ✅ **Partially Implemented (Phase 4)**
+   - ✅ Celery + Redis message queue for background processing
+   - ✅ Event-driven architecture for growth assimilation
+   - Future: WebSocket support for real-time dashboard updates
+   - Future: Stream processing for high-frequency sensor data
 
 3. **AI and Machine Learning Integration**
    - Integration points for predictive models

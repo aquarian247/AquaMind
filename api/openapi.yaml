@@ -1144,6 +1144,79 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/batch/batches/{id}/combined-growth-data/:
+    get:
+      operationId: batch-combined-growth-data
+      description: |-
+        Returns all data needed for the Growth Analysis page:
+        - Growth samples (measured anchors)
+        - Scenario projection (planned/modeled)
+        - Actual daily states (assimilated reality)
+        - Container assignments (for drilldown)
+
+        This is the primary endpoint for the frontend Growth Analysis chart.
+      summary: Get combined growth data (samples, scenario, actual states)
+      parameters:
+      - in: query
+        name: assignment_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter to specific container assignment (optional)
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: 'End date for data range (ISO 8601: YYYY-MM-DD). Default: today'
+      - in: query
+        name: granularity
+        schema:
+          type: string
+          enum:
+          - daily
+          - weekly
+        description: 'Data granularity: ''daily'' or ''weekly''. Default: daily'
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: 'Start date for data range (ISO 8601: YYYY-MM-DD). Default: batch
+          start date'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowthAnalysisCombined'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Batch not found or no scenario available
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/batch/batches/{id}/growth_analysis/:
     get:
       operationId: api_v1_batch_batches_growth_analysis_retrieve
@@ -1226,6 +1299,131 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/batches/{id}/pin-scenario/:
+    post:
+      operationId: batch-pin-scenario
+      description: |-
+        Associate a specific scenario with this batch as the reference for
+        growth assimilation calculations. Only one scenario can be pinned at a time.
+      summary: Pin a scenario to a batch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinScenario'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PinScenario'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PinScenario'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Scenario pinned successfully
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid scenario ID or validation error
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Batch or scenario not found
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/batches/{id}/recompute-daily-states/:
+    post:
+      operationId: batch-recompute-daily-states
+      description: |-
+        Trigger manual recomputation of ActualDailyAssignmentState for a date range.
+        Enqueues Celery task(s) to recompute daily states.
+
+        **Requires**: Admin or Manager role with can_recompute_daily_state permission.
+      summary: Manually trigger recomputation of daily states (Admin)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualRecompute'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ManualRecompute'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManualRecompute'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Recompute task(s) enqueued successfully (synchronous
+                  in tests)
+          description: ''
+        '202':
+          content:
+            application/json:
+              schema:
+                description: Recompute task(s) enqueued successfully (async in production)
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid date range or parameters
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                description: Permission denied
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
         '500':
           description: Internal Server Error
   /api/v1/batch/batches/compare/:
@@ -29854,6 +30052,13 @@ components:
           nullable: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        pinned_scenario:
+          type: integer
+          nullable: true
+          description: Pinned scenario used for daily actual state calculations. Defaults
+            to baseline scenario.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       required:
       - batch_number
       - created_at
@@ -33663,6 +33868,74 @@ components:
       - history_user
       - name
       - updated_at
+    GrowthAnalysisCombined:
+      type: object
+      description: |-
+        Combined response for Growth Analysis page.
+
+        Returns all data needed to render the Growth Analysis chart:
+        - Batch info
+        - Growth samples (measured anchors)
+        - Scenario projection (planned/modeled)
+        - Actual daily states (assimilated reality)
+        - Container assignments (for drilldown)
+
+        This is a read-only response serializer (not bound to a model).
+      properties:
+        batch_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+        species:
+          type: string
+        lifecycle_stage:
+          type: string
+        start_date:
+          type: string
+          format: date
+        status:
+          type: string
+        scenario:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        growth_samples:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        scenario_projection:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        actual_daily_states:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        container_assignments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        date_range:
+          type: object
+          additionalProperties: {}
+      required:
+      - actual_daily_states
+      - batch_id
+      - batch_number
+      - container_assignments
+      - date_range
+      - growth_samples
+      - lifecycle_stage
+      - scenario_projection
+      - species
+      - start_date
+      - status
     GrowthSample:
       type: object
       description: Serializer for GrowthSample model with calculated fields.
@@ -35239,6 +35512,12 @@ components:
           description: The batch for which lice were counted.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         container:
           type: integer
           nullable: true
@@ -35441,6 +35720,12 @@ components:
           type: integer
           nullable: true
           description: The batch being counted.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container:
@@ -35743,6 +36028,36 @@ components:
       - scheduled_date
       - task_type
       - updated_at
+    ManualRecompute:
+      type: object
+      description: |-
+        Request serializer for manual recompute trigger (admin).
+
+        POST /api/v1/batch/batches/{id}/recompute-daily-states/
+        Body: {
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+            "assignment_ids": [1, 2, 3]  // Optional
+        }
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        assignment_ids:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+          nullable: true
+          description: 'Optional: Specific assignments to recompute. If not provided,
+            all assignments recomputed.'
+      required:
+      - start_date
     MortalityEvent:
       type: object
       description: Serializer for the MortalityEvent model.
@@ -35763,6 +36078,12 @@ components:
           additionalProperties: {}
           nullable: true
           description: Get basic batch information.
+          readOnly: true
+        assignment_info:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: Get basic assignment information.
           readOnly: true
         container_info:
           type: object
@@ -35820,7 +36141,14 @@ components:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
       required:
+      - assignment_info
       - batch
       - batch_info
       - batch_number
@@ -35907,6 +36235,12 @@ components:
         batch:
           type: integer
           nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       required:
@@ -36141,6 +36475,12 @@ components:
           type: integer
           nullable: true
           description: The batch experiencing mortality.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         container:
@@ -41374,6 +41714,12 @@ components:
           description: The batch for which lice were counted.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where lice count was recorded.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         container:
           type: integer
           nullable: true
@@ -41620,6 +41966,12 @@ components:
           nullable: true
           description: Get basic batch information.
           readOnly: true
+        assignment_info:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: Get basic assignment information.
+          readOnly: true
         container_info:
           type: object
           additionalProperties: {}
@@ -41674,6 +42026,12 @@ components:
           readOnly: true
         batch:
           type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        assignment:
+          type: integer
+          nullable: true
+          description: Container-specific assignment where mortality occurred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
     PatchedMortalityModel:
@@ -42419,6 +42777,52 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Oxygen level during transfer (mg/L)
+        measured_avg_weight_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Average Weight (g)
+          description: Measured average weight during transfer (grams). Used as anchor
+            for daily state calculations.
+        measured_std_dev_weight_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Std Dev Weight (g)
+          description: Standard deviation of measured weights (grams).
+        measured_sample_size:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Number of fish sampled for weight measurement.
+        measured_avg_length_cm:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Average Length (cm)
+          description: Measured average length during transfer (cm).
+        measured_notes:
+          type: string
+          title: Measurement Notes
+          description: Notes about the weight measurements taken during transfer.
+        selection_method:
+          enum:
+          - AVERAGE
+          - LARGEST
+          - SMALLEST
+          - ''
+          type: string
+          x-spec-enum-id: 7cf84296f44092d5
+          description: |-
+            Method used to select fish for transfer. Affects weight calculation bias.
+
+            * `AVERAGE` - Average - Representative Sample
+            * `LARGEST` - Largest - Selection Bias Towards Larger Fish
+            * `SMALLEST` - Smallest - Selection Bias Towards Smaller Fish
         execution_duration_minutes:
           type: integer
           maximum: 2147483647
@@ -42854,6 +43258,20 @@ components:
       - day_length_hours
       - id
       - updated_at
+    PinScenario:
+      type: object
+      description: |-
+        Request serializer for pinning a scenario to a batch.
+
+        POST /api/v1/batch/batches/{id}/pin-scenario/
+        Body: {"scenario_id": 123}
+      properties:
+        scenario_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - scenario_id
     ProductGradeSummary:
       type: object
       description: Compact representation of a harvest product grade.
@@ -43828,6 +44246,52 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Oxygen level during transfer (mg/L)
+        measured_avg_weight_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Average Weight (g)
+          description: Measured average weight during transfer (grams). Used as anchor
+            for daily state calculations.
+        measured_std_dev_weight_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Std Dev Weight (g)
+          description: Standard deviation of measured weights (grams).
+        measured_sample_size:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Number of fish sampled for weight measurement.
+        measured_avg_length_cm:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Measured Average Length (cm)
+          description: Measured average length during transfer (cm).
+        measured_notes:
+          type: string
+          title: Measurement Notes
+          description: Notes about the weight measurements taken during transfer.
+        selection_method:
+          enum:
+          - AVERAGE
+          - LARGEST
+          - SMALLEST
+          - ''
+          type: string
+          x-spec-enum-id: 7cf84296f44092d5
+          description: |-
+            Method used to select fish for transfer. Affects weight calculation bias.
+
+            * `AVERAGE` - Average - Representative Sample
+            * `LARGEST` - Largest - Selection Bias Towards Larger Fish
+            * `SMALLEST` - Smallest - Selection Bias Towards Smaller Fish
         execution_duration_minutes:
           type: integer
           maximum: 2147483647
@@ -44260,6 +44724,10 @@ components:
             * `successful` - Successful
             * `partial` - Partially Successful
             * `unsuccessful` - Unsuccessful
+        includes_weighing:
+          type: boolean
+          description: Whether this treatment included fish weighing. Used as anchor
+            for daily state calculations.
         batch:
           type: integer
           nullable: true
@@ -44288,6 +44756,18 @@ components:
           type: integer
           nullable: true
           description: Specific vaccination type, if applicable.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        sampling_event:
+          type: integer
+          nullable: true
+          description: Linked health sampling event, if weights were recorded.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        journal_entry:
+          type: integer
+          nullable: true
+          description: Linked journal entry for traceability.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       required:

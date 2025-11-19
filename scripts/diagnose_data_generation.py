@@ -165,6 +165,7 @@ def create_test_samples():
         # Create a test mortality event
         mortality = MortalityEvent.objects.create(
             batch=batch,
+            assignment=assignment,
             event_date=today,
             count=10,
             biomass_kg=Decimal('1.0'),

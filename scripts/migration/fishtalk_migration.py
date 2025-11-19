@@ -681,13 +681,31 @@ class FishTalkMigration:
                 logger.warning(f"Skipping mortality {mort_id}: missing batch")
                 continue
             
-            mortality = MortalityEvent.objects.create(
+            # Get active assignment for the batch
+            active_assignment = BatchContainerAssignment.objects.filter(
                 batch_id=batch_id,
-                event_date=date,
-                count=count or 0,
-                cause=cause or 'Unknown',
-                description=description or ''
-            )
+                is_active=True
+            ).first()
+            
+            if active_assignment:
+                mortality = MortalityEvent.objects.create(
+                    batch_id=batch_id,
+                    assignment=active_assignment,
+                    event_date=date,
+                    count=count or 0,
+                    cause=cause or 'Unknown',
+                    description=description or ''
+                )
+            else:
+                # Legacy support - create without assignment if no active assignment
+                mortality = MortalityEvent.objects.create(
+                    batch_id=batch_id,
+                    assignment=None,
+                    event_date=date,
+                    count=count or 0,
+                    cause=cause or 'Unknown',
+                    description=description or ''
+                )
             logger.debug(f"Created mortality event for batch {batch_id}")
         
         # Load Treatments

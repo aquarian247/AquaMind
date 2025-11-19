@@ -36,6 +36,7 @@ class MortalityEventModelTests(TestCase):
         """Test creating a mortality event."""
         event = MortalityEvent.objects.create(
             batch=self.batch,
+            assignment=self.assignment,  # Added assignment FK
             event_date=date.today(),
             count=100,  # Updated from mortality_count to count
             biomass_kg=Decimal("1.0"),  # Added required field
@@ -43,15 +44,19 @@ class MortalityEventModelTests(TestCase):
             description="Test mortality event"  # Updated from notes to description
         )
         self.assertEqual(event.batch, self.batch)
+        self.assertEqual(event.assignment, self.assignment)
         self.assertEqual(event.count, 100)
         # Update the string representation test to match the current implementation
-        self.assertEqual(str(event), f"Mortality in BATCH001 on {date.today()}: 100 fish (Disease)")
+        container_name = self.assignment.container.name
+        expected_str = f"Mortality in BATCH001 (Container {container_name}) on {date.today()}: 100 fish (Disease)"
+        self.assertEqual(str(event), expected_str)
 
     def test_mortality_event_validation(self):
         """Test validation for mortality event."""
         # Create a valid mortality event to verify our test setup works
         event = MortalityEvent(
             batch=self.batch,
+            assignment=self.assignment,  # Added assignment FK
             event_date=date.today(),
             count=100,
             biomass_kg=Decimal("1.0"),

@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     depends_on:
       - timescale-db
+      - redis
     environment:
       - DATABASE_URL=postgresql://postgres:adminpass1234@timescale-db:5432/aquamind_db
       - DATABASE_HOST=timescale-db
@@ -22,6 +23,8 @@ services:
       - DJANGO_SECRET_KEY=dev-secret-key-for-local-development-only-replace-in-production
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
       - CORS_ALLOWED_ORIGINS=http://frontend:80,http://localhost:3000,http://127.0.0.1:3000
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     networks:
       - aquamind-net
     command: python manage.py runserver 0.0.0.0:8000
@@ -54,9 +57,47 @@ services:
     networks:
       - aquamind-net
 
+  # Redis for caching and Celery broker (Issue #112 Phase 4)
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aquamind-net
+
+  # Celery worker for background tasks (Issue #112 Phase 4)
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: celery -A aquamind worker -l info --concurrency=2
+    volumes:
+      - .:/workspaces/AquaMind
+    depends_on:
+      - timescale-db
+      - redis
+    environment:
+      - DB_HOST=timescale-db
+      - DB_NAME=aquamind_db
+      - DB_USER=postgres
+      - DB_PASSWORD=adminpass1234
+      - DB_PORT=5432
+      - DJANGO_SETTINGS_MODULE=aquamind.settings
+      - DJANGO_DEBUG=true
+      - DJANGO_SECRET_KEY=dev-secret-key-for-local-development-only-replace-in-production
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - PYTHONUNBUFFERED=1
+    networks:
+      - aquamind-net
+
 networks:
   aquamind-net:
     driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:

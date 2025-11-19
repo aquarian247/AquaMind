@@ -395,15 +395,18 @@ def simulate_batch_lifecycle(batch, days=900):
             try:
                 mortality_biomass = (daily_mortality * current_weight) / 1000  # kg
                 
-                # Create mortality event
-                MortalityEvent.objects.create(
-                    batch=batch,
-                    event_date=current_date,
-                    count=daily_mortality,
-                    biomass_kg=mortality_biomass,
-                    cause=get_mortality_cause(),
-                    description=f"Simulated mortality event for {batch.batch_number}"
-                )
+                # Create mortality event (requires assignment - skip if none available)
+                active_assignment = batch.batch_assignments.filter(is_active=True).first()
+                if active_assignment:
+                    MortalityEvent.objects.create(
+                        batch=batch,
+                        assignment=active_assignment,
+                        event_date=current_date,
+                        count=daily_mortality,
+                        biomass_kg=mortality_biomass,
+                        cause=get_mortality_cause(),
+                        description=f"Simulated mortality event for {batch.batch_number}"
+                    )
                 
                 # Update population and assignment
                 current_population -= daily_mortality

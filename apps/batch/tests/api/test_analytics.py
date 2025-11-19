@@ -203,6 +203,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
         # Create mortality events
         self.mortality1 = MortalityEvent.objects.create(
             batch=self.batch,
+            assignment=self.assignment1,
             event_date=date.today() - timedelta(days=25),
             count=50,
             cause="DISEASE",
@@ -212,6 +213,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
         
         self.mortality2 = MortalityEvent.objects.create(
             batch=self.batch,
+            assignment=self.assignment1,
             event_date=date.today() - timedelta(days=15),
             count=30,
             cause="HANDLING",
@@ -221,6 +223,7 @@ class BatchAnalyticsTestCase(BaseAPITestCase):
         
         self.mortality3 = MortalityEvent.objects.create(
             batch=self.batch2,
+            assignment=self.assignment2,
             event_date=date.today() - timedelta(days=15),
             count=75,
             cause="DISEASE",

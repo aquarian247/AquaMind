@@ -1,0 +1,632 @@
+metadata:
+  generated_date: '2025-11-19'
+  total_batches: 20
+  batches_per_geography: 10
+  target_saturation: 0.87
+  stagger_days: 30
+batches:
+- batch_id: FAR-2025-001
+  start_date: '2025-06-27'
+  eggs: 3762082
+  duration: 145
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 145
+  sea: null
+- batch_id: SCO-2025-001
+  start_date: '2025-07-02'
+  eggs: 3249053
+  duration: 140
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 140
+  sea: null
+- batch_id: FAR-2025-002
+  start_date: '2025-07-07'
+  eggs: 3145013
+  duration: 135
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 135
+  sea: null
+- batch_id: SCO-2025-002
+  start_date: '2025-07-12'
+  eggs: 3398118
+  duration: 130
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 130
+  sea: null
+- batch_id: FAR-2025-003
+  start_date: '2025-07-17'
+  eggs: 3253053
+  duration: 125
+  geography: Faroe Islands
+  station: FI-FW-03
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-03-Hall-A
+      containers:
+      - FI-FW-03-A-C01
+      - FI-FW-03-A-C02
+      - FI-FW-03-A-C03
+      - FI-FW-03-A-C04
+      - FI-FW-03-A-C05
+      - FI-FW-03-A-C06
+      - FI-FW-03-A-C07
+      - FI-FW-03-A-C08
+      - FI-FW-03-A-C09
+      - FI-FW-03-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-03-Hall-B
+      containers:
+      - FI-FW-03-B-C01
+      - FI-FW-03-B-C02
+      - FI-FW-03-B-C03
+      - FI-FW-03-B-C04
+      - FI-FW-03-B-C05
+      - FI-FW-03-B-C06
+      - FI-FW-03-B-C07
+      - FI-FW-03-B-C08
+      - FI-FW-03-B-C09
+      - FI-FW-03-B-C10
+      start_day: 90
+      end_day: 125
+  sea: null
+- batch_id: SCO-2025-003
+  start_date: '2025-07-22'
+  eggs: 3379993
+  duration: 120
+  geography: Scotland
+  station: S-FW-03
+  freshwater:
+    egg_alevin:
+      hall: S-FW-03-Hall-A
+      containers:
+      - S-FW-03-A-C01
+      - S-FW-03-A-C02
+      - S-FW-03-A-C03
+      - S-FW-03-A-C04
+      - S-FW-03-A-C05
+      - S-FW-03-A-C06
+      - S-FW-03-A-C07
+      - S-FW-03-A-C08
+      - S-FW-03-A-C09
+      - S-FW-03-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-03-Hall-B
+      containers:
+      - S-FW-03-B-C01
+      - S-FW-03-B-C02
+      - S-FW-03-B-C03
+      - S-FW-03-B-C04
+      - S-FW-03-B-C05
+      - S-FW-03-B-C06
+      - S-FW-03-B-C07
+      - S-FW-03-B-C08
+      - S-FW-03-B-C09
+      - S-FW-03-B-C10
+      start_day: 90
+      end_day: 120
+  sea: null
+- batch_id: FAR-2025-004
+  start_date: '2025-07-27'
+  eggs: 3700912
+  duration: 115
+  geography: Faroe Islands
+  station: FI-FW-04
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-04-Hall-A
+      containers:
+      - FI-FW-04-A-C01
+      - FI-FW-04-A-C02
+      - FI-FW-04-A-C03
+      - FI-FW-04-A-C04
+      - FI-FW-04-A-C05
+      - FI-FW-04-A-C06
+      - FI-FW-04-A-C07
+      - FI-FW-04-A-C08
+      - FI-FW-04-A-C09
+      - FI-FW-04-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-04-Hall-B
+      containers:
+      - FI-FW-04-B-C01
+      - FI-FW-04-B-C02
+      - FI-FW-04-B-C03
+      - FI-FW-04-B-C04
+      - FI-FW-04-B-C05
+      - FI-FW-04-B-C06
+      - FI-FW-04-B-C07
+      - FI-FW-04-B-C08
+      - FI-FW-04-B-C09
+      - FI-FW-04-B-C10
+      start_day: 90
+      end_day: 115
+  sea: null
+- batch_id: SCO-2025-004
+  start_date: '2025-08-01'
+  eggs: 3366243
+  duration: 110
+  geography: Scotland
+  station: S-FW-04
+  freshwater:
+    egg_alevin:
+      hall: S-FW-04-Hall-A
+      containers:
+      - S-FW-04-A-C01
+      - S-FW-04-A-C02
+      - S-FW-04-A-C03
+      - S-FW-04-A-C04
+      - S-FW-04-A-C05
+      - S-FW-04-A-C06
+      - S-FW-04-A-C07
+      - S-FW-04-A-C08
+      - S-FW-04-A-C09
+      - S-FW-04-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-04-Hall-B
+      containers:
+      - S-FW-04-B-C01
+      - S-FW-04-B-C02
+      - S-FW-04-B-C03
+      - S-FW-04-B-C04
+      - S-FW-04-B-C05
+      - S-FW-04-B-C06
+      - S-FW-04-B-C07
+      - S-FW-04-B-C08
+      - S-FW-04-B-C09
+      - S-FW-04-B-C10
+      start_day: 90
+      end_day: 110
+  sea: null
+- batch_id: FAR-2025-005
+  start_date: '2025-08-06'
+  eggs: 3482064
+  duration: 105
+  geography: Faroe Islands
+  station: FI-FW-05
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-05-Hall-A
+      containers:
+      - FI-FW-05-A-C01
+      - FI-FW-05-A-C02
+      - FI-FW-05-A-C03
+      - FI-FW-05-A-C04
+      - FI-FW-05-A-C05
+      - FI-FW-05-A-C06
+      - FI-FW-05-A-C07
+      - FI-FW-05-A-C08
+      - FI-FW-05-A-C09
+      - FI-FW-05-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-05-Hall-B
+      containers:
+      - FI-FW-05-B-C01
+      - FI-FW-05-B-C02
+      - FI-FW-05-B-C03
+      - FI-FW-05-B-C04
+      - FI-FW-05-B-C05
+      - FI-FW-05-B-C06
+      - FI-FW-05-B-C07
+      - FI-FW-05-B-C08
+      - FI-FW-05-B-C09
+      - FI-FW-05-B-C10
+      start_day: 90
+      end_day: 105
+  sea: null
+- batch_id: SCO-2025-005
+  start_date: '2025-08-11'
+  eggs: 3455268
+  duration: 100
+  geography: Scotland
+  station: S-FW-05
+  freshwater:
+    egg_alevin:
+      hall: S-FW-05-Hall-A
+      containers:
+      - S-FW-05-A-C01
+      - S-FW-05-A-C02
+      - S-FW-05-A-C03
+      - S-FW-05-A-C04
+      - S-FW-05-A-C05
+      - S-FW-05-A-C06
+      - S-FW-05-A-C07
+      - S-FW-05-A-C08
+      - S-FW-05-A-C09
+      - S-FW-05-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-05-Hall-B
+      containers:
+      - S-FW-05-B-C01
+      - S-FW-05-B-C02
+      - S-FW-05-B-C03
+      - S-FW-05-B-C04
+      - S-FW-05-B-C05
+      - S-FW-05-B-C06
+      - S-FW-05-B-C07
+      - S-FW-05-B-C08
+      - S-FW-05-B-C09
+      - S-FW-05-B-C10
+      start_day: 90
+      end_day: 100
+  sea: null
+- batch_id: FAR-2025-006
+  start_date: '2025-08-16'
+  eggs: 3517515
+  duration: 95
+  geography: Faroe Islands
+  station: FI-FW-06
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-06-Hall-A
+      containers:
+      - FI-FW-06-A-C01
+      - FI-FW-06-A-C02
+      - FI-FW-06-A-C03
+      - FI-FW-06-A-C04
+      - FI-FW-06-A-C05
+      - FI-FW-06-A-C06
+      - FI-FW-06-A-C07
+      - FI-FW-06-A-C08
+      - FI-FW-06-A-C09
+      - FI-FW-06-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-06-Hall-B
+      containers:
+      - FI-FW-06-B-C01
+      - FI-FW-06-B-C02
+      - FI-FW-06-B-C03
+      - FI-FW-06-B-C04
+      - FI-FW-06-B-C05
+      - FI-FW-06-B-C06
+      - FI-FW-06-B-C07
+      - FI-FW-06-B-C08
+      - FI-FW-06-B-C09
+      - FI-FW-06-B-C10
+      start_day: 90
+      end_day: 95
+  sea: null
+- batch_id: SCO-2025-006
+  start_date: '2025-08-21'
+  eggs: 3430458
+  duration: 90
+  geography: Scotland
+  station: S-FW-06
+  freshwater:
+    egg_alevin:
+      hall: S-FW-06-Hall-A
+      containers:
+      - S-FW-06-A-C01
+      - S-FW-06-A-C02
+      - S-FW-06-A-C03
+      - S-FW-06-A-C04
+      - S-FW-06-A-C05
+      - S-FW-06-A-C06
+      - S-FW-06-A-C07
+      - S-FW-06-A-C08
+      - S-FW-06-A-C09
+      - S-FW-06-A-C10
+      start_day: 0
+      end_day: 90
+  sea: null
+- batch_id: FAR-2025-007
+  start_date: '2025-08-26'
+  eggs: 3108028
+  duration: 85
+  geography: Faroe Islands
+  station: FI-FW-07
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-07-Hall-A
+      containers:
+      - FI-FW-07-A-C01
+      - FI-FW-07-A-C02
+      - FI-FW-07-A-C03
+      - FI-FW-07-A-C04
+      - FI-FW-07-A-C05
+      - FI-FW-07-A-C06
+      - FI-FW-07-A-C07
+      - FI-FW-07-A-C08
+      - FI-FW-07-A-C09
+      - FI-FW-07-A-C10
+      start_day: 0
+      end_day: 85
+  sea: null
+- batch_id: SCO-2025-007
+  start_date: '2025-08-31'
+  eggs: 3573958
+  duration: 80
+  geography: Scotland
+  station: S-FW-07
+  freshwater:
+    egg_alevin:
+      hall: S-FW-07-Hall-A
+      containers:
+      - S-FW-07-A-C01
+      - S-FW-07-A-C02
+      - S-FW-07-A-C03
+      - S-FW-07-A-C04
+      - S-FW-07-A-C05
+      - S-FW-07-A-C06
+      - S-FW-07-A-C07
+      - S-FW-07-A-C08
+      - S-FW-07-A-C09
+      - S-FW-07-A-C10
+      start_day: 0
+      end_day: 80
+  sea: null
+- batch_id: FAR-2025-008
+  start_date: '2025-09-05'
+  eggs: 3662587
+  duration: 75
+  geography: Faroe Islands
+  station: FI-FW-08
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-08-Hall-A
+      containers:
+      - FI-FW-08-A-C01
+      - FI-FW-08-A-C02
+      - FI-FW-08-A-C03
+      - FI-FW-08-A-C04
+      - FI-FW-08-A-C05
+      - FI-FW-08-A-C06
+      - FI-FW-08-A-C07
+      - FI-FW-08-A-C08
+      - FI-FW-08-A-C09
+      - FI-FW-08-A-C10
+      start_day: 0
+      end_day: 75
+  sea: null
+- batch_id: SCO-2025-008
+  start_date: '2025-09-10'
+  eggs: 3624492
+  duration: 70
+  geography: Scotland
+  station: S-FW-08
+  freshwater:
+    egg_alevin:
+      hall: S-FW-08-Hall-A
+      containers:
+      - S-FW-08-A-C01
+      - S-FW-08-A-C02
+      - S-FW-08-A-C03
+      - S-FW-08-A-C04
+      - S-FW-08-A-C05
+      - S-FW-08-A-C06
+      - S-FW-08-A-C07
+      - S-FW-08-A-C08
+      - S-FW-08-A-C09
+      - S-FW-08-A-C10
+      start_day: 0
+      end_day: 70
+  sea: null
+- batch_id: FAR-2025-009
+  start_date: '2025-09-15'
+  eggs: 3720316
+  duration: 65
+  geography: Faroe Islands
+  station: FI-FW-09
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-09-Hall-A
+      containers:
+      - FI-FW-09-A-C01
+      - FI-FW-09-A-C02
+      - FI-FW-09-A-C03
+      - FI-FW-09-A-C04
+      - FI-FW-09-A-C05
+      - FI-FW-09-A-C06
+      - FI-FW-09-A-C07
+      - FI-FW-09-A-C08
+      - FI-FW-09-A-C09
+      - FI-FW-09-A-C10
+      start_day: 0
+      end_day: 65
+  sea: null
+- batch_id: SCO-2025-009
+  start_date: '2025-09-20'
+  eggs: 3174563
+  duration: 60
+  geography: Scotland
+  station: S-FW-09
+  freshwater:
+    egg_alevin:
+      hall: S-FW-09-Hall-A
+      containers:
+      - S-FW-09-A-C01
+      - S-FW-09-A-C02
+      - S-FW-09-A-C03
+      - S-FW-09-A-C04
+      - S-FW-09-A-C05
+      - S-FW-09-A-C06
+      - S-FW-09-A-C07
+      - S-FW-09-A-C08
+      - S-FW-09-A-C09
+      - S-FW-09-A-C10
+      start_day: 0
+      end_day: 60
+  sea: null
+- batch_id: FAR-2025-010
+  start_date: '2025-09-25'
+  eggs: 3248809
+  duration: 55
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 55
+  sea: null
+- batch_id: SCO-2025-010
+  start_date: '2025-09-30'
+  eggs: 3047653
+  duration: 50
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 50
+  sea: null

@@ -56,6 +56,10 @@ services:
       # Cache Configuration
       - REDIS_URL=redis://redis:6379/1
 
+      # Celery Configuration (Issue #112 Phase 4)
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
       # Environment Identification
       - ENVIRONMENT=test
       - DEPLOYMENT_ENV=test
@@ -144,6 +148,122 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+    # Logging Configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ========================================
+  # CELERY WORKER - TEST ENVIRONMENT (Issue #112 Phase 4)
+  # ========================================
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aquamind-celery-worker-test
+    restart: unless-stopped
+    command: celery -A aquamind worker -l info --concurrency=4
+    volumes:
+      - .:/workspaces/AquaMind
+    depends_on:
+      - timescale-db
+      - redis
+    environment:
+      # Django Configuration
+      - DJANGO_SETTINGS_MODULE=aquamind.settings_test
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-false}
+
+      # Database Configuration
+      - DB_ENGINE=${DB_ENGINE:-django.db.backends.postgresql}
+      - DB_NAME=${DB_NAME:-aquamind_test_db}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=timescale-db
+      - DB_PORT=5432
+      - TIMESCALE_ENABLED=${TIMESCALE_ENABLED:-true}
+
+      # Celery Configuration
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      # Cache Configuration
+      - REDIS_URL=redis://redis:6379/1
+
+      # Python Environment
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+      # Environment Identification
+      - ENVIRONMENT=test
+      - DEPLOYMENT_ENV=test
+
+    networks:
+      - aquamind-test-net
+
+    # Health Check (verify worker is responsive)
+    healthcheck:
+      test: [ "CMD-SHELL", "celery -A aquamind inspect ping -d celery@$$HOSTNAME" ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Logging Configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # ========================================
+  # CELERY BEAT - TEST ENVIRONMENT (Future: Scheduled Tasks)
+  # ========================================
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aquamind-celery-beat-test
+    restart: unless-stopped
+    command: celery -A aquamind beat -l info
+    volumes:
+      - .:/workspaces/AquaMind
+      - celerybeat_schedule_test:/workspaces/AquaMind/celerybeat-schedule
+    depends_on:
+      - timescale-db
+      - redis
+      - celery-worker
+    environment:
+      # Django Configuration
+      - DJANGO_SETTINGS_MODULE=aquamind.settings_test
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-false}
+
+      # Database Configuration (read-only for beat)
+      - DB_ENGINE=${DB_ENGINE:-django.db.backends.postgresql}
+      - DB_NAME=${DB_NAME:-aquamind_test_db}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=timescale-db
+      - DB_PORT=5432
+
+      # Celery Configuration
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      # Python Environment
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+      # Environment Identification
+      - ENVIRONMENT=test
+      - DEPLOYMENT_ENV=test
+
+    networks:
+      - aquamind-test-net
 
     # Logging Configuration
     logging:
@@ -243,6 +363,8 @@ volumes:
   nginx_logs_test:
     driver: local
   postgres_logs_test:
+    driver: local
+  celerybeat_schedule_test:
     driver: local
 
 # ========================================

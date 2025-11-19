@@ -16,8 +16,9 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
     batch_number = serializers.StringRelatedField(source='batch', read_only=True)
     cause_display = serializers.CharField(source='get_cause_display', read_only=True)
     batch_info = serializers.SerializerMethodField()
-    container_info = serializers.SerializerMethodField()
-    reason_info = serializers.SerializerMethodField()
+    assignment_info = serializers.SerializerMethodField(required=False, allow_null=True)
+    container_info = serializers.SerializerMethodField(required=False, allow_null=True)
+    reason_info = serializers.SerializerMethodField(required=False, allow_null=True)
 
     class Meta:
         model = MortalityEvent
@@ -30,6 +31,17 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
             'id': 'id',
             'batch_number': 'batch_number'
         })
+    
+    def get_assignment_info(self, obj) -> Optional[Dict[str, Any]]:
+        """Get basic assignment information."""
+        if obj.assignment:
+            return {
+                'id': obj.assignment.id,
+                'container_id': obj.assignment.container_id,
+                'container_name': obj.assignment.container.name,
+                'lifecycle_stage': obj.assignment.lifecycle_stage.name if obj.assignment.lifecycle_stage else None
+            }
+        return None
 
     def get_container_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic container information."""
@@ -47,30 +59,53 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
 
     def validate(self, data):
         """
-        Validate that mortality count doesn't exceed batch population and
-        that mortality biomass doesn't exceed batch biomass.
+        Validate that mortality count doesn't exceed batch/assignment population
+        and that assignment belongs to batch if both are provided.
         """
         errors = {}
         
-        # Get the batch from data or database
+        # Validate assignment belongs to batch if both provided
+        assignment = data.get('assignment')
         batch = data.get('batch')
-
-        if batch:
-            # Check if mortality count doesn't exceed batch population
-            if 'count' in data:
+        
+        if assignment and batch:
+            if assignment.batch_id != batch.id:
+                errors['assignment'] = (
+                    f"Assignment {assignment.id} does not belong to "
+                    f"batch {batch.batch_number}."
+                )
+        
+        # Check if mortality count doesn't exceed assignment or batch population
+        if 'count' in data:
+            if assignment:
+                # Validate against assignment population
+                if data['count'] > assignment.population_count:
+                    errors['count'] = (
+                        f"Mortality count ({data['count']}) exceeds assignment "
+                        f"population ({assignment.population_count})."
+                    )
+            elif batch:
+                # Validate against batch population (legacy support)
                 if data['count'] > batch.calculated_population_count:
                     errors['count'] = (
                         f"Mortality count ({data['count']}) exceeds batch "
                         f"population ({batch.calculated_population_count})."
                     )
             
-            # Check if mortality biomass doesn't exceed batch biomass
+            # Check if mortality biomass doesn't exceed assignment or batch biomass
             if 'biomass_kg' in data:
-                if data['biomass_kg'] > batch.calculated_biomass_kg:
-                    errors['biomass_kg'] = (
-                        f"Mortality biomass ({data['biomass_kg']} kg) exceeds batch "
-                        f"biomass ({batch.calculated_biomass_kg} kg)."
-                    )
+                if assignment:
+                    if data['biomass_kg'] > assignment.biomass_kg:
+                        errors['biomass_kg'] = (
+                            f"Mortality biomass ({data['biomass_kg']} kg) exceeds assignment "
+                            f"biomass ({assignment.biomass_kg} kg)."
+                        )
+                elif batch:
+                    if data['biomass_kg'] > batch.calculated_biomass_kg:
+                        errors['biomass_kg'] = (
+                            f"Mortality biomass ({data['biomass_kg']} kg) exceeds batch "
+                            f"biomass ({batch.calculated_biomass_kg} kg)."
+                        )
         
         if errors:
             raise serializers.ValidationError(errors)

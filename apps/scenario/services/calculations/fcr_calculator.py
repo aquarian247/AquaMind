@@ -312,10 +312,14 @@ class FCRCalculator:
             errors.append("No lifecycle stages defined for FCR model")
         
         for stage_fcr in self.model.stages.all():
-            if stage_fcr.fcr_value <= 0:
-                errors.append(f"FCR value must be positive for stage {stage_fcr.stage}")
+            # Allow FCR=0 for Egg&Alevin stage (no external feeding, yolk sac)
+            stage_name = stage_fcr.stage.name if hasattr(stage_fcr.stage, 'name') else str(stage_fcr.stage)
             
-            if stage_fcr.fcr_value < 0.5:
+            if stage_fcr.fcr_value < 0:
+                errors.append(f"FCR value must be non-negative for stage {stage_fcr.stage}")
+            elif stage_fcr.fcr_value == 0 and 'Egg' not in stage_name and 'Alevin' not in stage_name:
+                errors.append(f"FCR value must be positive for stage {stage_fcr.stage}")
+            elif stage_fcr.fcr_value > 0 and stage_fcr.fcr_value < 0.5:
                 errors.append(f"FCR value unusually low (<0.5) for stage {stage_fcr.stage}")
             
             if stage_fcr.fcr_value > 3.0:

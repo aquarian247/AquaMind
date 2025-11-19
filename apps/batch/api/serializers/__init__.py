@@ -40,6 +40,13 @@ from apps.batch.api.serializers.mortality import (
     MortalityEventSerializer
 )
 from apps.batch.api.serializers.growth import GrowthSampleSerializer
+from apps.batch.api.serializers.actual_daily_state import (
+    ActualDailyAssignmentStateSerializer,
+    ActualDailyAssignmentStateListSerializer,
+    GrowthAnalysisCombinedSerializer,
+    PinScenarioSerializer,
+    ManualRecomputeSerializer,
+)
 from apps.batch.api.serializers.utils import (
     DecimalFieldsMixin, NestedModelMixin,
     format_decimal, calculate_biomass_kg, validate_date_order
@@ -71,6 +78,11 @@ __all__ = [
     'TransferActionRollbackSerializer',
     'MortalityEventSerializer',
     'GrowthSampleSerializer',
+    'ActualDailyAssignmentStateSerializer',
+    'ActualDailyAssignmentStateListSerializer',
+    'GrowthAnalysisCombinedSerializer',
+    'PinScenarioSerializer',
+    'ManualRecomputeSerializer',
 
     # Utility functions and mixins
     'DecimalFieldsMixin',

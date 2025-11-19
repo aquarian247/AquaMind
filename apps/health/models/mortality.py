@@ -6,6 +6,7 @@ This module defines models related to mortality records and lice counts.
 
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 import logging
@@ -32,10 +33,22 @@ class MortalityReason(models.Model):
 
 
 class MortalityRecord(models.Model):
-    """Model for recording mortality events."""
+    """Model for recording mortality events.
+    
+    Container-specific mortality tracking via assignment FK ensures precise
+    location granularity and allows direct linking to affected assignment.
+    """
     batch = models.ForeignKey(
         Batch, on_delete=models.CASCADE, related_name='mortality_records',
         help_text="The batch experiencing mortality."
+    )
+    assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.PROTECT,
+        related_name='mortality_records',
+        null=True,
+        blank=True,
+        help_text="Container-specific assignment where mortality occurred"
     )
     container = models.ForeignKey(
         Container, on_delete=models.SET_NULL, null=True, blank=True,
@@ -61,9 +74,20 @@ class MortalityRecord(models.Model):
         verbose_name_plural = "Mortality Records"
 
     history = HistoricalRecords()
+    
+    def clean(self):
+        """Validate that assignment belongs to batch if both are provided."""
+        super().clean()
+        if self.assignment and self.batch:
+            if self.assignment.batch_id != self.batch_id:
+                raise ValidationError({
+                    'assignment': f'Assignment must belong to batch {self.batch.id}'
+                })
 
     def __str__(self):
         """Return a string representation of the mortality record."""
+        if self.assignment:
+            return f"Mortality of {self.count} in {self.assignment.container.name} on {self.event_date.strftime('%Y-%m-%d')}"
         return f"Mortality of {self.count} on {self.event_date.strftime('%Y-%m-%d')}"
 
     def save(self, *args, **kwargs):
@@ -193,10 +217,21 @@ class LiceCount(models.Model):
 
     Supports both legacy format (aggregate counts by gender/maturity)
     and new normalized format (per-type counts with detailed tracking).
+    
+    Container-specific tracking via assignment FK ensures precise location
+    granularity for regulatory compliance and trend analysis.
     """
     batch = models.ForeignKey(
         Batch, on_delete=models.CASCADE, related_name='lice_counts',
         help_text="The batch being counted."
+    )
+    assignment = models.ForeignKey(
+        BatchContainerAssignment,
+        on_delete=models.PROTECT,
+        related_name='lice_counts',
+        null=True,
+        blank=True,
+        help_text="Container-specific assignment where lice count was recorded"
     )
     container = models.ForeignKey(
         Container, on_delete=models.SET_NULL, null=True, blank=True,
@@ -306,6 +341,13 @@ class LiceCount(models.Model):
     def clean(self):
         """Validate lice count data."""
         from django.core.exceptions import ValidationError
+        
+        # Validate assignment belongs to batch if both provided
+        if self.assignment and self.batch:
+            if self.assignment.batch_id != self.batch_id:
+                raise ValidationError({
+                    'assignment': f'Assignment must belong to batch {self.batch.id}'
+                })
 
         # Check that either legacy OR new format is used, not both
         has_legacy_data = any([

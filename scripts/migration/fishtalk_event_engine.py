@@ -596,6 +596,7 @@ class FishTalkEventEngine:
             if assignment:
                 mortality = MortalityEvent.objects.create(
                     batch=batch,
+                    assignment=assignment,
                     event_date=mort_date,
                     count=count or 0,
                     cause=cause or 'Unknown',

@@ -45,6 +45,17 @@ class Batch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Growth Assimilation - Pinned Scenario
+    pinned_scenario = models.ForeignKey(
+        'scenario.Scenario',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pinned_batches',
+        verbose_name="Pinned Scenario",
+        help_text="Pinned scenario used for daily actual state calculations. Defaults to baseline scenario."
+    )
+    
     # History tracking
     history = HistoricalRecords()
     
