@@ -371,9 +371,9 @@ class GrowthAssimilationMixin:
             {
                 'date': scenario.start_date + (proj.day_number - 1) * timedelta(days=1),
                 'day_number': proj.day_number,
-                'avg_weight_g': float(proj.avg_weight_g),
-                'population': proj.population,
-                'biomass_kg': float(proj.biomass_kg),
+                'avg_weight_g': float(proj.average_weight),  # ScenarioProjection uses 'average_weight'
+                'population': int(proj.population),
+                'biomass_kg': float(proj.biomass),
             }
             for proj in projections
         ]

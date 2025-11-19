@@ -94,32 +94,72 @@ class ProjectionEngine:
             self.model_changes[change_date] = change
     
     def _load_lifecycle_stages(self):
-        """Load lifecycle stages for stage transitions."""
-        self.lifecycle_stages = list(
-            # Use the correct weight fields defined on LifeCycleStage
-            LifeCycleStage.objects.order_by('expected_weight_min_g')
-        )
-    
-    def _determine_lifecycle_stage(self, weight: float) -> Optional[LifeCycleStage]:
         """
-        Determine lifecycle stage based on weight.
+        Load lifecycle stages for time-based stage transitions.
+        
+        Uses FCR model stage durations to determine when to transition between stages.
+        """
+        self.lifecycle_stages = list(
+            LifeCycleStage.objects.order_by('order')
+        )
+        
+        # Build stage duration map from FCR model
+        self.stage_durations = {}
+        self.cumulative_stage_days = {}
+        
+        if self.scenario.fcr_model:
+            cumulative_days = 0
+            for fcr_stage in self.scenario.fcr_model.stages.select_related('stage').order_by('stage__order'):
+                stage_name = fcr_stage.stage.name
+                duration = fcr_stage.duration_days
+                
+                self.stage_durations[stage_name] = duration
+                self.cumulative_stage_days[stage_name] = cumulative_days
+                cumulative_days += duration
+    
+    def _determine_lifecycle_stage(self, day_number: int) -> Optional[LifeCycleStage]:
+        """
+        Determine lifecycle stage based on elapsed days (time-based transitions).
+        
+        Uses FCR model stage durations to determine stage transitions, matching
+        the Event Engine's time-based approach where stages progress by duration.
+        
+        FCR model defines stages as:
+        - Day 0-90: Egg&Alevin (days 1-90)
+        - Day 90-180: Fry (days 91-180)
+        - Day 180-270: Parr (days 181-270)
+        - Day 270-360: Smolt (days 271-360)
+        - Day 360-450: Post-Smolt (days 361-450)
+        - Day 450-900: Adult (days 451-900)
         
         Args:
-            weight: Current average weight in grams
+            day_number: Current day number in the scenario (1-based: 1, 2, 3...)
             
         Returns:
             Appropriate lifecycle stage or None
         """
+        # Find which stage we should be in based on elapsed time
+        # day_number is 1-based, so day 1 has elapsed 0 days, day 91 has elapsed 90 days
+        elapsed_days = day_number - 1
+        
         for stage in self.lifecycle_stages:
-            if stage.expected_weight_min_g and stage.expected_weight_max_g:
-                if float(stage.expected_weight_min_g) <= weight <= float(stage.expected_weight_max_g):
-                    return stage
-            elif stage.expected_weight_min_g and weight >= float(stage.expected_weight_min_g):
-                # Last stage with no end weight
+            stage_name = stage.name
+            
+            if stage_name not in self.cumulative_stage_days:
+                continue
+            
+            stage_start = self.cumulative_stage_days[stage_name]
+            stage_duration = self.stage_durations.get(stage_name, 90)
+            stage_end = stage_start + stage_duration
+            
+            # Stage runs from stage_start to stage_end (exclusive)
+            # Day 91 (elapsed=90) should be in Fry (starts at day 90)
+            # Day 271 (elapsed=270) should be in Smolt (starts at day 270)
+            if stage_start <= elapsed_days < stage_end:
                 return stage
         
-        # Default to first stage if no match
-        return self.lifecycle_stages[0] if self.lifecycle_stages else None
+        # If past all stages, return last stage (Adult)
+        return self.lifecycle_stages[-1] if self.lifecycle_stages else None
     
     def _stage_has_external_feeding(self, stage: Optional[LifeCycleStage]) -> bool:
         """
@@ -199,7 +239,7 @@ class ProjectionEngine:
         
         current_weight = float(self.scenario.initial_weight)
         current_population = self.scenario.initial_count
-        current_stage = self._determine_lifecycle_stage(current_weight)
+        current_stage = self._determine_lifecycle_stage(1)  # Day 1 - time-based
         
         projections = []
         cumulative_feed = 0.0
@@ -212,8 +252,26 @@ class ProjectionEngine:
             # Apply any model changes
             self._apply_model_changes(current_date)
             
+            # IMPORTANT: Determine lifecycle stage based on time BEFORE calculations
+            # This ensures stage transitions happen on schedule (matches Event Engine)
+            new_stage = self._determine_lifecycle_stage(day_number)
+            if new_stage and new_stage != current_stage:
+                self.warnings.append(
+                    f"Stage transition on day {day_number}: "
+                    f"{current_stage.name if current_stage else 'Unknown'} -> {new_stage.name} "
+                    f"(weight: {current_weight:.2f}g)"
+                )
+                current_stage = new_stage
+            
             # Get temperature for the day
-            temperature = self.tgc_calculator._get_temperature_for_day(day_number)
+            profile_temperature = self.tgc_calculator._get_temperature_for_day(day_number)
+            
+            # Adjust temperature based on lifecycle stage (freshwater vs seawater)
+            temperature = self.tgc_calculator.get_temperature_for_stage(
+                temperature=profile_temperature,
+                lifecycle_stage=current_stage.name if current_stage else None
+            )
+            
             
             # Calculate growth (only if stage has external feeding)
             if self._stage_has_external_feeding(current_stage):
@@ -241,15 +299,6 @@ class ProjectionEngine:
                 custom_rate=stage_mortality_rate
             )
             new_population = mortality_data['surviving_population']
-            
-            # Update lifecycle stage if needed
-            new_stage = self._determine_lifecycle_stage(new_weight)
-            if new_stage and new_stage != current_stage:
-                self.warnings.append(
-                    f"Stage transition on day {day_number}: "
-                    f"{current_stage.name if current_stage else 'Unknown'} -> {new_stage.name}"
-                )
-                current_stage = new_stage
             
             # Calculate feed (only if stage has external feeding)
             if self._stage_has_external_feeding(current_stage):

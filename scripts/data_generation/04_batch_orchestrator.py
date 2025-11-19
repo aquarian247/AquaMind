@@ -123,12 +123,12 @@ class BatchOrchestrator:
         
         return batches_per_geo
     
-    def generate_batch_schedule(self, batches_per_geo, start_date=None):
+    def generate_batch_schedule(self, batches_per_geo, start_date=None, stagger_days=5):
         """
-        Generate staggered batch start dates with realistic 6-year operational history.
+        Generate chronologically-ordered batch schedule.
         
-        Strategy: 30-day stagger starting 6 years ago creates both:
-        - Completed/harvested batches (>900 days old) = operational history
+        Strategy: Configurable stagger, chronologically sorted for realistic history.
+        Both geographies start simultaneously and progress together.
         - Active batches in various stages (<900 days old) = current operations
         
         This simulates looking at a real farm database after years of operation.
@@ -141,27 +141,22 @@ class BatchOrchestrator:
         today = date.today()
         
         if start_date is None:
-            # Calculate start date so:
-            # - First batches are completed (>900 days old)
-            # - Last batches are active in early stages
-            # With 30-day stagger and N batches: span = N × 30 days
-            # Start at: today - (span + buffer days)
-            # This ensures first batches are old enough to complete
-            stagger_days = 30
-            span_days = (batches_per_geo - 1) * stagger_days  # -1 because first batch is at day 0
-            buffer_days = 50  # Small buffer so youngest batch is in early stage (Egg or Fry)
+            # Calculate start date based on stagger and batch count
+            span_days = (batches_per_geo - 1) * stagger_days
+            buffer_days = 50
             days_back = span_days + buffer_days
             start_date = today - timedelta(days=days_back)
-            
             years_back = days_back / 365
+        else:
+            years_back = (today - start_date).days / 365
         
         print("\n" + "="*80)
-        print("GENERATING BATCH SCHEDULE (6-Year Operational History)")
+        print("GENERATING BATCH SCHEDULE (Chronological History)")
         print("="*80 + "\n")
-        print(f"Strategy: 30-day stagger creates completed + active batches")
+        print(f"Strategy: {stagger_days}-day stagger, chronological order (both geographies)")
         print(f"Start: {start_date} ({years_back:.1f} years ago)")
         print(f"Today: {today}")
-        print(f"Stagger: Every 30 days\n")
+        print(f"Stagger: Every {stagger_days} days\n")
         
         schedule = []
         
@@ -185,8 +180,8 @@ class BatchOrchestrator:
             }
             
             for i in range(batches_per_geo):
-                # Stagger batches every 30 days
-                batch_start = start_date + timedelta(days=i * 30)
+                # Stagger batches every N days
+                batch_start = start_date + timedelta(days=i * stagger_days)
                 
                 # Calculate duration: run up to TODAY
                 days_since_start = (today - batch_start).days
@@ -260,6 +255,10 @@ class BatchOrchestrator:
         print(f"  Active Batches:    {active_count:3d} ({active_count/len(schedule)*100:.1f}%)")
         print(f"  Completed/Harvest: {completed_count:3d} ({completed_count/len(schedule)*100:.1f}%)")
         
+        # Sort chronologically (both geographies interleaved)
+        schedule.sort(key=lambda x: x['start_date'])
+        
+        print(f"\n✅ Schedule sorted chronologically ({len(schedule)} batches)")
         print()
         
         return schedule
@@ -293,30 +292,35 @@ class BatchOrchestrator:
             
             cmd_str = ' '.join(cmd)
             
-            if i <= 5 or i > len(schedule) - 2:  # Show first 5 and last 2
-                print(f"Batch {i}/{len(schedule)}: {batch_config['geography'][:3]}-{batch_config['start_date']}")
-                if dry_run:
+            if dry_run:
+                if i <= 5 or i > len(schedule) - 2:
+                    print(f"Batch {i}/{len(schedule)}: {batch_config['geography'][:3]}-{batch_config['start_date']}")
                     print(f"  Command: {cmd_str}\n")
-            elif i == 6:
-                print(f"... (processing batches 6-{len(schedule)-2}) ...\n")
-            
-            if not dry_run:
+                elif i == 6:
+                    print(f"... (processing batches 6-{len(schedule)-2}) ...\n")
+            else:
+                # Execute mode - clean progress output
+                geo_short = "Faroe" if "Faroe" in batch_config['geography'] else "Scotland"
+                print(f"[{i}/{len(schedule)}] Creating batch in {geo_short:8s} | "
+                      f"Start: {batch_config['start_date']} | "
+                      f"{batch_config['duration']:3d} days...", end=" ", flush=True)
+                
                 try:
                     result = subprocess.run(
                         cmd,
                         check=True,
                         capture_output=True,
-                        text=True
+                        text=True,
+                        env={**os.environ, 'SKIP_CELERY_SIGNALS': '1'}  # Always skip Celery in orchestrator
                     )
                     self.stats['batches_generated'] += 1
-                    
-                    if i <= 3 or i > len(schedule) - 1:
-                        print(f"  ✓ Success\n")
+                    print(f"✓")
                     
                 except subprocess.CalledProcessError as e:
-                    print(f"  ✗ Error: {e}")
-                    print(f"  Output: {e.output}")
-                    return False
+                    print(f"✗ FAILED")
+                    print(f"     Error: {str(e)[:100]}")
+                    self.stats['batches_generated'] += 1  # Count as attempted
+                    # Continue with next batch (don't fail entire run)
         
         if dry_run:
             print("\n" + "="*80)
@@ -334,7 +338,7 @@ class BatchOrchestrator:
         
         return True
     
-    def run(self, dry_run=True, batches_per_geo=None, start_date=None):
+    def run(self, dry_run=True, batches_per_geo=None, start_date=None, stagger_days=5):
         """
         Main orchestration workflow
         
@@ -342,6 +346,7 @@ class BatchOrchestrator:
             dry_run: If True, only show what would be generated
             batches_per_geo: Override calculated batch count
             start_date: Override default start date
+            stagger_days: Days between batch starts (default: 5)
         """
         print("\n" + "╔" + "═" * 78 + "╗")
         print("║" + " "*78 + "║")
@@ -357,7 +362,7 @@ class BatchOrchestrator:
             batches_per_geo = self.calculate_batch_plan()
         
         # Step 3: Generate schedule
-        schedule = self.generate_batch_schedule(batches_per_geo, start_date)
+        schedule = self.generate_batch_schedule(batches_per_geo, start_date, stagger_days)
         
         # Step 4: Execute (or dry run)
         self.execute_batch_generation(schedule, dry_run)
@@ -392,6 +397,12 @@ def main():
         type=str,
         help='Override: Base start date (YYYY-MM-DD, default: 900 days ago)'
     )
+    parser.add_argument(
+        '--stagger',
+        type=int,
+        default=5,
+        help='Days between batch starts (default: 5 for 87%% saturation)'
+    )
     
     args = parser.parse_args()
     
@@ -406,7 +417,8 @@ def main():
     return orchestrator.run(
         dry_run=not args.execute,
         batches_per_geo=args.batches,
-        start_date=start_date
+        start_date=start_date,
+        stagger_days=args.stagger
     )
 
 

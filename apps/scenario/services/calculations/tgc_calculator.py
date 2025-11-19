@@ -84,7 +84,10 @@ class TGCCalculator:
         lifecycle_stage: Optional[str] = None
     ) -> Dict[str, float]:
         """
-        Calculate daily growth using TGC formula.
+        Calculate daily growth using standard TGC cube-root formula.
+        
+        Uses the industry-standard Thermal Growth Coefficient formula:
+        W_f^(1/3) = W_i^(1/3) + (TGC/1000) × T × days
         
         Args:
             current_weight: Current average weight in grams
@@ -96,8 +99,6 @@ class TGCCalculator:
         """
         # Check for stage-specific TGC override
         tgc_value = self.model.tgc_value
-        temp_exponent = self.model.exponent_n
-        weight_exponent = self.model.exponent_m
         
         if lifecycle_stage:
             # Look for stage-specific override
@@ -106,26 +107,35 @@ class TGCCalculator:
                     lifecycle_stage=lifecycle_stage
                 )
                 tgc_value = float(stage_override.tgc_value)
-                temp_exponent = float(stage_override.temperature_exponent)
-                weight_exponent = float(stage_override.weight_exponent)
             except:
                 # No override found, use base model values
                 pass
         
-        # Standard TGC formula: ΔW = TGC × T^n × W^m
-        growth_g = (
-            tgc_value * 
-            (temperature ** temp_exponent) * 
-            (current_weight ** weight_exponent)
-        )
+        # Standard TGC cube-root formula
+        # Convert TGC from "per 1000 degree-days" to actual coefficient
+        tgc = tgc_value / 1000.0
         
-        new_weight = current_weight + growth_g
+        # Calculate growth using cube-root method
+        cube_root = current_weight ** (1/3)
+        cube_root += tgc * temperature * 1  # 1 day
+        new_weight = cube_root ** 3
+        
+        # Apply stage-specific weight caps to prevent unrealistic growth
+        # Note: Caps are permissive - set higher than normal stage transition weights
+        # to prevent capping before time-based stage transitions occur
+        stage_cap = self._get_stage_weight_cap(lifecycle_stage)
+        if stage_cap and new_weight > stage_cap:
+            # Only cap if significantly exceeding (allows natural stage progression)
+            new_weight = stage_cap
+        
+        growth_g = new_weight - current_weight
         
         return {
             'growth_g': growth_g,
             'new_weight_g': new_weight,
             'tgc_value': tgc_value,
-            'temperature': temperature
+            'temperature': temperature,
+            'formula': 'cube_root'
         }
     
     def calculate_tgc_from_growth(
@@ -245,6 +255,86 @@ class TGCCalculator:
         days = ((w2_root - w1_root) * 1000) / (self.tgc_value * temp_factor)
         
         return max(1, int(math.ceil(days)))
+    
+    def _get_stage_weight_cap(self, lifecycle_stage: Optional[str]) -> Optional[float]:
+        """
+        Get maximum weight cap for a lifecycle stage to prevent unrealistic growth.
+        
+        Matches the Event Engine stage caps for consistency.
+        
+        Args:
+            lifecycle_stage: Current lifecycle stage
+            
+        Returns:
+            Maximum weight in grams, or None if no cap
+        """
+        # Stage-specific weight caps (permissive - higher than typical to prevent premature capping)
+        # These are safety limits, not transition triggers (stages transition by time)
+        stage_caps = {
+            'egg': 1.0,        # Higher than typical to allow variation
+            'alevin': 1.0,
+            'fry': 10.0,       # Higher than 6g transition to allow growth headroom
+            'parr': 100.0,     # Higher than 60g transition
+            'smolt': 250.0,    # Higher than 180g transition
+            'post_smolt': 700.0,    # Higher than 500g transition
+            'post smolt': 700.0,
+            'harvest': 8000.0,
+            'adult': 8000.0    # Safety limit for harvest weight
+        }
+        
+        if not lifecycle_stage:
+            return None
+        
+        # Normalize stage name (lowercase, handle variations)
+        stage_lower = lifecycle_stage.lower().replace('_', ' ').replace('-', ' ')
+        
+        # Direct lookup first
+        if stage_lower in stage_caps:
+            return stage_caps[stage_lower]
+        
+        # Substring match for variations
+        for stage_key, cap in stage_caps.items():
+            if stage_key in stage_lower:
+                return cap
+        
+        return 7000.0  # Default cap if stage not recognized
+    
+    def get_temperature_for_stage(self, temperature: float, lifecycle_stage: Optional[str]) -> float:
+        """
+        Adjust temperature based on lifecycle stage.
+        
+        Freshwater stages use controlled temperature (~12°C), while seawater
+        stages use ambient temperature from the profile.
+        
+        Args:
+            temperature: Temperature from profile (typically seawater temp)
+            lifecycle_stage: Current lifecycle stage
+            
+        Returns:
+            Appropriate temperature for the stage
+        """
+        if not lifecycle_stage:
+            return temperature
+        
+        # Normalize stage name for exact matching
+        stage_lower = lifecycle_stage.lower().strip()
+        
+        # Freshwater stages use controlled temperature (exact match to avoid substring issues)
+        # Note: Must match stage names exactly from LifeCycleStage model
+        freshwater_stages = [
+            'egg&alevin',
+            'egg',
+            'alevin', 
+            'fry',
+            'parr',
+            'smolt'  # Last freshwater stage before sea transfer
+        ]
+        
+        if stage_lower in freshwater_stages:
+            return 12.0  # Standard freshwater temperature
+        
+        # Seawater stages (Post-Smolt, Adult, Harvest) use profile temperature
+        return temperature
     
     def _get_temperature_for_day(self, day_number: int) -> float:
         """

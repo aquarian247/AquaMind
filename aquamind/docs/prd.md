@@ -1098,10 +1098,10 @@ The Scenario Planning and Simulation feature comprises several interconnected co
   - **Description:** The system calculates projections based on the selected models and initial conditions.  
   - **Specifications:**  
     - *Growth Projection:*  
-      - Daily weight increase calculated using the TGC model:  
-        `Daily Growth = TGC * (Temperature)^n * (Current Weight)^m`  
-        (where `n` and `m` are model-specific exponents, typically provided in the TGC model definition).  
-      - Stage-specific TGC values applied when configured.  
+      - Daily weight increase calculated using the standard Thermal Growth Coefficient formula:  
+        `W_final^(1/3) = W_initial^(1/3) + (TGC/1000) × Temperature × Days`  
+        where TGC values typically range from 2.0-3.5 for Atlantic salmon (expressed per 1000 degree-days).  
+      - Stage-specific TGC values applied when configured for seasonal growth variations.  
       - Aggregated to weekly/monthly averages for display.  
     - *Population Projection:*  
       - Daily or weekly population decrease:  

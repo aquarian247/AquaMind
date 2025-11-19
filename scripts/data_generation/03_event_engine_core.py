@@ -55,6 +55,12 @@ class EventEngine:
             'Adult': 450        # 450 days (major change from implicit infinite)
         }
         
+        # Check if using pre-allocated schedule
+        self.use_schedule = os.environ.get('USE_SCHEDULE') == '1'
+        if self.use_schedule:
+            self.container_schedule = json.loads(os.environ.get('CONTAINER_SCHEDULE', '{}'))
+            self.sea_schedule = json.loads(os.environ.get('SEA_SCHEDULE', '{}'))
+        
     def init(self):
         print(f"\n{'='*80}")
         print("Initializing Event Engine")
@@ -460,7 +466,13 @@ class EventEngine:
         from django.db import transaction
         
         with transaction.atomic():
-            containers = self.find_available_containers(hall=hall_a, count=10)
+            if self.use_schedule:
+                # Use pre-allocated containers from schedule
+                hall_name = self.container_schedule['egg_alevin']['hall']
+                container_names = self.container_schedule['egg_alevin']['containers']
+                containers = list(Container.objects.filter(name__in=container_names))
+            else:
+                containers = self.find_available_containers(hall=hall_a, count=10)
             
             if not containers:
                 raise Exception(f"Insufficient available containers in {hall_a.name}. Need 10, infrastructure may be saturated.")
@@ -515,7 +527,8 @@ class EventEngine:
         print(f"✓ Batch: {self.batch.batch_number} (supplier: {supplier.name})")
         print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
         
-        # NOTE: Scenario will be created at Parr stage (Day 180) using "from batch" approach
+        # Create scenario immediately after batch creation (for growth analysis)
+        self._create_initial_scenario()
         
     def process_day(self):
         self.assignments = list(BatchContainerAssignment.objects.filter(batch=self.batch, is_active=True))
@@ -916,7 +929,23 @@ class EventEngine:
                         # Use transaction for atomic container allocation
                         from django.db import transaction
                         with transaction.atomic():
-                            new_containers = self.find_available_containers(hall=new_hall, count=10)
+                            if self.use_schedule:
+                                # Use next stage from schedule
+                                # Key format in schedule is lowercase with underscores: egg_alevin, fry, etc.
+                                schedule_key = next_stage.name.lower().replace('&', '_').replace('-', '_')
+                                next_stage_config = self.container_schedule.get(schedule_key)
+                                if not next_stage_config:
+                                     # Try explicit lookup for mismatch keys
+                                     if 'post' in schedule_key: schedule_key = 'post_smolt'
+                                     next_stage_config = self.container_schedule.get(schedule_key)
+                                
+                                if not next_stage_config:
+                                    raise Exception(f"Schedule missing configuration for stage {next_stage.name} (key: {schedule_key})")
+                                    
+                                container_names = next_stage_config['containers']
+                                new_containers = list(Container.objects.filter(name__in=container_names))
+                            else:
+                                new_containers = self.find_available_containers(hall=new_hall, count=10)
                             
                             if not new_containers:
                                 raise Exception(f"Insufficient available containers in {new_hall.name} for stage transition to {next_stage.name}")
@@ -1010,9 +1039,6 @@ class EventEngine:
                             self.assignments.append(new_assignment)
                     
                     print(f"  → Moved to {target_area.name} ({len(self.assignments)} sea containers)")
-                    
-                    # Create sea transition scenario (users care about forecasts at this point)
-                    self._create_sea_transition_scenario(self.current_date)
                 
                 # Create transfer workflow to document this transition (auditable action)
                 self._create_transfer_workflow(old_assignments, self.assignments, next_stage)
@@ -1022,11 +1048,6 @@ class EventEngine:
                 self.batch.save()
                 
                 self.current_stage_start_day = self.stats['days']
-                
-                # Create from-batch scenario at Parr stage (Day 180) for growth analysis
-                if next_stage.name == 'Parr':
-                    print(f"\n  Creating from-batch scenario for growth analysis...")
-                    self._create_from_batch_scenario(stage_name='Parr')
     
     def health_journal(self):
         if not self.assignments: return
@@ -1183,6 +1204,73 @@ class EventEngine:
             print(f"  ⚠ Transfer workflow creation failed: {e}")
             # Don't block transition if workflow creation fails
     
+    def _create_initial_scenario(self):
+        """
+        Create initial growth forecast scenario immediately after batch creation.
+        
+        This provides the baseline projection that will be compared against actual growth
+        in the Growth Analysis feature. Created at batch start with initial egg count.
+        
+        Required for: Growth Analysis feature (Actual vs Projected comparison)
+        """
+        try:
+            # Get initial batch state
+            if not self.assignments:
+                print(f"  ⚠ Cannot create initial scenario: no assignments")
+                return
+            
+            initial_pop = sum(a.population_count for a in self.assignments)
+            initial_weight = self.assignments[0].avg_weight_g
+            
+            # Create scenario for full 900-day lifecycle
+            scenario = Scenario.objects.create(
+                name=f"Baseline Projection - {self.batch.batch_number}",
+                start_date=self.start_date,
+                duration_days=900,  # Full lifecycle projection
+                initial_count=initial_pop,
+                initial_weight=float(initial_weight),
+                genotype=f"Standard {self.geography_name}",
+                supplier="External",
+                batch=self.batch,
+                tgc_model=self.tgc_model,
+                fcr_model=self.fcr_model,
+                mortality_model=self.mortality_model,
+                created_by=self.user
+            )
+            
+            print(f"  ✓ Created baseline scenario: {scenario.name}")
+            print(f"    Initial: {initial_pop:,} eggs @ {float(initial_weight):.2f}g")
+            print(f"    Duration: 900 days (full lifecycle projection)")
+            
+            # Compute projection data
+            try:
+                from apps.scenario.services.calculations.projection_engine import ProjectionEngine
+                
+                print(f"    Computing projection data...")
+                engine = ProjectionEngine(scenario)
+                result = engine.run_projection(save_results=True)
+                
+                if result['success']:
+                    proj_count = ScenarioProjection.objects.filter(scenario=scenario).count()
+                    print(f"    ✓ Computed {proj_count} projection days")
+                    
+                    # Show expected harvest
+                    final_proj = ScenarioProjection.objects.filter(scenario=scenario).order_by('-day_number').first()
+                    if final_proj:
+                        print(f"    Projected harvest: {final_proj.average_weight:.0f}g, {final_proj.population:,.0f} fish")
+                else:
+                    print(f"    ⚠ Projection failed: {result.get('errors', [])}")
+                    
+            except Exception as proj_error:
+                print(f"    ⚠ Projection computation failed: {proj_error}")
+            
+            self.stats['scenarios'] += 1
+            
+        except Exception as e:
+            print(f"  ⚠ Initial scenario creation failed: {e}")
+            import traceback
+            traceback.print_exc()
+    
     def _create_from_batch_scenario(self, stage_name="Parr"):
         """
         Create "from batch" style growth forecast scenario at mid-lifecycle.
@@ -1335,7 +1423,7 @@ class EventEngine:
         This generates the orange "Actual Daily State" line on Growth Analysis chart.
         """
         try:
-            from apps.batch.services.growth_assimilation import GrowthAssimilationService
+            from apps.batch.services.growth_assimilation import recompute_batch_assignments
             
             print(f"\n{'='*80}")
             print("Recomputing Growth Analysis (Actual Daily States)")
@@ -1343,10 +1431,13 @@ class EventEngine:
             
             print(f"Computing ActualDailyAssignmentState records for {self.batch.batch_number}...")
             
-            service = GrowthAssimilationService()
-            result = service.recompute_batch_daily_states(self.batch.id)
+            result = recompute_batch_assignments(
+                batch_id=self.batch.id,
+                start_date=self.batch.start_date,
+                end_date=self.current_date
+            )
             
-            if result.get('success'):
+            if result.get('total_errors', 0) == 0:
                 print(f"✓ Growth Analysis computed successfully")
                 print(f"  States created: {result.get('states_created', 0):,}")
                 print(f"  Assignments processed: {result.get('assignments_processed', 0)}")
@@ -1360,20 +1451,43 @@ class EventEngine:
             print(f"   This is non-blocking - batch data is still valid")
             print(f"   Can recompute manually later via API")
     
+    def should_harvest(self):
+        """
+        Check if batch is ready for harvest (realistic criteria).
+        
+        Real farms harvest based on:
+        - Target weight (4-6kg for Atlantic salmon)
+        - Market conditions
+        - Environmental factors
+        
+        NOT based on fixed day count (more realistic for test data).
+        """
+        if not self.assignments:
+            return False
+        
+        if self.batch.lifecycle_stage.name != 'Adult':
+            return False
+        
+        avg_weight = self.assignments[0].avg_weight_g
+        days_in_adult = self.stats['days'] - self.current_stage_start_day
+        
+        # Each batch has slightly different target weight (4.5-6.5kg)
+        # This creates variation in harvest timing (more realistic)
+        if not hasattr(self, 'target_harvest_weight'):
+            self.target_harvest_weight = random.uniform(4500, 6500)
+        
+        # Harvest when:
+        # 1. Weight reaches target (primary trigger)
+        # 2. OR 450 days in Adult (max duration, force harvest)
+        return (avg_weight >= self.target_harvest_weight) or (days_in_adult >= 450)
+    
     def harvest_batch(self):
-        """Harvest the batch if it's in Adult stage and ready"""
+        """Harvest the batch (called when should_harvest() returns True)"""
         if not self.assignments:
             return
         
-        # Check if in Adult stage and average weight > 4kg
-        is_adult = 'Adult' in self.batch.lifecycle_stage.name
         avg_weight = self.assignments[0].avg_weight_g
-        
-        if not is_adult or avg_weight < 4000:
-            print(f"\n⚠ Batch not ready for harvest:")
-            print(f"  Stage: {self.batch.lifecycle_stage.name} (need: Adult)")
-            print(f"  Avg Weight: {avg_weight}g (need: >4000g)")
-            return
+        days_in_adult = self.stats['days'] - self.current_stage_start_day
         
         print(f"\n{'='*80}")
         print("HARVESTING BATCH")
@@ -1477,9 +1591,22 @@ class EventEngine:
             for _ in range(self.duration):
                 self.process_day()
                 self.current_date += timedelta(days=1)
+                
+                # Check harvest readiness DAILY (weight-based trigger)
+                if self.should_harvest():
+                    print(f"\n  → Harvest trigger: Weight={self.assignments[0].avg_weight_g:.0f}g (target={self.target_harvest_weight:.0f}g)")
+                    
+                    # Recompute growth analysis BEFORE harvest (while assignments active)
+                    self._recompute_growth_analysis()
+                    
+                    # Harvest
+                    self.harvest_batch()
+                    break  # Stop processing after harvest
             
-            # Check if batch is ready for harvest
-            self.harvest_batch()
+            # If batch is still active (not harvested), compute growth analysis anyway
+            if self.batch.status == 'ACTIVE':
+                print(f"\n  → Batch still active (not harvested), computing growth analysis...")
+                self._recompute_growth_analysis()
             
             # NOTE: Growth Analysis recompute happens at orchestrator level
             # for all active batches, not per-batch (avoids duplicate work)
@@ -1524,8 +1651,10 @@ def main():
     parser.add_argument('--eggs', type=int, required=True)
     parser.add_argument('--geography', required=True)
     parser.add_argument('--duration', type=int, default=650)
+    parser.add_argument('--use-schedule', action='store_true',
+                       help='Use pre-allocated containers from CONTAINER_SCHEDULE env var')
     args = parser.parse_args()
-    
+
     start = datetime.strptime(args.start_date, '%Y-%m-%d').date()
     
     print("\n" + "╔" + "═" * 78 + "╗")
