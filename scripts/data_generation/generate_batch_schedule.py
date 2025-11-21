@@ -537,9 +537,10 @@ class BatchSchedulePlanner:
             if len(rings) != 20:
                 continue  # Skip areas that don't have 20 rings
             
-            # Try to allocate rings: 8 → 10 → 12 → 15 → 20 (adaptive, prefer smaller)
-            # Also try minimum viable (6 rings) as last resort
-            for ring_count in [8, 10, 12, 15, 20, 6]:
+            # Allocate 10 rings per batch (1:1 ratio from Post-Smolt)
+            # Fallback to larger allocations if needed for packing efficiency
+            # Post-Smolt: 10 containers → Adult: 10-15 rings preferred
+            for ring_count in [10, 12, 15, 20, 8]:
                 available_rings = []
                 for ring in rings:
                     if self._check_rings_available([ring], batch_start, adult_start_day, adult_end_day):
@@ -808,13 +809,26 @@ def main():
         max_from_time = total_batch_starts // 2  # Per geography
         
         # Infrastructure constraint: Sea rings are the bottleneck
-        # Scotland: 400 rings, Faroe: 460 rings (Scotland is limiting)
-        # At 85% saturation with 8 rings/batch: (400 × 0.85) / 8 = 42 batches in Adult simultaneously
-        # With 450-day Adult stage and 5-day stagger: 450/5 = 90 batches would overlap
-        # This is IMPOSSIBLE - so we need to find the sustainable batch count
+        # Compact allocation: 10 rings per batch (matches Post-Smolt container count)
+        # Scotland: 400 rings / 10 = 40 batches max in Adult simultaneously
+        # At 85% saturation: 40 × 0.85 = 34 concurrent Adult batches
         
-        # Conservative estimate: Start with half of time-based max and let planner validate
-        max_from_infrastructure = max_from_time // 2
+        rings_per_batch = 10  # Compact: Post-Smolt 10 containers → Adult 10 rings (1:1 ratio)
+        scotland_rings = 400
+        available_rings = scotland_rings * args.saturation
+        max_concurrent_adult_scotland = int(available_rings / rings_per_batch)
+        
+        # For the requested stagger, how many batches would overlap in Adult?
+        adult_overlap = args.adult_duration / args.stagger
+        
+        # Can we support that many? If not, we're infrastructure-limited
+        if adult_overlap > max_concurrent_adult_scotland:
+            # Infrastructure-limited: Use what fits
+            max_from_infrastructure = max_concurrent_adult_scotland
+            print(f'   ⚠️  Stagger too tight: {adult_overlap:.0f} batches would overlap in Adult, but capacity is {max_concurrent_adult_scotland}')
+        else:
+            # Stagger is safe: Use time-based limit
+            max_from_infrastructure = max_from_time
         
         # Use the lesser of the two constraints
         batches_per_geo = min(max_from_time, max_from_infrastructure)
