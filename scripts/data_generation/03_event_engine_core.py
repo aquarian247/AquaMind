@@ -30,6 +30,9 @@ from apps.scenario.models import (
 )
 # Explicit import to avoid ambiguity (FeedContainer is in infrastructure)
 from apps.infrastructure.models import FeedContainer
+from apps.infrastructure.models import Container
+from apps.batch.models import BatchContainerAssignment, TransferAction, BatchTransferWorkflow
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -37,13 +40,19 @@ PROGRESS_DIR = Path(project_root) / 'aquamind' / 'docs' / 'progress' / 'test_dat
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
 
 class EventEngine:
-    def __init__(self, start_date, eggs, geography, duration=900):
+    def __init__(self, start_date, eggs, geography, duration=900, station_name=None):
         self.start_date = start_date
         self.current_date = start_date
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
-        self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0, 'transfer_workflows': 0}
+        self.assigned_station_name = station_name  # DETERMINISTIC: Pre-assigned station
+        self.stats = {
+            'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 
+            'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0, 
+            'transfer_workflows': 0, 'health_sampling_events': 0, 
+            'fish_observations': 0, 'parameter_scores': 0, 'treatments': 0
+        }
         self.current_stage_start_day = 0
         # Realistic lifecycle stage durations (total: 900 days)
         self.stage_durations = {
@@ -61,6 +70,18 @@ class EventEngine:
             self.container_schedule = json.loads(os.environ.get('CONTAINER_SCHEDULE', '{}'))
             self.sea_schedule = json.loads(os.environ.get('SEA_SCHEDULE', '{}'))
         
+        # Track when treatments were last applied (prevent duplicate treatments)
+        self.lice_treatments_applied = 0  # Counter for lice treatments (max 2 per batch)
+        self.target_rings_per_batch = 20  # Configurable for sea stages
+
+        # Use deterministic harvest target if provided (from scheduler)
+        harvest_target_env = os.environ.get('HARVEST_TARGET_KG')
+        if harvest_target_env:
+            self.deterministic_harvest_target = Decimal(harvest_target_env)
+            print(f"✓ DETERMINISTIC: Using harvest target {self.deterministic_harvest_target}kg from schedule")
+        else:
+            self.deterministic_harvest_target = None
+        
     def init(self):
         print(f"\n{'='*80}")
         print("Initializing Event Engine")
@@ -68,17 +89,18 @@ class EventEngine:
         
         self.geo = Geography.objects.get(name=self.geography_name)
         
-        # Use round-robin station selection to distribute batches across infrastructure
-        # This prevents multiple batches from competing for same containers
-        existing_batches_count = Batch.objects.count()  # Count ALL batches for round-robin
-        
-        all_stations = list(FreshwaterStation.objects.filter(geography=self.geo).order_by('name'))
-        if all_stations and len(all_stations) > 1:
-            station_idx = existing_batches_count % len(all_stations)
-            self.station = all_stations[station_idx]
-            print(f"✓ Using station {station_idx + 1}/{len(all_stations)} for infrastructure distribution")
+        # DETERMINISTIC: Use pre-assigned station (if provided) or first available
+        if self.assigned_station_name:
+            # Deterministic mode: Use specific pre-assigned station
+            self.station = FreshwaterStation.objects.get(
+                name=self.assigned_station_name,
+                geography=self.geo
+            )
+            print(f"✓ DETERMINISTIC: Using pre-assigned station {self.station.name}")
         else:
+            # Fallback: Use first station (for single-batch testing)
             self.station = FreshwaterStation.objects.filter(geography=self.geo).first()
+            print(f"⚠️  NON-DETERMINISTIC: Using first available station {self.station.name}")
         
         self.sea_area = Area.objects.filter(geography=self.geo).first()
         self.species = Species.objects.get(name="Atlantic Salmon")
@@ -544,6 +566,9 @@ class EventEngine:
         self.feed_events(16)
         self.growth_update()
         self.lice_update()  # Weekly lice sampling (Adult stage only)
+        self.health_sampling()  # Monthly health sampling (Post-Smolt/Adult, 75 fish)
+        self.vaccination_events()  # Vaccinations at Smolt (180, 210) and Post-Smolt (280, 310)
+        self.lice_treatment_events()  # Lice treatments in Adult stage (2x per batch)
         
         if self.stats['days'] % 30 == 0:
             self.health_journal()
@@ -991,6 +1016,12 @@ class EventEngine:
                         if not all_areas:
                             raise Exception(f"No sea areas found in {self.geo.name}")
                         
+                        # NOTE: When USE_SCHEDULE=1, this code should never execute (dead code)
+                        # Schedule pre-allocates all sea containers, bypassing area selection
+                        if self.use_schedule:
+                            # This should never happen - schedule defines all container assignments
+                            raise Exception("BUG: Sea area selection reached despite USE_SCHEDULE=1. Schedule should pre-allocate sea containers.")
+                        
                         area_idx = existing_adult_batches % len(all_areas)
                         target_area = all_areas[area_idx]
                         print(f"  → Selected area {area_idx + 1}/{len(all_areas)}: {target_area.name}")
@@ -1001,13 +1032,29 @@ class EventEngine:
                                 is_active=True
                             ).values_list('container_id', flat=True)
                         )
-                        
-                        sea_containers = Container.objects.select_for_update(skip_locked=True).filter(
+
+                        # Get ALL available containers in the area, not just the first N
+                        all_available_containers = Container.objects.select_for_update(skip_locked=True).filter(
                             area=target_area,
                             active=True
                         ).exclude(
                             id__in=occupied_ids
-                        ).order_by('name')[:containers_needed]
+                        )
+
+                        # If we need more containers than available, use all available
+                        # Otherwise, distribute evenly across all rings (not just first N)
+                        if len(all_available_containers) <= containers_needed:
+                            sea_containers = list(all_available_containers)
+                        else:
+                            # Distribute across ALL rings by taking every Nth container
+                            # This ensures even distribution across the entire area
+                            step = len(all_available_containers) // containers_needed
+                            sea_containers = []
+                            for i in range(containers_needed):
+                                idx = (i * step) % len(all_available_containers)
+                                sea_containers.append(all_available_containers[idx])
+
+                        sea_containers = list(sea_containers)
                         
                         sea_containers = list(sea_containers)
 
@@ -1059,6 +1106,240 @@ class EventEngine:
             description=f'Routine observation {a.lifecycle_stage.name}',
             resolution_status=False
         )
+    
+    def health_sampling(self):
+        """
+        Create monthly health sampling events with 75 fish per sample.
+        Scores 9 health parameters per fish (675 total scores per event).
+        
+        Frequency: Every 30 days
+        Sample size: 75 fish
+        Parameters: Gill, Eye, Wounds, Fin, Body, Swimming, Appetite, Mucous, Color
+        Stages: Post-Smolt and Adult only
+        
+        Based on veterinary feedback for comprehensive welfare monitoring.
+        """
+        # Only sample Post-Smolt and Adult stages
+        if self.batch.lifecycle_stage.name not in ['Post-Smolt', 'Adult']:
+            return
+        
+        # Monthly sampling
+        if self.stats['days'] % 30 != 0:
+            return
+        
+        # Select random assignment to sample
+        if not self.assignments:
+            return
+        
+        assignment = random.choice(self.assignments)
+        
+        # Get all active health parameters
+        health_params = list(HealthParameter.objects.filter(is_active=True))
+        if not health_params:
+            return  # Skip if no health parameters configured
+        
+        # Create sampling event
+        sampling_event = HealthSamplingEvent.objects.create(
+            assignment=assignment,
+            sampling_date=self.current_date,
+            number_of_fish_sampled=75,
+            sampled_by=self.user,
+            notes=f'Monthly health assessment - {self.batch.lifecycle_stage.name} stage'
+        )
+        
+        self.stats['health_sampling_events'] += 1
+        
+        # Create 75 individual fish observations with measurements
+        avg_weight = float(assignment.avg_weight_g)  # Convert to float for calculations
+        
+        # Calculate avg length from weight (simplified allometric relationship)
+        # Length (cm) ≈ (Weight(g) * 1000)^(1/3) * 1.5
+        avg_length = ((avg_weight * 1000) ** (1/3)) * 1.5
+        
+        # Track aggregate stats for event summary
+        all_weights = []
+        all_lengths = []
+        
+        fish_observations = []
+        for fish_num in range(1, 76):  # 75 fish
+            # Add realistic variation (±15% for weight, ±10% for length)
+            fish_weight = random.gauss(avg_weight, avg_weight * 0.15)
+            fish_weight = max(avg_weight * 0.5, min(avg_weight * 1.5, fish_weight))
+            
+            fish_length = random.gauss(avg_length, avg_length * 0.10)
+            fish_length = max(avg_length * 0.7, min(avg_length * 1.3, fish_length))
+            
+            all_weights.append(fish_weight)
+            all_lengths.append(fish_length)
+            
+            # Create observation (bulk create later for performance)
+            fish_observations.append(
+                IndividualFishObservation(
+                    sampling_event=sampling_event,
+                    fish_identifier=f"F{fish_num:03d}",
+                    weight_g=Decimal(str(round(fish_weight, 2))),
+                    length_cm=Decimal(str(round(fish_length, 2))),
+                )
+            )
+        
+        # Bulk create fish observations
+        created_observations = IndividualFishObservation.objects.bulk_create(fish_observations, batch_size=100)
+        self.stats['fish_observations'] += len(created_observations)
+        
+        # Update sampling event with aggregate statistics
+        sampling_event.avg_weight_g = Decimal(str(round(sum(all_weights) / len(all_weights), 2)))
+        sampling_event.avg_length_cm = Decimal(str(round(sum(all_lengths) / len(all_lengths), 2)))
+        sampling_event.std_dev_weight_g = Decimal(str(round(np.std(all_weights), 2)))
+        sampling_event.std_dev_length_cm = Decimal(str(round(np.std(all_lengths), 2)))
+        sampling_event.min_weight_g = Decimal(str(round(min(all_weights), 2)))
+        sampling_event.max_weight_g = Decimal(str(round(max(all_weights), 2)))
+        sampling_event.min_length_cm = Decimal(str(round(min(all_lengths), 2)))
+        sampling_event.max_length_cm = Decimal(str(round(max(all_lengths), 2)))
+        sampling_event.calculated_sample_size = 75
+        
+        # Calculate avg K-factor (Fulton's condition factor)
+        k_factors = [
+            100 * (w / (l ** 3)) for w, l in zip(all_weights, all_lengths) if l > 0
+        ]
+        if k_factors:
+            sampling_event.avg_k_factor = Decimal(str(round(sum(k_factors) / len(k_factors), 4)))
+        
+        sampling_event.save()
+        
+        # Create parameter scores for each fish
+        # Score distribution: Weighted toward healthy (60% Great, 30% Fair, 8% Poor, 2% Critical)
+        score_weights = [60, 30, 8, 2]  # For scores 0, 1, 2, 3
+        
+        parameter_scores = []
+        for fish_obs in created_observations:
+            for param in health_params:
+                # Generate weighted random score
+                score = random.choices([0, 1, 2, 3], weights=score_weights)[0]
+                
+                parameter_scores.append(
+                    FishParameterScore(
+                        individual_fish_observation=fish_obs,
+                        parameter=param,
+                        score=score,
+                    )
+                )
+        
+        # Bulk create all parameter scores
+        FishParameterScore.objects.bulk_create(parameter_scores, batch_size=500)
+        self.stats['parameter_scores'] += len(parameter_scores)
+    
+    def vaccination_events(self):
+        """
+        Create vaccination events at key lifecycle milestones.
+        
+        Schedule (absolute days from batch start):
+        - Day 180 (Smolt stage): First vaccination
+        - Day 210 (Smolt stage): Second vaccination
+        - Day 280 (Post-Smolt stage): Third vaccination
+        - Day 310 (Post-Smolt stage): Fourth vaccination
+        
+        Vaccination types (rotate): Combined, Furunculosis, IPNV, PD
+        Withholding period: 21 days
+        """
+        day = self.stats['days']
+        
+        # Define vaccination schedule (absolute days from batch start)
+        vaccination_days = [180, 210, 280, 310]
+        
+        # Check if this is a vaccination day
+        if day not in vaccination_days:
+            return
+        
+        # Get vaccination types (rotate through available types)
+        vacc_types = list(VaccinationType.objects.all().order_by('name'))
+        if not vacc_types:
+            return  # Skip if no vaccination types configured
+        
+        # Select vaccination type based on which vaccination this is (0-3)
+        vacc_number = vaccination_days.index(day)
+        vacc_type = vacc_types[vacc_number % len(vacc_types)]
+        
+        stage = self.batch.lifecycle_stage.name
+        
+        # Vaccinate all active assignments
+        for assignment in self.assignments:
+            Treatment.objects.create(
+                batch=self.batch,
+                container=assignment.container,
+                batch_assignment=assignment,
+                user=self.user,
+                treatment_date=timezone.make_aware(datetime.combine(
+                    self.current_date, time(hour=10)
+                )),
+                treatment_type='vaccination',
+                vaccination_type=vacc_type,
+                description=f'{vacc_type.name} vaccination - {stage} stage (Day {day})',
+                dosage=vacc_type.dosage or 'Standard dose',
+                duration_days=1,  # Vaccination is single-day event
+                withholding_period_days=21,
+                outcome='successful',
+            )
+            
+            self.stats['treatments'] += 1
+        
+        print(f"  ✓ Vaccinations: {vacc_type.name} administered to {len(self.assignments)} containers (Day {day})")
+    
+    def lice_treatment_events(self):
+        """
+        Create lice treatment events for Adult stage batches in sea cages.
+        
+        Schedule: Exactly 2 treatments per batch (Adult stage only)
+        Location: Sea cages only (never freshwater)
+        Timing: ~150 days and ~270 days into Adult stage
+        Duration: 7 days
+        Withholding: 42 days
+        """
+        # Only treat lice in Adult stage (sea cages)
+        if self.batch.lifecycle_stage.name != 'Adult':
+            return
+        
+        # Check if we're at sea (not freshwater)
+        if self.assignments and self.assignments[0].container.hall_id is not None:
+            return  # This is freshwater, skip lice treatment
+        
+        # Check if we've already done 2 treatments (limit per batch)
+        if self.lice_treatments_applied >= 2:
+            return
+        
+        # Treatment days (relative to Adult stage start, not batch start)
+        days_in_adult = self.stats['days'] - self.current_stage_start_day
+        
+        # Schedule 2 treatments: ~150 days and ~270 days into Adult stage
+        # (Adult stage is ~450 days, so this gives good coverage)
+        treatment_days = [150, 270]
+        
+        if days_in_adult not in treatment_days:
+            return
+        
+        # Treat all active assignments (all sea cages in batch)
+        treatment_count = 0
+        for assignment in self.assignments:
+            Treatment.objects.create(
+                batch=self.batch,
+                container=assignment.container,
+                batch_assignment=assignment,
+                user=self.user,
+                treatment_date=timezone.make_aware(datetime.combine(
+                    self.current_date, time(hour=9)
+                )),
+                treatment_type='physical',  # Lice treatment is physical treatment
+                description=f'Lice treatment #{self.lice_treatments_applied + 1} - Adult stage (Day {self.stats["days"]}, Adult day {days_in_adult})',
+                dosage='Bath treatment - standard concentration',
+                duration_days=7,
+                withholding_period_days=42,
+                outcome='successful',
+            )
+            
+            treatment_count += 1
+            self.stats['treatments'] += 1
+        
+        self.lice_treatments_applied += 1
+        print(f"  ✓ Lice Treatment #{self.lice_treatments_applied}: Applied to {treatment_count} containers (Adult day {days_in_adult})")
     
     def _generate_finance_harvest_facts(self):
         """
@@ -1266,6 +1547,11 @@ class EventEngine:
             
             self.stats['scenarios'] += 1
             
+            # Pin scenario to batch (required for Growth Analysis GUI)
+            self.batch.pinned_scenario = scenario
+            self.batch.save(update_fields=['pinned_scenario'])
+            print(f"    ✓ Pinned scenario to batch")
+            
         except Exception as e:
             print(f"  ⚠ Initial scenario creation failed: {e}")
             import traceback
@@ -1416,27 +1702,36 @@ class EventEngine:
     def _recompute_growth_analysis(self):
         """
         Recompute ActualDailyAssignmentState for Growth Analysis.
-        
-        For test data generation, we do this ONCE at the end after all events
-        are recorded, rather than via Celery signals event-by-event.
-        
+
+        For test data generation, we SKIP this entirely since:
+        - Orchestrator handles batch-level recomputation at the end
+        - Avoids Celery/async processing during bulk generation
+        - Prevents 600x slowdown in test data generation
+
         This generates the orange "Actual Daily State" line on Growth Analysis chart.
         """
+        import os
+
+        # SKIP during test data generation (orchestrator handles this)
+        if os.environ.get('SKIP_CELERY_SIGNALS') == '1':
+            print(f"\n  → Skipping individual Growth Analysis recompute (handled by orchestrator)")
+            return
+
         try:
             from apps.batch.services.growth_assimilation import recompute_batch_assignments
-            
+
             print(f"\n{'='*80}")
             print("Recomputing Growth Analysis (Actual Daily States)")
             print(f"{'='*80}\n")
-            
+
             print(f"Computing ActualDailyAssignmentState records for {self.batch.batch_number}...")
-            
+
             result = recompute_batch_assignments(
                 batch_id=self.batch.id,
                 start_date=self.batch.start_date,
                 end_date=self.current_date
             )
-            
+
             if result.get('total_errors', 0) == 0:
                 print(f"✓ Growth Analysis computed successfully")
                 print(f"  States created: {result.get('states_created', 0):,}")
@@ -1445,7 +1740,7 @@ class EventEngine:
                 print(f"⚠ Growth Analysis computation had issues:")
                 for error in result.get('errors', []):
                     print(f"  - {error}")
-                    
+
         except Exception as e:
             print(f"\n⚠ Growth Analysis computation failed: {e}")
             print(f"   This is non-blocking - batch data is still valid")
@@ -1474,7 +1769,13 @@ class EventEngine:
         # Each batch has slightly different target weight (4.5-6.5kg)
         # This creates variation in harvest timing (more realistic)
         if not hasattr(self, 'target_harvest_weight'):
-            self.target_harvest_weight = random.uniform(4500, 6500)
+            if self.deterministic_harvest_target:
+                # Use deterministic target from scheduler (converted to grams)
+                self.target_harvest_weight = float(self.deterministic_harvest_target * 1000)
+                print(f"✓ Using deterministic harvest target: {self.deterministic_harvest_target}kg ({self.target_harvest_weight}g)")
+            else:
+                # Generate random target for standalone execution
+                self.target_harvest_weight = random.uniform(4500, 6500)
         
         # Harvest when:
         # 1. Weight reaches target (primary trigger)
@@ -1567,6 +1868,8 @@ class EventEngine:
         
         # Set actual_end_date to stop age counter in UI
         self.batch.actual_end_date = self.current_date
+        # Set batch status to COMPLETED (critical for GUI filtering!)
+        self.batch.status = 'COMPLETED'
         self.batch.save()
         
         print(f"✓ Harvested {harvest_count} containers")
@@ -1574,6 +1877,7 @@ class EventEngine:
         print(f"✓ Average weight: {avg_weight:.0f}g")
         print(f"✓ Total biomass: {sum(a.biomass_kg for a in self.assignments):,.0f}kg")
         print(f"✓ Batch age at harvest: {(self.current_date - self.batch.start_date).days} days")
+        print(f"✓ Batch status: COMPLETED")
         
         # Generate finance harvest facts
         self._generate_finance_harvest_facts()
@@ -1603,10 +1907,14 @@ class EventEngine:
                     self.harvest_batch()
                     break  # Stop processing after harvest
             
-            # If batch is still active (not harvested), compute growth analysis anyway
-            if self.batch.status == 'ACTIVE':
-                print(f"\n  → Batch still active (not harvested), computing growth analysis...")
+            # Compute Growth Analysis if not already done
+            # (harvest_batch() computes it before harvest, but non-harvested batches need it here)
+            has_growth_analysis = ActualDailyAssignmentState.objects.filter(batch=self.batch).exists()
+            if not has_growth_analysis:
+                print(f"\n  → Computing final Growth Analysis...")
                 self._recompute_growth_analysis()
+            else:
+                print(f"\n  → Growth Analysis already computed ({self.batch.daily_states.count()} states)")
             
             # NOTE: Growth Analysis recompute happens at orchestrator level
             # for all active batches, not per-batch (avoids duplicate work)
@@ -1623,6 +1931,10 @@ class EventEngine:
             print(f"  Mortality: {self.stats['mort']:,}")
             print(f"  Growth Samples: {self.stats['growth']:,}")
             print(f"  Lice Counts: {self.stats['lice']:,} (Adult stage weekly)")
+            print(f"  Health Sampling Events: {self.stats['health_sampling_events']:,} (monthly, 75 fish)")
+            print(f"  Fish Observations: {self.stats['fish_observations']:,}")
+            print(f"  Parameter Scores: {self.stats['parameter_scores']:,} (9 params per fish)")
+            print(f"  Treatments: {self.stats['treatments']:,} (vaccinations + delousing)")
             print(f"  Feed Purchases: {self.stats['purchases']:,}")
             print(f"  Transfer Workflows: {self.stats['transfer_workflows']:,} (stage transitions)")
             print(f"  Scenarios: {self.stats['scenarios']:,} (sea transition forecast)")
@@ -1651,6 +1963,8 @@ def main():
     parser.add_argument('--eggs', type=int, required=True)
     parser.add_argument('--geography', required=True)
     parser.add_argument('--duration', type=int, default=650)
+    parser.add_argument('--station', type=str, default=None,
+                       help='DETERMINISTIC: Specific station name to use (eliminates race conditions)')
     parser.add_argument('--use-schedule', action='store_true',
                        help='Use pre-allocated containers from CONTAINER_SCHEDULE env var')
     args = parser.parse_args()
@@ -1663,7 +1977,7 @@ def main():
     print("║" + " "*78 + "║")
     print("╚" + "═" * 78 + "╝\n")
     
-    engine = EventEngine(start, args.eggs, args.geography, args.duration)
+    engine = EventEngine(start, args.eggs, args.geography, args.duration, args.station)
     return engine.run()
 
 if __name__ == '__main__':
