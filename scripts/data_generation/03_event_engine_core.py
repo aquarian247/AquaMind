@@ -459,18 +459,9 @@ class EventEngine:
             notes=f"Generated {datetime.now().date()}"
         )
         
-        # Generate workflow number
-        last_workflow = BatchCreationWorkflow.objects.filter(
-            workflow_number__startswith=f'CRT-{year}-'
-        ).order_by('-workflow_number').first()
-        
-        if last_workflow:
-            last_num = int(last_workflow.workflow_number.split('-')[-1])
-            next_num = last_num + 1
-        else:
-            next_num = 1
-        
-        workflow_number = f'CRT-{year}-{next_num:03d}'
+        # Generate workflow number (deterministic based on batch number to avoid race conditions)
+        # Batch: FAR-2020-001 → Workflow: CRT-FAR-2020-001
+        workflow_number = f'CRT-{batch_name}'
         
         # Create creation workflow
         creation_workflow = BatchCreationWorkflow.objects.create(
@@ -1403,19 +1394,10 @@ class EventEngine:
             # Get source stage from old assignments
             source_stage = source_assignments[0].lifecycle_stage
             
-            # Generate workflow number (TRF-YYYY-###)
-            year = self.current_date.year
-            last_workflow = BatchTransferWorkflow.objects.filter(
-                workflow_number__startswith=f'TRF-{year}-'
-            ).order_by('-workflow_number').first()
-            
-            if last_workflow:
-                last_num = int(last_workflow.workflow_number.split('-')[-1])
-                next_num = last_num + 1
-            else:
-                next_num = 1
-            
-            workflow_number = f'TRF-{year}-{next_num:03d}'
+            # Generate workflow number (deterministic to avoid race conditions)
+            # Use batch number + stage transition info
+            # Example: FAR-2020-001 at day 90 → TRF-FAR-2020-001-D90
+            workflow_number = f'TRF-{self.batch.batch_number}-D{self.stats["days"]:03d}'
             
             # Create workflow
             workflow = BatchTransferWorkflow.objects.create(
