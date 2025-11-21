@@ -123,9 +123,7 @@ class BatchSchedulePlanner:
         
         # Calculate start date (historical)
         today = date.today()
-        # We generate batches_per_geo * 2 total batches
-        # Interleaved: Batch 0 (F), Batch 1 (S), Batch 2 (F)...
-        # Total spans: (total_batches - 1) * stagger_days
+        # Interleaved batches (F, S, F, S...) with global stagger
         total_batches = self.batches_per_geo * 2
         span_days = (total_batches - 1) * self.stagger_days
         buffer_days = 50
@@ -759,14 +757,20 @@ def main():
     parser.add_argument(
         '--batches',
         type=int,
-        default=225,
-        help='Number of batches per geography (default: 225 for 87%% saturation with 5-day stagger)'
+        default=None,
+        help='Number of batches per geography (if not specified, calculated from --years and --stagger)'
+    )
+    parser.add_argument(
+        '--years',
+        type=float,
+        default=4.0,
+        help='Years of historical data to generate (default: 4.0)'
     )
     parser.add_argument(
         '--saturation',
         type=float,
-        default=0.87,
-        help='Target infrastructure saturation (default: 0.87)'
+        default=0.85,
+        help='Target infrastructure saturation (default: 0.85)'
     )
     parser.add_argument(
         '--stagger',
@@ -794,9 +798,45 @@ def main():
     
     args = parser.parse_args()
     
+    # Calculate batches_per_geo from years and stagger if not explicitly provided
+    if args.batches is None:
+        # Calculate maximum batches from BOTH time and infrastructure constraints
+        total_days = int(args.years * 365)
+        
+        # Time constraint: How many batches fit in the timespan?
+        total_batch_starts = total_days // args.stagger
+        max_from_time = total_batch_starts // 2  # Per geography
+        
+        # Infrastructure constraint: Sea rings are the bottleneck
+        # Scotland: 400 rings, Faroe: 460 rings (Scotland is limiting)
+        # At 85% saturation with 8 rings/batch: (400 × 0.85) / 8 = 42 batches in Adult simultaneously
+        # With 450-day Adult stage and 5-day stagger: 450/5 = 90 batches would overlap
+        # This is IMPOSSIBLE - so we need to find the sustainable batch count
+        
+        # Conservative estimate: Start with half of time-based max and let planner validate
+        max_from_infrastructure = max_from_time // 2
+        
+        # Use the lesser of the two constraints
+        batches_per_geo = min(max_from_time, max_from_infrastructure)
+        
+        print(f"\n📊 Auto-calculating batch count from constraints:")
+        print(f"   Target: {args.years} years, {args.saturation*100:.0f}% saturation, {args.stagger}-day stagger")
+        print(f"   Time constraint: {max_from_time} batches/geo (fits in {total_days} days)")
+        print(f"   Infrastructure constraint: {max_from_infrastructure} batches/geo (400 Scotland rings)")
+        print(f"   Limiting factor: {'TIME' if batches_per_geo == max_from_time else 'INFRASTRUCTURE'}")
+        print(f"   Selected: {batches_per_geo} batches per geography")
+        print(f"   Total batches: {batches_per_geo * 2}\n")
+    else:
+        batches_per_geo = args.batches
+        calculated_years = (batches_per_geo * 2 * args.stagger) / 365
+        print(f"\n📊 Using specified batch count:")
+        print(f"   Batches per geography: {batches_per_geo}")
+        print(f"   Total batches: {batches_per_geo * 2}")
+        print(f"   With {args.stagger}-day stagger: ~{calculated_years:.1f} years of data\n")
+    
     try:
         planner = BatchSchedulePlanner(
-            batches_per_geo=args.batches,
+            batches_per_geo=batches_per_geo,
             target_saturation=args.saturation,
             stagger_days=args.stagger,
             adult_duration=args.adult_duration
