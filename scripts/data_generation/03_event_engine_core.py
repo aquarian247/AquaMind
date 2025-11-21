@@ -426,6 +426,9 @@ class EventEngine:
         from apps.batch.models import BatchCreationWorkflow, CreationAction
         from apps.broodstock.models import EggSupplier
         
+        # Extract year for workflow numbering
+        year = self.start_date.year
+        
         # Use pre-assigned batch number from schedule (if provided) to avoid race conditions
         if self.assigned_batch_number:
             batch_name = self.assigned_batch_number
@@ -433,7 +436,6 @@ class EventEngine:
         else:
             # Fallback: Generate batch number (may have race condition in parallel execution)
             prefix = "FI" if "Faroe" in self.geography_name else "SCO"
-            year = self.start_date.year
             existing = Batch.objects.filter(batch_number__startswith=f"{prefix}-{year}").count()
             batch_name = f"{prefix}-{year}-{existing + 1:03d}"
             print(f"⚠️  NON-DETERMINISTIC: Generated batch number {batch_name} (may conflict in parallel)")
