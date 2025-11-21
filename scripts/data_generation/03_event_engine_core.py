@@ -996,74 +996,78 @@ class EventEngine:
                         
                         print(f"  → Moved to {new_hall.name} ({len(self.assignments)} containers)")
                 else:
-                    # Adult stage - move to sea cages in SINGLE area (realistic distribution)
+                    # Adult stage - move to sea cages
                     from django.db import transaction
                     with transaction.atomic():
                         # Calculate total fish from all old assignments
                         total_fish = sum(a.population_count for a in old_assignments)
                         avg_weight = old_assignments[0].avg_weight_g
 
-                        # Estimate containers needed (target ~200,000 fish per container for adult salmon)
-                        target_fish_per_container = 200000
-                        containers_needed = max(10, (total_fish + target_fish_per_container - 1) // target_fish_per_container)
-
-                        # FIX: SELECT SINGLE AREA using round-robin (batches rarely span multiple areas)
-                        existing_adult_batches = Batch.objects.filter(
-                            lifecycle_stage__name='Adult',
-                            batch_assignments__container__area__geography=self.geo
-                        ).distinct().count()
-                        
-                        all_areas = list(Area.objects.filter(geography=self.geo).order_by('name'))
-                        if not all_areas:
-                            raise Exception(f"No sea areas found in {self.geo.name}")
-                        
-                        # NOTE: When USE_SCHEDULE=1, this code should never execute (dead code)
-                        # Schedule pre-allocates all sea containers, bypassing area selection
-                        if self.use_schedule:
-                            # This should never happen - schedule defines all container assignments
-                            raise Exception("BUG: Sea area selection reached despite USE_SCHEDULE=1. Schedule should pre-allocate sea containers.")
-                        
-                        area_idx = existing_adult_batches % len(all_areas)
-                        target_area = all_areas[area_idx]
-                        print(f"  → Selected area {area_idx + 1}/{len(all_areas)}: {target_area.name}")
-
-                        # Find available containers IN SELECTED AREA ONLY
-                        occupied_ids = set(
-                            BatchContainerAssignment.objects.select_for_update(skip_locked=True).filter(
-                                is_active=True
-                            ).values_list('container_id', flat=True)
-                        )
-
-                        # Get ALL available containers in the area, not just the first N
-                        all_available_containers = Container.objects.select_for_update(skip_locked=True).filter(
-                            area=target_area,
-                            active=True
-                        ).exclude(
-                            id__in=occupied_ids
-                        )
-
-                        # If we need more containers than available, use all available
-                        # Otherwise, distribute evenly across all rings (not just first N)
-                        if len(all_available_containers) <= containers_needed:
-                            sea_containers = list(all_available_containers)
+                        # Check if using pre-allocated schedule (deterministic mode)
+                        if self.use_schedule and self.sea_schedule:
+                            # Use pre-allocated sea containers from schedule
+                            container_names = self.sea_schedule['rings']
+                            sea_containers = list(Container.objects.filter(name__in=container_names))
+                            
+                            if len(sea_containers) < len(container_names):
+                                raise Exception(
+                                    f"Schedule specifies {len(container_names)} sea rings, but only {len(sea_containers)} found in database"
+                                )
+                            
+                            print(f"  → Using scheduled sea allocation: {len(sea_containers)} rings in {self.sea_schedule.get('area', 'unknown')}")
                         else:
-                            # Distribute across ALL rings by taking every Nth container
-                            # This ensures even distribution across the entire area
-                            step = len(all_available_containers) // containers_needed
-                            sea_containers = []
-                            for i in range(containers_needed):
-                                idx = (i * step) % len(all_available_containers)
-                                sea_containers.append(all_available_containers[idx])
+                            # Dynamic allocation (fallback for standalone execution)
+                            # Estimate containers needed (target ~200,000 fish per container for adult salmon)
+                            target_fish_per_container = 200000
+                            containers_needed = max(10, (total_fish + target_fish_per_container - 1) // target_fish_per_container)
 
-                        sea_containers = list(sea_containers)
-                        
-                        sea_containers = list(sea_containers)
+                            # SELECT SINGLE AREA using round-robin (batches rarely span multiple areas)
+                            existing_adult_batches = Batch.objects.filter(
+                                lifecycle_stage__name='Adult',
+                                batch_assignments__container__area__geography=self.geo
+                            ).distinct().count()
+                            
+                            all_areas = list(Area.objects.filter(geography=self.geo).order_by('name'))
+                            if not all_areas:
+                                raise Exception(f"No sea areas found in {self.geo.name}")
+                            
+                            area_idx = existing_adult_batches % len(all_areas)
+                            target_area = all_areas[area_idx]
+                            print(f"  → Selected area {area_idx + 1}/{len(all_areas)}: {target_area.name}")
 
-                        if len(sea_containers) < containers_needed:
-                            raise Exception(
-                                f"Insufficient available sea cages in {target_area.name}. "
-                                f"Need {containers_needed}, found {len(sea_containers)}"
+                            # Find available containers IN SELECTED AREA ONLY
+                            occupied_ids = set(
+                                BatchContainerAssignment.objects.select_for_update(skip_locked=True).filter(
+                                    is_active=True
+                                ).values_list('container_id', flat=True)
                             )
+
+                            # Get ALL available containers in the area, not just the first N
+                            all_available_containers = Container.objects.select_for_update(skip_locked=True).filter(
+                                area=target_area,
+                                active=True
+                            ).exclude(
+                                id__in=occupied_ids
+                            )
+
+                            # If we need more containers than available, use all available
+                            # Otherwise, distribute evenly across all rings (not just first N)
+                            if len(all_available_containers) <= containers_needed:
+                                sea_containers = list(all_available_containers)
+                            else:
+                                # Distribute across ALL rings by taking every Nth container
+                                # This ensures even distribution across the entire area
+                                step = len(all_available_containers) // containers_needed
+                                sea_containers = []
+                                for i in range(containers_needed):
+                                    idx = (i * step) % len(all_available_containers)
+                                    sea_containers.append(all_available_containers[idx])
+
+                            if len(sea_containers) < containers_needed:
+                                raise Exception(
+                                    f"Insufficient available sea cages in {target_area.name}. "
+                                    f"Need {containers_needed}, found {len(sea_containers)}"
+                                )
 
                         # Distribute fish evenly across containers
                         fish_per_container = total_fish // len(sea_containers)
