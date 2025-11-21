@@ -345,7 +345,7 @@ class BatchSchedulePlanner:
                     f"starting {batch_start}! Capacity exceeded - reduce batch count or increase stagger."
                 )
             
-            allocations[stage_name.lower().replace('&', '_')] = {
+            allocations[stage_name.lower().replace('&', '_').replace('-', '_')] = {
                 'hall': allocated_hall,
                 'containers': [c.name for c in allocated_containers],
                 'start_day': stage_start_day,
@@ -409,7 +409,7 @@ class BatchSchedulePlanner:
             for container in available:
                 self.occupancy[container.name].append((absolute_start, absolute_end, batch_index))
             
-            allocations[stage_name.lower().replace('&', '_')] = {
+            allocations[stage_name.lower().replace('&', '_').replace('-', '_')] = {
                 'hall': hall_name,
                 'containers': [c.name for c in available],
                 'start_day': stage_start_day,
