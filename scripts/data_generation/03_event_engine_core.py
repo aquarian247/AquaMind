@@ -1090,7 +1090,9 @@ class EventEngine:
                             )
                             self.assignments.append(new_assignment)
                     
-                    print(f"  → Moved to {target_area.name} ({len(self.assignments)} sea containers)")
+                    # Get area name from first container
+                    area_name = self.assignments[0].container.area.name if self.assignments and self.assignments[0].container.area else "Unknown"
+                    print(f"  → Moved to {area_name} ({len(self.assignments)} sea containers)")
                 
                 # Create transfer workflow to document this transition (auditable action)
                 self._create_transfer_workflow(old_assignments, self.assignments, next_stage)
