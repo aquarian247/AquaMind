@@ -40,13 +40,14 @@ PROGRESS_DIR = Path(project_root) / 'aquamind' / 'docs' / 'progress' / 'test_dat
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
 
 class EventEngine:
-    def __init__(self, start_date, eggs, geography, duration=900, station_name=None):
+    def __init__(self, start_date, eggs, geography, duration=900, station_name=None, batch_number=None):
         self.start_date = start_date
         self.current_date = start_date
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
         self.assigned_station_name = station_name  # DETERMINISTIC: Pre-assigned station
+        self.assigned_batch_number = batch_number  # DETERMINISTIC: Pre-assigned batch number from schedule
         self.stats = {
             'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 
             'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0, 
@@ -425,10 +426,17 @@ class EventEngine:
         from apps.batch.models import BatchCreationWorkflow, CreationAction
         from apps.broodstock.models import EggSupplier
         
-        prefix = "FI" if "Faroe" in self.geography_name else "SCO"
-        year = self.start_date.year
-        existing = Batch.objects.filter(batch_number__startswith=f"{prefix}-{year}").count()
-        batch_name = f"{prefix}-{year}-{existing + 1:03d}"
+        # Use pre-assigned batch number from schedule (if provided) to avoid race conditions
+        if self.assigned_batch_number:
+            batch_name = self.assigned_batch_number
+            print(f"✓ DETERMINISTIC: Using pre-assigned batch number {batch_name}")
+        else:
+            # Fallback: Generate batch number (may have race condition in parallel execution)
+            prefix = "FI" if "Faroe" in self.geography_name else "SCO"
+            year = self.start_date.year
+            existing = Batch.objects.filter(batch_number__startswith=f"{prefix}-{year}").count()
+            batch_name = f"{prefix}-{year}-{existing + 1:03d}"
+            print(f"⚠️  NON-DETERMINISTIC: Generated batch number {batch_name} (may conflict in parallel)")
         
         # Get or create egg supplier
         supplier, _ = EggSupplier.objects.get_or_create(
@@ -1965,6 +1973,8 @@ def main():
     parser.add_argument('--duration', type=int, default=650)
     parser.add_argument('--station', type=str, default=None,
                        help='DETERMINISTIC: Specific station name to use (eliminates race conditions)')
+    parser.add_argument('--batch-number', type=str, default=None,
+                       help='DETERMINISTIC: Pre-assigned batch number from schedule (eliminates race conditions)')
     parser.add_argument('--use-schedule', action='store_true',
                        help='Use pre-allocated containers from CONTAINER_SCHEDULE env var')
     args = parser.parse_args()
@@ -1977,7 +1987,7 @@ def main():
     print("║" + " "*78 + "║")
     print("╚" + "═" * 78 + "╝\n")
     
-    engine = EventEngine(start, args.eggs, args.geography, args.duration, args.station)
+    engine = EventEngine(start, args.eggs, args.geography, args.duration, args.station, args.batch_number)
     return engine.run()
 
 if __name__ == '__main__':

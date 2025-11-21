@@ -70,6 +70,7 @@ def execute_batch_from_schedule(batch_config, log_dir=None):
         '--eggs', str(batch_config['eggs']),
         '--geography', batch_config['geography'],
         '--duration', str(batch_config['duration']),
+        '--batch-number', batch_id,  # Pass batch_id to avoid race conditions
         '--use-schedule'
     ]
     
