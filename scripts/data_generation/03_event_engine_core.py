@@ -55,15 +55,9 @@ class EventEngine:
             'fish_observations': 0, 'parameter_scores': 0, 'treatments': 0
         }
         self.current_stage_start_day = 0
-        # Realistic lifecycle stage durations (total: 900 days)
-        self.stage_durations = {
-            'Egg&Alevin': 90,   # 90 days, no feed
-            'Fry': 90,          # 90 days
-            'Parr': 90,         # 90 days
-            'Smolt': 90,        # 90 days
-            'Post-Smolt': 90,   # 90 days
-            'Adult': 450        # 450 days (batches typically harvest ~day 450-550 by weight)
-        }
+        # Realistic lifecycle stage durations by order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+        # Total lifecycle: 90×5 + 450 = 900 days
+        self.stage_durations = [90, 90, 90, 90, 90, 450]  # Indexed by order-1
         
         # Check if using pre-allocated schedule
         self.use_schedule = os.environ.get('USE_SCHEDULE') == '1'
@@ -610,13 +604,15 @@ class EventEngine:
     
     def feed_events(self, hour):
         for a in self.assignments:
-            if 'Egg' in a.lifecycle_stage.name: continue
+            # Egg&Alevin stage (order=1) doesn't feed - uses yolk sac
+            if a.lifecycle_stage.order == 1: continue
             
             biomass = float(a.biomass_kg)
             if biomass <= 0: continue
             
-            rates = {'Fry': 3, 'Parr': 2.5, 'Smolt': 2, 'Post-Smolt': 1.5, 'Adult': 1}
-            rate = rates.get(a.lifecycle_stage.name, 1.5)
+            # Feeding rates by stage order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+            feeding_rates = [0, 3, 2.5, 2, 1.5, 1]  # % of biomass per day
+            rate = feeding_rates[a.lifecycle_stage.order - 1] if a.lifecycle_stage.order <= 6 else 1.5
             amount = biomass * (rate / 100) / 2
             
             feed = self.get_feed(a.lifecycle_stage)
@@ -635,10 +631,17 @@ class EventEngine:
                 self.stats['feed'] += 1
     
     def get_feed(self, stage):
-        feeds = {'Fry': 'Starter Feed 0.5mm', 'Parr': 'Starter Feed 1.0mm',
-                 'Smolt': 'Grower Feed 2.0mm', 'Post-Smolt': 'Grower Feed 3.0mm',
-                 'Adult': 'Finisher Feed 4.5mm'}
-        return Feed.objects.filter(name=feeds.get(stage.name, 'Starter Feed 0.5mm')).first()
+        # Feed types by stage order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+        feed_names = [
+            None,  # Egg&Alevin don't feed
+            'Starter Feed 0.5mm',   # Fry
+            'Starter Feed 1.0mm',   # Parr
+            'Grower Feed 2.0mm',    # Smolt
+            'Grower Feed 3.0mm',    # Post-Smolt
+            'Finisher Feed 4.5mm'   # Adult
+        ]
+        feed_name = feed_names[stage.order - 1] if stage.order <= 6 else 'Starter Feed 0.5mm'
+        return Feed.objects.filter(name=feed_name).first() if feed_name else None
     
     def consume_fifo(self, fc, feed, amt):
         stocks = FeedContainerStock.objects.filter(
@@ -687,11 +690,11 @@ class EventEngine:
         self.stats['purchases'] += 1
     
     def mortality_check(self):
-        rates = {'Egg&Alevin': 0.0015, 'Fry': 0.0005, 'Parr': 0.0003,
-                 'Smolt': 0.0002, 'Post-Smolt': 0.00015, 'Adult': 0.0001}
+        # Daily mortality rates by stage order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+        mortality_rates = [0.0015, 0.0005, 0.0003, 0.0002, 0.00015, 0.0001]
         
         for a in self.assignments:
-            rate = rates.get(a.lifecycle_stage.name, 0.0001)
+            rate = mortality_rates[a.lifecycle_stage.order - 1] if a.lifecycle_stage.order <= 6 else 0.0001
             exp = a.population_count * rate
             act = np.random.poisson(exp)
             
@@ -713,29 +716,28 @@ class EventEngine:
                 self.stats['mort'] += 1
     
     def growth_update(self):
-        # TGC values from industry data (per 1000 degree-days, so divide by 1000)
-        # Egg&Alevin: no growth (feed from yolk sac)
-        # Fry: 2.0-2.5, Parr: 2.5-3.0, Smolt: 2.5-3.0
-        # Post-Smolt: 3.0-3.5, Adult: 3.0-3.2
-        tgc = {
-            'Egg&Alevin': 0,
-            'Fry': 0.00225,      # 2.25/1000
-            'Parr': 0.00275,     # 2.75/1000
-            'Smolt': 0.00275,    # 2.75/1000
-            'Post-Smolt': 0.00325,  # 3.25/1000
-            'Adult': 0.0031      # 3.1/1000
-        }
+        # TGC values from industry data by stage order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+        # Values are per 1000 degree-days, already divided by 1000
+        tgc_values = [
+            0,          # Egg&Alevin: no growth (feed from yolk sac)
+            0.00225,    # Fry: 2.25/1000
+            0.00275,    # Parr: 2.75/1000
+            0.00275,    # Smolt: 2.75/1000
+            0.00325,    # Post-Smolt: 3.25/1000
+            0.0031      # Adult: 3.1/1000
+        ]
         
         for a in self.assignments:
-            t = tgc.get(a.lifecycle_stage.name, 0)
+            t = tgc_values[a.lifecycle_stage.order - 1] if a.lifecycle_stage.order <= 6 else 0
             if t == 0:  # No growth for Egg&Alevin
                 continue
             
             # Temperature varies by stage (freshwater ~12°C, seawater ~8-10°C)
-            if a.lifecycle_stage.name in ['Fry', 'Parr', 'Smolt']:
-                temp = 12.0  # Freshwater
+            # Orders 2-4 (Fry, Parr, Smolt) are freshwater, 5-6 (Post-Smolt, Adult) are seawater
+            if 2 <= a.lifecycle_stage.order <= 4:
+                temp = 12.0  # Freshwater stages
             else:
-                temp = 9.0   # Seawater
+                temp = 9.0   # Seawater stages
             
             w = float(a.avg_weight_g)
             
@@ -743,15 +745,16 @@ class EventEngine:
             # Already divided TGC by 1000, so: W_f^(1/3) = W_i^(1/3) + TGC * temp * days
             new_w = ((w ** (1/3)) + t * temp * 1) ** 3
             
-            # Cap at realistic max weights per stage
-            stage_caps = {
-                'Fry': 6,        # 0.05g -> ~5g
-                'Parr': 60,      # 5g -> ~50g
-                'Smolt': 180,    # 50g -> ~150g
-                'Post-Smolt': 500,  # 150g -> ~450g
-                'Adult': 7000    # 450g -> 5-7kg
-            }
-            max_weight = stage_caps.get(a.lifecycle_stage.name, 7000)
+            # Cap at realistic max weights per stage order: [Egg&Alevin, Fry, Parr, Smolt, Post-Smolt, Adult]
+            max_weights = [
+                0.1,    # Egg&Alevin: egg weight
+                6,      # Fry: 0.05g -> ~5g
+                60,     # Parr: 5g -> ~50g
+                180,    # Smolt: 50g -> ~150g
+                500,    # Post-Smolt: 150g -> ~450g
+                7000    # Adult: 450g -> 5-7kg
+            ]
+            max_weight = max_weights[a.lifecycle_stage.order - 1] if a.lifecycle_stage.order <= 6 else 7000
             new_w = min(new_w, max_weight)
             
             a.avg_weight_g = Decimal(str(round(new_w, 2)))
@@ -800,8 +803,8 @@ class EventEngine:
         Uses normalized format (lice_type + count_value) with realistic distributions.
         Sampling frequency: Every 7 days (weekly monitoring)
         """
-        # Only track lice in Adult stage (sea cages)
-        if self.batch.lifecycle_stage.name != 'Adult':
+        # Only track lice in Adult stage (order=6, sea cages)
+        if self.batch.lifecycle_stage.order != 6:
             return
         
         # Sample weekly (every 7 days)
@@ -907,8 +910,9 @@ class EventEngine:
     def check_stage_transition(self):
         """Check if batch should transition to next lifecycle stage"""
         days_in_stage = self.stats['days'] - self.current_stage_start_day
-        current_stage_name = self.batch.lifecycle_stage.name
-        target_duration = self.stage_durations.get(current_stage_name, 999999)
+        current_stage_order = self.batch.lifecycle_stage.order
+        # Get duration for current stage (order-1 indexed)
+        target_duration = self.stage_durations[current_stage_order - 1] if current_stage_order <= 6 else 999999
         
         if days_in_stage >= target_duration:
             # Get next stage
@@ -920,17 +924,12 @@ class EventEngine:
             
             if current_idx is not None and current_idx < len(self.stages) - 1:
                 next_stage = self.stages[current_idx + 1]
-                print(f"\n  → Stage Transition: {current_stage_name} → {next_stage.name}")
+                current_stage = self.stages[current_idx]
+                print(f"\n  → Stage Transition: {current_stage.name} → {next_stage.name}")
                 
-                # Map stage to hall letter (halls are specialized by stage)
-                stage_to_hall = {
-                    'Egg&Alevin': 'A',
-                    'Fry': 'B',
-                    'Parr': 'C',
-                    'Smolt': 'D',
-                    'Post-Smolt': 'E',
-                    'Adult': None  # Sea cages, not halls
-                }
+                # Map stage order to hall letter (halls are specialized by stage)
+                # Order 1-5 → Halls A-E, Order 6 (Adult) → Sea cages (no hall)
+                hall_letters = ['A', 'B', 'C', 'D', 'E', None]  # Index by order-1
                 
                 # Close out old assignments (will be linked to transfer workflow)
                 old_assignments = list(self.assignments)
@@ -939,8 +938,8 @@ class EventEngine:
                     a.departure_date = self.current_date
                     a.save()
                 
-                # Move to new containers based on stage
-                new_hall_letter = stage_to_hall.get(next_stage.name)
+                # Move to new containers based on stage order
+                new_hall_letter = hall_letters[next_stage.order - 1] if next_stage.order <= 6 else None
                 
                 if new_hall_letter:
                     # Freshwater stage - find appropriate hall (handle both naming formats)
@@ -1022,8 +1021,9 @@ class EventEngine:
                             containers_needed = max(10, (total_fish + target_fish_per_container - 1) // target_fish_per_container)
 
                             # SELECT SINGLE AREA using round-robin (batches rarely span multiple areas)
+                            # Count batches in Adult stage (order=6)
                             existing_adult_batches = Batch.objects.filter(
-                                lifecycle_stage__name='Adult',
+                                lifecycle_stage__order=6,
                                 batch_assignments__container__area__geography=self.geo
                             ).distinct().count()
                             
@@ -1124,8 +1124,8 @@ class EventEngine:
         
         Based on veterinary feedback for comprehensive welfare monitoring.
         """
-        # Only sample Post-Smolt and Adult stages
-        if self.batch.lifecycle_stage.name not in ['Post-Smolt', 'Adult']:
+        # Only sample Post-Smolt (order=5) and Adult (order=6) stages
+        if self.batch.lifecycle_stage.order < 5:
             return
         
         # Monthly sampling
@@ -1299,8 +1299,8 @@ class EventEngine:
         Duration: 7 days
         Withholding: 42 days
         """
-        # Only treat lice in Adult stage (sea cages)
-        if self.batch.lifecycle_stage.name != 'Adult':
+        # Only treat lice in Adult stage (order=6, sea cages)
+        if self.batch.lifecycle_stage.order != 6:
             return
         
         # Check if we're at sea (not freshwater)
@@ -1756,7 +1756,8 @@ class EventEngine:
         if not self.assignments:
             return False
         
-        if self.batch.lifecycle_stage.name != 'Adult':
+        # Only harvest in Adult stage (order=6, final stage)
+        if self.batch.lifecycle_stage.order != 6:
             return False
         
         avg_weight = self.assignments[0].avg_weight_g
