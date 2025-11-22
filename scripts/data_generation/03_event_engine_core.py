@@ -1043,17 +1043,20 @@ class EventEngine:
                             )
 
                             # Get ALL available containers in the area, not just the first N
-                            all_available_containers = Container.objects.select_for_update(skip_locked=True).filter(
-                                area=target_area,
-                                active=True
-                            ).exclude(
-                                id__in=occupied_ids
+                            # Convert to list immediately to avoid N database queries on indexing
+                            all_available_containers = list(
+                                Container.objects.select_for_update(skip_locked=True).filter(
+                                    area=target_area,
+                                    active=True
+                                ).exclude(
+                                    id__in=occupied_ids
+                                )
                             )
 
                             # If we need more containers than available, use all available
                             # Otherwise, distribute evenly across all rings (not just first N)
                             if len(all_available_containers) <= containers_needed:
-                                sea_containers = list(all_available_containers)
+                                sea_containers = all_available_containers
                             else:
                                 # Distribute across ALL rings by taking every Nth container
                                 # This ensures even distribution across the entire area
