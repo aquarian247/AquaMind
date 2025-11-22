@@ -29,6 +29,7 @@ import sys
 import json
 import django
 import subprocess
+import multiprocessing as mp
 from datetime import date, timedelta
 from pathlib import Path
 import random
