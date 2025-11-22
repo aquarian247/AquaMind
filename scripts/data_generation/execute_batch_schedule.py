@@ -22,14 +22,36 @@ import time
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-def execute_batch_from_schedule(batch_config):
+
+def _resolve_log_path(log_dir, batch_id):
+    """Resolve log file path for batch."""
+    log_dir = Path(log_dir)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir / f"batch_{batch_id}.log"
+
+
+def _write_batch_log(log_path, stdout, stderr, success):
+    """Write batch execution log."""
+    with open(log_path, 'w') as f:
+        f.write(f"{'='*80}\n")
+        f.write(f"Batch Execution Log\n")
+        f.write(f"Status: {'SUCCESS' if success else 'FAILED'}\n")
+        f.write(f"{'='*80}\n\n")
+        
+        f.write("=== STDOUT ===\n")
+        f.write(stdout or "(empty)\n")
+        f.write("\n=== STDERR ===\n")
+        f.write(stderr or "(empty)\n")
+
+
+def execute_batch_from_schedule(batch_config, log_dir=None):
     """
     Execute single batch using pre-allocated containers from schedule.
     Running in a separate process via subprocess.
     """
     start_time = time.time()
     batch_id = batch_config['batch_id']
-    
+
     # Prepare environment variables with schedule
     env = os.environ.copy()
     env['SKIP_CELERY_SIGNALS'] = '1'
@@ -37,13 +59,18 @@ def execute_batch_from_schedule(batch_config):
     env['CONTAINER_SCHEDULE'] = json.dumps(batch_config['freshwater'])
     if 'sea' in batch_config and batch_config['sea']:
         env['SEA_SCHEDULE'] = json.dumps(batch_config['sea'])
-    
+
+    # Pass harvest target if specified (for deterministic randomness)
+    if 'harvest_target_kg' in batch_config:
+        env['HARVEST_TARGET_KG'] = str(batch_config['harvest_target_kg'])
+
     cmd = [
         'python', 'scripts/data_generation/03_event_engine_core.py',
         '--start-date', batch_config['start_date'],
         '--eggs', str(batch_config['eggs']),
         '--geography', batch_config['geography'],
         '--duration', str(batch_config['duration']),
+        '--batch-number', batch_id,  # Pass batch_id to avoid race conditions
         '--use-schedule'
     ]
     
@@ -58,6 +85,12 @@ def execute_batch_from_schedule(batch_config):
             cwd=str(project_root)
         )
         duration = time.time() - start_time
+        
+        # Write log file if log_dir provided
+        if log_dir:
+            log_path = _resolve_log_path(log_dir, batch_id)
+            _write_batch_log(log_path, result.stdout, "", True)
+        
         return {
             'success': True, 
             'batch_id': batch_id, 
@@ -65,6 +98,11 @@ def execute_batch_from_schedule(batch_config):
             'output': result.stdout
         }
     except subprocess.CalledProcessError as e:
+        # Write error log
+        if log_dir:
+            log_path = _resolve_log_path(log_dir, batch_id)
+            _write_batch_log(log_path, e.stdout, e.stderr, False)
+        
         return {
             'success': False, 
             'batch_id': batch_id, 
@@ -74,11 +112,11 @@ def execute_batch_from_schedule(batch_config):
 
 def execute_worker_partition(args):
     """Execute a partition of batches assigned to a single worker."""
-    worker_id, batch_configs = args
+    worker_id, batch_configs, log_dir = args
     results = []
     
     for batch_config in batch_configs:
-        result = execute_batch_from_schedule(batch_config)
+        result = execute_batch_from_schedule(batch_config, log_dir)
         result['worker_id'] = worker_id
         results.append(result)
     
@@ -90,6 +128,8 @@ def main():
     parser.add_argument('--workers', type=int, default=1, help='Number of parallel workers (default: 1)')
     parser.add_argument('--use-partitions', action='store_true', 
                        help='Use pre-planned worker partitions (eliminates races)')
+    parser.add_argument('--log-dir', type=str, default='scripts/data_generation/logs',
+                       help='Directory for per-batch execution logs (default: scripts/data_generation/logs)')
     args = parser.parse_args()
     
     if not os.path.exists(args.schedule_file):
@@ -126,7 +166,7 @@ def main():
         for worker_id, partition_info in worker_partitions.items():
             batch_indices = partition_info['batch_indices']
             worker_batches = [batches[i] for i in batch_indices]
-            worker_tasks.append((worker_id, worker_batches))
+            worker_tasks.append((worker_id, worker_batches, args.log_dir))
             print(f"  {worker_id}: {partition_info['count']} batches (indices {partition_info['batch_range']})")
         
         print(f"\nStarting {len(worker_tasks)} workers with partitioned execution...\n")
@@ -151,8 +191,10 @@ def main():
     elif args.workers > 1:
         # STANDARD MODE: Workers compete for batches (may have races)
         print(f"Starting parallel execution with {args.workers} workers...")
+        from functools import partial
+        execute_with_log = partial(execute_batch_from_schedule, log_dir=args.log_dir)
         with mp.Pool(processes=args.workers) as pool:
-            for i, result in enumerate(pool.imap_unordered(execute_batch_from_schedule, batches)):
+            for i, result in enumerate(pool.imap_unordered(execute_with_log, batches)):
                 status = "✅" if result['success'] else "❌"
                 print(f"[{i+1}/{total_batches}] {status} Batch {result['batch_id']} ({result.get('duration', 0):.1f}s)")
                 results.append(result)
@@ -165,7 +207,7 @@ def main():
         # SEQUENTIAL MODE
         print("Starting sequential execution...")
         for i, batch in enumerate(batches):
-            result = execute_batch_from_schedule(batch)
+            result = execute_batch_from_schedule(batch, args.log_dir)
             status = "✅" if result['success'] else "❌"
             print(f"[{i+1}/{total_batches}] {status} Batch {result['batch_id']} ({result.get('duration', 0):.1f}s)")
             results.append(result)
@@ -198,4 +240,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-

@@ -26,7 +26,7 @@ import yaml
 import argparse
 from datetime import date, timedelta
 from pathlib import Path
-import random
+import random  # Used only for harvest target variation (deterministic via seed in schedule)
 from collections import defaultdict
 
 project_root = Path(__file__).parent.parent.parent
@@ -50,7 +50,7 @@ class BatchSchedulePlanner:
         self.adult_duration = adult_duration
         self.occupancy = defaultdict(list)  # {container_name: [(start_day, end_day, batch_id), ...]}
         self.schedule = []
-        
+
         # Stage durations (from event engine)
         self.stage_durations = {
             'Egg&Alevin': 90,
@@ -60,6 +60,60 @@ class BatchSchedulePlanner:
             'Post-Smolt': 90,
             'Adult': adult_duration
         }
+
+        # Weight-based harvest parameters (from event engine)
+        # Get actual TGC and temperature from database models
+        tgc_adult, temp_sea = self._get_adult_tgc_and_temp()
+        self.harvest_targets = {
+            'min_weight_kg': 4.5,  # Minimum harvest weight
+            'max_weight_kg': 6.5,  # Maximum harvest weight
+            'adult_start_weight_g': 450,  # Weight when entering Adult stage
+            'tgc_adult': tgc_adult,  # Adult stage TGC value from database
+            'temp_sea_c': temp_sea   # Sea temperature from database
+        }
+    
+    def _get_adult_tgc_and_temp(self):
+        """
+        Get actual Adult stage TGC value and sea temperature from database models.
+        Falls back to defaults if models not initialized.
+        
+        Returns:
+            Tuple of (tgc_value, temperature_c)
+        """
+        try:
+            from apps.scenario.models import TGCModel, TemperatureProfile, TemperatureReading
+            from django.db.models import Avg
+            
+            # Get any TGC model (they should be similar for Adult stage)
+            tgc_model = TGCModel.objects.first()
+            
+            if tgc_model:
+                tgc_value = float(tgc_model.tgc_value)
+            else:
+                tgc_value = 0.0031  # Fallback to standard value
+            
+            # Get average sea temperature from any temperature profile
+            temp_profile = TemperatureProfile.objects.filter(
+                name__icontains='Sea'
+            ).first()
+            
+            if temp_profile:
+                avg_temp = TemperatureReading.objects.filter(
+                    profile=temp_profile
+                ).aggregate(avg=Avg('temperature'))['avg']
+                temp_c = float(avg_temp) if avg_temp else 9.0
+            else:
+                temp_c = 9.0  # Fallback
+            
+            print(f"  Using TGC from database: {tgc_value}")
+            print(f"  Using sea temp from database: {temp_c:.1f}°C")
+            
+            return tgc_value, temp_c
+            
+        except Exception as e:
+            print(f"  ⚠ Could not load TGC/temp from database: {e}")
+            print(f"  Using fallback values: TGC=0.0031, Temp=9.0°C")
+            return 0.0031, 9.0  # Safe defaults
     
     def generate_schedule(self):
         """Generate complete deterministic schedule."""
@@ -69,9 +123,7 @@ class BatchSchedulePlanner:
         
         # Calculate start date (historical)
         today = date.today()
-        # We generate batches_per_geo * 2 total batches
-        # Interleaved: Batch 0 (F), Batch 1 (S), Batch 2 (F)...
-        # Total spans: (total_batches - 1) * stagger_days
+        # Interleaved batches (F, S, F, S...) with global stagger
         total_batches = self.batches_per_geo * 2
         span_days = (total_batches - 1) * self.stagger_days
         buffer_days = 50
@@ -169,42 +221,60 @@ class BatchSchedulePlanner:
         print()
     
     def _plan_single_batch(self, geo_name, geo_data, batch_index, batch_start, duration):
-        """Plan container allocation for single batch."""
-        
+        """Plan container allocation for single batch with weight-based harvest estimation."""
+
+        # For weight-based planning: Estimate actual harvest timing
+        # Use worst-case scenario (slowest growth to highest weight target)
+        harvest_target_kg = self.harvest_targets['max_weight_kg']  # Plan for maximum weight (longest duration)
+        estimated_harvest_days = self._estimate_harvest_days(
+            adult_start_weight_g=self.harvest_targets['adult_start_weight_g'],
+            target_harvest_kg=harvest_target_kg,
+            tgc=self.harvest_targets['tgc_adult'],
+            temp_c=self.harvest_targets['temp_sea_c']
+        )
+
+        # Use the longer of: date-bounded duration OR estimated harvest duration
+        # This ensures containers are planned for worst-case occupation
+        effective_duration = max(duration, estimated_harvest_days + 450)  # +450 for full lifecycle
+
         # Allocate freshwater containers (10 per stage)
         # Each stage can use ANY available hall (doesn't need to be same station)
         fw_containers = self._allocate_freshwater_independent(
-            geo_data['stations'], 
-            batch_index, 
-            batch_start, 
-            duration
+            geo_data['stations'],
+            batch_index,
+            batch_start,
+            effective_duration  # Use conservative duration for planning
         )
-        
+
         # Get station name from first allocated hall (for batch metadata)
         first_hall_name = list(fw_containers.values())[0]['hall'] if fw_containers else None
         station_name = first_hall_name.rsplit('-Hall-', 1)[0] if first_hall_name else geo_data['stations'][0].name
-        
+
         # Deterministic sea area selection (round-robin)
         area_idx = batch_index % len(geo_data['areas'])
-        
+
         # Allocate sea rings (20 per batch, full area utilization)
         sea_containers = self._allocate_sea_rings(
             geo_data['areas'],
             area_idx,
             batch_index,
             batch_start,
-            duration
+            effective_duration  # Conservative planning
         )
-        
-        # Generate batch config
+
+        # Generate batch config - include harvest target for execution
         batch_id = f"{geo_data['geography'].code if hasattr(geo_data['geography'], 'code') else geo_name[:3].upper()}-{batch_start.year}-{batch_index+1:03d}"
-        eggs = random.randint(3000000, 3800000)
-        
+        # Deterministic egg count based on batch index (eliminates random seed)
+        eggs = 3000000 + ((batch_index * 123456) % 800000)  # Range: 3.0M - 3.8M
+        actual_harvest_target = self._get_random_harvest_target()  # Random target for execution
+
         return {
             'batch_id': batch_id,
             'start_date': str(batch_start),
             'eggs': eggs,
-            'duration': duration,
+            'duration': duration,  # Actual execution duration
+            'effective_duration': effective_duration,  # Conservative planning duration
+            'harvest_target_kg': actual_harvest_target,  # For execution (matches engine)
             'geography': geo_name,
             'station': station_name,
             'freshwater': fw_containers,
@@ -275,7 +345,7 @@ class BatchSchedulePlanner:
                     f"starting {batch_start}! Capacity exceeded - reduce batch count or increase stagger."
                 )
             
-            allocations[stage_name.lower().replace('&', '_')] = {
+            allocations[stage_name.lower().replace('&', '_').replace('-', '_')] = {
                 'hall': allocated_hall,
                 'containers': [c.name for c in allocated_containers],
                 'start_day': stage_start_day,
@@ -339,7 +409,7 @@ class BatchSchedulePlanner:
             for container in available:
                 self.occupancy[container.name].append((absolute_start, absolute_end, batch_index))
             
-            allocations[stage_name.lower().replace('&', '_')] = {
+            allocations[stage_name.lower().replace('&', '_').replace('-', '_')] = {
                 'hall': hall_name,
                 'containers': [c.name for c in available],
                 'start_day': stage_start_day,
@@ -348,6 +418,39 @@ class BatchSchedulePlanner:
         
         return allocations
     
+    def _estimate_harvest_days(self, adult_start_weight_g, target_harvest_kg, tgc, temp_c):
+        """
+        Estimate days needed to reach harvest weight from adult stage entry.
+
+        Uses the same TGC formula as the event engine:
+        W_final^(1/3) = W_initial^(1/3) + TGC * temp * days
+
+        Args:
+            adult_start_weight_g: Weight when entering adult stage (g)
+            target_harvest_kg: Target harvest weight (kg)
+            tgc: Thermal growth coefficient
+            temp_c: Temperature in Celsius
+
+        Returns:
+            Days needed to reach target weight (capped at adult_duration)
+        """
+        w_start_kg = adult_start_weight_g / 1000  # Convert to kg
+        w_target_kg = target_harvest_kg
+
+        # TGC formula: W_target^(1/3) = W_start^(1/3) + TGC * temp * days
+        # Solve for days: days = (W_target^(1/3) - W_start^(1/3)) / (TGC * temp)
+        days_needed = (w_target_kg**(1/3) - w_start_kg**(1/3)) / (tgc * temp_c)
+
+        # Cap at maximum adult duration (some batches may not reach target weight)
+        return min(max(days_needed, 1), self.adult_duration)
+
+    def _get_random_harvest_target(self):
+        """Get random harvest target weight (4.5-6.5kg) matching event engine."""
+        return random.uniform(
+            self.harvest_targets['min_weight_kg'],
+            self.harvest_targets['max_weight_kg']
+        )
+
     def _check_container_available(self, container_name, start_day, end_day):
         """Check if container is available during specified period."""
         occupied_periods = self.occupancy.get(container_name, [])
@@ -434,9 +537,10 @@ class BatchSchedulePlanner:
             if len(rings) != 20:
                 continue  # Skip areas that don't have 20 rings
             
-            # Try to allocate rings: 8 → 10 → 12 → 15 → 20 (adaptive, prefer smaller)
-            # Also try minimum viable (6 rings) as last resort
-            for ring_count in [8, 10, 12, 15, 20, 6]:
+            # Allocate 10 rings per batch (1:1 ratio from Post-Smolt)
+            # Fallback to larger allocations if needed for packing efficiency
+            # Post-Smolt: 10 containers → Adult: 10-15 rings preferred
+            for ring_count in [10, 12, 15, 20, 8]:
                 available_rings = []
                 for ring in rings:
                     if self._check_rings_available([ring], batch_start, adult_start_day, adult_end_day):
@@ -654,14 +758,20 @@ def main():
     parser.add_argument(
         '--batches',
         type=int,
-        default=225,
-        help='Number of batches per geography (default: 225 for 87%% saturation with 5-day stagger)'
+        default=None,
+        help='Number of batches per geography (if not specified, calculated from --years and --stagger)'
+    )
+    parser.add_argument(
+        '--years',
+        type=float,
+        default=4.0,
+        help='Years of historical data to generate (default: 4.0)'
     )
     parser.add_argument(
         '--saturation',
         type=float,
-        default=0.87,
-        help='Target infrastructure saturation (default: 0.87)'
+        default=0.85,
+        help='Target infrastructure saturation (default: 0.85)'
     )
     parser.add_argument(
         '--stagger',
@@ -689,9 +799,58 @@ def main():
     
     args = parser.parse_args()
     
+    # Calculate batches_per_geo from years and stagger if not explicitly provided
+    if args.batches is None:
+        # Calculate maximum batches from BOTH time and infrastructure constraints
+        total_days = int(args.years * 365)
+        
+        # Time constraint: How many batches fit in the timespan?
+        total_batch_starts = total_days // args.stagger
+        max_from_time = total_batch_starts // 2  # Per geography
+        
+        # Infrastructure constraint: Sea rings are the bottleneck
+        # Compact allocation: 10 rings per batch (matches Post-Smolt container count)
+        # Scotland: 400 rings / 10 = 40 batches max in Adult simultaneously
+        # At 85% saturation: 40 × 0.85 = 34 concurrent Adult batches
+        
+        rings_per_batch = 10  # Compact: Post-Smolt 10 containers → Adult 10 rings (1:1 ratio)
+        scotland_rings = 400
+        available_rings = scotland_rings * args.saturation
+        max_concurrent_adult_scotland = int(available_rings / rings_per_batch)
+        
+        # For the requested stagger, how many batches would overlap in Adult?
+        adult_overlap = args.adult_duration / args.stagger
+        
+        # Can we support that many? If not, we're infrastructure-limited
+        if adult_overlap > max_concurrent_adult_scotland:
+            # Infrastructure-limited: Use what fits
+            max_from_infrastructure = max_concurrent_adult_scotland
+            print(f'   ⚠️  Stagger too tight: {adult_overlap:.0f} batches would overlap in Adult, but capacity is {max_concurrent_adult_scotland}')
+        else:
+            # Stagger is safe: Use time-based limit
+            max_from_infrastructure = max_from_time
+        
+        # Use the lesser of the two constraints
+        batches_per_geo = min(max_from_time, max_from_infrastructure)
+        
+        print(f"\n📊 Auto-calculating batch count from constraints:")
+        print(f"   Target: {args.years} years, {args.saturation*100:.0f}% saturation, {args.stagger}-day stagger")
+        print(f"   Time constraint: {max_from_time} batches/geo (fits in {total_days} days)")
+        print(f"   Infrastructure constraint: {max_from_infrastructure} batches/geo (400 Scotland rings)")
+        print(f"   Limiting factor: {'TIME' if batches_per_geo == max_from_time else 'INFRASTRUCTURE'}")
+        print(f"   Selected: {batches_per_geo} batches per geography")
+        print(f"   Total batches: {batches_per_geo * 2}\n")
+    else:
+        batches_per_geo = args.batches
+        calculated_years = (batches_per_geo * 2 * args.stagger) / 365
+        print(f"\n📊 Using specified batch count:")
+        print(f"   Batches per geography: {batches_per_geo}")
+        print(f"   Total batches: {batches_per_geo * 2}")
+        print(f"   With {args.stagger}-day stagger: ~{calculated_years:.1f} years of data\n")
+    
     try:
         planner = BatchSchedulePlanner(
-            batches_per_geo=args.batches,
+            batches_per_geo=batches_per_geo,
             target_saturation=args.saturation,
             stagger_days=args.stagger,
             adult_duration=args.adult_duration
@@ -731,4 +890,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
