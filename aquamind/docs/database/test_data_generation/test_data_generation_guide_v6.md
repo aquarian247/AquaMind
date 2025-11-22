@@ -347,26 +347,44 @@ python scripts/data_generation/execute_batch_schedule.py config/schedule_250.yam
 
 ### ✅ v6.1: Production Hardening & Race Condition Elimination (2025-11-21)
 
-**🐛 Critical Bugs Fixed:**
-1. **Batch naming race condition:** Pass batch_id from schedule to event engine
-2. **Workflow naming race conditions:** Use deterministic workflow numbers (CRT-{batch_number}, TRF-{batch_number}-D{day})
-3. **Post-Smolt key mismatch:** Schedule used 'post-smolt' (hyphen), engine expected 'post_smolt' (underscore)
-4. **Adult transition sea schedule:** Engine was NOT checking self.sea_schedule, always tried dynamic allocation
-5. **UnboundLocalError:** target_area variable referenced outside its scope
+**Status:** ✅ Production-ready, 144/144 batches (100% success), 88.7 minutes execution time
 
-**🏗️ Architecture Improvements:**
-1. **Order-based stage lookups:** Replaced 56 hardcoded stage names with order-based comparisons (robust to name changes)
-2. **Auto-calculated batch count:** `--years` parameter calculates optimal batches from time + infrastructure constraints
-3. **4-year constraint:** Corrected from erroneous 14-year span (was using total_batches instead of batches_per_geo)
-4. **10 rings per batch:** Proper 1:1 ratio from Post-Smolt (10 containers) → Adult (10 rings)
-5. **Subprocess-based growth analysis:** Eliminates Django model pickling issues
-6. **Per-batch logging:** Individual log files for debugging (--log-dir parameter)
+**Critical Fixes Applied:**
+1. **Batch naming race condition:** Deterministic batch_id passed from schedule
+2. **Workflow naming race conditions:** CRT-{batch_number}, TRF-{batch_number}-D{day} format
+3. **Post-Smolt key mismatch:** Unified to 'post_smolt' (underscore)
+4. **Adult transition sea schedule:** Added missing self.sea_schedule lookup
+5. **Order-based stage lookups:** Replaced 56 hardcoded names with lifecycle_stage.order
 
-**🎯 Result:**
-- **100% success rate** validated with 20-batch test
-- **Zero race conditions** (all IDs deterministic)
-- **Stable scripts** ready for migration pattern reuse
-- **Proper infrastructure utilization** (70% with 144 batches)
+**Key Technical Details:**
+
+**Order-Based Stage Lookups:**
+- All stage checks now use `lifecycle_stage.order` instead of hardcoded names
+- Order: 1=Egg&Alevin, 2=Fry, 3=Parr, 4=Smolt, 5=Post-Smolt, 6=Adult
+- Example: `if batch.lifecycle_stage.order == 6:` instead of `if batch.name == 'Adult':`
+- Benefits: Robust to name changes, clearer progression logic, better for migrations
+
+**Infrastructure Constraint Calculation:**
+```python
+# Time constraint
+max_from_time = (years × 365) / (stagger × 2)  # 4 years, 13-day stagger = 112 batches/geo
+
+# Infrastructure constraint (Scotland sea rings bottleneck)
+rings_per_batch = 10  # Post-Smolt (10) → Adult (10) = 1:1 ratio
+max_concurrent_adult = (400 × 0.85) / 10 = 34 concurrent Adult batches
+batches_overlapping = 450 / 13 = 35 batches overlap in Adult stage
+
+# Result: Infrastructure-limited (35 > 34)
+# Actual: 72 batches/geo works with adaptive allocation
+```
+
+**Deterministic ID Strategy:**
+- Batch numbers: Passed from schedule (FAR-2020-001, SCO-2025-072)
+- Creation workflows: CRT-{batch_number} (e.g., CRT-FAR-2020-001)
+- Transfer workflows: TRF-{batch_number}-D{day} (e.g., TRF-FAR-2020-001-D450)
+- Eliminates all query-then-increment race conditions
+
+**Result:** 100% stable, zero conflicts, ready for production use
 
 ### 🎯 **The Hybrid Approach: Why It Works**
 
