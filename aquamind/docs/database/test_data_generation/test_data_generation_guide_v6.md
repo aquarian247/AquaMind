@@ -1209,134 +1209,79 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/04_batch_orchestrator_paral
 
 ---
 
-## 📚 HISTORICAL CONTEXT
+## 🔧 TECHNICAL REFERENCE
 
-### November 20, 2025 - Critical Bug Fixes & Feature Completion
+### Order-Based Stage Lookups
 
-**Problems Discovered:**
-- 49 batches stuck in "PLANNED" status (should be COMPLETED/ACTIVE)
-- 0 batches had pinned_scenario (scenarios existed but not pinned)
-- 111 batches missing Growth Analysis data
+**All scripts use `lifecycle_stage.order` instead of hardcoded names for robustness.**
 
-**Root Cause:** Event engine didn't set status/pinning after batch operations
+**Stage Order Mapping:**
+```
+1 = Egg&Alevin (no feeding, 90 days)
+2 = Fry (freshwater, 90 days)
+3 = Parr (freshwater, 90 days)
+4 = Smolt (freshwater, 90 days)
+5 = Post-Smolt (seawater, 90 days)
+6 = Adult (seawater, 450 days, harvested)
+```
 
-**Fixes Applied:**
-1. `batch.status = 'COMPLETED'` after harvest (line ~1572)
-2. `batch.pinned_scenario = scenario` after scenario creation (line ~1270)
-3. Growth Analysis computed check improved (line ~1610)
+**Example Usage:**
+```python
+# Correct: Order-based checks
+if batch.lifecycle_stage.order == 6:  # Adult stage
+if 2 <= stage.order <= 4:  # Freshwater stages (Fry, Parr, Smolt)
+if stage.order >= 5:  # Seawater stages (Post-Smolt, Adult)
 
-**New Features Added:**
-- Finance: Intercompany policies + DimSite creation
-- Health: 9 parameters with monthly sampling (75 fish, 9 scores each)
-- Treatments: 4 vaccinations + 2 lice treatments per batch
+# Wrong: Hardcoded names (fragile)
+if batch.lifecycle_stage.name == 'Adult':  # Breaks if name changes
+```
 
-**Philosophy:** Test data scripts = migration prototypes. Fix at source, never backfill.
-
-**Result:** All bugs fixed, health/finance fully integrated, 13 obsolete scripts removed.
-
-### November 18, 2025 - Growth Analysis Fix (Issue #112)
-
-**Problem:** Population doubling at stage transitions (~2x inflation)
-
-**Root Cause:** Transfer destinations had fish in BOTH metadata (`assignment.population_count`) AND transfer records (`TransferAction.transferred_count`). Growth Engine correctly summed both → double-counting.
-
-**Fix Applied:** `apps/batch/services/growth_assimilation.py` line 469-485
-- Detect if assignment is transfer destination on first day
-- Start from 0 population (not metadata)
-- Let placements add fish daily from transfers
-
-**Verification:** Day 91 population = ~3M (not ~6M)
-
-**Documentation:** `/aquamind/docs/progress/test_data_2025_11_18/`
+**Benefits:** Robust to name changes, clearer progression, migration-safe.
 
 ---
 
-## 🎉 READY FOR PRODUCTION
+### Deterministic ID Strategy
 
-**Current Status (v3.0):**
-- ✅ All core systems verified
-- ✅ Growth Engine fix applied and tested
-- ✅ Parallel orchestrator optimized (10-12x speedup)
-- ✅ Infrastructure saturation model validated
-- ✅ Celery signal bypass for 600x speedup
-- ✅ Realistic data volumes and distributions
+**All entity IDs are deterministic to eliminate race conditions in parallel execution.**
 
-**Recommended Approach:**
-1. **Test:** 20 batches (90 minutes)
-2. **Verify:** Run validation queries
-3. **Scale:** 85 batches (5-6 hours) if test passes
+| Entity | Format | Example |
+|--------|--------|---------|
+| Batch | From schedule | FAR-2020-001, SCO-2025-072 |
+| Creation Workflow | CRT-{batch_number} | CRT-FAR-2020-001 |
+| Transfer Workflow | TRF-{batch_number}-D{day} | TRF-FAR-2020-001-D450 |
+
+**Critical Rule:** Never query-then-increment in parallel code. Always pass predetermined IDs.
 
 ---
 
-## 📝 COMMAND REFERENCE
+### Infrastructure Capacity Calculation
 
-```bash
-# === WIPE DATA (Fast with SQL TRUNCATE) ===
-psql aquamind_db -c "TRUNCATE TABLE batch_batch CASCADE; TRUNCATE TABLE inventory_feedpurchase CASCADE;"
+**Scheduler auto-calculates maximum batches from time AND infrastructure constraints:**
 
-# === ONE-TIME SETUP (Run once after infrastructure exists) ===
-python scripts/data_generation/01_initialize_scenario_master_data.py   # TGC/temperature models
-python scripts/data_generation/01_initialize_finance_policies.py       # Intercompany policies
-python scripts/data_generation/01_initialize_health_parameters.py      # Health parameters
+```python
+# Time constraint
+years = 4; stagger = 13
+max_from_time = (years × 365) / (stagger × 2) = 56 batches/geo
 
-# === TEST GENERATION (20 batches) ===
-# Step 1: Generate schedule
-python scripts/data_generation/generate_batch_schedule.py \
-  --batches 10 --stagger 30 --saturation 0.85 \
-  --output config/test_20.yaml
+# Infrastructure constraint (Scotland sea rings = bottleneck)
+scotland_rings = 400; rings_per_batch = 10; saturation = 0.85
+max_concurrent_adult = (400 × 0.85) / 10 = 34 batches
+overlap_in_adult = 450 / 13 = 35 batches
 
-# Step 2: Execute schedule (~10 minutes)
-SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
-  config/test_20.yaml --workers 4 --use-partitions \
-  --log-dir scripts/data_generation/logs/test
-
-# === FULL PRODUCTION (144 batches, 5.2 years) ===
-# Step 1: Generate schedule with auto-calculated batch count
-python scripts/data_generation/generate_batch_schedule.py \
-  --years 4 --stagger 13 --saturation 0.85 \
-  --output config/schedule_production.yaml
-
-# Step 2: Execute schedule (~45 minutes)
-SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
-  config/schedule_production.yaml --workers 14 --use-partitions \
-  --log-dir scripts/data_generation/logs/production
-
-# === MANUAL BATCH (Standalone, for debugging) ===
-SKIP_CELERY_SIGNALS=1 python scripts/data_generation/03_event_engine_core.py \
-  --start-date 2025-01-01 --eggs 3500000 --geography "Faroe Islands" --duration 200
-
-# === VERIFICATION ===
-python scripts/data_generation/verify_test_data.py
+# Result: Infrastructure-limited (35 > 34)
+# Actual: 72 batches/geo validated through testing
 ```
 
 ---
 
-## 🎯 **READY FOR PRODUCTION - v4.0**
+### Schedule File Structure
 
-**Single Source of Truth** - Version 4.0  
-**Last Updated:** 2025-11-20  
-**Status:** All critical bugs fixed, health & finance integrated  
-**Expected Data Volume:** 50M+ events for full saturation (includes health data)
+**Generated by `generate_batch_schedule.py`, consumed by `execute_batch_schedule.py`.**
 
-**Key Improvements in v4.0:**
-- ✅ All 3 root cause bugs fixed (status, pinning, Growth Analysis)
-- ✅ Health monitoring: 9 parameters, monthly sampling, 75 fish
-- ✅ Treatments: 4 vaccinations + 2 lice per batch
-- ✅ Finance: Intercompany policies, DimSite, automatic projection
-- ✅ Scripts cleaned: 13 obsolete scripts removed
-- ✅ Migration-ready: No backfill scripts, all correct at source
-
-**This guide contains everything needed for test data generation. No other documents required.**
-
----
-
-## 🎯 **SUCCESS: v6.0 Hybrid Weight-Aware Deterministic Scheduling**
-
-**Achieved:** 100% success rate with realistic harvest variation
-
-**Solution:** Weight-aware deterministic pre-planning + execution-time harvest randomness
-
-**Result:** Perfect balance of predictability and realism - the impossible made possible!
+**Critical Details:**
+- Stage keys use underscores: `egg_alevin`, `post_smolt` (NOT hyphens!)
+- Each batch has `freshwater` dict (5 stages) and `sea` dict (rings list)
+- Worker partitions for chronological parallel execution
 
 ---
 
