@@ -2,6 +2,9 @@
 django==4.2.11
 # Database connectivity for PostgreSQL/TimescaleDB (latest minor version)
 psycopg2-binary==2.9.10
+# SQL Server connectivity for AVEVA historian ingestion
+pyodbc==5.3.0
+pymssql==2.3.9
 # REST API framework
 djangorestframework==3.15.2
 # API filtering

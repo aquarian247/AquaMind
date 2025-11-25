@@ -1,0 +1,30 @@
+{
+  "batch": {
+    "start_date": "2024-01-01",
+    "eggs": 350000,
+    "geography": "Faroe Islands",
+    "duration": 30
+  },
+  "days": {
+    "0": {
+      "assignments": [
+        {
+          "container": "FT-Container-1001",
+          "population_count": 20000,
+          "avg_weight_g": 5,
+          "biomass_kg": 100
+        }
+      ],
+      "events": [
+        {
+          "type": "feed",
+          "container": "FT-Container-1001",
+          "amount_kg": 25.0,
+          "hour": 8,
+          "note": "Historical replay"
+        }
+      ],
+      "replace_default_events": false
+    }
+  }
+}

@@ -1,7 +1,7 @@
-# AquaMind Test Data Generation Guide v6.0
+# AquaMind Test Data Generation Guide v6.2
 
-**Last Updated:** 2025-11-21
-**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling**
+**Last Updated:** 2025-11-25
+**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling + Optimized Growth Analysis**
 
 **⚠️ THIS IS THE SINGLE SOURCE OF TRUTH FOR TEST DATA GENERATION**
 
@@ -19,7 +19,7 @@ Generate **realistic, production-scale test data** that:
 
 ## 🚀 QUICK START
 
-### Option A: Full Infrastructure Saturation (45 minutes)
+### Option A: Full Infrastructure Saturation (55 minutes total)
 
 ```bash
 cd /Users/aquarian247/Projects/AquaMind
@@ -29,19 +29,26 @@ python scripts/data_generation/01_initialize_scenario_master_data.py
 python scripts/data_generation/01_initialize_finance_policies.py
 python scripts/data_generation/01_initialize_health_parameters.py
 
-# 2. Wipe operational data (fast with TRUNCATE)
+# 2. Apply database migrations (includes Growth Analysis performance indexes)
+python manage.py migrate
+
+# 3. Wipe operational data (fast with TRUNCATE)
 psql aquamind_db -c "TRUNCATE TABLE batch_batch CASCADE; TRUNCATE TABLE inventory_feedpurchase CASCADE;"
 
-# 3. Generate schedule (auto-calculates optimal batch count from constraints)
+# 4. Generate schedule (auto-calculates optimal batch count from constraints)
 python scripts/data_generation/generate_batch_schedule.py \
   --years 4 --stagger 13 --saturation 0.85 \
   --output config/schedule_production.yaml
 
-# 4. Execute schedule with parallel workers (45 minutes)
+# 5. Execute schedule with parallel workers (45 minutes)
 SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
   config/schedule_production.yaml \
   --workers 14 --use-partitions \
   --log-dir scripts/data_generation/logs/production
+
+# 6. Run Growth Analysis recomputation (8-10 minutes)
+# This computes ActualDailyAssignmentState for all batches - required for Growth Analysis charts
+python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 ```
 
 **Expected Results:**
@@ -54,11 +61,12 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
 - **225K+ fish observations** (75 per event)
 - **2M+ health parameter scores** (9 per fish)
 - **4,000+ treatments** (vaccinations + lice)
+- **~940K ActualDailyAssignmentState records** (Growth Analysis data)
 - **Finance facts + intercompany transactions**
 - **5.2 years** of operational history
 - **70% infrastructure utilization** (10 rings per batch)
 
-### Option B: Small Test (20 batches, ~90 minutes)
+### Option B: Small Test (20 batches, ~100 minutes)
 
 ```bash
 cd /Users/aquarian247/Projects/AquaMind
@@ -68,6 +76,9 @@ echo "DELETE" | python scripts/data_generation/00_wipe_operational_data.py --con
 
 SKIP_CELERY_SIGNALS=1 python scripts/data_generation/04_batch_orchestrator_parallel.py \
   --execute --batches 20 --workers 14
+
+# Run Growth Analysis (required for Growth charts to work)
+python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 ```
 
 **Expected Results:**
@@ -76,6 +87,7 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/04_batch_orchestrator_paral
 - **~15 active batches**
 - **8 million environmental readings**
 - **1.5 million feeding events**
+- **~900K ActualDailyAssignmentState records** (Growth Analysis)
 - **15-20 GB database**
 
 ### Option C: Single Batch Verification (15 minutes)
@@ -386,6 +398,55 @@ batches_overlapping = 450 / 13 = 35 batches overlap in Adult stage
 
 **Result:** 100% stable, zero conflicts, ready for production use
 
+### ✅ v6.2: Optimized Growth Analysis Recomputation (2025-11-25)
+
+**Status:** ✅ Production-ready, 145 batches in 7.8 minutes (previously 300s+ timeout per batch)
+
+**Problem Solved:**
+- Growth Analysis recomputation was timing out during test data generation
+- N+1 query pattern: ~1000 queries per batch (1 per day × multiple events)
+- Each 900-day batch took 300+ seconds → unsuitable for test data generation
+
+**Solution: Bulk Query Optimization**
+
+1. **Database Indexes (Migration: `0038_add_growth_analysis_performance_indexes.py`):**
+   - `MortalityEvent`: `(assignment, event_date)`, `(batch, event_date)`
+   - `TransferAction`: `(source_assignment, actual_execution_date, status)`, `(dest_assignment, ...)`
+   - `BatchContainerAssignment`: `(batch, assignment_date, departure_date)`
+   - `GrowthSample`: `(assignment, sample_date)`, `(batch, sample_date)`
+   - `FeedingEvent`: `(container, feeding_date)`, `(batch, feeding_date)`
+
+2. **Bulk Query Engine (`growth_assimilation_optimized.py`):**
+   - Fetches ALL events for date range in ~5 queries (vs ~1000 queries)
+   - In-memory processing of daily states
+   - Bulk create/update for ActualDailyAssignmentState
+   - **150x speedup:** 3.2s avg per batch (vs 300s+)
+
+3. **Stage Transition Spike Fix:**
+   - Root cause: Event engine sets incorrect `avg_weight_g` on destination assignments
+   - Fix: Growth assimilation now checks transfers FIRST, uses source assignment weight
+   - Result: Smooth weight progression across stage transitions (no more 7x spikes)
+
+**Performance Results:**
+```
+145 batches processed in 7.8 minutes (469 seconds)
+937,610 ActualDailyAssignmentState records created/updated
+Average: 3.2 seconds per batch
+```
+
+**Key Files:**
+- `apps/batch/services/growth_assimilation_optimized.py` - Bulk query engine
+- `apps/batch/migrations/0038_add_growth_analysis_performance_indexes.py` - DB indexes
+- `apps/inventory/migrations/0015_add_feeding_performance_indexes.py` - Feeding indexes
+- `scripts/data_generation/run_growth_analysis_optimized.py` - Standalone runner
+
+**⚠️ CRITICAL:** Always run Growth Analysis AFTER batch generation completes:
+```bash
+python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
+```
+
+**Production Benefit:** These indexes also improve daily Celery-triggered Growth Analysis updates.
+
 ### 🎯 **The Hybrid Approach: Why It Works**
 
 **The Fundamental Tension Resolved:**
@@ -656,7 +717,8 @@ Actual target: 170 batches (85 per geography)
 | `01_initialize_finance_policies.py` | Finance policies + DimSite | 30 sec | Once after infrastructure |
 | `01_initialize_health_parameters.py` | Health parameters + scoring | 15 sec | Once after infrastructure |
 | `03_event_engine_core.py` | Single batch generation | 2-3 min | Core engine (called by orchestrator) |
-| `04_batch_orchestrator_parallel.py` | Multi-batch parallel generation | 1-2 hrs | Main production data generation |
+| `04_batch_orchestrator_parallel.py` | Multi-batch parallel generation | 45-60 min | Main production data generation |
+| `run_growth_analysis_optimized.py` | Compute ActualDailyAssignmentState | 8-10 min | **REQUIRED** after batch generation |
 
 ### Supporting Scripts
 

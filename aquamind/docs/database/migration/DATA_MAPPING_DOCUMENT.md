@@ -8,6 +8,12 @@
 
 This document provides detailed field-level mapping specifications for migrating data from FishTalk to AquaMind. Each section covers entity relationships, field transformations, and business logic required for accurate data migration.
 
+### 1.1 Environments & Schema Snapshots
+
+- **Source:** FishTalk SQL Server (Docker container `sqlserver`, port `1433`, read-only login `fishtalk_reader`).
+- **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
+- **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Outputs (`*_table_counts.csv`, `*_columns.csv`, `*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/` and supersede the older `fishtalk_column_headers.txt` export.
+
 **Key Revision Notes (v4.0):** Refined based on fishtalk_column_headers.txt (or CSV equivalent). Mappings use exact confirmed columns (e.g., Populations.StartTime). No Plan*-prefixed tables included. Where direct mappings are absent (e.g., no explicit assignments table), derive from event data (e.g., group Feeding by PopulationID/ContainerID over time to infer assignments). Assumes CSV exports for tables; load via pandas in script for transformation.
 
 ## 2. Infrastructure & Geography Mapping
@@ -138,6 +144,11 @@ This document provides detailed field-level mapping specifications for migrating
 
 ## 5. Health & Medical Mapping
 
+> **Master Data Gaps:**
+> - Align FishTalk `MortalityCause` codes with `health_mortalityreason` records before migration.
+> - Health parameter labels/scores must match `health_healthparameter` + `health_parameterscoredefinition`; seed any missing entries.
+> - Treatment types/vaccine categories require lookup harmonisation (see Sections 5.3 and 5.4).
+
 ### 5.1 Health Journal Entry Mapping
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
@@ -180,6 +191,10 @@ This document provides detailed field-level mapping specifications for migrating
 
 ## 6. Environmental Data Mapping
 
+> **Master Data Gaps:** Sensor parameter codes in FishTalk must be mapped to `environmental_environmentalparameter` (e.g., DO, Temp, Sal). Add missing parameters plus unit metadata before replaying readings.
+>
+> **Temporary Source Strategy:** AVEVA historian access is currently pending, so sensor object metadata and early readings will be extracted from FishTalk. Treat FishTalk sensor names as canonical for now—they must remain aligned with the eventual AVEVA sensor catalog. When AVEVA access becomes available, reconcile the two sources and record any divergences in `migration_support.ExternalIdMap` so the loaders can pivot to AVEVA without duplicating historical FishTalk records.
+
 ### 6.1 Sensor Reading Mapping (FishTalk: SensorReadings, SensorUnitAssignments) - TimescaleDB
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
@@ -203,6 +218,19 @@ This document provides detailed field-level mapping specifications for migrating
 | pH | pH | - | 0 to 14 |
 | Turbidity | Turbidity | NTU | 0 to 1000 |
 | Ammonia | Ammonia | mg/L | 0 to 10 |
+
+### 6.3 Historian Tag Catalog Bridge
+
+To keep AVEVA data ingestion isolated from AquaMind’s core domain we added a three-table bridge:
+
+- `historian_tag` – canonical catalog (15,399 rows) copied directly from `_Tag`. Stores `tag_id`, `tag_name`, key metadata, plus the untouched AVEVA payload in `metadata`.
+- `historian_tag_history` – 5,033 snapshots imported from `TagHistory` (FK is nullable to allow entries for tags that have been deleted upstream).
+- `historian_tag_link` – manual mapping table that ties a historian tag to `infrastructure_sensor`, `infrastructure_container`, and/or `environmental_environmentalparameter`.
+
+Workflow:
+1. `python manage.py load_historian_tags --profile aveva_readonly --using <db>` refreshes the catalog for either `aquamind_db` or `aquamind_db_migr_dev`.
+2. The AVEVA team populates `historian_tag_link` via CSV to associate tags with real AquaMind assets.
+3. When block files are parsed, the loader uses the link table to write directly into `environmental_environmentalreading` (Timescale hypertable) without duplicating the historian schema.
 
 ## 7. User & Access Control Mapping
 
@@ -399,3 +427,17 @@ Each migrated record should include:
 - Status: Draft
 - Last Updated: December 2024
 - Next Review: [Pending]
+## 9. External ID Mapping Tables
+
+AquaMind now persists source-to-target identifier mappings in the `apps.migration_support.ExternalIdMap` model. Each row captures the FishTalk identifier (`source_system='FishTalk'`) and the AquaMind object it produced.
+
+| Field | Description |
+| --- | --- |
+| source_system | External system name (e.g., `FishTalk`, `Aveva`). |
+| source_model | Source table/entity (Populations, Feeding, etc.). |
+| source_identifier | Primary key in the source system (PopulationID, FeedingID...). |
+| target_app_label / target_model | Django app + model storing the migrated row. |
+| target_object_id | Primary key of the AquaMind object. |
+| metadata | JSON payload for auxiliary context (batch numbers, timestamps, etc.). |
+
+Use this table to de-duplicate replays, troubleshoot migrations, and produce reconciliation reports. The mapping scripts should always look up existing entries before creating new AquaMind records to keep migrations idempotent.

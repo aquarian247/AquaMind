@@ -5,10 +5,35 @@
     "database": "FishTalk",
     "uid": "sa",
     "pwd": "2).nV(Ze2TZ8",
-    "port": 1433
+    "port": 1433,
+    "trust_server_certificate": true,
+    "container": "sqlserver",
+    "container_port": 1433
+  },
+  "fishtalk_readonly": {
+    "driver": "{ODBC Driver 18 for SQL Server}",
+    "server": "localhost",
+    "database": "FishTalk",
+    "uid": "fishtalk_reader",
+    "pwd": "FishtalkReader#2025",
+    "port": 1433,
+    "trust_server_certificate": true,
+    "container": "sqlserver",
+    "container_port": 1433
+  },
+  "aveva_readonly": {
+    "driver": "{ODBC Driver 18 for SQL Server}",
+    "server": "localhost",
+    "database": "RuntimeDB",
+    "uid": "sa",
+    "pwd": "2).nV(Ze2TZ8",
+    "port": 1435,
+    "trust_server_certificate": true,
+    "container": "aveva-sql",
+    "container_port": 1433
   },
   "aquamind": {
-    "database": "aquamind_db",
+    "database": "aquamind_db_migr_dev",
     "host": "localhost",
     "port": 5432,
     "user": "postgres",
@@ -28,38 +53,69 @@
     "infrastructure": {
       "enabled": true,
       "order": 1,
-      "entities": ["sites", "locations", "units", "sensors"]
+      "source_profile": "fishtalk_readonly",
+      "source_database": null,
+      "source_container": null,
+      "entities": [
+        "sites",
+        "locations",
+        "units",
+        "sensors"
+      ]
     },
     "batches": {
       "enabled": true,
       "order": 2,
-      "entities": ["projects", "individuals", "transfers"]
+      "entities": [
+        "projects",
+        "individuals",
+        "transfers"
+      ]
     },
     "inventory": {
       "enabled": true,
       "order": 3,
-      "entities": ["feed_types", "feeding_events", "fcr_calculations"]
+      "entities": [
+        "feed_types",
+        "feeding_events",
+        "fcr_calculations"
+      ]
     },
     "health": {
       "enabled": true,
       "order": 4,
-      "entities": ["health_logs", "mortality", "treatments", "vaccinations"]
+      "entities": [
+        "health_logs",
+        "mortality",
+        "treatments",
+        "vaccinations"
+      ]
     },
     "environmental": {
       "enabled": true,
       "order": 5,
-      "entities": ["sensor_readings", "weather_data"],
+      "entities": [
+        "sensor_readings",
+        "weather_data"
+      ],
       "months_to_migrate": 12
     },
     "broodstock": {
       "enabled": true,
       "order": 6,
-      "entities": ["broodstock_fish", "breeding_pairs", "egg_production"]
+      "entities": [
+        "broodstock_fish",
+        "breeding_pairs",
+        "egg_production"
+      ]
     },
     "financial": {
       "enabled": false,
       "order": 7,
-      "entities": ["harvest_events", "intercompany_transactions"],
+      "entities": [
+        "harvest_events",
+        "intercompany_transactions"
+      ],
       "note": "Enable if financial data migration is required"
     }
   },
@@ -97,7 +153,9 @@
   },
   "notifications": {
     "email_on_completion": false,
-    "email_recipients": ["admin@example.com"],
+    "email_recipients": [
+      "admin@example.com"
+    ],
     "slack_webhook": "",
     "send_summary_report": true
   },
@@ -108,4 +166,3 @@
     "query_timeout_seconds": 300
   }
 }
-

@@ -1,60 +1,55 @@
 #!/usr/bin/env python
 """
-Test FishTalk Database Connection
-Simple script to verify connection and explore schema
+Test SQL Server connection defined in migration_config.json.
+Useful for both FishTalk and AVEVA profiles.
 """
 
+import argparse
+import importlib.util
 import os
 import sys
-import json
-import pyodbc
-from datetime import datetime
+from pathlib import Path
 
-# Add parent directory to path for Django imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import pyodbc
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parents[1]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
 
-def load_config():
-    """Load migration configuration"""
-    config_path = os.path.join(os.path.dirname(__file__), 'migration_config.json')
-    with open(config_path, 'r') as f:
-        return json.load(f)
+CONFIG_MODULE_PATH = SCRIPT_DIR / 'config.py'
+spec = importlib.util.spec_from_file_location('migration_config_module', CONFIG_MODULE_PATH)
+if spec is None or spec.loader is None:
+    raise ImportError(f"Unable to load migration config helper at {CONFIG_MODULE_PATH}")
+config_module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = config_module
+spec.loader.exec_module(config_module)
+get_sqlserver_config = config_module.get_sqlserver_config
 
-def test_connection():
-    """Test FishTalk database connection and run basic queries"""
-    config = load_config()
+
+def test_connection(conn_key: str) -> bool:
+    """Test SQL Server database connection and run basic queries."""
+    sql_config = get_sqlserver_config(conn_key)
 
     print("=" * 80)
-    print("FishTalk Database Connection Test")
+    print("SQL Server Connection Test")
     print("=" * 80)
 
     try:
-        # Connect to FishTalk
-        conn_str = (
-            f"DRIVER={config['fishtalk']['driver']};"
-            f"SERVER={config['fishtalk']['server']};"
-            f"DATABASE={config['fishtalk']['database']};"
-            f"UID={config['fishtalk']['uid']};"
-            f"PWD={config['fishtalk']['pwd']};"
-            f"PORT={config['fishtalk'].get('port', 1433)}"
-        )
-
-        print(f"Connecting to: {config['fishtalk']['server']}:{config['fishtalk'].get('port', 1433)}")
+        conn_str = sql_config.to_odbc_string()
+        print(f"Connecting to: {sql_config.server}:{sql_config.port} ({conn_key})")
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
 
-        print("✅ Connected successfully!")
-        print()
-
-        # Test basic queries
+        print("✅ Connected successfully!\n")
         print("Testing basic queries...")
 
-        # 1. Get database info
         cursor.execute("SELECT @@VERSION as version")
         version = cursor.fetchone()[0][:100] + "..."
         print(f"✅ SQL Server Version: {version}")
 
-        # 2. List main tables we're interested in
         tables_of_interest = [
             'Populations', 'PlanPopulation', 'PlanContainer', 'PlanSite',
             'Feeding', 'HWFeeding', 'Mortality', 'UserSample',
@@ -67,10 +62,9 @@ def test_connection():
                 cursor.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cursor.fetchone()[0]
                 print(f"✅ {table}: {count:,} records")
-            except Exception as e:
+            except Exception as e:  # pragma: no cover - inspection utility
                 print(f"❌ {table}: Not found or error - {str(e)[:50]}...")
 
-        # 3. Sample data from Populations
         print("\nSample Populations data:")
         try:
             cursor.execute("""
@@ -86,7 +80,6 @@ def test_connection():
         except Exception as e:
             print(f"❌ Error querying Populations: {e}")
 
-        # 4. Sample PlanPopulation data
         print("\nSample PlanPopulation data:")
         try:
             cursor.execute("""
@@ -102,7 +95,6 @@ def test_connection():
         except Exception as e:
             print(f"❌ Error querying PlanPopulation: {e}")
 
-        # 5. Check for active batches
         print("\nActive batches summary:")
         try:
             cursor.execute("""
@@ -124,32 +116,24 @@ def test_connection():
         print("\n" + "=" * 80)
         print("✅ Connection test completed successfully!")
         print("=" * 80)
-
         return True
 
     except Exception as e:
         print(f"❌ Connection failed: {e}")
         print("\nTroubleshooting:")
-        print("1. Check if FishTalk Docker container is running")
-        print("2. Verify connection details in migration_config.json")
-        print("3. Ensure ODBC driver is installed: 'ODBC Driver 17 for SQL Server'")
+        print("1. Check if the Docker container for this profile is running")
+        print(f"2. Verify connection details for '{conn_key}' in migration_config.json")
+        print("3. Ensure Microsoft ODBC Driver 18 for SQL Server is installed")
         print("4. Check firewall settings")
         return False
 
+
 if __name__ == '__main__':
-    success = test_connection()
+    parser = argparse.ArgumentParser(description="Verify connectivity to the FishTalk SQL Server instance.")
+    parser.add_argument(
+        "--conn-key",
+        default="fishtalk_readonly",
+        help="Connection profile defined in migration_config.json (default: fishtalk_readonly)",
+    )
+    success = test_connection(parser.parse_args().conn_key)
     sys.exit(0 if success else 1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

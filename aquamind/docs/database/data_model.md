@@ -1553,6 +1553,43 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - `MortalityModelStage.save()` auto-populates weekly rates from the stored daily rate when left blank.
 - Scenario models no longer register `HistoricalRecords`; history endpoints are not exposed for this app.
 
+### 4.11 Historian Integration (`historian` app)
+**Purpose**: Provide a lightweight bridge between the AVEVA Historian metadata and AquaMind’s domain so telemetry can be ingested without duplicating the historian schema.
+
+#### Tables
+- **`historian_tag`**
+  - `tag_id`: uuid (PK, mirrors AVEVA `_Tag`.`TagId`)
+  - `tag_name`: varchar(512)
+  - `description`: text
+  - `tag_type`: smallint (1 = analog, 2 = discrete, etc.)
+  - `unit`: varchar(128)
+  - `source_system`: varchar(64) (default `AVEVA`)
+  - `metadata`: jsonb (complete upstream row: limits, deadbands, IO server keys, etc.)
+  - `created_at`, `updated_at`: timestamptz
+
+- **`historian_tag_history`**
+  - `id`: bigint (PK)
+  - `tag`: ForeignKey → `historian_tag` (nullable so snapshots of deleted tags persist)
+  - `recorded_at`: timestamptz (copied from AVEVA `DateCreated`)
+  - `tag_name`, `tag_type`, `unit`: cached fields for filtering
+  - `payload`: jsonb snapshot of the `TagHistory` row
+  - `created_at`: timestamptz
+
+- **`historian_tag_link`**
+  - `id`: bigint (PK)
+  - `tag`: OneToOneField → `historian_tag`
+  - `sensor`: ForeignKey → `infrastructure_sensor` (nullable)
+  - `container`: ForeignKey → `infrastructure_container` (nullable)
+  - `parameter`: ForeignKey → `environmental_environmentalparameter` (nullable)
+  - `notes`: text (free-form mapping details)
+  - `metadata`: jsonb (structured hints, QA state, etc.)
+  - `created_at`, `updated_at`: timestamptz
+
+#### Workflow
+1. **Catalog refresh** – `python manage.py load_historian_tags --profile aveva_readonly --using <db_alias>` pulls `_Tag` + `TagHistory` from AVEVA into both `aquamind_db` and `aquamind_db_migr_dev`.
+2. **Mapping exercise** – Export the subset of analog measurement tags (`docs/database/migration/historian_tag_export.csv`) and populate `historian_tag_link` with the matching AquaMind sensor/container/parameter.
+3. **Telemetry ingestion** – Block-file parsers (and future realtime feeds) consult `historian_tag_link`, then write directly into `environmental_environmentalreading` (TimescaleDB hypertable) so AquaMind remains the authoritative store for environmental analytics while AVEVA continues to operate in production.
+
 ## 5. Planned Data Model Domains (Not Yet Implemented)
 
 ### 5.1 Operational Planning

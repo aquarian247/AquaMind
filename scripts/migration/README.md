@@ -13,6 +13,8 @@ This directory contains scripts for migrating data from the legacy FishTalk syst
 
 ## Quick Setup (Development)
 
+> **Important:** All migration work uses the dedicated PostgreSQL database `aquamind_db_migr_dev` (the `migr_dev` Django alias). Keep the primary `aquamind_db` instance untouched for day-to-day development. Connection details for the FishTalk Docker container and the migration database are documented in `docs/database/migration/ENV_SETUP.md`.
+
 ### 1. Set up Migration Database
 
 ```bash
@@ -32,6 +34,12 @@ python scripts/migration/setup_master_data.py
 ```bash
 # Run with mock data (default)
 python scripts/migration/fishtalk_event_engine.py
+```
+
+### 4. Orchestrate Phases (dry-run)
+
+```bash
+python scripts/migration/migrate.py --dry-run
 ```
 
 ## Production Setup
@@ -82,7 +90,8 @@ python scripts/migration/fishtalk_event_engine.py
 
 All migration settings are controlled via `migration_config.json`:
 
-- **Database connections**: FishTalk and AquaMind credentials
+- **Database connections**: FishTalk, AVEVA Historian, and AquaMind credentials
+- **Multiple SQL sources**: Per-phase overrides (`source_profile`, `source_database`, `source_container`) make it easy to switch infrastructure extracts from FishTalk to `aveva_readonly` without editing code.
 - **Migration parameters**: Batch size, date ranges, validation settings
 - **Phase control**: Enable/disable specific migration phases
 - **Performance tuning**: Parallel workers, memory limits, timeouts

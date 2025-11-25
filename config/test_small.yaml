@@ -1,0 +1,2104 @@
+metadata:
+  generated_date: '2025-11-21'
+  total_batches: 20
+  batches_per_geography: 10
+  target_saturation: 0.85
+  stagger_days: 30
+  worker_partitions:
+    worker_1:
+      batch_indices:
+      - 0
+      - 1
+      batch_range: 1-2
+      count: 2
+    worker_2:
+      batch_indices:
+      - 2
+      - 3
+      batch_range: 3-4
+      count: 2
+    worker_3:
+      batch_indices:
+      - 4
+      - 5
+      batch_range: 5-6
+      count: 2
+    worker_4:
+      batch_indices:
+      - 6
+      - 7
+      batch_range: 7-8
+      count: 2
+    worker_5:
+      batch_indices:
+      - 8
+      - 9
+      batch_range: 9-10
+      count: 2
+    worker_6:
+      batch_indices:
+      - 10
+      - 11
+      batch_range: 11-12
+      count: 2
+    worker_7:
+      batch_indices:
+      - 12
+      batch_range: 13-13
+      count: 1
+    worker_8:
+      batch_indices:
+      - 13
+      batch_range: 14-14
+      count: 1
+    worker_9:
+      batch_indices:
+      - 14
+      batch_range: 15-15
+      count: 1
+    worker_10:
+      batch_indices:
+      - 15
+      batch_range: 16-16
+      count: 1
+    worker_11:
+      batch_indices:
+      - 16
+      batch_range: 17-17
+      count: 1
+    worker_12:
+      batch_indices:
+      - 17
+      batch_range: 18-18
+      count: 1
+    worker_13:
+      batch_indices:
+      - 18
+      batch_range: 19-19
+      count: 1
+    worker_14:
+      batch_indices:
+      - 19
+      batch_range: 20-20
+      count: 1
+batches:
+- batch_id: FAR-2024-001
+  start_date: '2024-03-11'
+  eggs: 3000000
+  duration: 620
+  effective_duration: 620
+  harvest_target_kg: 6.186131041654871
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-01
+    rings:
+    - FI-SEA-01-Ring-01
+    - FI-SEA-01-Ring-02
+    - FI-SEA-01-Ring-03
+    - FI-SEA-01-Ring-04
+    - FI-SEA-01-Ring-05
+    - FI-SEA-01-Ring-06
+    - FI-SEA-01-Ring-07
+    - FI-SEA-01-Ring-08
+    - FI-SEA-01-Ring-09
+    - FI-SEA-01-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 620
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2024-001
+  start_date: '2024-04-10'
+  eggs: 3000000
+  duration: 590
+  effective_duration: 590
+  harvest_target_kg: 5.060778472205754
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-01-Hall-C
+      containers:
+      - S-FW-01-C-C01
+      - S-FW-01-C-C02
+      - S-FW-01-C-C03
+      - S-FW-01-C-C04
+      - S-FW-01-C-C05
+      - S-FW-01-C-C06
+      - S-FW-01-C-C07
+      - S-FW-01-C-C08
+      - S-FW-01-C-C09
+      - S-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-01-Hall-D
+      containers:
+      - S-FW-01-D-C01
+      - S-FW-01-D-C02
+      - S-FW-01-D-C03
+      - S-FW-01-D-C04
+      - S-FW-01-D-C05
+      - S-FW-01-D-C06
+      - S-FW-01-D-C07
+      - S-FW-01-D-C08
+      - S-FW-01-D-C09
+      - S-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-01-Hall-E
+      containers:
+      - S-FW-01-E-C01
+      - S-FW-01-E-C02
+      - S-FW-01-E-C03
+      - S-FW-01-E-C04
+      - S-FW-01-E-C05
+      - S-FW-01-E-C06
+      - S-FW-01-E-C07
+      - S-FW-01-E-C08
+      - S-FW-01-E-C09
+      - S-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-01
+    rings:
+    - S-SEA-01-Ring-01
+    - S-SEA-01-Ring-02
+    - S-SEA-01-Ring-03
+    - S-SEA-01-Ring-04
+    - S-SEA-01-Ring-05
+    - S-SEA-01-Ring-06
+    - S-SEA-01-Ring-07
+    - S-SEA-01-Ring-08
+    - S-SEA-01-Ring-09
+    - S-SEA-01-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 590
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2024-002
+  start_date: '2024-05-10'
+  eggs: 3123456
+  duration: 560
+  effective_duration: 560
+  harvest_target_kg: 5.002755589601149
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-02
+    rings:
+    - FI-SEA-02-Ring-01
+    - FI-SEA-02-Ring-02
+    - FI-SEA-02-Ring-03
+    - FI-SEA-02-Ring-04
+    - FI-SEA-02-Ring-05
+    - FI-SEA-02-Ring-06
+    - FI-SEA-02-Ring-07
+    - FI-SEA-02-Ring-08
+    - FI-SEA-02-Ring-09
+    - FI-SEA-02-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 560
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2024-002
+  start_date: '2024-06-09'
+  eggs: 3123456
+  duration: 530
+  effective_duration: 530
+  harvest_target_kg: 5.859444550606825
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-02-Hall-C
+      containers:
+      - S-FW-02-C-C01
+      - S-FW-02-C-C02
+      - S-FW-02-C-C03
+      - S-FW-02-C-C04
+      - S-FW-02-C-C05
+      - S-FW-02-C-C06
+      - S-FW-02-C-C07
+      - S-FW-02-C-C08
+      - S-FW-02-C-C09
+      - S-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-02-Hall-D
+      containers:
+      - S-FW-02-D-C01
+      - S-FW-02-D-C02
+      - S-FW-02-D-C03
+      - S-FW-02-D-C04
+      - S-FW-02-D-C05
+      - S-FW-02-D-C06
+      - S-FW-02-D-C07
+      - S-FW-02-D-C08
+      - S-FW-02-D-C09
+      - S-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-02-Hall-E
+      containers:
+      - S-FW-02-E-C01
+      - S-FW-02-E-C02
+      - S-FW-02-E-C03
+      - S-FW-02-E-C04
+      - S-FW-02-E-C05
+      - S-FW-02-E-C06
+      - S-FW-02-E-C07
+      - S-FW-02-E-C08
+      - S-FW-02-E-C09
+      - S-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-02
+    rings:
+    - S-SEA-02-Ring-01
+    - S-SEA-02-Ring-02
+    - S-SEA-02-Ring-03
+    - S-SEA-02-Ring-04
+    - S-SEA-02-Ring-05
+    - S-SEA-02-Ring-06
+    - S-SEA-02-Ring-07
+    - S-SEA-02-Ring-08
+    - S-SEA-02-Ring-09
+    - S-SEA-02-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 530
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2024-003
+  start_date: '2024-07-09'
+  eggs: 3246912
+  duration: 500
+  effective_duration: 500
+  harvest_target_kg: 5.75899738947872
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-03
+    rings:
+    - FI-SEA-03-Ring-01
+    - FI-SEA-03-Ring-02
+    - FI-SEA-03-Ring-03
+    - FI-SEA-03-Ring-04
+    - FI-SEA-03-Ring-05
+    - FI-SEA-03-Ring-06
+    - FI-SEA-03-Ring-07
+    - FI-SEA-03-Ring-08
+    - FI-SEA-03-Ring-09
+    - FI-SEA-03-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 500
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2024-003
+  start_date: '2024-08-08'
+  eggs: 3246912
+  duration: 470
+  effective_duration: 470
+  harvest_target_kg: 5.725423957550567
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-01-Hall-C
+      containers:
+      - S-FW-01-C-C01
+      - S-FW-01-C-C02
+      - S-FW-01-C-C03
+      - S-FW-01-C-C04
+      - S-FW-01-C-C05
+      - S-FW-01-C-C06
+      - S-FW-01-C-C07
+      - S-FW-01-C-C08
+      - S-FW-01-C-C09
+      - S-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-01-Hall-D
+      containers:
+      - S-FW-01-D-C01
+      - S-FW-01-D-C02
+      - S-FW-01-D-C03
+      - S-FW-01-D-C04
+      - S-FW-01-D-C05
+      - S-FW-01-D-C06
+      - S-FW-01-D-C07
+      - S-FW-01-D-C08
+      - S-FW-01-D-C09
+      - S-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-01-Hall-E
+      containers:
+      - S-FW-01-E-C01
+      - S-FW-01-E-C02
+      - S-FW-01-E-C03
+      - S-FW-01-E-C04
+      - S-FW-01-E-C05
+      - S-FW-01-E-C06
+      - S-FW-01-E-C07
+      - S-FW-01-E-C08
+      - S-FW-01-E-C09
+      - S-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-03
+    rings:
+    - S-SEA-03-Ring-01
+    - S-SEA-03-Ring-02
+    - S-SEA-03-Ring-03
+    - S-SEA-03-Ring-04
+    - S-SEA-03-Ring-05
+    - S-SEA-03-Ring-06
+    - S-SEA-03-Ring-07
+    - S-SEA-03-Ring-08
+    - S-SEA-03-Ring-09
+    - S-SEA-03-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 470
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2024-004
+  start_date: '2024-09-07'
+  eggs: 3370368
+  duration: 440
+  effective_duration: 451
+  harvest_target_kg: 6.164292763075157
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-04
+    rings:
+    - FI-SEA-04-Ring-01
+    - FI-SEA-04-Ring-02
+    - FI-SEA-04-Ring-03
+    - FI-SEA-04-Ring-04
+    - FI-SEA-04-Ring-05
+    - FI-SEA-04-Ring-06
+    - FI-SEA-04-Ring-07
+    - FI-SEA-04-Ring-08
+    - FI-SEA-04-Ring-09
+    - FI-SEA-04-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2024-004
+  start_date: '2024-10-07'
+  eggs: 3370368
+  duration: 410
+  effective_duration: 451
+  harvest_target_kg: 4.800497013632061
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-02-Hall-C
+      containers:
+      - S-FW-02-C-C01
+      - S-FW-02-C-C02
+      - S-FW-02-C-C03
+      - S-FW-02-C-C04
+      - S-FW-02-C-C05
+      - S-FW-02-C-C06
+      - S-FW-02-C-C07
+      - S-FW-02-C-C08
+      - S-FW-02-C-C09
+      - S-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-02-Hall-D
+      containers:
+      - S-FW-02-D-C01
+      - S-FW-02-D-C02
+      - S-FW-02-D-C03
+      - S-FW-02-D-C04
+      - S-FW-02-D-C05
+      - S-FW-02-D-C06
+      - S-FW-02-D-C07
+      - S-FW-02-D-C08
+      - S-FW-02-D-C09
+      - S-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-02-Hall-E
+      containers:
+      - S-FW-02-E-C01
+      - S-FW-02-E-C02
+      - S-FW-02-E-C03
+      - S-FW-02-E-C04
+      - S-FW-02-E-C05
+      - S-FW-02-E-C06
+      - S-FW-02-E-C07
+      - S-FW-02-E-C08
+      - S-FW-02-E-C09
+      - S-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-04
+    rings:
+    - S-SEA-04-Ring-01
+    - S-SEA-04-Ring-02
+    - S-SEA-04-Ring-03
+    - S-SEA-04-Ring-04
+    - S-SEA-04-Ring-05
+    - S-SEA-04-Ring-06
+    - S-SEA-04-Ring-07
+    - S-SEA-04-Ring-08
+    - S-SEA-04-Ring-09
+    - S-SEA-04-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2024-005
+  start_date: '2024-11-06'
+  eggs: 3493824
+  duration: 380
+  effective_duration: 451
+  harvest_target_kg: 6.246194342899688
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-05
+    rings:
+    - FI-SEA-05-Ring-01
+    - FI-SEA-05-Ring-02
+    - FI-SEA-05-Ring-03
+    - FI-SEA-05-Ring-04
+    - FI-SEA-05-Ring-05
+    - FI-SEA-05-Ring-06
+    - FI-SEA-05-Ring-07
+    - FI-SEA-05-Ring-08
+    - FI-SEA-05-Ring-09
+    - FI-SEA-05-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2024-005
+  start_date: '2024-12-06'
+  eggs: 3493824
+  duration: 350
+  effective_duration: 451
+  harvest_target_kg: 5.014097919443597
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-01-Hall-C
+      containers:
+      - S-FW-01-C-C01
+      - S-FW-01-C-C02
+      - S-FW-01-C-C03
+      - S-FW-01-C-C04
+      - S-FW-01-C-C05
+      - S-FW-01-C-C06
+      - S-FW-01-C-C07
+      - S-FW-01-C-C08
+      - S-FW-01-C-C09
+      - S-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-01-Hall-D
+      containers:
+      - S-FW-01-D-C01
+      - S-FW-01-D-C02
+      - S-FW-01-D-C03
+      - S-FW-01-D-C04
+      - S-FW-01-D-C05
+      - S-FW-01-D-C06
+      - S-FW-01-D-C07
+      - S-FW-01-D-C08
+      - S-FW-01-D-C09
+      - S-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-01-Hall-E
+      containers:
+      - S-FW-01-E-C01
+      - S-FW-01-E-C02
+      - S-FW-01-E-C03
+      - S-FW-01-E-C04
+      - S-FW-01-E-C05
+      - S-FW-01-E-C06
+      - S-FW-01-E-C07
+      - S-FW-01-E-C08
+      - S-FW-01-E-C09
+      - S-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-05
+    rings:
+    - S-SEA-05-Ring-01
+    - S-SEA-05-Ring-02
+    - S-SEA-05-Ring-03
+    - S-SEA-05-Ring-04
+    - S-SEA-05-Ring-05
+    - S-SEA-05-Ring-06
+    - S-SEA-05-Ring-07
+    - S-SEA-05-Ring-08
+    - S-SEA-05-Ring-09
+    - S-SEA-05-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2025-006
+  start_date: '2025-01-05'
+  eggs: 3617280
+  duration: 320
+  effective_duration: 451
+  harvest_target_kg: 5.286243034891204
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-06
+    rings:
+    - FI-SEA-06-Ring-01
+    - FI-SEA-06-Ring-02
+    - FI-SEA-06-Ring-03
+    - FI-SEA-06-Ring-04
+    - FI-SEA-06-Ring-05
+    - FI-SEA-06-Ring-06
+    - FI-SEA-06-Ring-07
+    - FI-SEA-06-Ring-08
+    - FI-SEA-06-Ring-09
+    - FI-SEA-06-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2025-006
+  start_date: '2025-02-04'
+  eggs: 3617280
+  duration: 290
+  effective_duration: 451
+  harvest_target_kg: 5.6205459611920245
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-02-Hall-C
+      containers:
+      - S-FW-02-C-C01
+      - S-FW-02-C-C02
+      - S-FW-02-C-C03
+      - S-FW-02-C-C04
+      - S-FW-02-C-C05
+      - S-FW-02-C-C06
+      - S-FW-02-C-C07
+      - S-FW-02-C-C08
+      - S-FW-02-C-C09
+      - S-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-02-Hall-D
+      containers:
+      - S-FW-02-D-C01
+      - S-FW-02-D-C02
+      - S-FW-02-D-C03
+      - S-FW-02-D-C04
+      - S-FW-02-D-C05
+      - S-FW-02-D-C06
+      - S-FW-02-D-C07
+      - S-FW-02-D-C08
+      - S-FW-02-D-C09
+      - S-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-02-Hall-E
+      containers:
+      - S-FW-02-E-C01
+      - S-FW-02-E-C02
+      - S-FW-02-E-C03
+      - S-FW-02-E-C04
+      - S-FW-02-E-C05
+      - S-FW-02-E-C06
+      - S-FW-02-E-C07
+      - S-FW-02-E-C08
+      - S-FW-02-E-C09
+      - S-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-06
+    rings:
+    - S-SEA-06-Ring-01
+    - S-SEA-06-Ring-02
+    - S-SEA-06-Ring-03
+    - S-SEA-06-Ring-04
+    - S-SEA-06-Ring-05
+    - S-SEA-06-Ring-06
+    - S-SEA-06-Ring-07
+    - S-SEA-06-Ring-08
+    - S-SEA-06-Ring-09
+    - S-SEA-06-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2025-007
+  start_date: '2025-03-06'
+  eggs: 3740736
+  duration: 260
+  effective_duration: 451
+  harvest_target_kg: 5.865180995056204
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-07
+    rings:
+    - FI-SEA-07-Ring-01
+    - FI-SEA-07-Ring-02
+    - FI-SEA-07-Ring-03
+    - FI-SEA-07-Ring-04
+    - FI-SEA-07-Ring-05
+    - FI-SEA-07-Ring-06
+    - FI-SEA-07-Ring-07
+    - FI-SEA-07-Ring-08
+    - FI-SEA-07-Ring-09
+    - FI-SEA-07-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2025-007
+  start_date: '2025-04-05'
+  eggs: 3740736
+  duration: 230
+  effective_duration: 451
+  harvest_target_kg: 4.597191847007553
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-01-Hall-C
+      containers:
+      - S-FW-01-C-C01
+      - S-FW-01-C-C02
+      - S-FW-01-C-C03
+      - S-FW-01-C-C04
+      - S-FW-01-C-C05
+      - S-FW-01-C-C06
+      - S-FW-01-C-C07
+      - S-FW-01-C-C08
+      - S-FW-01-C-C09
+      - S-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-01-Hall-D
+      containers:
+      - S-FW-01-D-C01
+      - S-FW-01-D-C02
+      - S-FW-01-D-C03
+      - S-FW-01-D-C04
+      - S-FW-01-D-C05
+      - S-FW-01-D-C06
+      - S-FW-01-D-C07
+      - S-FW-01-D-C08
+      - S-FW-01-D-C09
+      - S-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-01-Hall-E
+      containers:
+      - S-FW-01-E-C01
+      - S-FW-01-E-C02
+      - S-FW-01-E-C03
+      - S-FW-01-E-C04
+      - S-FW-01-E-C05
+      - S-FW-01-E-C06
+      - S-FW-01-E-C07
+      - S-FW-01-E-C08
+      - S-FW-01-E-C09
+      - S-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-07
+    rings:
+    - S-SEA-07-Ring-01
+    - S-SEA-07-Ring-02
+    - S-SEA-07-Ring-03
+    - S-SEA-07-Ring-04
+    - S-SEA-07-Ring-05
+    - S-SEA-07-Ring-06
+    - S-SEA-07-Ring-07
+    - S-SEA-07-Ring-08
+    - S-SEA-07-Ring-09
+    - S-SEA-07-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2025-008
+  start_date: '2025-05-05'
+  eggs: 3064192
+  duration: 200
+  effective_duration: 451
+  harvest_target_kg: 5.9133833150489075
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-08
+    rings:
+    - FI-SEA-08-Ring-01
+    - FI-SEA-08-Ring-02
+    - FI-SEA-08-Ring-03
+    - FI-SEA-08-Ring-04
+    - FI-SEA-08-Ring-05
+    - FI-SEA-08-Ring-06
+    - FI-SEA-08-Ring-07
+    - FI-SEA-08-Ring-08
+    - FI-SEA-08-Ring-09
+    - FI-SEA-08-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2025-008
+  start_date: '2025-06-04'
+  eggs: 3064192
+  duration: 170
+  effective_duration: 451
+  harvest_target_kg: 4.787916982728724
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-02-Hall-C
+      containers:
+      - S-FW-02-C-C01
+      - S-FW-02-C-C02
+      - S-FW-02-C-C03
+      - S-FW-02-C-C04
+      - S-FW-02-C-C05
+      - S-FW-02-C-C06
+      - S-FW-02-C-C07
+      - S-FW-02-C-C08
+      - S-FW-02-C-C09
+      - S-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-02-Hall-D
+      containers:
+      - S-FW-02-D-C01
+      - S-FW-02-D-C02
+      - S-FW-02-D-C03
+      - S-FW-02-D-C04
+      - S-FW-02-D-C05
+      - S-FW-02-D-C06
+      - S-FW-02-D-C07
+      - S-FW-02-D-C08
+      - S-FW-02-D-C09
+      - S-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-02-Hall-E
+      containers:
+      - S-FW-02-E-C01
+      - S-FW-02-E-C02
+      - S-FW-02-E-C03
+      - S-FW-02-E-C04
+      - S-FW-02-E-C05
+      - S-FW-02-E-C06
+      - S-FW-02-E-C07
+      - S-FW-02-E-C08
+      - S-FW-02-E-C09
+      - S-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-08
+    rings:
+    - S-SEA-08-Ring-01
+    - S-SEA-08-Ring-02
+    - S-SEA-08-Ring-03
+    - S-SEA-08-Ring-04
+    - S-SEA-08-Ring-05
+    - S-SEA-08-Ring-06
+    - S-SEA-08-Ring-07
+    - S-SEA-08-Ring-08
+    - S-SEA-08-Ring-09
+    - S-SEA-08-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2025-009
+  start_date: '2025-07-04'
+  eggs: 3187648
+  duration: 140
+  effective_duration: 451
+  harvest_target_kg: 4.7469816179005875
+  geography: Faroe Islands
+  station: FI-FW-01
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-09
+    rings:
+    - FI-SEA-09-Ring-01
+    - FI-SEA-09-Ring-02
+    - FI-SEA-09-Ring-03
+    - FI-SEA-09-Ring-04
+    - FI-SEA-09-Ring-05
+    - FI-SEA-09-Ring-06
+    - FI-SEA-09-Ring-07
+    - FI-SEA-09-Ring-08
+    - FI-SEA-09-Ring-09
+    - FI-SEA-09-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2025-009
+  start_date: '2025-08-03'
+  eggs: 3187648
+  duration: 110
+  effective_duration: 451
+  harvest_target_kg: 4.737222371005163
+  geography: Scotland
+  station: S-FW-01
+  freshwater:
+    egg_alevin:
+      hall: S-FW-01-Hall-A
+      containers:
+      - S-FW-01-A-C01
+      - S-FW-01-A-C02
+      - S-FW-01-A-C03
+      - S-FW-01-A-C04
+      - S-FW-01-A-C05
+      - S-FW-01-A-C06
+      - S-FW-01-A-C07
+      - S-FW-01-A-C08
+      - S-FW-01-A-C09
+      - S-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-01-Hall-B
+      containers:
+      - S-FW-01-B-C01
+      - S-FW-01-B-C02
+      - S-FW-01-B-C03
+      - S-FW-01-B-C04
+      - S-FW-01-B-C05
+      - S-FW-01-B-C06
+      - S-FW-01-B-C07
+      - S-FW-01-B-C08
+      - S-FW-01-B-C09
+      - S-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-01-Hall-C
+      containers:
+      - S-FW-01-C-C01
+      - S-FW-01-C-C02
+      - S-FW-01-C-C03
+      - S-FW-01-C-C04
+      - S-FW-01-C-C05
+      - S-FW-01-C-C06
+      - S-FW-01-C-C07
+      - S-FW-01-C-C08
+      - S-FW-01-C-C09
+      - S-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-01-Hall-D
+      containers:
+      - S-FW-01-D-C01
+      - S-FW-01-D-C02
+      - S-FW-01-D-C03
+      - S-FW-01-D-C04
+      - S-FW-01-D-C05
+      - S-FW-01-D-C06
+      - S-FW-01-D-C07
+      - S-FW-01-D-C08
+      - S-FW-01-D-C09
+      - S-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-01-Hall-E
+      containers:
+      - S-FW-01-E-C01
+      - S-FW-01-E-C02
+      - S-FW-01-E-C03
+      - S-FW-01-E-C04
+      - S-FW-01-E-C05
+      - S-FW-01-E-C06
+      - S-FW-01-E-C07
+      - S-FW-01-E-C08
+      - S-FW-01-E-C09
+      - S-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-09
+    rings:
+    - S-SEA-09-Ring-01
+    - S-SEA-09-Ring-02
+    - S-SEA-09-Ring-03
+    - S-SEA-09-Ring-04
+    - S-SEA-09-Ring-05
+    - S-SEA-09-Ring-06
+    - S-SEA-09-Ring-07
+    - S-SEA-09-Ring-08
+    - S-SEA-09-Ring-09
+    - S-SEA-09-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: FAR-2025-010
+  start_date: '2025-09-02'
+  eggs: 3311104
+  duration: 80
+  effective_duration: 451
+  harvest_target_kg: 4.627035308651077
+  geography: Faroe Islands
+  station: FI-FW-02
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-10
+    rings:
+    - FI-SEA-10-Ring-01
+    - FI-SEA-10-Ring-02
+    - FI-SEA-10-Ring-03
+    - FI-SEA-10-Ring-04
+    - FI-SEA-10-Ring-05
+    - FI-SEA-10-Ring-06
+    - FI-SEA-10-Ring-07
+    - FI-SEA-10-Ring-08
+    - FI-SEA-10-Ring-09
+    - FI-SEA-10-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)
+- batch_id: SCO-2025-010
+  start_date: '2025-10-02'
+  eggs: 3311104
+  duration: 50
+  effective_duration: 451
+  harvest_target_kg: 5.708180888660307
+  geography: Scotland
+  station: S-FW-02
+  freshwater:
+    egg_alevin:
+      hall: S-FW-02-Hall-A
+      containers:
+      - S-FW-02-A-C01
+      - S-FW-02-A-C02
+      - S-FW-02-A-C03
+      - S-FW-02-A-C04
+      - S-FW-02-A-C05
+      - S-FW-02-A-C06
+      - S-FW-02-A-C07
+      - S-FW-02-A-C08
+      - S-FW-02-A-C09
+      - S-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: S-FW-02-Hall-B
+      containers:
+      - S-FW-02-B-C01
+      - S-FW-02-B-C02
+      - S-FW-02-B-C03
+      - S-FW-02-B-C04
+      - S-FW-02-B-C05
+      - S-FW-02-B-C06
+      - S-FW-02-B-C07
+      - S-FW-02-B-C08
+      - S-FW-02-B-C09
+      - S-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: S-FW-02-Hall-C
+      containers:
+      - S-FW-02-C-C01
+      - S-FW-02-C-C02
+      - S-FW-02-C-C03
+      - S-FW-02-C-C04
+      - S-FW-02-C-C05
+      - S-FW-02-C-C06
+      - S-FW-02-C-C07
+      - S-FW-02-C-C08
+      - S-FW-02-C-C09
+      - S-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: S-FW-02-Hall-D
+      containers:
+      - S-FW-02-D-C01
+      - S-FW-02-D-C02
+      - S-FW-02-D-C03
+      - S-FW-02-D-C04
+      - S-FW-02-D-C05
+      - S-FW-02-D-C06
+      - S-FW-02-D-C07
+      - S-FW-02-D-C08
+      - S-FW-02-D-C09
+      - S-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: S-FW-02-Hall-E
+      containers:
+      - S-FW-02-E-C01
+      - S-FW-02-E-C02
+      - S-FW-02-E-C03
+      - S-FW-02-E-C04
+      - S-FW-02-E-C05
+      - S-FW-02-E-C06
+      - S-FW-02-E-C07
+      - S-FW-02-E-C08
+      - S-FW-02-E-C09
+      - S-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: S-SEA-10
+    rings:
+    - S-SEA-10-Ring-01
+    - S-SEA-10-Ring-02
+    - S-SEA-10-Ring-03
+    - S-SEA-10-Ring-04
+    - S-SEA-10-Ring-05
+    - S-SEA-10-Ring-06
+    - S-SEA-10-Ring-07
+    - S-SEA-10-Ring-08
+    - S-SEA-10-Ring-09
+    - S-SEA-10-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 451
+    note: Standard allocation (10/20 rings)

@@ -435,13 +435,39 @@ class GrowthAssimilationEngine:
             }
         
         # Bootstrap initial state
-        # Get weight: assignment > stage constraint min > scenario initial_weight
+        # Get weight with proper fallback hierarchy to prevent stage transition spikes
+        # IMPORTANT: Check transfers FIRST - Event Engine sets wrong avg_weight_g during transfers!
         initial_weight = None
         
-        if self.assignment.avg_weight_g:
+        # Priority 1: ALWAYS check transfers first!
+        # The Event Engine incorrectly sets dest assignment avg_weight_g to stage min (~3000g for Adult)
+        # but actual fish weight should come from source assignment (~500g from Post-Smolt)
+        transfer_in = TransferAction.objects.filter(
+            dest_assignment=self.assignment,
+            status='COMPLETED'
+        ).select_related('source_assignment').first()
+        
+        if transfer_in:
+            # Try measured weight from transfer (most accurate)
+            if transfer_in.measured_avg_weight_g:
+                initial_weight = float(transfer_in.measured_avg_weight_g)
+            # Try last computed state from source (second best)
+            elif transfer_in.source_assignment:
+                last_state = ActualDailyAssignmentState.objects.filter(
+                    assignment=transfer_in.source_assignment
+                ).order_by('-date').first()
+                if last_state:
+                    initial_weight = float(last_state.avg_weight_g)
+            # Try source assignment's weight (fallback)
+            if not initial_weight and transfer_in.source_assignment and transfer_in.source_assignment.avg_weight_g:
+                initial_weight = float(transfer_in.source_assignment.avg_weight_g)
+        
+        # Priority 2: Assignment has explicit weight (only for non-transfers)
+        if not initial_weight and self.assignment.avg_weight_g:
             initial_weight = float(self.assignment.avg_weight_g)
-        elif self.bio_constraints:
-            # Get minimum weight for current stage from biological constraints
+        
+        # Priority 3: Stage constraint min weight
+        if not initial_weight and self.bio_constraints:
             try:
                 from apps.scenario.models import StageConstraint
                 stage_constraint = StageConstraint.objects.get(
@@ -452,11 +478,12 @@ class GrowthAssimilationEngine:
             except (StageConstraint.DoesNotExist, Exception):
                 pass
         
-        # Final fallback to scenario's initial_weight
+        # Priority 4: Scenario's initial_weight
         if not initial_weight and self.scenario.initial_weight:
             initial_weight = float(self.scenario.initial_weight)
-        elif not initial_weight:
-            # Last resort: use lifecycle stage's min weight if available
+        
+        # Priority 5: Lifecycle stage expected weight
+        if not initial_weight:
             if hasattr(self.assignment.lifecycle_stage, 'expected_weight_min_g'):
                 if self.assignment.lifecycle_stage.expected_weight_min_g:
                     initial_weight = float(self.assignment.lifecycle_stage.expected_weight_min_g)

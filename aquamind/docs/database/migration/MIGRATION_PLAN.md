@@ -31,6 +31,8 @@ This document outlines the comprehensive migration plan for transitioning from t
 ### 1.3 Migration Constraints
 - **Downtime Window**: Maximum 48 hours for complete cutover
 - **Data Integrity**: Zero tolerance for data loss in active batches
+- **AVEVA Historian Runtime**: The Historian backup now runs in the `aveva-sql` container (host port `1435`). Infrastructure extracts can shift to the `aveva_readonly` profile as soon as schema validation completes; keep FishTalk data in sync until we declare AVEVA canonical.
+- **Historian Bridge Tables**: All AVEVA metadata must flow through the new `historian_tag`, `historian_tag_history`, and `historian_tag_link` tables before landing in AquaMind domain tables. Refresh with `python manage.py load_historian_tags --profile aveva_readonly --using <db>`.
 - **Regulatory Compliance**: Must maintain audit trail continuity
 - **Business Continuity**: Phased approach to minimize operational disruption
 

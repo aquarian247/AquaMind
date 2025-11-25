@@ -144,7 +144,8 @@ from datetime import date
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
 django.setup()
 
-from apps.batch.services.growth_assimilation import recompute_batch_assignments
+# Use optimized version for bulk operations (100x faster)
+from apps.batch.services.growth_assimilation_optimized import recompute_batch_assignments_optimized
 
 # Read config from stdin
 config = json.load(sys.stdin)
@@ -153,9 +154,9 @@ config = json.load(sys.stdin)
 start_date = date.fromisoformat(config['start_date'])
 end_date = date.fromisoformat(config['end_date']) if config.get('end_date') else None
 
-# Run growth analysis
+# Run growth analysis with optimized engine
 try:
-    result = recompute_batch_assignments(
+    result = recompute_batch_assignments_optimized(
         batch_id=config['batch_id'],
         start_date=start_date,
         end_date=end_date
@@ -167,7 +168,7 @@ try:
         'batch_number': config['batch_number'],
         'status': config['status'],
         'success': result.get('total_errors', 0) == 0,
-        'states': result.get('total_rows_created', 0),
+        'states': result.get('total_rows_created', 0) + result.get('total_rows_updated', 0),
         'assignments': result.get('assignments_processed', 0),
         'errors': result.get('errors', [])
     }, sys.stdout)

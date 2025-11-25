@@ -40,12 +40,13 @@ PROGRESS_DIR = Path(project_root) / 'aquamind' / 'docs' / 'progress' / 'test_dat
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
 
 class EventEngine:
-    def __init__(self, start_date, eggs, geography, duration=900, station_name=None, batch_number=None):
+    def __init__(self, start_date, eggs, geography, duration=900, station_name=None, batch_number=None, event_feed=None):
         self.start_date = start_date
         self.current_date = start_date
         self.initial_eggs = eggs
         self.duration = duration
         self.geography_name = geography
+        self.event_feed = event_feed
         self.assigned_station_name = station_name  # DETERMINISTIC: Pre-assigned station
         self.assigned_batch_number = batch_number  # DETERMINISTIC: Pre-assigned batch number from schedule
         self.stats = {
@@ -116,6 +117,8 @@ class EventEngine:
         print(f"✓ Station: {self.station.name}")
         print(f"✓ Sea Area: {self.sea_area.name}")
         print(f"✓ Duration: {self.duration} days\n")
+        if self.event_feed and hasattr(self.event_feed, 'on_init'):
+            self.event_feed.on_init(self)
     
     def _init_finance_dimensions(self):
         """Initialize finance company and site dimensions."""
@@ -543,6 +546,8 @@ class EventEngine:
         print(f"✓ Creation Workflow: {workflow_number} ({len(self.assignments)} actions)")
         print(f"✓ Batch: {self.batch.batch_number} (supplier: {supplier.name})")
         print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
+        if self.event_feed and hasattr(self.event_feed, 'on_batch_created'):
+            self.event_feed.on_batch_created(self.batch, self.assignments)
         
         # Create scenario immediately after batch creation (for growth analysis)
         self._create_initial_scenario()
@@ -550,7 +555,13 @@ class EventEngine:
     def process_day(self):
         self.assignments = list(BatchContainerAssignment.objects.filter(batch=self.batch, is_active=True))
         if not self.assignments: return
-        
+
+        if self.event_feed and hasattr(self.event_feed, 'process_day'):
+            handled = self.event_feed.process_day(self)
+            if handled:
+                self.stats['days'] += 1
+                return
+
         # Check for stage transition BEFORE processing events
         self.check_stage_transition()
         
@@ -573,7 +584,10 @@ class EventEngine:
             print(f"  Day {self.stats['days']}/{self.duration}: {self.batch.lifecycle_stage.name}, "
                   f"Pop: {sum(a.population_count for a in self.assignments):,}, "
                   f"Avg: {self.assignments[0].avg_weight_g}g")
-        
+
+        if self.event_feed and hasattr(self.event_feed, 'after_day'):
+            self.event_feed.after_day(self)
+
     def env_readings_bulk(self, hours):
         """Bulk create environmental readings for performance (M4 Max optimized)"""
         readings = []
