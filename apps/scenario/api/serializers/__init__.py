@@ -12,6 +12,8 @@ from .modeling import (
 from .constraints import BiologicalConstraintsSerializer, ScenarioModelChangeSerializer
 from .scenario import ScenarioSerializer
 from .projections import (
+    ProjectionRunListSerializer,
+    ProjectionRunDetailSerializer,
     ProjectionChartSerializer,
     ScenarioComparisonSerializer,
     ScenarioProjectionSerializer,
@@ -38,6 +40,8 @@ __all__ = [
     "ScenarioModelChangeSerializer",
     "BiologicalConstraintsSerializer",
     "ScenarioSerializer",
+    "ProjectionRunListSerializer",
+    "ProjectionRunDetailSerializer",
     "ScenarioProjectionSerializer",
     "ProjectionChartSerializer",
     "ScenarioComparisonSerializer",

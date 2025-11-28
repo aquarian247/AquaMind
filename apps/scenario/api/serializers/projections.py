@@ -4,7 +4,41 @@ from typing import Any, Dict, List, Optional
 
 from rest_framework import serializers
 
-from apps.scenario.models import Scenario, ScenarioProjection
+from apps.scenario.models import Scenario, ScenarioProjection, ProjectionRun
+
+
+class ProjectionRunListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing projection runs."""
+    scenario_name = serializers.CharField(source='scenario.name', read_only=True)
+    pinned_batch_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ProjectionRun
+        fields = [
+            'run_id', 'scenario', 'scenario_name', 'run_number', 
+            'label', 'run_date', 'total_projections',
+            'final_weight_g', 'final_biomass_kg', 'pinned_batch_count',
+            'created_by', 'created_at'
+        ]
+        read_only_fields = ['run_id', 'run_date', 'run_number', 'created_at']
+    
+    def get_pinned_batch_count(self, obj):
+        return obj.pinned_batches.count()
+
+
+class ProjectionRunDetailSerializer(ProjectionRunListSerializer):
+    """Full serializer with parameters snapshot."""
+    parameters_snapshot = serializers.JSONField(read_only=True)
+    created_by_name = serializers.CharField(
+        source='created_by.username', 
+        read_only=True,
+        allow_null=True
+    )
+    
+    class Meta(ProjectionRunListSerializer.Meta):
+        fields = ProjectionRunListSerializer.Meta.fields + [
+            'parameters_snapshot', 'notes', 'created_by_name', 'updated_at'
+        ]
 
 
 class ScenarioProjectionSerializer(serializers.ModelSerializer):

@@ -22,7 +22,7 @@ from aquamind.utils.history_mixins import HistoryReasonMixin
 
 from apps.scenario.models import (
     TemperatureProfile, TGCModel, FCRModel, MortalityModel,
-    Scenario, BiologicalConstraints, ScenarioModelChange
+    Scenario, ProjectionRun, BiologicalConstraints, ScenarioModelChange
 )
 from apps.scenario.services import BulkDataImportService, DateRangeInputService
 from apps.scenario.services.calculations import ProjectionEngine
@@ -584,35 +584,64 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def run_projection(self, request, pk=None):
         """
-        Run projection calculation for a scenario.
+        Run projection - creates NEW ProjectionRun.
         
-        Returns projection summary and saves results to database.
+        Request body (optional):
+        {
+            "label": "Updated TGC model"  // Optional label for this run
+        }
+        
+        Returns:
+        {
+            "success": true,
+            "projection_run_id": 123,
+            "run_number": 2,
+            "message": "Projection run #2 created."
+        }
         """
         scenario = self.get_object()
         
-        # Check if user owns the scenario
-        if scenario.created_by != request.user:
+        # Check permissions
+        if scenario.created_by != request.user and not request.user.is_superuser:
             return Response(
                 {'error': 'You do not have permission to run projections for this scenario'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Create projection engine
-        engine = ProjectionEngine(scenario)
+        label = request.data.get('label', '')
         
-        # Run projection
-        result = engine.run_projection(save_results=True)
+        engine = ProjectionEngine(scenario)
+        result = engine.run_projection(
+            save_results=True,
+            label=label,
+            current_user=request.user
+        )
         
         if result['success']:
-            return Response(
-                {
-                    'success': True,
-                    'summary': result['summary'],
-                    'warnings': result['warnings'],
-                    'message': f"Projection completed successfully. {scenario.duration_days} days calculated."
-                },
-                status=status.HTTP_200_OK
-            )
+            return Response({
+                'success': True,
+                'projection_run_id': result['projection_run_id'],
+                'run_number': result['run_number'],
+                'message': f"Projection run #{result['run_number']} created.",
+                'summary': result['summary'],
+                'warnings': result.get('warnings', []),
+            })
+        else:
+            return Response({
+                'success': False,
+                'errors': result['errors'],
+                'warnings': result.get('warnings', []),
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'])
+    def projection_runs(self, request, pk=None):
+        """List all projection runs for a scenario."""
+        scenario = self.get_object()
+        runs = scenario.projection_runs.select_related('created_by').order_by('-run_number')
+        
+        from apps.scenario.api.serializers import ProjectionRunListSerializer
+        serializer = ProjectionRunListSerializer(runs, many=True)
+        return Response(serializer.data)
         else:
             return Response(
                 {
@@ -961,4 +990,48 @@ class DataEntryViewSet(viewsets.ViewSet):
         return Response({
             'message': 'Import status tracking not yet implemented',
             'recent_imports': []
-        }) 
+        })
+
+
+class ProjectionRunViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only ViewSet for ProjectionRun.
+    
+    Creating runs is done via Scenario.run_projection action.
+    Deleting runs requires Manager+ role.
+    """
+    queryset = ProjectionRun.objects.select_related('scenario', 'created_by')
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['scenario']
+    search_fields = ['label', 'scenario__name']
+    ordering_fields = ['run_number', 'run_date']
+    ordering = ['-run_date']
+    
+    def get_serializer_class(self):
+        """Use detail serializer for retrieve, list serializer for list."""
+        from apps.scenario.api.serializers import ProjectionRunListSerializer, ProjectionRunDetailSerializer
+        if self.action == 'retrieve':
+            return ProjectionRunDetailSerializer
+        return ProjectionRunListSerializer
+    
+    @action(detail=True, methods=['get'])
+    def projections(self, request, pk=None):
+        """Get all projection data for this run."""
+        projection_run = self.get_object()
+        
+        # Support aggregation parameter
+        aggregation = request.query_params.get('aggregation', 'daily')
+        projections = projection_run.projections.select_related('current_stage')
+        
+        if aggregation == 'weekly':
+            projections = projections.annotate(
+                mod_result=Mod(F('day_number'), 7)
+            ).filter(mod_result=0)
+        elif aggregation == 'monthly':
+            projections = projections.annotate(
+                mod_result=Mod(F('day_number'), 30)
+            ).filter(mod_result=0)
+        
+        serializer = ScenarioProjectionSerializer(projections, many=True)
+        return Response(serializer.data) 

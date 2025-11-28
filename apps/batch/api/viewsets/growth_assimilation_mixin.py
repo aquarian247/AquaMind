@@ -156,14 +156,54 @@ class GrowthAssimilationMixin:
             404: {"description": "Batch or scenario not found"},
         }
     )
+    @action(detail=True, methods=['post'], url_path='pin-projection-run')
+    def pin_projection_run(self, request, pk=None):
+        """
+        Pin a specific projection run to this batch.
+        
+        Request body:
+        {
+            "projection_run_id": 123
+        }
+        """
+        from apps.scenario.models import ProjectionRun
+        from django.shortcuts import get_object_or_404
+        
+        batch = self.get_object()
+        projection_run_id = request.data.get('projection_run_id')
+        
+        if not projection_run_id:
+            return Response(
+                {'error': 'projection_run_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        projection_run = get_object_or_404(ProjectionRun, pk=projection_run_id)
+        
+        batch.pinned_projection_run = projection_run
+        batch.save(update_fields=['pinned_projection_run'])
+        
+        return Response({
+            'success': True,
+            'pinned_projection_run_id': projection_run.run_id,
+            'scenario_name': projection_run.scenario.name,
+            'run_number': projection_run.run_number,
+            'run_label': projection_run.label,
+        })
+    
     @action(detail=True, methods=['post'], url_path='pin-scenario')
     def pin_scenario(self, request, pk=None):
         """
-        Pin a scenario to this batch.
+        DEPRECATED: Use pin_projection_run instead.
+        
+        This endpoint pins the LATEST projection run for the given scenario.
         
         URL: POST /api/v1/batch/batches/{pk}/pin-scenario/
         Body: {"scenario_id": 123}
         """
+        from apps.scenario.models import ProjectionRun
+        from django.shortcuts import get_object_or_404
+        
         batch = self.get_object()
         serializer = PinScenarioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -178,16 +218,28 @@ class GrowthAssimilationMixin:
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Pin scenario
+        # Get latest projection run for this scenario
+        latest_run = ProjectionRun.objects.filter(scenario=scenario).order_by('-run_number').first()
+        
+        if not latest_run:
+            return Response(
+                {'error': 'Scenario has no projection runs. Run projections first.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Pin to latest run (also set old pinned_scenario for backward compatibility)
+        batch.pinned_projection_run = latest_run
         batch.pinned_scenario = scenario
-        batch.save(update_fields=['pinned_scenario'])
+        batch.save(update_fields=['pinned_projection_run', 'pinned_scenario'])
         
         return Response({
             'success': True,
             'batch_id': batch.id,
             'batch_number': batch.batch_number,
-            'pinned_scenario_id': scenario.id,
+            'pinned_projection_run_id': latest_run.run_id,
+            'pinned_scenario_id': scenario.scenario_id,
             'pinned_scenario_name': scenario.name,
+            'message': 'DEPRECATED: Use pin_projection_run endpoint. Pinned to latest run.',
         })
     
     @extend_schema(

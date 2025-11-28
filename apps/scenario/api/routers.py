@@ -24,6 +24,7 @@ FCRModelViewSet = viewsets_module.FCRModelViewSet
 MortalityModelViewSet = viewsets_module.MortalityModelViewSet
 BiologicalConstraintsViewSet = viewsets_module.BiologicalConstraintsViewSet
 ScenarioViewSet = viewsets_module.ScenarioViewSet
+ProjectionRunViewSet = viewsets_module.ProjectionRunViewSet
 DataEntryViewSet = viewsets_module.DataEntryViewSet
 
 # Create router
@@ -36,6 +37,7 @@ router.register(r'fcr-models', FCRModelViewSet, basename='fcr-model')
 router.register(r'mortality-models', MortalityModelViewSet, basename='mortality-model')
 router.register(r'biological-constraints', BiologicalConstraintsViewSet, basename='biological-constraints')
 router.register(r'scenarios', ScenarioViewSet, basename='scenario')
+router.register(r'projection-runs', ProjectionRunViewSet, basename='projection-run')
 router.register(r'data-entry', DataEntryViewSet, basename='data-entry')
 
 # The router will generate the following URL patterns:
