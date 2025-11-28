@@ -22,7 +22,7 @@ class ProjectionRunListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['run_id', 'run_date', 'run_number', 'created_at']
     
-    def get_pinned_batch_count(self, obj):
+    def get_pinned_batch_count(self, obj) -> int:
         return obj.pinned_batches.count()
 
 

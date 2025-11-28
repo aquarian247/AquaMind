@@ -1301,7 +1301,7 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
-  /api/v1/batch/batches/{id}/pin-scenario/:
+  /api/v1/batch/batches/{id}/pin-projection-run/:
     post:
       operationId: batch-pin-scenario
       description: |-
@@ -1359,6 +1359,59 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/batch/batches/{id}/pin-scenario/:
+    post:
+      operationId: api_v1_batch_batches_pin_scenario_create
+      description: |-
+        DEPRECATED: Use pin_projection_run instead.
+
+        This endpoint pins the LATEST projection run for the given scenario.
+
+        URL: POST /api/v1/batch/batches/{pk}/pin-scenario/
+        Body: {"scenario_id": 123}
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Batch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Batch'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
   /api/v1/batch/batches/{id}/recompute-daily-states/:
     post:
       operationId: batch-recompute-daily-states
@@ -26622,6 +26675,131 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/scenario/projection-runs/:
+    get:
+      operationId: api_v1_scenario_projection_runs_list
+      description: |-
+        Read-only ViewSet for ProjectionRun.
+
+        Creating runs is done via Scenario.run_projection action.
+        Deleting runs requires Manager+ role.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: scenario
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectionRunListList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/scenario/projection-runs/{run_id}/:
+    get:
+      operationId: api_v1_scenario_projection_runs_retrieve
+      description: |-
+        Read-only ViewSet for ProjectionRun.
+
+        Creating runs is done via Scenario.run_projection action.
+        Deleting runs requires Manager+ role.
+      parameters:
+      - in: path
+        name: run_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Projection Run.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionRunDetail'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/scenario/projection-runs/{run_id}/projections/:
+    get:
+      operationId: api_v1_scenario_projection_runs_projections_retrieve
+      description: Get all projection data for this run.
+      parameters:
+      - in: path
+        name: run_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Projection Run.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionRunList'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/scenario/scenarios/:
     get:
       operationId: api_v1_scenario_scenarios_list
@@ -26879,7 +27057,7 @@ paths:
   /api/v1/scenario/scenarios/{scenario_id}/chart_data/:
     get:
       operationId: api_v1_scenario_scenarios_chart_data_retrieve
-      description: Get projection data formatted for charts.
+      description: Get projection data formatted for charts (from latest run).
       parameters:
       - in: query
         name: aggregation
@@ -26993,7 +27171,40 @@ paths:
   /api/v1/scenario/scenarios/{scenario_id}/export_projections/:
     get:
       operationId: api_v1_scenario_scenarios_export_projections_retrieve
-      description: Export projections as CSV.
+      description: Export projections as CSV (from latest run).
+      parameters:
+      - in: path
+        name: scenario_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Scenario.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/scenario/scenarios/{scenario_id}/projection_runs/:
+    get:
+      operationId: api_v1_scenario_scenarios_projection_runs_retrieve
+      description: List all projection runs for a scenario.
       parameters:
       - in: path
         name: scenario_id
@@ -27026,7 +27237,8 @@ paths:
   /api/v1/scenario/scenarios/{scenario_id}/projections/:
     get:
       operationId: api_v1_scenario_scenarios_projections_list
-      description: Get projections for a scenario with optional filtering.
+      description: Get projections for a scenario (from latest run) with optional
+        filtering.
       parameters:
       - in: query
         name: aggregation
@@ -27114,9 +27326,20 @@ paths:
     post:
       operationId: api_v1_scenario_scenarios_run_projection_create
       description: |-
-        Run projection calculation for a scenario.
+        Run projection - creates NEW ProjectionRun.
 
-        Returns projection summary and saves results to database.
+        Request body (optional):
+        {
+            "label": "Updated TGC model"  // Optional label for this run
+        }
+
+        Returns:
+        {
+            "success": true,
+            "projection_run_id": 123,
+            "run_number": 2,
+            "message": "Projection run #2 created."
+        }
       parameters:
       - in: path
         name: scenario_id
@@ -30062,8 +30285,16 @@ components:
         pinned_scenario:
           type: integer
           nullable: true
-          description: Pinned scenario used for daily actual state calculations. Defaults
-            to baseline scenario.
+          title: Pinned Scenario (Deprecated)
+          description: 'DEPRECATED: Use pinned_projection_run instead. Will be removed
+            after data migration.'
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        pinned_projection_run:
+          type: integer
+          nullable: true
+          description: Specific projection run used for growth analysis. Provides
+            version control for projections.
           maximum: 9223372036854775807
           minimum: -9223372036854775808
       required:
@@ -38522,6 +38753,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PhotoperiodData'
+    PaginatedProjectionRunListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectionRunList'
     PaginatedSampleTypeList:
       type: object
       required:
@@ -43298,6 +43554,162 @@ components:
       - code
       - id
       - name
+    ProjectionRunDetail:
+      type: object
+      description: Full serializer with parameters snapshot.
+      properties:
+        run_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario:
+          type: integer
+          description: The scenario configuration used for this run
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          readOnly: true
+        run_number:
+          type: integer
+          readOnly: true
+          description: Sequential run number for this scenario (1, 2, 3...)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        label:
+          type: string
+          description: Optional label (e.g., 'Baseline', 'Updated TGC')
+          maxLength: 100
+        run_date:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When this projection run was created
+        total_projections:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total number of projection records in this run
+        final_weight_g:
+          type: number
+          format: double
+          nullable: true
+          description: Final average weight at end of projection
+        final_biomass_kg:
+          type: number
+          format: double
+          nullable: true
+          description: Final biomass at end of projection
+        pinned_batch_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_by:
+          type: integer
+          nullable: true
+          description: User who created this run
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        parameters_snapshot:
+          readOnly: true
+        notes:
+          type: string
+          description: Additional notes about this run
+        created_by_name:
+          type: string
+          readOnly: true
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by_name
+      - parameters_snapshot
+      - pinned_batch_count
+      - run_date
+      - run_id
+      - run_number
+      - scenario
+      - scenario_name
+      - updated_at
+    ProjectionRunList:
+      type: object
+      description: Lightweight serializer for listing projection runs.
+      properties:
+        run_id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario:
+          type: integer
+          description: The scenario configuration used for this run
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          readOnly: true
+        run_number:
+          type: integer
+          readOnly: true
+          description: Sequential run number for this scenario (1, 2, 3...)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        label:
+          type: string
+          description: Optional label (e.g., 'Baseline', 'Updated TGC')
+          maxLength: 100
+        run_date:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When this projection run was created
+        total_projections:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total number of projection records in this run
+        final_weight_g:
+          type: number
+          format: double
+          nullable: true
+          description: Final average weight at end of projection
+        final_biomass_kg:
+          type: number
+          format: double
+          nullable: true
+          description: Final biomass at end of projection
+        pinned_batch_count:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_by:
+          type: integer
+          nullable: true
+          description: User who created this run
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - pinned_batch_count
+      - run_date
+      - run_id
+      - run_number
+      - scenario
+      - scenario_name
     SampleType:
       type: object
       description: |-
@@ -43493,6 +43905,8 @@ components:
           minimum: -9223372036854775808
         scenario:
           type: integer
+          nullable: true
+          description: 'DEPRECATED: Temporary field for migration'
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         projection_date:
@@ -43562,7 +43976,6 @@ components:
       - population
       - projection_date
       - projection_id
-      - scenario
       - stage_name
       - temperature
     Sensor:
