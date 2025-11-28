@@ -157,7 +157,7 @@ class GrowthAssimilationMixin:
         }
     )
     @extend_schema(
-        operation_id="batch-pin-projection-run",
+        operation_id="batch_pin_projection_run",
         summary="Pin a projection run to this batch",
         description=(
             "Pin a specific projection run to this batch for growth analysis.\n"

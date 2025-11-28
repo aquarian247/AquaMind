@@ -1303,11 +1303,11 @@ paths:
           description: Internal Server Error
   /api/v1/batch/batches/{id}/pin-projection-run/:
     post:
-      operationId: batch-pin-scenario
+      operationId: batch_pin_projection_run
       description: |-
-        Associate a specific scenario with this batch as the reference for
-        growth assimilation calculations. Only one scenario can be pinned at a time.
-      summary: Pin a scenario to a batch
+        Pin a specific projection run to this batch for growth analysis.
+        Provides version control for scenario projections.
+      summary: Pin a projection run to this batch
       parameters:
       - in: path
         name: id
@@ -1323,10 +1323,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PinScenario'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PinScenario'
+              type: object
+              properties:
+                projection_run_id:
+                  type: integer
+                  description: ID of the projection run to pin
+              required:
+                - projection_run_id
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PinScenario'
