@@ -574,7 +574,7 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         scenarios = Scenario.objects.filter(
             scenario_id__in=serializer.validated_data['scenario_ids'],
             created_by=request.user
-        ).prefetch_related('projections')
+        ).prefetch_related('projection_runs__projections')
         
         # Generate comparison
         comparison_data = serializer.to_representation(scenarios)
