@@ -12,7 +12,7 @@ from datetime import date, timedelta
 
 from apps.scenario.models import (
     Scenario, TGCModel, FCRModel, FCRModelStage, MortalityModel,
-    TemperatureProfile, TemperatureReading, ScenarioProjection
+    TemperatureProfile, TemperatureReading, ScenarioProjection, ProjectionRun
 )
 from apps.batch.models import Species, LifeCycleStage
 
@@ -104,10 +104,21 @@ class ProjectionsAggregationTestCase(TestCase):
 
     def _create_sample_projections(self):
         """Create sample projection data for testing."""
+        # Create ProjectionRun first
+        projection_run = ProjectionRun.objects.create(
+            scenario=self.scenario,
+            run_number=1,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user,
+            total_projections=91
+        )
+        
         projections = []
         for day in range(91):  # Days 0 to 90
             projection = ScenarioProjection(
-                scenario=self.scenario,
+                projection_run=projection_run,
+                scenario=self.scenario,  # Keep for backward compatibility
                 projection_date=date(2024, 1, 1) + timedelta(days=day),
                 day_number=day,
                 average_weight=5.0 + (day * 0.5),
@@ -120,6 +131,12 @@ class ProjectionsAggregationTestCase(TestCase):
             )
             projections.append(projection)
         ScenarioProjection.objects.bulk_create(projections)
+        
+        # Update run summary
+        last_proj = projections[-1]
+        projection_run.final_weight_g = last_proj.average_weight
+        projection_run.final_biomass_kg = last_proj.biomass
+        projection_run.save()
 
     def test_daily_aggregation_returns_all_projections(self):
         """Test that daily aggregation returns all projections."""
@@ -253,8 +270,8 @@ class ProjectionsAggregationTestCase(TestCase):
         url = f'/api/v1/scenario/scenarios/{empty_scenario.scenario_id}/projections/'
         response = self.client.get(url, {'aggregation': 'weekly'})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        # Should return 404 as there are no projection runs
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_aggregation_maintains_chronological_order(self):
         """Test that aggregated results maintain chronological order."""
