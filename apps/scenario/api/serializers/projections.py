@@ -185,7 +185,9 @@ class ScenarioComparisonSerializer(serializers.Serializer):
         data = {"scenarios": [], "metrics": {}}
 
         for scenario in scenarios:
-            latest = scenario.projections.order_by("-day_number").first()
+            # Get latest projection run and its last projection
+            latest_run = scenario.projection_runs.order_by('-run_number').first()
+            latest = latest_run.projections.order_by("-day_number").first() if latest_run else None
             scenario_entry: Dict[str, Any] = {
                 "id": scenario.scenario_id,
                 "name": scenario.name,

@@ -97,7 +97,9 @@ class Command(BaseCommand):
                             self.stdout.write(f"       - {warning}")
                     
                     if not options['dry_run']:
-                        projection_count = scenario.projections.count()
+                        # Get projection count from latest run
+                        latest_run = scenario.projection_runs.order_by('-run_number').first()
+                        projection_count = latest_run.projections.count() if latest_run else 0
                         self.stdout.write(f"     Saved {projection_count} projection records")
                     
                     success_count += 1

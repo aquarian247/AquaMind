@@ -428,7 +428,7 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     queryset = Scenario.objects.select_related(
         'tgc_model', 'fcr_model', 'mortality_model', 'batch', 
         'created_by', 'biological_constraints'
-    ).prefetch_related('model_changes', 'projections')
+    ).prefetch_related('model_changes', 'projection_runs')
     serializer_class = ScenarioSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -642,16 +642,6 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         from apps.scenario.api.serializers import ProjectionRunListSerializer
         serializer = ProjectionRunListSerializer(runs, many=True)
         return Response(serializer.data)
-        else:
-            return Response(
-                {
-                    'success': False,
-                    'errors': result['errors'],
-                    'warnings': result['warnings'],
-                    'message': 'Projection failed due to validation errors.'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
     
     @action(detail=True, methods=['post'])
     def sensitivity_analysis(self, request, pk=None):
@@ -727,9 +717,16 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['get'])
     def projections(self, request, pk=None):
-        """Get projections for a scenario with optional filtering."""
+        """Get projections for a scenario (from latest run) with optional filtering."""
         scenario = self.get_object()
-        projections = scenario.projections.select_related('current_stage')
+        
+        # Get latest projection run for this scenario
+        latest_run = scenario.projection_runs.order_by('-run_number').first()
+        if not latest_run:
+            return Response({'detail': 'No projection runs exist for this scenario. Run projections first.'}, 
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        projections = latest_run.projections.select_related('current_stage')
         
         # Support date range filtering
         start_date = request.query_params.get('start_date')
@@ -788,9 +785,16 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['get'])
     def chart_data(self, request, pk=None):
-        """Get projection data formatted for charts."""
+        """Get projection data formatted for charts (from latest run)."""
         scenario = self.get_object()
-        projections = scenario.projections.select_related('current_stage').order_by('day_number')
+        
+        # Get latest projection run
+        latest_run = scenario.projection_runs.order_by('-run_number').first()
+        if not latest_run:
+            return Response({'detail': 'No projection runs exist for this scenario. Run projections first.'}, 
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        projections = latest_run.projections.select_related('current_stage').order_by('day_number')
         
         # Use chart serializer
         chart_serializer = ProjectionChartSerializer(data=request.query_params)
@@ -802,9 +806,16 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def export_projections(self, request, pk=None):
-        """Export projections as CSV."""
+        """Export projections as CSV (from latest run)."""
         scenario = self.get_object()
-        projections = scenario.projections.select_related('current_stage').order_by('day_number')
+        
+        # Get latest projection run
+        latest_run = scenario.projection_runs.order_by('-run_number').first()
+        if not latest_run:
+            return Response({'detail': 'No projection runs exist for this scenario. Run projections first.'}, 
+                          status=status.HTTP_404_NOT_FOUND)
+        
+        projections = latest_run.projections.select_related('current_stage').order_by('day_number')
         
         # Create CSV response
         response = HttpResponse(content_type='text/csv')
@@ -848,7 +859,7 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         stats = {
             'total_scenarios': user_scenarios.count(),
             'scenarios_with_projections': user_scenarios.filter(
-                projections__isnull=False
+                projection_runs__isnull=False
             ).distinct().count(),
             'average_duration': user_scenarios.aggregate(
                 avg_duration=Avg('duration_days')
