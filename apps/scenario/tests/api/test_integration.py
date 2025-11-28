@@ -30,7 +30,7 @@ from apps.scenario.models import (
     FCRModelStage, MortalityModel, Scenario, ScenarioModelChange,
     BiologicalConstraints, StageConstraint, TGCModelStage,
     FCRModelStageOverride, MortalityModelStage, ScenarioProjection,
-    LifecycleStageChoices
+    ProjectionRun, LifecycleStageChoices
 )
 from apps.batch.models import LifeCycleStage, Batch, Species
 from apps.scenario.services.calculations.projection_engine import ProjectionEngine
@@ -558,14 +558,22 @@ class ScenarioWorkflowTests(TestCase):
             created_by=self.user
         )
         
-        # Create projections for both scenarios
+        # Create projection runs for both scenarios
         # For scenario 1
+        run1 = ProjectionRun.objects.create(
+            scenario=scenario1,
+            run_number=1,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user
+        )
         for i, day in enumerate([0, 30, 60, 90]):
             weight = 2.5 * (1 + i)
             population = 10000 - (i * 150)
             biomass = weight * population / 1000
             ScenarioProjection.objects.create(
-                scenario=scenario1,
+                projection_run=run1,
+                scenario=scenario1,  # Keep for backward compatibility
                 projection_date=date.today() + timedelta(days=day),
                 day_number=day,
                 average_weight=weight,
@@ -576,14 +584,26 @@ class ScenarioWorkflowTests(TestCase):
                 temperature=12.0 + i,
                 current_stage=self.fry_stage if i == 0 else self.parr_stage if i == 1 else self.smolt_stage
             )
+        run1.total_projections = 4
+        run1.final_weight_g = 2.5 * (1 + 3)
+        run1.final_biomass_kg = (2.5 * (1 + 3)) * (10000 - (3 * 150)) / 1000
+        run1.save()
         
         # For scenario 2 (higher growth rate)
+        run2 = ProjectionRun.objects.create(
+            scenario=scenario2,
+            run_number=1,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user
+        )
         for i, day in enumerate([0, 30, 60, 90]):
             weight = 2.5 * (1 + i * 1.2)  # 20% faster growth
             population = 10000 - (i * 150)  # Same mortality
             biomass = weight * population / 1000
             ScenarioProjection.objects.create(
-                scenario=scenario2,
+                projection_run=run2,
+                scenario=scenario2,  # Keep for backward compatibility
                 projection_date=date.today() + timedelta(days=day),
                 day_number=day,
                 average_weight=weight,
@@ -594,6 +614,10 @@ class ScenarioWorkflowTests(TestCase):
                 temperature=12.0 + i,
                 current_stage=self.fry_stage if i == 0 else self.parr_stage if i == 1 else self.smolt_stage
             )
+        run2.total_projections = 4
+        run2.final_weight_g = 2.5 * (1 + 3 * 1.2)
+        run2.final_biomass_kg = (2.5 * (1 + 3 * 1.2)) * (10000 - (3 * 150)) / 1000
+        run2.save()
         
         # Get comparison data from API
         # Build JSON payload explicitly; use `content=` so the request body
@@ -931,13 +955,21 @@ class ScenarioWorkflowTests(TestCase):
             created_by=self.user
         )
         
-        # Create projections
+        # Create projection run and projections
+        run = ProjectionRun.objects.create(
+            scenario=scenario,
+            run_number=1,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user
+        )
         for i, day in enumerate([0, 30, 60, 90]):
             weight = 2.5 * (1 + i)
             population = 10000 - (i * 150)
             biomass = weight * population / 1000
             ScenarioProjection.objects.create(
-                scenario=scenario,
+                projection_run=run,
+                scenario=scenario,  # Keep for backward compatibility
                 projection_date=date.today() + timedelta(days=day),
                 day_number=day,
                 average_weight=weight,
@@ -948,6 +980,10 @@ class ScenarioWorkflowTests(TestCase):
                 temperature=12.0 + i,
                 current_stage=self.fry_stage if i == 0 else self.parr_stage if i == 1 else self.smolt_stage
             )
+        run.total_projections = 4
+        run.final_weight_g = 2.5 * (1 + 3)
+        run.final_biomass_kg = (2.5 * (1 + 3)) * (10000 - (3 * 150)) / 1000
+        run.save()
         
         # Call the export endpoint
         response = self.client.get(
@@ -1007,13 +1043,21 @@ class ScenarioWorkflowTests(TestCase):
             created_by=self.user
         )
         
-        # Create projections
+        # Create projection run and projections
+        run = ProjectionRun.objects.create(
+            scenario=scenario,
+            run_number=1,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user
+        )
         for i, day in enumerate([0, 30, 60, 90]):
             weight = 2.5 * (1 + i)
             population = 10000 - (i * 150)
             biomass = weight * population / 1000
             ScenarioProjection.objects.create(
-                scenario=scenario,
+                projection_run=run,
+                scenario=scenario,  # Keep for backward compatibility
                 projection_date=date.today() + timedelta(days=day),
                 day_number=day,
                 average_weight=weight,
@@ -1024,6 +1068,10 @@ class ScenarioWorkflowTests(TestCase):
                 temperature=12.0 + i,
                 current_stage=self.fry_stage if i == 0 else self.parr_stage if i == 1 else self.smolt_stage
             )
+        run.total_projections = 4
+        run.final_weight_g = 2.5 * (1 + 3)
+        run.final_biomass_kg = (2.5 * (1 + 3)) * (10000 - (3 * 150)) / 1000
+        run.save()
         
         # Call the chart data endpoint
         response = self.client.get(

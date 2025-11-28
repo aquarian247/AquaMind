@@ -142,6 +142,48 @@ class BaseScenarioAPITestCase(BaseAPITestCase):
                 expected_weight_max_g=max_weight
             )
     
+    def create_projection_run_with_projections(self, scenario, num_days=30):
+        """Helper to create a ProjectionRun with manual projection data."""
+        from apps.scenario.models import ProjectionRun
+        
+        # Create projection run
+        latest_run = scenario.projection_runs.order_by('-run_number').first()
+        run_number = (latest_run.run_number + 1) if latest_run else 1
+        
+        projection_run = ProjectionRun.objects.create(
+            scenario=scenario,
+            run_number=run_number,
+            label='Test Run',
+            parameters_snapshot={},
+            created_by=self.user
+        )
+        
+        # Create sample projections
+        parr_stage = LifeCycleStage.objects.get(name='parr')
+        for i in range(num_days):
+            ScenarioProjection.objects.create(
+                projection_run=projection_run,
+                scenario=scenario,  # Keep for backward compatibility
+                projection_date=scenario.start_date + timedelta(days=i),
+                day_number=i,
+                average_weight=50.0 + i * 2,
+                population=scenario.initial_count - i * 5,
+                biomass=(50.0 + i * 2) * (scenario.initial_count - i * 5) / 1000,
+                daily_feed=10 + i * 0.5,
+                cumulative_feed=(10 + i * 0.5) * (i + 1),
+                temperature=10 + (i % 5) * 0.5,
+                current_stage=parr_stage
+            )
+        
+        # Update run summary
+        last_proj = projection_run.projections.order_by('-day_number').first()
+        projection_run.total_projections = num_days
+        projection_run.final_weight_g = last_proj.average_weight if last_proj else None
+        projection_run.final_biomass_kg = last_proj.biomass if last_proj else None
+        projection_run.save()
+        
+        return projection_run
+    
     def get_api_url(self, viewname, **kwargs):
         """Helper to construct API URLs."""
         return f'/api/v1/scenario/{viewname}/'
@@ -593,7 +635,7 @@ class ProjectionChartAPITests(BaseScenarioAPITestCase):
     
     def test_chart_data_endpoint(self):
         """Test chart data endpoint."""
-        # Create scenario with projections
+        # Create scenario
         scenario = Scenario.objects.create(
             name='Chart Test Scenario',
             start_date=date.today(),
@@ -608,20 +650,8 @@ class ProjectionChartAPITests(BaseScenarioAPITestCase):
             created_by=self.user
         )
         
-        # Create some projections
-        for i in range(30):
-            ScenarioProjection.objects.create(
-                scenario=scenario,
-                projection_date=date.today() + timedelta(days=i),
-                day_number=i,
-                average_weight=50.0 + i * 2,
-                population=10000 - i * 5,
-                biomass=(50.0 + i * 2) * (10000 - i * 5) / 1000,
-                daily_feed=10 + i * 0.5,
-                cumulative_feed=(10 + i * 0.5) * (i + 1),
-                temperature=10 + (i % 5) * 0.5,
-                current_stage=LifeCycleStage.objects.get(name='parr')
-            )
+        # Create projection run with test data
+        self.create_projection_run_with_projections(scenario, num_days=30)
         
         url = f"{self.get_api_url('scenarios')}{scenario.scenario_id}/chart_data/"
         
