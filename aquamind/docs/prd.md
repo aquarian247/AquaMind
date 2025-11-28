@@ -1118,6 +1118,33 @@ The Scenario Planning and Simulation feature comprises several interconnected co
       - Identifies dates when average weight reaches user-defined target weights (e.g., 4.5 kg).  
       - Considers biomass constraints and harvest plant capacities (if linked to operational data).  
 
+- **Projection Run Version Control** ✅ **IMPLEMENTED**
+  - **Description:** Each projection calculation creates a versioned ProjectionRun, enabling history tracking and preventing unintended updates when scenarios are re-run.
+  - **Specifications:**
+    - *Immutable Projection History:*
+      - Each execution of scenario projections creates a new `ProjectionRun` (Run #1, Run #2, etc.).
+      - Previous runs are preserved with complete projection data, parameter snapshots, and metadata.
+      - Users can compare different runs of the same scenario (e.g., before/after model updates).
+    - *Explicit Batch Pinning:*
+      - Batches pin to specific `ProjectionRun` instances (not directly to Scenario configuration).
+      - Re-running projections creates new run without affecting batches pinned to previous runs.
+      - Users explicitly choose when to update a batch's pinned run, providing full control.
+    - *Parameters Snapshot:*
+      - Each run captures TGC values, FCR values, mortality rates, and scenario configuration at execution time.
+      - Snapshots enable audit trail and facilitate comparison between runs.
+      - Parameter changes are traceable through run history.
+    - *Run Metadata:*
+      - Optional labels for runs (e.g., "Baseline," "Updated TGC Model," "Post-Temperature Adjustment").
+      - User attribution tracking (who created each run).
+      - Run date/time stamps for chronological tracking.
+      - Summary metrics (total projections, final weight, final biomass) for quick comparison.
+  - **API Endpoints:**
+    - `POST /api/v1/scenario/scenarios/{id}/run_projection/` - Create new projection run (with optional label)
+    - `GET /api/v1/scenario/scenarios/{id}/projection_runs/` - List all runs for a scenario
+    - `GET /api/v1/scenario/projection-runs/{id}/` - Get run details with parameter snapshot
+    - `GET /api/v1/scenario/projection-runs/{id}/projections/` - Get projection data for specific run
+    - `POST /api/v1/batch/batches/{id}/pin-projection-run/` - Pin batch to specific run
+
 - **Visualization and Analysis**  
   - **Description:** Provides intuitive displays and tools to interpret scenario outcomes.  
   - **Specifications:**  
@@ -1126,6 +1153,7 @@ The Scenario Planning and Simulation feature comprises several interconnected co
       - Configurable time scales (daily, weekly, monthly).  
     - *Comparison:*  
       - Side-by-side visualization of multiple scenarios (e.g., standard vs. increased feeding).  
+      - Compare different projection runs of the same scenario to assess model changes.
       - Highlight differences in harvest timing and biomass.  
     - *Export:*  
       - Data exportable in CSV format (columns: Date, Weight, Population, Biomass, Feed).  
@@ -1136,11 +1164,18 @@ The Scenario Planning and Simulation feature comprises several interconnected co
   - TGC models apply daily growth increments using the specified temperature profile, defaulting to the last known value if no update is provided.  
   - Mortality rates adjust population continuously, with daily or weekly recalculation based on model settings.  
   - FCR models transition automatically as fish progress through lifecycle stages, determined by days since scenario start. They rely on the registered growth (TGC) and mortality of the day in order to calculate the feed usage for the same day
+- *Projection Run Lifecycle:*  
+  - Running projections creates a new `ProjectionRun` instance with sequential run number.
+  - Previous runs are preserved indefinitely with complete projection data and parameter snapshots.
+  - Batches pin to specific `ProjectionRun` instances, maintaining stable references even when scenarios are re-run.
+  - Users explicitly control when batches adopt new projection runs, preventing unexpected changes.
 - *Dynamic Updates:*  
-  - Projections recalculate instantly upon changes to models, initial conditions, or mid-scenario parameter adjustments.  
+  - Re-running projections creates new run without deleting or modifying existing runs.
   - Users receive warnings if data inconsistencies arise (e.g., negative population).  
+  - Projection runs can be compared to assess impact of model changes.
 - *Integration:*  
   - Links to `batch_batch` and `infrastructure_container` for real-time data initialization.  
+  - Batches use pinned `ProjectionRun` (via `pinned_projection_run_id`) for growth analysis and variance calculations.
   - Optionally incorporates environmental data (e.g., temperature from `environmental_environmentalreading`) if available; otherwise, uses user-input projections.  
 
 **Justification**  
@@ -1181,9 +1216,21 @@ Scenario planning is a cornerstone of salmon farming management, enabling proact
     - The system projects from the current date forward 300 days, showing:  
       - Transition to Post-Smolt and Adult stages with corresponding FCR shifts.  
       - Biomass reaching 300 tons by day 250.  
-    - The projection aligns with real-time batch data at the starting point.  
+    - The projection aligns with real-time batch data at the starting point.
 
-**Additional Considerations**  
+- *User Story 4: Managing Projection Versions with ProjectionRun* ✅ **IMPLEMENTED**
+  **As a Production Planner, I want to update my TGC model and re-run projections without disrupting batches that are using the previous projection baseline, so I can test new parameters while maintaining existing operational plans.**  
+  - **Acceptance Criteria:**  
+    - The user creates a scenario with initial TGC parameters and runs projections, creating "Run #1 - Baseline."  
+    - Three batches pin to Run #1 for their growth analysis and daily state calculations.  
+    - The user updates the TGC model based on new research data and runs projections again with label "Updated TGC 2024."  
+    - The system creates "Run #2 - Updated TGC 2024" without deleting or modifying Run #1.  
+    - The three batches continue using Run #1 projections; their growth analysis remains unchanged.  
+    - The user reviews Run #2 results, compares them to Run #1, and decides to switch two batches to Run #2 while keeping one on Run #1.  
+    - The system tracks which batches use which runs (e.g., "2 batches pinned to this run").  
+    - Both runs remain accessible for comparison and audit trail purposes.
+
+**Additional Considerations**
 - *Scalability:* The system must handle hundreds of scenarios and models without performance degradation, caching frequent calculations and supporting bulk data operations.  
 - *Usability:* Multi-method data entry system reduces complexity from 900+ manual inputs to manageable operations through CSV uploads, templates, and automated pattern generation. Model selection features guided wizards with validation and preview capabilities.  
 - *Data Entry Efficiency:* Template library and formula-based generation enable rapid model creation, while visual editors provide intuitive adjustment capabilities for fine-tuning.  

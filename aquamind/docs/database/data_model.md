@@ -292,6 +292,8 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `expected_end_date`: date (nullable)
   - `actual_end_date`: date (nullable)
   - `notes`: text (NOT NULL)
+  - `pinned_scenario_id`: bigint (FK to `scenario`, on_delete=SET_NULL, nullable, related_name='pinned_batches') - **DEPRECATED**: Use pinned_projection_run instead
+  - `pinned_projection_run_id`: bigint (FK to `scenario_projection_run`, on_delete=SET_NULL, nullable, related_name='pinned_batches') - **NEW**: Specific projection run used for growth analysis
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
 - **`batch_batchcontainerassignment`**
@@ -1469,9 +1471,28 @@ The Harvest Management app's data model supports comprehensive tracking of harve
   - `updated_at`: timestamptz (auto_now=True)
   - Validation requires at least one replacement model and bounds `change_day` to the scenario duration
 
+- **`scenario_projection_run`**
+  - `run_id`: bigint (PK, auto-increment)
+  - `scenario_id`: bigint (FK to `scenario`, on_delete=CASCADE, related_name='projection_runs')
+  - `run_date`: timestamptz (auto_now_add=True, help_text="When this projection run was created")
+  - `run_number`: integer (positive, help_text="Sequential run number for this scenario (1, 2, 3...)")
+  - `label`: varchar(100) (blank=True, help_text="Optional label (e.g., 'Baseline', 'Updated TGC')")
+  - `parameters_snapshot`: jsonb (default={}, help_text="Snapshot of TGC, FCR, mortality values used")
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, null=True, blank=True, related_name='projection_runs')
+  - `notes`: text (blank=True)
+  - `total_projections`: integer (positive, default=0, help_text="Total number of projection records in this run")
+  - `final_weight_g`: double precision (nullable, help_text="Final average weight at end of projection")
+  - `final_biomass_kg`: double precision (nullable, help_text="Final biomass at end of projection")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `db_table = 'scenario_projection_run'`, `ordering = ['scenario', '-run_number']`, `unique_together = ['scenario', 'run_number']`
+  - Indexes on (`scenario_id`, `-run_date`) and `run_number`
+  - **Purpose**: Represents a single execution of projections for a scenario. Batches pin to a ProjectionRun (not directly to Scenario) so that re-running projections creates a new run without affecting existing batch references.
+
 - **`scenario_scenarioprojection`**
   - `projection_id`: bigint (PK, auto-increment)
-  - `scenario_id`: bigint (FK to `scenario`, on_delete=CASCADE, related_name='projections')
+  - `projection_run_id`: bigint (FK to `scenario_projection_run`, on_delete=CASCADE, related_name='projections')
+  - `scenario_id`: bigint (FK to `scenario`, on_delete=CASCADE, nullable, related_name='_old_projections') - **DEPRECATED**: Kept temporarily for migration compatibility
   - `projection_date`: date
   - `day_number`: integer (validators: MinValueValidator(0))
   - `average_weight`: double precision (validators: MinValueValidator(0))
@@ -1483,7 +1504,8 @@ The Harvest Management app's data model supports comprehensive tracking of harve
   - `current_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=PROTECT, related_name='scenario_projections')
   - `created_at`: timestamptz (auto_now_add=True)
   - `updated_at`: timestamptz (auto_now=True)
-  - Indexes on (`scenario_id`, `projection_date`) and (`scenario_id`, `day_number`)
+  - Indexes on (`projection_run_id`, `projection_date`) and (`projection_run_id`, `day_number`)
+  - **Purpose**: Daily projection data for a projection run. Stores calculated daily values for weight, population, biomass, and feed consumption.
 
 - **`scenario_biological_constraints`**
   - `id`: bigint (PK, auto-increment)
@@ -1540,11 +1562,15 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - `scenario_fcrmodelstage` ← `scenario_fcr_model_stage_override` (CASCADE, related_name='overrides')
 - `scenario_mortalitymodel` ← `scenario_mortality_model_stage` (CASCADE, related_name='stage_overrides')
 - `scenario` ← `scenario_scenariomodelchange` (CASCADE, related_name='model_changes')
-- `scenario` ← `scenario_scenarioprojection` (CASCADE, related_name='projections')
+- `scenario` ← `scenario_projection_run` (CASCADE, related_name='projection_runs')
+- `scenario_projection_run` ← `scenario_scenarioprojection` (CASCADE, related_name='projections')
+- `scenario` ← `scenario_scenarioprojection` (CASCADE, nullable, related_name='_old_projections') - **DEPRECATED**: Temporary for migration
 - `scenario_biological_constraints` ← `scenario` (SET_NULL)
 - `scenario_biological_constraints` ← `scenario_stage_constraint` (CASCADE, related_name='stage_constraints')
 - `batch_batch` ← `scenario` (SET_NULL, related_name='scenarios')
+- `batch_batch` ← `scenario_projection_run` (SET_NULL, related_name='pinned_batches') - **NEW**: Batches pin to specific projection runs
 - `users_customuser` ← `scenario` (SET_NULL, related_name='created_scenarios')
+- `users_customuser` ← `scenario_projection_run` (SET_NULL, related_name='projection_runs')
 
 #### Additional Considerations
 - `Scenario.clean()` validates the initial weight against linked constraint sets and enforces a 0.1g minimum when no constraints apply.
