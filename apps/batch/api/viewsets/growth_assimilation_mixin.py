@@ -156,6 +156,31 @@ class GrowthAssimilationMixin:
             404: {"description": "Batch or scenario not found"},
         }
     )
+    @extend_schema(
+        operation_id="batch-pin-projection-run",
+        summary="Pin a projection run to this batch",
+        description=(
+            "Pin a specific projection run to this batch for growth analysis.\n"
+            "Provides version control for scenario projections."
+        ),
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'projection_run_id': {
+                        'type': 'integer',
+                        'description': 'ID of the projection run to pin'
+                    }
+                },
+                'required': ['projection_run_id']
+            }
+        },
+        responses={
+            200: {"description": "Projection run pinned successfully"},
+            400: {"description": "Invalid projection run ID or validation error"},
+            404: {"description": "Batch or projection run not found"},
+        }
+    )
     @action(detail=True, methods=['post'], url_path='pin-projection-run')
     def pin_projection_run(self, request, pk=None):
         """
