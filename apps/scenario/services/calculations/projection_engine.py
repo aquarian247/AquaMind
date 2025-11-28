@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from ...models import (
-    Scenario, ScenarioProjection, ScenarioModelChange,
+    Scenario, ProjectionRun, ScenarioProjection, ScenarioModelChange,
     TGCModel, FCRModel, MortalityModel
 )
 # We'll use the batch LifeCycleStage for now, but could switch to scenario-specific later
@@ -205,21 +205,59 @@ class ProjectionEngine:
                     f"Applied mortality model change on {current_date}: {change.new_mortality_model.name}"
                 )
     
+    def _capture_parameters_snapshot(self) -> dict:
+        """Capture key parameters for audit trail and comparison."""
+        return {
+            'tgc_model': {
+                'id': self.tgc_calculator.model.model_id,
+                'name': self.tgc_calculator.model.name,
+                'tgc_value': self.tgc_calculator.model.tgc_value,
+                'exponent_n': self.tgc_calculator.model.exponent_n,
+                'exponent_m': self.tgc_calculator.model.exponent_m,
+                'location': self.tgc_calculator.model.location,
+                'release_period': self.tgc_calculator.model.release_period,
+            },
+            'fcr_model': {
+                'id': self.fcr_calculator.model.model_id,
+                'name': self.fcr_calculator.model.name,
+            },
+            'mortality_model': {
+                'id': self.mortality_calculator.model.model_id,
+                'name': self.mortality_calculator.model.name,
+                'rate': self.mortality_calculator.model.rate,
+                'frequency': self.mortality_calculator.model.frequency,
+            },
+            'scenario': {
+                'initial_weight': float(self.scenario.initial_weight) if self.scenario.initial_weight else None,
+                'initial_count': self.scenario.initial_count,
+                'duration_days': self.scenario.duration_days,
+                'genotype': self.scenario.genotype,
+                'supplier': self.scenario.supplier,
+            },
+            'captured_at': timezone.now().isoformat(),
+        }
+    
     @transaction.atomic
     def run_projection(
         self,
         save_results: bool = True,
+        label: str = "",
+        current_user = None,
         progress_callback: Optional[callable] = None
     ) -> Dict[str, any]:
         """
-        Run the complete projection for the scenario.
+        Run projection and create a new ProjectionRun.
+        
+        Does NOT delete existing projections - creates new run instead.
         
         Args:
             save_results: Whether to save projections to database
+            label: Optional label for this projection run
+            current_user: User creating this run (for attribution)
             progress_callback: Optional callback for progress updates
             
         Returns:
-            Dict with projection results and summary
+            Dict with projection results, summary, and run information
         """
         if self.errors:
             return {
@@ -229,9 +267,20 @@ class ProjectionEngine:
                 'projections': []
             }
         
-        # Clear existing projections if re-running
+        # Create new ProjectionRun (instead of deleting existing projections)
+        projection_run = None
         if save_results:
-            self.scenario.projections.all().delete()
+            # Get next run number
+            latest_run = self.scenario.projection_runs.order_by('-run_number').first()
+            next_run_number = (latest_run.run_number + 1) if latest_run else 1
+            
+            projection_run = ProjectionRun.objects.create(
+                scenario=self.scenario,
+                run_number=next_run_number,
+                label=label,
+                parameters_snapshot=self._capture_parameters_snapshot(),
+                created_by=current_user,
+            )
         
         # Initialize projection state
         current_date = self.scenario.start_date
@@ -326,19 +375,27 @@ class ProjectionEngine:
             # Calculate biomass
             biomass = (new_weight * new_population) / 1000.0  # Convert to kg
             
-            # Create projection record
-            projection = ScenarioProjection(
-                scenario=self.scenario,
-                projection_date=current_date,
-                day_number=day_number,
-                average_weight=new_weight,
-                population=new_population,
-                biomass=round(biomass, 2),
-                daily_feed=feed_data['daily_feed_kg'],
-                cumulative_feed=round(cumulative_feed, 3),
-                temperature=temperature,
-                current_stage=current_stage
-            )
+            # Create projection record data (will be linked to run when saving)
+            projection_data = {
+                'projection_date': current_date,
+                'day_number': day_number,
+                'average_weight': new_weight,
+                'population': new_population,
+                'biomass': round(biomass, 2),
+                'daily_feed': feed_data['daily_feed_kg'],
+                'cumulative_feed': round(cumulative_feed, 3),
+                'temperature': temperature,
+                'current_stage': current_stage
+            }
+            
+            # For non-saved projections, create object with old scenario FK
+            if not save_results:
+                projection = ScenarioProjection(
+                    scenario=self.scenario,
+                    **projection_data
+                )
+            else:
+                projection = projection_data
             
             projections.append(projection)
             
@@ -352,15 +409,46 @@ class ProjectionEngine:
                 progress = (day_number / self.scenario.duration_days) * 100
                 progress_callback(progress, f"Processing day {day_number}")
         
-        # Save projections if requested
-        if save_results and projections:
-            ScenarioProjection.objects.bulk_create(projections)
+        # Save projections to new run if requested
+        if save_results and projections and projection_run:
+            # Create projection objects linked to the run
+            projection_objs = [
+                ScenarioProjection(
+                    projection_run=projection_run,
+                    scenario=self.scenario,  # Keep for now during migration
+                    **p
+                ) for p in projections
+            ]
+            ScenarioProjection.objects.bulk_create(projection_objs)
+            
+            # Update run summary
+            last_projection = projections[-1]
+            projection_run.total_projections = len(projections)
+            projection_run.final_weight_g = last_projection['average_weight']
+            projection_run.final_biomass_kg = last_projection['biomass']
+            projection_run.save(update_fields=['total_projections', 'final_weight_g', 'final_biomass_kg'])
         
-        # Generate summary
-        summary = self._generate_summary(projections)
+        # Generate summary (convert dicts to objects for non-saved projections)
+        if save_results:
+            # For saved projections, create temporary objects for summary
+            summary_projections = [
+                type('Projection', (), {
+                    'average_weight': p['average_weight'],
+                    'population': p['population'],
+                    'biomass': p['biomass'],
+                    'cumulative_feed': p['cumulative_feed'],
+                    'temperature': p['temperature']
+                })() for p in projections
+            ]
+        else:
+            summary_projections = projections
+        
+        summary = self._generate_summary(summary_projections)
         
         return {
             'success': True,
+            'projection_run_id': projection_run.run_id if projection_run else None,
+            'run_number': projection_run.run_number if projection_run else None,
             'errors': self.errors,
             'warnings': self.warnings,
             'projections': projections if not save_results else [],

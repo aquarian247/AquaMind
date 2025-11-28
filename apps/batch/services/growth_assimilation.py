@@ -88,9 +88,10 @@ class GrowthAssimilationEngine:
         Get the scenario to use for TGC/mortality models.
         
         Priority:
-        1. Batch pinned_scenario
-        2. Batch's first scenario (if any)
-        3. Raise error (scenario is required)
+        1. Batch pinned_projection_run.scenario (NEW)
+        2. Batch pinned_scenario (DEPRECATED, for backward compatibility)
+        3. Batch's first scenario (if any)
+        4. Raise error (scenario is required)
         
         Returns:
             Scenario to use for calculations
@@ -98,8 +99,16 @@ class GrowthAssimilationEngine:
         Raises:
             ValueError: If no scenario is available
         """
-        # Try pinned scenario
+        # NEW: Try pinned projection run first
+        if self.batch.pinned_projection_run:
+            return self.batch.pinned_projection_run.scenario
+        
+        # DEPRECATED: Try old pinned scenario (for backward compatibility)
         if self.batch.pinned_scenario:
+            logger.warning(
+                f"Batch {self.batch.batch_number} using deprecated pinned_scenario. "
+                f"Consider pinning a ProjectionRun instead."
+            )
             return self.batch.pinned_scenario
         
         # Try first scenario for this batch
@@ -110,7 +119,7 @@ class GrowthAssimilationEngine:
         
         raise ValueError(
             f"No scenario available for batch {self.batch.batch_number}. "
-            f"Assign a pinned_scenario or create a scenario for this batch."
+            f"Pin a projection run or assign a scenario to this batch."
         )
     
     def recompute_range(
