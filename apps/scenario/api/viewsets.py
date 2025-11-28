@@ -581,6 +581,30 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         
         return Response(comparison_data)
     
+    @extend_schema(
+        operation_id="scenario_run_projection",
+        summary="Run projections and create new run",
+        description=(
+            "Run projection calculations and create a new ProjectionRun.\n"
+            "Does NOT delete existing projections - creates new versioned run."
+        ),
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'label': {
+                        'type': 'string',
+                        'description': 'Optional label for this run (e.g., "Updated TGC model")'
+                    }
+                }
+            }
+        },
+        responses={
+            200: {"description": "Projection run created successfully"},
+            400: {"description": "Validation error"},
+            403: {"description": "Permission denied"},
+        }
+    )
     @action(detail=True, methods=['post'])
     def run_projection(self, request, pk=None):
         """

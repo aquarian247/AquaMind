@@ -1303,11 +1303,11 @@ paths:
           description: Internal Server Error
   /api/v1/batch/batches/{id}/pin-projection-run/:
     post:
-      operationId: batch_pin_projection_run
+      operationId: batch-pin-scenario
       description: |-
-        Pin a specific projection run to this batch for growth analysis.
-        Provides version control for scenario projections.
-      summary: Pin a projection run to this batch
+        Associate a specific scenario with this batch as the reference for
+        growth assimilation calculations. Only one scenario can be pinned at a time.
+      summary: Pin a scenario to a batch
       parameters:
       - in: path
         name: id
@@ -1323,13 +1323,10 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                projection_run_id:
-                  type: integer
-                  description: ID of the projection run to pin
-              required:
-                - projection_run_id
+              $ref: '#/components/schemas/PinScenario'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PinScenario'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PinScenario'
@@ -27327,22 +27324,11 @@ paths:
           description: Bad request (validation error)
   /api/v1/scenario/scenarios/{scenario_id}/run_projection/:
     post:
-      operationId: api_v1_scenario_scenarios_run_projection_create
+      operationId: scenario_run_projection
       description: |-
-        Run projection - creates NEW ProjectionRun.
-
-        Request body (optional):
-        {
-            "label": "Updated TGC model"  // Optional label for this run
-        }
-
-        Returns:
-        {
-            "success": true,
-            "projection_run_id": 123,
-            "run_number": 2,
-            "message": "Projection run #2 created."
-        }
+        Run projection calculations and create a new ProjectionRun.
+        Does NOT delete existing projections - creates new versioned run.
+      summary: Run projections and create new run
       parameters:
       - in: path
         name: scenario_id
@@ -27358,14 +27344,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Scenario'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Scenario'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Scenario'
-        required: true
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: Optional label for this run (e.g., "Updated TGC model")
       security:
       - jwtAuth: []
       - tokenAuth: []
@@ -27374,18 +27357,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scenario'
+                description: Projection run created successfully
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Validation error
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                description: Permission denied
           description: ''
         '404':
           description: Not Found
         '401':
           description: Unauthorized
-        '403':
-          description: Forbidden
         '500':
           description: Internal Server Error
-        '400':
-          description: Bad request (validation error)
   /api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/:
     post:
       operationId: api_v1_scenario_scenarios_sensitivity_analysis_create
