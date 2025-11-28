@@ -481,18 +481,117 @@ class ScenarioModelChange(models.Model):
         return f"{self.scenario.name} - Day {self.change_day} change"
 
 
+class ProjectionRun(models.Model):
+    """
+    Represents a single execution of projections for a scenario.
+    
+    Batches pin to a ProjectionRun (not directly to Scenario) so that
+    re-running projections creates a new run without affecting existing
+    batch references.
+    """
+    run_id = models.BigAutoField(primary_key=True)
+    scenario = models.ForeignKey(
+        Scenario,
+        on_delete=models.CASCADE,
+        related_name='projection_runs',
+        help_text="The scenario configuration used for this run"
+    )
+    run_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this projection run was created"
+    )
+    run_number = models.PositiveIntegerField(
+        help_text="Sequential run number for this scenario (1, 2, 3...)"
+    )
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional label (e.g., 'Baseline', 'Updated TGC')"
+    )
+    
+    # Snapshot of key parameters used (for comparison/audit)
+    parameters_snapshot = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Snapshot of TGC, FCR, mortality values used"
+    )
+    
+    # Metadata
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='projection_runs',
+        help_text="User who created this run"
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes about this run"
+    )
+    
+    # Denormalized summary for quick access
+    total_projections = models.PositiveIntegerField(
+        default=0,
+        help_text="Total number of projection records in this run"
+    )
+    final_weight_g = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Final average weight at end of projection"
+    )
+    final_biomass_kg = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Final biomass at end of projection"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'scenario_projection_run'
+        verbose_name = "Projection Run"
+        verbose_name_plural = "Projection Runs"
+        ordering = ['scenario', '-run_number']
+        unique_together = ['scenario', 'run_number']
+        indexes = [
+            models.Index(fields=['scenario', '-run_date']),
+            models.Index(fields=['run_number']),
+        ]
+    
+    def __str__(self):
+        label_str = f" ({self.label})" if self.label else ""
+        return f"{self.scenario.name} - Run #{self.run_number}{label_str}"
+
+
 class ScenarioProjection(models.Model):
     """
-    Daily projection data for a scenario.
+    Daily projection data for a projection run.
     
     Stores calculated daily values for weight, population, biomass,
     and feed consumption. Consider TimescaleDB for large datasets.
     """
     projection_id = models.BigAutoField(primary_key=True)
+    
+    # MIGRATION: Keep scenario temporarily during migration, will be removed
     scenario = models.ForeignKey(
         Scenario,
         on_delete=models.CASCADE,
-        related_name='projections'
+        related_name='_old_projections',  # Temporary name to avoid conflicts
+        null=True,
+        blank=True,
+        help_text="DEPRECATED: Temporary field for migration"
+    )
+    
+    projection_run = models.ForeignKey(
+        ProjectionRun,
+        on_delete=models.CASCADE,
+        related_name='projections',
+        null=True,  # Temporarily nullable for migration
+        blank=True,
+        help_text="The projection run this data belongs to"
     )
     projection_date = models.DateField(
         help_text="Projection date"
@@ -535,14 +634,14 @@ class ScenarioProjection(models.Model):
     class Meta:
         verbose_name = "Scenario Projection"
         verbose_name_plural = "Scenario Projections"
-        ordering = ['scenario', 'day_number']
+        ordering = ['projection_run', 'day_number']
         indexes = [
-            models.Index(fields=['scenario', 'projection_date']),
-            models.Index(fields=['scenario', 'day_number']),
+            models.Index(fields=['projection_run', 'projection_date']),
+            models.Index(fields=['projection_run', 'day_number']),
         ]
     
     def __str__(self):
-        return f"{self.scenario.name} - Day {self.day_number}: {self.average_weight:.1f}g"
+        return f"{self.projection_run} - Day {self.day_number}: {self.average_weight:.1f}g"
 
 
 # Biological Configuration Models

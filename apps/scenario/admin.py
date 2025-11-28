@@ -8,7 +8,7 @@ from django.contrib import admin
 from .models import (
     TemperatureProfile, TemperatureReading, TGCModel, FCRModel, 
     FCRModelStage, MortalityModel, Scenario, ScenarioModelChange,
-    ScenarioProjection,
+    ProjectionRun, ScenarioProjection,
     # New biological constraint models
     BiologicalConstraints, StageConstraint,
     TGCModelStage, FCRModelStageOverride,
@@ -164,15 +164,67 @@ class ScenarioAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+@admin.register(ProjectionRun)
+class ProjectionRunAdmin(admin.ModelAdmin):
+    """Admin configuration for Projection Runs."""
+    list_display = ('__str__', 'scenario', 'run_number', 'run_date', 'total_projections',
+                    'final_weight_g', 'pinned_batch_count', 'created_by')
+    list_filter = ('scenario', 'run_date', 'created_by')
+    search_fields = ('scenario__name', 'label')
+    readonly_fields = ('run_id', 'run_date', 'total_projections', 'final_weight_g', 
+                      'final_biomass_kg', 'created_at', 'updated_at')
+    autocomplete_fields = ['scenario', 'created_by']
+    date_hierarchy = 'run_date'
+    
+    fieldsets = (
+        ('Run Information', {
+            'fields': ('scenario', 'run_number', 'label', 'run_date')
+        }),
+        ('Summary Metrics', {
+            'fields': ('total_projections', 'final_weight_g', 'final_biomass_kg'),
+            'description': 'Auto-calculated summary values'
+        }),
+        ('Parameters Snapshot', {
+            'fields': ('parameters_snapshot',),
+            'classes': ('collapse',),
+            'description': 'Captured parameters used for this run'
+        }),
+        ('Metadata', {
+            'fields': ('created_by', 'notes', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def pinned_batch_count(self, obj):
+        """Display count of batches pinned to this run."""
+        return obj.pinned_batches.count()
+    pinned_batch_count.short_description = 'Pinned Batches'
+    
+    def has_add_permission(self, request):
+        """Runs are created via API, not manually."""
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow editing label and notes only."""
+        return request.user.is_staff
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make most fields read-only, allow editing label and notes."""
+        if obj:  # Editing existing object
+            return self.readonly_fields + ('scenario', 'run_number')
+        return self.readonly_fields
+
+
 @admin.register(ScenarioProjection)
 class ScenarioProjectionAdmin(admin.ModelAdmin):
     """Admin configuration for Scenario Projections."""
-    list_display = ('scenario', 'day_number', 'projection_date', 'average_weight', 
-                    'population', 'biomass', 'current_stage')
-    list_filter = ('scenario', 'current_stage', 'projection_date')
-    search_fields = ('scenario__name',)
+    list_display = ('get_scenario', 'get_run_number', 'day_number', 'projection_date', 
+                    'average_weight', 'population', 'biomass', 'current_stage')
+    list_filter = ('projection_run__scenario', 'current_stage', 'projection_date')
+    search_fields = ('projection_run__scenario__name', 'projection_run__label')
     readonly_fields = ('created_at', 'updated_at')
     date_hierarchy = 'projection_date'
+    autocomplete_fields = ['projection_run', 'current_stage']
     
     # Limit editing as projections are typically calculated
     def has_add_permission(self, request):
@@ -183,9 +235,21 @@ class ScenarioProjectionAdmin(admin.ModelAdmin):
         """Projections are read-only."""
         return False
     
+    def get_scenario(self, obj):
+        """Display the scenario name."""
+        return obj.projection_run.scenario.name
+    get_scenario.short_description = 'Scenario'
+    get_scenario.admin_order_field = 'projection_run__scenario__name'
+    
+    def get_run_number(self, obj):
+        """Display the run number."""
+        return f"Run #{obj.projection_run.run_number}"
+    get_run_number.short_description = 'Run'
+    get_run_number.admin_order_field = 'projection_run__run_number'
+    
     fieldsets = (
-        ('Scenario', {
-            'fields': ('scenario', 'projection_date', 'day_number')
+        ('Projection Run', {
+            'fields': ('projection_run', 'projection_date', 'day_number')
         }),
         ('Fish Metrics', {
             'fields': ('average_weight', 'population', 'biomass', 'current_stage')
