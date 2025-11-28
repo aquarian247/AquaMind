@@ -26625,8 +26625,15 @@ paths:
   /api/v1/scenario/scenarios/:
     get:
       operationId: api_v1_scenario_scenarios_list
-      description: Enhanced ViewSet for scenarios with audit trail support.
+      description: List scenarios with optional filter to show all users' scenarios.
       parameters:
+      - in: query
+        name: all
+        schema:
+          type: boolean
+          default: false
+        description: If true, returns all scenarios. By default, only returns scenarios
+          created by the current user.
       - in: query
         name: created_by
         schema:

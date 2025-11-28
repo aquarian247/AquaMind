@@ -2,8 +2,8 @@
 
 **AquaMind Financial Planning & Budgeting Module - REST API Documentation**
 
-**Version**: 1.0  
-**Date**: October 28, 2025  
+**Version**: 2.0  
+**Date**: November 26, 2025  
 **Base URL**: `/api/v1/finance-core/`
 
 ---
@@ -17,15 +17,19 @@
 5. [Cost Center Endpoints](#cost-center-endpoints)
 6. [Budget Endpoints](#budget-endpoints)
 7. [Budget Entry Endpoints](#budget-entry-endpoints)
-8. [Reporting Endpoints](#reporting-endpoints)
-9. [Error Handling](#error-handling)
-10. [Rate Limiting](#rate-limiting)
+8. [Period Lock Endpoints](#period-lock-endpoints)
+9. [Valuation Run Endpoints](#valuation-run-endpoints)
+10. [Reporting Endpoints](#reporting-endpoints)
+11. [Error Handling](#error-handling)
+12. [Rate Limiting](#rate-limiting)
 
 ---
 
 ## Overview
 
-The Financial Core API provides RESTful endpoints for managing the Chart of Accounts (CoA), Cost Centers, and Budgets in AquaMind. All endpoints follow Django REST Framework conventions and return JSON responses.
+The Financial Core API provides RESTful endpoints for managing the Chart of Accounts (CoA), Cost Centers, Budgets, and EoM processes (allocation, valuation, locking) in AquaMind. All endpoints follow Django REST Framework conventions and return JSON responses.
+
+NB! Do not take for granted that all variables and data types are 100% correct. This is a blueprint/guide - not the code. 
 
 ### API Conventions
 
@@ -117,8 +121,6 @@ GET /api/v1/finance-core/account-groups/?account_type=EXPENSE&ordering=display_o
 }
 ```
 
----
-
 ### 2. Create Account Group
 
 **Endpoint**: `POST /api/v1/finance-core/account-groups/`
@@ -160,8 +162,6 @@ GET /api/v1/finance-core/account-groups/?account_type=EXPENSE&ordering=display_o
 }
 ```
 
----
-
 ### 3. Retrieve Account Group
 
 **Endpoint**: `GET /api/v1/finance-core/account-groups/{id}/`
@@ -183,8 +183,6 @@ GET /api/v1/finance-core/account-groups/?account_type=EXPENSE&ordering=display_o
   "updated_at": "2025-01-15T10:00:00Z"
 }
 ```
-
----
 
 ### 4. Update Account Group
 
@@ -216,8 +214,6 @@ GET /api/v1/finance-core/account-groups/?account_type=EXPENSE&ordering=display_o
   "updated_at": "2025-01-15T12:00:00Z"
 }
 ```
-
----
 
 ### 5. Delete Account Group
 
@@ -300,8 +296,6 @@ GET /api/v1/finance-core/accounts/?account_type=EXPENSE&is_active=true&ordering=
 }
 ```
 
----
-
 ### 2. Create Account
 
 **Endpoint**: `POST /api/v1/finance-core/accounts/`
@@ -345,8 +339,6 @@ GET /api/v1/finance-core/accounts/?account_type=EXPENSE&is_active=true&ordering=
 }
 ```
 
----
-
 ### 3. Retrieve Account
 
 **Endpoint**: `GET /api/v1/finance-core/accounts/{id}/`
@@ -369,8 +361,6 @@ GET /api/v1/finance-core/accounts/?account_type=EXPENSE&is_active=true&ordering=
   "updated_at": "2025-01-15T10:10:00Z"
 }
 ```
-
----
 
 ### 4. Update Account
 
@@ -404,8 +394,6 @@ GET /api/v1/finance-core/accounts/?account_type=EXPENSE&is_active=true&ordering=
 }
 ```
 
----
-
 ### 5. Delete Account
 
 **Endpoint**: `DELETE /api/v1/finance-core/accounts/{id}/`
@@ -423,8 +411,6 @@ GET /api/v1/finance-core/accounts/?account_type=EXPENSE&is_active=true&ordering=
   "detail": "Cannot delete account with existing budget entries."
 }
 ```
-
----
 
 ### 6. Custom Action: Get Accounts by Type
 
@@ -458,8 +444,6 @@ GET /api/v1/finance-core/accounts/by-type/?type=REVENUE
   }
 ]
 ```
-
----
 
 ### 7. Custom Action: Get Active Accounts
 
@@ -547,8 +531,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
 }
 ```
 
----
-
 ### 2. Create Cost Center
 
 **Endpoint**: `POST /api/v1/finance-core/cost-centers/`
@@ -582,8 +564,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
 }
 ```
 
----
-
 ### 3. Retrieve Cost Center
 
 **Endpoint**: `GET /api/v1/finance-core/cost-centers/{id}/`
@@ -605,8 +585,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
   "updated_at": "2025-01-15T10:25:00Z"
 }
 ```
-
----
 
 ### 4. Update Cost Center
 
@@ -639,8 +617,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
 }
 ```
 
----
-
 ### 5. Delete Cost Center
 
 **Endpoint**: `DELETE /api/v1/finance-core/cost-centers/{id}/`
@@ -651,8 +627,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
 ```
 (empty response body)
 ```
-
----
 
 ### 6. Custom Action: Get Active Cost Centers
 
@@ -671,8 +645,6 @@ GET /api/v1/finance-core/cost-centers/?company=1&is_active=true&ordering=code
   }
 ]
 ```
-
----
 
 ### 7. Custom Action: Get Cost Centers by Company
 
@@ -780,8 +752,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
 }
 ```
 
----
-
 ### 2. Create Budget
 
 **Endpoint**: `POST /api/v1/finance-core/budgets/`
@@ -812,6 +782,7 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "scenario": null,
   "scenario_name": null,
   "description": "Base budget for 2026 fiscal year",
+  "currency": "DKK",
   "is_active": false,
   "entry_count": 0,
   "total_budgeted": 0.00,
@@ -820,8 +791,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "created_by": 1
 }
 ```
-
----
 
 ### 3. Retrieve Budget
 
@@ -841,7 +810,7 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "scenario": null,
   "scenario_name": null,
   "description": "Base budget for 2025 fiscal year",
-  "currency": "DKK",  // Added: Assumed uniform for the Budget
+  "currency": "DKK",
   "is_active": true,
   "entry_count": 2,
   "total_budgeted": 100000.00,
@@ -852,7 +821,7 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
     {
       "id": 1,
       "budget": 1,
-      "currency": "DKK",  // Added
+      "currency": "DKK",
       "account": 1,
       "account_code": "5100",
       "account_name": "Smolt Feed",
@@ -868,7 +837,7 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
     {
       "id": 2,
       "budget": 1,
-      "currency": "DKK",  // Added
+      "currency": "DKK",
       "account": 1,
       "account_code": "5100",
       "account_name": "Smolt Feed",
@@ -884,8 +853,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   ]
 }
 ```
-
----
 
 ### 4. Update Budget
 
@@ -914,8 +881,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
 }
 ```
 
----
-
 ### 5. Delete Budget
 
 **Endpoint**: `DELETE /api/v1/finance-core/budgets/{id}/`
@@ -926,8 +891,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
 ```
 (empty response body)
 ```
-
----
 
 ### 6. Custom Action: Get Budget Summary
 
@@ -941,7 +904,7 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "budget_id": 1,
   "budget_name": "2025 Base Budget",
   "year": 2025,
-  "currency": "DKK",  // Added: Assumed uniform
+  "currency": "DKK",
   "summary_by_type": [
     {
       "account_type": "REVENUE",
@@ -955,8 +918,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "net_income": 2000000.00
 }
 ```
-
----
 
 ### 7. Custom Action: Copy Budget
 
@@ -984,8 +945,6 @@ GET /api/v1/finance-core/budgets/?year=2025&company=1&ordering=-created_at
   "created_at": "2025-01-15T13:00:00Z"
 }
 ```
-
----
 
 ### 8. Custom Action: Get Budgets by Scenario
 
@@ -1029,7 +988,7 @@ Budget Entries represent monthly budgeted amounts for specific account/cost cent
 
 **Query Parameters**:
 - `budget` (integer, optional): Filter by budget ID
-- `currency` (string, optional)
+- `currency` (string, optional): Filter by ISO 4217 code (e.g., "DKK")
 - `account` (integer, optional): Filter by account ID
 - `cost_center` (integer, optional): Filter by cost center ID
 - `month` (integer, optional): Filter by month (1-12)
@@ -1068,8 +1027,6 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
   ]
 }
 ```
-
----
 
 ### 2. Create Budget Entry
 
@@ -1110,8 +1067,6 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
 }
 ```
 
----
-
 ### 3. Retrieve Budget Entry
 
 **Endpoint**: `GET /api/v1/finance-core/budget-entries/{id}/`
@@ -1137,8 +1092,6 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
   "updated_at": "2025-01-15T10:40:00Z"
 }
 ```
-
----
 
 ### 4. Update Budget Entry
 
@@ -1175,8 +1128,6 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
 }
 ```
 
----
-
 ### 5. Delete Budget Entry
 
 **Endpoint**: `DELETE /api/v1/finance-core/budget-entries/{id}/`
@@ -1188,13 +1139,11 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
 (empty response body)
 ```
 
----
-
 ### 6. Custom Action: Bulk Create Budget Entries
 
 **Endpoint**: `POST /api/v1/finance-core/budget-entries/bulk-create/`
 
-**Description**: Create multiple budget entries in a single request (useful for spreadsheet-like data entry). Note: All entries in a budget should use the same currency to avoid aggregation issues; mixed currencies are allowed but reports assume uniformity.
+**Description**: Create multiple budget entries in a single request (useful for spreadsheet-like data entry).
 
 **Request Body**:
 ```json
@@ -1210,7 +1159,7 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
     },
     {
       "budget": 1,
-      "currency": "DKK",
+      "currency": "GBP",
       "account": 1,
       "cost_center": 1,
       "month": 2,
@@ -1218,7 +1167,7 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
     },
     {
       "budget": 1,
-      "currency": "DKK",
+      "currency": "EUR",
       "account": 1,
       "cost_center": 1,
       "month": 3,
@@ -1264,6 +1213,8 @@ GET /api/v1/finance-core/budget-entries/?budget=1&month=1&ordering=account__code
 ]
 ```
 
+**Note**: All entries in a budget should use the same currency to avoid aggregation issues; mixed currencies are allowed but reports assume uniformity.
+
 ---
 
 ## Reporting Endpoints
@@ -1295,43 +1246,41 @@ GET /api/v1/finance-core/reports/budget-summary/?budget_id=1
       "account__account_type": "REVENUE",
       "month": 1,
       "total": 800000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     {
       "account__account_type": "EXPENSE",
       "month": 1,
       "total": 650000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     {
       "account__account_type": "REVENUE",
       "month": 2,
       "total": 850000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     {
       "account__account_type": "EXPENSE",
       "month": 2,
       "total": 680000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     }
   ],
   "totals_by_type": [
     {
       "account__account_type": "REVENUE",
       "total": 10000000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     {
       "account__account_type": "EXPENSE",
       "total": 8000000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     }
   ]
 }
 ```
-
----
 
 ### 2. P&L Projection Report
 
@@ -1356,21 +1305,21 @@ GET /api/v1/finance-core/reports/pl-projection/?budget_id=1
   "total_revenue": 10000000.00,
   "total_expenses": 8000000.00,
   "net_income": 2000000.00,
-  "currency": "DKK",  // Added: Top-level for uniform assumption
+  "currency": "DKK",
   "monthly_pl": [
     {
       "month": 1,
       "revenue": 800000.00,
       "expenses": 650000.00,
       "net_income": 150000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     {
       "month": 2,
       "revenue": 850000.00,
       "expenses": 680000.00,
       "net_income": 170000.00,
-      "currency": "DKK"  // Added
+      "currency": "DKK"
     },
     ...
   ]
@@ -1400,8 +1349,7 @@ All API endpoints return standard HTTP status codes and JSON error responses.
 ```json
 {
   "code": ["This field must be unique."],
-  "budgeted_amount": ["Ensure this value is greater than or equal to 0."],
-  "currency": ["Invalid ISO 4217 code. Must be a 3-letter alphabetic code (e.g., 'DKK', 'EUR')."]  // Added
+  "budgeted_amount": ["Ensure this value is greater than or equal to 0."]
 }
 ```
 
@@ -1441,3 +1389,4 @@ API requests are rate-limited to prevent abuse.
 This API specification provides complete documentation for all Financial Core endpoints. Frontend agents can use this specification to integrate with the backend API, ensuring consistent data exchange and error handling.
 
 For implementation details, see the **Financial Core Implementation Plan** and **Financial Core Architecture** documents.
+```

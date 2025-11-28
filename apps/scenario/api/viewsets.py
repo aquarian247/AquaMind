@@ -437,6 +437,22 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     ordering_fields = ['name', 'start_date', 'created_at', 'duration_days']
     ordering = ['-created_at']
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='all',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='If true, returns all scenarios. By default, only returns scenarios created by the current user.',
+                required=False,
+                default=False,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """List scenarios with optional filter to show all users' scenarios."""
+        return super().list(request, *args, **kwargs)
+    
     def get_queryset(self):
         """Filter scenarios to user's own by default."""
         queryset = super().get_queryset()
