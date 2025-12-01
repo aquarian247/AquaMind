@@ -1628,7 +1628,7 @@ The Harvest Management app's data model supports comprehensive tracking of harve
   - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE, related_name='planned_activities')
   - `activity_type`: varchar(50) (choices: VACCINATION, TREATMENT, CULL, SALE, FEED_CHANGE, TRANSFER, MAINTENANCE, SAMPLING, OTHER)
   - `due_date`: date (help_text="Planned execution date")
-  - `status`: varchar(20) (choices: PENDING, IN_PROGRESS, COMPLETED, OVERDUE, CANCELLED, default='PENDING')
+  - `status`: varchar(20) (choices: PENDING, IN_PROGRESS, COMPLETED, CANCELLED, default='PENDING')
   - `container_id`: bigint (FK to `infrastructure_container`, on_delete=SET_NULL, nullable, help_text="Target container (optional)")
   - `notes`: text (nullable, blank=True, help_text="Free-text notes for operational context")
   - `transfer_workflow_id`: bigint (FK to `batch_batchtransferworkflow`, on_delete=SET_NULL, nullable, help_text="Spawned Transfer Workflow (for TRANSFER activities)")
@@ -1747,7 +1747,7 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - Foreign key constraints ensure referential integrity
 - Cascade behavior on scenario/batch deletion removes orphaned activities
 - OneToOne relationship between PlannedActivity and TransferWorkflow prevents multiple workflow spawns
-- Status validation ensures only PENDING activities can be marked overdue
+- Overdue detection is computed property only - activities remain in PENDING status when past due date
 
 #### Additional Considerations
 

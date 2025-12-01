@@ -891,12 +891,12 @@ The Operational Scheduling feature comprises interconnected components for activ
       - **Maintenance**: Tank cleaning, equipment checks, infrastructure upkeep
       - **Sampling**: Growth sampling, health checks, quality assessment
       - **Other**: Custom activity types for operational flexibility
-    - Five status states with automatic state management:
+    - Four status states with automatic state management:
       - **PENDING**: Activity planned but not started
       - **IN_PROGRESS**: Activity execution has begun (e.g., linked workflow started)
       - **COMPLETED**: Activity has been executed successfully
-      - **OVERDUE**: Past due date and not completed (auto-calculated property)
       - **CANCELLED**: Activity was cancelled (manual status)
+    - Overdue detection via computed property (`is_overdue`): Activities in PENDING status past their due date are dynamically identified as overdue for filtering and display purposes without modifying the stored status
     - Comprehensive filtering and querying across scenarios, batches, activity types, status, date ranges, and containers.
     - Mobile-friendly interfaces for field operators to mark activities completed on-site.
     - Complete audit trail via django-simple-history tracking all activity changes.
