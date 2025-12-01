@@ -486,14 +486,87 @@ Definition of done: Batch Growth Analysis shows three overlays with smooth UX.
 
 #### Phase 8 — Integration with Production Planner
 
-- [ ] Read aquamind/docs/progress/operational_scheduling/operational_scheduling_architecture.md and aquamind/docs/progress/operational_scheduling/operational_scheduling_implementation_plan.md to fully grok how this implementation is a prerequisite for the implementation of bidirectional flows (calcs trigger activities; completions anchor calcs).  
-- [ ] Extend engine: Post-compute, evaluate ActivityTemplates against state (e.g., if avg_weight_g >= threshold, generate PlannedActivity via API).  
-- [ ] Signals: On PlannedActivity completion, check if it qualifies as anchor (e.g., TRANSFER/VACCINATION types) and recompute.  
-- [ ] API: Add /planned-activities/variance-from-actual/ (joins with hypertable for planned vs. actual metrics).  
-- [ ] UI: In Production Planner timeline, add "Recalculate from Actuals" button; show suggested activities from triggers.  
-- [ ] Tests: Template triggers create activities; completions anchor series.  
+**Prerequisite**: The `planning` app (Operational Scheduling) must be fully implemented before this phase. See:
+- `aquamind/docs/progress/operational_scheduling/operational_scheduling_architecture.md`
+- `aquamind/docs/progress/operational_scheduling/operational_scheduling_implementation_plan.md`
 
-Definition of done: Calcs trigger planner activities; variances reported accurately.  
+This phase connects the Growth Assimilation engine with the Production Planner, enabling:
+- **Forward flow**: Daily state calculations trigger PlannedActivity creation when weight/stage thresholds are met
+- **Backward flow**: Completed PlannedActivities (TRANSFER, VACCINATION, SAMPLING) anchor the daily state series
+
+##### 8.1 Replace Stub: Template Trigger Evaluation
+
+**File**: `apps/batch/services/growth_assimilation.py`  
+**Method**: `_evaluate_planner_triggers()` (lines 692-716)
+
+Current stub logs potential triggers. Replace with real implementation:
+
+- [ ] Query `ActivityTemplate.objects.filter(trigger_type='WEIGHT_THRESHOLD', is_active=True)`
+- [ ] For each template, check if `state_data['avg_weight_g'] >= template.weight_threshold_g`
+- [ ] Query `ActivityTemplate.objects.filter(trigger_type='STAGE_TRANSITION', is_active=True)`
+- [ ] For stage templates, check if `state_data['lifecycle_stage']` matches `template.target_lifecycle_stage`
+- [ ] When conditions met, call `template.generate_activity(scenario=batch.pinned_scenario, batch=batch)`
+- [ ] Add deduplication: Skip if activity already exists for this batch/template/date window
+- [ ] Log generated activities for audit trail
+
+##### 8.2 Add Signal: PlannedActivity Completion Anchors State
+
+**File**: `apps/batch/signals.py` (new signal handler)
+
+When a PlannedActivity is marked COMPLETED and has activity_type in (TRANSFER, VACCINATION, SAMPLING):
+
+- [ ] Create signal handler `on_planned_activity_completed(sender, instance, **kwargs)`
+- [ ] Check if `instance.status == 'COMPLETED'` and `instance.activity_type in ['TRANSFER', 'VACCINATION', 'SAMPLING']`
+- [ ] Enqueue recompute task: `recompute_batch_window.delay(batch_id, completed_date - 2 days, completed_date + 2 days)`
+- [ ] If activity has measured weights (via linked Treatment/TransferAction), use those as anchors
+
+##### 8.3 Add FK: Link ActualDailyAssignmentState to PlannedActivity
+
+**File**: `apps/batch/models/actual_daily_state.py`  
+**Migration**: New migration in `apps/batch/migrations/`
+
+- [ ] Add `planned_activity_id` FK to `ActualDailyAssignmentState` (nullable, SET_NULL)
+- [ ] This allows tracking which daily states were anchored by completed activities
+- [ ] Update engine to set this FK when a state is anchored by a completed PlannedActivity
+
+##### 8.4 API: Variance Endpoint
+
+**File**: `apps/planning/api/viewsets/` (new viewset method or mixin)
+
+Endpoint: `GET /api/v1/planning/planned-activities/{id}/variance-from-actual/`
+
+- [ ] Join PlannedActivity with ActualDailyAssignmentState on batch + date range
+- [ ] Return: planned_date, actual_completion_date (if completed), weight_at_planned_date, weight_at_completion
+- [ ] Include variance metrics: days_variance, weight_variance_g, weight_variance_pct
+- [ ] Support batch-level aggregate: `GET /api/v1/batch/batches/{id}/planned-vs-actual-variance/`
+
+##### 8.5 UI: Production Planner Integration Points
+
+**Frontend Files** (in AquaMind-Frontend):
+
+- [ ] Add "Recalculate from Actuals" button to Production Planner timeline
+  - Calls `POST /api/v1/batch/batches/{id}/recompute-daily-states/` (already exists from Phase 6)
+- [ ] Show "Suggested Activities" panel when template triggers fire
+  - Query endpoint that returns pending template-generated activities
+- [ ] Display variance indicators on completed activities (on-time, late, early)
+
+##### 8.6 Tests
+
+**File**: `apps/batch/tests/test_phase8_planner_integration.py`
+
+- [ ] Test: Weight threshold template triggers PlannedActivity creation
+- [ ] Test: Stage transition template triggers PlannedActivity creation
+- [ ] Test: Deduplication prevents duplicate activities for same trigger
+- [ ] Test: Completed TRANSFER activity triggers recompute
+- [ ] Test: Completed VACCINATION activity with measured weights anchors state
+- [ ] Test: Variance endpoint returns correct calculations
+- [ ] Test: No circular dependency (activity triggers recompute, recompute triggers activity)
+
+**Definition of done**: 
+- Stub `_evaluate_planner_triggers()` replaced with production code
+- Bidirectional flow working: calcs → activities → anchors → calcs
+- Variance API returns accurate planned vs actual comparisons
+- All tests pass on PostgreSQL and SQLite  
 
 #### Phase 9 — Backfill, Validation, and Rollout
 
