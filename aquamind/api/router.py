@@ -19,6 +19,7 @@ from apps.health.api.routers import router as health_router
 from apps.broodstock.api.routers import router as broodstock_router
 from apps.infrastructure.api.routers import router as infrastructure_router
 from apps.scenario.api.routers import router as scenario_router
+from apps.planning.api.routers import router as planning_router
 from apps.operational.api.routers import router as operational_router
 from apps.harvest.api.routers import router as harvest_router
 from apps.finance.api.routers import router as finance_router
@@ -53,6 +54,7 @@ urlpatterns = [
     # Restored infrastructure endpoints
     path('infrastructure/', include(infrastructure_router.urls)),
     path('scenario/', include(scenario_router.urls)),
+    path('planning/', include(planning_router.urls)),
     path('operational/', include(operational_router.urls)),
     path('operational/', include(harvest_router.urls)),
     path('finance/', include(finance_router.urls)),

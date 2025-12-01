@@ -4,6 +4,8 @@ Batch viewsets.
 These viewsets provide CRUD operations for batch management and analytics.
 """
 from rest_framework import viewsets, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum, F, Case, When, Q
 from decimal import Decimal
@@ -138,3 +140,29 @@ class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, Geo
 
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['get'], url_path='planned-activities')
+    def planned_activities(self, request, pk=None):
+        """Retrieve all planned activities for this batch across all scenarios."""
+        from apps.planning.api.serializers import PlannedActivitySerializer
+        
+        batch = self.get_object()
+        activities = batch.planned_activities.select_related(
+            'scenario',
+            'container',
+            'created_by',
+            'completed_by',
+            'transfer_workflow'
+        ).all()
+        
+        # Apply optional filters
+        scenario_id = request.query_params.get('scenario')
+        status_filter = request.query_params.get('status')
+        
+        if scenario_id:
+            activities = activities.filter(scenario_id=scenario_id)
+        if status_filter:
+            activities = activities.filter(status=status_filter)
+        
+        serializer = PlannedActivitySerializer(activities, many=True)
+        return Response(serializer.data)

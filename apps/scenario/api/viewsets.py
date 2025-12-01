@@ -901,6 +901,35 @@ class ScenarioViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         }
         
         return Response(stats)
+    
+    @action(detail=True, methods=['get'], url_path='planned-activities')
+    def planned_activities(self, request, pk=None):
+        """Retrieve all planned activities for this scenario."""
+        from apps.planning.api.serializers import PlannedActivitySerializer
+        
+        scenario = self.get_object()
+        activities = scenario.planned_activities.select_related(
+            'batch',
+            'container',
+            'created_by',
+            'completed_by',
+            'transfer_workflow'
+        ).all()
+        
+        # Apply optional filters
+        activity_type = request.query_params.get('activity_type')
+        status_filter = request.query_params.get('status')
+        batch_id = request.query_params.get('batch')
+        
+        if activity_type:
+            activities = activities.filter(activity_type=activity_type)
+        if status_filter:
+            activities = activities.filter(status=status_filter)
+        if batch_id:
+            activities = activities.filter(batch_id=batch_id)
+        
+        serializer = PlannedActivitySerializer(activities, many=True)
+        return Response(serializer.data)
 
 
 class DataEntryViewSet(viewsets.ViewSet):

@@ -64,6 +64,7 @@ LOCAL_APPS = [
     # 'apps.core',  # Temporarily disabled
     'apps.broodstock',
     'apps.scenario',
+    'apps.planning',
     'apps.operational',
     'apps.harvest',
     'apps.finance',
