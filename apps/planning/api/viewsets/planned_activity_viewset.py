@@ -111,7 +111,8 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
             workflow = activity.spawn_transfer_workflow(
                 workflow_type=workflow_type,
                 source_lifecycle_stage=source_stage,
-                dest_lifecycle_stage=dest_stage
+                dest_lifecycle_stage=dest_stage,
+                user=request.user
             )
         except LifeCycleStage.DoesNotExist as e:
             return Response(

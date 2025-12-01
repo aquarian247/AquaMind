@@ -8,7 +8,76 @@
 
 ## Bugs Identified and Fixed
 
-### Bug 1: Cancelled Activities Can Be Marked Completed
+### Bug 1: Workflow Initiator Incorrectly Set to Activity Creator
+
+**Severity**: 🟡 **MODERATE** (Attribution error, audit trail accuracy)
+
+**Description**:  
+The `spawn_transfer_workflow()` method set `initiated_by=self.created_by`, recording the PlannedActivity creator as the workflow initiator. When called via API, the actual user triggering the spawn (from `request.user`) was not passed to the method. If User A created an activity and User B later spawned the workflow, the BatchTransferWorkflow incorrectly showed User A as initiator instead of User B.
+
+**Impact**:
+- Incorrect audit trail attribution
+- Workflow initiator doesn't reflect actual user action
+- Inconsistent with `mark_completed(user)` which properly accepts user
+- Compliance reporting would show wrong user
+
+**Root Cause**:
+```python
+# BEFORE (buggy code)
+def spawn_transfer_workflow(self, workflow_type, source_lifecycle_stage, dest_lifecycle_stage):
+    # ... validation ...
+    
+    workflow = BatchTransferWorkflow.objects.create(
+        # ... other fields ...
+        initiated_by=self.created_by  # Wrong! Uses activity creator, not spawner
+    )
+```
+
+**Fix**:
+```python
+# AFTER (fixed code)
+def spawn_transfer_workflow(self, workflow_type, source_lifecycle_stage, dest_lifecycle_stage, user):
+    # ... validation ...
+    
+    workflow = BatchTransferWorkflow.objects.create(
+        # ... other fields ...
+        initiated_by=user  # Correct! Uses actual spawning user
+    )
+
+# API viewset update
+workflow = activity.spawn_transfer_workflow(
+    workflow_type=workflow_type,
+    source_lifecycle_stage=source_stage,
+    dest_lifecycle_stage=dest_stage,
+    user=request.user  # Pass the actual API user
+)
+```
+
+**Test Coverage**:
+```python
+def test_spawn_transfer_workflow_attributes_to_spawning_user(self):
+    """CRITICAL: Workflow must be attributed to user who spawns it, not activity creator."""
+    # Create activity as user1
+    user2 = User.objects.create_user(username='spawner')
+    
+    activity = PlannedActivity.objects.create(
+        created_by=self.user,  # User1 creates activity
+        ...
+    )
+    
+    # Spawn workflow as user2
+    workflow = activity.spawn_transfer_workflow(..., user=user2)
+    
+    # Verify workflow shows user2, not user1
+    self.assertEqual(workflow.initiated_by, user2)
+    self.assertNotEqual(workflow.initiated_by, self.user)
+```
+
+**Result**: ✅ Workflow initiation now correctly attributed to spawning user
+
+---
+
+### Bug 2: Cancelled Activities Can Be Marked Completed
 
 **Severity**: 🟡 **MODERATE** (Logical inconsistency, data integrity)
 
@@ -72,7 +141,7 @@ def test_mark_completed_action_rejects_cancelled_activity(self):
 
 ---
 
-### Bug 2: Missing Null Check for Template Trigger Fields
+### Bug 3: Missing Null Check for Template Trigger Fields
 
 **Severity**: 🔴 **CRITICAL** (Would cause TypeError at runtime)
 
@@ -126,7 +195,7 @@ def test_generate_activity_raises_error_for_missing_day_offset(self):
 
 ---
 
-### Bug 3: Workflow Spawning Without Status Validation
+### Bug 4: Workflow Spawning Without Status Validation
 
 **Severity**: 🟡 **MODERATE** (Data integrity issue, not crash)
 
@@ -371,11 +440,11 @@ Don't just test happy paths - test what happens with None values, wrong statuses
 
 ## Final Status
 
-**Bugs Fixed**: 3 critical validation issues  
-**Tests Added**: 6 new edge case tests  
-**Total Tests**: 19 tests (100% pass rate)  
-**SQLite**: ✅ Pass (1.031s)  
-**PostgreSQL**: ✅ Pass (1.470s)
+**Bugs Fixed**: 4 critical issues (3 validation, 1 attribution)  
+**Tests Added**: 7 new edge case tests  
+**Total Tests**: 20 tests (100% pass rate)  
+**SQLite**: ✅ Pass (1.014s)  
+**PostgreSQL**: ✅ Pass (1.369s)
 
 **Code Quality**: ⭐⭐⭐⭐⭐ (Improved with robust validation)  
 **Production Readiness**: ✅ **YES** (More confident than before)

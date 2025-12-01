@@ -331,7 +331,8 @@ class WorkflowCompletionSyncTest(BaseAPITestCase):
         workflow = activity.spawn_transfer_workflow(
             workflow_type='LIFECYCLE_TRANSITION',
             source_lifecycle_stage=self.fry_stage,
-            dest_lifecycle_stage=self.parr_stage
+            dest_lifecycle_stage=self.parr_stage,
+            user=self.user
         )
         
         # Complete workflow (this triggers signal)

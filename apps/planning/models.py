@@ -143,7 +143,7 @@ class PlannedActivity(models.Model):
         self.completed_by = user
         self.save()
     
-    def spawn_transfer_workflow(self, workflow_type, source_lifecycle_stage, dest_lifecycle_stage):
+    def spawn_transfer_workflow(self, workflow_type, source_lifecycle_stage, dest_lifecycle_stage, user):
         """Create a Transfer Workflow from this planned activity."""
         if self.activity_type != 'TRANSFER':
             raise ValueError("Can only spawn workflows from TRANSFER activities")
@@ -167,7 +167,7 @@ class PlannedActivity(models.Model):
             dest_lifecycle_stage=dest_lifecycle_stage,
             planned_start_date=self.due_date,
             planned_activity=self,
-            initiated_by=self.created_by
+            initiated_by=user
         )
         
         self.transfer_workflow = workflow

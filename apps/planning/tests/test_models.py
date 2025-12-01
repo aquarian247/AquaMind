@@ -182,7 +182,8 @@ class PlannedActivityModelTest(TestCase):
         workflow = activity.spawn_transfer_workflow(
             workflow_type='LIFECYCLE_TRANSITION',
             source_lifecycle_stage=self.fry_stage,
-            dest_lifecycle_stage=self.parr_stage
+            dest_lifecycle_stage=self.parr_stage,
+            user=self.user
         )
         
         # Verify workflow created and linked
@@ -190,6 +191,8 @@ class PlannedActivityModelTest(TestCase):
         self.assertEqual(activity.transfer_workflow, workflow)
         self.assertEqual(activity.status, 'IN_PROGRESS')
         self.assertEqual(workflow.planned_activity, activity)
+        # Verify correct user attribution
+        self.assertEqual(workflow.initiated_by, self.user)
     
     def test_spawn_transfer_workflow_raises_error_for_non_transfer(self):
         """CRITICAL: spawn_transfer_workflow must reject non-TRANSFER activities."""
@@ -205,7 +208,8 @@ class PlannedActivityModelTest(TestCase):
             activity.spawn_transfer_workflow(
                 workflow_type='LIFECYCLE_TRANSITION',
                 source_lifecycle_stage=self.fry_stage,
-                dest_lifecycle_stage=self.parr_stage
+                dest_lifecycle_stage=self.parr_stage,
+                user=self.user
             )
         
         self.assertIn('Can only spawn workflows from TRANSFER activities', str(context.exception))
@@ -227,7 +231,8 @@ class PlannedActivityModelTest(TestCase):
             activity.spawn_transfer_workflow(
                 workflow_type='LIFECYCLE_TRANSITION',
                 source_lifecycle_stage=self.fry_stage,
-                dest_lifecycle_stage=self.parr_stage
+                dest_lifecycle_stage=self.parr_stage,
+                user=self.user
             )
         
         self.assertIn('Cannot spawn workflow for activity with status', str(context.exception))
@@ -247,7 +252,8 @@ class PlannedActivityModelTest(TestCase):
             activity.spawn_transfer_workflow(
                 workflow_type='LIFECYCLE_TRANSITION',
                 source_lifecycle_stage=self.fry_stage,
-                dest_lifecycle_stage=self.parr_stage
+                dest_lifecycle_stage=self.parr_stage,
+                user=self.user
             )
         
         self.assertIn('Cannot spawn workflow for activity with status', str(context.exception))
