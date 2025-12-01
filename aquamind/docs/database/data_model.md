@@ -1616,33 +1616,161 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 2. **Mapping exercise** – Export the subset of analog measurement tags (`docs/database/migration/historian_tag_export.csv`) and populate `historian_tag_link` with the matching AquaMind sensor/container/parameter.
 3. **Telemetry ingestion** – Block-file parsers (and future realtime feeds) consult `historian_tag_link`, then write directly into `environmental_environmentalreading` (TimescaleDB hypertable) so AquaMind remains the authoritative store for environmental analytics while AVEVA continues to operate in production.
 
-## 5. Planned Data Model Domains (Not Yet Implemented)
+### 4.12 Operational Planning (`planning` app)
 
-### 5.1 Operational Planning
-**Purpose**: Provide operational recommendations.
-**Tables**: `batch_operational_plan`, `planning_recommendation`. (Details omitted).
+**Purpose**: Provides scenario-aware operational activity planning and scheduling across batch lifecycles, enabling proactive management, timeline visibility, and variance tracking for all operational events.
 
-### 5.2 Scenario Planning
-**Purpose**: Simulate hypothetical scenarios.
-**Tables**: `batch_scenario`, `scenario_model`. (Details omitted).
+#### Tables
 
-### 5.3 Analytics
-**Purpose**: Support AI/ML predictions.
-**Tables**: `analytics_model`, `prediction`. (Details omitted).
+- **`planning_plannedactivity`** (Core Planning Entity)
+  - `id`: bigint (PK, auto-increment)
+  - `scenario_id`: bigint (FK to `scenario.scenario`, on_delete=CASCADE, related_name='planned_activities')
+  - `batch_id`: bigint (FK to `batch_batch`, on_delete=CASCADE, related_name='planned_activities')
+  - `activity_type`: varchar(50) (choices: VACCINATION, TREATMENT, CULL, SALE, FEED_CHANGE, TRANSFER, MAINTENANCE, SAMPLING, OTHER)
+  - `due_date`: date (help_text="Planned execution date")
+  - `status`: varchar(20) (choices: PENDING, IN_PROGRESS, COMPLETED, CANCELLED, default='PENDING')
+  - `container_id`: bigint (FK to `infrastructure_container`, on_delete=SET_NULL, nullable, help_text="Target container (optional)")
+  - `notes`: text (nullable, blank=True, help_text="Free-text notes for operational context")
+  - `transfer_workflow_id`: bigint (FK to `batch_batchtransferworkflow`, on_delete=SET_NULL, nullable, help_text="Spawned Transfer Workflow (for TRANSFER activities)")
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=PROTECT, related_name='created_planned_activities')
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - `completed_at`: timestamptz (nullable, help_text="Timestamp when activity was completed")
+  - `completed_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable, related_name='completed_planned_activities')
+  - Meta: `db_table = 'planning_plannedactivity'`, `ordering = ['due_date', 'created_at']`
+  - Indexes: `(scenario_id, due_date)`, `(batch_id, status)`, `(activity_type, status)`
+  - **Properties**: `is_overdue` (computed: returns True if status=PENDING and due_date < today)
+  - **Methods**: `mark_completed(user)`, `spawn_transfer_workflow(workflow_type, source_stage, dest_stage)`
 
-## 6. Data Governance
+- **`planning_activitytemplate`** (Template Definitions)
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(200) (Unique, help_text="Template name (e.g., 'Standard Atlantic Salmon Lifecycle')")
+  - `description`: text (nullable, blank=True)
+  - `activity_type`: varchar(50) (same choices as PlannedActivity)
+  - `trigger_type`: varchar(20) (choices: DAY_OFFSET, WEIGHT_THRESHOLD, STAGE_TRANSITION)
+  - `day_offset`: integer (nullable, help_text="Days after batch creation (for DAY_OFFSET trigger)")
+  - `weight_threshold_g`: decimal(10,2) (nullable, help_text="Average weight threshold (for WEIGHT_THRESHOLD trigger)")
+  - `target_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`, on_delete=SET_NULL, nullable, related_name='target_templates')
+  - `notes_template`: text (nullable, blank=True, help_text="Template for activity notes")
+  - `is_active`: boolean (default=True, help_text="Whether template is active for auto-generation")
+  - `created_at`: timestamptz (auto_now_add=True)
+  - `updated_at`: timestamptz (auto_now=True)
+  - Meta: `db_table = 'planning_activitytemplate'`, `ordering = ['name']`
+  - **Methods**: `generate_activity(scenario, batch, override_due_date=None)`
+
+- **`planning_historicalplannedactivity`** (Audit Trail)
+  - All fields from `planning_plannedactivity` plus history tracking fields
+  - `history_id`: integer (PK, auto-increment)
+  - `history_date`: timestamptz (timestamp of change)
+  - `history_change_reason`: varchar (optional reason for change, nullable)
+  - `history_type`: varchar (+, ~, - for create/update/delete)
+  - `history_user_id`: integer (FK to user who made change, nullable)
+
+#### Relationships
+
+**Internal Planning Relationships:**
+- `scenario.scenario` ← `planning_plannedactivity` (CASCADE, related_name='planned_activities')
+- `batch_batch` ← `planning_plannedactivity` (CASCADE, related_name='planned_activities')
+- `infrastructure_container` ← `planning_plannedactivity` (SET_NULL, optional)
+- `batch_batchtransferworkflow` ← `planning_plannedactivity` (SET_NULL, related_name='spawned_from_activity')
+- `batch_lifecyclestage` ← `planning_activitytemplate` (SET_NULL, related_name='target_templates')
+
+**Bidirectional Transfer Workflow Link:**
+- `planning_plannedactivity` ↔ `batch_batchtransferworkflow` (OneToOne via `planned_activity_id` field on workflow)
+  - PlannedActivity can spawn one TransferWorkflow
+  - TransferWorkflow optionally links back to originating PlannedActivity
+  - Completion synchronization via signal handlers
+
+**User Attribution:**
+- `auth_user` ← `planning_plannedactivity` (PROTECT, created_by, related_name='created_planned_activities')
+- `auth_user` ← `planning_plannedactivity` (SET_NULL, completed_by, related_name='completed_planned_activities')
+- `auth_user` ← `planning_historicalplannedactivity` (SET_NULL, history_user_id)
+
+#### Signal Handlers
+
+**Automatic Activity Generation:**
+- Signal: `post_save` on `Batch` model
+- Trigger: When new batch is created (`created=True`)
+- Action: Auto-generate planned activities from active templates with `DAY_OFFSET` trigger type
+- Scenario: Uses batch's pinned scenario for activity association
+- **Behavior**: Reduces manual planning by automatically creating standard lifecycle activities (vaccinations, sampling, transfers) based on template library.
+
+**Workflow Completion Synchronization:**
+- Signal: `post_save` on `BatchTransferWorkflow` model
+- Trigger: When workflow status changes to COMPLETED
+- Action: Auto-complete linked planned activity if exists and not already completed
+- User Attribution: Uses workflow's `completed_by` or falls back to `initiated_by`
+- **Behavior**: Ensures planned activities automatically reflect execution status when Transfer Workflows complete, maintaining synchronization without manual updates.
+
+#### API Endpoints
+
+**PlannedActivity Operations:**
+- `GET /api/v1/planning/planned-activities/` - List with filtering (scenario, batch, activity_type, status, container, overdue, date ranges)
+- `POST /api/v1/planning/planned-activities/` - Create new activity
+- `GET /api/v1/planning/planned-activities/{id}/` - Retrieve activity details
+- `PUT /api/v1/planning/planned-activities/{id}/` - Update activity
+- `PATCH /api/v1/planning/planned-activities/{id}/` - Partial update
+- `DELETE /api/v1/planning/planned-activities/{id}/` - Delete activity
+- `POST /api/v1/planning/planned-activities/{id}/mark-completed/` - Mark as completed (mobile-friendly)
+- `POST /api/v1/planning/planned-activities/{id}/spawn-workflow/` - Create Transfer Workflow from TRANSFER activity
+
+**ActivityTemplate Operations:**
+- `GET /api/v1/planning/activity-templates/` - List templates
+- `POST /api/v1/planning/activity-templates/` - Create template
+- `GET /api/v1/planning/activity-templates/{id}/` - Retrieve template
+- `PUT /api/v1/planning/activity-templates/{id}/` - Update template
+- `DELETE /api/v1/planning/activity-templates/{id}/` - Delete template
+- `POST /api/v1/planning/activity-templates/{id}/generate-for-batch/` - Generate activity for specific batch/scenario
+
+**Integration Endpoints:**
+- `GET /api/v1/scenario/scenarios/{id}/planned-activities/` - Retrieve all activities for scenario (with filters)
+- `GET /api/v1/batch/batches/{id}/planned-activities/` - Retrieve all activities for batch across scenarios (with filters)
+
+#### Admin Interface
+
+**PlannedActivity Admin:**
+- List display: scenario, batch, activity_type, due_date, status, created_by
+- Filters: activity_type, status, scenario, created_at, due_date
+- Search: batch number, scenario name, notes
+- Fieldsets: Core Information, Details, Integration, Audit Trail
+- History tracking enabled (SimpleHistoryAdmin)
+
+**ActivityTemplate Admin:**
+- List display: name, activity_type, trigger_type, is_active
+- Filters: activity_type, trigger_type, is_active
+- Search: name, description
+- Fieldsets: Core Information, Trigger Configuration, Template Content, Metadata
+
+#### Constraints
+
+- Unique workflow numbers prevent duplicate workflow spawning
+- Foreign key constraints ensure referential integrity
+- Cascade behavior on scenario/batch deletion removes orphaned activities
+- OneToOne relationship between PlannedActivity and TransferWorkflow prevents multiple workflow spawns
+- Overdue detection is computed property only - activities remain in PENDING status when past due date
+
+#### Additional Considerations
+
+- **Operational Efficiency**: Template-based generation reduces planning effort from hours to minutes for batch lifecycle management.
+- **Timeline Visibility**: Cross-batch activity view provides operational awareness impossible with isolated batch management.
+- **Variance Analysis**: Planned vs. actual completion tracking enables continuous improvement of planning accuracy and operational efficiency.
+- **Mobile Operations**: Mark-completed custom action optimized for field operators working at sea cages or freshwater facilities without desktop access.
+- **Scenario Integration**: All activities belong to scenarios, enabling what-if analysis of different operational strategies (aggressive vs. conservative approaches).
+- **Transfer Workflow Coexistence**: Planned transfer activities provide planning layer while Transfer Workflows handle multi-day execution complexity, combining strengths of both systems.
+
+## 5. Data Governance
 
 - **Audit Trails**: Standard `created_at`, `updated_at` fields exist. Consider integrating `django-auditlog` for comprehensive tracking.
 - **Validation**: ORM-level validation exists. Database constraints (Foreign Keys, Uniqueness) are enforced. `on_delete` behavior specified where known/inferred.
 - **Partitioning and Indexing**: TimescaleDB hypertables are partitioned. Relevant indexes exist on Foreign Keys and timestamp columns.
 
-## 7. Appendix: Developer Notes
+## 6. Appendix: Developer Notes
 
 - **TimescaleDB Setup**: Ensure `timescaledb` extension is enabled. Use Django migrations (potentially with `RunSQL`) or manual commands (`SELECT create_hypertable(...)`) to manage hypertables.
 - **Calculated Fields**: Fields like `batch_batchcontainerassignment.biomass_kg` are calculated in the application logic (e.g., model `save()` method or serializers), not stored directly unless denormalized.
 - **User Profile**: Access extended user information via `user.userprofile`. Geography is linked via FK, subsidiary requires clarification (FK or CharField?).
 
-## 8. TimescaleDB Hypertables (Implemented)
+## 7. TimescaleDB Hypertables (Implemented)
 
 **Purpose**: Efficient time-series data management for environmental monitoring and weather data.
 

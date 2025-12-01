@@ -52,6 +52,14 @@ class BatchTransferWorkflow(models.Model):
         related_name='transfer_workflows',
         help_text="Batch being transferred"
     )
+    planned_activity = models.OneToOneField(
+        'planning.PlannedActivity',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='spawned_workflow',
+        help_text="Planned activity that spawned this workflow (if any)"
+    )
     
     # Transfer Type & Lifecycle Context
     workflow_type = models.CharField(
@@ -240,6 +248,10 @@ class BatchTransferWorkflow(models.Model):
                 self.status = 'COMPLETED'
                 self.actual_completion_date = timezone.now().date()
                 self.save(update_fields=['status', 'actual_completion_date', 'updated_at'])
+                
+                # Update linked planned activity if exists
+                if self.planned_activity and self.planned_activity.status != 'COMPLETED':
+                    self.planned_activity.mark_completed(user=self.completed_by or self.initiated_by)
                 
                 # Trigger finance integration if intercompany
                 if self.is_intercompany and not self.finance_transaction:
