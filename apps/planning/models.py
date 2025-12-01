@@ -145,6 +145,9 @@ class PlannedActivity(models.Model):
         if self.transfer_workflow:
             raise ValueError("Workflow already spawned for this activity")
         
+        if self.status not in ['PENDING', 'IN_PROGRESS']:
+            raise ValueError(f"Cannot spawn workflow for activity with status {self.status}")
+        
         from apps.batch.models import BatchTransferWorkflow
         
         # Generate workflow_number
@@ -258,11 +261,17 @@ class ActivityTemplate(models.Model):
         if override_due_date:
             due_date = override_due_date
         elif self.trigger_type == 'DAY_OFFSET':
+            if self.day_offset is None:
+                raise ValueError("day_offset is required for DAY_OFFSET trigger type")
             due_date = batch.created_at.date() + timedelta(days=self.day_offset)
         elif self.trigger_type == 'WEIGHT_THRESHOLD':
+            if self.weight_threshold_g is None:
+                raise ValueError("weight_threshold_g is required for WEIGHT_THRESHOLD trigger type")
             # Placeholder: Would need growth projection logic
             due_date = timezone.now().date() + timedelta(days=30)
         elif self.trigger_type == 'STAGE_TRANSITION':
+            if self.target_lifecycle_stage is None:
+                raise ValueError("target_lifecycle_stage is required for STAGE_TRANSITION trigger type")
             # Placeholder: Would need lifecycle transition logic
             due_date = timezone.now().date() + timedelta(days=60)
         else:

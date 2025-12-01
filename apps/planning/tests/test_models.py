@@ -175,6 +175,48 @@ class PlannedActivityModelTest(TestCase):
             )
         
         self.assertIn('Can only spawn workflows from TRANSFER activities', str(context.exception))
+    
+    def test_spawn_transfer_workflow_raises_error_for_completed_activity(self):
+        """CRITICAL: Cannot spawn workflow from completed or cancelled activities."""
+        activity = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='TRANSFER',
+            due_date=timezone.now().date(),
+            status='COMPLETED',  # Already completed
+            created_by=self.user,
+            completed_by=self.user,
+            completed_at=timezone.now()
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            activity.spawn_transfer_workflow(
+                workflow_type='LIFECYCLE_TRANSITION',
+                source_lifecycle_stage=self.fry_stage,
+                dest_lifecycle_stage=self.parr_stage
+            )
+        
+        self.assertIn('Cannot spawn workflow for activity with status', str(context.exception))
+    
+    def test_spawn_transfer_workflow_raises_error_for_cancelled_activity(self):
+        """CRITICAL: Cannot spawn workflow from cancelled activities."""
+        activity = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='TRANSFER',
+            due_date=timezone.now().date(),
+            status='CANCELLED',  # Cancelled
+            created_by=self.user
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            activity.spawn_transfer_workflow(
+                workflow_type='LIFECYCLE_TRANSITION',
+                source_lifecycle_stage=self.fry_stage,
+                dest_lifecycle_stage=self.parr_stage
+            )
+        
+        self.assertIn('Cannot spawn workflow for activity with status', str(context.exception))
 
 
 class ActivityTemplateModelTest(TestCase):
@@ -262,3 +304,21 @@ class ActivityTemplateModelTest(TestCase):
         self.assertEqual(activity.due_date, expected_due_date)
         self.assertEqual(activity.activity_type, 'VACCINATION')
         self.assertEqual(activity.notes, 'Test vaccination')
+    
+    def test_generate_activity_raises_error_for_missing_day_offset(self):
+        """CRITICAL: Template must validate day_offset when trigger_type is DAY_OFFSET."""
+        template = ActivityTemplate.objects.create(
+            name='Invalid Template',
+            activity_type='VACCINATION',
+            trigger_type='DAY_OFFSET',
+            day_offset=None,  # Missing required field
+            is_active=True
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            template.generate_activity(
+                scenario=self.scenario,
+                batch=self.batch
+            )
+        
+        self.assertIn('day_offset is required', str(context.exception))
