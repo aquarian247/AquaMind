@@ -160,6 +160,23 @@ class PlannedActivityAPITest(BaseAPITestCase):
         self.assertIsNotNone(activity.completed_at)
         self.assertEqual(activity.completed_by, self.user)
     
+    def test_mark_completed_action_rejects_cancelled_activity(self):
+        """CRITICAL: API must reject marking cancelled activities as completed."""
+        activity = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='VACCINATION',
+            due_date=timezone.now().date(),
+            status='CANCELLED',
+            created_by=self.user
+        )
+        
+        url = self.get_action_url('planning', 'planned-activities', activity.id, 'mark-completed')
+        response = self.client.post(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancelled', response.data['error'].lower())
+    
     def test_spawn_workflow_action_creates_workflow(self):
         """CRITICAL: spawn-workflow action must create workflow and link it."""
         activity = PlannedActivity.objects.create(

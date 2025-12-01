@@ -134,6 +134,40 @@ class PlannedActivityModelTest(TestCase):
         self.assertIsNotNone(activity.completed_at)
         self.assertEqual(activity.completed_by, self.user)
     
+    def test_mark_completed_raises_error_for_cancelled_activity(self):
+        """CRITICAL: Cannot mark cancelled activities as completed."""
+        activity = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='VACCINATION',
+            due_date=timezone.now().date(),
+            status='CANCELLED',
+            created_by=self.user
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            activity.mark_completed(user=self.user)
+        
+        self.assertIn('Cannot complete a cancelled activity', str(context.exception))
+    
+    def test_mark_completed_raises_error_if_already_completed(self):
+        """CRITICAL: Cannot mark already completed activities as completed again."""
+        activity = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='VACCINATION',
+            due_date=timezone.now().date(),
+            status='COMPLETED',
+            created_by=self.user,
+            completed_by=self.user,
+            completed_at=timezone.now()
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            activity.mark_completed(user=self.user)
+        
+        self.assertIn('Activity is already completed', str(context.exception))
+    
     def test_spawn_transfer_workflow_creates_workflow_and_links(self):
         """CRITICAL: spawn_transfer_workflow must create workflow and update status."""
         activity = PlannedActivity.objects.create(

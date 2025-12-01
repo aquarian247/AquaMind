@@ -59,6 +59,12 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if activity.status == 'CANCELLED':
+            return Response(
+                {"error": "Cannot complete a cancelled activity"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         activity.mark_completed(user=request.user)
         
         serializer = self.get_serializer(activity)

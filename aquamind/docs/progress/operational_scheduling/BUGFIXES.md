@@ -8,7 +8,71 @@
 
 ## Bugs Identified and Fixed
 
-### Bug 1: Missing Null Check for Template Trigger Fields
+### Bug 1: Cancelled Activities Can Be Marked Completed
+
+**Severity**: 🟡 **MODERATE** (Logical inconsistency, data integrity)
+
+**Description**:  
+The `mark_completed()` method and API action only checked if activity was already COMPLETED but didn't reject CANCELLED activities. This allowed semantically incorrect state transition from CANCELLED to COMPLETED, enabling users to "un-cancel" activities.
+
+**Impact**:
+- Cancelled activities could be marked as completed
+- Inconsistent with spawn_transfer_workflow validation
+- Violates state machine logic (cancellation should be terminal)
+- Audit trail would show illogical status transitions
+
+**Root Cause**:
+```python
+# BEFORE (buggy code)
+def mark_completed(self, user):
+    """Mark activity as completed."""
+    self.status = 'COMPLETED'  # No validation!
+    self.completed_at = timezone.now()
+    self.completed_by = user
+    self.save()
+```
+
+**Fix**:
+```python
+# AFTER (fixed code)
+def mark_completed(self, user):
+    """Mark activity as completed."""
+    if self.status == 'COMPLETED':
+        raise ValueError("Activity is already completed")
+    
+    if self.status == 'CANCELLED':
+        raise ValueError("Cannot complete a cancelled activity")
+    
+    self.status = 'COMPLETED'
+    self.completed_at = timezone.now()
+    self.completed_by = user
+    self.save()
+```
+
+**Test Coverage**:
+```python
+def test_mark_completed_raises_error_for_cancelled_activity(self):
+    """CRITICAL: Cannot mark cancelled activities as completed."""
+    activity = PlannedActivity.objects.create(
+        status='CANCELLED',
+        ...
+    )
+    
+    with self.assertRaises(ValueError) as context:
+        activity.mark_completed(user=self.user)
+    
+    self.assertIn('Cannot complete a cancelled activity', str(context.exception))
+
+def test_mark_completed_action_rejects_cancelled_activity(self):
+    """CRITICAL: API must reject marking cancelled activities as completed."""
+    # API-level test verifying 400 Bad Request response
+```
+
+**Result**: ✅ Cancelled activities now properly rejected from completion
+
+---
+
+### Bug 2: Missing Null Check for Template Trigger Fields
 
 **Severity**: 🔴 **CRITICAL** (Would cause TypeError at runtime)
 
@@ -62,7 +126,7 @@ def test_generate_activity_raises_error_for_missing_day_offset(self):
 
 ---
 
-### Bug 2: Workflow Spawning Without Status Validation
+### Bug 3: Workflow Spawning Without Status Validation
 
 **Severity**: 🟡 **MODERATE** (Data integrity issue, not crash)
 
@@ -142,19 +206,19 @@ def test_spawn_transfer_workflow_raises_error_for_cancelled_activity(self):
 
 ### SQLite (GitHub CI)
 ```
-Found 16 test(s).
-Ran 16 tests in 0.879s
+Found 19 test(s).
+Ran 19 tests in 1.031s
 OK ✅
 ```
 
 ### PostgreSQL (Production)
 ```
-Found 16 test(s).
-Ran 16 tests in 1.314s
+Found 19 test(s).
+Ran 19 tests in 1.470s
 OK ✅
 ```
 
-**Test Count Increase**: 13 → 16 tests (+3 validation tests)  
+**Test Count Increase**: 13 → 19 tests (+6 validation tests)  
 **Pass Rate**: 100% on both databases ✅
 
 ---
@@ -189,7 +253,7 @@ OK ✅
 | Operation | Current Status | Validation |
 |-----------|----------------|------------|
 | `spawn_transfer_workflow()` | Must be PENDING or IN_PROGRESS | Rejects COMPLETED/CANCELLED |
-| `mark_completed()` | Any except COMPLETED | Prevents double-completion |
+| `mark_completed()` | Must not be COMPLETED or CANCELLED | Prevents double-completion and completing cancelled activities |
 
 ---
 
@@ -220,6 +284,20 @@ OK ✅
 ```json
 {
   "error": "Can only spawn workflows from TRANSFER activities"
+}
+```
+
+### Mark Completed Error (Cancelled Activity)
+```json
+{
+  "error": "Cannot complete a cancelled activity"
+}
+```
+
+### Mark Completed Error (Already Completed)
+```json
+{
+  "error": "Activity is already completed"
 }
 ```
 
@@ -293,11 +371,11 @@ Don't just test happy paths - test what happens with None values, wrong statuses
 
 ## Final Status
 
-**Bugs Fixed**: 2 critical validation issues  
-**Tests Added**: 3 new edge case tests  
-**Total Tests**: 16 tests (100% pass rate)  
-**SQLite**: ✅ Pass (0.879s)  
-**PostgreSQL**: ✅ Pass (1.314s)
+**Bugs Fixed**: 3 critical validation issues  
+**Tests Added**: 6 new edge case tests  
+**Total Tests**: 19 tests (100% pass rate)  
+**SQLite**: ✅ Pass (1.031s)  
+**PostgreSQL**: ✅ Pass (1.470s)
 
 **Code Quality**: ⭐⭐⭐⭐⭐ (Improved with robust validation)  
 **Production Readiness**: ✅ **YES** (More confident than before)

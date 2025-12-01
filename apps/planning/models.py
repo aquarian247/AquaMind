@@ -132,6 +132,12 @@ class PlannedActivity(models.Model):
     
     def mark_completed(self, user):
         """Mark activity as completed."""
+        if self.status == 'COMPLETED':
+            raise ValueError("Activity is already completed")
+        
+        if self.status == 'CANCELLED':
+            raise ValueError("Cannot complete a cancelled activity")
+        
         self.status = 'COMPLETED'
         self.completed_at = timezone.now()
         self.completed_by = user
