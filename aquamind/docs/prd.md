@@ -868,37 +868,169 @@ Broodstock management underpins salmon farming success, directly impacting egg q
 
 ### 3.2 Phase 2: Operational Planning and Compliance
 
-#### 3.2.1 Operational Planning
-- **Purpose**: To optimize resource allocation and operational workflows through data-driven insights.
-- **Functionality**:
-  - The system shall provide real-time infrastructure monitoring, tracking container status, sensor health, and asset utilization.
-  - The system shall include a recommendation engine for:
-    - Batch transfers based on lifecycle stage, container capacity, and environmental conditions.
-    - Feed optimization based on batch needs and inventory levels.
-    - Resource allocation (e.g., staff scheduling, equipment usage).
-  - The system shall generate actionable insights for operational planning, such as:
-    - Predicting container overcrowding and recommending transfers.
-    - Identifying underutilized assets and suggesting reallocation.
-    - Optimizing feed schedules to minimize waste.
-  - The system shall allow users to accept, reject, or modify recommendations, logging the decision.
-  - The system shall provide a planning dashboard with visualizations of resource usage and operational bottlenecks.
-- **Behavior**:
-  - Recommendations shall be updated daily or on-demand based on new data.
-  - Planning dashboards shall display real-time metrics with predictive insights.
-  - User decisions on recommendations shall be logged with timestamps and rationale.
-- **Justification**: Enhances operational efficiency, reduces costs, and improves resource utilization.
-- **User Story**: As a Farm Operator, I want to receive recommendations for batch transfers so that I can optimize container usage.
-  - **Acceptance Criteria**:
-    - The system suggests transfers based on lifecycle stage, container capacity, and environmental data.
-    - Recommendations include rationale (e.g., "Container at 90% capacity").
-    - Users can accept, reject, or modify the recommendation.
-    - Accepted transfers are logged and executed with user confirmation.
-- **User Story**: As a Manager, I want to view a planning dashboard so that I can identify operational bottlenecks.
-  - **Acceptance Criteria**:
-    - The dashboard displays resource usage (e.g., container occupancy, staff allocation).
-    - Predictive insights highlight potential issues (e.g., "Container X at risk of overcrowding").
-    - Visualizations include charts for utilization trends over time.
-    - Users can drill down into specific assets or batches for details.
+#### 3.2.1 Operational Scheduling and Activity Planning
+
+**Status**: ✅ **IMPLEMENTED** - Backend Complete
+
+**Purpose**  
+The Operational Scheduling feature in AquaMind enables farming managers to plan, track, and analyze operational activities across batch lifecycles within scenario contexts. By providing scenario-aware planning capabilities for all operational events—from vaccinations and treatments to transfers and harvests—this feature complements the existing Transfer Workflow system with a comprehensive planning layer. It delivers cross-batch visibility for 50-60 active batches, automatic overdue detection, template-based activity generation, and variance tracking between planned and actual execution, supporting proactive operational management and what-if analysis critical for optimizing aquaculture operations.
+
+**Functionality**  
+The Operational Scheduling feature comprises interconnected components for activity planning, template management, and execution tracking:
+
+- **Planned Activity Management**  
+  - **Description:** Plan and track operational activities within specific scenarios, enabling what-if analysis and operational strategy comparison.  
+  - **Specifications:**  
+    - Support for nine activity types covering complete operational lifecycle:
+      - **Vaccination**: Scheduled immunization events for disease prevention
+      - **Treatment/Health Intervention**: De-licing, disease treatments, parasite control, veterinary procedures
+      - **Culling**: Planned removal of underperforming or diseased fish
+      - **Sale/Harvest**: Planned harvest events for market delivery
+      - **Feed Strategy Change**: Transition to new feed type or feeding regime
+      - **Transfer**: Container-to-container movements (integrates with Transfer Workflows)
+      - **Maintenance**: Tank cleaning, equipment checks, infrastructure upkeep
+      - **Sampling**: Growth sampling, health checks, quality assessment
+      - **Other**: Custom activity types for operational flexibility
+    - Five status states with automatic state management:
+      - **PENDING**: Activity planned but not started
+      - **IN_PROGRESS**: Activity execution has begun (e.g., linked workflow started)
+      - **COMPLETED**: Activity has been executed successfully
+      - **OVERDUE**: Past due date and not completed (auto-calculated property)
+      - **CANCELLED**: Activity was cancelled (manual status)
+    - Comprehensive filtering and querying across scenarios, batches, activity types, status, date ranges, and containers.
+    - Mobile-friendly interfaces for field operators to mark activities completed on-site.
+    - Complete audit trail via django-simple-history tracking all activity changes.
+  - **Data Requirements:** Scenario ID, batch ID, activity type, due date, optional container ID, notes, creator and completion attribution.
+
+- **Template-Based Activity Generation**  
+  - **Description:** Auto-generate standard lifecycle activities for new batches using configurable templates, reducing manual planning effort and ensuring operational consistency.  
+  - **Specifications:**  
+    - Three trigger types for flexible automation:
+      - **DAY_OFFSET**: Create activity N days after batch creation (e.g., "First vaccination on Day 45")
+      - **WEIGHT_THRESHOLD**: Create activity when batch reaches average weight (e.g., "Transfer to sea at 100g")
+      - **STAGE_TRANSITION**: Create activity when batch transitions to lifecycle stage (e.g., "Vaccination upon entering Smolt stage")
+    - Template library supports reusable activity plans across batches and scenarios.
+    - Templates include configurable notes templates for consistent documentation.
+    - Active/inactive status controls which templates apply to new batches.
+    - Signal-based automatic generation when batches are created with associated scenarios.
+  - **Data Requirements:** Template name, activity type, trigger configuration (day offset, weight threshold, or target stage), notes template.
+
+- **Transfer Workflow Integration**  
+  - **Description:** Seamless bidirectional linking between planned transfer activities and the existing Transfer Workflow system for execution tracking.  
+  - **Specifications:**  
+    - Planned activities with `activity_type=TRANSFER` can spawn BatchTransferWorkflow instances via custom API action.
+    - Spawning workflow updates activity status to IN_PROGRESS and establishes bidirectional link.
+    - Workflow completion automatically updates linked planned activity to COMPLETED status.
+    - Signal-based synchronization ensures planned activities reflect workflow execution status.
+    - Planning layer provides timeline visibility while Transfer Workflows handle multi-day execution complexity.
+  - **Data Requirements:** Workflow type, source and destination lifecycle stages, planned start date matching activity due date.
+
+- **Scenario-Based Planning**  
+  - **Description:** All planned activities belong to scenarios, enabling what-if analysis and comparison of different operational strategies.  
+  - **Specifications:**  
+    - Multiple scenarios can define different activity plans for the same batch (e.g., "Aggressive Growth Plan" vs. "Conservative Growth Plan").
+    - Scenario deletion cascades to remove all associated planned activities.
+    - Custom API action on ScenarioViewSet retrieves all activities for scenario with filtering.
+    - Scenario comparison includes planned activity timelines and execution variance.
+  - **Data Requirements:** Scenario ID (required foreign key), optional filters by activity type, status, and batch.
+
+- **Variance Tracking and Reporting**  
+  - **Description:** Compare planned execution dates with actual completion dates to analyze operational variance and improve future planning accuracy.  
+  - **Specifications:**  
+    - Activities track both planned due dates and actual completion timestamps.
+    - Overdue activities automatically identified when past due date with PENDING status.
+    - Completion attribution captures which user marked activity as completed and when.
+    - Historical audit trail enables retrospective analysis of planning accuracy.
+    - API provides filtering by overdue status for KPI dashboard integration.
+  - **Data Requirements:** Due date, completion timestamp, completed by user attribution.
+
+- **Cross-Batch Visibility**  
+  - **Description:** Unified timeline view of all planned activities across 50-60 active batches for comprehensive operational awareness.  
+  - **Specifications:**  
+    - List endpoint supports pagination for large activity sets.
+    - Filtering by scenario, batch, activity type, status, container, and date ranges.
+    - Search functionality across activity notes for quick location of specific plans.
+    - Ordering by due date provides chronological activity timeline.
+    - Custom actions on BatchViewSet retrieve all activities for specific batch across scenarios.
+  - **Data Requirements:** Comprehensive filtering parameters, pagination support, search indexing on notes field.
+
+**Behavior**  
+- **Activity Creation**: Users create planned activities via API or Django admin, specifying scenario, batch, activity type, and due date. System automatically sets PENDING status and captures creator attribution.
+- **Overdue Detection**: System automatically identifies overdue activities (PENDING status past due date) via computed property exposed in API serializers for real-time KPI dashboards.
+- **Template Application**: When new batches are created with associated scenarios, active templates with DAY_OFFSET trigger automatically generate planned activities via signal handler, calculating due dates from batch creation date.
+- **Workflow Spawning**: For planned TRANSFER activities, users spawn Transfer Workflows via custom API action, providing source/destination lifecycle stages. System creates workflow, establishes bidirectional link, and transitions activity to IN_PROGRESS status.
+- **Workflow Sync**: When Transfer Workflows complete (all actions finished), signal handler automatically marks linked planned activity as COMPLETED, setting completion timestamp and user attribution from workflow.
+- **Completion Tracking**: Users mark non-transfer activities as completed via custom API action (mobile-friendly), updating status, timestamp, and user attribution for audit trail.
+
+**Justification**  
+Operational scheduling addresses critical visibility gaps in managing 50-60 concurrent batches across multiple lifecycle stages, containers, and operational activities. While the Transfer Workflow system excels at orchestrating complex multi-day transfers with financial implications, operational planning requires broader visibility across all activity types (vaccinations, treatments, culling, harvests) with long-term timeline views and variance tracking. This feature transforms AquaMind from a reactive operational system into a proactive planning platform, enabling managers to anticipate resource needs, coordinate multi-batch activities, track execution variance, and optimize operational efficiency through scenario-based strategy comparison. Template-based generation ensures operational consistency while scenario integration enables what-if analysis for different operational approaches.
+
+**User Stories and Acceptance Criteria**
+
+- **User Story 1: Planning Vaccination Schedule Across Multiple Batches**  
+  **As a Farm Manager, I want to plan vaccination schedules for 20 active batches within a scenario so that I can coordinate veterinarian visits and ensure compliance with health protocols.**  
+  - **Acceptance Criteria:**  
+    - Create multiple planned activities with `activity_type=VACCINATION` for different batches and due dates within selected scenario.
+    - View unified timeline showing all 20 vaccination activities chronologically across batches.
+    - Filter activities by batch, date range, and status to focus on specific operational windows.
+    - Mark activities as completed when vaccinations are administered, capturing completion date and responsible user.
+    - Overdue vaccinations automatically flagged on dashboard with clear visual indicators.
+
+- **User Story 2: Template-Based Lifecycle Planning**  
+  **As a Production Planner, I want to automatically generate standard lifecycle activities for new batches using templates so that I can ensure consistent operational procedures without manual planning effort.**  
+  - **Acceptance Criteria:**  
+    - Create activity templates with DAY_OFFSET triggers (e.g., "First vaccination Day 45", "Transfer to sea Day 120").
+    - When new batch is created with associated scenario, system automatically generates planned activities from active templates.
+    - Generated activities have calculated due dates based on batch creation date plus template offsets.
+    - Template notes are copied to generated activities for operational guidance.
+    - Templates can be activated/deactivated to control which procedures apply to new batches.
+
+- **User Story 3: Transfer Planning with Workflow Integration**  
+  **As a Freshwater Manager, I want to plan a transfer operation 30 days in advance and spawn a detailed Transfer Workflow when execution begins so that I can coordinate resources and track multi-day operations.**  
+  - **Acceptance Criteria:**  
+    - Create planned activity with `activity_type=TRANSFER` for batch 30 days before planned execution.
+    - View planned transfer on timeline alongside other operational activities.
+    - When ready to execute, spawn Transfer Workflow from planned activity via custom API action.
+    - System creates workflow, links it to planned activity, and transitions activity to IN_PROGRESS status.
+    - As workflow actions complete, progress visible in workflow detail view.
+    - When all workflow actions finish, planned activity automatically transitions to COMPLETED with completion timestamp.
+
+- **User Story 4: Scenario-Based Operational Strategy Comparison**  
+  **As an Aquaculture Manager, I want to create two scenarios with different operational strategies (aggressive vs. conservative treatment schedules) and compare activity timelines so that I can evaluate operational implications before committing to an approach.**  
+  - **Acceptance Criteria:**  
+    - Create "Aggressive Treatment" scenario with monthly de-licing activities for batch.
+    - Create "Conservative Treatment" scenario with quarterly de-licing activities for same batch.
+    - View side-by-side comparison of activity timelines for both scenarios.
+    - Compare total activity counts, resource requirements, and operational windows.
+    - Select preferred scenario and proceed with those planned activities.
+    - Activities in non-selected scenario can be deleted or kept for future reference.
+
+- **User Story 5: Mobile Activity Completion in the Field**  
+  **As a Farm Operator working at sea cages, I want to mark planned activities as completed from my mobile device so that activity status updates in real-time without waiting to return to office.**  
+  - **Acceptance Criteria:**  
+    - Access planned activities list on mobile device with responsive interface.
+    - Filter to show activities due today or overdue for quick access.
+    - Tap activity to view details (batch, container, notes).
+    - Mark activity as completed with single action via custom API endpoint.
+    - System records completion timestamp and user attribution.
+    - Completed activities immediately update on manager's dashboard timeline view.
+
+- **User Story 6: Overdue Activity Monitoring**  
+  **As a Farm Manager, I want to view all overdue activities across my active batches so that I can prioritize urgent operational tasks and ensure compliance with planned schedules.**  
+  - **Acceptance Criteria:**  
+    - Dashboard displays overdue activity count as prominent KPI metric.
+    - Overdue activities automatically identified (PENDING status past due date).
+    - List view filtered to show only overdue activities with batch, activity type, and days overdue.
+    - Activities sortable by due date to prioritize most urgent tasks.
+    - Mark multiple activities as completed to clear overdue backlog.
+    - Historical audit trail shows when activities became overdue and completion patterns.
+
+**Additional Considerations**  
+- **Scalability:** Support hundreds of planned activities across 50-60 active batches with optimized indexing on scenario, batch, due date, and status fields for sub-second query performance.
+- **Usability:** Intuitive interfaces with clear activity type labels, visual timeline representations, and mobile-optimized completion workflows for field operations.
+- **Integration:** Reuses existing infrastructure (Container, Area), batch management (Batch, LifecycleStage), and scenario planning (Scenario) models for seamless data flow.
+- **Flexibility:** Template system accommodates varying operational procedures across geographies, species, and farm practices while maintaining consistency within operations.
+- **Traceability:** Complete audit trail via django-simple-history ensures regulatory compliance and enables variance analysis for continuous operational improvement.
 
 #### 3.2.2 Regulatory Compliance and Reporting
 - **Purpose**: To ensure compliance with environmental, health, and financial regulations in the Faroe Islands and Scotland.
