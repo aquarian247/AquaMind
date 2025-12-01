@@ -27,7 +27,7 @@ Successfully implemented **Phase 1: Backend Foundation** of the Operational Sche
 ### Key Features Implemented
 
 - ✅ 9 Activity Types (VACCINATION, TREATMENT, CULL, SALE, FEED_CHANGE, TRANSFER, etc.)
-- ✅ 5 Status States with automatic overdue detection
+- ✅ 4 Status States (PENDING, IN_PROGRESS, COMPLETED, CANCELLED) with computed overdue property
 - ✅ Scenario-aware planning for what-if analysis
 - ✅ Template-based activity generation (3 trigger types)
 - ✅ Transfer Workflow integration with bidirectional linking

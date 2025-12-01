@@ -8,7 +8,66 @@
 
 ## Bugs Identified and Fixed
 
-### Bug 1: Workflow Initiator Incorrectly Set to Activity Creator
+### Bug 1: OVERDUE Status Choice Unused and Inconsistent
+
+**Severity**: 🟡 **MODERATE** (Design inconsistency, potential confusion)
+
+**Description**:  
+The STATUS_CHOICES included `'OVERDUE'` as a storable status value, but no code ever sets this status. The `is_overdue` property only returns `True` when `status == 'PENDING'` (not when status is literally 'OVERDUE'), and the API's `?overdue=true` filter queries for `status='PENDING' AND due_date < today`. This created inconsistency: filtering by `?status=OVERDUE` returned nothing, and manually setting status to 'OVERDUE' made `is_overdue` return `False`.
+
+**Impact**:
+- Users could manually set status='OVERDUE' via admin (confusing behavior)
+- Filtering by status=OVERDUE would return no results
+- is_overdue property would return False for status='OVERDUE' activities
+- Documentation described "5 status states" but overdue was never really a status
+- Potential confusion between stored status and computed property
+
+**Root Cause**:
+```python
+# BEFORE (inconsistent design)
+STATUS_CHOICES = [
+    ('PENDING', 'Pending'),
+    ('IN_PROGRESS', 'In Progress'),
+    ('COMPLETED', 'Completed'),
+    ('OVERDUE', 'Overdue'),  # Never set in code!
+    ('CANCELLED', 'Cancelled'),
+]
+
+@property
+def is_overdue(self):
+    return self.status == 'PENDING' and self.due_date < today  # Doesn't check for 'OVERDUE'!
+```
+
+**Fix**:
+```python
+# AFTER (consistent design)
+STATUS_CHOICES = [
+    ('PENDING', 'Pending'),
+    ('IN_PROGRESS', 'In Progress'),
+    ('COMPLETED', 'Completed'),
+    ('CANCELLED', 'Cancelled'),
+]
+
+# Overdue remains as computed property only
+@property
+def is_overdue(self):
+    return self.status == 'PENDING' and self.due_date < today
+```
+
+**Migration Created**:
+- `planning.0002_remove_overdue_status_choice.py`
+- Updates status field choices in both PlannedActivity and HistoricalPlannedActivity
+
+**Documentation Updates**:
+- Updated from "5 status states" to "4 status states"
+- Clarified overdue as computed property
+- Updated PRD, Data Model, and all progress docs
+
+**Result**: ✅ Status field now consistent with implementation - overdue is a computed property, not a stored status
+
+---
+
+### Bug 2: Workflow Initiator Incorrectly Set to Activity Creator
 
 **Severity**: 🟡 **MODERATE** (Attribution error, audit trail accuracy)
 
@@ -77,7 +136,7 @@ def test_spawn_transfer_workflow_attributes_to_spawning_user(self):
 
 ---
 
-### Bug 2: Cancelled Activities Can Be Marked Completed
+### Bug 3: Cancelled Activities Can Be Marked Completed
 
 **Severity**: 🟡 **MODERATE** (Logical inconsistency, data integrity)
 
@@ -141,7 +200,7 @@ def test_mark_completed_action_rejects_cancelled_activity(self):
 
 ---
 
-### Bug 3: Missing Null Check for Template Trigger Fields
+### Bug 4: Missing Null Check for Template Trigger Fields
 
 **Severity**: 🔴 **CRITICAL** (Would cause TypeError at runtime)
 
@@ -195,7 +254,7 @@ def test_generate_activity_raises_error_for_missing_day_offset(self):
 
 ---
 
-### Bug 4: Workflow Spawning Without Status Validation
+### Bug 5: Workflow Spawning Without Status Validation
 
 **Severity**: 🟡 **MODERATE** (Data integrity issue, not crash)
 
@@ -440,11 +499,12 @@ Don't just test happy paths - test what happens with None values, wrong statuses
 
 ## Final Status
 
-**Bugs Fixed**: 4 critical issues (3 validation, 1 attribution)  
-**Tests Added**: 7 new edge case tests  
-**Total Tests**: 20 tests (100% pass rate)  
-**SQLite**: ✅ Pass (1.014s)  
-**PostgreSQL**: ✅ Pass (1.369s)
+**Bugs Fixed**: 5 issues (3 validation, 1 attribution, 1 design consistency)  
+**Tests Added**: 7 new edge case tests (validation bugs sufficiently tested)  
+**Total Tests**: 19 tests (100% pass rate)  
+**Migrations**: 2 migrations (0001_initial, 0002_remove_overdue_status_choice)  
+**SQLite**: ✅ Pass (1.042s)  
+**PostgreSQL**: ✅ Pass (1.492s)
 
 **Code Quality**: ⭐⭐⭐⭐⭐ (Improved with robust validation)  
 **Production Readiness**: ✅ **YES** (More confident than before)

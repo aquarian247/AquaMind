@@ -29,7 +29,7 @@ Successfully delivered **Phase 1: Backend Foundation** of the Operational Schedu
 ### Core Implementation (10/10 Tasks)
 
 - ✅ **Task 1.1**: Planning app structure created
-- ✅ **Task 1.2**: PlannedActivity model (9 activity types, 5 statuses)
+- ✅ **Task 1.2**: PlannedActivity model (9 activity types, 4 statuses + computed overdue)
 - ✅ **Task 1.3**: ActivityTemplate model (3 trigger types)
 - ✅ **Task 1.4**: Serializers with computed fields
 - ✅ **Task 1.5**: ViewSets with 3 custom actions
@@ -115,13 +115,14 @@ Successfully delivered **Phase 1: Backend Foundation** of the Operational Schedu
 8. **SAMPLING** - Growth sampling, health checks
 9. **OTHER** - Custom activity types
 
-### Status States (5 states)
+### Status States (4 states)
 
 1. **PENDING** - Activity is planned but not started
 2. **IN_PROGRESS** - Activity execution has begun (workflow spawned)
 3. **COMPLETED** - Activity has been executed
-4. **OVERDUE** - Past due date and not completed (auto-calculated)
-5. **CANCELLED** - Activity was cancelled
+4. **CANCELLED** - Activity was cancelled
+
+**Note**: Overdue detection is implemented as a computed property (`is_overdue`), not a stored status. Activities remain in PENDING status when past their due date, and the `is_overdue` property dynamically returns `True` for filtering and display purposes.
 
 ### Template Triggers (3 types)
 

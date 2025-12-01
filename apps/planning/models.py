@@ -27,7 +27,6 @@ class PlannedActivity(models.Model):
         ('PENDING', 'Pending'),
         ('IN_PROGRESS', 'In Progress'),
         ('COMPLETED', 'Completed'),
-        ('OVERDUE', 'Overdue'),
         ('CANCELLED', 'Cancelled'),
     ]
     

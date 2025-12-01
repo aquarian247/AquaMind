@@ -22,7 +22,7 @@ Successfully completed Phase 1 (Backend Foundation) of the Operational Schedulin
 
 ### ✅ Task 1.2: Implement PlannedActivity Model
 - Core model with 9 activity types
-- 5 status states with automatic overdue detection
+- 4 status states (PENDING, IN_PROGRESS, COMPLETED, CANCELLED) with computed overdue detection
 - Foreign keys to Scenario, Batch, Container
 - Audit trail with django-simple-history
 - Methods: `mark_completed()`, `spawn_transfer_workflow()`

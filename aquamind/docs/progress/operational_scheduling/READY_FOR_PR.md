@@ -250,8 +250,10 @@ Implements Phase 1 (Backend Foundation) of the Operational Scheduling feature, e
 ### 9 Activity Types
 VACCINATION, TREATMENT, CULL, SALE, FEED_CHANGE, TRANSFER, MAINTENANCE, SAMPLING, OTHER
 
-### 5 Status States
-PENDING, IN_PROGRESS, COMPLETED, OVERDUE (auto-calculated), CANCELLED
+### 4 Status States
+PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+
+**Note**: Overdue detection is a computed property (`is_overdue`), not a stored status. Activities remain in PENDING status when past due, and the `is_overdue` property dynamically returns `True`.
 
 ### 3 Template Triggers
 DAY_OFFSET, WEIGHT_THRESHOLD, STAGE_TRANSITION
