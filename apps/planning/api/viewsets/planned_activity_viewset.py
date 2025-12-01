@@ -96,18 +96,18 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
             )
         
         try:
-            from apps.batch.models import LifecycleStage
+            from apps.batch.models import LifeCycleStage
             
             # Validate lifecycle stages exist
-            source_stage = LifecycleStage.objects.get(id=source_stage_id)
-            dest_stage = LifecycleStage.objects.get(id=dest_stage_id)
+            source_stage = LifeCycleStage.objects.get(id=source_stage_id)
+            dest_stage = LifeCycleStage.objects.get(id=dest_stage_id)
             
             workflow = activity.spawn_transfer_workflow(
                 workflow_type=workflow_type,
                 source_lifecycle_stage=source_stage,
                 dest_lifecycle_stage=dest_stage
             )
-        except LifecycleStage.DoesNotExist as e:
+        except LifeCycleStage.DoesNotExist as e:
             return Response(
                 {"error": "Lifecycle stage not found"},
                 status=status.HTTP_404_NOT_FOUND
@@ -118,7 +118,7 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        from apps.batch.api.serializers import BatchTransferWorkflowSerializer
-        serializer = BatchTransferWorkflowSerializer(workflow)
+        from apps.batch.api.serializers import BatchTransferWorkflowDetailSerializer
+        serializer = BatchTransferWorkflowDetailSerializer(workflow)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

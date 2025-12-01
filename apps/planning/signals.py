@@ -17,7 +17,13 @@ def auto_generate_activities_from_templates(sender, instance, created, **kwargs)
     
     # Get the default scenario for this batch (if exists)
     # Note: Batches may not always have scenarios initially
-    default_scenario = instance.scenarios.filter(is_baseline=True).first()
+    try:
+        # Try to get baseline scenario (field may not exist in all versions)
+        default_scenario = instance.scenarios.filter(is_baseline=True).first()
+    except Exception:
+        # If is_baseline field doesn't exist, get first scenario or batch.pinned_scenario
+        default_scenario = getattr(instance, 'pinned_scenario', None) or instance.scenarios.first()
+    
     if not default_scenario:
         return  # No scenario to attach activities to
     

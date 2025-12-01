@@ -147,14 +147,18 @@ class PlannedActivity(models.Model):
         
         from apps.batch.models import BatchTransferWorkflow
         
+        # Generate workflow_number
+        workflow_number = f"TRF-PA-{self.id}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        
         workflow = BatchTransferWorkflow.objects.create(
+            workflow_number=workflow_number,
             batch=self.batch,
             workflow_type=workflow_type,
             source_lifecycle_stage=source_lifecycle_stage,
             dest_lifecycle_stage=dest_lifecycle_stage,
             planned_start_date=self.due_date,
             planned_activity=self,
-            created_by=self.created_by
+            initiated_by=self.created_by
         )
         
         self.transfer_workflow = workflow
