@@ -227,6 +227,67 @@ class PlannedActivityAPITest(BaseAPITestCase):
 class ActivityTemplateAPITest(BaseAPITestCase):
     """Test ActivityTemplate API operations."""
     
+    def setUp(self):
+        """Set up minimal test data."""
+        super().setUp()
+        
+        # Minimal species/stage/batch
+        self.species, _ = Species.objects.get_or_create(
+            name='Atlantic Salmon',
+            defaults={'scientific_name': 'Salmo salar'}
+        )
+        self.fry_stage, _ = LifeCycleStage.objects.get_or_create(
+            name='Fry',
+            species=self.species,
+            defaults={'order': 1}
+        )
+        self.batch, _ = Batch.objects.get_or_create(
+            batch_number='TEST-TEMPLATE-001',
+            defaults={
+                'species': self.species,
+                'lifecycle_stage': self.fry_stage,
+                'start_date': timezone.now().date(),
+                'status': 'ACTIVE',
+                'batch_type': 'PRODUCTION'
+            }
+        )
+        
+        # Minimal scenario
+        temp_profile = TemperatureProfile.objects.create(name='Test Profile')
+        tgc_model = TGCModel.objects.create(
+            name='Test TGC',
+            location='Test',
+            release_period='Spring',
+            tgc_value=Decimal('0.025'),
+            profile=temp_profile
+        )
+        fcr_model = FCRModel.objects.create(name='Test FCR')
+        FCRModelStage.objects.create(
+            model=fcr_model,
+            stage=self.fry_stage,
+            fcr_value=Decimal('1.2'),
+            duration_days=90
+        )
+        mortality_model = MortalityModel.objects.create(
+            name='Test Mortality',
+            frequency='daily',
+            rate=Decimal('0.05')
+        )
+        
+        self.scenario = Scenario.objects.create(
+            name='Test Scenario',
+            start_date=timezone.now().date(),
+            duration_days=365,
+            initial_count=10000,
+            initial_weight=Decimal('5.0'),
+            genotype='Standard',
+            supplier='Test Supplier',
+            tgc_model=tgc_model,
+            fcr_model=fcr_model,
+            mortality_model=mortality_model,
+            created_by=self.user
+        )
+    
     def test_create_activity_template(self):
         """CRITICAL: POST to create template must work."""
         url = self.get_api_url('planning', 'activity-templates')
@@ -244,6 +305,30 @@ class ActivityTemplateAPITest(BaseAPITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ActivityTemplate.objects.count(), 1)
+    
+    def test_generate_for_batch_handles_missing_trigger_field(self):
+        """CRITICAL: API must return 400 for template with missing trigger field."""
+        # Create template with missing day_offset
+        template = ActivityTemplate.objects.create(
+            name='Invalid Template',
+            activity_type='VACCINATION',
+            trigger_type='DAY_OFFSET',
+            day_offset=None,  # Missing required field
+            is_active=True
+        )
+        
+        url = self.get_action_url('planning', 'activity-templates', template.id, 'generate-for-batch')
+        data = {
+            'scenario': self.scenario.scenario_id,
+            'batch': self.batch.id
+        }
+        
+        response = self.client.post(url, data, format='json')
+        
+        # Should return 400 Bad Request, not 500 Internal Server Error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+        self.assertIn('day_offset', response.data['error'])
 
 
 class WorkflowCompletionSyncTest(BaseAPITestCase):

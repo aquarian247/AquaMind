@@ -39,7 +39,7 @@ class ActivityTemplateViewSet(viewsets.ModelViewSet):
             from apps.scenario.models import Scenario
             from apps.batch.models import Batch
             
-            scenario = Scenario.objects.get(id=scenario_id)
+            scenario = Scenario.objects.get(scenario_id=scenario_id)
             batch = Batch.objects.get(id=batch_id)
             
             activity = template.generate_activity(
@@ -63,5 +63,10 @@ class ActivityTemplateViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Batch not found"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
