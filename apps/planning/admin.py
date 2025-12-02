@@ -146,3 +146,4 @@ class ActivityTemplateAdmin(admin.ModelAdmin):
         }),
     )
 
+

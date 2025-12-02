@@ -75,8 +75,8 @@ class OptimizedGrowthAssimilationEngine:
     
     def _get_scenario(self) -> Optional[Scenario]:
         """Get scenario for TGC/mortality models."""
-        if self.batch.pinned_scenario:
-            return self.batch.pinned_scenario
+        if self.batch.pinned_projection_run:
+            return self.batch.pinned_projection_run.scenario
         return self.batch.scenarios.first()
     
     def recompute_range(

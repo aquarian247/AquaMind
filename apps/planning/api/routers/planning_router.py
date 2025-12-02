@@ -8,3 +8,4 @@ router = DefaultRouter()
 router.register(r'planned-activities', PlannedActivityViewSet, basename='planned-activity')
 router.register(r'activity-templates', ActivityTemplateViewSet, basename='activity-template')
 
+

@@ -9,3 +9,4 @@ class PlanningConfig(AppConfig):
     def ready(self):
         import apps.planning.signals  # noqa
 
+

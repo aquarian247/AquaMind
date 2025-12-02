@@ -110,8 +110,12 @@ class Command(BaseCommand):
         
         for batch in batches:
             try:
-                # Check if batch has pinned scenario (required)
-                if not batch.pinned_scenario and not batch.scenarios.exists():
+                # Check if batch has a scenario (via pinned projection run or direct association)
+                has_scenario = (
+                    batch.pinned_projection_run is not None or 
+                    batch.scenarios.exists()
+                )
+                if not has_scenario:
                     self.stdout.write(
                         self.style.WARNING(
                             f"  ⚠️  Skipping {batch.batch_number}: "

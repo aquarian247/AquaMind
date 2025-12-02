@@ -36,6 +36,7 @@ from apps.scenario.tests.test_helpers import (
     create_test_biological_constraints,
     create_test_scenario
 )
+from apps.scenario.models import ProjectionRun
 
 User = get_user_model()
 
@@ -102,8 +103,13 @@ class GrowthAssimilationCoreTestCase(TestCase):
         self.scenario.initial_count = 1000
         self.scenario.save()
         
-        # Pin scenario
-        self.batch.pinned_scenario = self.scenario
+        # Create projection run and pin it to batch
+        self.projection_run = ProjectionRun.objects.create(
+            scenario=self.scenario,
+            run_number=1,
+            label='Test Run'
+        )
+        self.batch.pinned_projection_run = self.projection_run
         self.batch.save()
         
         # Create temperature parameter
@@ -122,8 +128,9 @@ class GrowthAssimilationCoreTestCase(TestCase):
     
     def test_engine_requires_scenario(self):
         """Test engine fails gracefully without scenario."""
-        self.batch.pinned_scenario = None
+        self.batch.pinned_projection_run = None
         self.batch.save()
+        self.projection_run.delete()
         self.scenario.delete()
         
         with self.assertRaises(ValueError) as ctx:

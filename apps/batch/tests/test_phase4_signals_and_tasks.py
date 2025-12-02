@@ -47,6 +47,7 @@ from apps.batch.tests.models.test_utils import (
     create_test_lifecycle_stage
 )
 from apps.scenario.tests.test_helpers import create_test_scenario
+from apps.scenario.models import ProjectionRun
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -80,9 +81,14 @@ class CeleryTaskTestCase(TestCase):
             avg_weight_g=Decimal('50.0')
         )
         
-        # Create and pin scenario
+        # Create scenario and projection run, then pin to batch
         self.scenario = create_test_scenario(user=self.user)
-        self.batch.pinned_scenario = self.scenario
+        self.projection_run = ProjectionRun.objects.create(
+            scenario=self.scenario,
+            run_number=1,
+            label='Test Run'
+        )
+        self.batch.pinned_projection_run = self.projection_run
         self.batch.save()
     
     def test_recompute_assignment_window_task(self):
@@ -230,9 +236,14 @@ class SignalHandlerTestCase(TestCase):
             avg_weight_g=Decimal('50.0')
         )
         
-        # Create and pin scenario
+        # Create scenario and projection run, then pin to batch
         self.scenario = create_test_scenario(user=self.user)
-        self.batch.pinned_scenario = self.scenario
+        self.projection_run = ProjectionRun.objects.create(
+            scenario=self.scenario,
+            run_number=1,
+            label='Test Run'
+        )
+        self.batch.pinned_projection_run = self.projection_run
         self.batch.save()
     
     def tearDown(self):
@@ -331,9 +342,14 @@ class ManagementCommandTestCase(TestCase):
             avg_weight_g=Decimal('50.0')
         )
         
-        # Create and pin scenario
+        # Create scenario and projection run, then pin to batch
         self.scenario = create_test_scenario(user=self.user)
-        self.batch.pinned_scenario = self.scenario
+        self.projection_run = ProjectionRun.objects.create(
+            scenario=self.scenario,
+            run_number=1,
+            label='Test Run'
+        )
+        self.batch.pinned_projection_run = self.projection_run
         self.batch.save()
     
     @patch('apps.batch.tasks.recompute_batch_window.delay')

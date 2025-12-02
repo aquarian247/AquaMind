@@ -108,8 +108,12 @@ class GrowthAssimilationMixin:
         if granularity not in ['daily', 'weekly']:
             raise ValidationError({'granularity': 'Must be "daily" or "weekly"'})
         
-        # Get pinned scenario
-        scenario = batch.pinned_scenario or batch.scenarios.first()
+        # Get scenario from pinned projection run
+        scenario = None
+        if batch.pinned_projection_run:
+            scenario = batch.pinned_projection_run.scenario
+        if not scenario:
+            scenario = batch.scenarios.first()
         if not scenario:
             return Response(
                 {
@@ -252,18 +256,17 @@ class GrowthAssimilationMixin:
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Pin to latest run (also set old pinned_scenario for backward compatibility)
+        # Pin to latest run
         batch.pinned_projection_run = latest_run
-        batch.pinned_scenario = scenario
-        batch.save(update_fields=['pinned_projection_run', 'pinned_scenario'])
+        batch.save(update_fields=['pinned_projection_run'])
         
         return Response({
             'success': True,
             'batch_id': batch.id,
             'batch_number': batch.batch_number,
             'pinned_projection_run_id': latest_run.run_id,
-            'pinned_scenario_id': scenario.scenario_id,
-            'pinned_scenario_name': scenario.name,
+            'scenario_id': scenario.scenario_id,
+            'scenario_name': scenario.name,
             'message': 'DEPRECATED: Use pin_projection_run endpoint. Pinned to latest run.',
         })
     

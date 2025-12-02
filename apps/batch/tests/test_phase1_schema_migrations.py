@@ -49,19 +49,19 @@ class Phase1SchemaMigrationTestCase(TestCase):
         self.assertTrue(measured_sample_size_field.null)
         self.assertTrue(measured_sample_size_field.blank)
     
-    def test_batch_has_pinned_scenario_field(self):
-        """Test that Batch model has pinned_scenario field."""
+    def test_batch_has_pinned_projection_run_field(self):
+        """Test that Batch model has pinned_projection_run field."""
         field_names = [f.name for f in Batch._meta.get_fields()]
-        self.assertIn('pinned_scenario', field_names)
+        self.assertIn('pinned_projection_run', field_names)
     
-    def test_batch_pinned_scenario_nullable(self):
-        """Test that pinned_scenario field is nullable."""
-        pinned_scenario_field = Batch._meta.get_field('pinned_scenario')
-        self.assertTrue(pinned_scenario_field.null)
-        self.assertTrue(pinned_scenario_field.blank)
+    def test_batch_pinned_projection_run_nullable(self):
+        """Test that pinned_projection_run field is nullable."""
+        pinned_projection_run_field = Batch._meta.get_field('pinned_projection_run')
+        self.assertTrue(pinned_projection_run_field.null)
+        self.assertTrue(pinned_projection_run_field.blank)
         
-        # Check that it's a ForeignKey to Scenario
-        self.assertEqual(pinned_scenario_field.related_model.__name__, 'Scenario')
+        # Check that it's a ForeignKey to ProjectionRun
+        self.assertEqual(pinned_projection_run_field.related_model.__name__, 'ProjectionRun')
     
     def test_treatment_has_weighing_fields(self):
         """Test that Treatment model has new weighing-related fields."""
@@ -106,7 +106,7 @@ class Phase1SchemaMigrationTestCase(TestCase):
             
             # Check Batch table
             batch_fields = {f.column for f in Batch._meta.fields}
-            self.assertIn('pinned_scenario_id', batch_fields)
+            self.assertIn('pinned_projection_run_id', batch_fields)
             
             # Check Treatment table
             treatment_fields = {f.column for f in Treatment._meta.fields}
