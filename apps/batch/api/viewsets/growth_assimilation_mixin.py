@@ -108,16 +108,26 @@ class GrowthAssimilationMixin:
         if granularity not in ['daily', 'weekly']:
             raise ValidationError({'granularity': 'Must be "daily" or "weekly"'})
         
-        # Get scenario from pinned projection run
+        # Get projection run from pinned projection run or find latest
+        from apps.scenario.models import ProjectionRun
+        
+        projection_run = batch.pinned_projection_run
         scenario = None
-        if batch.pinned_projection_run:
-            scenario = batch.pinned_projection_run.scenario
-        if not scenario:
+        
+        if projection_run:
+            scenario = projection_run.scenario
+        else:
+            # Find latest projection run for any scenario linked to this batch
             scenario = batch.scenarios.first()
-        if not scenario:
+            if scenario:
+                projection_run = ProjectionRun.objects.filter(
+                    scenario=scenario
+                ).order_by('-run_number').first()
+        
+        if not scenario or not projection_run:
             return Response(
                 {
-                    'detail': 'No scenario available for this batch. Create and pin a scenario first.',
+                    'detail': 'No scenario/projection run available for this batch. Create and pin a scenario first.',
                     'batch_id': batch.id,
                     'batch_number': batch.batch_number,
                 },
@@ -133,8 +143,9 @@ class GrowthAssimilationMixin:
             'start_date': batch.start_date,
             'status': batch.status,
             'scenario': self._serialize_scenario(scenario),
+            'projection_run': self._serialize_projection_run(projection_run),
             'growth_samples': self._get_growth_samples(batch, start_date, end_date, assignment_id),
-            'scenario_projection': self._get_scenario_projection(scenario, start_date, end_date, granularity),
+            'scenario_projection': self._get_scenario_projection(projection_run, start_date, end_date, granularity),
             'actual_daily_states': self._get_actual_daily_states(batch, start_date, end_date, assignment_id, granularity),
             'container_assignments': self._get_container_assignments(batch, start_date, end_date),
             'date_range': {
@@ -394,6 +405,18 @@ class GrowthAssimilationMixin:
             'initial_weight': float(scenario.initial_weight),
         }
     
+    def _serialize_projection_run(self, projection_run):
+        """Serialize projection run info."""
+        return {
+            'id': projection_run.run_id,
+            'run_number': projection_run.run_number,
+            'label': projection_run.label,
+            'run_date': projection_run.run_date,
+            'total_projections': projection_run.total_projections,
+            'final_weight_g': projection_run.final_weight_g,
+            'final_biomass_kg': projection_run.final_biomass_kg,
+        }
+    
     def _get_growth_samples(self, batch, start_date, end_date, assignment_id=None):
         """Get growth samples for the batch in date range."""
         qs = GrowthSample.objects.filter(
@@ -419,8 +442,10 @@ class GrowthAssimilationMixin:
             for sample in qs
         ]
     
-    def _get_scenario_projection(self, scenario, start_date, end_date, granularity):
-        """Get scenario projection for date range."""
+    def _get_scenario_projection(self, projection_run, start_date, end_date, granularity):
+        """Get scenario projection for date range from a projection run."""
+        scenario = projection_run.scenario
+        
         # Calculate day numbers from scenario start
         start_day = (start_date - scenario.start_date).days + 1
         end_day = (end_date - scenario.start_date).days + 1
@@ -432,9 +457,9 @@ class GrowthAssimilationMixin:
         if start_day > end_day:
             return []
         
-        # Query projection days
+        # Query projection days from the specific projection run
         qs = ScenarioProjection.objects.filter(
-            scenario=scenario,
+            projection_run=projection_run,
             day_number__gte=start_day,
             day_number__lte=end_day
         ).order_by('day_number')
@@ -449,7 +474,7 @@ class GrowthAssimilationMixin:
         
         return [
             {
-                'date': scenario.start_date + (proj.day_number - 1) * timedelta(days=1),
+                'date': scenario.start_date + timedelta(days=proj.day_number - 1),
                 'day_number': proj.day_number,
                 'avg_weight_g': float(proj.average_weight),  # ScenarioProjection uses 'average_weight'
                 'population': int(proj.population),

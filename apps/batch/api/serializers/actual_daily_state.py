@@ -89,6 +89,7 @@ class GrowthAnalysisCombinedSerializer(serializers.Serializer):
     
     # Scenario info
     scenario = serializers.DictField(required=False, allow_null=True)
+    projection_run = serializers.DictField(required=False, allow_null=True)
     
     # Time series data
     growth_samples = serializers.ListField(child=serializers.DictField())
