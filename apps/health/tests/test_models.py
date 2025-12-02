@@ -26,141 +26,78 @@ User = get_user_model()
 
 class HealthModelsTestCase(TestCase):
     def setUp(self):
-        try:
-            self.user = User.objects.create_user(username='testuser', password='testpass')
-            # print("User created successfully")
-        except Exception as e:
-            print(f"Error creating User: {e}")
-            raise
+        self.user = User.objects.create_user(username='testuser', password='testpass')
 
-        try:
-            self.species = Species.objects.create(name='Salmon')
-            # print("Species created successfully")
-        except Exception as e:
-            print(f"Error creating Species: {e}")
-            raise
+        self.species = Species.objects.create(name='Salmon')
 
-        try:
-            self.lifecycle_stage = LifeCycleStage.objects.create(name='Fry', order=2, species=self.species)
-            # print("LifeCycleStage created successfully")
-        except Exception as e:
-            print(f"Error creating LifeCycleStage: {e}")
-            raise
+        self.lifecycle_stage = LifeCycleStage.objects.create(name='Fry', order=2, species=self.species)
 
-        try:
-            self.batch = Batch.objects.create(
-                batch_number='B001',
-                species=self.species,
-                status='ACTIVE',
-                start_date='2023-01-01',
-                notes='Test batch',
-                batch_type='STANDARD',
-                lifecycle_stage=self.lifecycle_stage
-            )
-            # print("Batch created successfully")
-        except Exception as e:
-            print(f"Error creating Batch: {e}")
-            raise
+        self.batch = Batch.objects.create(
+            batch_number='B001',
+            species=self.species,
+            status='ACTIVE',
+            start_date='2023-01-01',
+            notes='Test batch',
+            batch_type='STANDARD',
+            lifecycle_stage=self.lifecycle_stage
+        )
 
-        try:
-            self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=Decimal('100.0'), category='TANK')
-            # print("ContainerType created successfully")
-        except Exception as e:
-            print(f"Error creating ContainerType: {e}")
-            raise
+        self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=Decimal('100.0'), category='TANK')
 
-        try:
-            self.geography = Geography.objects.create(name='Test Geography')
-            # print("Geography created successfully")
-        except Exception as e:
-            print(f"Error creating Geography: {e}")
-            raise
+        self.geography = Geography.objects.create(name='Test Geography')
 
-        try:
-            self.station = FreshwaterStation.objects.create(
-                name='Test Station', 
-                station_type='HATCHERY',
-                latitude=Decimal('50.8503'),
-                longitude=Decimal('4.3517'),
-                geography=self.geography
-            )
-            # print("FreshwaterStation created successfully")
-        except Exception as e:
-            print(f"Error creating FreshwaterStation: {e}")
-            raise
+        self.station = FreshwaterStation.objects.create(
+            name='Test Station', 
+            station_type='HATCHERY',
+            latitude=Decimal('50.8503'),
+            longitude=Decimal('4.3517'),
+            geography=self.geography
+        )
 
-        try:
-            self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
-            # print("Hall created successfully")
-        except Exception as e:
-            print(f"Error creating Hall: {e}")
-            raise
+        self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
 
-        try:
-            self.container = Container.objects.create(
-                name='C001',
-                container_type=self.container_type,
-                volume_m3=Decimal('50.0'),
-                max_biomass_kg=Decimal('5000.0'),
-                hall=self.hall,
-                active=True
-            )
-            # print("Container created successfully")
-        except Exception as e:
-            print(f"Error creating Container: {e}")
-            raise
+        self.container = Container.objects.create(
+            name='C001',
+            container_type=self.container_type,
+            volume_m3=Decimal('50.0'),
+            max_biomass_kg=Decimal('5000.0'),
+            hall=self.hall,
+            active=True
+        )
 
+        # Ensure BatchContainerAssignment is created for tests that need it
         try:
-            # Ensure BatchContainerAssignment is created for tests that need it
             self.batch_container_assignment = BatchContainerAssignment.objects.create(
                 batch=self.batch,
                 container=self.container,
-                lifecycle_stage=self.lifecycle_stage, # Use the correct stage
-                population_count=1000, # Corrected field name
-                biomass_kg=Decimal('50.00'), # Example biomass
+                lifecycle_stage=self.lifecycle_stage,
+                population_count=1000,
+                biomass_kg=Decimal('50.00'),
                 assignment_date=date(2023, 1, 1),
                 is_active=True
             )
-            # print("BatchContainerAssignment created successfully")
-        except Exception as e:
-            print(f"Error creating BatchContainerAssignment: {e}")
-            # If it fails, it might be because it's created elsewhere or a unique constraint issue if run multiple times
-            # Try to fetch it if it already exists
+        except Exception:
+            # If it fails, try to fetch it if it already exists
             self.batch_container_assignment = BatchContainerAssignment.objects.filter(batch=self.batch, container=self.container).first()
             if not self.batch_container_assignment:
-                print("Failed to create or fetch BatchContainerAssignment in setUp")
                 raise
 
         try:
             self.sample_type = SampleType.objects.create(name='Test Histopathology', description='For histopathological analysis')
-            # print("SampleType created successfully")
-        except IntegrityError: # If it already exists from a previous run within the same test session
+        except IntegrityError:
             self.sample_type = SampleType.objects.get(name='Test Histopathology')
-        except Exception as e:
-            print(f"Error creating SampleType: {e}")
-            raise
 
-        try:
-            self.health_parameter = HealthParameter.objects.create(
-                name='Test Skin Lesions Models',
-                min_score=0,
-                max_score=3
-            )
-            # print("HealthParameter created successfully")
-        except Exception as e:
-            print(f"Error creating HealthParameter: {e}")
-            raise
+        self.health_parameter = HealthParameter.objects.create(
+            name='Test Skin Lesions Models',
+            min_score=0,
+            max_score=3
+        )
 
-        try:
-            self.gill_health_param = HealthParameter.objects.create(
-                name='Test Gill Health Models',
-                min_score=0,
-                max_score=3
-            )
-            # print("HealthParameter created successfully")
-        except Exception as e:
-            print(f"Error creating HealthParameter: {e}")
-            raise
+        self.gill_health_param = HealthParameter.objects.create(
+            name='Test Gill Health Models',
+            min_score=0,
+            max_score=3
+        )
 
     def test_journal_entry_creation(self):
         entry = JournalEntry.objects.create(

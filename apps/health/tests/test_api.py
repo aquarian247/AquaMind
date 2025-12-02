@@ -31,211 +31,119 @@ class HealthAPITestCase(BaseAPITestCase):
         # Initialize BaseAPITestCase setup (creates & authenticates default user)
         super().setUp()
 
-        try:
-            self.species = Species.objects.create(name='Salmon')
-            print("Species created successfully")
-        except Exception as e:
-            print(f"Error creating Species: {e}")
-            raise
+        self.species = Species.objects.create(name='Salmon')
 
-        try:
-            self.lifecycle_stage = LifeCycleStage.objects.create(name='Fry', order=2, species=self.species)
-            print("LifeCycleStage created successfully")
-        except Exception as e:
-            print(f"Error creating LifeCycleStage: {e}")
-            raise
+        self.lifecycle_stage = LifeCycleStage.objects.create(name='Fry', order=2, species=self.species)
 
-        try:
-            self.batch = Batch.objects.create(
-                batch_number='B001',
-                species=self.species,
-                status='ACTIVE',
-                start_date='2023-01-01',
-                notes='Test batch',
-                batch_type='STANDARD',
-                lifecycle_stage=self.lifecycle_stage
-            )
-            print("Batch created successfully")
-        except Exception as e:
-            print(f"Error creating Batch: {e}")
-            raise
+        self.batch = Batch.objects.create(
+            batch_number='B001',
+            species=self.species,
+            status='ACTIVE',
+            start_date='2023-01-01',
+            notes='Test batch',
+            batch_type='STANDARD',
+            lifecycle_stage=self.lifecycle_stage
+        )
 
-        try:
-            self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=100.0, category='TANK')
-            print("ContainerType created successfully")
-        except Exception as e:
-            print(f"Error creating ContainerType: {e}")
-            raise
+        self.container_type = ContainerType.objects.create(name='Tank', max_volume_m3=100.0, category='TANK')
 
-        try:
-            # Create a geography for the freshwater station
-            self.geography = Geography.objects.create(name='Test Geography')
-            print("Geography created successfully")
-        except Exception as e:
-            print(f"Error creating Geography: {e}")
-            raise
+        # Create a geography for the freshwater station
+        self.geography = Geography.objects.create(name='Test Geography')
 
-        try:
-            # Create a freshwater station for the hall
-            self.station = FreshwaterStation.objects.create(
-                name='Test Station', 
-                station_type='HATCHERY',
-                latitude=50.8503,
-                longitude=4.3517,
-                geography=self.geography
-            )
-            print("FreshwaterStation created successfully")
-        except Exception as e:
-            print(f"Error creating FreshwaterStation: {e}")
-            raise
+        # Create a freshwater station for the hall
+        self.station = FreshwaterStation.objects.create(
+            name='Test Station', 
+            station_type='HATCHERY',
+            latitude=50.8503,
+            longitude=4.3517,
+            geography=self.geography
+        )
 
-        try:
-            # Create a hall for location (container must be in either a hall or area)
-            self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
-            print("Hall created successfully")
-        except Exception as e:
-            print(f"Error creating Hall: {e}")
-            raise
+        # Create a hall for location (container must be in either a hall or area)
+        self.hall = Hall.objects.create(name='Test Hall', freshwater_station=self.station)
 
-        try:
-            self.container = Container.objects.create(
-                name='C001',
-                container_type=self.container_type,
-                volume_m3=50.0,
-                max_biomass_kg=5000.0,
-                hall=self.hall,
-                active=True
-            )
-            print("Container created successfully")
-        except Exception as e:
-            print(f"Error creating Container: {e}")
-            raise
+        self.container = Container.objects.create(
+            name='C001',
+            container_type=self.container_type,
+            volume_m3=50.0,
+            max_biomass_kg=5000.0,
+            hall=self.hall,
+            active=True
+        )
 
-        try:
-            # Create BatchContainerAssignment for testing
-            self.batch_container_assignment = BatchContainerAssignment.objects.create(
-                batch=self.batch,
-                container=self.container,
-                assignment_date='2023-01-01',  # Changed to be before sample date in test
-                population_count=1000, # Initial population
-                biomass_kg=Decimal('500.00'), # Initial biomass
-                lifecycle_stage=self.lifecycle_stage, # Initial lifecycle stage
-                is_active=True
-            )
-            print("BatchContainerAssignment created successfully")
-        except Exception as e:
-            print(f"Error creating BatchContainerAssignment: {e}")
-            raise
+        # Create BatchContainerAssignment for testing
+        self.batch_container_assignment = BatchContainerAssignment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            assignment_date='2023-01-01',
+            population_count=1000,
+            biomass_kg=Decimal('500.00'),
+            lifecycle_stage=self.lifecycle_stage,
+            is_active=True
+        )
 
-        try:
-            # Add HealthParameter for testing observations (with unique names to avoid migration conflicts)
-            self.gill_health_param = HealthParameter.objects.create(
-                name='Test Gill Health API',
-                min_score=0,
-                max_score=3
-            )
-            self.eye_condition_param = HealthParameter.objects.create(
-                name='Test Eye Condition API',
-                min_score=0,
-                max_score=3
-            )
-            print("Health Parameters created successfully")
-        except Exception as e:
-            print(f"Error creating Health Parameters: {e}")
-            raise
+        # Add HealthParameter for testing observations (with unique names to avoid migration conflicts)
+        self.gill_health_param = HealthParameter.objects.create(
+            name='Test Gill Health API',
+            min_score=0,
+            max_score=3
+        )
+        self.eye_condition_param = HealthParameter.objects.create(
+            name='Test Eye Condition API',
+            min_score=0,
+            max_score=3
+        )
 
-        try:
-            # Create a SampleType for testing lab samples
-            self.tissue_sample_type = SampleType.objects.create(name='Tissue Sample', description='A sample of fish tissue for analysis.')
-            print("SampleType created successfully")
-        except Exception as e:
-            print(f"Error creating SampleType: {e}")
-            raise
+        # Create a SampleType for testing lab samples
+        self.tissue_sample_type = SampleType.objects.create(name='Tissue Sample', description='A sample of fish tissue for analysis.')
 
-        try:
-            self.journal_entry = JournalEntry.objects.create(
-                batch=self.batch,
-                container=self.container,
-                user=self.user,
-                category='observation',
-                severity='low',
-                description='Fish appear healthy.'
-            )
-            print("Journal Entry created successfully")
-        except Exception as e:
-            print(f"Error creating Journal Entry: {e}")
-            raise
+        self.journal_entry = JournalEntry.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            category='observation',
+            severity='low',
+            description='Fish appear healthy.'
+        )
 
-        try:
-            self.mortality_reason = MortalityReason.objects.create(name='Disease')
-            print("Mortality Reason created successfully")
-        except Exception as e:
-            print(f"Error creating Mortality Reason: {e}")
-            raise
+        self.mortality_reason = MortalityReason.objects.create(name='Disease')
 
-        try:
-            self.mortality_record = MortalityRecord.objects.create(
-                batch=self.batch,
-                container=self.container,
-                count=50,
-                reason=self.mortality_reason
-            )
-            print("Mortality Record created successfully")
-        except Exception as e:
-            print(f"Error creating Mortality Record: {e}")
-            raise
+        self.mortality_record = MortalityRecord.objects.create(
+            batch=self.batch,
+            container=self.container,
+            count=50,
+            reason=self.mortality_reason
+        )
 
-        try:
-            self.lice_count = LiceCount.objects.create(
-                batch=self.batch,
-                container=self.container,
-                user=self.user,
-                adult_female_count=10,
-                adult_male_count=5,
-                juvenile_count=15,
-                fish_sampled=5
-            )
-            print("Lice Count created successfully")
-        except Exception as e:
-            print(f"Error creating Lice Count: {e}")
-            raise
+        self.lice_count = LiceCount.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            adult_female_count=10,
+            adult_male_count=5,
+            juvenile_count=15,
+            fish_sampled=5
+        )
 
-        try:
-            self.vaccination_type = VaccinationType.objects.create(name='Vaccine A')
-            print("Vaccination Type created successfully")
-        except Exception as e:
-            print(f"Error creating Vaccination Type: {e}")
-            raise
+        self.vaccination_type = VaccinationType.objects.create(name='Vaccine A')
 
-        try:
-            self.treatment = Treatment.objects.create(
-                batch=self.batch,
-                container=self.container,
-                user=self.user,
-                treatment_type='vaccination',
-                vaccination_type=self.vaccination_type,
-                description='Vaccination against disease',
-                withholding_period_days=30
-            )
-            print("Treatment created successfully")
-        except Exception as e:
-            print(f"Error creating Treatment: {e}")
-            raise
+        self.treatment = Treatment.objects.create(
+            batch=self.batch,
+            container=self.container,
+            user=self.user,
+            treatment_type='vaccination',
+            vaccination_type=self.vaccination_type,
+            description='Vaccination against disease',
+            withholding_period_days=30
+        )
 
-        try:
-            self.sample_type = SampleType.objects.create(name='Water Sample')
-            print("Sample Type created successfully")
-        except Exception as e:
-            print(f"Error creating Sample Type: {e}")
-            raise
+        self.sample_type = SampleType.objects.create(name='Water Sample')
 
     def test_health_parameter_api(self):
         """Test listing and creating health parameters via API."""
         url = self.get_api_url('health', 'health-parameters')
-        print(f"[Debug] Testing URL: {url}")
         # Test GET (list)
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -270,9 +178,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_mortality_reason_list(self):
         """Test listing mortality reasons via API."""
         url = self.get_api_url('health', 'mortality-reasons')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -284,9 +190,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_mortality_record_list(self):
         """Test listing mortality records via API."""
         url = self.get_api_url('health', 'mortality-records')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -299,9 +203,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_lice_count_list(self):
         """Test listing lice counts via API."""
         url = self.get_api_url('health', 'lice-counts')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -314,9 +216,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_vaccination_type_list(self):
         """Test listing vaccination types via API."""
         url = self.get_api_url('health', 'vaccination-types')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -328,9 +228,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_treatment_list(self):
         """Test listing treatments via API."""
         url = self.get_api_url('health', 'treatments')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -343,9 +241,7 @@ class HealthAPITestCase(BaseAPITestCase):
     def test_sample_type_list(self):
         """Test listing sample types via API."""
         url = self.get_api_url('health', 'sample-types')
-        print(f"[Debug] Testing URL: {url}")
         response = self.client.get(url)
-        print(f"[Debug] Response status code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=f"Unexpected status code for URL: {url}")
         # Handle case where response.data might be a list directly (no pagination)
         if isinstance(response.data, list):
@@ -515,11 +411,6 @@ class HealthAPITestCase(BaseAPITestCase):
         }
 
         response = self.client.post(url, payload, format='json')
-
-        # Debugging: print response data if status is not 201
-        if response.status_code != status.HTTP_201_CREATED:
-            print(f"Create HealthLabSample failed with status {response.status_code}:")
-            print(response.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(HealthLabSample.objects.count(), 1)
