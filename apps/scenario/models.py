@@ -39,9 +39,6 @@ class TemperatureProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # History tracking disabled (tables removed)
-    # history = HistoricalRecords()
-
     class Meta:
         verbose_name = "Temperature Profile"
         verbose_name_plural = "Temperature Profiles"
@@ -126,9 +123,6 @@ class TGCModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # History tracking disabled (tables removed)
-    # history = HistoricalRecords()
-
     class Meta:
         verbose_name = "TGC Model"
         verbose_name_plural = "TGC Models"
@@ -153,9 +147,6 @@ class FCRModel(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # History tracking disabled (tables removed)
-    # history = HistoricalRecords()
 
     class Meta:
         verbose_name = "FCR Model"
@@ -232,9 +223,6 @@ class MortalityModel(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # History tracking disabled (tables removed)
-    # history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Mortality Model"
@@ -575,16 +563,6 @@ class ScenarioProjection(models.Model):
     """
     projection_id = models.BigAutoField(primary_key=True)
     
-    # MIGRATION: Keep scenario temporarily during migration, will be removed
-    scenario = models.ForeignKey(
-        Scenario,
-        on_delete=models.CASCADE,
-        related_name='_old_projections',  # Temporary name to avoid conflicts
-        null=True,
-        blank=True,
-        help_text="DEPRECATED: Temporary field for migration"
-    )
-    
     projection_run = models.ForeignKey(
         ProjectionRun,
         on_delete=models.CASCADE,
@@ -668,9 +646,6 @@ class BiologicalConstraints(models.Model):
         null=True,
         related_name='created_constraints'
     )
-
-    # History tracking disabled (tables removed)
-    # history = HistoricalRecords()
 
     class Meta:
         db_table = 'scenario_biological_constraints'

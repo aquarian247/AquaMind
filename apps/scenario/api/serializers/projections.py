@@ -52,7 +52,7 @@ class ScenarioProjectionSerializer(serializers.ModelSerializer):
         model = ScenarioProjection
         fields = [
             "projection_id",
-            "scenario",
+            "projection_run",
             "projection_date",
             "day_number",
             "average_weight",

@@ -163,7 +163,6 @@ class BaseScenarioAPITestCase(BaseAPITestCase):
         for i in range(num_days):
             ScenarioProjection.objects.create(
                 projection_run=projection_run,
-                scenario=scenario,  # Keep for backward compatibility
                 projection_date=scenario.start_date + timedelta(days=i),
                 day_number=i,
                 average_weight=50.0 + i * 2,

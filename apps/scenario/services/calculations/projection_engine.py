@@ -388,10 +388,9 @@ class ProjectionEngine:
                 'current_stage': current_stage
             }
             
-            # For non-saved projections, create object with old scenario FK
+            # For non-saved projections, create object without saving
             if not save_results:
                 projection = ScenarioProjection(
-                    scenario=self.scenario,
                     **projection_data
                 )
             else:
@@ -415,7 +414,6 @@ class ProjectionEngine:
             projection_objs = [
                 ScenarioProjection(
                     projection_run=projection_run,
-                    scenario=self.scenario,  # Keep for now during migration
                     **p
                 ) for p in projections
             ]

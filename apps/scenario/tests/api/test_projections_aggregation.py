@@ -118,7 +118,6 @@ class ProjectionsAggregationTestCase(TestCase):
         for day in range(91):  # Days 0 to 90
             projection = ScenarioProjection(
                 projection_run=projection_run,
-                scenario=self.scenario,  # Keep for backward compatibility
                 projection_date=date(2024, 1, 1) + timedelta(days=day),
                 day_number=day,
                 average_weight=5.0 + (day * 0.5),
@@ -193,7 +192,7 @@ class ProjectionsAggregationTestCase(TestCase):
         # Check first projection has all expected fields
         first = response.data[0]
         expected_fields = [
-            'projection_id', 'scenario', 'projection_date',
+            'projection_id', 'projection_run', 'projection_date',
             'day_number', 'average_weight', 'population',
             'biomass', 'daily_feed', 'cumulative_feed',
             'temperature', 'current_stage', 'stage_name'
