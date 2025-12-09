@@ -331,6 +331,292 @@ class ActivityTemplateAPITest(BaseAPITestCase):
         self.assertIn('day_offset', response.data['error'])
 
 
+class VarianceReportAPITest(BaseAPITestCase):
+    """Test variance-report API endpoint."""
+    
+    def setUp(self):
+        """Set up test data with varied activity statuses and completion dates."""
+        super().setUp()
+        
+        # Minimal species/stage/batch
+        self.species, _ = Species.objects.get_or_create(
+            name='Atlantic Salmon',
+            defaults={'scientific_name': 'Salmo salar'}
+        )
+        self.fry_stage, _ = LifeCycleStage.objects.get_or_create(
+            name='Fry',
+            species=self.species,
+            defaults={'order': 1}
+        )
+        self.batch, _ = Batch.objects.get_or_create(
+            batch_number='TEST-VARIANCE-001',
+            defaults={
+                'species': self.species,
+                'lifecycle_stage': self.fry_stage,
+                'start_date': timezone.now().date(),
+                'status': 'ACTIVE',
+                'batch_type': 'PRODUCTION'
+            }
+        )
+        
+        # Minimal scenario
+        temp_profile = TemperatureProfile.objects.create(name='Test Variance Profile')
+        tgc_model = TGCModel.objects.create(
+            name='Test Variance TGC',
+            location='Test',
+            release_period='Spring',
+            tgc_value=Decimal('0.025'),
+            profile=temp_profile
+        )
+        fcr_model = FCRModel.objects.create(name='Test Variance FCR')
+        FCRModelStage.objects.create(
+            model=fcr_model,
+            stage=self.fry_stage,
+            fcr_value=Decimal('1.2'),
+            duration_days=90
+        )
+        mortality_model = MortalityModel.objects.create(
+            name='Test Variance Mortality',
+            frequency='daily',
+            rate=Decimal('0.05')
+        )
+        
+        self.scenario = Scenario.objects.create(
+            name='Test Variance Scenario',
+            start_date=timezone.now().date() - timedelta(days=60),
+            duration_days=365,
+            initial_count=10000,
+            initial_weight=Decimal('5.0'),
+            genotype='Standard',
+            supplier='Test Supplier',
+            tgc_model=tgc_model,
+            fcr_model=fcr_model,
+            mortality_model=mortality_model,
+            created_by=self.user
+        )
+        
+        # Create activities with various statuses and completion times
+        today = timezone.now().date()
+        
+        # Completed on time (variance = 0)
+        activity1 = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='VACCINATION',
+            due_date=today - timedelta(days=10),
+            status='COMPLETED',
+            created_by=self.user
+        )
+        activity1.completed_at = timezone.now() - timedelta(days=10)
+        activity1.completed_by = self.user
+        activity1.save()
+        
+        # Completed early (variance = -3)
+        activity2 = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='SAMPLING',
+            due_date=today - timedelta(days=5),
+            status='COMPLETED',
+            created_by=self.user
+        )
+        activity2.completed_at = timezone.now() - timedelta(days=8)
+        activity2.completed_by = self.user
+        activity2.save()
+        
+        # Completed late (variance = +5)
+        activity3 = PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='FEED_CHANGE',
+            due_date=today - timedelta(days=20),
+            status='COMPLETED',
+            created_by=self.user
+        )
+        activity3.completed_at = timezone.now() - timedelta(days=15)
+        activity3.completed_by = self.user
+        activity3.save()
+        
+        # Pending (future)
+        PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='TRANSFER',
+            due_date=today + timedelta(days=7),
+            status='PENDING',
+            created_by=self.user
+        )
+        
+        # Pending overdue
+        PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='TREATMENT',
+            due_date=today - timedelta(days=3),
+            status='PENDING',
+            created_by=self.user
+        )
+        
+        # Cancelled
+        PlannedActivity.objects.create(
+            scenario=self.scenario,
+            batch=self.batch,
+            activity_type='MAINTENANCE',
+            due_date=today - timedelta(days=7),
+            status='CANCELLED',
+            created_by=self.user
+        )
+    
+    def _get_list_action_url(self, action, query_params=None):
+        """Helper to construct URL for list-level custom actions."""
+        url = f'/api/v1/planning/planned-activities/{action}/'
+        if query_params:
+            from urllib.parse import urlencode
+            url = f"{url}?{urlencode(query_params)}"
+        return url
+    
+    def test_variance_report_returns_summary(self):
+        """CRITICAL: Variance report must return summary statistics."""
+        url = self._get_list_action_url('variance-report', 
+                                        {'scenario': self.scenario.scenario_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('summary', response.data)
+        
+        summary = response.data['summary']
+        self.assertEqual(summary['total_activities'], 6)
+        self.assertEqual(summary['completed_activities'], 3)
+        self.assertEqual(summary['pending_activities'], 2)
+        self.assertEqual(summary['cancelled_activities'], 1)
+        self.assertEqual(summary['overdue_activities'], 1)
+    
+    def test_variance_report_returns_by_activity_type(self):
+        """CRITICAL: Variance report must group stats by activity type."""
+        url = self._get_list_action_url('variance-report',
+                                        {'scenario': self.scenario.scenario_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('by_activity_type', response.data)
+        
+        # Should have 6 different activity types
+        type_stats = {s['activity_type']: s for s in response.data['by_activity_type']}
+        self.assertIn('VACCINATION', type_stats)
+        self.assertIn('SAMPLING', type_stats)
+        self.assertIn('FEED_CHANGE', type_stats)
+        
+        # Check vaccination stats (1 completed on time)
+        vacc = type_stats['VACCINATION']
+        self.assertEqual(vacc['total_count'], 1)
+        self.assertEqual(vacc['completed_count'], 1)
+        self.assertEqual(vacc['on_time_count'], 1)
+    
+    def test_variance_report_returns_time_series(self):
+        """CRITICAL: Variance report must include time series data."""
+        url = self._get_list_action_url('variance-report',
+                                        {'scenario': self.scenario.scenario_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('time_series', response.data)
+        
+        # Should have at least one time period
+        self.assertTrue(len(response.data['time_series']) > 0)
+        
+        # Each period should have required fields
+        for period in response.data['time_series']:
+            self.assertIn('period', period)
+            self.assertIn('total_due', period)
+            self.assertIn('completed', period)
+            self.assertIn('on_time', period)
+            self.assertIn('late', period)
+    
+    def test_variance_report_include_details(self):
+        """API must include activity details when include_details=true."""
+        url = self._get_list_action_url('variance-report', {
+            'scenario': self.scenario.scenario_id,
+            'include_details': 'true'
+        })
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('activities', response.data)
+        self.assertEqual(len(response.data['activities']), 6)
+        
+        # Check activity details structure
+        activity = response.data['activities'][0]
+        self.assertIn('id', activity)
+        self.assertIn('batch_number', activity)
+        self.assertIn('activity_type', activity)
+        self.assertIn('variance_days', activity)
+        self.assertIn('is_on_time', activity)
+    
+    def test_variance_report_without_details_by_default(self):
+        """API must not include activity details by default."""
+        url = self._get_list_action_url('variance-report',
+                                        {'scenario': self.scenario.scenario_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('activities', response.data)
+    
+    def test_variance_report_filters_by_date_range(self):
+        """API must filter activities by date range."""
+        today = timezone.now().date()
+        
+        url = self._get_list_action_url('variance-report', {
+            'scenario': self.scenario.scenario_id,
+            'due_date_after': (today - timedelta(days=15)).isoformat(),
+            'due_date_before': (today - timedelta(days=1)).isoformat()
+        })
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should only include activities within the date range
+        self.assertLess(response.data['summary']['total_activities'], 6)
+    
+    def test_variance_report_filters_by_activity_type(self):
+        """API must filter by activity type."""
+        url = self._get_list_action_url('variance-report', {
+            'scenario': self.scenario.scenario_id,
+            'activity_type': 'VACCINATION'
+        })
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['total_activities'], 1)
+    
+    def test_variance_report_week_grouping(self):
+        """API must support weekly time series grouping."""
+        url = self._get_list_action_url('variance-report', {
+            'scenario': self.scenario.scenario_id,
+            'group_by': 'week'
+        })
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Weekly periods should use ISO week format
+        for period in response.data['time_series']:
+            self.assertIn('-W', period['period'])
+    
+    def test_variance_report_on_time_rate_calculation(self):
+        """API must correctly calculate on-time rate."""
+        url = self._get_list_action_url('variance-report',
+                                        {'scenario': self.scenario.scenario_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # We have 3 completed: 1 on-time, 1 early (-3), 1 late (+5)
+        # On-time rate = (on_time + early) / total_completed * 100 = 2/3 * 100 = 66.7%
+        summary = response.data['summary']
+        self.assertEqual(summary['on_time_activities'], 2)  # on-time + early
+        self.assertEqual(summary['late_activities'], 1)
+        self.assertGreater(summary['overall_on_time_rate'], 60)  # ~66.7%
+
+
 class WorkflowCompletionSyncTest(BaseAPITestCase):
     """Test workflow completion synchronization with planned activities."""
     

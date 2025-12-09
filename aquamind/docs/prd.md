@@ -944,6 +944,38 @@ The Operational Scheduling feature comprises interconnected components for activ
     - API provides filtering by overdue status for KPI dashboard integration.
   - **Data Requirements:** Due date, completion timestamp, completed by user attribution.
 
+- **Variance Report API**  
+  - **Description:** Dedicated API endpoint for comprehensive variance analysis with aggregated statistics, activity type breakdowns, and time series data.  
+  - **Specifications:**  
+    - **Endpoint:** `GET /api/v1/planning/planned-activities/variance-report/`
+    - **Query Parameters:**
+      - `scenario` (integer): Filter by scenario ID
+      - `due_date_after` (date): Include activities due on or after this date
+      - `due_date_before` (date): Include activities due on or before this date
+      - `activity_type` (string): Filter by specific activity type (e.g., VACCINATION, TRANSFER)
+      - `grouping` (string): Time series aggregation period ('weekly' or 'monthly', default: 'weekly')
+    - **Response Structure:**
+      - `summary`: Aggregate counts (total_activities, completed_activities, pending_activities, cancelled_activities, overdue_activities), completion_rate_percent, on_time_rate_percent, average_variance_days, late_count, early_count
+      - `by_activity_type`: Array of activity type statistics including type, total, completed, pending, completion_rate, average_variance_days
+      - `time_series`: Array of time-bucketed data with period_start, period_end, completed_count, pending_count, completion_rate
+    - Variance calculation: Days between due_date and completed_at (negative = early, 0 = on-time, positive = late)
+    - Supports scenario-level, date-range, and activity-type filtering for targeted analysis
+  - **Data Requirements:** Scenario ID (optional), date range parameters, activity type filter, grouping preference.
+
+- **Variance Report Dashboard**  
+  - **Description:** Frontend dashboard for visualizing variance analysis with KPI metrics, charts, and filtering controls.  
+  - **Specifications:**  
+    - **Route:** `/variance-report`
+    - **KPI Cards:** Total activities, completion rate percentage, on-time rate percentage, overdue count
+    - **Charts:**
+      - Completion rates by activity type (bar chart)
+      - Variance distribution showing early/on-time/late counts (bar chart)
+      - Performance over time with completed vs pending trends (line chart)
+    - **Statistics Table:** Detailed breakdown by activity type with completion rates and variance metrics
+    - **Filter Controls:** Activity type dropdown, date range pickers, time grouping selector (weekly/monthly)
+    - Navigation accessible from Production Planner page via "Variance Report" button
+  - **Data Requirements:** Real-time API integration with variance-report endpoint.
+
 - **Cross-Batch Visibility**  
   - **Description:** Unified timeline view of all planned activities across 50-60 active batches for comprehensive operational awareness.  
   - **Specifications:**  
@@ -1024,6 +1056,27 @@ Operational scheduling addresses critical visibility gaps in managing 50-60 conc
     - Activities sortable by due date to prioritize most urgent tasks.
     - Mark multiple activities as completed to clear overdue backlog.
     - Historical audit trail shows when activities became overdue and completion patterns.
+
+- **User Story 7: Variance Analysis Dashboard**  
+  **As a Farm Manager, I want to view variance reports comparing planned vs. actual activity execution so that I can identify operational inefficiencies and improve future planning accuracy.**  
+  - **Acceptance Criteria:**  
+    - Variance Report page displays KPI cards showing total activities, completion rate, on-time rate, and overdue count.
+    - Bar chart visualizes completion rates by activity type for quick performance comparison.
+    - Time series chart shows completed vs. pending activity trends over weeks or months.
+    - Filter controls allow narrowing analysis by activity type, date range, and time grouping.
+    - Statistics table provides detailed breakdown per activity type with variance metrics.
+    - Navigation link from Production Planner provides quick access to variance analysis.
+
+- **User Story 8: Template Management for Standard Procedures**  
+  **As a Production Planner, I want to manage activity templates through a dedicated interface so that I can define, edit, and maintain standard operational procedures without technical assistance.**  
+  - **Acceptance Criteria:**  
+    - Template Management page lists all templates with name, activity type, trigger type, and status.
+    - Create new templates via form dialog specifying name, activity type, trigger configuration, and notes template.
+    - Edit existing templates to update trigger parameters or notes without affecting already-generated activities.
+    - Activate or deactivate templates to control which apply to new batches.
+    - Delete unused templates with confirmation dialog.
+    - Filter templates by status (active/inactive) and activity type for focused management.
+    - KPI cards display total, active, and inactive template counts.
 
 **Additional Considerations**  
 - **Scalability:** Support hundreds of planned activities across 50-60 active batches with optimized indexing on scenario, batch, due date, and status fields for sub-second query performance.

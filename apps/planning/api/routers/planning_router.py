@@ -9,3 +9,7 @@ router.register(r'planned-activities', PlannedActivityViewSet, basename='planned
 router.register(r'activity-templates', ActivityTemplateViewSet, basename='activity-template')
 
 
+
+
+
+

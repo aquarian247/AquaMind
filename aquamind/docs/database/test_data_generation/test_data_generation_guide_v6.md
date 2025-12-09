@@ -1,7 +1,7 @@
-# AquaMind Test Data Generation Guide v6.2
+# AquaMind Test Data Generation Guide v6.3
 
-**Last Updated:** 2025-11-25
-**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling + Optimized Growth Analysis**
+**Last Updated:** 2025-12-03
+**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling + Optimized Growth Analysis + Planned Activities**
 
 **⚠️ THIS IS THE SINGLE SOURCE OF TRUTH FOR TEST DATA GENERATION**
 
@@ -28,6 +28,7 @@ cd /Users/aquarian247/Projects/AquaMind
 python scripts/data_generation/01_initialize_scenario_master_data.py
 python scripts/data_generation/01_initialize_finance_policies.py
 python scripts/data_generation/01_initialize_health_parameters.py
+python scripts/data_generation/01_initialize_activity_templates.py
 
 # 2. Apply database migrations (includes Growth Analysis performance indexes)
 python manage.py migrate
@@ -49,6 +50,10 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
 # 6. Run Growth Analysis recomputation (8-10 minutes)
 # This computes ActualDailyAssignmentState for all batches - required for Growth Analysis charts
 python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
+
+# 7. Seed Planned Activities for Production Planner (30 seconds)
+# Generates PlannedActivity records across active batches for operational scheduling testing
+python scripts/data_generation/seed_planned_activities.py
 ```
 
 **Expected Results:**
@@ -62,6 +67,7 @@ python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 - **2M+ health parameter scores** (9 per fish)
 - **4,000+ treatments** (vaccinations + lice)
 - **~940K ActualDailyAssignmentState records** (Growth Analysis data)
+- **~1,180 PlannedActivity records** (20 templates × ~59 active batches only)
 - **Finance facts + intercompany transactions**
 - **5.2 years** of operational history
 - **70% infrastructure utilization** (10 rings per batch)
@@ -79,6 +85,9 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/04_batch_orchestrator_paral
 
 # Run Growth Analysis (required for Growth charts to work)
 python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
+
+# Seed Planned Activities (for Production Planner testing)
+python scripts/data_generation/seed_planned_activities.py
 ```
 
 **Expected Results:**
@@ -88,6 +97,7 @@ python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 - **8 million environmental readings**
 - **1.5 million feeding events**
 - **~900K ActualDailyAssignmentState records** (Growth Analysis)
+- **150+ PlannedActivity records** (Production Planner)
 - **15-20 GB database**
 
 ### Option C: Single Batch Verification (15 minutes)
@@ -716,9 +726,11 @@ Actual target: 170 batches (85 per geography)
 | `01_initialize_scenario_master_data.py` | Scenario models + TGC | 30 sec | Once after infrastructure |
 | `01_initialize_finance_policies.py` | Finance policies + DimSite | 30 sec | Once after infrastructure |
 | `01_initialize_health_parameters.py` | Health parameters + scoring | 15 sec | Once after infrastructure |
+| `01_initialize_activity_templates.py` | Activity templates for Production Planner | 15 sec | Once after infrastructure |
 | `03_event_engine_core.py` | Single batch generation | 2-3 min | Core engine (called by orchestrator) |
 | `04_batch_orchestrator_parallel.py` | Multi-batch parallel generation | 45-60 min | Main production data generation |
 | `run_growth_analysis_optimized.py` | Compute ActualDailyAssignmentState | 8-10 min | **REQUIRED** after batch generation |
+| `seed_planned_activities.py` | PlannedActivity from 20 lifecycle templates | 30 sec | After Growth Analysis (uses templates for realistic data) |
 
 ### Supporting Scripts
 

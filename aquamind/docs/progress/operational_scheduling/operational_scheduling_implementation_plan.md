@@ -1152,20 +1152,25 @@ The implementation is divided into three sequential phases:
 
 ---
 
-## Phase 2: Frontend Implementation
+## Phase 2: Frontend Implementation ✅ COMPLETE
 
 **Goal**: Create the Production Planner UI with timeline view, filters, and forms.
 
 **Duration**: 3-4 weeks
 
-*This phase is documented in the frontend repository.*
+**Completed**: December 3, 2025
+
+*Detailed documentation in frontend repository: `AquaMind-Frontend/docs/progress/operational_scheduling/`*
 
 **Key Deliverables**:
-- [ ] Production Planner page with KPI dashboard
-- [ ] Timeline/Gantt chart view for planned activities
-- [ ] Create/Edit activity forms
-- [ ] Integration with Batch Detail page (Planned Activities tab)
-- [ ] Integration with Scenario Planning page
+- [x] Production Planner page with KPI dashboard
+- [x] Timeline/Gantt chart view for planned activities (react-calendar-timeline)
+- [x] Create/Edit activity forms (with proper UX for edit mode)
+- [x] Integration with Batch Detail page (Planned Activities tab)
+- [x] Integration with Scenario Planning page (summary with link)
+- [x] Spawn Workflow dialog for TRANSFER activities
+- [x] Batch dropdown pagination (fetches all ~59 active batches)
+- [x] HARVEST activity type added (separate from SALE)
 
 ---
 
@@ -1175,7 +1180,29 @@ The implementation is divided into three sequential phases:
 
 **Duration**: 2-3 weeks
 
-#### Task 3.1: Template Management UI
+#### Task 3.1: Activity Templates & Test Data ✅ COMPLETE
+
+**Objective**: Create activity templates and seed realistic test data.
+
+**Completed**: December 3, 2025
+
+**Deliverables**:
+- [x] Added HARVEST activity type to `PlannedActivity.ACTIVITY_TYPE_CHOICES`
+- [x] Created `01_initialize_activity_templates.py` with 20 realistic lifecycle templates:
+  - 5 TRANSFER templates (Egg/Alevin→Fry, Fry→Parr, Parr→Smolt, Smolt→Post-Smolt, Post-Smolt→Adult)
+  - 1 VACCINATION (pre-smoltification, day 265)
+  - 6 FEED_CHANGE (aligned with feed types: 0.5mm→1.0mm→2.0mm→3.0mm→4.5mm→6.0mm)
+  - 5 SAMPLING (pre-transfer, pre-vaccination, pre-sea, mid-cycle, pre-harvest)
+  - 2 TREATMENT (lice treatments in Adult stage)
+  - 1 HARVEST (day 800, ~5kg target)
+- [x] Updated `seed_planned_activities.py` to use templates for backfilling
+- [x] Only ACTIVE batches get planned activities (completed/harvested batches excluded)
+- [x] Updated `test_data_generation_guide_v6.md` with Step 7
+- [x] **Result**: 1,180 PlannedActivity records (20 templates × 59 active batches)
+
+---
+
+#### Task 3.2: Template Management UI 🔜 FUTURE
 
 **Objective**: Create UI for managing activity templates.
 
@@ -1188,20 +1215,33 @@ The implementation is divided into three sequential phases:
 
 ---
 
-#### Task 3.2: Variance Reporting
+#### Task 3.3: Variance Reporting ✅ COMPLETE (2025-12-05)
 
 **Objective**: Create reports comparing planned vs. actual execution.
 
 **Steps**:
-1. Add API endpoint for variance analysis
-2. Create Variance Report page
-3. Implement charts (planned vs. actual dates, completion rates)
+1. ✅ Add API endpoint for variance analysis (`/api/v1/planning/planned-activities/variance-report/`)
+2. ✅ Create Variance Report page (`/variance-report`)
+3. ✅ Implement charts (completion rates by type, variance distribution, performance over time)
+
+**Implementation Details**:
+- **Backend**:
+  - Created `VarianceReportSerializer` with nested serializers for summary, activity type stats, and time series
+  - Added `variance_report` action to `PlannedActivityViewSet` with comprehensive filtering (scenario, date range, activity type)
+  - OpenAPI schema decorators for full API documentation
+  - 9 unit tests covering all variance report functionality
+- **Frontend**:
+  - `VarianceReportPage` with KPI dashboard, filters panel, and multiple charts
+  - Recharts-based visualizations: bar charts and line charts
+  - Activity type details table with color-coded performance indicators
+  - Navigation link from Production Planner page
 
 **Estimated Time**: 1 week
+**Actual Time**: 1 session (backend + frontend complete)
 
 ---
 
-#### Task 3.3: Mobile Optimization
+#### Task 3.4: Mobile Optimization 🔜 FUTURE
 
 **Objective**: Optimize UI for mobile devices (marking activities as completed in the field).
 

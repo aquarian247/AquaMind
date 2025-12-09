@@ -25804,10 +25804,11 @@ paths:
         name: activity_type
         schema:
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           enum:
           - CULL
           - FEED_CHANGE
+          - HARVEST
           - MAINTENANCE
           - OTHER
           - SALE
@@ -25821,7 +25822,8 @@ paths:
           * `VACCINATION` - Vaccination
           * `TREATMENT` - Treatment/Health Intervention
           * `CULL` - Culling
-          * `SALE` - Sale/Harvest
+          * `HARVEST` - Harvest
+          * `SALE` - Sale/Commercial Handoff
           * `FEED_CHANGE` - Feed Strategy Change
           * `TRANSFER` - Transfer
           * `MAINTENANCE` - Maintenance
@@ -26129,10 +26131,11 @@ paths:
         name: activity_type
         schema:
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           enum:
           - CULL
           - FEED_CHANGE
+          - HARVEST
           - MAINTENANCE
           - OTHER
           - SALE
@@ -26146,7 +26149,8 @@ paths:
           * `VACCINATION` - Vaccination
           * `TREATMENT` - Treatment/Health Intervention
           * `CULL` - Culling
-          * `SALE` - Sale/Harvest
+          * `HARVEST` - Harvest
+          * `SALE` - Sale/Commercial Handoff
           * `FEED_CHANGE` - Feed Strategy Change
           * `TRANSFER` - Transfer
           * `MAINTENANCE` - Maintenance
@@ -26508,6 +26512,79 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
+  /api/v1/planning/planned-activities/variance-report/:
+    get:
+      operationId: api_v1_planning_planned_activities_variance_report_retrieve
+      description: Generate variance report comparing planned vs actual activity execution.
+      parameters:
+      - in: query
+        name: activity_type
+        schema:
+          type: string
+          enum:
+          - CULL
+          - FEED_CHANGE
+          - HARVEST
+          - MAINTENANCE
+          - OTHER
+          - SALE
+          - SAMPLING
+          - TRANSFER
+          - TREATMENT
+          - VACCINATION
+        description: Filter by activity type
+      - in: query
+        name: due_date_after
+        schema:
+          type: string
+          format: date
+        description: Filter activities due on or after this date (YYYY-MM-DD)
+      - in: query
+        name: due_date_before
+        schema:
+          type: string
+          format: date
+        description: Filter activities due on or before this date (YYYY-MM-DD)
+      - in: query
+        name: group_by
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: 'Time series grouping: "month" or "week"'
+      - in: query
+        name: include_details
+        schema:
+          type: boolean
+          default: false
+        description: Include individual activity details in response
+      - in: query
+        name: scenario
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by scenario ID
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VarianceReport'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: api_v1_scenario_biological_constraints_list
@@ -29778,6 +29855,7 @@ components:
           - VACCINATION
           - TREATMENT
           - CULL
+          - HARVEST
           - SALE
           - FEED_CHANGE
           - TRANSFER
@@ -29785,14 +29863,15 @@ components:
           - SAMPLING
           - OTHER
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           description: |-
             Type of activity to generate
 
             * `VACCINATION` - Vaccination
             * `TREATMENT` - Treatment/Health Intervention
             * `CULL` - Culling
-            * `SALE` - Sale/Harvest
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
             * `FEED_CHANGE` - Feed Strategy Change
             * `TRANSFER` - Transfer
             * `MAINTENANCE` - Maintenance
@@ -29859,6 +29938,131 @@ components:
       - trigger_type
       - trigger_type_display
       - updated_at
+    ActivityTypeStats:
+      type: object
+      description: Serializer for variance statistics grouped by activity type.
+      properties:
+        activity_type:
+          type: string
+        activity_type_display:
+          type: string
+        total_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        pending_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        cancelled_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completion_rate:
+          type: number
+          format: double
+          description: Percentage of activities completed (excluding cancelled)
+        on_time_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        on_time_rate:
+          type: number
+          format: double
+          description: Percentage of completed activities that were on-time or early
+        avg_variance_days:
+          type: number
+          format: double
+          nullable: true
+          description: Average variance in days for completed activities
+        min_variance_days:
+          type: integer
+          nullable: true
+          description: Minimum variance (most early)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        max_variance_days:
+          type: integer
+          nullable: true
+          description: Maximum variance (most late)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - activity_type
+      - activity_type_display
+      - avg_variance_days
+      - cancelled_count
+      - completed_count
+      - completion_rate
+      - early_count
+      - late_count
+      - max_variance_days
+      - min_variance_days
+      - on_time_count
+      - on_time_rate
+      - pending_count
+      - total_count
+    ActivityVarianceItem:
+      type: object
+      description: Serializer for individual activity variance data.
+      properties:
+        id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+        batch_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        activity_type:
+          type: string
+        activity_type_display:
+          type: string
+        due_date:
+          type: string
+          format: date
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+        variance_days:
+          type: integer
+          nullable: true
+          description: Days between due_date and completion. Negative=early, 0=on-time,
+            Positive=late
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        is_on_time:
+          type: boolean
+          nullable: true
+          description: True if completed on or before due_date
+      required:
+      - activity_type
+      - activity_type_display
+      - batch_id
+      - batch_number
+      - completed_at
+      - due_date
+      - id
+      - is_on_time
+      - status
+      - variance_days
     Area:
       type: object
       description: Serializer for the Area model.
@@ -40180,6 +40384,7 @@ components:
           - VACCINATION
           - TREATMENT
           - CULL
+          - HARVEST
           - SALE
           - FEED_CHANGE
           - TRANSFER
@@ -40187,14 +40392,15 @@ components:
           - SAMPLING
           - OTHER
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           description: |-
             Type of activity to generate
 
             * `VACCINATION` - Vaccination
             * `TREATMENT` - Treatment/Health Intervention
             * `CULL` - Culling
-            * `SALE` - Sale/Harvest
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
             * `FEED_CHANGE` - Feed Strategy Change
             * `TRANSFER` - Transfer
             * `MAINTENANCE` - Maintenance
@@ -43561,6 +43767,7 @@ components:
           - VACCINATION
           - TREATMENT
           - CULL
+          - HARVEST
           - SALE
           - FEED_CHANGE
           - TRANSFER
@@ -43568,14 +43775,15 @@ components:
           - SAMPLING
           - OTHER
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           description: |-
             Type of operational activity
 
             * `VACCINATION` - Vaccination
             * `TREATMENT` - Treatment/Health Intervention
             * `CULL` - Culling
-            * `SALE` - Sale/Harvest
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
             * `FEED_CHANGE` - Feed Strategy Change
             * `TRANSFER` - Transfer
             * `MAINTENANCE` - Maintenance
@@ -44731,6 +44939,7 @@ components:
           - VACCINATION
           - TREATMENT
           - CULL
+          - HARVEST
           - SALE
           - FEED_CHANGE
           - TRANSFER
@@ -44738,14 +44947,15 @@ components:
           - SAMPLING
           - OTHER
           type: string
-          x-spec-enum-id: 49a2271efbe030ee
+          x-spec-enum-id: f708e2744b31c829
           description: |-
             Type of operational activity
 
             * `VACCINATION` - Vaccination
             * `TREATMENT` - Treatment/Health Intervention
             * `CULL` - Culling
-            * `SALE` - Sale/Harvest
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
             * `FEED_CHANGE` - Feed Strategy Change
             * `TRANSFER` - Transfer
             * `MAINTENANCE` - Maintenance
@@ -47091,6 +47301,161 @@ components:
       - id
       - manufacturer
       - name
+    VarianceReport:
+      type: object
+      description: |-
+        Main serializer for the complete variance report response.
+
+        Contains summary statistics, per-activity-type breakdown,
+        time series data, and optionally individual activity details.
+      properties:
+        report_generated_at:
+          type: string
+          format: date-time
+        scenario_id:
+          type: integer
+          nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          nullable: true
+        date_range_start:
+          type: string
+          format: date
+          nullable: true
+        date_range_end:
+          type: string
+          format: date
+          nullable: true
+        summary:
+          $ref: '#/components/schemas/VarianceReportSummary'
+        by_activity_type:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityTypeStats'
+        time_series:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianceTimeSeriesItem'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityVarianceItem'
+          description: Individual activity details (only included if include_details=true)
+      required:
+      - by_activity_type
+      - date_range_end
+      - date_range_start
+      - report_generated_at
+      - scenario_id
+      - scenario_name
+      - summary
+      - time_series
+    VarianceReportSummary:
+      type: object
+      description: Serializer for overall variance report summary.
+      properties:
+        total_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        pending_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        cancelled_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overdue_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overall_completion_rate:
+          type: number
+          format: double
+          description: Percentage of total activities completed
+        on_time_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overall_on_time_rate:
+          type: number
+          format: double
+          description: Percentage of completed activities that were on-time or early
+        avg_variance_days:
+          type: number
+          format: double
+          nullable: true
+          description: Average variance in days across all completed activities
+      required:
+      - avg_variance_days
+      - cancelled_activities
+      - completed_activities
+      - early_activities
+      - late_activities
+      - on_time_activities
+      - overall_completion_rate
+      - overall_on_time_rate
+      - overdue_activities
+      - pending_activities
+      - total_activities
+    VarianceTimeSeriesItem:
+      type: object
+      description: Serializer for time series variance data point.
+      properties:
+        period:
+          type: string
+          description: Period identifier (e.g., '2025-01' for month, '2025-W01' for
+            week)
+        total_due:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        on_time:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completion_rate:
+          type: number
+          format: double
+        on_time_rate:
+          type: number
+          format: double
+      required:
+      - completed
+      - completion_rate
+      - early
+      - late
+      - on_time
+      - on_time_rate
+      - period
+      - total_due
     WeatherData:
       type: object
       description: |-

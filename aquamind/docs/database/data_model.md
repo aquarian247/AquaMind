@@ -1713,6 +1713,7 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - `DELETE /api/v1/planning/planned-activities/{id}/` - Delete activity
 - `POST /api/v1/planning/planned-activities/{id}/mark-completed/` - Mark as completed (mobile-friendly)
 - `POST /api/v1/planning/planned-activities/{id}/spawn-workflow/` - Create Transfer Workflow from TRANSFER activity
+- `GET /api/v1/planning/planned-activities/variance-report/` - Variance analysis with summary statistics, activity type breakdown, and time series data (supports scenario, date range, activity_type, and grouping filters)
 
 **ActivityTemplate Operations:**
 - `GET /api/v1/planning/activity-templates/` - List templates
