@@ -446,17 +446,18 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
             ).first()
             
             if projection:
-                projected_weight_g = float(projection.avg_weight_g) if projection.avg_weight_g else None
-                projected_population = projection.population if hasattr(projection, 'population') else None
-                projected_biomass_kg = float(projection.biomass_kg) if hasattr(projection, 'biomass_kg') and projection.biomass_kg else None
-                day_number = projection.day_number if hasattr(projection, 'day_number') else None
+                # Use 'is not None' checks - truthy checks would incorrectly treat 0 as missing
+                projected_weight_g = float(projection.avg_weight_g) if projection.avg_weight_g is not None else None
+                projected_population = projection.population if hasattr(projection, 'population') and projection.population is not None else None
+                projected_biomass_kg = float(projection.biomass_kg) if hasattr(projection, 'biomass_kg') and projection.biomass_kg is not None else None
+                day_number = projection.day_number if hasattr(projection, 'day_number') and projection.day_number is not None else None
         except Exception as e:
             # Log but continue - projection data is optional
             pass
         
-        # Build rationale string
-        if projected_weight_g:
-            if day_number:
+        # Build rationale string (use 'is not None' - 0 is a valid weight)
+        if projected_weight_g is not None:
+            if day_number is not None:
                 rationale = (
                     f"From {activity.scenario.name}: "
                     f"Day {day_number}, projected {projected_weight_g:.1f}g"
