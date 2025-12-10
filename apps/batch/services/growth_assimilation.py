@@ -620,6 +620,8 @@ class GrowthAssimilationEngine:
         new_biomass = (new_population * new_weight) / 1000  # Convert to kg
         
         # Step 9: Calculate observed FCR (if feed and growth occurred)
+        # FCR = Feed Conversion Ratio = total_feed_kg / biomass_gain_kg
+        # Good aquaculture FCR ranges: 0.8-2.5 (typical salmon: 1.0-1.3)
         observed_fcr = None
         biomass_gain = new_biomass - float(prev_biomass)  # Ensure float for calculation
         
@@ -629,6 +631,14 @@ class GrowthAssimilationEngine:
         
         if feed_kg > 0 and biomass_gain > MIN_BIOMASS_GAIN_FOR_FCR:
             observed_fcr = feed_kg / biomass_gain
+            
+            # Validation warning at FCR > 3.0 (unusually high)
+            if observed_fcr > 3.0:
+                logger.warning(
+                    f"High FCR={observed_fcr:.2f} on {current_date} "
+                    f"(feed={feed_kg}kg, gain={biomass_gain:.3f}kg) - check feed data"
+                )
+            
             # Cap absurdly high FCR values (data quality issues)
             if observed_fcr > 10.0:
                 logger.warning(
@@ -636,11 +646,23 @@ class GrowthAssimilationEngine:
                     f"(feed={feed_kg}kg, gain={biomass_gain:.3f}kg) - capping at 10.0"
                 )
                 observed_fcr = 10.0
-            sources['fcr'] = 'observed'
-        elif biomass_gain > MIN_BIOMASS_GAIN_FOR_FCR:
-            # Use model FCR
-            # Note: Will need to access FCRModel - defer to refinement
-            sources['fcr'] = 'model'
+            
+            sources['fcr'] = 'calculated'
+            confidence['fcr'] = min(feed_confidence, 0.9)  # FCR confidence based on feed data quality
+        elif feed_kg == 0 and biomass_gain > MIN_BIOMASS_GAIN_FOR_FCR:
+            # No feeding events recorded - insufficient data for FCR
+            # FALLBACK: Set FCR to None with 'insufficient_data' source
+            # This prevents NaN in variance calculations
+            sources['fcr'] = 'insufficient_data'
+            confidence['fcr'] = 0.0
+            logger.debug(
+                f"No feeding data on {current_date} for assignment {self.assignment.id} - "
+                f"FCR set to None (insufficient_data)"
+            )
+        elif biomass_gain <= MIN_BIOMASS_GAIN_FOR_FCR:
+            # Biomass gain too small to calculate meaningful FCR
+            sources['fcr'] = 'insufficient_data'
+            confidence['fcr'] = 0.0
         
         # Step 10: Check for stage transition
         new_stage = self._determine_stage_transition(new_weight, current_stage)
@@ -684,27 +706,326 @@ class GrowthAssimilationEngine:
         """
         Evaluate if this state should trigger Production Planner activities.
         
-        This is an integration hook for Phase 8. Currently logs potential triggers.
-        
-        In Phase 8, this will:
+        Phase 8 Implementation:
         - Check ActivityTemplates with WEIGHT_THRESHOLD trigger type
         - Check ActivityTemplates with STAGE_TRANSITION trigger type  
         - Auto-generate PlannedActivities when conditions are met
-        - Call planner API endpoint: POST /activity-templates/{id}/generate-for-batch/
+        - Deduplication prevents duplicate activities for same batch/template/date window
         
         Args:
             state_data: Computed state data for the day
         """
-        # Phase 3: Stub implementation with logging
         avg_weight = float(state_data['avg_weight_g'])
         lifecycle_stage = state_data['lifecycle_stage']
+        current_date = state_data['date']
         
-        # Log potential weight-based triggers
-        # TODO Phase 8: Query ActivityTemplate.objects.filter(trigger_type='WEIGHT_THRESHOLD')
+        stage_name = lifecycle_stage.name if lifecycle_stage else 'unknown'
         logger.debug(
-            f"Planner hook: weight={avg_weight}g, stage={lifecycle_stage.name} "
-            f"(Phase 8: check for template triggers)"
+            f"Evaluating planner triggers for batch {self.batch.batch_number}: "
+            f"weight={avg_weight}g, stage={stage_name}"
         )
+        
+        # Get scenario for activity generation
+        scenario = self._get_scenario_for_triggers()
+        if not scenario:
+            logger.debug(f"No scenario available for batch {self.batch.batch_number} - skipping triggers")
+            return
+        
+        # Evaluate WEIGHT_THRESHOLD templates
+        self._evaluate_weight_triggers(avg_weight, current_date, scenario)
+        
+        # Evaluate STAGE_TRANSITION templates
+        self._evaluate_stage_triggers(lifecycle_stage, current_date, scenario)
+        
+        # OPTIONAL: Evaluate broodstock resilience triggers
+        # Uses disease_resistance trait priority as proxy for genetic resilience
+        self._evaluate_broodstock_triggers(current_date, scenario)
+    
+    def _get_scenario_for_triggers(self):
+        """Get scenario to use for generating triggered activities."""
+        try:
+            # Priority: pinned projection run's scenario, then first scenario
+            if self.batch.pinned_projection_run:
+                return self.batch.pinned_projection_run.scenario
+            return self.batch.scenarios.first()
+        except Exception as e:
+            logger.warning(f"Error getting scenario for triggers: {e}")
+            return None
+    
+    def _get_activity_creator(self, scenario):
+        """
+        Get a valid user for PlannedActivity.created_by field.
+        
+        PlannedActivity.created_by is non-nullable, but scenario.created_by
+        can be null (e.g., if original user was deleted). This helper provides
+        fallback options to ensure activity creation doesn't fail.
+        
+        Priority:
+        1. scenario.created_by (if set)
+        2. First superuser
+        3. First active user
+        
+        Args:
+            scenario: The scenario object (may have null created_by)
+            
+        Returns:
+            User instance or None if no valid user found
+        """
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # Priority 1: Use scenario's creator if available
+        if scenario and scenario.created_by:
+            return scenario.created_by
+        
+        # Priority 2: Use first superuser
+        superuser = User.objects.filter(is_superuser=True, is_active=True).first()
+        if superuser:
+            return superuser
+        
+        # Priority 3: Use first active user
+        return User.objects.filter(is_active=True).first()
+    
+    def _evaluate_weight_triggers(self, avg_weight: float, current_date: date, scenario) -> None:
+        """
+        Evaluate WEIGHT_THRESHOLD templates and generate activities if conditions met.
+        
+        Args:
+            avg_weight: Current average weight in grams
+            current_date: Current computation date
+            scenario: Scenario to create activities in
+        """
+        try:
+            from apps.planning.models import ActivityTemplate, PlannedActivity
+            
+            # Query active weight-threshold templates
+            templates = ActivityTemplate.objects.filter(
+                trigger_type='WEIGHT_THRESHOLD',
+                is_active=True,
+                weight_threshold_g__isnull=False
+            )
+            
+            for template in templates:
+                threshold = float(template.weight_threshold_g)
+                
+                # Check if weight crosses threshold
+                if avg_weight >= threshold:
+                    # Deduplication: Check if activity from THIS TEMPLATE already exists for this batch
+                    # Use template ID in notes for exact matching (avoids substring false positives)
+                    # No date window - weight threshold should only fire ONCE per batch per template
+                    template_marker = f"[TemplateID:{template.id}]"
+                    existing = PlannedActivity.objects.filter(
+                        batch=self.batch,
+                        notes__contains=template_marker  # Exact template ID match
+                    ).exists()
+                    
+                    if not existing:
+                        logger.info(
+                            f"Weight trigger fired: batch={self.batch.batch_number}, "
+                            f"template={template.name}, weight={avg_weight}g >= {threshold}g"
+                        )
+                        
+                        # Generate activity
+                        try:
+                            activity = template.generate_activity(
+                                scenario=scenario,
+                                batch=self.batch,
+                                override_due_date=current_date
+                            )
+                            # Update notes with template ID for exact deduplication tracking
+                            activity.notes = f"{template_marker} [Auto-triggered: {template.name}] {activity.notes or ''}"
+                            activity.save()
+                            
+                            logger.info(f"Generated PlannedActivity {activity.id} from template {template.name}")
+                        except Exception as e:
+                            logger.error(f"Error generating activity from template {template.name}: {e}")
+                    else:
+                        logger.debug(
+                            f"Skipping duplicate: activity already exists for "
+                            f"batch={self.batch.batch_number}, template={template.name} (ID:{template.id})"
+                        )
+                        
+        except ImportError:
+            logger.debug("Planning app not available - skipping weight triggers")
+        except Exception as e:
+            logger.error(f"Error evaluating weight triggers: {e}")
+    
+    def _evaluate_stage_triggers(self, lifecycle_stage, current_date: date, scenario) -> None:
+        """
+        Evaluate STAGE_TRANSITION templates and generate activities if conditions met.
+        
+        Args:
+            lifecycle_stage: Current lifecycle stage
+            current_date: Current computation date
+            scenario: Scenario to create activities in
+        """
+        try:
+            from apps.planning.models import ActivityTemplate, PlannedActivity
+            
+            # Query active stage-transition templates
+            templates = ActivityTemplate.objects.filter(
+                trigger_type='STAGE_TRANSITION',
+                is_active=True,
+                target_lifecycle_stage__isnull=False
+            )
+            
+            for template in templates:
+                # Check if current stage matches target stage
+                if lifecycle_stage and template.target_lifecycle_stage_id == lifecycle_stage.id:
+                    # Deduplication: Check if activity from THIS TEMPLATE already exists for this batch
+                    # Use template ID in notes for exact matching (avoids substring false positives)
+                    # No date window - stage transition should only fire ONCE per batch per template
+                    template_marker = f"[TemplateID:{template.id}]"
+                    existing = PlannedActivity.objects.filter(
+                        batch=self.batch,
+                        notes__contains=template_marker  # Exact template ID match
+                    ).exists()
+                    
+                    if not existing:
+                        logger.info(
+                            f"Stage trigger fired: batch={self.batch.batch_number}, "
+                            f"template={template.name}, stage={lifecycle_stage.name}"
+                        )
+                        
+                        # Generate activity
+                        try:
+                            activity = template.generate_activity(
+                                scenario=scenario,
+                                batch=self.batch,
+                                override_due_date=current_date
+                            )
+                            # Update notes with template ID for exact deduplication tracking
+                            activity.notes = f"{template_marker} [Auto-triggered: {template.name}] {activity.notes or ''}"
+                            activity.save()
+                            
+                            logger.info(f"Generated PlannedActivity {activity.id} from template {template.name}")
+                        except Exception as e:
+                            logger.error(f"Error generating activity from template {template.name}: {e}")
+                    else:
+                        logger.debug(
+                            f"Skipping duplicate: activity already exists for "
+                            f"batch={self.batch.batch_number}, template={template.name} (ID:{template.id})"
+                        )
+                        
+        except ImportError:
+            logger.debug("Planning app not available - skipping stage triggers")
+        except Exception as e:
+            logger.error(f"Error evaluating stage triggers: {e}")
+    
+    def _evaluate_broodstock_triggers(self, current_date: date, scenario) -> None:
+        """
+        OPTIONAL: Evaluate broodstock resilience and suggest TREATMENT activities.
+        
+        Uses existing BreedingTraitPriority.disease_resistance as a proxy for
+        genetic resilience. Batches with low disease_resistance priority weight
+        (<0.5) may benefit from proactive treatment planning.
+        
+        This is an OPTIONAL feature - gracefully skips if broodstock app is not
+        installed or if batch has no parentage data.
+        
+        Args:
+            current_date: Current computation date
+            scenario: Scenario to create activities in
+        """
+        try:
+            from apps.broodstock.models import BatchParentage, BreedingTraitPriority
+            from apps.planning.models import PlannedActivity
+            
+            # Find parentage for this batch
+            parentage = BatchParentage.objects.filter(batch=self.batch).first()
+            
+            if not parentage:
+                logger.debug(
+                    f"No parentage data for batch {self.batch.batch_number} - "
+                    "skipping broodstock triggers"
+                )
+                return
+            
+            # Check if egg production has a breeding pair
+            if not parentage.egg_production or not parentage.egg_production.pair:
+                logger.debug(
+                    f"No breeding pair for batch {self.batch.batch_number} - "
+                    "skipping broodstock triggers"
+                )
+                return
+            
+            # Get the breeding plan
+            breeding_pair = parentage.egg_production.pair
+            plan = breeding_pair.plan
+            
+            # Query disease_resistance trait priority
+            disease_priority = BreedingTraitPriority.objects.filter(
+                plan=plan,
+                trait_name='disease_resistance'
+            ).first()
+            
+            if not disease_priority:
+                # No trait priority found - soft note for debugging
+                logger.debug(
+                    f"No disease_resistance trait priority for batch {self.batch.batch_number} - "
+                    "skipping genetic trigger"
+                )
+                return
+            
+            # Check if resilience is low (priority weight < 0.5)
+            RESILIENCE_THRESHOLD = 0.5
+            if disease_priority.priority_weight < RESILIENCE_THRESHOLD:
+                logger.info(
+                    f"Low resilience detected for batch {self.batch.batch_number} "
+                    f"(disease_resistance={disease_priority.priority_weight})"
+                )
+                
+                # Deduplication: Check if treatment activity already exists
+                existing = PlannedActivity.objects.filter(
+                    scenario=scenario,
+                    batch=self.batch,
+                    activity_type='TREATMENT',
+                    notes__contains='Genetic low-resilience alert',
+                    due_date__gte=current_date - timedelta(days=30),
+                    due_date__lte=current_date + timedelta(days=30)
+                ).exists()
+                
+                if not existing:
+                    # Get a valid user for created_by (scenario.created_by may be null)
+                    created_by = self._get_activity_creator(scenario)
+                    if not created_by:
+                        logger.warning(
+                            f"Cannot create activity for batch {self.batch.batch_number}: "
+                            "no valid user found for created_by"
+                        )
+                        return
+                    
+                    # Create TREATMENT activity suggestion
+                    activity = PlannedActivity.objects.create(
+                        scenario=scenario,
+                        batch=self.batch,
+                        activity_type='TREATMENT',
+                        due_date=current_date + timedelta(days=7),  # Suggest for 1 week from now
+                        status='PENDING',
+                        notes=(
+                            f"[Genetic low-resilience alert] "
+                            f"Batch from breeding pair with low disease_resistance "
+                            f"({disease_priority.priority_weight:.2f}). "
+                            f"Consider proactive treatment protocol."
+                        ),
+                        created_by=created_by
+                    )
+                    logger.info(
+                        f"Generated TREATMENT activity {activity.id} for low-resilience batch "
+                        f"{self.batch.batch_number}"
+                    )
+                else:
+                    logger.debug(
+                        f"Skipping duplicate: resilience treatment activity already exists for "
+                        f"batch={self.batch.batch_number}"
+                    )
+        
+        except ImportError:
+            # Broodstock app not installed - skip gracefully
+            pass
+        except Exception as e:
+            # Log but don't fail - this is an optional feature
+            logger.debug(f"Error evaluating broodstock triggers: {e}")
     
     def _get_temperature(self, date: date) -> Tuple[Optional[float], str, float]:
         """

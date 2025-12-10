@@ -33,6 +33,30 @@ class PlannedActivitySerializer(serializers.ModelSerializer):
         read_only=True
     )
     
+    def __init__(self, *args, **kwargs):
+        """Initialize and make scenario optional for create operations only."""
+        super().__init__(*args, **kwargs)
+        # Make scenario optional for CREATE only - will be auto-assigned if not provided (Edge Guard)
+        # For UPDATE operations, scenario must remain set (validated in validate_scenario)
+        if 'scenario' in self.fields:
+            self.fields['scenario'].required = False
+            self.fields['scenario'].allow_null = True
+    
+    def validate_scenario(self, value):
+        """
+        Validate scenario field.
+        
+        - CREATE: Allow null (will be auto-assigned in create())
+        - UPDATE: Reject null (scenario FK is non-nullable at DB level)
+        """
+        # On update operations, scenario cannot be set to null
+        if self.instance is not None and value is None:
+            raise serializers.ValidationError(
+                "Cannot set scenario to null on an existing activity. "
+                "Scenario is required for all planned activities."
+            )
+        return value
+    
     class Meta:
         model = PlannedActivity
         fields = [
@@ -82,7 +106,25 @@ class PlannedActivitySerializer(serializers.ModelSerializer):
         return None
     
     def create(self, validated_data):
-        """Override create to set created_by from request user."""
+        """
+        Override create to set created_by and auto-assign scenario if missing.
+        
+        Edge Guard pattern: If no scenario is provided, automatically assign
+        the batch's baseline scenario to prevent "ghost plans" (activities
+        without scenario context).
+        """
         validated_data['created_by'] = self.context['request'].user
+        
+        # Edge Guard: Auto-assign scenario if not provided
+        if 'scenario' not in validated_data or validated_data.get('scenario') is None:
+            batch = validated_data.get('batch')
+            if batch:
+                try:
+                    validated_data['scenario'] = batch.get_baseline_scenario()
+                except ValueError as e:
+                    raise serializers.ValidationError({
+                        'scenario': str(e)
+                    })
+        
         return super().create(validated_data)
 

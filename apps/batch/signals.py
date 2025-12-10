@@ -30,7 +30,27 @@ from apps.batch.models import (
 
 logger = logging.getLogger(__name__)
 
-# Check if Celery signals should be skipped (test data generation mode)
+
+def _should_skip_celery_signals():
+    """
+    Check if Celery signals should be skipped.
+    
+    Supports both environment variable (for scripts) and Django settings (for tests).
+    This function is called each time to support @override_settings in tests.
+    
+    Returns:
+        bool: True if signals should be skipped
+    """
+    # Check environment variable first (for data generation scripts)
+    if os.environ.get('SKIP_CELERY_SIGNALS') == '1':
+        return True
+    
+    # Check Django settings (for @override_settings in tests)
+    from django.conf import settings
+    return getattr(settings, 'SKIP_CELERY_SIGNALS', False) == '1'
+
+
+# Legacy constant for backwards compatibility (use _should_skip_celery_signals() instead)
 SKIP_CELERY_SIGNALS = os.environ.get('SKIP_CELERY_SIGNALS') == '1'
 
 
@@ -147,7 +167,7 @@ def on_growth_sample_saved(sender, instance, created, **kwargs):
         **kwargs: Additional signal arguments
     """
     # Skip during test data generation (env var check)
-    if SKIP_CELERY_SIGNALS:
+    if _should_skip_celery_signals():
         return
     
     if not created:
@@ -211,7 +231,7 @@ def on_transfer_completed(sender, instance, created, **kwargs):
         **kwargs: Additional signal arguments
     """
     # Skip during test data generation (env var check)
-    if SKIP_CELERY_SIGNALS:
+    if _should_skip_celery_signals():
         return
     
     # Check if this transfer has measured weight
@@ -300,7 +320,7 @@ def on_mortality_event(sender, instance, created, **kwargs):
         **kwargs: Additional signal arguments
     """
     # Skip during test data generation (env var check)
-    if SKIP_CELERY_SIGNALS:
+    if _should_skip_celery_signals():
         return
     
     if not created:
@@ -338,3 +358,127 @@ def on_mortality_event(sender, instance, created, **kwargs):
             f"Could not enqueue batch recompute task after mortality event "
             f"{instance.id}: {e}. Normal in test/CI without Redis/Celery."
         )
+
+
+# ------------------------------------------------------------------
+# PlannedActivity Completion Signal (Issue #112 Phase 8)
+# ------------------------------------------------------------------
+
+def on_planned_activity_completed(sender, instance, **kwargs):
+    """
+    Trigger growth assimilation recompute when PlannedActivity is completed.
+    
+    When a PlannedActivity with activity_type in (TRANSFER, VACCINATION, SAMPLING)
+    is marked as COMPLETED, this signal triggers a recompute to anchor the
+    daily state series with any measured weights from the completed activity.
+    
+    Window: [completed_at.date() - 2, completed_at.date() + 2]
+    
+    Bidirectional flow:
+        - Forward: Daily state calculations trigger PlannedActivity creation (via templates)
+        - Backward: Completed PlannedActivities anchor daily state series (this signal)
+    
+    Note: Only triggers when status CHANGES to COMPLETED, not on subsequent saves
+    of an already-completed activity. Uses _original_status tracking from model.
+    
+    Args:
+        sender: PlannedActivity model class
+        instance: The saved PlannedActivity instance
+        **kwargs: Additional signal arguments (created, etc.)
+    """
+    # Skip during test data generation (env var check)
+    if _should_skip_celery_signals():
+        return
+    
+    # Only trigger when status CHANGES to COMPLETED (not on every save of completed activity)
+    # This prevents unnecessary recomputes when editing notes or other fields
+    original_status = getattr(instance, '_original_status', None)
+    status_just_changed_to_completed = (
+        instance.status == 'COMPLETED' and 
+        original_status is not None and 
+        original_status != 'COMPLETED'
+    )
+    
+    # Also trigger for newly created activities that are immediately COMPLETED
+    created = kwargs.get('created', False)
+    newly_created_as_completed = created and instance.status == 'COMPLETED'
+    
+    if not (status_just_changed_to_completed or newly_created_as_completed):
+        logger.debug(
+            f"Skipping recompute for PlannedActivity {instance.id} "
+            f"(status={instance.status}, original={original_status}, created={created})"
+        )
+        return
+    
+    # Only trigger for activity types that can have measured weights
+    ANCHOR_ACTIVITY_TYPES = ['TRANSFER', 'VACCINATION', 'SAMPLING']
+    if instance.activity_type not in ANCHOR_ACTIVITY_TYPES:
+        logger.debug(
+            f"Skipping recompute for PlannedActivity {instance.id} "
+            f"(activity_type={instance.activity_type}, not an anchor type)"
+        )
+        return
+    
+    try:
+        # Import here to avoid circular imports
+        from apps.batch.tasks import enqueue_batch_recompute
+        
+        batch = instance.batch
+        
+        # Use completed_at date, or due_date as fallback
+        # Handle both datetime objects (from DB) and date objects (from tests/manual creation)
+        if instance.completed_at:
+            trigger_date = (
+                instance.completed_at.date() 
+                if hasattr(instance.completed_at, 'date') 
+                else instance.completed_at
+            )
+        else:
+            trigger_date = instance.due_date
+        
+        logger.debug(
+            f"PlannedActivity completed for batch {batch.batch_number} "
+            f"(type={instance.activity_type}, date={trigger_date})"
+        )
+        
+        # Enqueue batch-level recompute task
+        task_id = enqueue_batch_recompute(
+            batch_id=batch.id,
+            trigger_date=trigger_date,
+            window_days=2
+        )
+        
+        logger.info(
+            f"📋 Enqueued growth assimilation task {task_id} for "
+            f"batch {batch.batch_number} after {instance.activity_type} activity "
+            f"completed (window: {trigger_date} ± 2 days)"
+        )
+    except Exception as e:
+        # Gracefully handle Celery/Redis unavailability
+        logger.warning(
+            f"Could not enqueue recompute task after PlannedActivity "
+            f"{instance.id} completion: {e}. Normal in test/CI without Redis/Celery."
+        )
+
+
+def register_planning_signals():
+    """
+    Register signals for the planning app.
+    
+    This function should be called from the batch app's ready() method
+    to avoid import issues. It connects to the PlannedActivity model
+    from the planning app if available.
+    """
+    try:
+        from apps.planning.models import PlannedActivity
+        
+        # Connect the signal handler
+        post_save.connect(
+            on_planned_activity_completed,
+            sender=PlannedActivity,
+            dispatch_uid='planned_activity_completion_recompute'
+        )
+        
+        logger.info("Registered PlannedActivity completion signal for growth assimilation")
+    except ImportError:
+        logger.debug("Planning app not available - skipping PlannedActivity signal registration")

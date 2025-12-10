@@ -124,6 +124,7 @@ class ActualDailyAssignmentState(models.Model):
         ('transfer', 'Transfer with Measured Weight'),
         ('vaccination', 'Vaccination with Weighing'),
         ('manual', 'Manual Admin Anchor'),
+        ('planned_activity', 'Completed Planned Activity'),
     ]
     
     anchor_type = models.CharField(
@@ -132,6 +133,17 @@ class ActualDailyAssignmentState(models.Model):
         null=True,
         blank=True,
         help_text="Type of anchor if this is an anchor point"
+    )
+    
+    # Link to PlannedActivity (Phase 8 integration)
+    # This allows tracking which daily states were anchored by completed activities
+    planned_activity = models.ForeignKey(
+        'planning.PlannedActivity',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='anchored_daily_states',
+        help_text="PlannedActivity that anchored this state (if completed activity provided weights)"
     )
     
     # Provenance (JSON fields for transparency)

@@ -10,3 +10,8 @@ class BatchConfig(AppConfig):
         """Import signal handlers when the app is ready."""
         import apps.batch.services.growth_service  # noqa
         import apps.batch.signals  # noqa - Register batch lifecycle signals
+        
+        # Register PlannedActivity completion signal for growth assimilation
+        # This enables the backward flow: completed activities anchor daily states
+        from apps.batch.signals import register_planning_signals
+        register_planning_signals()

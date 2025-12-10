@@ -412,4 +412,187 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
             })
         
         return time_series
+    
+    @extend_schema(
+        responses={200: dict},
+        description='Get projection preview showing scenario-based rationale for activity due date.'
+    )
+    @action(detail=True, methods=['get'], url_path='projection-preview')
+    def projection_preview(self, request, pk=None):
+        """
+        Return projection rationale for this activity's due date.
+        
+        Joins with scenario projections to show:
+        - Projected weight at the due date
+        - Projected population
+        - Rationale (from scenario and day number)
+        
+        This enables the "Projection Preview" tooltip in the Production Planner UI.
+        """
+        activity = self.get_object()
+        
+        # Get scenario projection for the due date
+        projected_weight_g = None
+        projected_population = None
+        projected_biomass_kg = None
+        day_number = None
+        
+        try:
+            from apps.scenario.models import ProjectionDay
+            projection = ProjectionDay.objects.filter(
+                projection_run__scenario=activity.scenario,
+                batch=activity.batch,
+                day_date=activity.due_date
+            ).first()
+            
+            if projection:
+                projected_weight_g = float(projection.avg_weight_g) if projection.avg_weight_g else None
+                projected_population = projection.population if hasattr(projection, 'population') else None
+                projected_biomass_kg = float(projection.biomass_kg) if hasattr(projection, 'biomass_kg') and projection.biomass_kg else None
+                day_number = projection.day_number if hasattr(projection, 'day_number') else None
+        except Exception as e:
+            # Log but continue - projection data is optional
+            pass
+        
+        # Build rationale string
+        if projected_weight_g:
+            if day_number:
+                rationale = (
+                    f"From {activity.scenario.name}: "
+                    f"Day {day_number}, projected {projected_weight_g:.1f}g"
+                )
+            else:
+                rationale = (
+                    f"From {activity.scenario.name}: "
+                    f"Projected weight {projected_weight_g:.1f}g"
+                )
+        else:
+            rationale = f"Scheduled per {activity.scenario.name}"
+        
+        response_data = {
+            'activity_id': activity.id,
+            'due_date': activity.due_date,
+            'scenario_id': activity.scenario_id,
+            'scenario_name': activity.scenario.name,
+            'projected_weight_g': projected_weight_g,
+            'projected_population': projected_population,
+            'projected_biomass_kg': projected_biomass_kg,
+            'day_number': day_number,
+            'rationale': rationale,
+        }
+        
+        return Response(response_data)
+    
+    @extend_schema(
+        responses={200: dict},
+        description='Get variance-from-actual data for a specific activity by joining with ActualDailyAssignmentState.'
+    )
+    @action(detail=True, methods=['get'], url_path='variance-from-actual')
+    def variance_from_actual(self, request, pk=None):
+        """
+        Get variance data comparing planned activity with actual daily state.
+        
+        Returns:
+        - Planned date and actual completion date (if completed)
+        - Weight at planned date (from scenario projection or actual state)
+        - Weight at completion (from actual daily state)
+        - FCR at completion (from actual daily state)
+        - Variance metrics: days_variance, weight_variance_g, weight_variance_pct, fcr_variance
+        """
+        activity = self.get_object()
+        
+        # Get actual daily state data
+        from apps.batch.models import ActualDailyAssignmentState
+        
+        # Get state on due date
+        state_on_due_date = ActualDailyAssignmentState.objects.filter(
+            batch=activity.batch,
+            date=activity.due_date
+        ).first()
+        
+        # Get state on completion date (if completed)
+        state_at_completion = None
+        completion_date = None
+        if activity.status == 'COMPLETED' and activity.completed_at:
+            completion_date = activity.completed_at.date()
+            state_at_completion = ActualDailyAssignmentState.objects.filter(
+                batch=activity.batch,
+                date=completion_date
+            ).first()
+        
+        # Get projected weight from scenario (if available)
+        projected_weight_g = None
+        try:
+            from apps.scenario.models import ProjectionDay
+            projection = ProjectionDay.objects.filter(
+                projection_run__scenario=activity.scenario,
+                batch=activity.batch,
+                day_date=activity.due_date
+            ).first()
+            if projection and projection.avg_weight_g is not None:
+                projected_weight_g = float(projection.avg_weight_g)
+        except Exception:
+            pass
+        
+        # Build response data
+        response_data = {
+            'activity_id': activity.id,
+            'batch_number': activity.batch.batch_number,
+            'activity_type': activity.activity_type,
+            'activity_type_display': activity.get_activity_type_display(),
+            'scenario_name': activity.scenario.name,
+            'status': activity.status,
+            
+            # Dates
+            'planned_date': activity.due_date,
+            'actual_completion_date': completion_date,
+            'days_variance': None,
+            
+            # Weight at planned date
+            'projected_weight_g': projected_weight_g,
+            'actual_weight_at_planned_date_g': None,
+            
+            # Weight at completion
+            'weight_at_completion_g': None,
+            'weight_variance_g': None,
+            'weight_variance_pct': None,
+            
+            # FCR at completion
+            'fcr_at_completion': None,
+            'fcr_projected': None,
+            'fcr_variance_pct': None,
+            
+            # Biomass data
+            'biomass_at_planned_date_kg': None,
+            'biomass_at_completion_kg': None,
+            'population_at_completion': None,
+        }
+        
+        # Fill in actual data from daily states
+        if state_on_due_date:
+            response_data['actual_weight_at_planned_date_g'] = float(state_on_due_date.avg_weight_g)
+            response_data['biomass_at_planned_date_kg'] = float(state_on_due_date.biomass_kg)
+        
+        if state_at_completion:
+            response_data['weight_at_completion_g'] = float(state_at_completion.avg_weight_g)
+            response_data['biomass_at_completion_kg'] = float(state_at_completion.biomass_kg)
+            response_data['population_at_completion'] = state_at_completion.population
+            
+            if state_at_completion.observed_fcr is not None:
+                response_data['fcr_at_completion'] = float(state_at_completion.observed_fcr)
+        
+        # Calculate variances
+        if completion_date:
+            response_data['days_variance'] = (completion_date - activity.due_date).days
+        
+        # Weight variance (comparing projected vs actual at completion)
+        if projected_weight_g and response_data['weight_at_completion_g']:
+            weight_variance = response_data['weight_at_completion_g'] - projected_weight_g
+            response_data['weight_variance_g'] = round(weight_variance, 2)
+            if projected_weight_g > 0:
+                response_data['weight_variance_pct'] = round(
+                    (weight_variance / projected_weight_g) * 100, 1
+                )
+        
+        return Response(response_data)
 
