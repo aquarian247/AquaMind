@@ -515,7 +515,12 @@ class PlannedActivityViewSet(viewsets.ModelViewSet):
         state_at_completion = None
         completion_date = None
         if activity.status == 'COMPLETED' and activity.completed_at:
-            completion_date = activity.completed_at.date()
+            # Handle both datetime objects (from DB) and date objects (from tests/manual creation)
+            completion_date = (
+                activity.completed_at.date()
+                if hasattr(activity.completed_at, 'date')
+                else activity.completed_at
+            )
             state_at_completion = ActualDailyAssignmentState.objects.filter(
                 batch=activity.batch,
                 date=completion_date
