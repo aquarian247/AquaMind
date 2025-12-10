@@ -46,8 +46,10 @@ def _should_skip_celery_signals():
         return True
     
     # Check Django settings (for @override_settings in tests)
+    # Support both boolean True and string '1' for flexibility
     from django.conf import settings
-    return getattr(settings, 'SKIP_CELERY_SIGNALS', False) == '1'
+    setting_value = getattr(settings, 'SKIP_CELERY_SIGNALS', False)
+    return setting_value is True or setting_value == '1'
 
 
 # Legacy constant for backwards compatibility (use _should_skip_celery_signals() instead)
