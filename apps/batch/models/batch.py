@@ -131,3 +131,40 @@ class Batch(models.Model):
         if total_biomass is not None:
             return Decimal(str(total_biomass))
         return Decimal('0.00')
+    
+    def get_baseline_scenario(self):
+        """
+        Get the baseline scenario for this batch.
+        
+        This method supports the "Edge Guard" pattern to prevent PlannedActivities
+        from being created without an associated scenario ("ghost plans").
+        
+        Priority:
+        1. Return pinned projection run's scenario if available
+        2. Return first associated scenario if available  
+        3. Raise ValueError if no scenario available
+        
+        Note: This method does NOT create scenarios (unlike Django's get_or_create).
+        Scenarios require complex FK dependencies (TGCModel, FCRModel, etc.)
+        so the user must create a scenario first.
+            
+        Returns:
+            Scenario: An existing scenario for this batch
+            
+        Raises:
+            ValueError: If no scenario is available for this batch
+        """
+        # Priority 1: Use pinned projection run's scenario
+        if self.pinned_projection_run:
+            return self.pinned_projection_run.scenario
+        
+        # Priority 2: Use first associated scenario
+        existing_scenario = self.scenarios.first()
+        if existing_scenario:
+            return existing_scenario
+        
+        # Priority 3: No scenario available - raise error
+        raise ValueError(
+            f"No scenario available for batch {self.batch_number}. "
+            "Please create a scenario with the required models (TGC, FCR, Mortality) first."
+        )

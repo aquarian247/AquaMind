@@ -11,6 +11,19 @@ class PlannedActivity(models.Model):
     operations (transfers that spawn Transfer Workflows).
     """
     
+    def __init__(self, *args, **kwargs):
+        """Track original status for change detection in signals."""
+        super().__init__(*args, **kwargs)
+        # Store original status to detect changes (used by on_planned_activity_completed signal)
+        self._original_status = self.status if self.pk else None
+    
+    def save(self, *args, **kwargs):
+        """Override save to update _original_status after each save."""
+        super().save(*args, **kwargs)
+        # Update _original_status to current status after save
+        # This prevents signal from firing repeatedly for already-completed activities
+        self._original_status = self.status
+    
     ACTIVITY_TYPE_CHOICES = [
         ('VACCINATION', 'Vaccination'),
         ('TREATMENT', 'Treatment/Health Intervention'),
@@ -262,6 +275,7 @@ class ActivityTemplate(models.Model):
     def generate_activity(self, scenario, batch, override_due_date=None):
         """Generate a PlannedActivity from this template."""
         from datetime import timedelta
+        from django.contrib.auth import get_user_model
         
         # Calculate due date based on trigger type
         if override_due_date:
@@ -283,13 +297,27 @@ class ActivityTemplate(models.Model):
         else:
             due_date = timezone.now().date()
         
+        # Get a valid user for created_by (scenario.created_by may be null)
+        User = get_user_model()
+        created_by = scenario.created_by if scenario.created_by else None
+        if not created_by:
+            # Fallback: use first superuser or first active user
+            created_by = User.objects.filter(is_superuser=True, is_active=True).first()
+        if not created_by:
+            created_by = User.objects.filter(is_active=True).first()
+        if not created_by:
+            raise ValueError(
+                "Cannot create PlannedActivity: no valid user found for created_by "
+                "(scenario.created_by is null and no active users exist)"
+            )
+        
         activity = PlannedActivity.objects.create(
             scenario=scenario,
             batch=batch,
             activity_type=self.activity_type,
             due_date=due_date,
             notes=self.notes_template,
-            created_by=scenario.created_by
+            created_by=created_by
         )
         
         return activity

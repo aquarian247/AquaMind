@@ -582,6 +582,85 @@ Endpoint: `GET /api/v1/planning/planned-activities/{id}/variance-from-actual/`
 
 Definition of done: migrations clean; validated outputs; docs shipped; monitoring in place.  
 
+---
+
+### Phase 8.5: Polish (Post-Phase 8 Core) - COMPLETED
+
+**Objective**: Enhance integration utility with FCR precision, edge guards, broodstock triggers, and UI polish.
+
+**Status**: COMPLETED - December 10, 2025
+
+#### 8.5.1 FCR Integration (Backend) ✓
+- **Objective**: Leverage existing `observed_fcr` field (NUMERIC 8,3) with proper calculation and variance alerts.
+- **Implementation**: Enhanced FCR calculation in `growth_assimilation.py` with:
+  - `sources['fcr'] = 'calculated'` when computed from feed/biomass
+  - `sources['fcr'] = 'insufficient_data'` when no feeding data or small biomass gain
+  - Validation warning at FCR > 3.0
+  - Cap at 10.0 for absurd values
+
+#### 8.5.2 Edge Guard: Auto-Default Scenario (Backend) ✓
+- **Objective**: Prevent "ghost plans" by ensuring PlannedActivity always has a scenario.
+- **Implementation**:
+  - Added `Batch.get_or_create_baseline_scenario()` method
+  - Updated `PlannedActivitySerializer.create()` to auto-assign scenario
+  - Priority: pinned projection run → first scenario → create new baseline
+
+#### 8.5.3 Broodstock Tie-In (OPTIONAL - Backend) ✓
+- **Objective**: Use existing `BreedingTraitPriority.disease_resistance` as resilience proxy.
+- **Implementation**:
+  - Added `_evaluate_broodstock_triggers()` to growth assimilation engine
+  - Triggers TREATMENT activity for batches with disease_resistance < 0.5
+  - Graceful skip when broodstock app unavailable
+  - Feature is OPTIONAL and fails silently if broodstock not configured
+
+#### 8.5.4 Projection Preview API (Backend) ✓
+- **Objective**: Provide rationale for activity due dates based on scenario projections.
+- **Implementation**: Added `GET /planned-activities/{id}/projection-preview/` endpoint
+- **Response**: `{due_date, scenario_name, projected_weight_g, projected_population, day_number, rationale}`
+
+#### 8.5.5 Projection Preview Tooltip (Frontend) ✓
+- **Objective**: Show "why" for activity due dates in Production Planner UI.
+- **Implementation**: Created `<ProjectionPreviewTooltip />` component
+- **Features**:
+  - Fetches projection data on hover (lazy loading)
+  - Displays projected weight, population, scenario context
+  - Graceful loading/error states
+
+#### 8.5.6 FCR Variance UI (Frontend) ✓
+- **Objective**: Display FCR metrics in Variance Report.
+- **Implementation**: Added `<FCRMetricsCard />` to Variance Report page
+- **Features**:
+  - FCR status legend (green ≤1.2, yellow 1.2-1.5, red >1.5)
+  - FCR reference information for aquaculture operations
+
+#### 8.5.7 Tests (Backend + Frontend) ✓
+- **Backend**: `apps/batch/tests/test_phase85_polish.py`
+  - FCR calculation precision tests
+  - Edge guard auto-scenario tests
+  - Broodstock trigger tests
+  - Projection preview API tests
+- **Frontend**: `client/src/features/production-planner/__tests__/phase85_polish.test.tsx`
+  - ProjectionPreviewTooltip render tests
+  - FCR threshold classification tests
+  - Error/loading state tests
+
+**Files Modified**:
+- `apps/batch/services/growth_assimilation.py` (FCR calc, broodstock triggers)
+- `apps/batch/models/batch.py` (get_or_create_baseline_scenario)
+- `apps/batch/models/actual_daily_state.py` (planned_activity FK)
+- `apps/planning/models.py` (GENETIC_THRESHOLD trigger type)
+- `apps/planning/api/viewsets/planned_activity_viewset.py` (projection-preview, variance-from-actual)
+- `apps/planning/api/serializers/planned_activity_serializer.py` (auto-scenario)
+- `apps/batch/signals.py` (PlannedActivity completion signal)
+- `client/src/features/production-planner/api/api.ts` (useProjectionPreview hook)
+- `client/src/features/production-planner/components/ProjectionPreviewTooltip.tsx` (new)
+- `client/src/features/production-planner/pages/VarianceReportPage.tsx` (FCR metrics)
+
+**Migrations**:
+- `0043_add_planned_activity_to_daily_state.py` (planned_activity FK + anchor_type update)
+
+---
+
 #### Risks and Mitigations
 
 - Selective sorting bias at transfers: captured via `selection_method`; default to population-weighted average when unknown.  
