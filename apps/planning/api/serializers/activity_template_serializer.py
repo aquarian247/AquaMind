@@ -39,3 +39,4 @@ class ActivityTemplateSerializer(serializers.ModelSerializer):
 
 
 
+

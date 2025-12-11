@@ -502,3 +502,4 @@ class IsExecutiveUser(BasePermission):
 |------|---------|---------|
 | 2025-12-10 | 1.0 | Initial draft based on CFO request at Steering Committee |
 
+

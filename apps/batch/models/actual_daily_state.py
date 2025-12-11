@@ -137,12 +137,15 @@ class ActualDailyAssignmentState(models.Model):
     
     # Link to PlannedActivity (Phase 8 integration)
     # This allows tracking which daily states were anchored by completed activities
+    # Note: db_constraint=False because this is a TimescaleDB hypertable with columnstore
+    # Django ORM still handles the FK relationship, but no DB-level constraint
     planned_activity = models.ForeignKey(
         'planning.PlannedActivity',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='anchored_daily_states',
+        db_constraint=False,  # Required for TimescaleDB hypertable with columnstore
         help_text="PlannedActivity that anchored this state (if completed activity provided weights)"
     )
     
