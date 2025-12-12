@@ -374,6 +374,32 @@ NAV_ACCOUNT_MAP = {
 }
 
 # ------------------------------------------------------------------
+# Forecast Configuration (Executive Dashboard)
+# ------------------------------------------------------------------
+# Species-specific harvest weight thresholds (grams)
+HARVEST_THRESHOLDS = {
+    'atlantic_salmon': {'min_weight_g': 4500, 'target_weight_g': 5000},
+    'rainbow_trout': {'min_weight_g': 2500, 'target_weight_g': 3000},
+    'default': {'min_weight_g': 4000, 'target_weight_g': 5000}
+}
+
+# Species-specific sea transfer weight thresholds (grams)
+# Used for forecasting freshwater -> sea cage transfers
+SEA_TRANSFER_CRITERIA = {
+    'atlantic_salmon': {'min_weight_g': 80, 'target_weight_g': 100},
+    'default': {'min_weight_g': 100, 'target_weight_g': 100}
+}
+
+# Confidence thresholds for UI color coding in forecast displays
+# High (green): confidence >= 0.8
+# Medium (yellow): confidence >= 0.5
+# Low (red): confidence < 0.5
+FORECAST_CONFIDENCE_THRESHOLDS = {
+    'high': 0.8,
+    'medium': 0.5,
+}
+
+# ------------------------------------------------------------------
 # Celery Configuration (Issue #112 - Batch Growth Assimilation)
 # ------------------------------------------------------------------
 # Asynchronous task queue for background processing
