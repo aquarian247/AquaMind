@@ -300,7 +300,7 @@ class ForecastViewSet(viewsets.ViewSet):
         species_id = request.query_params.get('species_id')
         from_date_str = request.query_params.get('from_date')
         to_date_str = request.query_params.get('to_date')
-        min_confidence = float(request.query_params.get('min_confidence', 0.5))
+        min_confidence = float(request.query_params.get('min_confidence', 0))
 
         # Parse dates
         from_date = None
@@ -534,7 +534,7 @@ class ForecastViewSet(viewsets.ViewSet):
         species_id = request.query_params.get('species_id')
         from_date_str = request.query_params.get('from_date')
         to_date_str = request.query_params.get('to_date')
-        min_confidence = float(request.query_params.get('min_confidence', 0.5))
+        min_confidence = float(request.query_params.get('min_confidence', 0))
 
         # Parse dates
         from_date = None
