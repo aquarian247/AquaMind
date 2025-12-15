@@ -439,6 +439,61 @@ if 'test' in sys.argv:
     CELERY_TASK_EAGER_PROPAGATES = True
 
 # ------------------------------------------------------------------
+# Live Forward Projection Settings
+# ------------------------------------------------------------------
+# TimescaleDB retention: how many days of historical projections to keep
+# (allows backtesting and accuracy validation)
+LIVE_FORWARD_PROJECTION_RETENTION_DAYS = int(
+    os.environ.get('LIVE_FORWARD_PROJECTION_RETENTION_DAYS', '90')
+)
+
+# Compression policy: compress chunks older than N days
+LIVE_FORWARD_PROJECTION_COMPRESS_AFTER_DAYS = int(
+    os.environ.get('LIVE_FORWARD_PROJECTION_COMPRESS_AFTER_DAYS', '7')
+)
+
+# Temperature bias window: how many recent days to use for bias calculation
+# (requires sensor-derived temps: measured, interpolated, nearest_before/after)
+LIVE_FORWARD_TEMP_BIAS_WINDOW_DAYS = int(
+    os.environ.get('LIVE_FORWARD_TEMP_BIAS_WINDOW_DAYS', '14')
+)
+
+# Temperature bias clamp: min/max bounds to prevent unrealistic adjustments
+# Format: (min_c, max_c) - bias clamped to this range
+LIVE_FORWARD_TEMP_BIAS_CLAMP_C = (
+    float(os.environ.get('LIVE_FORWARD_TEMP_BIAS_CLAMP_MIN_C', '-2.0')),
+    float(os.environ.get('LIVE_FORWARD_TEMP_BIAS_CLAMP_MAX_C', '2.0')),
+)
+
+# Maximum projection horizon: safety cap to prevent runaway projections
+# (actual horizon is min(scenario.duration_days - current_day, MAX_HORIZON))
+# Set high (1000) since salmon lifecycle is 700-900 days
+LIVE_FORWARD_MAX_HORIZON_DAYS = int(
+    os.environ.get('LIVE_FORWARD_MAX_HORIZON_DAYS', '1000')
+)
+
+# Days before threshold to flag "needs planning attention" (Tier 3)
+# Container flagged if projected to cross threshold within this window
+LIVE_FORWARD_ATTENTION_THRESHOLD_DAYS = int(
+    os.environ.get('LIVE_FORWARD_ATTENTION_THRESHOLD_DAYS', '30')
+)
+
+# ------------------------------------------------------------------
+# Celery Beat Schedule (Periodic Tasks)
+# ------------------------------------------------------------------
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    # Nightly live forward projection computation
+    # Runs at 03:00 UTC daily, after ActualDailyAssignmentState is updated
+    'compute-live-projections': {
+        'task': 'apps.batch.tasks.compute_all_live_forward_projections',
+        'schedule': crontab(hour=3, minute=0),
+        'options': {'queue': 'default'},
+    },
+}
+
+# ------------------------------------------------------------------
 # Test configuration
 # ------------------------------------------------------------------
 # Use a custom test-runner that guarantees all PostgreSQL connections

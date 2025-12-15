@@ -25,6 +25,7 @@ from apps.batch.models.mortality import MortalityEvent
 from apps.batch.models.growth import GrowthSample
 from apps.batch.models.individual_growth_observation import IndividualGrowthObservation
 from apps.batch.models.actual_daily_state import ActualDailyAssignmentState
+from apps.batch.models.live_projection import LiveForwardProjection, ContainerForecastSummary
 
 __all__ = [
     'Species',
@@ -40,4 +41,6 @@ __all__ = [
     'GrowthSample',
     'IndividualGrowthObservation',
     'ActualDailyAssignmentState',
+    'LiveForwardProjection',
+    'ContainerForecastSummary',
 ]
