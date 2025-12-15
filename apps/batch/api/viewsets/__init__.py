@@ -14,3 +14,4 @@ from .mortality import MortalityEventViewSet
 from .assignments import BatchContainerAssignmentViewSet
 from .composition import BatchCompositionViewSet
 from .growth import GrowthSampleViewSet
+from .forecast_viewset import ForecastViewSet

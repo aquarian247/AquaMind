@@ -26,6 +26,7 @@ from .viewsets.history import (
 from .viewsets.container_availability import ContainerAvailabilityViewSet
 from .viewsets.workflow_creation import BatchCreationWorkflowViewSet
 from .viewsets.workflow_creation_action import CreationActionViewSet
+from .viewsets.forecast_viewset import ForecastViewSet
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
@@ -49,6 +50,9 @@ router.register(r'history/batches', BatchHistoryViewSet, basename='batch-history
 router.register(r'history/container-assignments', BatchContainerAssignmentHistoryViewSet, basename='batch-container-assignment-history')
 router.register(r'history/mortality-events', MortalityEventHistoryViewSet, basename='mortality-event-history')
 router.register(r'history/growth-samples', GrowthSampleHistoryViewSet, basename='growth-sample-history')
+
+# Register forecast endpoints
+router.register(r'forecast', ForecastViewSet, basename='batch-forecast')
 
 # The API URLs are determined automatically by the router
 urlpatterns = router.urls
