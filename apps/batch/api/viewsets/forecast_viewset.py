@@ -875,10 +875,9 @@ the live forward projection task).
 
         # TIER 2 & 3: From ContainerForecastSummary
         for forecast in forecasts:
-            # Skip if already in planned results
+            # Skip if already in planned results to avoid duplicates
             if forecast.assignment.batch_id in planned_batch_ids:
-                # Could add as PROJECTED with different tier
-                pass
+                continue
 
             tier = 'NEEDS_PLANNING' if forecast.needs_planning_attention else 'PROJECTED'
 
