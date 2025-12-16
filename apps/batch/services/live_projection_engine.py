@@ -134,6 +134,7 @@ class LiveProjectionEngine:
         self.stage_durations = {}
         self.cumulative_stage_days = {}
         
+        # Try to load stage durations from FCR model
         if self.scenario.fcr_model and hasattr(self.scenario.fcr_model, 'stages'):
             fcr_stages = self.scenario.fcr_model.stages.select_related('stage').all()
             cumulative_days = 0
@@ -148,8 +149,10 @@ class LiveProjectionEngine:
                 self.stage_durations[stage_name] = duration
                 self.cumulative_stage_days[stage_name] = cumulative_days
                 cumulative_days += duration
-        else:
-            # Default durations if no FCR model (based on typical Atlantic salmon)
+        
+        # Fall back to defaults if no stages were loaded
+        # (handles: no FCR model, FCR model without stages, or empty stages)
+        if not self.stage_durations:
             default_stages = [
                 ('Egg&Alevin', 90),
                 ('Fry', 90),
