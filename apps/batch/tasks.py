@@ -1,8 +1,9 @@
 """
-Celery tasks for batch growth assimilation.
+Celery tasks for batch growth assimilation and live forward projections.
 
-This module contains asynchronous tasks for recomputing actual daily states
-when operational events occur (growth samples, transfers, treatments, mortality).
+This module contains asynchronous tasks for:
+1. Recomputing actual daily states when operational events occur
+2. Computing live forward projections (nightly scheduled task)
 
 Architecture:
 - Lightweight signal handlers enqueue tasks (don't block requests)
@@ -13,16 +14,21 @@ Architecture:
 Usage:
     # From signal handler
     recompute_assignment_window.delay(assignment_id, start_date, end_date)
-    
+
     # From management command
     recompute_batch_window.delay(batch_id, start_date, end_date)
+
+    # Nightly live forward projection (via Celery Beat)
+    compute_all_live_forward_projections.delay()
 
 Performance:
 - Typical task: 100-500ms for 5-day window
 - Large batch: 2-5 seconds for full lifecycle
+- Live projection: 200-500ms per assignment (full horizon)
 - Worker pool: 4-8 workers recommended for production
 
 Issue: #112 - Phase 4 (Event-Driven Recompute)
+Issue: Live Forward Projection Feature
 """
 import logging
 from datetime import date, timedelta
@@ -350,18 +356,183 @@ def enqueue_batch_recompute(
     # Calculate window
     start_date = trigger_date - timedelta(days=window_days)
     end_date = trigger_date + timedelta(days=window_days)
-    
+
     # Enqueue task
     result = recompute_batch_window.delay(
         batch_id,
         start_date.isoformat(),
         end_date.isoformat()
     )
-    
+
     logger.info(
         f"📋 Enqueued batch task {result.id} for batch {batch_id} "
         f"(trigger={trigger_date}, window={start_date} to {end_date})"
     )
-    
+
     return result.id
+
+
+# ------------------------------------------------------------------
+# Task: Live Forward Projection (Nightly)
+# ------------------------------------------------------------------
+
+@shared_task(bind=True, max_retries=2, default_retry_delay=300)
+def compute_all_live_forward_projections(self) -> Dict:
+    """
+    Compute live forward projections for all active assignments.
+
+    This is the main scheduled task, typically run nightly at 03:00 UTC
+    after ActualDailyAssignmentState data is updated.
+
+    For each active assignment:
+    1. Compute projections from latest actual state to scenario end
+    2. Store in LiveForwardProjection hypertable
+    3. Update ContainerForecastSummary for dashboards
+
+    Guardrails:
+    - Skips assignments without pinned scenario
+    - Skips assignments without actual state data
+    - Idempotent (safe to run multiple times per day)
+
+    Returns:
+        Dict with stats (assignments_processed, total_rows, errors)
+
+    Schedule (via Celery Beat):
+        'compute-live-projections': {
+            'task': 'apps.batch.tasks.compute_all_live_forward_projections',
+            'schedule': crontab(hour=3, minute=0),  # 03:00 UTC daily
+        }
+    """
+    from django.db.models import Q
+    from django.utils import timezone
+    from apps.batch.models import BatchContainerAssignment
+    from apps.batch.services.live_projection_engine import LiveProjectionEngine
+
+    logger.info("[Task] Starting nightly live forward projection computation")
+
+    computed_date = timezone.now().date()
+
+    # Get active assignments for active batches with pinned scenarios
+    active_assignments = BatchContainerAssignment.objects.filter(
+        is_active=True,
+        batch__status='ACTIVE',
+    ).filter(
+        # Must have a pinned scenario or at least one scenario
+        Q(batch__pinned_projection_run__isnull=False) |
+        Q(batch__scenarios__isnull=False)
+    ).select_related(
+        'batch__pinned_projection_run__scenario__tgc_model__profile',
+        'batch__pinned_projection_run__scenario__mortality_model',
+        'container'
+    ).distinct()
+
+    stats = {
+        'assignments_processed': 0,
+        'assignments_skipped': 0,
+        'total_rows_created': 0,
+        'errors': [],
+        'computed_date': computed_date.isoformat(),
+    }
+
+    for assignment in active_assignments:
+        try:
+            engine = LiveProjectionEngine(assignment)
+            result = engine.compute_and_store(computed_date=computed_date)
+
+            if result.get('success'):
+                stats['assignments_processed'] += 1
+                stats['total_rows_created'] += result.get('rows_created', 0)
+            else:
+                stats['assignments_skipped'] += 1
+                if result.get('error'):
+                    stats['errors'].append({
+                        'assignment_id': assignment.id,
+                        'error': result['error'],
+                    })
+
+        except Exception as e:
+            logger.error(
+                f"Error computing projection for assignment {assignment.id}: "
+                f"{e}", exc_info=True
+            )
+            stats['errors'].append({
+                'assignment_id': assignment.id,
+                'error': str(e),
+            })
+
+    logger.info(
+        f"✅ [Task] Live projection complete: "
+        f"{stats['assignments_processed']} processed, "
+        f"{stats['total_rows_created']} rows created, "
+        f"{len(stats['errors'])} errors"
+    )
+
+    return stats
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def compute_assignment_live_projection(
+    self,
+    assignment_id: int,
+    computed_date: Optional[str] = None
+) -> Dict:
+    """
+    Compute live forward projection for a single assignment.
+
+    Use this for on-demand projection updates (e.g., after significant
+    growth sample or manual trigger).
+
+    Args:
+        assignment_id: BatchContainerAssignment ID
+        computed_date: ISO date string (default: today)
+
+    Returns:
+        Dict with stats (success, rows_created, etc.)
+    """
+    from django.utils import timezone
+    from apps.batch.models import BatchContainerAssignment
+    from apps.batch.services.live_projection_engine import LiveProjectionEngine
+
+    logger.info(
+        f"[Task] Computing live projection for assignment {assignment_id}"
+    )
+
+    try:
+        assignment = BatchContainerAssignment.objects.select_related(
+            'batch__pinned_projection_run__scenario__tgc_model__profile',
+            'batch__pinned_projection_run__scenario__mortality_model',
+            'container'
+        ).get(id=assignment_id)
+    except BatchContainerAssignment.DoesNotExist:
+        logger.error(f"Assignment {assignment_id} not found")
+        return {
+            'success': False,
+            'error': 'Assignment not found',
+            'assignment_id': assignment_id,
+        }
+
+    # Parse computed_date if provided
+    if computed_date:
+        from datetime import date as date_cls
+        comp_date = date_cls.fromisoformat(computed_date)
+    else:
+        comp_date = timezone.now().date()
+
+    try:
+        engine = LiveProjectionEngine(assignment)
+        result = engine.compute_and_store(computed_date=comp_date)
+
+        logger.info(
+            f"✅ [Task] Projection complete for assignment {assignment_id}: "
+            f"{result.get('rows_created', 0)} rows"
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(
+            f"Error computing projection for assignment {assignment_id}: {e}",
+            exc_info=True
+        )
+        raise self.retry(exc=e)
 

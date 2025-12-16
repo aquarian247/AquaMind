@@ -1,8 +1,10 @@
 """
 Batch container assignment viewsets.
 
-These viewsets provide CRUD operations for batch container assignment management.
+These viewsets provide CRUD operations for batch container assignment
+management, including live forward projection endpoints for growth forecasting.
 """
+from datetime import date as date_cls
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
@@ -20,10 +22,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.types import OpenApiTypes
 
-from apps.batch.models import BatchContainerAssignment
+from apps.batch.models import BatchContainerAssignment, LiveForwardProjection
 from apps.batch.api.serializers import BatchContainerAssignmentSerializer
 from apps.batch.api.filters.assignments import BatchContainerAssignmentFilter
 from .mixins import LocationFilterMixin
@@ -236,3 +238,173 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
                 "total_population": aggregates["total_population"] or 0,
             }
         )
+
+    # ------------------------------------------------------------------ #
+    # Live Forward Projection endpoint                                   #
+    # ------------------------------------------------------------------ #
+    @extend_schema(
+        operation_id="batch-container-assignments-live-forward-projection",
+        summary="Get live forward projection for an assignment",
+        description="""
+Returns the live forward projection series for a specific container assignment.
+
+The projection starts from the latest ActualDailyAssignmentState and projects
+growth forward to the scenario end using:
+- TGC-based growth model
+- Temperature profile with bias adjustment
+- Scenario mortality model
+
+**Temperature Bias**: Computed from recent days where sensor-derived temps
+were available (measured, interpolated, nearest). The bias represents the
+delta between actual temps and profile temps, clamped to configurable bounds.
+
+**Provenance**: Response includes full transparency about projection inputs:
+- Temperature profile name and ID
+- Bias value, window days, and clamp bounds
+- TGC value used
+- computed_date (when projection was run)
+
+By default returns the latest projection (computed_date = most recent).
+Use `computed_date` parameter for backtesting historical projections.
+        """,
+        parameters=[
+            OpenApiParameter(
+                name="computed_date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                description="Date of projection run (YYYY-MM-DD). Default: latest.",
+                required=False,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Live forward projection series with provenance",
+                response={
+                    "type": "object",
+                    "properties": {
+                        "assignment_id": {"type": "integer"},
+                        "batch_number": {"type": "string"},
+                        "container_name": {"type": "string"},
+                        "computed_date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Date projection was computed"
+                        },
+                        "provenance": {
+                            "type": "object",
+                            "properties": {
+                                "temp_profile_id": {"type": "integer"},
+                                "temp_profile_name": {"type": "string"},
+                                "temp_bias_c": {"type": "number"},
+                                "temp_bias_window_days": {"type": "integer"},
+                                "temp_bias_clamp_min_c": {"type": "number"},
+                                "temp_bias_clamp_max_c": {"type": "number"},
+                                "tgc_value": {"type": "number"},
+                            }
+                        },
+                        "projections": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "projection_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "day_number": {"type": "integer"},
+                                    "projected_weight_g": {"type": "number"},
+                                    "projected_population": {"type": "integer"},
+                                    "projected_biomass_kg": {"type": "number"},
+                                    "temperature_used_c": {"type": "number"},
+                                }
+                            }
+                        }
+                    }
+                }
+            ),
+            404: OpenApiResponse(description="No projections found"),
+        },
+    )
+    @action(detail=True, methods=['get'], url_path='live-forward-projection')
+    def live_forward_projection(self, request, pk=None):
+        """
+        Get live forward projection series for this assignment.
+
+        Returns projected growth trajectory from latest actual state,
+        with full provenance about model inputs and temperature bias.
+        """
+        assignment = self.get_object()
+
+        # Parse computed_date parameter (default: latest)
+        computed_date_str = request.query_params.get('computed_date')
+        if computed_date_str:
+            try:
+                computed_date = date_cls.fromisoformat(computed_date_str)
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            projections = LiveForwardProjection.objects.filter(
+                assignment=assignment,
+                computed_date=computed_date,
+            ).order_by('projection_date')
+        else:
+            # Get latest computed_date for this assignment
+            latest = LiveForwardProjection.objects.filter(
+                assignment=assignment,
+            ).order_by('-computed_date').first()
+
+            if not latest:
+                return Response(
+                    {
+                        "error": "No projections available",
+                        "detail": "Live forward projections have not been "
+                                  "computed for this assignment yet."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            computed_date = latest.computed_date
+            projections = LiveForwardProjection.objects.filter(
+                assignment=assignment,
+                computed_date=computed_date,
+            ).order_by('projection_date')
+
+        if not projections.exists():
+            return Response(
+                {"error": "No projections found for specified date"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Build response with provenance from first projection
+        first_proj = projections.first()
+
+        response_data = {
+            "assignment_id": assignment.id,
+            "batch_number": assignment.batch.batch_number,
+            "container_name": assignment.container.name,
+            "computed_date": computed_date.isoformat(),
+            "provenance": {
+                "temp_profile_id": first_proj.temp_profile_id,
+                "temp_profile_name": first_proj.temp_profile_name,
+                "temp_bias_c": float(first_proj.temp_bias_c),
+                "temp_bias_window_days": first_proj.temp_bias_window_days,
+                "temp_bias_clamp_min_c": float(first_proj.temp_bias_clamp_min_c),
+                "temp_bias_clamp_max_c": float(first_proj.temp_bias_clamp_max_c),
+                "tgc_value": float(first_proj.tgc_value_used),
+            },
+            "projections": [
+                {
+                    "projection_date": proj.projection_date.isoformat(),
+                    "day_number": proj.day_number,
+                    "projected_weight_g": float(proj.projected_weight_g),
+                    "projected_population": proj.projected_population,
+                    "projected_biomass_kg": float(proj.projected_biomass_kg),
+                    "temperature_used_c": float(proj.temperature_used_c),
+                }
+                for proj in projections
+            ],
+        }
+
+        return Response(response_data)
