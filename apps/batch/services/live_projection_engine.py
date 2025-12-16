@@ -103,6 +103,9 @@ class LiveProjectionEngine:
         # Temperature profile from TGC model
         self.temp_profile = self.scenario.tgc_model.profile
 
+        # Load lifecycle stages and durations for stage transitions
+        self._load_lifecycle_stages()
+
         logger.debug(
             f"Initialized LiveProjectionEngine for assignment {assignment.id} "
             f"(Batch: {self.batch.batch_number}, Container: {self.container.name})"
@@ -113,6 +116,85 @@ class LiveProjectionEngine:
         if self.batch.pinned_projection_run:
             return self.batch.pinned_projection_run.scenario
         return self.batch.scenarios.first()
+
+    def _load_lifecycle_stages(self) -> None:
+        """
+        Load lifecycle stages and their durations for time-based transitions.
+        
+        This mirrors the ProjectionEngine's stage loading to ensure consistent
+        stage transitions. Stages are determined by elapsed time, not weight.
+        """
+        from apps.batch.models import LifeCycleStage
+        
+        self.lifecycle_stages = list(
+            LifeCycleStage.objects.order_by('order')
+        )
+        
+        # Get stage durations from FCR model
+        self.stage_durations = {}
+        self.cumulative_stage_days = {}
+        
+        if self.scenario.fcr_model and hasattr(self.scenario.fcr_model, 'stages'):
+            fcr_stages = self.scenario.fcr_model.stages.select_related('stage').all()
+            cumulative_days = 0
+            
+            for fcr_stage in fcr_stages:
+                # stage is FK to LifeCycleStage
+                stage_name = fcr_stage.stage.name if fcr_stage.stage else None
+                if not stage_name:
+                    continue
+                duration = fcr_stage.duration_days or 90  # Default 90 days
+                
+                self.stage_durations[stage_name] = duration
+                self.cumulative_stage_days[stage_name] = cumulative_days
+                cumulative_days += duration
+        else:
+            # Default durations if no FCR model (based on typical Atlantic salmon)
+            default_stages = [
+                ('Egg&Alevin', 90),
+                ('Fry', 90),
+                ('Parr', 90),
+                ('Smolt', 90),
+                ('Post-Smolt', 90),
+                ('Adult', 450),
+            ]
+            cumulative_days = 0
+            for stage_name, duration in default_stages:
+                self.stage_durations[stage_name] = duration
+                self.cumulative_stage_days[stage_name] = cumulative_days
+                cumulative_days += duration
+
+    def _determine_lifecycle_stage(self, day_number: int):
+        """
+        Determine lifecycle stage based on elapsed days (time-based transitions).
+        
+        This mirrors the ProjectionEngine's stage determination to ensure
+        live projections use the same stage transitions as scenario projections.
+        
+        Args:
+            day_number: Current day number in the scenario (1-based)
+            
+        Returns:
+            LifeCycleStage for the given day, or None
+        """
+        # day_number is 1-based, so day 1 has elapsed 0 days
+        elapsed_days = day_number - 1
+        
+        for stage in self.lifecycle_stages:
+            stage_name = stage.name
+            
+            if stage_name not in self.cumulative_stage_days:
+                continue
+            
+            stage_start = self.cumulative_stage_days[stage_name]
+            stage_duration = self.stage_durations.get(stage_name, 90)
+            stage_end = stage_start + stage_duration
+            
+            if stage_start <= elapsed_days < stage_end:
+                return stage
+        
+        # If past all stages, return last stage (Adult)
+        return self.lifecycle_stages[-1] if self.lifecycle_stages else None
 
     def compute_and_store(self, computed_date: Optional[date] = None) -> Dict:
         """
@@ -353,6 +435,16 @@ class LiveProjectionEngine:
             # Skip past dates (shouldn't happen, but safety check)
             if proj_date <= today:
                 continue
+
+            # Determine lifecycle stage based on elapsed time (time-based transitions)
+            # This ensures live projections advance through stages like scenario projections
+            new_stage = self._determine_lifecycle_stage(day_number)
+            if new_stage and new_stage != current_stage:
+                logger.debug(
+                    f"Stage transition at day {day_number}: "
+                    f"{current_stage.name if current_stage else 'None'} -> {new_stage.name}"
+                )
+                current_stage = new_stage
 
             # Get temperature for this day (profile + bias)
             profile_temp = self.tgc_calculator._get_temperature_for_day(
