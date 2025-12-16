@@ -866,49 +866,103 @@ the live forward projection task).
         # TIER 1: Planned harvests
         for activity in planned_harvests:
             # Get forecast summary if exists
-            # If activity targets a specific container, filter by that container
             summary_filter = {
                 'assignment__batch': activity.batch,
                 'assignment__is_active': True,
             }
+            
             if activity.container:
+                # Container-specific: get that container's summary
                 summary_filter['assignment__container'] = activity.container
-
-            summary = ContainerForecastSummary.objects.filter(
-                **summary_filter
-            ).first()
-
-            result = {
-                'tier': 'PLANNED',
-                'batch_id': activity.batch_id,
-                'batch_number': activity.batch.batch_number,
-                'container_id': activity.container_id if activity.container else None,
-                'container_name': (
-                    activity.container.name if activity.container else 'Batch-level'
-                ),
-                'current_weight_g': (
-                    float(summary.current_weight_g) if summary else None
-                ),
-                'planned_date': activity.due_date.isoformat(),
-                'projected_date': (
-                    summary.projected_harvest_date.isoformat()
-                    if summary and summary.projected_harvest_date else None
-                ),
-                'days_to_harvest': (
-                    (activity.due_date - today).days
-                ),
-                'variance_days': (
-                    summary.harvest_variance_days if summary else None
-                ),
-                'confidence': (
-                    float(summary.state_confidence) if summary else None
-                ),
-                'computed_date': (
-                    summary.computed_date.isoformat()
-                    if summary and summary.computed_date else None
-                ),
-                'source': 'PlannedActivity',
-            }
+                summary = ContainerForecastSummary.objects.filter(
+                    **summary_filter
+                ).first()
+                
+                result = {
+                    'tier': 'PLANNED',
+                    'batch_id': activity.batch_id,
+                    'batch_number': activity.batch.batch_number,
+                    'container_id': activity.container_id,
+                    'container_name': activity.container.name,
+                    'current_weight_g': (
+                        float(summary.current_weight_g) if summary else None
+                    ),
+                    'planned_date': activity.due_date.isoformat(),
+                    'projected_date': (
+                        summary.projected_harvest_date.isoformat()
+                        if summary and summary.projected_harvest_date else None
+                    ),
+                    'days_to_harvest': (activity.due_date - today).days,
+                    'variance_days': (
+                        summary.harvest_variance_days if summary else None
+                    ),
+                    'confidence': (
+                        float(summary.state_confidence) if summary else None
+                    ),
+                    'computed_date': (
+                        summary.computed_date.isoformat()
+                        if summary and summary.computed_date else None
+                    ),
+                    'source': 'PlannedActivity',
+                }
+            else:
+                # Batch-level: aggregate across all active containers
+                summaries = ContainerForecastSummary.objects.filter(
+                    **summary_filter
+                )
+                summary_count = summaries.count()
+                
+                if summary_count > 0:
+                    # Calculate aggregates (Avg, Min already imported at top)
+                    aggregates = summaries.aggregate(
+                        avg_weight=Avg('current_weight_g'),
+                        avg_confidence=Avg('state_confidence'),
+                        min_harvest_date=Min('projected_harvest_date'),
+                    )
+                    avg_weight = aggregates['avg_weight']
+                    avg_confidence = aggregates['avg_confidence']
+                    earliest_harvest = aggregates['min_harvest_date']
+                    
+                    # Get most recent computed_date
+                    latest_summary = summaries.order_by('-computed_date').first()
+                    computed_date_val = (
+                        latest_summary.computed_date.isoformat()
+                        if latest_summary and latest_summary.computed_date else None
+                    )
+                    
+                    # Calculate variance from earliest projected harvest
+                    variance_days = None
+                    if earliest_harvest:
+                        variance_days = (earliest_harvest - activity.due_date).days
+                else:
+                    avg_weight = None
+                    avg_confidence = None
+                    earliest_harvest = None
+                    computed_date_val = None
+                    variance_days = None
+                
+                result = {
+                    'tier': 'PLANNED',
+                    'batch_id': activity.batch_id,
+                    'batch_number': activity.batch.batch_number,
+                    'container_id': None,
+                    'container_name': f'Batch-level ({summary_count} containers)',
+                    'current_weight_g': (
+                        float(avg_weight) if avg_weight else None
+                    ),
+                    'planned_date': activity.due_date.isoformat(),
+                    'projected_date': (
+                        earliest_harvest.isoformat() if earliest_harvest else None
+                    ),
+                    'days_to_harvest': (activity.due_date - today).days,
+                    'variance_days': variance_days,
+                    'confidence': (
+                        float(avg_confidence) if avg_confidence else None
+                    ),
+                    'computed_date': computed_date_val,
+                    'source': 'PlannedActivity',
+                }
+            
             results.append(result)
 
         # TIER 2 & 3: From ContainerForecastSummary

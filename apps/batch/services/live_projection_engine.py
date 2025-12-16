@@ -27,6 +27,7 @@ from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.batch.models import (
@@ -550,17 +551,22 @@ class LiveProjectionEngine:
             if harvest_crossing and transfer_crossing:
                 break
 
-        # Check for planned activities
+        # Check for planned activities that apply to THIS container
+        # Include: batch-level activities (container=None) OR container-specific for this container
         has_planned_harvest = PlannedActivity.objects.filter(
             batch=self.batch,
             activity_type='HARVEST',
             status__in=['PENDING', 'IN_PROGRESS'],
+        ).filter(
+            Q(container__isnull=True) | Q(container=self.container)
         ).exists()
 
         has_planned_transfer = PlannedActivity.objects.filter(
             batch=self.batch,
             activity_type='TRANSFER',
             status__in=['PENDING', 'IN_PROGRESS'],
+        ).filter(
+            Q(container__isnull=True) | Q(container=self.container)
         ).exists()
 
         # Determine if needs attention (approaching threshold without plan)
