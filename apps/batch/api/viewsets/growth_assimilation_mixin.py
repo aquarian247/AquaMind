@@ -100,7 +100,6 @@ class GrowthAssimilationMixin:
         
         # Parse query parameters
         start_date = self._parse_date_param(request, 'start_date', batch.start_date)
-        end_date = self._parse_date_param(request, 'end_date', datetime.now().date())
         assignment_id = request.query_params.get('assignment_id')
         granularity = request.query_params.get('granularity', 'daily')
         
@@ -133,6 +132,12 @@ class GrowthAssimilationMixin:
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        # Calculate end_date: use scenario end date to include full projection
+        # This ensures scenario projections aren't cut off at current date
+        scenario_end_date = scenario.start_date + timedelta(days=scenario.duration_days)
+        default_end_date = max(datetime.now().date(), scenario_end_date)
+        end_date = self._parse_date_param(request, 'end_date', default_end_date)
         
         # Build response
         response_data = {
