@@ -663,15 +663,16 @@ class LiveProjectionEngine:
     def _get_harvest_threshold(self) -> Optional[float]:
         """Get harvest weight threshold from scenario."""
         # Try biological constraints first
+        # StageConstraint.lifecycle_stage uses lowercase choices: 'harvest'
         if self.scenario.biological_constraints:
             try:
                 from apps.scenario.models import StageConstraint
-                adult_constraint = StageConstraint.objects.get(
+                harvest_constraint = StageConstraint.objects.get(
                     constraint_set=self.scenario.biological_constraints,
-                    lifecycle_stage__in=['Adult', 'Harvest', 'adult', 'harvest']
+                    lifecycle_stage='harvest'
                 )
-                if adult_constraint.max_weight_g:
-                    return float(adult_constraint.max_weight_g)
+                if harvest_constraint.max_weight_g:
+                    return float(harvest_constraint.max_weight_g)
             except StageConstraint.DoesNotExist:
                 pass
 
@@ -681,12 +682,13 @@ class LiveProjectionEngine:
     def _get_transfer_threshold(self) -> Optional[float]:
         """Get sea-transfer weight threshold from scenario."""
         # Try biological constraints first
+        # StageConstraint.lifecycle_stage uses lowercase choices: 'smolt'
         if self.scenario.biological_constraints:
             try:
                 from apps.scenario.models import StageConstraint
                 smolt_constraint = StageConstraint.objects.get(
                     constraint_set=self.scenario.biological_constraints,
-                    lifecycle_stage__in=['Smolt', 'smolt']
+                    lifecycle_stage='smolt'
                 )
                 if smolt_constraint.max_weight_g:
                     return float(smolt_constraint.max_weight_g)
