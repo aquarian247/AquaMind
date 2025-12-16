@@ -849,7 +849,17 @@ the live forward projection task).
                 Q(container__isnull=True, batch__batch_assignments__container__hall__freshwater_station__geography_id=geography_id)
             ).distinct()
 
-        planned_batch_ids = set(planned_harvests.values_list('batch_id', flat=True))
+        # Track planned items to avoid duplicates in TIER 2/3
+        # For container-specific activities: track (batch_id, container_id)
+        # For batch-level activities: track (batch_id, None) - excludes all containers
+        planned_keys = set()
+        for activity in planned_harvests:
+            if activity.container_id:
+                # Container-specific: only this container is planned
+                planned_keys.add((activity.batch_id, activity.container_id))
+            else:
+                # Batch-level: all containers in batch are covered
+                planned_keys.add((activity.batch_id, None))
 
         results = []
 
@@ -903,17 +913,27 @@ the live forward projection task).
 
         # TIER 2 & 3: From ContainerForecastSummary
         for forecast in forecasts:
+            batch_id = forecast.assignment.batch_id
+            container_id = forecast.assignment.container_id
+            
             # Skip if already in planned results to avoid duplicates
-            if forecast.assignment.batch_id in planned_batch_ids:
+            # Check both container-specific and batch-level planned activities
+            if (batch_id, container_id) in planned_keys or (batch_id, None) in planned_keys:
                 continue
 
             tier = 'NEEDS_PLANNING' if forecast.needs_planning_attention else 'PROJECTED'
 
+            # Calculate days_to_harvest from today for consistency with TIER 1
+            # (stored days_to_harvest is relative to computed_date, which may be stale)
+            days_to_harvest = None
+            if forecast.projected_harvest_date:
+                days_to_harvest = (forecast.projected_harvest_date - today).days
+
             result = {
                 'tier': tier,
-                'batch_id': forecast.assignment.batch_id,
+                'batch_id': batch_id,
                 'batch_number': forecast.assignment.batch.batch_number,
-                'container_id': forecast.assignment.container_id,
+                'container_id': container_id,
                 'container_name': forecast.assignment.container.name,
                 'current_weight_g': float(forecast.current_weight_g),
                 'planned_date': None,
@@ -921,7 +941,7 @@ the live forward projection task).
                     forecast.projected_harvest_date.isoformat()
                     if forecast.projected_harvest_date else None
                 ),
-                'days_to_harvest': forecast.days_to_harvest,
+                'days_to_harvest': days_to_harvest,
                 'variance_days': forecast.harvest_variance_days,
                 'confidence': float(forecast.state_confidence),
                 'computed_date': (
