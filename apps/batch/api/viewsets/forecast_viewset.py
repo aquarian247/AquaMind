@@ -837,7 +837,17 @@ the live forward projection task).
             activity_type='HARVEST',
             status__in=['PENDING', 'IN_PROGRESS'],
             due_date__lte=horizon_date,
-        ).select_related('batch')
+        ).select_related('batch', 'container__area', 'container__hall__freshwater_station')
+
+        # Apply geography filter to planned harvests too
+        if geography_id:
+            planned_harvests = planned_harvests.filter(
+                Q(container__area__geography_id=geography_id) |
+                Q(container__hall__freshwater_station__geography_id=geography_id) |
+                # Include batch-level activities if batch has containers in geography
+                Q(container__isnull=True, batch__assignments__container__area__geography_id=geography_id) |
+                Q(container__isnull=True, batch__assignments__container__hall__freshwater_station__geography_id=geography_id)
+            ).distinct()
 
         planned_batch_ids = set(planned_harvests.values_list('batch_id', flat=True))
 
@@ -846,9 +856,16 @@ the live forward projection task).
         # TIER 1: Planned harvests
         for activity in planned_harvests:
             # Get forecast summary if exists
+            # If activity targets a specific container, filter by that container
+            summary_filter = {
+                'assignment__batch': activity.batch,
+                'assignment__is_active': True,
+            }
+            if activity.container:
+                summary_filter['assignment__container'] = activity.container
+
             summary = ContainerForecastSummary.objects.filter(
-                assignment__batch=activity.batch,
-                assignment__is_active=True,
+                **summary_filter
             ).first()
 
             result = {
