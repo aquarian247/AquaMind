@@ -98,7 +98,7 @@ class TGCCalculator:
             Dict with growth_g and new_weight_g
         """
         # Check for stage-specific TGC override
-        tgc_value = self.model.tgc_value
+        tgc_value = self.tgc_value  # Use pre-converted float from __init__
         
         if lifecycle_stage:
             # Look for stage-specific override

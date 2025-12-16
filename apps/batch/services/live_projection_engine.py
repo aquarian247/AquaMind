@@ -338,7 +338,7 @@ class LiveProjectionEngine:
         current_stage = start_state.lifecycle_stage
 
         # Profile info for provenance
-        profile_id = self.temp_profile.id if self.temp_profile else None
+        profile_id = self.temp_profile.profile_id if self.temp_profile else None
         profile_name = self.temp_profile.name if self.temp_profile else ''
 
         # Get TGC value (may vary by stage later)
@@ -607,18 +607,19 @@ class LiveProjectionEngine:
             return None
 
         try:
-            from apps.scenario.models import ProjectionDay
+            from apps.scenario.models import ScenarioProjection
             # Find the day when projected weight first crosses harvest threshold
             harvest_threshold = self._get_harvest_threshold()
-            harvest_day = ProjectionDay.objects.filter(
+            if harvest_threshold is None:
+                return None
+                
+            harvest_projection = ScenarioProjection.objects.filter(
                 projection_run=self.batch.pinned_projection_run,
-                projected_avg_weight_g__gte=Decimal(str(harvest_threshold))
+                average_weight__gte=float(harvest_threshold)
             ).order_by('day_number').first()
 
-            if harvest_day:
-                return self.batch.start_date + timedelta(
-                    days=harvest_day.day_number - 1
-                )
+            if harvest_projection:
+                return harvest_projection.projection_date
         except Exception as e:
             logger.warning(f"Error getting original harvest date: {e}")
 
