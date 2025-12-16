@@ -436,10 +436,6 @@ class LiveProjectionEngine:
             proj_date = start_date + timedelta(days=day_offset)
             day_number = current_day + day_offset
 
-            # Skip past dates (shouldn't happen, but safety check)
-            if proj_date <= today:
-                continue
-
             # Determine lifecycle stage based on elapsed time (time-based transitions)
             # This ensures live projections advance through stages like scenario projections
             new_stage = self._determine_lifecycle_stage(day_number)
@@ -474,6 +470,15 @@ class LiveProjectionEngine:
             mortality = int(round(current_population * daily_mortality_rate))
             new_population = max(0, current_population - mortality)
 
+            # Update state for next iteration (must happen for ALL days
+            # to avoid underestimating growth when start_state is stale)
+            current_weight = new_weight
+            current_population = new_population
+
+            # Only store projections for future dates (not today or past)
+            if proj_date <= today:
+                continue
+
             # Calculate biomass
             new_biomass = (new_weight * new_population) / 1000
 
@@ -500,10 +505,6 @@ class LiveProjectionEngine:
                 temp_bias_clamp_max_c=Decimal(str(self.bias_clamp[1])),
             )
             projections.append(projection)
-
-            # Update for next iteration
-            current_weight = new_weight
-            current_population = new_population
 
         return projections
 
