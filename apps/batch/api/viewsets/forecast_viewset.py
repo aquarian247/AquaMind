@@ -845,8 +845,8 @@ the live forward projection task).
                 Q(container__area__geography_id=geography_id) |
                 Q(container__hall__freshwater_station__geography_id=geography_id) |
                 # Include batch-level activities if batch has containers in geography
-                Q(container__isnull=True, batch__assignments__container__area__geography_id=geography_id) |
-                Q(container__isnull=True, batch__assignments__container__hall__freshwater_station__geography_id=geography_id)
+                Q(container__isnull=True, batch__batch_assignments__container__area__geography_id=geography_id) |
+                Q(container__isnull=True, batch__batch_assignments__container__hall__freshwater_station__geography_id=geography_id)
             ).distinct()
 
         planned_batch_ids = set(planned_harvests.values_list('batch_id', flat=True))
