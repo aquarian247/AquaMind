@@ -390,11 +390,11 @@ def fix_history_operation_ids(result, generator, request, public):
     Returns:
         The modified OpenAPI schema with fixed operation IDs
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     if 'paths' not in result:
         return result
-
-    # Debug: print that the hook is running
-    print("🔧 fix_history_operation_ids hook is running!")
 
     # Mapping of current Spectacular-generated operation IDs to correct ones
     # Need to differentiate between list and retrieve operations to avoid collisions
@@ -502,9 +502,12 @@ def fix_history_operation_ids(result, generator, request, public):
                     new_operation_id = operation_id_mapping[old_operation_id]
                     operation['operationId'] = new_operation_id
                     changes_made += 1
-                    print(f"🔧 Fixed operationId: {old_operation_id} → {new_operation_id}")
+                    logger.debug(
+                        f"Fixed operationId: {old_operation_id} → {new_operation_id}"
+                    )
 
-    print(f"🔧 Total operation ID fixes: {changes_made}")
+    if changes_made > 0:
+        logger.debug(f"Total history operation ID fixes: {changes_made}")
     return result
 
 
