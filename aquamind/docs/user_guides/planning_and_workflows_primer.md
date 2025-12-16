@@ -1,19 +1,19 @@
 # AquaMind Operational Core Integration Guide
 
-**Version**: 2.0  
-**Last Updated**: December 11, 2025  
-**Owner**: Engineering (Solo Dev)  
+**Version**: 2.1  
+**Last Updated**: December 16, 2025  
+**Owner**: Engineering  
 **Target Repository**: `aquarian247/AquaMind/aquamind/docs/user_guides/`  
 
 ---
 
 ## Overview
 
-This guide documents the interplay between AquaMind's three core operational features: **Production Planner** (scenario-based planning), **Batch Growth Assimilation** (daily "actuals" computation), and **Transfer Workflows** (multi-step execution). These form a symbiotic "plan → execute → track → learn" feedback loop, enabling proactive management of 50-60+ concurrent batches while grounding decisions in real data.
+This guide documents the interplay between AquaMind's four core operational features: **Production Planner** (scenario-based planning), **Batch Growth Assimilation** (daily "actuals" computation), **Transfer Workflows** (multi-step execution), and **Live Forward Projection** (operational forecasting). These form a symbiotic "plan → execute → track → learn → forecast" feedback loop, enabling proactive management of 50-60+ concurrent batches while grounding decisions in real data.
 
-The design separates concerns for flexibility—plans for what-ifs, workflows for high-risk executions (e.g., transfers), and assimilation for truth-telling actuals—without redundancy. This aligns with Bakkafrost's multi-subsidiary ops (e.g., Freshwater → Farming handoffs) and regulatory needs (audit trails via `django-simple-history`). 
+The design separates concerns for flexibility—plans for what-ifs, workflows for high-risk executions (e.g., transfers), assimilation for truth-telling actuals, and live projections for data-driven forecasts—without redundancy. This aligns with Bakkafrost's multi-subsidiary ops (e.g., Freshwater → Farming handoffs) and regulatory needs (audit trails via `django-simple-history`). 
 
-For superusers: Think of it as a feedback engine. Plans sketch the future; workflows make it happen; assimilation measures reality and auto-adjusts. No manual reconciliation—signals and Celery tasks keep it live.
+For superusers: Think of it as a feedback engine. Plans sketch the future; workflows make it happen; assimilation measures reality and auto-adjusts; live projections answer "given where we are today, when will we really be ready?" No manual reconciliation—signals and Celery tasks keep it live.
 
 **Key Benefits**:
 - **Agility**: What-if scenarios without workflow overhead.
@@ -46,6 +46,42 @@ They share primitives (status lifecycles: PENDING → COMPLETED; audit via simpl
 
 ---
 
+## The Fourth Pillar: Live Forward Projection
+
+While the three pillars above handle **past** (assimilation), **present** (workflows), and **planned future** (planner), they don't answer a critical operational question: *"Given where we actually are today, when will this batch really be ready?"*
+
+**Live Forward Projection** bridges this gap by projecting forward from the latest `ActualDailyAssignmentState` using TGC growth models and temperature-corrected profiles. This creates data-driven harvest and transfer forecasts that update nightly, reflecting reality rather than stale scenario assumptions.
+
+| Component | Purpose | Key Models/Tables | Data Flow Role |
+|-----------|---------|-------------------|---------------|
+| **Live Forward Projection** | Nightly recompute of "when will we reach harvest/transfer weight?" based on current actuals | `batch_liveforwardprojection` (hypertable); `batch_containerforecastsummary` (dashboard cache). | Starts from latest actual state; applies temp bias + TGC; outputs daily projections; feeds Executive Dashboard with tiered forecasts. |
+
+### The Three-Tier Forecast Architecture
+
+Live Forward Projection enables executive decision-making via tiered urgency classification:
+
+| Tier | Name | Condition | Action |
+|------|------|-----------|--------|
+| **1** | PLANNED | `PlannedActivity` (HARVEST/TRANSFER) exists | Execute as scheduled |
+| **2** | PROJECTED | Live Forward predicts threshold crossing, no plan yet | Create plan when appropriate |
+| **3** | NEEDS_ATTENTION | Within 30 days of threshold, still no plan | **Urgent**: Create plan now |
+
+This ensures executives focus on exceptions rather than reviewing every batch.
+
+### Key Innovation: Temperature Bias
+
+Scenario projections assume idealized temperatures from `TemperatureProfile`. Reality diverges. Live Forward computes a **temperature bias** from recent sensor data:
+
+```
+bias = mean(actual_temp - profile_temp) over last 14 days
+```
+
+This bias is applied to all future temperature predictions, making projections more accurate as operational data accumulates.
+
+📚 **Full Documentation**: See [Live Forward Projection Guide](./live_forward_projection_guide.md) for complete details on computation, API endpoints, TimescaleDB configuration, and troubleshooting.
+
+---
+
 ## Data Flow and Interplay
 
 Phase 8/8.5 implementation (December 2025) closed the loop with bidirectional signals—actuals trigger plans; completed plans/workflows anchor actuals. This creates a true feedback engine.
@@ -59,7 +95,12 @@ Phase 8/8.5 implementation (December 2025) closed the loop with bidirectional si
      │                                                                 │
 [Assimilation: Daily Actuals + Anchors] <──anchors── [Core: e.g., weights from actions, mortalities]
      │                                                                 │
-     └──────────triggers/eval──────────────┘ (WEIGHT/STAGE hooks; variance joins; FCR tracking)
+     ├──────────triggers/eval──────────────┘ (WEIGHT/STAGE hooks; variance joins; FCR tracking)
+     │
+     ▼
+[Live Forward Projection] ──projects──> [Executive Dashboard: Tiered Forecasts]
+     │                                           │
+     └───────────────────────────────────────────┘ (NEEDS_ATTENTION tier → prompts PlannedActivity creation)
 ```
 
 ### Forward Flow (Plan → Execute → Track)
@@ -237,6 +278,7 @@ From `data_model.md` inspection (December 2025):
 - Data Model: `docs/database/data_model.md`
 - Implementation Plan: `docs/progress/batch_growth_assimilation/batch-growth-assimilation-plan.md` (Phase 8/8.5)
 - Executive Forecast Dashboard: `docs/progress/executive_forecast_dashboard/` (Phase 9 planning)
+- **Live Forward Projection Guide**: `docs/user_guides/live_forward_projection_guide.md` (Phase 9 implementation)
 
 ---
 
