@@ -788,7 +788,18 @@ the live forward projection task).
         """
         geography_id = request.query_params.get('geography_id')
         tier_filter = request.query_params.get('tier')
-        days_horizon = int(request.query_params.get('days_horizon', 90))
+        days_horizon_param = request.query_params.get('days_horizon', '90')
+        
+        try:
+            days_horizon = int(days_horizon_param)
+            if days_horizon < 1 or days_horizon > 3650:  # 1 day to 10 years
+                raise ValidationError({
+                    'days_horizon': 'Must be between 1 and 3650 days'
+                })
+        except (ValueError, TypeError):
+            raise ValidationError({
+                'days_horizon': 'Invalid days_horizon value - must be an integer'
+            })
 
         today = date.today()
         horizon_date = today + timedelta(days=days_horizon)
