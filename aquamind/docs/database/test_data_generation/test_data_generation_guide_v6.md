@@ -1,7 +1,7 @@
-# AquaMind Test Data Generation Guide v6.3
+# AquaMind Test Data Generation Guide v6.4
 
-**Last Updated:** 2025-12-03
-**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling + Optimized Growth Analysis + Planned Activities**
+**Last Updated:** 2026-01-12
+**Status:** ✅ **PRODUCTION READY - Hybrid Weight-Aware Deterministic Scheduling + Optimized Growth Analysis + Planned Activities + UAT-Optimized Distribution**
 
 **⚠️ THIS IS THE SINGLE SOURCE OF TRUTH FOR TEST DATA GENERATION**
 
@@ -108,6 +108,79 @@ SKIP_CELERY_SIGNALS=1 python scripts/data_generation/03_event_engine_core.py \
   --start-date 2025-01-01 --eggs 3500000 \
   --geography "Faroe Islands" --duration 200
 ```
+
+### Option D: UAT-Optimized Distribution (60-70 minutes) ⭐ NEW
+
+**Purpose:** Generate test data optimized for **User Acceptance Testing (UAT)** with strategic batch positioning across all lifecycle stages.
+
+**Problem Solved:** Standard test data generation creates batches with random lifecycle positions (based on time-staggering). For UAT, testers need:
+- Equal representation across all 6 lifecycle stages
+- Batches near stage transition points (for testing transfer workflows)
+- Fresh data extending to TODAY (for live forward projection testing)
+
+**Solution:** "Lifecycle Ladder" distribution positions batches at specific day targets:
+- Formula: `start_date = TODAY - target_day_number`
+- Each active batch is at the exact lifecycle position needed for testing
+
+```bash
+cd /Users/aquarian247/Projects/AquaMind
+
+# 1. One-time setup (if not already done)
+python scripts/data_generation/01_initialize_scenario_master_data.py
+python scripts/data_generation/01_initialize_finance_policies.py
+python scripts/data_generation/01_initialize_health_parameters.py
+python scripts/data_generation/01_initialize_activity_templates.py
+
+# 2. Wipe operational data
+echo "DELETE" | python scripts/data_generation/00_wipe_operational_data.py --confirm
+
+# 3. Generate UAT-optimized schedule
+python scripts/data_generation/generate_uat_schedule.py \
+  --output config/schedule_uat.yaml
+
+# 4. Execute schedule with parallel workers (45-55 minutes)
+SKIP_CELERY_SIGNALS=1 python scripts/data_generation/execute_batch_schedule.py \
+  config/schedule_uat.yaml \
+  --workers 14 --use-partitions \
+  --log-dir scripts/data_generation/logs/uat
+
+# 5. Run Growth Analysis recomputation (8-10 minutes)
+python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
+
+# 6. Seed Planned Activities
+python scripts/data_generation/seed_planned_activities.py
+
+# 7. Verify UAT coverage
+python scripts/data_generation/verify_uat_coverage.py
+```
+
+**Expected Results:**
+- **~136 batches total** (68 per geography)
+- **~56 active batches** strategically positioned:
+  - **Egg & Alevin:** 5 batches (Day 25-90)
+  - **Fry:** 4 batches (Day 105-178)
+  - **Parr:** 4 batches (Day 195-268)
+  - **Smolt:** 4 batches (Day 285-358, including FW→Sea transition)
+  - **Post-Smolt:** 4 batches (Day 375-448)
+  - **Adult:** 7 batches (Day 480-860, including near-harvest)
+- **~80 completed batches** (historical baseline)
+- **3-4 batches at each transition boundary** (for workflow testing)
+- **6 Adult batches near harvest** (Day 720-860, for harvest planning)
+- **Data fresh to TODAY** (critical for Live Forward Projection)
+
+**Key Files:**
+- `scripts/data_generation/generate_uat_schedule.py` - UAT schedule generator
+- `scripts/data_generation/verify_uat_coverage.py` - Coverage verification
+- `config/schedule_uat.yaml` - Generated schedule (output)
+
+**When to Use Option D:**
+- Pre-UAT testing preparation
+- Testing Live Forward Projection features
+- Testing Transfer Workflow features (especially FW→Sea)
+- Testing Harvest Planning features
+- When you need batches in specific lifecycle positions
+
+**vs. Option A:** Option A creates production-like data with realistic time-staggering (good for load testing, performance testing). Option D creates UAT-optimized data with strategic positioning (good for feature testing, workflow testing).
 
 ---
 
@@ -729,6 +802,9 @@ Actual target: 170 batches (85 per geography)
 | `01_initialize_activity_templates.py` | Activity templates for Production Planner | 15 sec | Once after infrastructure |
 | `03_event_engine_core.py` | Single batch generation | 2-3 min | Core engine (called by orchestrator) |
 | `04_batch_orchestrator_parallel.py` | Multi-batch parallel generation | 45-60 min | Main production data generation |
+| `generate_batch_schedule.py` | Time-staggered schedule planner | 30 sec | **Option A**: Production-like data |
+| `generate_uat_schedule.py` | UAT lifecycle ladder schedule | 30 sec | **Option D**: UAT-optimized data |
+| `execute_batch_schedule.py` | Execute pre-planned schedule | 45-60 min | After schedule generation |
 | `run_growth_analysis_optimized.py` | Compute ActualDailyAssignmentState | 8-10 min | **REQUIRED** after batch generation |
 | `seed_planned_activities.py` | PlannedActivity from 20 lifecycle templates | 30 sec | After Growth Analysis (uses templates for realistic data) |
 
@@ -738,6 +814,7 @@ Actual target: 170 batches (85 per geography)
 |--------|---------|-------|
 | `verify_single_batch.py` | Automated verification | Checks fixes applied |
 | `verify_test_data.py` | Comprehensive data quality check | Post-generation validation |
+| `verify_uat_coverage.py` | UAT stage distribution verification | Use after Option D generation |
 
 ### Deprecated Scripts (Don't Use)
 
@@ -1091,6 +1168,36 @@ Event engine creates 10,000 events → 10,000 signal attempts → 10,000 Redis f
 - Container reuse (batches transition through facilities)
 
 **Our model mirrors this:** 85% saturation with 170 batches across 2,017 containers.
+
+### 6. UAT vs Production Data Distribution (NEW)
+
+**The Problem:** Standard time-staggered generation creates batches at arbitrary lifecycle positions, making systematic feature testing difficult.
+
+**Two Approaches:**
+
+| Aspect | Production-Like (Option A) | UAT-Optimized (Option D) |
+|--------|---------------------------|-------------------------|
+| **Distribution** | Time-staggered (13-day intervals) | Lifecycle ladder (specific day targets) |
+| **Stage Coverage** | Random/unpredictable | Equal across all 6 stages |
+| **Transition Testing** | May lack batches at boundaries | 3-4 batches per transition |
+| **Best For** | Load testing, performance, realism | Feature testing, workflow validation |
+| **Live Forward Projection** | May have stale data | Data fresh to TODAY |
+
+**UAT Lifecycle Ladder Concept:**
+```
+TODAY
+  │
+  ├─ Day 25-90:   Egg&Alevin (5 batches)
+  ├─ Day 105-178: Fry (4 batches)  
+  ├─ Day 195-268: Parr (4 batches)
+  ├─ Day 285-358: Smolt (4 batches) ← FW→Sea critical!
+  ├─ Day 375-448: Post-Smolt (4 batches)
+  └─ Day 480-860: Adult (7 batches) ← Harvest planning
+```
+
+**Formula:** `start_date = TODAY - target_day_number`
+
+Each batch runs from its start date to TODAY, so it's at exactly the lifecycle position you need for testing.
 
 ---
 
