@@ -54,6 +54,11 @@ python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 # 7. Seed Planned Activities for Production Planner (30 seconds)
 # Generates PlannedActivity records across active batches for operational scheduling testing
 python scripts/data_generation/seed_planned_activities.py
+
+# 8. Compute Live Forward Projections (5-6 minutes)
+# This computes forward projections from current state to harvest - required for Growth Analytics purple line
+# Also updates ContainerForecastSummary for Executive Dashboard tiered harvest view
+python scripts/data_generation/run_live_projections.py
 ```
 
 **Expected Results:**
@@ -68,6 +73,7 @@ python scripts/data_generation/seed_planned_activities.py
 - **4,000+ treatments** (vaccinations + lice)
 - **~940K ActualDailyAssignmentState records** (Growth Analysis data)
 - **~1,180 PlannedActivity records** (20 templates × ~59 active batches only)
+- **~200K+ LiveForwardProjection records** (forward projections to harvest)
 - **Finance facts + intercompany transactions**
 - **5.2 years** of operational history
 - **70% infrastructure utilization** (10 rings per batch)
@@ -88,6 +94,9 @@ python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 
 # Seed Planned Activities (for Production Planner testing)
 python scripts/data_generation/seed_planned_activities.py
+
+# Compute Live Forward Projections (for Growth Analytics purple line)
+python scripts/data_generation/run_live_projections.py
 ```
 
 **Expected Results:**
@@ -98,6 +107,7 @@ python scripts/data_generation/seed_planned_activities.py
 - **1.5 million feeding events**
 - **~900K ActualDailyAssignmentState records** (Growth Analysis)
 - **150+ PlannedActivity records** (Production Planner)
+- **~100K+ LiveForwardProjection records** (forward projections)
 - **15-20 GB database**
 
 ### Option C: Single Batch Verification (15 minutes)
@@ -150,7 +160,11 @@ python scripts/data_generation/run_growth_analysis_optimized.py --workers 4
 # 6. Seed Planned Activities
 python scripts/data_generation/seed_planned_activities.py
 
-# 7. Verify UAT coverage
+# 7. Compute Live Forward Projections (5-6 minutes)
+# Required for Growth Analytics purple line and Executive Dashboard tiered harvest view
+python scripts/data_generation/run_live_projections.py
+
+# 8. Verify UAT coverage
 python scripts/data_generation/verify_uat_coverage.py
 ```
 
@@ -166,6 +180,7 @@ python scripts/data_generation/verify_uat_coverage.py
 - **~80 completed batches** (historical baseline)
 - **3-4 batches at each transition boundary** (for workflow testing)
 - **6 Adult batches near harvest** (Day 720-860, for harvest planning)
+- **~235K+ LiveForwardProjection records** (forward projections)
 - **Data fresh to TODAY** (critical for Live Forward Projection)
 
 **Key Files:**
@@ -806,7 +821,8 @@ Actual target: 170 batches (85 per geography)
 | `generate_uat_schedule.py` | UAT lifecycle ladder schedule | 30 sec | **Option D**: UAT-optimized data |
 | `execute_batch_schedule.py` | Execute pre-planned schedule | 45-60 min | After schedule generation |
 | `run_growth_analysis_optimized.py` | Compute ActualDailyAssignmentState | 8-10 min | **REQUIRED** after batch generation |
-| `seed_planned_activities.py` | PlannedActivity from 20 lifecycle templates | 30 sec | After Growth Analysis (uses templates for realistic data) |
+| `seed_planned_activities.py` | PlannedActivity from 20 lifecycle templates | 30 sec | After Growth Analysis |
+| `run_live_projections.py` | Compute LiveForwardProjection records | 5-6 min | **REQUIRED** for Growth Analytics + Executive Dashboard |
 
 ### Supporting Scripts
 
