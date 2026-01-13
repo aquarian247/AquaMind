@@ -158,9 +158,10 @@ class HallViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         # Get containers in this hall
         containers = Container.objects.filter(hall=hall)
 
-        # Aggregate container counts
+        # Aggregate container counts and total capacity
         container_aggregates = containers.aggregate(
             container_count=Count('id'),
+            total_capacity_kg=Sum('max_biomass_kg'),
         )
 
         # Get biomass and population aggregates based on is_active filter
@@ -184,18 +185,24 @@ class HallViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
 
         # Extract values with defaults
         container_count = container_aggregates['container_count'] or 0
+        total_capacity_kg = container_aggregates['total_capacity_kg'] or Decimal('0.00')
         active_biomass_kg = biomass_aggregates['active_biomass_kg'] or Decimal('0.00')
         population_count = biomass_aggregates['population_count'] or 0
 
         # Calculate average weight with division by zero protection
         avg_weight_kg = float(active_biomass_kg) / population_count if population_count > 0 else 0
+        
+        # Calculate utilization percentage (biomass-based)
+        utilization_percent = float(active_biomass_kg) / float(total_capacity_kg) * 100 if total_capacity_kg > 0 else 0
 
         # Serialize and return the response
         serializer = HallSummarySerializer(data={
             'container_count': container_count,
             'active_biomass_kg': active_biomass_kg,
             'population_count': population_count,
-            'avg_weight_kg': round(avg_weight_kg, 3)
+            'avg_weight_kg': round(avg_weight_kg, 3),
+            'total_capacity_kg': total_capacity_kg,
+            'utilization_percent': round(utilization_percent, 1),
         })
         serializer.is_valid(raise_exception=True)
 

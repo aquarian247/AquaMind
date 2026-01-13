@@ -38,9 +38,19 @@ class HallSummarySerializer(serializers.Serializer):
         min_value=0,
         help_text="Average weight in kg per fish (active_biomass_kg / population_count). Returns 0 if population_count is 0."
     )
+    total_capacity_kg = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=0,
+        help_text="Sum of max_biomass_kg from all containers in this hall."
+    )
+    utilization_percent = serializers.FloatField(
+        min_value=0,
+        help_text="Biomass utilization percentage (active_biomass_kg / total_capacity_kg * 100). Returns 0 if total_capacity_kg is 0."
+    )
 
     class Meta:
-        fields = ['container_count', 'active_biomass_kg', 'population_count', 'avg_weight_kg']
+        fields = ['container_count', 'active_biomass_kg', 'population_count', 'avg_weight_kg', 'total_capacity_kg', 'utilization_percent']
 
 
 class HallSerializer(TimestampedModelSerializer, NamedModelSerializer):
