@@ -1518,11 +1518,11 @@ class EventEngine:
             initial_pop = sum(a.population_count for a in self.assignments)
             initial_weight = self.assignments[0].avg_weight_g
             
-            # Create scenario for realistic harvest timeline (not full lifecycle)
+            # Create scenario covering full lifecycle (900 days to harvest)
             scenario = Scenario.objects.create(
                 name=f"Baseline Projection - {self.batch.batch_number}",
                 start_date=self.start_date,
-                duration_days=760,  # Project to ~5-6kg (typical harvest weight)
+                duration_days=900,  # Full lifecycle to harvest (~3 years)
                 initial_count=initial_pop,
                 initial_weight=float(initial_weight),
                 genotype=f"Standard {self.geography_name}",
@@ -1536,7 +1536,7 @@ class EventEngine:
             
             print(f"  ✓ Created baseline scenario: {scenario.name}")
             print(f"    Initial: {initial_pop:,} eggs @ {float(initial_weight):.2f}g")
-            print(f"    Duration: 760 days (projects to ~5-6kg harvest weight)")
+            print(f"    Duration: 900 days (full lifecycle to harvest)")
             
             # Compute projection data
             try:
