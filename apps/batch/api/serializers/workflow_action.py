@@ -49,6 +49,7 @@ class TransferActionListSerializer(
             'transferred_count',
             'mortality_during_transfer',
             'transferred_biomass_kg',
+            'allow_mixed',
             'status',
             'status_display',
             'planned_date',

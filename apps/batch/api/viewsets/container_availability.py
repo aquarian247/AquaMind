@@ -6,15 +6,15 @@ planners to see which containers will be available on a future delivery date.
 """
 from datetime import datetime, timedelta
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db.models import Q, Sum, F
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
 from apps.infrastructure.models import Container
 from apps.batch.models import BatchContainerAssignment
+from apps.batch.models.workflow_action import TransferAction
+from apps.planning.models import PlannedActivity
 from apps.batch.api.serializers.container_availability import ContainerAvailabilityResponseSerializer
 
 
@@ -184,9 +184,68 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
         current_assignments_data = []
         total_current_biomass = 0
         latest_expected_departure = None
+        latest_is_estimated = False
+        latest_source_label = None
+        is_sea_container = container.area_id is not None
+        default_duration_days = 400 if is_sea_container else 90
+
+        planned_activity_date = PlannedActivity.objects.filter(
+            container=container,
+            activity_type='TRANSFER',
+            status__in=['PENDING', 'IN_PROGRESS']
+        ).order_by('due_date').values_list('due_date', flat=True).first()
+
+        action_dates = {}
+        if active_assignments.exists():
+            planned_actions = (
+                TransferAction.objects.filter(
+                    source_assignment__in=active_assignments,
+                    status__in=['PENDING', 'IN_PROGRESS']
+                )
+                .exclude(workflow__status='CANCELLED')
+                .select_related('workflow', 'source_assignment')
+            )
+            for action in planned_actions:
+                planned_date = action.planned_date or action.workflow.planned_start_date
+                if not planned_date:
+                    continue
+                existing = action_dates.get(action.source_assignment_id)
+                if existing is None or planned_date < existing:
+                    action_dates[action.source_assignment_id] = planned_date
         
         for assignment in active_assignments:
-            expected_departure = assignment.expected_departure_date
+            expected_departure = None
+            is_estimated = False
+            source_label = None
+
+            planned_action_date = action_dates.get(assignment.id)
+            if planned_activity_date and planned_action_date:
+                if planned_activity_date <= planned_action_date:
+                    expected_departure = planned_activity_date
+                    source_label = 'planned activity'
+                else:
+                    expected_departure = planned_action_date
+                    source_label = 'workflow action'
+            elif planned_activity_date:
+                expected_departure = planned_activity_date
+                source_label = 'planned activity'
+            elif planned_action_date:
+                expected_departure = planned_action_date
+                source_label = 'workflow action'
+            else:
+                expected_departure = assignment.expected_departure_date
+                if expected_departure:
+                    if assignment.departure_date:
+                        source_label = 'actual departure'
+                    else:
+                        is_estimated = True
+                        source_label = 'stage estimate'
+                else:
+                    expected_departure = assignment.assignment_date + timedelta(
+                        days=default_duration_days
+                    )
+                    is_estimated = True
+                    source_label = 'default estimate'
             current_assignments_data.append({
                 'batch_id': assignment.batch.id,
                 'batch_number': assignment.batch.batch_number,
@@ -199,8 +258,16 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
             
             # Track latest expected departure
             if expected_departure:
-                if latest_expected_departure is None or expected_departure > latest_expected_departure:
+                if (
+                    latest_expected_departure is None
+                    or expected_departure > latest_expected_departure
+                ):
                     latest_expected_departure = expected_departure
+                    latest_is_estimated = is_estimated
+                    latest_source_label = source_label
+                elif expected_departure == latest_expected_departure and source_label:
+                    if latest_source_label in [None, 'stage estimate', 'default estimate']:
+                        latest_source_label = source_label
         
         # Determine current status
         current_status = 'OCCUPIED' if active_assignments.exists() else 'EMPTY'
@@ -221,18 +288,42 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
                 days_buffer = (delivery_date - latest_expected_departure).days
                 availability_status = 'AVAILABLE'
                 days_until_available = days_buffer
-                availability_message = f'Available from {latest_expected_departure.isoformat()} ({days_buffer} days before your delivery)'
+                availability_message = (
+                    f'Available from {latest_expected_departure.isoformat()} '
+                    f'({days_buffer} days before your delivery)'
+                )
+                availability_message += self._format_availability_source(
+                    latest_is_estimated,
+                    latest_source_label,
+                    default_duration_days
+                )
             elif delivery_date == latest_expected_departure:
                 # Same day - risky but technically OK
                 availability_status = 'OCCUPIED_BUT_OK'
                 days_until_available = 0
-                availability_message = f'Available on delivery day {latest_expected_departure.isoformat()} (no buffer - risky)'
+                availability_message = (
+                    f'Available on delivery day {latest_expected_departure.isoformat()} '
+                    f'(no buffer - risky)'
+                )
+                availability_message += self._format_availability_source(
+                    latest_is_estimated,
+                    latest_source_label,
+                    default_duration_days
+                )
             else:
                 # Still occupied on delivery date - conflict
                 days_conflict = (latest_expected_departure - delivery_date).days
                 availability_status = 'CONFLICT'
                 days_until_available = -days_conflict
-                availability_message = f'⚠️ Conflict: Occupied until {latest_expected_departure.isoformat()} ({days_conflict} day{"s" if days_conflict != 1 else ""} after your delivery)'
+                availability_message = (
+                    f'⚠️ Conflict: Occupied until {latest_expected_departure.isoformat()} '
+                    f'({days_conflict} day{"s" if days_conflict != 1 else ""} after your delivery)'
+                )
+                availability_message += self._format_availability_source(
+                    latest_is_estimated,
+                    latest_source_label,
+                    default_duration_days
+                )
         
         # Calculate capacity
         max_biomass = float(container.max_biomass_kg or 0)
@@ -260,4 +351,14 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
             'available_capacity_kg': round(available_capacity_kg, 2),
             'available_capacity_percent': round(available_capacity_percent, 1),
         }
+
+    def _format_availability_source(self, is_estimated, source_label, default_days):
+        if is_estimated:
+            label = source_label or 'default'
+            return f' - Estimated ({label} {default_days} days)'
+        if source_label in ['planned activity', 'workflow action']:
+            return f' - From {source_label}'
+        if source_label == 'actual departure':
+            return ' - From actual departure'
+        return ''
 

@@ -85,6 +85,11 @@ class TransferAction(models.Model):
         validators=[MinValueValidator(0)],
         help_text="Biomass transferred (kg)"
     )
+
+    allow_mixed = models.BooleanField(
+        default=False,
+        help_text="Allow mixing with other batches if destination is occupied at execution"
+    )
     
     # Status & Timeline
     status = models.CharField(
@@ -271,6 +276,10 @@ class TransferAction(models.Model):
                 f"Cannot execute actions on workflow in {self.workflow.status} status"
             )
         
+        # Map API field name to internal param when provided
+        if 'mortality_during_transfer' in execution_details:
+            mortality_count = execution_details.pop('mortality_during_transfer') or 0
+
         with transaction.atomic():
             # Lock source assignment to prevent race conditions
             source = BatchContainerAssignment.objects.select_for_update().get(
@@ -295,7 +304,24 @@ class TransferAction(models.Model):
             
             # Create or update destination assignment if provided
             if self.dest_assignment:
+                other_active = BatchContainerAssignment.objects.select_for_update().filter(
+                    container=self.dest_assignment.container,
+                    is_active=True,
+                ).exclude(batch=self.workflow.batch)
+                if other_active.exists() and not self.allow_mixed:
+                    raise ValidationError(
+                        "Destination container has another active batch. "
+                        "Enable mixed batch to proceed."
+                    )
+
                 dest = self.dest_assignment
+                if not dest.is_active:
+                    dest.is_active = True
+                    dest.assignment_date = timezone.now().date()
+                if self.workflow.dest_lifecycle_stage and dest.lifecycle_stage_id != self.workflow.dest_lifecycle_stage_id:
+                    dest.lifecycle_stage = self.workflow.dest_lifecycle_stage
+                if (not dest.avg_weight_g or dest.avg_weight_g == 0) and source.avg_weight_g:
+                    dest.avg_weight_g = source.avg_weight_g
                 dest.population_count += self.transferred_count
                 # Update biomass
                 if dest.avg_weight_g and self.transferred_count > 0:
@@ -314,6 +340,24 @@ class TransferAction(models.Model):
                     setattr(self, key, value)
             
             self.save()
+
+            # Record mortality event (if any)
+            if mortality_count > 0:
+                from apps.batch.models.mortality import MortalityEvent
+                avg_weight_g = source.avg_weight_g or Decimal('0')
+                biomass_kg = (Decimal(mortality_count) * avg_weight_g) / Decimal('1000')
+                MortalityEvent.objects.create(
+                    batch=self.workflow.batch,
+                    assignment=source,
+                    event_date=self.actual_execution_date,
+                    count=mortality_count,
+                    biomass_kg=biomass_kg,
+                    cause='HANDLING',
+                    description=(
+                        f"Transfer mortality during {self.workflow.workflow_number} "
+                        f"action {self.action_number}"
+                    ),
+                )
             
             # Update workflow status and progress
             self.workflow.mark_in_progress()
