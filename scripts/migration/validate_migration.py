@@ -21,8 +21,13 @@ import pyodbc
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
 
+from scripts.migration.safety import configure_migration_environment, assert_default_db_is_migration_db
+
+configure_migration_environment()
+
 import django
 django.setup()
+assert_default_db_is_migration_db()
 
 from django.db import connection
 from django.db.models import Count, Sum, Q, F

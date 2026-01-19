@@ -1613,7 +1613,7 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 
 #### Workflow
 1. **Catalog refresh** – `python manage.py load_historian_tags --profile aveva_readonly --using <db_alias>` pulls `_Tag` + `TagHistory` from AVEVA into both `aquamind_db` and `aquamind_db_migr_dev`.
-2. **Mapping exercise** – Export the subset of analog measurement tags (`docs/database/migration/historian_tag_export.csv`) and populate `historian_tag_link` with the matching AquaMind sensor/container/parameter.
+2. **Mapping exercise** – Export the subset of analog measurement tags to a local CSV (not tracked in the repo) and populate `historian_tag_link` with the matching AquaMind sensor/container/parameter.
 3. **Telemetry ingestion** – Block-file parsers (and future realtime feeds) consult `historian_tag_link`, then write directly into `environmental_environmentalreading` (TimescaleDB hypertable) so AquaMind remains the authoritative store for environmental analytics while AVEVA continues to operate in production.
 
 ### 4.12 Operational Planning (`planning` app)

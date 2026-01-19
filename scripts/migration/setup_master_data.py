@@ -11,7 +11,12 @@ import django
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.insert(0, project_root)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
+
+from scripts.migration.safety import configure_migration_environment, assert_default_db_is_migration_db
+
+configure_migration_environment()
 django.setup()
+assert_default_db_is_migration_db()
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -106,6 +111,7 @@ def create_lifecycle_stages(species):
         stage, created = LifeCycleStage.objects.get_or_create(
             name=stage_data['name'],
             defaults={
+                'species': species,
                 'description': stage_data['description'],
                 'order': stage_data['order']
             }

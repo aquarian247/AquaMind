@@ -1,4 +1,6 @@
-# FishTalk Migration Environment Setup
+# Deprecated: FishTalk Migration Environment Setup
+
+> **Deprecated:** This document is out of date. See `aquamind/docs/progress/migration/MIGRATION_CANONICAL.md`.
 
 This document captures the canonical local environment for running migration
 scripts against the restored FishTalk database and the dedicated AquaMind

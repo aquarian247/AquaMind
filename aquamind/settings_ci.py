@@ -19,7 +19,7 @@ DATABASES = {
         # Use a persistent SQLite file so that both the migration step and the
         # subsequently-started dev-server share the same schema & data.
         # BASE_DIR comes from the base settings we just imported.
-        'NAME': BASE_DIR / 'ci.sqlite3',
+        'NAME': str(BASE_DIR / 'ci.sqlite3'),
     }
 }
 

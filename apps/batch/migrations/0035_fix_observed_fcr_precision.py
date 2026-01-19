@@ -5,10 +5,17 @@
 from django.db import migrations, models, connection
 from decimal import Decimal
 import django.core.validators
+import os
 
 
 def is_timescaledb_available():
     """Check if TimescaleDB extension is available."""
+    # Per timescaledb_testing_strategy.md and 0034_setup_timescaledb_hypertable,
+    # TimescaleDB operations are skipped in dev/test by default. Enable explicitly
+    # when running production TimescaleDB migrations.
+    if os.environ.get("AQUAMIND_ENABLE_TIMESCALEDB_MIGRATIONS") != "1":
+        return False
+
     # Skip on SQLite (CI tests)
     if connection.vendor == 'sqlite':
         return False

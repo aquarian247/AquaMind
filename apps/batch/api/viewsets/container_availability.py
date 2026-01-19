@@ -189,11 +189,22 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
         is_sea_container = container.area_id is not None
         default_duration_days = 400 if is_sea_container else 90
 
-        planned_activity_date = PlannedActivity.objects.filter(
-            container=container,
-            activity_type='TRANSFER',
-            status__in=['PENDING', 'IN_PROGRESS']
-        ).order_by('due_date').values_list('due_date', flat=True).first()
+        planned_activity_types = ['TRANSFER', 'HARVEST', 'SALE']
+
+        def _get_planned_activity_date(batch):
+            base_qs = PlannedActivity.objects.filter(
+                batch=batch,
+                activity_type__in=planned_activity_types,
+                status__in=['PENDING', 'IN_PROGRESS']
+            ).order_by('due_date')
+            container_date = base_qs.filter(
+                container=container
+            ).values_list('due_date', flat=True).first()
+            if container_date:
+                return container_date
+            return base_qs.filter(
+                container__isnull=True
+            ).values_list('due_date', flat=True).first()
 
         action_dates = {}
         if active_assignments.exists():
@@ -218,6 +229,7 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
             is_estimated = False
             source_label = None
 
+            planned_activity_date = _get_planned_activity_date(assignment.batch)
             planned_action_date = action_dates.get(assignment.id)
             if planned_activity_date and planned_action_date:
                 if planned_activity_date <= planned_action_date:
@@ -361,4 +373,3 @@ class ContainerAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
         if source_label == 'actual departure':
             return ' - From actual departure'
         return ''
-

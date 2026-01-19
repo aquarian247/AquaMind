@@ -16,8 +16,13 @@ if str(PROJECT_ROOT) not in sys.path:
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aquamind.settings')
 
+from scripts.migration.safety import configure_migration_environment, assert_default_db_is_migration_db
+
+configure_migration_environment()
+
 import django
 django.setup()
+assert_default_db_is_migration_db()
 
 from scripts.migration.config import load_config
 from scripts.migration.extractors.base import ExtractionContext

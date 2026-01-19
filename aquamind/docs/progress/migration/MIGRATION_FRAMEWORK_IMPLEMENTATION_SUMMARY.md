@@ -1,4 +1,6 @@
-# FishTalk to AquaMind Migration Framework - Implementation Summary
+# Deprecated: FishTalk to AquaMind Migration Framework - Implementation Summary
+
+> **Deprecated:** This document is out of date. See `MIGRATION_CANONICAL.md` for the current migration guide.
 
 **Date:** November 3, 2025
 **Status:** ✅ **Production Ready** - Framework Validated & All Tests Passing

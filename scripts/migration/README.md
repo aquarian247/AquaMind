@@ -13,7 +13,7 @@ This directory contains scripts for migrating data from the legacy FishTalk syst
 
 ## Quick Setup (Development)
 
-> **Important:** All migration work uses the dedicated PostgreSQL database `aquamind_db_migr_dev` (the `migr_dev` Django alias). Keep the primary `aquamind_db` instance untouched for day-to-day development. Connection details for the FishTalk Docker container and the migration database are documented in `docs/database/migration/ENV_SETUP.md`.
+> **Important:** All migration work uses the dedicated PostgreSQL database `aquamind_db_migr_dev` (the `migr_dev` Django alias). Keep the primary `aquamind_db` instance untouched for day-to-day development. Connection details for the FishTalk Docker container and the migration database are documented in `docs/progress/migration/ENV_SETUP.md`.
 
 ### 1. Set up Migration Database
 

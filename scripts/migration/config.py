@@ -26,7 +26,7 @@ def _load_raw_config(path: Path | None = None) -> Dict[str, Any]:
     if not cfg_path.exists():
         raise MigrationConfigError(
             f"Migration config not found at {cfg_path}. "
-            "See docs/database/migration/ENV_SETUP.md for setup instructions."
+            "See docs/progress/migration/ENV_SETUP.md for setup instructions."
         )
 
     with cfg_path.open("r", encoding="utf-8") as handle:

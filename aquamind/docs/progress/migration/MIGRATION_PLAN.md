@@ -1,4 +1,6 @@
-# FishTalk to AquaMind Migration Plan
+# Deprecated: FishTalk to AquaMind Migration Plan
+
+> **Deprecated:** This document is out of date. See `aquamind/docs/progress/migration/MIGRATION_CANONICAL.md`.
 
 **Version:** 1.0  
 **Date:** December 2024  

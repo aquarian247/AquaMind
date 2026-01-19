@@ -1,0 +1,41 @@
+services:
+  # Migration-preview backend (points at aquamind_db_migr_dev by default)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/workspaces/AquaMind
+    ports:
+      - "${MIGR_BACKEND_BIND_ADDRESS:-0.0.0.0}:${MIGR_BACKEND_PORT:-8001}:8000"
+    environment:
+      - DB_ENGINE=${MIGR_DB_ENGINE:-django.db.backends.postgresql}
+      - DB_NAME=${MIGR_DB_NAME:-aquamind_db_migr_dev}
+      - DB_USER=${MIGR_DB_USER:-postgres}
+      - DB_PASSWORD=${MIGR_DB_PASSWORD:-adminpass1234}
+      - DB_HOST=${MIGR_DB_HOST:-host.docker.internal}
+      - DB_PORT=${MIGR_DB_PORT:-5432}
+      - DJANGO_SETTINGS_MODULE=${MIGR_DJANGO_SETTINGS_MODULE:-aquamind.settings}
+      - DJANGO_DEBUG=${MIGR_DJANGO_DEBUG:-true}
+      - DJANGO_SECRET_KEY=${MIGR_DJANGO_SECRET_KEY:-dev-secret-key-for-local-development-only-replace-in-production}
+      - ALLOWED_HOSTS=${MIGR_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      - SKIP_CELERY_SIGNALS=${MIGR_SKIP_CELERY_SIGNALS:-1}
+    extra_hosts:
+      # Enables host Postgres access on Linux; harmless on Docker Desktop.
+      - "host.docker.internal:host-gateway"
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # Migration-preview frontend (served by nginx)
+  # Build arg VITE_DJANGO_API_URL should usually be the *public* URL of this frontend
+  # (so the SPA calls /api on the same origin and nginx proxies to the backend).
+  frontend:
+    build:
+      context: ../AquaMind-Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_DJANGO_API_URL: ${MIGR_PUBLIC_URL:-http://localhost:5002}
+        VITE_USE_DJANGO_API: "true"
+    ports:
+      - "${MIGR_FRONTEND_BIND_ADDRESS:-0.0.0.0}:${MIGR_FRONTEND_PORT:-5002}:80"
+    depends_on:
+      - web
