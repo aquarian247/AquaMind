@@ -25,3 +25,34 @@ This document defines **non‑negotiable migration standards** to preserve data 
 ## Repeatability & Logging
 - Keep migrations deterministic: explicit ordering, consistent time‑zone conversions, and stable identifiers.
 - Log errors with source identifiers, target model, and action taken (skip/retry/fail).
+
+## Scenario & Planning Data Policy
+
+### Decision (2026-01-20)
+**DO NOT migrate FishTalk planning/projection data.** The scenario tables (`PlanScenario`, `PlannedActivities`, `PlanPopulation`, `PlanTransfer`, etc.) contain stale or "junk" planning data that does not reflect operational reality and would pollute AquaMind's planning features.
+
+### What TO Migrate (Master Data Only)
+- **TGC Models:** FishTalk `GrowthModels` + `TGCTableEntries` → AquaMind `scenario_tgcmodel` + `scenario_tgc_model_stage`
+- **FCR Models:** FishTalk `FCRTableEntries` → AquaMind `scenario_fcrmodel` + `scenario_fcrmodelstage`
+- **Temperature Profiles:** FishTalk `TemperatureTables` + `TemperatureTableEntries` → AquaMind `scenario_temperatureprofile` + `scenario_temperaturereading`
+
+### What NOT to Migrate
+- `PlanScenario` - Planning scenarios (stale)
+- `PlannedActivities` - Planned activities (stale)
+- `PlanPopulation` - Population forecasts (not actuals)
+- `PlanTransfer` - Planned transfers (not actual transfers)
+- `FFFinancialScenario` - Financial scenarios (out of scope)
+- `OptimeeringScenarioData` - Optimization data (out of scope)
+
+### Post-Migration Workflow
+After batch data migration is complete:
+1. Migrate TGC/FCR/Temperature master data from FishTalk
+2. Create baseline scenarios in AquaMind for each migrated batch
+3. Pin scenarios to batches via UI or API
+4. Run projections manually to generate `ActualDailyAssignmentState` and `LiveForwardProjection` data
+
+### Rationale
+- Migrated batches have **actual historical data** (feeding, mortality, treatments, transfers)
+- AquaMind's assimilation engine can compute daily states from this actual data once scenarios exist
+- FishTalk scenarios were for **planning future batches**, not tracking historical ones
+- This approach keeps the migration focused on verifiable actuals and avoids importing stale forecasts

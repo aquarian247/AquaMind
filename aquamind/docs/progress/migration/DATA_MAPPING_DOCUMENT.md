@@ -2,8 +2,8 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 4.0  
-**Date:** December 2024  
+**Version:** 4.1  
+**Date:** January 2026  
 **Status:** Refined - Based on live FishTalk schema inspection  
 
 ## 1. Overview
@@ -16,49 +16,96 @@ This document provides detailed field-level mapping specifications for migrating
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
 
-**Key Revision Notes (v4.0):** Refined based on live FishTalk schema inspection. Mappings use exact confirmed columns (e.g., Populations.StartTime). No Plan*-prefixed tables included. Where direct mappings are absent (e.g., no explicit assignments table), derive from event data (e.g., group Feeding by PopulationID/ContainerID over time to infer assignments).
+**Key Revision Notes (v4.2 - 2026-01-20):** 
+- **Project-Based Stitching:** FW-to-sea transfers stopped being recorded in `PublicTransfers` since January 2023. Use `(ProjectNumber, InputYear, RunningNumber)` tuple from `dbo.Populations` to group FW and sea populations into logical batches. See `project_based_stitching_report.py`.
+- Updated infrastructure mappings to use OrganisationUnit + Ext_GroupedOrganisation_v2 (hall-per-container-group with Høll→Hall normalization) and clarified geography resolution. 
+- Mappings use exact confirmed columns (e.g., Populations.StartTime). No Plan*-prefixed tables included. 
+- Where direct mappings are absent (e.g., no explicit assignments table), derive from event data (e.g., group Feeding by PopulationID/ContainerID over time to infer assignments).
 
 ## 2. Infrastructure & Geography Mapping
 
-### 2.1 Geography/Site Mapping (FishTalk: Sites)
+### 2.1 Geography Mapping (FishTalk: Locations + Site Grouping)
 
-| FishTalk Column (Sites) | AquaMind Target | Data Type | Transformation | Notes |
-|-------------------------|-----------------|-----------|----------------|--------|
-| SiteID | infrastructure_geography.id | bigint | Identity map + offset | Store original ID for reference |
-| SiteName | infrastructure_geography.name | varchar(100) | Direct | Unique constraint |
-| Description | infrastructure_geography.description | text | Direct | Nullable |
-| Country | infrastructure_geography.description | text | Append to description | "Country: {value}" |
-| CreatedDate | infrastructure_geography.created_at | timestamptz | UTC conversion | |
-| ModifiedDate | infrastructure_geography.updated_at | timestamptz | UTC conversion | |
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|-------|
+| Locations.NationID | infrastructure_geography.name | varchar(100) | Direct | Fallback geography if site grouping fails |
+| Ext_GroupedOrganisation_v2.SiteGroup / Site | infrastructure_geography.name | varchar(100) | Resolve to `Faroe Islands` or `Scotland` | SiteGroup takes precedence; see resolution order below |
 
-### 2.2 Area/Location Mapping (FishTalk: Locations)
+**Geography resolution order**
+1. `SiteGroup` in `{West, North, South}` ⇒ **Faroe Islands**
+2. `SiteGroup` present (any other value) ⇒ **Scotland**
+3. Site name membership in curated lists (FAROE_SITES_* / SCOTLAND_SITES_*) ⇒ **Faroe Islands** or **Scotland**
+4. `Locations.NationID`
+5. `Unknown`
 
-| FishTalk Column (Locations) | AquaMind Target | Data Type | Transformation | Notes |
-|-----------------------------|-----------------|-----------|----------------|--------|
-| LocationID | infrastructure_area.id | bigint | Identity map + offset | |
-| LocationName | infrastructure_area.name | varchar(100) | Direct | |
-| SiteID | infrastructure_area.geography_id | bigint | FK lookup | Required |
-| Latitude | infrastructure_area.latitude | numeric(9,6) | Direct | Validate range (-90 to 90) |
-| Longitude | infrastructure_area.longitude | numeric(9,6) | Direct | Validate range (-180 to 180) |
-| MaxBiomass | infrastructure_area.max_biomass | numeric | Unit conversion if needed | |
-| Status | infrastructure_area.active | boolean | Map: Active=>true | Derive from recent activity if null |
+### 2.2 Freshwater Station Mapping (FishTalk: OrganisationUnit + Locations + Ext_GroupedOrganisation_v2)
 
-### 2.3 Container/Unit Mapping (FishTalk: Units)
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|-------|
+| OrganisationUnit.OrgUnitID | ExternalIdMap (OrganisationUnitStation) | uuid | Store for idempotency | `source_identifier = OrgUnitID` |
+| Ext_GroupedOrganisation_v2.Site / OrganisationUnit.Name | infrastructure_freshwaterstation.name | varchar(100) | Prefer `Site`, fallback to `OrgUnit.Name` | Trim to 100 chars |
+| OrganisationUnit.LocationID → Locations.Latitude/Longitude | infrastructure_freshwaterstation.latitude / longitude | numeric(9,6) | Direct | Default `0` if missing |
+| Derived | infrastructure_freshwaterstation.station_type | varchar(20) | `FRESHWATER` | | 
+| Geography (from 2.1) | infrastructure_freshwaterstation.geography_id | bigint | FK lookup | |
 
-| FishTalk Column (Units) | AquaMind Target | Data Type | Transformation | Notes |
-|-------------------------|-----------------|-----------|----------------|--------|
-| UnitID | infrastructure_container.id | bigint | Identity map + offset | |
-| UnitName | infrastructure_container.name | varchar(100) | Direct | |
-| UnitType | infrastructure_container.container_type_id | bigint | Lookup/Create | Map type (see below) |
-| HallID | infrastructure_container.hall_id | bigint | FK lookup | Optional |
-| AreaID | infrastructure_container.area_id | bigint | FK lookup | Optional |
-| Volume | infrastructure_container.volume_m3 | numeric(10,2) | Direct or convert | |
-| MaxBiomass | infrastructure_container.max_biomass_kg | numeric(10,2) | Direct | |
-| IsActive | infrastructure_container.active | boolean | Direct | Default true |
+### 2.3 Hall Mapping (FishTalk: Ext_GroupedOrganisation_v2 + Containers)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|-------|
+| Ext_GroupedOrganisation_v2.ContainerGroup | infrastructure_hall.name | varchar(100) | Normalize whitespace; `A Høll` → `Hall A` | `Høll` is Faroese for Hall |
+| Containers.OfficialID | infrastructure_hall.name | varchar(100) | Fallback: prefix before `;`, normalize | Used when `ContainerGroup` is empty |
+| Ext_GroupedOrganisation_v2.ContainerGroupID | ExternalIdMap (OrganisationUnitHall) | uuid | Store `OrgUnitID:ContainerGroupID` | Ensures per-station uniqueness |
+| OrganisationUnit.OrgUnitID | infrastructure_hall.freshwater_station_id | bigint | FK lookup | Hall belongs to station |
+
+### 2.4 Sea Area Mapping (FishTalk: OrganisationUnit + Locations)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|-------|
+| OrganisationUnit.Name / Ext_GroupedOrganisation_v2.Site | infrastructure_area.name | varchar(100) | Prefer `Site`, fallback to `OrgUnit.Name` | Trim to 100 chars |
+| OrganisationUnit.LocationID → Locations.Latitude/Longitude | infrastructure_area.latitude / longitude | numeric(9,6) | Direct | Default `0` if missing |
+| Derived | infrastructure_area.max_biomass | numeric | Default `0` | |
+| Geography (from 2.1) | infrastructure_area.geography_id | bigint | FK lookup | |
+| Derived | infrastructure_area.active | boolean | `true` | |
+
+### 2.5 Container Mapping (FishTalk: Containers + Ext_GroupedOrganisation_v2)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|-------|
+| Containers.ContainerID | infrastructure_container (ExternalIdMap) | uuid | Store for idempotency | `source_model = Containers` |
+| Containers.ContainerName | infrastructure_container.name | varchar(100) | Prefix with `FT` | Trim to 100 chars |
+| Containers.ContainerType | infrastructure_container.container_type_id | bigint | Map to `FishTalk Imported Tank` / `FishTalk Imported Pen` | Created during migration |
+| Ext_GroupedOrganisation_v2.ProdStage | classification | - | `MARINE`/`SEA` ⇒ sea | Otherwise freshwater |
+| Ext_GroupedOrganisation_v2.ContainerGroup / Containers.OfficialID | infrastructure_container.hall_id | bigint | Assign hall for freshwater | Uses hall mapping above |
+| Derived | infrastructure_container.area_id | bigint | Assign area for sea | Uses sea area mapping |
+
+**Notes**
+- Infrastructure phase uses `ProdStage` + hall label presence to classify sea vs freshwater; pilot component migration uses population stages (sea if any member stage is sea).
+- Container ExternalIdMap metadata stores `site`, `site_group`, `company`, `prod_stage`, `container_group`, `container_group_id`, `stand_name`, `stand_id`.
 
 #### Container Type Mapping (unchanged)
 
 ## 3. Batch & Production Mapping
+
+### 3.0 Population Stitching Strategy (Critical)
+
+**Problem Discovered (2026-01-20):** FishTalk's `PublicTransfers` table stopped recording FW-to-sea transfers since January 2023. The original stitching approach relied on this table, causing batch fragmentation.
+
+**Solution:** Project-Based Stitching using `(ProjectNumber, InputYear, RunningNumber)` from `dbo.Populations`:
+
+```sql
+-- Groups all populations for a logical batch
+SELECT ProjectNumber, InputYear, RunningNumber, PopulationID, PopulationName
+FROM dbo.Populations
+WHERE ProjectNumber IS NOT NULL AND InputYear IS NOT NULL
+```
+
+This groups FW populations (Egg→Smolt) with their sea counterparts (Ongrowing→Harvest) because they share the same project tuple.
+
+**Scripts:**
+- `project_based_stitching_report.py` - Generates `project_batches.csv` and `recommended_batches.csv`
+- `pilot_migrate_project_batch.py` - Migrates a single project-based batch through the full pipeline
+
+**Output:** Batches with 5-6 lifecycle stages spanning FW and sea, with proper transfer workflows typed as `LIFECYCLE_TRANSITION`.
 
 ### 3.1 Batch Mapping (FishTalk: Populations)
 
@@ -123,6 +170,39 @@ This document provides detailed field-level mapping specifications for migrating
 - Otherwise → `BatchTransferWorkflow.workflow_type = CONTAINER_REDISTRIBUTION`.
 - Lifecycle transitions are also synthesized from ordered `PopulationProductionStages` events across project/year/run groups so stage changes exist even without transfers.
 
+### 3.5 Batch Creation Workflow Mapping (FishTalk: Stitched Components)
+
+FishTalk does not capture a formal “creation workflow.” For each stitched component migrated into a batch, synthesize a creation workflow that represents initial egg placement into the first assignments.
+
+| Derived Source | AquaMind Target | Data Type | Transformation | Notes |
+|----------------|----------------|-----------|----------------|--------|
+| Component key | batch_creationworkflow.workflow_number | varchar(50) | `CRT-{batch_number}` trimmed to 50 chars; append `-{component_prefix}` if needed | Deterministic per batch |
+| Component key | batch_creationworkflow.external_supplier_batch_number | varchar(100) | Direct | Store component key for traceability |
+| Synthetic | batch_creationworkflow.egg_source_type | varchar(20) | `EXTERNAL` | Placeholder for FishTalk legacy eggs |
+| Synthetic supplier | batch_creationworkflow.external_supplier_id | bigint | Ensure `EggSupplier` named `FishTalk Legacy Supplier` exists | Create if missing |
+| Initial assignments | batch_creationworkflow.total_eggs_planned | integer | Sum of `assignment.population_count` for initial set | Defaults to 0 if none |
+| Initial assignments | batch_creationworkflow.total_eggs_received | integer | Same as planned | No DOA data available |
+| Initial assignments | batch_creationworkflow.total_actions | integer | Count of initial assignments | One action per assignment |
+| Initial assignments | batch_creationworkflow.actions_completed | integer | Same as total_actions | Set to completed on migration |
+| Initial assignments | batch_creationworkflow.planned_start_date | date | Earliest assignment start date | Also used for actual_start_date |
+| Initial assignments | batch_creationworkflow.planned_completion_date | date | Latest assignment start date | Also used for actual_completion_date |
+| Synthetic | batch_creationworkflow.status | varchar(20) | `COMPLETED` when actions exist, else `PLANNED` | No in-progress state from source |
+
+**Initial assignment selection rules**
+- Prefer populations whose `start_time.date()` equals the batch start date and whose stage maps to the batch’s initial lifecycle stage.
+- If none match stage, include all populations starting on the batch start date.
+- If still empty, fall back to the earliest population in the component.
+
+**Creation actions**
+- Create one `CreationAction` per initial assignment:
+  - `dest_assignment` = assignment
+  - `egg_count_planned` / `egg_count_actual` = assignment `population_count`
+  - `expected_delivery_date` / `actual_delivery_date` = assignment `assignment_date`
+  - `status` = `COMPLETED`
+- Record idempotency via `ExternalIdMap`:
+  - `source_model = PopulationComponentCreationWorkflow` (component key → creation workflow)
+  - `source_model = PopulationCreationAction` (population id → creation action)
+
 ## 4. Feed & Inventory Mapping
 
 ### 4.0 Source of Truth (FishTalk)
@@ -179,6 +259,11 @@ This document provides detailed field-level mapping specifications for migrating
 | FeedReceptionBatches.SuppliersBatchNumber | inventory_feedpurchase.batch_number | varchar | Direct | Preferred over ReceiptNumber |
 | FeedReceptionBatches.ReceiptNumber | inventory_feedpurchase.batch_number | varchar | Direct | Fallback |
 | FeedBatch.FeedTypeID / FeedTypes.Name | inventory_feedpurchase.feed_id | bigint | FK lookup/create | Use FeedTypes.Name in feed name |
+
+**Extraction rules**
+- Join chain: `FeedStoreUnitAssignment → FeedStore → FeedBatch → FeedReceptionBatches → FeedReceptions`.
+- Limit to feed stores assigned to the component’s containers (assignment date range overlap with component window).
+- By default, `ReceptionTime` must fall inside the component window; use `--include-all-receptions` to bypass the time filter when validating historical purchases.
 
 ### 4.5 Feed Container Stock Mapping (FishTalk: FeedStore + FeedStoreUnitAssignment + FeedBatch)
 
@@ -487,12 +572,90 @@ Each migrated record should include:
 ```
 
 ---
+
+## 14. Scenario Model Mapping (TGC, FCR, Temperature)
+
+**Purpose:** Migrate growth model master data to enable AquaMind's projection and planning features.
+
+### 14.1 Temperature Profile Mapping (FishTalk: TemperatureTables + TemperatureTableEntries)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|-----------------|-----------------|-----------|----------------|-------|
+| TemperatureTables.TemperatureTableID | ExternalIdMap | uuid | Store for idempotency | `source_model = TemperatureTables` |
+| "FT-TempProfile-{ID[:8]}" | scenario_temperatureprofile.name | varchar(255) | Generated | Unique name |
+| TemperatureTableEntries.IntervalStart | scenario_temperaturereading.day_number | int | Direct (already day-based) | 1-900 range |
+| TemperatureTableEntries.Temperature | scenario_temperaturereading.temperature | float | Direct | Celsius |
+
+**Row counts:** 20 profiles, 240 readings
+
+### 14.2 TGC Model Mapping (FishTalk: GrowthModels + TGCTableEntries)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|-----------------|-----------------|-----------|----------------|-------|
+| GrowthModels.GrowthModelID | ExternalIdMap | uuid | `source_model = GrowthModels_TGC` | Separate from FCR mapping |
+| GrowthModels.Comment | scenario_tgcmodel.name | varchar(255) | Prefix with "FT-TGC-" | Trim to 255 chars |
+| AVG(TGCTableEntries.TGC) | scenario_tgcmodel.tgc_value | float | Average of day-specific values | Per model |
+| "FishTalk Import" | scenario_tgcmodel.location | varchar(255) | Static | |
+| "Year-round" | scenario_tgcmodel.release_period | varchar(255) | Static | |
+| 0.33 | scenario_tgcmodel.exponent_n | float | Default | Standard exponent |
+| 0.66 | scenario_tgcmodel.exponent_m | float | Default | Standard exponent |
+| (first available) | scenario_tgcmodel.profile_id | FK | Default profile | Required FK |
+
+**Note:** TGCTableEntries contains day-specific TGC values (7,530 rows). These are averaged to produce a single `tgc_value` per model since AquaMind uses a simpler model structure.
+
+### 14.3 FCR Model Mapping (FishTalk: GrowthModels + FCRTableEntries)
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|-----------------|-----------------|-----------|----------------|-------|
+| GrowthModels.GrowthModelID | ExternalIdMap | uuid | `source_model = GrowthModels_FCR` | |
+| GrowthModels.Comment | scenario_fcrmodel.name | varchar(255) | Prefix with "FT-FCR-" | |
+
+**Stage derivation:** FCRTableEntries contains weight/temperature-specific FCR values. Aggregate to lifecycle stages:
+
+| Weight Range (g) | AquaMind Stage | Duration (days) |
+|-----------------|----------------|-----------------|
+| 0.0 - 0.5 | Egg&Alevin | 90 |
+| 0.5 - 5.0 | Fry | 60 |
+| 5.0 - 30.0 | Parr | 120 |
+| 30.0 - 100.0 | Smolt | 90 |
+| 100.0 - 500.0 | Post-Smolt | 180 |
+| 500.0+ | Adult | 360 |
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|-----------------|-----------------|-----------|----------------|-------|
+| AVG(FCRTableEntries.FCR) per stage | scenario_fcrmodelstage.fcr_value | float | Weight-bucketed average | |
+| (lookup) | scenario_fcrmodelstage.stage_id | FK | LifecycleStage lookup | |
+| (from mapping table) | scenario_fcrmodelstage.duration_days | int | Default per stage | |
+
+**Row counts:** 120 GrowthModels → 120 FCRModels, up to 6 stages each
+
+### 14.4 Mortality Model Mapping
+
+FishTalk does not have dedicated mortality model tables. Create default mortality models:
+
+| Name | Frequency | Rate (%) | Purpose |
+|------|-----------|----------|---------|
+| FT-Mortality-Low | daily | 0.01 | Low mortality scenario |
+| FT-Mortality-Standard | daily | 0.05 | Standard mortality |
+| FT-Mortality-High | daily | 0.10 | High mortality scenario |
+
+### 14.5 ExternalIdMap Source Models
+
+| source_model | Description |
+|--------------|-------------|
+| `TemperatureTables` | Temperature profile mapping |
+| `GrowthModels_TGC` | TGC model mapping |
+| `GrowthModels_FCR` | FCR model mapping |
+
+---
+
 **Document Control**
-- Version: 1.0
-- Status: Draft
-- Last Updated: December 2024
+- Version: 4.3
+- Status: Revised
+- Last Updated: January 2026
 - Next Review: [Pending]
-## 9. External ID Mapping Tables
+
+## 15. External ID Mapping Tables
 
 AquaMind now persists source-to-target identifier mappings in the `apps.migration_support.ExternalIdMap` model. Each row captures the FishTalk identifier (`source_system='FishTalk'`) and the AquaMind object it produced.
 

@@ -42,8 +42,9 @@ assert_default_db_is_migration_db()
 
 from django.db import transaction  # noqa: E402
 
-from apps.batch.models import Batch, LifeCycleStage, Species  # noqa: E402
+from apps.batch.models import Batch, LifeCycleStage, Species, BatchCreationWorkflow, CreationAction  # noqa: E402
 from apps.batch.models.assignment import BatchContainerAssignment  # noqa: E402
+from apps.broodstock.models import EggSupplier  # noqa: E402
 from apps.infrastructure.models import (  # noqa: E402
     Area,
     Container,
@@ -152,6 +153,26 @@ def resolve_site_grouping(site: str | None, site_group: str | None) -> tuple[str
     return "", ""
 
 
+def hall_label_from_group(group_name: str | None) -> str:
+    label = normalize_label(group_name)
+    if not label:
+        return ""
+    if "Høll" in label:
+        prefix, _, _ = label.partition("Høll")
+        prefix = prefix.strip()
+        return f"Hall {prefix}" if prefix else "Hall"
+    if label.startswith("Hall ") or label.endswith(" Hall"):
+        return label
+    return label
+
+
+def hall_label_from_official(official_id: str | None) -> str:
+    if not official_id:
+        return ""
+    prefix = official_id.split(";")[0].strip()
+    return hall_label_from_group(prefix)
+
+
 def fishtalk_stage_to_aquamind(stage_name: str) -> str:
     upper = (stage_name or "").upper()
     if any(token in upper for token in ("EGG", "ALEVIN", "SAC")):
@@ -184,6 +205,40 @@ def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
     ).first()
+
+
+def get_or_create_egg_supplier(name: str, *, history_user: User | None, history_reason: str | None) -> EggSupplier:
+    supplier = EggSupplier.objects.filter(name=name).first()
+    if not supplier:
+        supplier = EggSupplier(
+            name=name,
+            contact_details="Unknown (FishTalk migration)",
+            certifications="",
+        )
+        save_with_history(supplier, user=history_user, reason=history_reason)
+    ExternalIdMap.objects.update_or_create(
+        source_system="FishTalk",
+        source_model="EggSupplier",
+        source_identifier=name,
+        defaults={
+            "target_app_label": supplier._meta.app_label,
+            "target_model": supplier._meta.model_name,
+            "target_object_id": supplier.pk,
+        },
+    )
+    return supplier
+
+
+def build_creation_workflow_number(batch_number: str, component_key: str) -> str:
+    base = f"CRT-{batch_number}"
+    if len(base) <= 50:
+        return base
+    suffix = (component_key or "")[:8]
+    reserved = len("CRT-") + 1 + len(suffix)
+    trimmed = batch_number[: max(0, 50 - reserved)]
+    if suffix:
+        return f"CRT-{trimmed}-{suffix}"
+    return f"CRT-{trimmed}"[:50]
 
 
 @dataclass(frozen=True)
@@ -367,11 +422,22 @@ def main() -> int:
 
     grouping_rows = extractor._run_sqlcmd(
         query=(
-            "SELECT CONVERT(varchar(36), ContainerID) AS ContainerID, Site, SiteGroup, Company, ProdStage "
+            "SELECT CONVERT(varchar(36), ContainerID) AS ContainerID, "
+            "Site, SiteGroup, Company, ProdStage, ContainerGroup, ContainerGroupID, StandName, StandID "
             "FROM dbo.Ext_GroupedOrganisation_v2 "
             f"WHERE ContainerID IN ({in_clause})"
         ),
-        headers=["ContainerID", "Site", "SiteGroup", "Company", "ProdStage"],
+        headers=[
+            "ContainerID",
+            "Site",
+            "SiteGroup",
+            "Company",
+            "ProdStage",
+            "ContainerGroup",
+            "ContainerGroupID",
+            "StandName",
+            "StandID",
+        ],
     )
 
     container_grouping: dict[str, dict[str, str]] = {}
@@ -383,12 +449,20 @@ def main() -> int:
         site_group = normalize_label(row.get("SiteGroup"))
         company = normalize_label(row.get("Company"))
         prod_stage = normalize_label(row.get("ProdStage"))
+        container_group = normalize_label(row.get("ContainerGroup"))
+        container_group_id = normalize_label(row.get("ContainerGroupID"))
+        stand_name = normalize_label(row.get("StandName"))
+        stand_id = normalize_label(row.get("StandID"))
         geo_name, bucket = resolve_site_grouping(site, site_group)
         container_grouping[container_id] = {
             "site": site,
             "site_group": site_group,
             "company": company,
             "prod_stage": prod_stage,
+            "container_group": container_group,
+            "container_group_id": container_group_id,
+            "stand_name": stand_name,
+            "stand_id": stand_id,
             "geography": geo_name,
             "grouping_bucket": bucket,
         }
@@ -473,7 +547,8 @@ def main() -> int:
 
         # Create (or reuse) org-unit scoped holders
         station_by_org: dict[str, FreshwaterStation] = {}
-        hall_by_org: dict[str, Hall] = {}
+        hall_by_org_group: dict[tuple[str, str], Hall] = {}
+        fallback_hall_by_org: dict[str, Hall] = {}
         area_by_org: dict[str, Area] = {}
 
         for org_id in org_unit_ids:
@@ -507,13 +582,6 @@ def main() -> int:
                 user=history_user,
                 reason=history_reason,
             )
-            hall, _ = get_or_create_with_history(
-                Hall,
-                lookup={"name": f"FT {org_name} Hall"[:100], "freshwater_station": station},
-                defaults={"description": "Imported placeholder from FishTalk", "active": True},
-                user=history_user,
-                reason=history_reason,
-            )
             area, _ = get_or_create_with_history(
                 Area,
                 lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
@@ -527,7 +595,6 @@ def main() -> int:
                 reason=history_reason,
             )
             station_by_org[org_id] = station
-            hall_by_org[org_id] = hall
             area_by_org[org_id] = area
 
         # Create containers
@@ -547,8 +614,50 @@ def main() -> int:
                 hall = None
             else:
                 container_type = tank_type
-                hall = hall_by_org[org_id]
                 area = None
+                group_meta = container_grouping.get(cid, {})
+                group_label = hall_label_from_group(group_meta.get("container_group"))
+                if not group_label:
+                    group_label = hall_label_from_official(src.get("OfficialID"))
+                if group_label:
+                    hall_key = (org_id, group_label)
+                    hall = hall_by_org_group.get(hall_key)
+                    if hall is None:
+                        station = station_by_org[org_id]
+                        group_description = (
+                            "Imported placeholder from FishTalk "
+                            f"({group_meta.get('container_group') or group_label})"
+                        )
+                        hall, _ = get_or_create_with_history(
+                            Hall,
+                            lookup={"name": group_label[:100], "freshwater_station": station},
+                            defaults={
+                                "description": group_description,
+                                "active": True,
+                            },
+                            user=history_user,
+                            reason=history_reason,
+                        )
+                        hall_by_org_group[hall_key] = hall
+                else:
+                    hall = fallback_hall_by_org.get(org_id)
+                    if hall is None:
+                        station = station_by_org[org_id]
+                        org_name = (org_by_id.get(org_id, {}).get("Name") or org_id)[:80]
+                        hall, _ = get_or_create_with_history(
+                            Hall,
+                            lookup={
+                                "name": f"FT {org_name} Hall"[:100],
+                                "freshwater_station": station,
+                            },
+                            defaults={
+                                "description": "Imported placeholder from FishTalk",
+                                "active": True,
+                            },
+                            user=history_user,
+                            reason=history_reason,
+                        )
+                        fallback_hall_by_org[org_id] = hall
 
             container = Container(
                 name=f"FT {src.get('ContainerName') or cid}"[:100],
@@ -577,6 +686,10 @@ def main() -> int:
                         "site_group": container_grouping.get(cid, {}).get("site_group"),
                         "company": container_grouping.get(cid, {}).get("company"),
                         "prod_stage": container_grouping.get(cid, {}).get("prod_stage"),
+                        "container_group": container_grouping.get(cid, {}).get("container_group"),
+                        "container_group_id": container_grouping.get(cid, {}).get("container_group_id"),
+                        "stand_name": container_grouping.get(cid, {}).get("stand_name"),
+                        "stand_id": container_grouping.get(cid, {}).get("stand_id"),
                         "grouping_bucket": container_grouping.get(cid, {}).get("grouping_bucket"),
                     },
                 },
@@ -617,6 +730,8 @@ def main() -> int:
                     "metadata": {"batch_number": batch.batch_number},
                 },
             )
+
+        assignment_by_population_id: dict[str, BatchContainerAssignment] = {}
 
         # Create assignments (1 per FishTalk PopulationID)
         for member in members:
@@ -713,6 +828,147 @@ def main() -> int:
                         "target_model": assignment._meta.model_name,
                         "target_object_id": assignment.pk,
                         "metadata": {"component_key": component_key, "container_id": member.container_id},
+                    },
+                )
+
+            assignment_by_population_id[member.population_id] = assignment
+
+        initial_stage_name = lifecycle_stage.name if lifecycle_stage else lifecycle_stage_name
+        initial_members = [
+            member
+            for member in members
+            if member.start_time.date() == batch_start
+            and fishtalk_stage_to_aquamind(member.first_stage or member.last_stage) == initial_stage_name
+        ]
+        if not initial_members:
+            initial_members = [member for member in members if member.start_time.date() == batch_start]
+        if not initial_members:
+            initial_members = [members[0]]
+
+        initial_members.sort(key=lambda member: (member.start_time, member.population_id))
+        creation_assignments = [
+            (member, assignment_by_population_id.get(member.population_id))
+            for member in initial_members
+            if assignment_by_population_id.get(member.population_id)
+        ]
+
+        if creation_assignments:
+            workflow_number = build_creation_workflow_number(batch.batch_number, component_key)
+            workflow_map = get_external_map("PopulationComponentCreationWorkflow", component_key)
+            if workflow_map:
+                creation_workflow = BatchCreationWorkflow.objects.get(pk=workflow_map.target_object_id)
+            else:
+                creation_workflow = BatchCreationWorkflow.objects.filter(workflow_number=workflow_number).first()
+
+            supplier_name = "FishTalk Legacy Supplier"
+            egg_supplier = get_or_create_egg_supplier(
+                supplier_name,
+                history_user=history_user,
+                history_reason=history_reason,
+            )
+
+            total_eggs_planned = sum(int(assignment.population_count or 0) for _, assignment in creation_assignments)
+            total_actions = len(creation_assignments)
+            planned_start_date = min(member.start_time for member, _ in creation_assignments).date()
+            planned_completion_date = max(member.start_time for member, _ in creation_assignments).date()
+            progress_percentage = Decimal("100.00") if total_actions else Decimal("0.00")
+
+            workflow_payload = {
+                "workflow_number": workflow_number,
+                "batch": batch,
+                "status": "COMPLETED" if total_actions else "PLANNED",
+                "egg_source_type": "EXTERNAL",
+                "external_supplier": egg_supplier,
+                "external_supplier_batch_number": str(component_key),
+                "total_eggs_planned": total_eggs_planned,
+                "total_eggs_received": total_eggs_planned,
+                "total_mortality_on_arrival": 0,
+                "planned_start_date": planned_start_date,
+                "planned_completion_date": planned_completion_date,
+                "actual_start_date": planned_start_date if total_actions else None,
+                "actual_completion_date": planned_completion_date if total_actions else None,
+                "total_actions": total_actions,
+                "actions_completed": total_actions,
+                "progress_percentage": progress_percentage,
+                "created_by": history_user,
+                "notes": f"Synthetic creation workflow from FishTalk component {component_key}",
+            }
+
+            if creation_workflow:
+                for key, value in workflow_payload.items():
+                    setattr(creation_workflow, key, value)
+                save_with_history(creation_workflow, user=history_user, reason=history_reason)
+            else:
+                creation_workflow = BatchCreationWorkflow(**workflow_payload)
+                save_with_history(creation_workflow, user=history_user, reason=history_reason)
+            ExternalIdMap.objects.update_or_create(
+                source_system="FishTalk",
+                source_model="PopulationComponentCreationWorkflow",
+                source_identifier=str(component_key),
+                defaults={
+                    "target_app_label": creation_workflow._meta.app_label,
+                    "target_model": creation_workflow._meta.model_name,
+                    "target_object_id": creation_workflow.pk,
+                    "metadata": {"batch_number": batch.batch_number},
+                },
+            )
+
+            used_action_numbers = set(
+                CreationAction.objects.filter(workflow=creation_workflow).values_list("action_number", flat=True)
+            )
+            next_action_number = 1
+
+            def next_available_action_number() -> int:
+                nonlocal next_action_number
+                while next_action_number in used_action_numbers:
+                    next_action_number += 1
+                value = next_action_number
+                used_action_numbers.add(value)
+                next_action_number += 1
+                return value
+
+            for member, assignment in creation_assignments:
+                action_map = get_external_map("PopulationCreationAction", member.population_id)
+                if action_map:
+                    creation_action = CreationAction.objects.get(pk=action_map.target_object_id)
+                    action_number = creation_action.action_number or next_available_action_number()
+                else:
+                    creation_action = None
+                    action_number = next_available_action_number()
+
+                action_payload = {
+                    "workflow": creation_workflow,
+                    "action_number": action_number,
+                    "status": "COMPLETED" if total_actions else "PENDING",
+                    "dest_assignment": assignment,
+                    "egg_count_planned": int(assignment.population_count or 0),
+                    "egg_count_actual": int(assignment.population_count or 0),
+                    "mortality_on_arrival": 0,
+                    "expected_delivery_date": member.start_time.date(),
+                    "actual_delivery_date": member.start_time.date(),
+                    "executed_by": history_user,
+                    "notes": f"FishTalk PopulationID={member.population_id}",
+                }
+
+                if creation_action:
+                    for key, value in action_payload.items():
+                        setattr(creation_action, key, value)
+                    save_with_history(creation_action, user=history_user, reason=history_reason)
+                else:
+                    creation_action = CreationAction(**action_payload)
+                    save_with_history(creation_action, user=history_user, reason=history_reason)
+                ExternalIdMap.objects.update_or_create(
+                    source_system="FishTalk",
+                    source_model="PopulationCreationAction",
+                    source_identifier=str(member.population_id),
+                    defaults={
+                        "target_app_label": creation_action._meta.app_label,
+                        "target_model": creation_action._meta.model_name,
+                        "target_object_id": creation_action.pk,
+                        "metadata": {
+                            "component_key": component_key,
+                            "batch_number": batch.batch_number,
+                        },
                     },
                 )
 

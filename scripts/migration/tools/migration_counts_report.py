@@ -28,6 +28,8 @@ assert_default_db_is_migration_db()
 from apps.batch.models import (
     Batch,
     BatchContainerAssignment,
+    BatchCreationWorkflow,
+    CreationAction,
     BatchTransferWorkflow,
     TransferAction,
     MortalityEvent,
@@ -75,6 +77,8 @@ def main() -> int:
     core_counts = [
         ("batch_batch", Batch.objects.count()),
         ("batch_batchcontainerassignment", BatchContainerAssignment.objects.count()),
+        ("batch_creationworkflow", BatchCreationWorkflow.objects.count()),
+        ("batch_creationaction", CreationAction.objects.count()),
         ("batch_batchtransferworkflow", BatchTransferWorkflow.objects.count()),
         ("batch_transferaction", TransferAction.objects.count()),
         ("batch_mortalityevent", MortalityEvent.objects.count()),
@@ -103,6 +107,8 @@ def main() -> int:
     header = (
         "batch_number",
         "assignments",
+        "creation_workflows",
+        "creation_actions",
         "workflows",
         "actions",
         "feeding",
@@ -138,6 +144,8 @@ def main() -> int:
         row = (
             batch.batch_number,
             BatchContainerAssignment.objects.filter(batch=batch).count(),
+            BatchCreationWorkflow.objects.filter(batch=batch).count(),
+            CreationAction.objects.filter(workflow__batch=batch).count(),
             BatchTransferWorkflow.objects.filter(batch=batch).count(),
             TransferAction.objects.filter(workflow__batch=batch).count(),
             FeedingEvent.objects.filter(batch=batch).count(),
@@ -150,6 +158,16 @@ def main() -> int:
             EnvironmentalReading.objects.filter(batch=batch).count(),
         )
         print(" | ".join(str(value) for value in row))
+
+    missing_creation = list(
+        batch_qs.filter(creation_workflows__isnull=True)
+        .values_list("batch_number", flat=True)
+        .distinct()
+    )
+    if missing_creation:
+        print("\n[Missing creation workflows]")
+        for batch_number in missing_creation:
+            print(f"- {batch_number}")
 
     return 0
 

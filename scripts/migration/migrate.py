@@ -55,6 +55,9 @@ def infrastructure_phase(**kwargs):
     geo_stats = loader.load_geographies(geos)
     locations = extractor.fetch_locations()
     loc_stats = loader.load_locations(locations)
+    sites = extractor.fetch_sites()
+    containers = extractor.fetch_containers()
+    infra_stats = loader.load_sites_and_containers(sites, containers)
     LOGGER.info(
         "[infra] geographies total=%s created=%s updated=%s skipped=%s",
         len(geos),
@@ -68,6 +71,24 @@ def infrastructure_phase(**kwargs):
         loc_stats.get('created'),
         loc_stats.get('updated'),
         loc_stats.get('skipped'),
+    )
+    LOGGER.info(
+        "[infra] sites total=%s stations created=%s updated=%s",
+        len(sites),
+        infra_stats["stations"].get("created"),
+        infra_stats["stations"].get("updated"),
+    )
+    LOGGER.info(
+        "[infra] areas created=%s updated=%s",
+        infra_stats["areas"].get("created"),
+        infra_stats["areas"].get("updated"),
+    )
+    LOGGER.info(
+        "[infra] halls created=%s updated=%s containers created=%s updated=%s",
+        infra_stats["halls"].get("created"),
+        infra_stats["halls"].get("updated"),
+        infra_stats["containers"].get("created"),
+        infra_stats["containers"].get("updated"),
     )
 
 
