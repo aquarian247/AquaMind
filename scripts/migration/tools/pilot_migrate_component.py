@@ -551,6 +551,18 @@ def main() -> int:
         fallback_hall_by_org: dict[str, Hall] = {}
         area_by_org: dict[str, Area] = {}
 
+        # Determine which org units have sea containers vs freshwater
+        org_has_sea: dict[str, bool] = {}
+        org_has_freshwater: dict[str, bool] = {}
+        for org_id in org_unit_ids:
+            org_containers = containers_by_org.get(org_id, [])
+            org_has_sea[org_id] = any(
+                container_bucket.get(cid) == "sea" for cid in org_containers
+            )
+            org_has_freshwater[org_id] = any(
+                container_bucket.get(cid, "freshwater") != "sea" for cid in org_containers
+            )
+
         for org_id in org_unit_ids:
             org = org_by_id.get(org_id) or {}
             org_name = (org.get("Name") or org_id)[:80]
@@ -568,34 +580,39 @@ def main() -> int:
                 org_geo_name = args.geography
             geography = get_geography(org_geo_name)
 
-            station, _ = get_or_create_with_history(
-                FreshwaterStation,
-                lookup={"name": f"FT {org_name} FW"[:100]},
-                defaults={
-                    "station_type": "FRESHWATER",
-                    "geography": geography,
-                    "latitude": lat,
-                    "longitude": lon,
-                    "description": "Imported placeholder from FishTalk",
-                    "active": True,
-                },
-                user=history_user,
-                reason=history_reason,
-            )
-            area, _ = get_or_create_with_history(
-                Area,
-                lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
-                defaults={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "max_biomass": Decimal("0"),
-                    "active": True,
-                },
-                user=history_user,
-                reason=history_reason,
-            )
-            station_by_org[org_id] = station
-            area_by_org[org_id] = area
+            # Only create FreshwaterStation if org has freshwater containers
+            if org_has_freshwater.get(org_id, True):
+                station, _ = get_or_create_with_history(
+                    FreshwaterStation,
+                    lookup={"name": f"FT {org_name} FW"[:100]},
+                    defaults={
+                        "station_type": "FRESHWATER",
+                        "geography": geography,
+                        "latitude": lat,
+                        "longitude": lon,
+                        "description": "Imported placeholder from FishTalk",
+                        "active": True,
+                    },
+                    user=history_user,
+                    reason=history_reason,
+                )
+                station_by_org[org_id] = station
+
+            # Only create Area if org has sea containers
+            if org_has_sea.get(org_id, False):
+                area, _ = get_or_create_with_history(
+                    Area,
+                    lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
+                    defaults={
+                        "latitude": lat,
+                        "longitude": lon,
+                        "max_biomass": Decimal("0"),
+                        "active": True,
+                    },
+                    user=history_user,
+                    reason=history_reason,
+                )
+                area_by_org[org_id] = area
 
         # Create containers
         aquamind_container_by_source: dict[str, Container] = {}
