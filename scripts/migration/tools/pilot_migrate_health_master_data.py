@@ -152,11 +152,11 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
     
     causes = extractor._run_sqlcmd(
         query="""
-        SELECT MortalityCauseID, Name, MortalityCauseGroupID, IsForCulling 
+        SELECT MortalityCauseID, Name, MortalityCauseGroupID 
         FROM dbo.Ext_MortalityCauses_v2 
         ORDER BY Name
         """,
-        headers=["MortalityCauseID", "Name", "MortalityCauseGroupID", "IsForCulling"]
+        headers=["MortalityCauseID", "Name", "MortalityCauseGroupID"]
     )
     
     print(f"  Found {len(causes)} causes in FishTalk")
@@ -169,8 +169,7 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
     if dry_run:
         for c in causes[:15]:
             group_id = c.get("MortalityCauseGroupID", "N/A")
-            is_cull = "CULL" if c.get("IsForCulling", "0") not in ["0", "-2", ""] else ""
-            print(f"    Would create: {c.get('Name', 'N/A')} (group: {group_id}) {is_cull}")
+            print(f"    Would create: {c.get('Name', 'N/A')} (group: {group_id})")
         if len(causes) > 15:
             print(f"    ... and {len(causes) - 15} more")
         return {"causes": len(causes)}
@@ -183,7 +182,6 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             cause_id = c.get("MortalityCauseID", "").strip()
             name = c.get("Name", "").strip()
             group_id = c.get("MortalityCauseGroupID", "").strip()
-            is_for_culling = c.get("IsForCulling", "0")
             
             if not cause_id or not name:
                 skipped += 1
@@ -213,7 +211,8 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             
             # Build description
             description = f"FishTalk Mortality Cause: {name}"
-            if is_for_culling and is_for_culling not in ["0", "-2", ""]:
+            # Check for culling-related terms in name
+            if "culling" in name.lower() or "cull" in name.lower():
                 description += " [Also used for culling operations]"
             
             # Create MortalityReason
@@ -248,7 +247,6 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
                     "original_name": name,
                     "is_cause": True,
                     "group_id": group_id,
-                    "is_for_culling": is_for_culling,
                 },
             )
     
@@ -260,16 +258,18 @@ def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
     """Migrate FishTalk vaccination methods as VaccinationType."""
     print("\n--- Vaccination Methods ---")
     
+    # Actual columns: VaccinationMethodID, DefaultText, Active, SystemDelivered
     methods = extractor._run_sqlcmd(
-        query="SELECT VaccinationMethodID, Name, Description, IsActive FROM dbo.Ext_VaccinationMethod_v2",
-        headers=["VaccinationMethodID", "Name", "Description", "IsActive"]
+        query="SELECT VaccinationMethodID, DefaultText, Active FROM dbo.Ext_VaccinationMethod_v2",
+        headers=["VaccinationMethodID", "DefaultText", "Active"]
     )
     
     print(f"  Found {len(methods)} vaccination methods in FishTalk")
     
     if dry_run:
         for m in methods:
-            print(f"    Would create: {m.get('Name', 'N/A')}")
+            active = "Active" if m.get('Active') == '1' else "Inactive"
+            print(f"    Would create: {m.get('DefaultText', 'N/A')} [{active}]")
         return {"methods": len(methods)}
     
     created = 0
@@ -278,8 +278,8 @@ def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
     with transaction.atomic():
         for m in methods:
             method_id = m.get("VaccinationMethodID", "").strip()
-            name = m.get("Name", "").strip()
-            description = m.get("Description", "").strip()
+            name = m.get("DefaultText", "").strip()
+            is_active = m.get("Active", "1")
             
             if not method_id or not name:
                 skipped += 1
@@ -302,7 +302,7 @@ def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
                 defaults={
                     "manufacturer": "FishTalk Migration",
                     "dosage": "",
-                    "description": f"FishTalk method: {description or name}",
+                    "description": f"FishTalk vaccination method: {name}",
                 }
             )
             
@@ -317,7 +317,7 @@ def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
                 target_app_label="health",
                 target_model="vaccinationtype",
                 target_object_id=vac_type.pk,
-                metadata={"original_name": name, "description": description},
+                metadata={"original_name": name, "is_active": is_active},
             )
     
     print(f"  Created: {created}, Skipped: {skipped}")
@@ -328,27 +328,26 @@ def migrate_treatment_types(extractor, dry_run: bool = False) -> dict:
     """Extract and document FishTalk treatment types (for reference)."""
     print("\n--- Treatment Types (Reference) ---")
     
+    # Actual columns: TreatmentTypesID, DefaultText, Active, SystemDelivered
     types = extractor._run_sqlcmd(
-        query="SELECT TreatmentTypesID, Name, IsMedical, IsAntibiotics FROM dbo.Ext_TreatmentTypes_v2",
-        headers=["TreatmentTypesID", "Name", "IsMedical", "IsAntibiotics"]
+        query="SELECT TreatmentTypesID, DefaultText, Active FROM dbo.Ext_TreatmentTypes_v2",
+        headers=["TreatmentTypesID", "DefaultText", "Active"]
     )
     
     print(f"  Found {len(types)} treatment types in FishTalk")
     
-    medical_count = sum(1 for t in types if t.get("IsMedical") == "1")
-    antibiotic_count = sum(1 for t in types if t.get("IsAntibiotics") == "1")
+    active_count = sum(1 for t in types if t.get("Active") == "1")
     
-    print(f"    Medical: {medical_count}")
-    print(f"    Antibiotics: {antibiotic_count}")
+    print(f"    Active: {active_count}")
     
     for t in types[:10]:
-        medical = "Medical" if t.get("IsMedical") == "1" else "Non-Medical"
-        print(f"    - {t.get('Name', 'N/A')} ({medical})")
+        status = "Active" if t.get("Active") == "1" else "Inactive"
+        print(f"    - {t.get('DefaultText', 'N/A')} [{status}]")
     if len(types) > 10:
         print(f"    ... and {len(types) - 10} more")
     
     # Treatment types are stored as metadata - AquaMind uses treatments differently
-    return {"types": len(types), "medical": medical_count}
+    return {"types": len(types), "active": active_count}
 
 
 def build_parser() -> argparse.ArgumentParser:
