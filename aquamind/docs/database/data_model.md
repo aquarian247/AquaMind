@@ -601,6 +601,7 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - `id`: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
   - `description`: text (blank=True)
+  - `parent_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, blank=True)
 - **`health_journalentry`**
   - id: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.id, on_delete=CASCADE, related_name='journal_entries')
@@ -677,6 +678,7 @@ All inventory models with `history = HistoricalRecords()` create corresponding h
   - id: bigint (PK, auto-increment)
   - `name`: varchar(100) (Unique)
   - `description`: text (blank=True)
+  - `parent_id`: bigint (FK to `health_mortalityreason`.id, on_delete=SET_NULL, nullable, blank=True)
   - Meta: `verbose_name_plural = "Mortality Reasons"`, `ordering = ['name']`
 - **`health_mortalityrecord`**
   - id: bigint (PK, auto-increment)

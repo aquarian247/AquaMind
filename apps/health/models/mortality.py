@@ -22,6 +22,14 @@ class MortalityReason(models.Model):
     """Model for categorizing reasons for mortality events."""
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='children',
+        help_text="Parent mortality reason for hierarchical grouping"
+    )
 
     class Meta:
         verbose_name_plural = "Mortality Reasons"

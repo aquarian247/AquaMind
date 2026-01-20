@@ -262,6 +262,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **General Health Journaling**:
     - The system shall track general health events via `health_journalentry` records, linked to specific batches and containers. Entry categories include observation, issue, action, diagnosis, treatment, vaccination, and sample.
     - Specific event details are stored in linked models: `health_licecount`, `health_mortalityrecord` (linked to `health_mortalityreason`), `health_treatment`, `health_vaccinationrecord`.
+    - Mortality reasons are hierarchical (group → specific cause) to support primary and secondary cause selection in the UI.
     - Veterinarians and authorized personnel shall be able to log `health_journalentry` records with rich text notes, and optionally attach pictures and videos (via a separate Media model or generic relations).
 
   - **Detailed Health Sampling & Growth Metrics**:

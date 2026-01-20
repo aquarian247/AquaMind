@@ -187,6 +187,55 @@ class HealthAPITestCase(BaseAPITestCase):
             results = response.data.get('results', response.data)
         self.assertGreaterEqual(len(results), 1)
 
+    def test_mortality_reason_top_level_filter(self):
+        """Test filtering mortality reasons to top-level only."""
+        parent = MortalityReason.objects.create(name='Disease Group')
+        child = MortalityReason.objects.create(name='Viral Disease', parent=parent)
+
+        url = reverse('mortality-reasons-list') + '?top_level=true'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if isinstance(response.data, list):
+            results = response.data
+        else:
+            results = response.data.get('results', response.data)
+
+        returned_ids = {item['id'] for item in results}
+        self.assertIn(parent.id, returned_ids)
+        self.assertNotIn(child.id, returned_ids)
+
+    def test_mortality_reason_parent_filter(self):
+        """Test filtering mortality reasons by parent."""
+        parent = MortalityReason.objects.create(name='Environment Group')
+        child = MortalityReason.objects.create(name='Low Oxygen', parent=parent)
+        MortalityReason.objects.create(name='Predation', parent=parent)
+        other_parent = MortalityReason.objects.create(name='Production Group')
+        MortalityReason.objects.create(name='Handling Stress', parent=other_parent)
+
+        url = reverse('mortality-reasons-list') + f'?parent={parent.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if isinstance(response.data, list):
+            results = response.data
+        else:
+            results = response.data.get('results', response.data)
+
+        returned_ids = {item['id'] for item in results}
+        self.assertIn(child.id, returned_ids)
+        for item in results:
+            self.assertEqual(item['parent'], parent.id)
+
+    def test_mortality_reason_hierarchy_detail(self):
+        """Test parent_name is returned on detail view."""
+        parent = MortalityReason.objects.create(name='Disease Root')
+        child = MortalityReason.objects.create(name='Bacterial Disease', parent=parent)
+
+        response = self.client.get(
+            reverse('mortality-reasons-detail', kwargs={'pk': child.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['parent_name'], parent.name)
+
     def test_mortality_record_list(self):
         """Test listing mortality records via API."""
         url = self.get_api_url('health', 'mortality-records')

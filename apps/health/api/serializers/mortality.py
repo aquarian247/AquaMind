@@ -54,20 +54,46 @@ class LiceTypeSerializer(HealthBaseSerializer):
 
 
 class MortalityReasonSerializer(HealthBaseSerializer):
-    """Serializer for the MortalityReason model.
-    
-    Uses HealthBaseSerializer for consistent error handling and field management.
-    """
+    """Serializer for hierarchical MortalityReason model."""
     name = serializers.CharField(
-        help_text="Name of the mortality reason (e.g., 'Disease', 'Predation')."
+        help_text="Name of the mortality reason."
     )
     description = serializers.CharField(
-        help_text="Detailed description of the mortality reason."
+        required=False,
+        allow_blank=True,
+        help_text="Detailed description."
     )
-    
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=MortalityReason.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Parent reason ID for sub-reasons."
+    )
+    parent_name = serializers.SerializerMethodField(
+        help_text="Name of parent reason (read-only)."
+    )
+    children = serializers.SerializerMethodField(
+        help_text="Child reasons (read-only, only on detail view)."
+    )
+
+    def get_parent_name(self, obj):
+        return obj.parent.name if obj.parent else None
+
+    def get_children(self, obj):
+        # Only include children on detail view to avoid N+1
+        request = self.context.get('request')
+        if request and hasattr(request, 'parser_context'):
+            if request.parser_context.get('kwargs', {}).get('pk'):
+                return MortalityReasonSerializer(
+                    obj.children.all(),
+                    many=True,
+                    context={'request': request}
+                ).data
+        return None
+
     class Meta:
         model = MortalityReason
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'parent', 'parent_name', 'children']
 
 
 class MortalityRecordSerializer(HealthBaseSerializer):

@@ -6,6 +6,7 @@ MortalityReason, MortalityRecord, and LiceCount.
 """
 
 from rest_framework import viewsets, permissions
+from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -33,6 +34,22 @@ from ..mixins import (
 )
 
 
+class MortalityReasonFilter(filters.FilterSet):
+    top_level = filters.BooleanFilter(method='filter_top_level')
+    parent = filters.NumberFilter(field_name='parent_id')
+
+    def filter_top_level(self, queryset, name, value):
+        if value:
+            return queryset.filter(parent__isnull=True)
+        return queryset
+
+    class Meta:
+        model = MortalityReason
+        fields = {
+            'name': ['exact', 'icontains']
+        }
+
+
 class MortalityReasonViewSet(
     HistoryReasonMixin, StandardFilterMixin,
     viewsets.ModelViewSet
@@ -53,11 +70,7 @@ class MortalityReasonViewSet(
     queryset = MortalityReason.objects.all()
     serializer_class = MortalityReasonSerializer
     permission_classes = [permissions.IsAuthenticated, IsHealthContributor]
-
-    # StandardFilterMixin configuration
-    filterset_fields = {
-        'name': ['exact', 'icontains']
-    }
+    filterset_class = MortalityReasonFilter
 
     # Override filter_queryset to add custom filtering
     def filter_queryset(self, queryset):
@@ -71,6 +84,25 @@ class MortalityReasonViewSet(
 
         return queryset
     search_fields = ['name', 'description']
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='top_level',
+                type=bool,
+                description='Filter to only top-level reasons (no parent)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='parent',
+                type=int,
+                description='Filter by parent reason ID',
+                required=False,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class MortalityRecordViewSet(

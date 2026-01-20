@@ -37,7 +37,7 @@ from .viewsets.history import (
 
 router = DefaultRouter()
 router.register(r'journal-entries', JournalEntryViewSet, basename='journal-entry')
-router.register(r'mortality-reasons', MortalityReasonViewSet, basename='mortality-reason')
+router.register(r'mortality-reasons', MortalityReasonViewSet, basename='mortality-reasons')
 router.register(r'mortality-records', MortalityRecordViewSet, basename='mortality-record')
 router.register(r'lice-counts', LiceCountViewSet, basename='lice-count')
 router.register(r'lice-types', LiceTypeViewSet, basename='lice-type')
