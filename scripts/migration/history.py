@@ -26,15 +26,32 @@ def get_or_create_with_history(
     reason: str | None,
     using: str | None = None,
 ):
+    from django.db import IntegrityError, transaction
+    
     qs = model.objects.using(using) if using else model.objects
+    
+    # First try to get existing
     obj = qs.filter(**lookup).first()
     if obj:
         return obj, False
+    
+    # Try to create - use transaction to handle race conditions
     payload = {**lookup, **defaults}
     obj = model(**payload)
     if user is not None:
         obj._history_user = user
-    obj.save(using=using)
+    
+    try:
+        with transaction.atomic(using=using):
+            obj.save(using=using)
+    except IntegrityError:
+        # Another worker created it first - fetch the existing one
+        obj = qs.filter(**lookup).first()
+        if obj:
+            return obj, False
+        # If still not found, re-raise
+        raise
+    
     # Update change reason - handle multi-database scenario
     if reason and hasattr(obj, "history"):
         try:

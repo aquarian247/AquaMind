@@ -582,49 +582,81 @@ def main() -> int:
             geography = get_geography(org_geo_name)
 
             # LOOKUP FreshwaterStation from pre-migration, fallback to create
+            # Use file locking to prevent race conditions with parallel workers
+            import fcntl
+            import time
+            
             if org_has_freshwater.get(org_id, True):
+                station_name = f"FT {org_name} FW"[:100]
                 # Try to find pre-created station from ExternalIdMap
                 station_map = get_external_map("OrgUnit_FW", org_id)
                 if station_map:
                     station = FreshwaterStation.objects.get(pk=station_map.target_object_id)
                 else:
-                    # Fallback: try to find by name or create
-                    station, _ = get_or_create_with_history(
-                        FreshwaterStation,
-                        lookup={"name": f"FT {org_name} FW"[:100]},
-                        defaults={
-                            "station_type": "FRESHWATER",
-                            "geography": geography,
-                            "latitude": lat,
-                            "longitude": lon,
-                            "description": "Imported placeholder from FishTalk",
-                            "active": True,
-                        },
-                        user=history_user,
-                        reason=history_reason,
-                    )
+                    # First try simple lookup
+                    station = FreshwaterStation.objects.filter(name=station_name).first()
+                    if not station:
+                        # Use file lock to serialize creation
+                        lock_file = Path(f"/tmp/migration_station_{org_id}.lock")
+                        lock_file.touch()
+                        with open(lock_file) as f:
+                            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                            try:
+                                # Re-check after acquiring lock
+                                station = FreshwaterStation.objects.filter(name=station_name).first()
+                                if not station:
+                                    station, _ = get_or_create_with_history(
+                                        FreshwaterStation,
+                                        lookup={"name": station_name},
+                                        defaults={
+                                            "station_type": "FRESHWATER",
+                                            "geography": geography,
+                                            "latitude": lat,
+                                            "longitude": lon,
+                                            "description": "Imported placeholder from FishTalk",
+                                            "active": True,
+                                        },
+                                        user=history_user,
+                                        reason=history_reason,
+                                    )
+                            finally:
+                                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
                 station_by_org[org_id] = station
 
             # LOOKUP Area from pre-migration, fallback to create
             if org_has_sea.get(org_id, False):
+                area_name = f"FT {org_name} Sea"[:100]
                 # Try to find pre-created area from ExternalIdMap
                 area_map = get_external_map("OrgUnit_Sea", org_id)
                 if area_map:
                     area = Area.objects.get(pk=area_map.target_object_id)
                 else:
-                    # Fallback: try to find by name or create
-                    area, _ = get_or_create_with_history(
-                        Area,
-                        lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
-                        defaults={
-                            "latitude": lat,
-                            "longitude": lon,
-                            "max_biomass": Decimal("0"),
-                            "active": True,
-                        },
-                        user=history_user,
-                        reason=history_reason,
-                    )
+                    # First try simple lookup
+                    area = Area.objects.filter(name=area_name, geography=geography).first()
+                    if not area:
+                        # Use file lock to serialize creation
+                        lock_file = Path(f"/tmp/migration_area_{org_id}.lock")
+                        lock_file.touch()
+                        with open(lock_file) as f:
+                            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                            try:
+                                # Re-check after acquiring lock
+                                area = Area.objects.filter(name=area_name, geography=geography).first()
+                                if not area:
+                                    area, _ = get_or_create_with_history(
+                                        Area,
+                                        lookup={"name": area_name, "geography": geography},
+                                        defaults={
+                                            "latitude": lat,
+                                            "longitude": lon,
+                                            "max_biomass": Decimal("0"),
+                                            "active": True,
+                                        },
+                                        user=history_user,
+                                        reason=history_reason,
+                                    )
+                            finally:
+                                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
                 area_by_org[org_id] = area
 
         # Create containers
