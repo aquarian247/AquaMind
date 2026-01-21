@@ -545,7 +545,8 @@ def main() -> int:
             reason=history_reason,
         )
 
-        # Create (or reuse) org-unit scoped holders
+        # Lookup (or create) org-unit scoped holders
+        # PREFER LOOKUP from pre-migrated infrastructure to avoid race conditions
         station_by_org: dict[str, FreshwaterStation] = {}
         hall_by_org_group: dict[tuple[str, str], Hall] = {}
         fallback_hall_by_org: dict[str, Hall] = {}
@@ -580,38 +581,50 @@ def main() -> int:
                 org_geo_name = args.geography
             geography = get_geography(org_geo_name)
 
-            # Only create FreshwaterStation if org has freshwater containers
+            # LOOKUP FreshwaterStation from pre-migration, fallback to create
             if org_has_freshwater.get(org_id, True):
-                station, _ = get_or_create_with_history(
-                    FreshwaterStation,
-                    lookup={"name": f"FT {org_name} FW"[:100]},
-                    defaults={
-                        "station_type": "FRESHWATER",
-                        "geography": geography,
-                        "latitude": lat,
-                        "longitude": lon,
-                        "description": "Imported placeholder from FishTalk",
-                        "active": True,
-                    },
-                    user=history_user,
-                    reason=history_reason,
-                )
+                # Try to find pre-created station from ExternalIdMap
+                station_map = get_external_map("OrgUnit_FW", org_id)
+                if station_map:
+                    station = FreshwaterStation.objects.get(pk=station_map.target_object_id)
+                else:
+                    # Fallback: try to find by name or create
+                    station, _ = get_or_create_with_history(
+                        FreshwaterStation,
+                        lookup={"name": f"FT {org_name} FW"[:100]},
+                        defaults={
+                            "station_type": "FRESHWATER",
+                            "geography": geography,
+                            "latitude": lat,
+                            "longitude": lon,
+                            "description": "Imported placeholder from FishTalk",
+                            "active": True,
+                        },
+                        user=history_user,
+                        reason=history_reason,
+                    )
                 station_by_org[org_id] = station
 
-            # Only create Area if org has sea containers
+            # LOOKUP Area from pre-migration, fallback to create
             if org_has_sea.get(org_id, False):
-                area, _ = get_or_create_with_history(
-                    Area,
-                    lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
-                    defaults={
-                        "latitude": lat,
-                        "longitude": lon,
-                        "max_biomass": Decimal("0"),
-                        "active": True,
-                    },
-                    user=history_user,
-                    reason=history_reason,
-                )
+                # Try to find pre-created area from ExternalIdMap
+                area_map = get_external_map("OrgUnit_Sea", org_id)
+                if area_map:
+                    area = Area.objects.get(pk=area_map.target_object_id)
+                else:
+                    # Fallback: try to find by name or create
+                    area, _ = get_or_create_with_history(
+                        Area,
+                        lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
+                        defaults={
+                            "latitude": lat,
+                            "longitude": lon,
+                            "max_biomass": Decimal("0"),
+                            "active": True,
+                        },
+                        user=history_user,
+                        reason=history_reason,
+                    )
                 area_by_org[org_id] = area
 
         # Create containers
