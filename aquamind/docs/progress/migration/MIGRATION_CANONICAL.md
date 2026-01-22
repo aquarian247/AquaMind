@@ -1,79 +1,246 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-01-20
+**Last updated:** 2026-01-22
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
+---
+
 ## 1) Purpose & Audience
+
 - **Architect view:** scope, status, risks, and decisions.
 - **Agent view:** runbook (commands, scripts, validation, and safety checks).
 
 ## 2) Documentation Map
-- `MIGRATION_CANONICAL.md` — runbook + current status (this doc)
-- `MIGRATION_BEST_PRACTICES.md` — data integrity, audit trail, idempotency, verification standards
-- `DATA_MAPPING_DOCUMENT.md` — field-level mapping blueprint
-- `ENV_SETUP.md` — environment and tooling setup
-- `MIGRATION_FRAMEWORK_IMPLEMENTATION_SUMMARY.md` — framework background (historical context)
 
-## 3) Critical Discovery: Project-Based Stitching
+| Document | Purpose |
+|----------|---------|
+| `MIGRATION_CANONICAL.md` | Runbook + current status (this doc) |
+| `MIGRATION_LESSONS_LEARNED.md` | What works vs. what doesn't (read before migrating) |
+| `MIGRATION_BEST_PRACTICES.md` | Data integrity, audit trail, idempotency standards |
+| `DATA_MAPPING_DOCUMENT.md` | Field-level mapping blueprint |
+| `ENV_SETUP.md` | Environment and tooling setup |
+| `docs/prd.md` | Full AquaMind product requirements |
+| `docs/database/data_model.md` | Complete 161-table schema reference |
+| `docs/user_guides/planning_and_workflows_primer.md` | Operational core integration guide |
 
-### Problem Identified (2026-01-20)
+---
 
-**FW-to-sea transfers stopped being recorded in FishTalk's `PublicTransfers` table since January 2023.**
+## 3) Critical Discovery: Input-Based Stitching (Ext_Inputs_v2)
 
-- The most recent Smolt→Ongrowing transfer in PublicTransfers is from 2023-01-05
-- BUT fish ARE reaching sea - 2,239 sea-stage populations exist since 2024
-- The original stitching approach relied on PublicTransfers, explaining the batch fragmentation
+### Problem Identified (2026-01-20 → 2026-01-22)
 
-**Root cause:** Silent failure in FishTalk (likely upgrade-related) broke the transfer recording ~2 years ago.
+- **PublicTransfers is broken** since Jan 2023, so FW→Sea handoffs are not recorded there.
+- **Project tuples are administrative** and can span multiple biological year-classes.
 
-### Solution: Project-Based Stitching
+### Solution: Input-Based Stitching
 
-Instead of relying on broken `PublicTransfers`, we now **stitch populations by FishTalk project identifiers**:
+Use **`Ext_Inputs_v2`** to identify biological batches:
 
 ```
-(ProjectNumber, InputYear, RunningNumber) → Logical Batch
+Batch Key = InputName + InputNumber + YearClass
 ```
 
-This groups FW populations (Egg→Smolt) with their sea counterparts (Ongrowing→Harvest) because they share the same project tuple.
+**Key findings:**
+- `Ext_Inputs_v2` tracks egg deliveries — the true biological origin.
+- **InputName changes at FW→Sea**, so sea-phase batches have their own InputName identity.
+- Sea-phase batches (e.g., "Summar 2024") are valid for sea analytics, even if FW history is separate.
 
-**New script:** `scripts/migration/tools/project_based_stitching_report.py`
+### Transfer Workflows (within-environment)
+- Use **SubTransfers** for transfers and stage transitions (recommended for 2020+).
+- **PublicTransfers is legacy only** (pre-2020; broken since 2023).
+- FW→Sea linking still needs explicit logic. **Best candidates to explore:**
+  - `Ext_Populations_v2.PopulationName` (includes Supplier/Station/Month/Year + YearClass)
+  - `PopulationLink` (if populated in this DB)
 
-## 4) Current Scope (10 Project-Based Batches)
+---
 
-**Active project batches (2026-01-20 migration):**
+## 4) Current Migration Status
 
-| Project Key | Populations | Stages | Status |
-|------------|-------------|--------|--------|
-| 1/24/27 | 34 | 5/6 (Egg&Alevin, Fry, Parr, Smolt, Adult) | ACTIVE |
-| 1/24/20 | 43 | 5/6 | ACTIVE |
-| 1/24/67 | 16 | 5/6 | ACTIVE |
-| 1/24/45 | 35 | 5/6 | ACTIVE |
-| 1/24/7 | 68 | 5/6 | ACTIVE |
-| 1/24/80 | 10 | 5/6 | ACTIVE |
-| 1/24/37 | 31 | 5/6 | ACTIVE |
-| 1/24/17 | 56 | 5/6 | ACTIVE |
-| 1/24/60 | 20 | 5/6 | ACTIVE |
-| 1/24/21 | 44 | 5/6 | ACTIVE |
+**Latest migration run: 2026-01-22**
 
-All batches span freshwater (Egg&Alevin, Fry, Parr, Smolt) through sea (Adult) stages.
+### 4.1 Summary Statistics
 
-## 5) Current Status (Summary)
+| Category | Count | Notes |
+|----------|-------|-------|
+| **Batches migrated** | 2 | Input-based sea batches (Summar 2024, Vár 2024) |
+| **Container assignments** | 214 | Sea containers only (no FW stations) |
+| **Transfer workflows** | 2 | Stage transition workflows only |
+| **Transfer actions** | 203 | Stage actions (no SubTransfers edges) |
+| **Mortality events** | 3,655 | Daily records |
+| **Feeding events** | 2,454 | 351 (Summar) + 2,103 (Vár) |
+| **Treatments** | 402 | Health treatments administered |
+| **Lice counts** | 697 | Sea lice monitoring data |
+| **Journal entries** | 0 | No UserSample actions for these batches |
+| **Environmental readings** | 233,702 | Daily + time-series |
+| **Infrastructure containers** | 80 | Tanks/pens used by these batches |
+| **Sensors** | 289 | FishTalk sensor IDs mapped |
+| **ExternalIdMap entries** | 241,738 | Source-to-target ID tracking |
 
-**Latest migration run: 2026-01-20**
+### 4.2 Tables with Data
 
-- **Batches migrated:** 10 active batches with complete FW→sea lifecycle
-- **Container assignments:** 357 across FW tanks and sea pens
-- **Transfer workflows:** 176 workflows with 219 actions
-- **Operations data:** 10,753 mortality events, 7,119 feeding events
-- **Health data:** 731 treatments, 2,098 lice counts, 125 journal entries
-- **Infrastructure:** 192 containers, 33 areas, 46 halls, 33 FW stations
-- **Verification:** 24/25 required tables populated (environmental readings skipped due to time)
-- **Audit trail:** `scripts/migration/history.py` used in migration scripts
+**Current run (2 sea batches) populates:**
+
+| Domain | Tables with Data | Notes |
+|--------|-----------------|------------|
+| Batch Management | Core tables | batch, assignments, workflows, actions, mortality |
+| Infrastructure | Core tables | geography, area, container, sensor, containertype |
+| Inventory | Partial | feed, feedingevent (no purchases/stock yet) |
+| Health | Partial | treatment, lice (no journal entries yet) |
+| Environmental | Core tables | parameters + readings |
+| Migration Support | Core | ExternalIdMap populated |
+
+### 4.3 Tables Intentionally Empty (By Design)
+
+| Category | Tables | Reason |
+|----------|--------|--------|
+| **Broodstock** | All 20 tables | Out of scope for initial migration |
+| **Growth Samples** | growthsample, individualgrowthobservation | Will be populated via assimilation |
+| **Planning** | plannedactivity, activitytemplate | Created fresh in AquaMind, not migrated |
+| **Live Projections** | actualdailyassignmentstate, liveforwardprojection | Computed post-migration by assimilation engine |
+| **Harvest** | harvestevent, harvestlot, harvestwaste | Future harvests, not historical |
+| **Finance** | All 12 tables | Intercompany transactions created during operations |
+
+### 4.4 Expected Empty (Current Sea-Only Run)
+- `infrastructure_freshwaterstation`, `infrastructure_hall` (no FW stages)
+- `inventory_feedpurchase`, `inventory_feedcontainerstock` (no FeedStore data yet)
+- `health_journalentry` (no UserSample actions for these batches)
+
+---
+
+## 5) ETL Optimization (Bulk Extract + CSV Mode)
+
+### 5.1 The Problem
+
+Per-batch SQL extraction via `docker exec sqlcmd` was extremely slow (~200ms overhead per query). With 50+ queries per batch × 527 batches, the original migration took 20+ hours.
+
+### 5.2 The Solution
+
+Bulk extract all FishTalk data to CSV files once, then migrate using in-memory CSV lookups.
+
+#### Step 1: Extract FishTalk Data to CSV
+
+```bash
+# Extract all tables (runs once, ~20-30 minutes)
+PYTHONPATH=/path/to/AquaMind \
+  python scripts/migration/tools/bulk_extract_fishtalk.py \
+  --output scripts/migration/data/extract/
+
+# List available tables
+python scripts/migration/tools/bulk_extract_fishtalk.py --list-tables
+
+# Extract specific tables only
+python scripts/migration/tools/bulk_extract_fishtalk.py \
+  --tables populations,containers,status_values
+```
+
+#### Extracted Data Volumes
+
+| Table | Rows | File Size | Notes |
+|-------|------|-----------|-------|
+| populations.csv | 350K | 25MB | All FishTalk populations |
+| containers.csv | 17K | 1MB | Tank/pen definitions |
+| org_units.csv | 4K | 200KB | Organization hierarchy |
+| status_values.csv | 7M | 538MB | Population snapshots over time |
+| mortality_actions.csv | 4.7M | ~300MB | Mortality events with causes |
+| feeding_actions.csv | 4.7M | ~300MB | Feeding events with feed types |
+| daily_sensor_readings.csv | 60M | 5.0GB | Daily aggregates → `is_manual=True` |
+| time_sensor_readings.csv | 50M+ | 5.9GB | Time-series → `is_manual=False` |
+| transfer_operations.csv | - | 5.9MB | Transfer operation metadata |
+| transfer_edges.csv | - | 37MB | Population transfer links |
+
+**Total extracted: ~12GB of CSV data**
+
+#### Step 2: Run Migration with CSV Mode
+
+CSV mode is supported by:
+- `pilot_migrate_component.py`
+- `pilot_migrate_component_transfers.py`
+- `pilot_migrate_component_feeding.py`
+- `pilot_migrate_component_mortality.py`
+- `pilot_migrate_component_environmental.py`
+
+SQL-only (no `--use-csv` yet):
+- `pilot_migrate_component_treatments.py`
+- `pilot_migrate_component_lice.py`
+- `pilot_migrate_component_health_journal.py`
+- `pilot_migrate_component_feed_inventory.py`
+
+```bash
+# Migrate component using pre-extracted CSV data
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_component.py \
+  --component-key <key> \
+  --report-dir scripts/migration/output/project_batch_migration/<project> \
+  --use-csv scripts/migration/data/extract/
+
+# Same for other scripts
+python scripts/migration/tools/pilot_migrate_component_mortality.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+
+python scripts/migration/tools/pilot_migrate_component_feeding.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+
+python scripts/migration/tools/pilot_migrate_component_environmental.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+
+python scripts/migration/tools/pilot_migrate_component_transfers.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+```
+
+### 5.3 Environmental Data: is_manual Distinction
+
+**Critical:** When importing environmental readings:
+- `Ext_DailySensorReadings_v2` (daily aggregates) → `is_manual=True`
+- `Ext_SensorReadings_v2` (time-series) → `is_manual=False`
+
+This distinction allows AquaMind to:
+1. Prefer time-series data for accurate TGC/thermal unit calculations
+2. Fall back to daily aggregates where time-series is missing
+3. Maintain data provenance for audit trails
+
+### 5.4 Performance Comparison
+
+| Approach | FishTalk Queries | Migration Time |
+|----------|-----------------|----------------|
+| Live SQL (per-batch) | ~50,000 | 20+ hours |
+| ETL (CSV mode) | ~20 (one-time extraction) | 2-3 hours |
+
+**Speedup: 7-10x faster migration with identical data fidelity.**
+
+### 5.5 Environmental SQLite Index (Parallel-Friendly)
+
+CSV mode is fast but large environmental files (5–6GB each) become memory-bound when run in parallel.
+To enable **16+ workers** without loading entire CSVs per process, build a SQLite index for
+`daily_sensor_readings.csv` and `time_sensor_readings.csv`:
+
+```bash
+# Build a compact, indexed SQLite store (one-time)
+python scripts/migration/tools/build_environmental_sqlite.py \
+  --input-dir scripts/migration/data/extract/ \
+  --output-path scripts/migration/data/extract/environmental_readings.sqlite \
+  --replace
+```
+
+Then run environmental migration with **parallel workers**:
+
+```bash
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_environmental_all.py \
+  --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite \
+  --workers 16
+```
+
+---
 
 ## 6) Safety Guardrails (Must Use)
+
 - `scripts/migration/safety.py` forces the **default** DB to `aquamind_db_migr_dev` and aborts if misconfigured.
 - Use `SKIP_CELERY_SIGNALS=1` for all migration scripts to avoid background tasks.
+- All writes must use `save_with_history()` or `get_or_create_with_history()` to populate audit trails.
+- Every migrated row tracked in `ExternalIdMap` to prevent duplicates on replay.
+
+---
 
 ## 7) Runbook (Agent-Friendly)
 
@@ -87,6 +254,7 @@ The migration preview stack runs Django + Node in Docker to resemble test/prod:
 Use this stack for GUI validation; avoid local `runserver`/`npm dev` when validating migration data.
 
 ### 7.1 Setup (once per environment)
+
 ```bash
 PYTHONPATH=/path/to/AquaMind python scripts/migration/setup_master_data.py
 ```
@@ -99,181 +267,113 @@ Use this before a clean dry-run. It truncates migration data but keeps schema an
 PYTHONPATH=/path/to/AquaMind python scripts/migration/clear_migration_db.py
 ```
 
-### 7.2 Generate project-based stitching report (RECOMMENDED)
-
-This is the new approach that correctly links FW and sea populations:
+### 7.2 Generate input-based stitching report
 
 ```bash
-python scripts/migration/tools/project_based_stitching_report.py --min-stages 4 --print-top 20
+python scripts/migration/tools/input_based_stitching_report.py \
+  --output-dir scripts/migration/output/input_stitching
 ```
 
-Output files in `scripts/migration/output/project_stitching/`:
-- `project_batches.csv` - All batches meeting criteria
-- `project_population_members.csv` - Populations grouped by project
+Output files in `scripts/migration/output/input_stitching/`:
+- `input_batches.csv` - All input-based batches
+- `input_population_members.csv` - Populations grouped by input batch
 - `recommended_batches.csv` - Top candidates for migration
 
-### 7.2.1 Legacy stitching (component-based)
-
-For reference only - this approach has limitations due to missing PublicTransfers data:
-
-```bash
-python scripts/migration/tools/population_stitching_report.py
-```
-
-### 7.3 Migrate a project-based batch end-to-end (RECOMMENDED)
+### 7.3 Migrate an input-based batch end-to-end
 
 ```bash
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_project_batch.py \
-  --project-key "1/24/27" \
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+  --batch-key "Vár 2024|1|2024" \
+  --use-csv scripts/migration/data/extract/ \
   --skip-environmental  # Optional: skip slow environmental migration
 ```
 
-This wrapper runs all migration scripts in sequence for a single project batch.
+This wrapper runs all migration scripts in sequence for a single input batch.
 
-### 7.3.1 Migrate one component end-to-end (legacy)
+### 7.3.1 Legacy: project-based stitching (deprecated)
 
 ```bash
-python scripts/migration/tools/pilot_migrate_component.py --component-key <key>
-python scripts/migration/tools/pilot_migrate_component_transfers.py --component-key <key>
-python scripts/migration/tools/pilot_migrate_component_feeding.py --component-key <key>
-python scripts/migration/tools/pilot_migrate_component_mortality.py --component-key <key>
+python scripts/migration/tools/project_based_stitching_report.py --min-stages 4 --print-top 20
+
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_project_batch.py \
+  --project-key "1/24/27" \
+  --skip-environmental
+```
+
+### 7.4 Migrate individual components (with CSV mode)
+
+```bash
+# Core batch + infrastructure
+python scripts/migration/tools/pilot_migrate_component.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+
+# Transfers (use SubTransfers for 2020+)
+python scripts/migration/tools/pilot_migrate_component_transfers.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/ --use-subtransfers
+
+# Operations
+python scripts/migration/tools/pilot_migrate_component_feeding.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+python scripts/migration/tools/pilot_migrate_component_mortality.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
+
+# Health
 python scripts/migration/tools/pilot_migrate_component_treatments.py --component-key <key>
 python scripts/migration/tools/pilot_migrate_component_lice.py --component-key <key>
 python scripts/migration/tools/pilot_migrate_component_health_journal.py --component-key <key>
-python scripts/migration/tools/pilot_migrate_component_environmental.py --component-key <key>
+
+# Environmental (slowest - run last)
+python scripts/migration/tools/pilot_migrate_component_environmental.py \
+  --component-key <key> --use-csv scripts/migration/data/extract/
 ```
 
-### 7.4 Counts report (core + per-batch)
+### 7.4.1 Environmental at scale (parallel, recommended)
+
 ```bash
+# Build SQLite index once
+python scripts/migration/tools/build_environmental_sqlite.py \
+  --input-dir scripts/migration/data/extract/ \
+  --output-path scripts/migration/data/extract/environmental_readings.sqlite \
+  --replace
+
+# Parallel run across all project batches
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_environmental_all.py \
+  --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite \
+  --workers 16
+```
+
+### 7.5 Verification & Reports
+
+```bash
+# Counts report (core + per-batch)
 python scripts/migration/tools/migration_counts_report.py
-```
 
-### 7.5 Comprehensive verification report
-
-```bash
+# Comprehensive verification report
 python scripts/migration/tools/migration_verification_report.py
 ```
 
-Checks all required tables have data and reports per-batch lifecycle stage coverage.
-
-### 7.6 Validation (lint only for now)
-```bash
-python -m flake8 scripts/migration/tools/migration_counts_report.py
-```
-
-### 7.7 Migrate Scenario Models (TGC, FCR, Temperature)
-
-Migrate growth model master data from FishTalk to enable AquaMind projections:
+### 7.6 Migrate Scenario Models (TGC, FCR, Temperature)
 
 ```bash
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   python scripts/migration/tools/pilot_migrate_scenario_models.py
 ```
 
-**What it migrates:**
-
-| FishTalk Source | AquaMind Target | Rows |
-|-----------------|-----------------|------|
-| `TemperatureTables` | `TemperatureProfile` | 20 |
-| `TemperatureTableEntries` | `TemperatureReading` | 240 |
-| `GrowthModels` + `TGCTableEntries` | `TGCModel` | 120 |
-| `GrowthModels` + `FCRTableEntries` | `FCRModel` + `FCRModelStage` | 8,639 entries |
-| (synthetic) | `MortalityModel` | 3 defaults |
-
-**Options:**
-- `--dry-run` - Preview without database changes
-- `--skip-temperature` - Skip temperature profile migration
-- `--skip-tgc` - Skip TGC model migration
-- `--skip-fcr` - Skip FCR model migration
-- `--skip-mortality` - Skip mortality model creation
-
-**Key transformation:** FCR entries in FishTalk are weight/temperature-based lookup tables. The migration aggregates these to stage-based FCR values using weight-to-stage mapping:
-
-| Weight Range (g) | AquaMind Stage |
-|-----------------|----------------|
-| 0.0 - 0.5 | Egg&Alevin |
-| 0.5 - 5.0 | Fry |
-| 5.0 - 30.0 | Parr |
-| 30.0 - 100.0 | Smolt |
-| 100.0 - 500.0 | Post-Smolt |
-| 500.0+ | Adult |
-
-### 7.8 Expand Batch Migration (517 remaining batches)
-
-After the initial 10-batch pilot, expand to all 527 batches with 5+ stages:
+### 7.7 Post-Migration: Create Scenarios & Run Projections
 
 ```bash
-# Dry run first - see what would be migrated
-PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_batch_expansion.py \
-  --min-stages 5 --limit 50 --dry-run
-
-# Migrate next 50 batches (skip environmental for speed)
-PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_batch_expansion.py \
-  --min-stages 5 --limit 50
-
-# Migrate all remaining batches
-PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_batch_expansion.py \
-  --min-stages 5
-```
-
-**Options:**
-- `--min-stages N` - Minimum lifecycle stages (default: 5)
-- `--limit N` - Maximum batches to migrate
-- `--active-only` - Only migrate active batches
-- `--include-environmental` - Include slow environmental data migration
-- `--dry-run` - Preview without changes
-
-### 7.9 Environmental Data Migration
-
-Environmental data is slow to migrate. Run separately after batch expansion:
-
-```bash
-# For each migrated batch, run environmental migration
-# This is typically done batch-by-batch due to volume
-PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_component_environmental.py \
-  --component-key <component_key> \
-  --report-dir scripts/migration/output/project_batch_migration/<project_key>
-```
-
-### 7.10 Post-Migration: Create Scenarios & Run Projections
-
-After batch + scenario model migration, run post-processing for ACTIVE batches:
-
-```bash
-# Dry run first
-PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_post_batch_processing.py --dry-run
-
-# Full run - creates scenarios, runs growth analysis, runs projections
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   python scripts/migration/tools/pilot_migrate_post_batch_processing.py
 ```
 
-**What it does:**
-1. **Creates scenarios** for ACTIVE batches using migrated FT-TGC/FCR/Mortality models
-2. **Pins projection runs** to active batches
-3. **Runs Growth Analysis** - computes `ActualDailyAssignmentState`
-4. **Runs Live Forward Projections** - computes `LiveForwardProjection` for dashboard
+---
 
-**Options:**
-- `--skip-scenario-creation` - Skip scenario creation step
-- `--skip-growth-analysis` - Skip growth analysis step
-- `--skip-projections` - Skip live forward projections step
+## 8) Data Sources & Mapping
 
-## 8) Data Sources & Mapping Notes (Architect-Friendly)
-
-- **Batch + infra:** derived from project-based stitching using `(ProjectNumber, InputYear, RunningNumber)`.
-- **Transfers:** transfer workflows/actions from FishTalk movement events (action_number uniqueness fixed).
-- **Feeding/Mortality/Treatments/Lice/Journal:** migrated directly from FishTalk operational tables.
-- **Environmental:** migrated from `Ext_SensorReadings_v2` and `Ext_DailySensorReadings_v2` (slow, often skipped).
-- **Audit trail:** `save_with_history()`/`get_or_create_with_history()` apply `_history_user` + change reason.
-
-**Stage mapping (FishTalk → AquaMind):**
+### 8.1 FishTalk → AquaMind Stage Mapping
 
 | FishTalk Stage | AquaMind Stage |
 |----------------|----------------|
@@ -284,90 +384,237 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
 | POST-SMOLT, LARGE SMOLT | Post-Smolt |
 | ONGROW, GROWER, GRILSE | Adult |
 
-## 9) Current Counts Snapshot (2026-01-20)
+### 8.2 Key Entity Mappings
 
-```
-[Core table counts]
-batch_batch                        : 10
-batch_batchcontainerassignment     : 357
-batch_creationworkflow             : 10
-batch_creationaction               : 10
-batch_batchtransferworkflow        : 176
-batch_transferaction               : 219
-batch_mortalityevent               : 10753
-inventory_feedingevent             : 7119
-health_treatment                   : 731
-health_licecount                   : 2098
-health_journalentry                : 125
-environmental_environmentalreading : 0 (skipped for speed)
-infrastructure_sensor              : 0
-infrastructure_container           : 192
-infrastructure_area                : 33
-infrastructure_hall                : 46
-infrastructure_freshwaterstation   : 33
-inventory_feedpurchase             : 0
-inventory_feedcontainerstock       : 0
-migration_support_externalidmap    : 21801
-```
+| FishTalk Entity | AquaMind Entity | Notes |
+|-----------------|-----------------|-------|
+| Populations + Ext_Inputs_v2 | Batch | Input-based (InputName + InputNumber + YearClass); InputName changes at FW→Sea |
+| Containers | Container | 1:1 mapping with OrgUnit hierarchy |
+| PublicStatusValues | BatchContainerAssignment | Population/biomass snapshots (prefer non-zero after start) |
+| Ext_SensorReadings_v2 | EnvironmentalReading | Time-series (is_manual=False) |
+| Ext_DailySensorReadings_v2 | EnvironmentalReading | Daily aggregates (is_manual=True) |
+| Mortality + MortalityCauses | MortalityEvent + MortalityReason | Full cause categorization |
+| Feeding + FeedTypes | FeedingEvent + Feed | With feed specifications |
+| Operations + Treatments | Treatment | Health treatments |
+| LiceCount | LiceCount | Sea lice monitoring |
 
-```
-[Per-batch counts]
-batch_number             | assignments | workflows | actions | feeding | mortality | treatments | lice | journal
------------------------- | ----------- | --------- | ------- | ------- | --------- | ---------- | ---- | -------
-FT-23ECA7F8-24Q1-LHS     | 16          | 8         | 9       | 427     | 632       | 60         | 82   | 0
-FT-275B48B5-24Q1-LHS     | 43          | 24        | 29      | 1615    | 0         | 0          | 0    | 0
-FT-8F24E7BE-24Q1-LHS     | 35          | 19        | 24      | 1396    | 2742      | 150        | 425  | 10
-FT-9F35C74F-NH-FEB-24    | 10          | 7         | 8       | 195     | 248       | 4          | 32   | 0
-FT-A6417114-24Q1-LHS     | 56          | 29        | 39      | 1641    | 2673      | 193        | 598  | 57
-FT-AA8AACFE-24Q1-LHS     | 68          | 22        | 28      | 1427    | 2334      | 201        | 545  | 41
-FT-DF5F0436-24Q1-LHS     | 31          | 12        | 15      | 0       | 1433      | 104        | 332  | 17
-FT-E04A249B-24Q1-LHS     | 34          | 22        | 26      | 0       | 0         | 0          | 0    | 0
-FT-E71CBA7D-24Q1-LHS     | 20          | 8         | 10      | 418     | 691       | 19         | 84   | 0
-FT-FA381BEE-24Q1-LHS     | 44          | 25        | 31      | 0       | 0         | 0          | 0    | 0
-```
+### 8.3 Audit Trail Implementation
 
-## 10) Verification Results (2026-01-20)
+All migration writes use:
+- `save_with_history(obj, user=migration_user, reason="FishTalk migration")` 
+- `get_or_create_with_history(...)` for idempotent creates
 
-**Tables with required data:** 24/25 PASSED
+This populates django-simple-history tables automatically. See `MIGRATION_BEST_PRACTICES.md` for details.
 
-| Category | Tables Verified |
-|----------|----------------|
-| Infrastructure | geography, freshwaterstation, hall, area, container, containertype |
-| Batch Management | batch, batchcontainerassignment, lifecyclestage, species, batchtransferworkflow, transferaction, creationworkflow, creationaction, mortalityevent |
-| Inventory | feed, feedingevent |
-| Health | treatment, licecount, journalentry, mortalityreason, vaccinationtype |
-| Environmental | environmentalparameter |
-| Migration Support | externalidmap |
+---
 
-**Tables missing data:** 1 (environmental_environmentalreading - skipped for speed)
+## 9) AquaMind Table Coverage Analysis
 
-**Lifecycle stage coverage per batch:** All 10 batches have 5/6 stages (Adult, Egg&Alevin, Fry, Parr, Smolt)
+### 9.1 Complete Table Inventory (161 tables)
 
-## 11) Known Gaps / Out of Scope
+| App | Total Tables | With Data | Key Migration Tables |
+|-----|-------------|-----------|---------------------|
+| batch | 27 | 14 | batch, batchcontainerassignment, mortalityevent, batchtransferworkflow, transferaction |
+| broodstock | 20 | 0 | (Out of scope) |
+| health | 25 | 6 | treatment, licecount, journalentry, mortalityreason |
+| infrastructure | 16 | 8 | container, hall, area, freshwaterstation, sensor |
+| inventory | 12 | 6 | feed, feedingevent, feedpurchase |
+| environmental | 8 | 2 | environmentalparameter, environmentalreading |
+| scenario | 15 | 6 | tgcmodel, fcrmodel, temperatureprofile |
+| harvest | 8 | 0 | (Future operations) |
+| finance | 12 | 0 | (Runtime transactions) |
+| planning | 3 | 0 | (Created fresh in AquaMind) |
+| users | 3 | 3 | user, userprofile |
+| auth/admin | 7 | 3 | Standard Django tables |
+| historian | 3 | 0 | Historian config |
+| migration_support | 1 | 1 | externalidmap |
 
-- **Post-Smolt stage:** Not commonly tracked in FishTalk, so most batches show 5/6 stages.
-- **Environmental readings:** Migration slow; skipped in this run but script is available.
-- **Feed purchase/stock:** Data not available in current FishTalk scope.
-- **Planning data (PlanScenario, PlannedActivities):** Stale/junk - DO NOT migrate (per MIGRATION_BEST_PRACTICES.md).
-- **Broodstock data:** Not in scope for initial migration.
-- **PublicTransfers data gap:** FW→sea transfers stopped being recorded in Jan 2023; project-based stitching bypasses this.
+### 9.2 Tables That Should Have Data Post-Migration
+
+**Expected populated after a complete migration run:**
+
+1. **Core Batch Data** (batch app)
+   - `batch_batch` - Fish batches
+   - `batch_batchcontainerassignment` - Container assignments
+   - `batch_lifecyclestage` - Stage definitions (master data)
+   - `batch_species` - Species definitions (master data)
+   - `batch_batchcreationworkflow` - Creation workflows
+   - `batch_creationaction` - Creation actions
+   - `batch_batchtransferworkflow` - Transfer workflows
+   - `batch_transferaction` - Transfer actions
+   - `batch_mortalityevent` - Mortality events
+
+2. **Infrastructure** (infrastructure app)
+   - `infrastructure_geography` - Geographies
+   - `infrastructure_area` - Sea areas
+   - `infrastructure_freshwaterstation` - FW stations
+   - `infrastructure_hall` - Halls in FW stations
+   - `infrastructure_container` - All containers
+   - `infrastructure_containertype` - Container types
+   - `infrastructure_sensor` - Sensors
+   - `infrastructure_feedcontainer` - Feed containers
+
+3. **Inventory** (inventory app)
+   - `inventory_feed` - Feed types
+   - `inventory_feedingevent` - Feeding events
+   - `inventory_feedpurchase` - Feed purchases (if available)
+   - `inventory_feedcontainerstock` - FIFO stock
+
+4. **Health** (health app)
+   - `health_mortalityreason` - Mortality reasons
+   - `health_treatment` - Treatments
+   - `health_vaccinationtype` - Vaccination types
+   - `health_licecount` - Lice counts
+   - `health_journalentry` - Health journal
+
+5. **Environmental** (environmental app)
+   - `environmental_environmentalparameter` - Parameter types
+   - `environmental_environmentalreading` - Sensor readings
+
+6. **Scenario Models** (scenario app)
+   - `scenario_tgcmodel` + `scenario_tgcmodelstage`
+   - `scenario_fcrmodel` + `scenario_fcrmodelstage`
+   - `scenario_temperatureprofile` + `scenario_temperaturereading`
+   - `scenario_mortalitymodel`
+
+7. **Audit History** (all *_historical* tables)
+   - Auto-populated via django-simple-history
+
+### 9.3 Tables That Remain Empty (Expected)
+
+- **Broodstock** (20 tables) - Out of scope for production migration
+- **Harvest** (8 tables) - Future harvest operations
+- **Finance** (12 tables) - Runtime intercompany transactions
+- **Planning** (3 tables) - Created fresh in AquaMind
+- **Growth Samples** - Computed by assimilation engine
+- **Daily States / Projections** - Computed post-migration
+
+---
+
+## 10) Known Issues & Gaps
+
+### 10.1 Data Gaps in FishTalk
+
+| Issue | Impact | Mitigation |
+|-------|--------|------------|
+| PublicTransfers broken since Jan 2023 | FW→sea transfers not recorded | Use SubTransfers for transfers; input-based for batch identity; FW→Sea linking still pending |
+| Post-Smolt stage rarely tracked | Most batches show 5/6 stages | Acceptable - reflects FishTalk practice |
+| Feed purchase data sparse | Limited FIFO cost tracking | Optional - not blocking |
+| FishTalk backup from Oct 2025 | Missing recent 3 months | Refresh backup before final migration |
+
+### 10.2 Performance Considerations
+
+| Issue | Solution |
+|-------|----------|
+| Environmental migration slow | Use `--use-csv` mode with pre-extracted CSVs |
+| Parallel env migration becomes memory-bound | Build SQLite index + `--use-sqlite` (see 5.5, 7.4.1) |
+| Large batch count (527+) | ETL approach reduces from 20h to 2-3h |
+| Status values table (7M rows) | Pandas DataFrame with filtered loading |
+
+### 10.3 Not Migrated (By Design)
+
+- **Scenario/Planning data from FishTalk** - Stale/junk data (see MIGRATION_BEST_PRACTICES.md)
+- **Broodstock data** - Out of scope for initial go-live
+- **Historical growth samples** - Will be back-filled by assimilation if needed
+
+### 10.4 Environment Prerequisites
+
+- **Growth analysis requires TimescaleDB**: `batch_actualdailyassignmentstate` is a hypertable; ensure the Timescale extension is preloaded in `aquamind_db_migr_dev` before running post‑migration processing.
+
+---
+
+## 11) Lessons Learned
+
+### 11.1 Technical Lessons
+
+1. **Input-based stitching is essential:** `Ext_Inputs_v2` is the biological batch key; InputName changes at FW→Sea.
+
+2. **ETL approach is 7-10x faster:** Bulk CSV extraction eliminates the ~200ms overhead per SQL query. Essential for 500+ batch migrations.
+
+3. **Environmental data needs `is_manual` distinction:** Daily aggregates (`is_manual=True`) vs time-series (`is_manual=False`) is critical for accurate TGC calculations.
+
+4. **Audit trail via django-simple-history works well:** All 20+ historical tables auto-populated correctly with user attribution and change reasons.
+
+5. **ExternalIdMap provides idempotency:** Enables safe replay without duplicates.
+
+### 11.2 Process Lessons
+
+1. **Validate with dry-run first:** All scripts support `--dry-run` for safe preview.
+
+2. **Monitor CPU during parallel migrations:** Avoid running many Python processes simultaneously - can cause laptop thermal issues.
+
+3. **Clear migration DB between full runs:** Use `clear_migration_db.py` for clean slate.
+
+4. **GUI validation essential:** Use Docker preview stack (localhost:8001/5002) to verify data appears correctly in UI.
+
+### 11.3 Data Quality Lessons
+
+1. **FishTalk data quality varies:** Some batches have complete data, others are sparse. Migration handles gracefully.
+
+2. **Stage mapping requires normalization:** FishTalk stage names are inconsistent; normalize before mapping.
+
+3. **Container grouping from OrgUnit hierarchy:** FishTalk's Ext_GroupedOrganisation_v2 provides site/area/company context.
+
+---
 
 ## 12) Next Steps
 
-1. **Run scenario model migration:** Execute `pilot_migrate_scenario_models.py` to migrate TGC/FCR/Temperature master data.
-2. **Create baseline scenarios:** After TGC/FCR migration, create scenarios for migrated batches and pin them.
-3. **Run projections:** Generate `ActualDailyAssignmentState` and `LiveForwardProjection` data.
-4. **Expand batch count:** Add more project batches (527 with 5+ stages available) as needed.
-5. **Environmental data:** Run `pilot_migrate_component_environmental.py` for batches where sensor data is needed.
-6. **Fresh FishTalk backup:** Current backup is from October 2025; refresh for final migration run.
-7. **Production migration:** Define criteria for production readiness and create final migration plan.
+### 12.1 Immediate (Pre-Production)
 
-## 13) Lessons Learned
+1. **Complete environmental data migration** - Run for all 527 batches using CSV mode
+2. **Run scenario model migration** - Execute `pilot_migrate_scenario_models.py`
+3. **Create baseline scenarios** - For active batches, create scenarios and pin them
+4. **Run growth assimilation** - Generate `ActualDailyAssignmentState` data
+5. **Run live forward projections** - Populate `LiveForwardProjection` for dashboard
+6. **GUI validation** - Verify all data appears correctly in frontend
 
-1. **Project-based stitching is essential:** The PublicTransfers table in FishTalk has been broken since Jan 2023. Using `(ProjectNumber, InputYear, RunningNumber)` reliably links FW and sea populations.
+### 12.2 Before Go-Live
 
-2. **Environmental migration is slow:** Consider running it separately or for a subset of high-priority batches.
+1. **Refresh FishTalk backup** - Current backup is from October 2025; need recent data
+2. **Final migration run** - Clean slate with fresh backup
+3. **Production DB setup** - Configure `aquamind_db_prod` with same schema
+4. **User training** - Ensure operators understand AquaMind workflows
 
-3. **Batch status correctly marked ACTIVE:** All migrated batches show correct status based on recent activity.
+### 12.3 Post Go-Live
 
-4. **Stage coverage is consistent:** All project-based batches show 5/6 lifecycle stages, spanning the full FW→sea journey.
+1. **Monitor growth assimilation** - Verify daily state computation works correctly
+2. **Track variance reports** - Compare planned vs actual outcomes
+3. **Expand to broodstock** - Phase 2/3 when ready
+
+---
+
+## 13) Key Files Reference
+
+### Migration Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/migration/tools/bulk_extract_fishtalk.py` | ETL extraction to CSV |
+| `scripts/migration/tools/etl_loader.py` | CSV data loader with caching |
+| `scripts/migration/tools/pilot_migrate_component.py` | Core batch migration |
+| `scripts/migration/tools/pilot_migrate_component_*.py` | Domain-specific migrations |
+| `scripts/migration/tools/pilot_migrate_project_batch.py` | End-to-end batch migration |
+| `scripts/migration/tools/pilot_migrate_scenario_models.py` | TGC/FCR/Temperature migration |
+| `scripts/migration/tools/pilot_migrate_post_batch_processing.py` | Post-migration processing |
+| `scripts/migration/tools/migration_counts_report.py` | Verification counts |
+| `scripts/migration/tools/migration_verification_report.py` | Full verification |
+
+### Data Directories
+
+| Directory | Contents |
+|-----------|----------|
+| `scripts/migration/data/extract/` | Pre-extracted CSV files (~12GB) |
+| `scripts/migration/output/project_batch_migration/` | Per-batch migration outputs |
+| `scripts/migration/output/population_stitching/` | Stitching reports |
+
+### Configuration
+
+| File | Purpose |
+|------|---------|
+| `scripts/migration/safety.py` | DB safety enforcement |
+| `scripts/migration/history.py` | Audit trail helpers |
+| `scripts/migration/extractors/base.py` | SQL extraction base class |
+
+---
+
+**End of Document**

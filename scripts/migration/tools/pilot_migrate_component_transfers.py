@@ -2,9 +2,13 @@
 # flake8: noqa
 """Pilot migrate FishTalk transfers (movements) for one stitched population component.
 
-Source (FishTalk): dbo.PublicTransfers keyed by (OperationID, SourcePop, DestPop).
-  - PublicTransfers.OperationID -> Operations.StartTime (transfer timestamp)
-  - PublicTransfers.ShareCountForward / ShareBiomassForward are used to estimate counts/biomass moved.
+This script supports two transfer data sources:
+1. **SubTransfers (recommended)**: Active through 2025, use with --use-subtransfers
+2. **PublicTransfers (legacy)**: Broken since Jan 2023, default for backward compatibility
+
+SubTransfers tracks actual fish movements with granular population chains:
+  - SourcePopBefore -> SourcePopAfter (remnant chain)
+  - SourcePopBefore -> DestPopAfter (transfer to new location)
 
 Target (AquaMind):
   - apps.batch.models.BatchTransferWorkflow (1 per FishTalk OperationID)
@@ -56,6 +60,7 @@ from apps.batch.models import Batch, BatchTransferWorkflow, TransferAction, Life
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -145,6 +150,10 @@ def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
     return None
 
 
+STAGE_ORDER = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"]
+STAGE_INDEX = {name: idx for idx, name in enumerate(STAGE_ORDER)}
+
+
 @dataclass(frozen=True)
 class ComponentMember:
     population_id: str
@@ -175,6 +184,58 @@ def load_members_from_report(report_dir: Path, *, component_id: int | None, comp
 
     members.sort(key=lambda m: m.start_time)
     return members
+
+
+def load_members_from_chain(chain_dir: Path, *, chain_id: str) -> list[ComponentMember]:
+    """Load members from SubTransfers-based chain stitching output."""
+    import csv
+
+    path = chain_dir / "batch_chains.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing chain file: {path}")
+
+    members: list[ComponentMember] = []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            if row.get("chain_id") != chain_id:
+                continue
+            
+            start = parse_dt(row.get("start_time", ""))
+            if start is None:
+                continue
+            end = parse_dt(row.get("end_time", ""))
+            members.append(ComponentMember(
+                population_id=row.get("population_id", ""),
+                start_time=start,
+                end_time=end,
+            ))
+
+    members.sort(key=lambda m: m.start_time)
+    return members
+
+
+def load_subtransfers_from_csv(csv_dir: Path, population_ids: set[str]) -> list[dict]:
+    """Load SubTransfers data from CSV for specified populations."""
+    import csv
+    
+    path = csv_dir / "sub_transfers.csv"
+    if not path.exists():
+        return []
+    
+    transfers = []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            src_before = row.get("SourcePopBefore", "")
+            src_after = row.get("SourcePopAfter", "")
+            dst_after = row.get("DestPopAfter", "")
+            
+            # Include if any involved population is in our set
+            if src_before in population_ids or src_after in population_ids or dst_after in population_ids:
+                transfers.append(row)
+    
+    return transfers
 
 
 def resolve_component_key(report_dir: Path, *, component_id: int | None, component_key: str | None) -> str:
@@ -247,23 +308,91 @@ def lookup_project_info(extractor: BaseExtractor, *, population_id: str) -> tupl
     return project_number, input_year, running_number
 
 
+CHAIN_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "chain_stitching"
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pilot migrate transfer workflows/actions for a stitched FishTalk component")
-    parser.add_argument("--component-id", type=int, help="Component id from components.csv")
-    parser.add_argument("--component-key", help="Stable component_key from components.csv")
-    parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
+    parser = argparse.ArgumentParser(
+        description="Pilot migrate transfer workflows/actions for a stitched FishTalk component",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Transfer data sources:
+  --use-subtransfers: Use SubTransfers table (active through 2025, recommended for 2020+)
+  Default: Use PublicTransfers (broken since Jan 2023, legacy only)
+        """,
+    )
+    
+    # SubTransfers-based stitching (recommended)
+    chain_group = parser.add_argument_group("SubTransfers-based stitching (recommended)")
+    chain_group.add_argument(
+        "--chain-id",
+        help="Chain ID from subtransfer_chain_stitching.py (e.g., CHAIN-00001)",
+    )
+    chain_group.add_argument(
+        "--chain-dir",
+        default=str(CHAIN_DIR_DEFAULT),
+        help="Directory containing batch_chains.csv from subtransfer_chain_stitching.py",
+    )
+    
+    # Project-based stitching (legacy)
+    legacy_group = parser.add_argument_group("Project-based stitching (legacy)")
+    legacy_group.add_argument("--component-id", type=int, help="Component id from components.csv")
+    legacy_group.add_argument("--component-key", help="Stable component_key from components.csv")
+    legacy_group.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
+    
+    # Transfer data source options
+    parser.add_argument(
+        "--use-subtransfers",
+        action="store_true",
+        help="Use SubTransfers table instead of PublicTransfers (recommended for 2020+ batches)",
+    )
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    report_dir = Path(args.report_dir)
-    component_key = resolve_component_key(report_dir, component_id=args.component_id, component_key=args.component_key)
-    members = load_members_from_report(report_dir, component_id=args.component_id, component_key=component_key)
-    if not members:
-        raise SystemExit("No members found for the selected component")
+    
+    # Determine which stitching approach to use
+    use_chain_stitching = args.chain_id is not None
+    use_project_stitching = args.component_id is not None or args.component_key is not None
+    
+    if not use_chain_stitching and not use_project_stitching:
+        raise SystemExit(
+            "Provide either:\n"
+            "  SubTransfers-based: --chain-id CHAIN-00001\n"
+            "  Project-based: --component-id or --component-key"
+        )
+    
+    if use_chain_stitching and use_project_stitching:
+        raise SystemExit("Cannot use both --chain-id and --component-id/--component-key")
+    
+    # Load members based on stitching approach
+    if use_chain_stitching:
+        chain_dir = Path(args.chain_dir)
+        members = load_members_from_chain(chain_dir, chain_id=args.chain_id)
+        if not members:
+            raise SystemExit(f"No members found for chain {args.chain_id}")
+        component_key = f"chain:{args.chain_id}"
+        print(f"Loaded {len(members)} populations from chain {args.chain_id}")
+        
+        # For chain-based, default to SubTransfers
+        if not args.use_subtransfers:
+            print("Note: Using --use-subtransfers by default for chain-based stitching")
+            args.use_subtransfers = True
+    else:
+        report_dir = Path(args.report_dir)
+        component_key = resolve_component_key(report_dir, component_id=args.component_id, component_key=args.component_key)
+        members = load_members_from_report(report_dir, component_id=args.component_id, component_key=component_key)
+        if not members:
+            raise SystemExit("No members found for the selected component")
 
     batch_map = get_external_map("PopulationComponent", component_key)
     if not batch_map:
@@ -283,37 +412,95 @@ def main() -> int:
 
     extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
-    project_number, input_year, running_number = lookup_project_info(
-        extractor, population_id=component_key
-    )
+    # For chain-based stitching, skip project lookup (not relevant)
+    project_number, input_year, running_number = None, None, None
+    if not use_chain_stitching:
+        project_number, input_year, running_number = lookup_project_info(
+            extractor, population_id=component_key
+        )
 
     in_clause = ",".join(f"'{pid}'" for pid in population_ids)
     start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
     end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    pop_id_set = set(population_ids)
 
-    transfer_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT pt.OperationID, "
-            "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
-            "CONVERT(varchar(36), pt.SourcePop) AS SourcePop, "
-            "CONVERT(varchar(36), pt.DestPop) AS DestPop, "
-            "CONVERT(varchar(64), pt.ShareCountForward) AS ShareCountForward, "
-            "CONVERT(varchar(64), pt.ShareBiomassForward) AS ShareBiomassForward "
-            "FROM dbo.PublicTransfers pt "
-            "JOIN dbo.Operations o ON o.OperationID = pt.OperationID "
-            f"WHERE (pt.SourcePop IN ({in_clause}) OR pt.DestPop IN ({in_clause})) "
-            f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
-            "ORDER BY o.StartTime ASC"
-        ),
-        headers=[
-            "OperationID",
-            "OperationStartTime",
-            "SourcePop",
-            "DestPop",
-            "ShareCountForward",
-            "ShareBiomassForward",
-        ],
-    )
+    # Load transfers from appropriate source
+    if args.use_subtransfers:
+        # Use SubTransfers (recommended for 2020+)
+        if args.use_csv:
+            # Load from CSV
+            csv_dir = Path(args.use_csv)
+            raw_transfers = load_subtransfers_from_csv(csv_dir, pop_id_set)
+            # Convert to consistent format
+            transfer_rows = []
+            for row in raw_transfers:
+                # SubTransfers has SourcePopBefore, SourcePopAfter, DestPopAfter
+                # For transfer workflows, we care about SourcePopBefore -> DestPopAfter
+                src = row.get("SourcePopBefore", "")
+                dst = row.get("DestPopAfter", "")
+                if src and dst and src in pop_id_set and dst in pop_id_set:
+                    transfer_rows.append({
+                        "OperationID": row.get("OperationID", ""),
+                        "OperationStartTime": row.get("OperationTime", ""),
+                        "SourcePop": src,
+                        "DestPop": dst,
+                        "ShareCountForward": row.get("ShareCountFwd", ""),
+                        "ShareBiomassForward": row.get("ShareBiomFwd", ""),
+                    })
+            print(f"Loaded {len(transfer_rows)} SubTransfers edges from CSV")
+        else:
+            # Query from SQL
+            transfer_rows = extractor._run_sqlcmd(
+                query=(
+                    "SELECT st.OperationID, "
+                    "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
+                    "CONVERT(varchar(36), st.SourcePopBefore) AS SourcePop, "
+                    "CONVERT(varchar(36), st.DestPopAfter) AS DestPop, "
+                    "CONVERT(varchar(64), st.ShareCountFwd) AS ShareCountForward, "
+                    "CONVERT(varchar(64), st.ShareBiomFwd) AS ShareBiomassForward "
+                    "FROM dbo.SubTransfers st "
+                    "JOIN dbo.Operations o ON o.OperationID = st.OperationID "
+                    f"WHERE st.SourcePopBefore IN ({in_clause}) "
+                    f"AND st.DestPopAfter IN ({in_clause}) "
+                    f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
+                    "ORDER BY o.StartTime ASC"
+                ),
+                headers=[
+                    "OperationID",
+                    "OperationStartTime",
+                    "SourcePop",
+                    "DestPop",
+                    "ShareCountForward",
+                    "ShareBiomassForward",
+                ],
+            )
+            print(f"Loaded {len(transfer_rows)} SubTransfers edges from SQL")
+    else:
+        # Use PublicTransfers (legacy, broken since Jan 2023)
+        transfer_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT pt.OperationID, "
+                "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
+                "CONVERT(varchar(36), pt.SourcePop) AS SourcePop, "
+                "CONVERT(varchar(36), pt.DestPop) AS DestPop, "
+                "CONVERT(varchar(64), pt.ShareCountForward) AS ShareCountForward, "
+                "CONVERT(varchar(64), pt.ShareBiomassForward) AS ShareBiomassForward "
+                "FROM dbo.PublicTransfers pt "
+                "JOIN dbo.Operations o ON o.OperationID = pt.OperationID "
+                f"WHERE (pt.SourcePop IN ({in_clause}) OR pt.DestPop IN ({in_clause})) "
+                f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
+                "ORDER BY o.StartTime ASC"
+            ),
+            headers=[
+                "OperationID",
+                "OperationStartTime",
+                "SourcePop",
+                "DestPop",
+                "ShareCountForward",
+                "ShareBiomassForward",
+            ],
+        )
+        print(f"Loaded {len(transfer_rows)} PublicTransfers edges from SQL")
 
     stages_raw = extractor._run_sqlcmd(
         query="SELECT StageID, StageName FROM dbo.ProductionStages",
@@ -347,45 +534,7 @@ def main() -> int:
     for pop_id, events in stage_events.items():
         events.sort(key=lambda item: item[0])
 
-    stage_events_all: list[dict[str, object]] = []
-    for pop_id, events in stage_events.items():
-        for ts, stage_name in events:
-            mapped_name = fishtalk_stage_to_aquamind(stage_name)
-            if not mapped_name:
-                continue
-            stage_events_all.append(
-                {
-                    "population_id": pop_id,
-                    "stage": mapped_name,
-                    "transition_time": ts,
-                }
-            )
-
-    stage_events_all.sort(
-        key=lambda item: (
-            item["transition_time"],
-            item["stage"],
-            item["population_id"],
-        )
-    )
-
-    collapsed_events: list[dict[str, object]] = []
-    for event in stage_events_all:
-        if not collapsed_events or event["stage"] != collapsed_events[-1]["stage"]:
-            collapsed_events.append(event)
-
-    stage_transitions: list[dict[str, object]] = []
-    for idx in range(1, len(collapsed_events)):
-        prev = collapsed_events[idx - 1]
-        curr = collapsed_events[idx]
-        stage_transitions.append(
-            {
-                "population_id": curr["population_id"],
-                "from_stage": prev["stage"],
-                "to_stage": curr["stage"],
-                "transition_time": curr["transition_time"],
-            }
-        )
+    transitions_by_pair: dict[tuple[str, str], list[BatchContainerAssignment]] = {}
 
     # Keep only internal edges (both endpoints in component) to avoid linking outside batches.
     transfer_rows = [
@@ -418,6 +567,22 @@ def main() -> int:
     with transaction.atomic():
         history_user = user
         history_reason = f"FishTalk migration: transfers for component {component_key}"
+        stage_prefix = f"{component_key}:"
+        stage_wf_ids = list(
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model="PopulationStageTransition",
+                source_identifier__startswith=stage_prefix,
+            ).values_list("target_object_id", flat=True)
+        )
+        if stage_wf_ids:
+            BatchTransferWorkflow.objects.filter(pk__in=stage_wf_ids).delete()
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model__in=["PopulationStageTransition", "PopulationStageTransitionAction"],
+                source_identifier__startswith=stage_prefix,
+            ).delete()
+
         for op_id, edges in by_op.items():
             op_time = parse_dt(edges[0].get("OperationStartTime") or "")
             if op_time is None:
@@ -612,116 +777,114 @@ def main() -> int:
             save_with_history(workflow, user=history_user, reason=history_reason)
             workflow.recalculate_totals()
 
-        for transition in stage_transitions:
-            from_stage_name = transition["from_stage"]
-            to_stage_name = transition["to_stage"]
-            transition_time = transition["transition_time"]
-            pop_id = transition["population_id"]
+        stage_assignments: dict[str, list[BatchContainerAssignment]] = {}
+        for assignment in batch.batch_assignments.select_related("lifecycle_stage"):
+            if assignment.lifecycle_stage and assignment.lifecycle_stage.name in STAGE_INDEX:
+                stage_assignments.setdefault(assignment.lifecycle_stage.name, []).append(assignment)
 
+        stage_start_dates: dict[str, datetime.date] = {}
+        for stage_name, assignments in stage_assignments.items():
+            stage_start_dates[stage_name] = min(a.assignment_date for a in assignments)
+
+        ordered_stages = [name for name in STAGE_ORDER if name in stage_start_dates]
+        transitions_by_pair = {}
+        for idx in range(1, len(ordered_stages)):
+            from_stage = ordered_stages[idx - 1]
+            to_stage = ordered_stages[idx]
+            transitions_by_pair[(from_stage, to_stage)] = list(stage_assignments.get(to_stage, []))
+
+        for (from_stage_name, to_stage_name), transitions in transitions_by_pair.items():
             source_stage = LifeCycleStage.objects.filter(name=from_stage_name).first()
             dest_stage = LifeCycleStage.objects.filter(name=to_stage_name).first()
             if not source_stage or not dest_stage:
-                skipped_stage += 1
+                skipped_stage += len(transitions)
                 continue
 
-            if isinstance(transition_time, datetime):
-                transition_time = ensure_aware(transition_time)
-            op_date = transition_time.date()
+            if not transitions:
+                continue
 
-            transition_key_time = transition_time.strftime("%Y%m%d%H%M%S")
-            transition_identifier = (
-                f"{component_key}:{from_stage_name}:{to_stage_name}:{transition_key_time}"
+            transition_times = [ensure_aware(datetime.combine(t.assignment_date, datetime.min.time())) for t in transitions]
+            min_time = min(transition_times)
+            max_time = max(transition_times)
+            op_date = min_time.date()
+
+            transition_identifier = f"{component_key}:{from_stage_name}:{to_stage_name}"
+            wf_number = (
+                f"FT-STG-{op_date.strftime('%Y%m%d')}-{stage_slug(from_stage_name)}-"
+                f"{stage_slug(to_stage_name)}-{component_key[:6]}"
+            )[:50]
+            workflow = BatchTransferWorkflow(
+                workflow_number=wf_number,
+                batch=batch,
+                workflow_type="LIFECYCLE_TRANSITION",
+                source_lifecycle_stage=source_stage,
+                dest_lifecycle_stage=dest_stage,
+                status="COMPLETED",
+                planned_start_date=min_time.date(),
+                planned_completion_date=max_time.date(),
+                actual_start_date=min_time.date(),
+                actual_completion_date=max_time.date(),
+                initiated_by=user,
+                completed_by=user,
+                notes=f"FishTalk stage transition {from_stage_name}→{to_stage_name}; component={component_key}",
             )
-            wf_map = get_external_map("PopulationStageTransition", transition_identifier)
-            if wf_map:
-                workflow = BatchTransferWorkflow.objects.get(pk=wf_map.target_object_id)
-                workflow.source_lifecycle_stage = source_stage
-                workflow.dest_lifecycle_stage = dest_stage
-                workflow.workflow_type = "LIFECYCLE_TRANSITION"
-                workflow.status = "COMPLETED"
-                workflow.planned_start_date = op_date
-                workflow.planned_completion_date = op_date
-                workflow.actual_start_date = op_date
-                workflow.actual_completion_date = op_date
-                workflow.completed_by = user
-                workflow.notes = f"FishTalk stage transition {from_stage_name}→{to_stage_name}; PopulationID={pop_id}"
-                save_with_history(workflow, user=history_user, reason=history_reason)
-                updated_stage_wf += 1
-            else:
-                wf_number = (
-                    f"FT-STG-{op_date.strftime('%Y%m%d')}-{stage_slug(from_stage_name)}-"
-                    f"{stage_slug(to_stage_name)}-{component_key[:6]}"
-                )[:50]
-                workflow = BatchTransferWorkflow(
-                    workflow_number=wf_number,
-                    batch=batch,
-                    workflow_type="LIFECYCLE_TRANSITION",
-                    source_lifecycle_stage=source_stage,
-                    dest_lifecycle_stage=dest_stage,
-                    status="COMPLETED",
-                    planned_start_date=op_date,
-                    planned_completion_date=op_date,
-                    actual_start_date=op_date,
-                    actual_completion_date=op_date,
-                    initiated_by=user,
-                    completed_by=user,
-                    notes=f"FishTalk stage transition {from_stage_name}→{to_stage_name}; PopulationID={pop_id}",
-                )
-                save_with_history(workflow, user=history_user, reason=history_reason)
-                ExternalIdMap.objects.update_or_create(
-                    source_system="FishTalk",
-                    source_model="PopulationStageTransition",
-                    source_identifier=transition_identifier,
-                    defaults={
-                        "target_app_label": workflow._meta.app_label,
-                        "target_model": workflow._meta.model_name,
-                        "target_object_id": workflow.pk,
-                        "metadata": {
-                            "population_id": pop_id,
-                            "from_stage": from_stage_name,
-                            "to_stage": to_stage_name,
-                            "transition_time": transition_time.isoformat(),
-                        },
+            save_with_history(workflow, user=history_user, reason=history_reason)
+            ExternalIdMap.objects.update_or_create(
+                source_system="FishTalk",
+                source_model="PopulationStageTransition",
+                source_identifier=transition_identifier,
+                defaults={
+                    "target_app_label": workflow._meta.app_label,
+                    "target_model": workflow._meta.model_name,
+                    "target_object_id": workflow.pk,
+                    "metadata": {
+                        "from_stage": from_stage_name,
+                        "to_stage": to_stage_name,
+                        "transition_start": min_time.isoformat(),
+                        "transition_end": max_time.isoformat(),
                     },
-                )
-                created_stage_wf += 1
-
-            source_assignment = assignment_by_pop.get(pop_id) or next(
-                iter(assignment_by_pop.values()), None
+                },
             )
-            if not source_assignment:
-                skipped_stage += 1
-                continue
+            created_stage_wf += 1
 
-            count, biomass = lookup_status_snapshot(extractor, population_id=pop_id, at_time=transition_time)
-            action_identifier = f"{transition_identifier}:action"
-            action_map = get_external_map("PopulationStageTransitionAction", action_identifier)
-            action_defaults = {
-                "workflow": workflow,
-                "action_number": 1,
-                "source_assignment": source_assignment,
-                "dest_assignment": source_assignment,
-                "source_population_before": max(count, 0),
-                "transferred_count": max(count, 0),
-                "mortality_during_transfer": 0,
-                "transferred_biomass_kg": biomass,
-                "allow_mixed": False,
-                "status": "COMPLETED",
-                "planned_date": op_date,
-                "actual_execution_date": op_date,
-                "transfer_method": None,
-                "notes": (
-                    f"FishTalk stage transition {from_stage_name}→{to_stage_name}; PopulationID={pop_id}"
-                ),
-            }
+            action_number = 1
+            from_assignments_sorted = sorted(
+                stage_assignments.get(from_stage_name, []),
+                key=lambda a: a.assignment_date,
+            )
+            for dest_assignment, transition_time in zip(transitions, transition_times):
+                source_assignment = None
+                for candidate in from_assignments_sorted:
+                    if candidate.assignment_date <= dest_assignment.assignment_date:
+                        source_assignment = candidate
+                    else:
+                        break
+                if source_assignment is None:
+                    source_assignment = dest_assignment
 
-            if action_map:
-                action = TransferAction.objects.get(pk=action_map.target_object_id)
-                for k, v in action_defaults.items():
-                    setattr(action, k, v)
-                save_with_history(action, user=history_user, reason=history_reason)
-                updated_stage_actions += 1
-            else:
+                count = dest_assignment.population_count or 0
+                biomass = dest_assignment.biomass_kg or Decimal("0.00")
+                action_identifier = f"{transition_identifier}:{dest_assignment.pk}"
+                action_defaults = {
+                    "workflow": workflow,
+                    "action_number": action_number,
+                    "source_assignment": source_assignment,
+                    "dest_assignment": dest_assignment,
+                    "source_population_before": max(count, 0),
+                    "transferred_count": max(count, 0),
+                    "mortality_during_transfer": 0,
+                    "transferred_biomass_kg": biomass,
+                    "allow_mixed": False,
+                    "status": "COMPLETED",
+                    "planned_date": transition_time.date(),
+                    "actual_execution_date": transition_time.date(),
+                    "transfer_method": None,
+                    "notes": (
+                        f"FishTalk stage transition {from_stage_name}→{to_stage_name}; "
+                        f"DestAssignment={dest_assignment.pk}"
+                    ),
+                }
+
                 action = TransferAction(**action_defaults)
                 save_with_history(action, user=history_user, reason=history_reason)
                 ExternalIdMap.objects.update_or_create(
@@ -733,13 +896,14 @@ def main() -> int:
                         "target_model": action._meta.model_name,
                         "target_object_id": action.pk,
                         "metadata": {
-                            "population_id": pop_id,
+                            "assignment_id": dest_assignment.pk,
                             "from_stage": from_stage_name,
                             "to_stage": to_stage_name,
                         },
                     },
                 )
                 created_stage_actions += 1
+                action_number += 1
 
             workflow.total_actions_planned = workflow.actions.count()
             workflow.actions_completed = workflow.actions.filter(status="COMPLETED").count()

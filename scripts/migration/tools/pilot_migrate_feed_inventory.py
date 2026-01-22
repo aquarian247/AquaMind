@@ -162,32 +162,39 @@ def migrate_feed_types(extractor, supplier_lookup: dict, dry_run: bool = False) 
                     except:
                         pass
                 
-                # Create Feed
-                feed, was_created = Feed.objects.get_or_create(
-                    name=f"FT-{feed_type_id} {name}",
-                    defaults={
-                        "brand": supplier_name,
-                        "size_category": size_category,
-                        "pellet_size_mm": pellet_size,
-                        "description": f"FishTalk feed type: {name}",
-                    }
-                )
+                # Reuse existing feed if already created without ExternalIdMap
+                existing_feed = Feed.objects.filter(name__startswith=f"FT-{feed_type_id} ").first()
+                if existing_feed:
+                    feed = existing_feed
+                    was_created = False
+                else:
+                    feed, was_created = Feed.objects.get_or_create(
+                        name=f"FT-{feed_type_id} {name}",
+                        defaults={
+                            "brand": supplier_name,
+                            "size_category": size_category,
+                            "pellet_size_mm": pellet_size,
+                            "description": f"FishTalk feed type: {name}",
+                        }
+                    )
                 
                 if was_created:
                     created += 1
-                    
-                    # Track mapping
-                    ExternalIdMap.objects.create(
-                        source_system="FishTalk",
-                        source_model="FeedType",
-                        source_identifier=feed_type_id,
-                        target_app_label="inventory",
-                        target_model="feed",
-                        target_object_id=feed.pk,
-                        metadata={"original_name": name, "supplier_id": supplier_id},
-                    )
                 else:
                     skipped += 1
+
+                # Track mapping (idempotent)
+                ExternalIdMap.objects.update_or_create(
+                    source_system="FishTalk",
+                    source_model="FeedType",
+                    source_identifier=feed_type_id,
+                    defaults={
+                        "target_app_label": "inventory",
+                        "target_model": "feed",
+                        "target_object_id": feed.pk,
+                        "metadata": {"original_name": name, "supplier_id": supplier_id},
+                    },
+                )
                     
             except Exception as e:
                 errors.append({"feed_type_id": feed_type_id, "error": str(e)})
@@ -318,27 +325,31 @@ def migrate_feed_stores(extractor, dry_run: bool = False) -> dict:
                         skipped += 1
                         continue
                 
-                # Create FeedContainer
-                feed_container = FeedContainer.objects.create(
-                    name=f"FT-{name}",
-                    container_type=container_type,
-                    hall=hall if hall else None,
-                    area=area if not hall else None,
-                    capacity_kg=capacity if capacity > 0 else Decimal("10000"),  # Default 10 tons
-                    active=is_active,
-                )
+                existing_container = FeedContainer.objects.filter(name=f"FT-{name}").first()
+                if existing_container:
+                    feed_container = existing_container
+                else:
+                    feed_container = FeedContainer.objects.create(
+                        name=f"FT-{name}",
+                        container_type=container_type,
+                        hall=hall if hall else None,
+                        area=area if not hall else None,
+                        capacity_kg=capacity if capacity > 0 else Decimal("10000"),  # Default 10 tons
+                        active=is_active,
+                    )
+                    created += 1
                 
-                created += 1
-                
-                # Track mapping
-                ExternalIdMap.objects.create(
+                # Track mapping (idempotent)
+                ExternalIdMap.objects.update_or_create(
                     source_system="FishTalk",
                     source_model="FeedStore",
                     source_identifier=store_id,
-                    target_app_label="infrastructure",
-                    target_model="feedcontainer",
-                    target_object_id=feed_container.pk,
-                    metadata={"original_name": name, "org_unit": org_unit},
+                    defaults={
+                        "target_app_label": "infrastructure",
+                        "target_model": "feedcontainer",
+                        "target_object_id": feed_container.pk,
+                        "metadata": {"original_name": name, "org_unit": org_unit},
+                    },
                 )
                 
             except Exception as e:
@@ -486,45 +497,73 @@ def migrate_feed_deliveries(extractor, supplier_lookup: dict, dry_run: bool = Fa
                 # Get supplier name
                 supplier_name = supplier_lookup.get(supplier_id, "FishTalk Import")
                 
-                # Create FeedPurchase
-                purchase = FeedPurchase.objects.create(
-                    feed=feed,
-                    purchase_date=purchase_date,
-                    quantity_kg=amount,
-                    cost_per_kg=cost_per_kg if cost_per_kg > 0 else Decimal("0.01"),
-                    supplier=supplier_name,
-                    batch_number=batch_number or f"FT-{reception_id[:8]}",
-                    notes=f"FishTalk delivery {reception_id}",
-                )
-                
-                created += 1
-                
                 # Track mapping with composite key (ReceptionID + FeedTypeID)
                 composite_id = f"{reception_id}_{feed_type_id}"
-                ExternalIdMap.objects.create(
+                purchase_map = ExternalIdMap.objects.filter(
                     source_system="FishTalk",
                     source_model="FeedDelivery",
                     source_identifier=composite_id,
-                    target_app_label="inventory",
-                    target_model="feedpurchase",
-                    target_object_id=purchase.pk,
-                    metadata={
-                        "reception_id": reception_id,
-                        "feed_type_id": feed_type_id,
-                        "store_id": store_id,
-                        "supplier_id": supplier_id,
-                    },
-                )
+                ).first()
+                purchase = FeedPurchase.objects.filter(pk=purchase_map.target_object_id).first() if purchase_map else None
+                if purchase is None:
+                    existing_purchase = FeedPurchase.objects.filter(
+                        notes=f"FishTalk delivery {reception_id}",
+                        feed__name__startswith=f"FT-{feed_type_id} ",
+                    ).first()
+                    if existing_purchase:
+                        purchase = existing_purchase
+                    else:
+                        purchase = FeedPurchase.objects.create(
+                            feed=feed,
+                            purchase_date=purchase_date,
+                            quantity_kg=amount,
+                            cost_per_kg=cost_per_kg if cost_per_kg > 0 else Decimal("0.01"),
+                            supplier=supplier_name,
+                            batch_number=batch_number or f"FT-{reception_id[:8]}",
+                            notes=f"FishTalk delivery {reception_id}",
+                        )
+                        created += 1
+
+                    ExternalIdMap.objects.update_or_create(
+                        source_system="FishTalk",
+                        source_model="FeedDelivery",
+                        source_identifier=composite_id,
+                        defaults={
+                            "target_app_label": "inventory",
+                            "target_model": "feedpurchase",
+                            "target_object_id": purchase.pk,
+                            "metadata": {
+                                "reception_id": reception_id,
+                                "feed_type_id": feed_type_id,
+                                "store_id": store_id,
+                                "supplier_id": supplier_id,
+                            },
+                        },
+                    )
+                if purchase:
+                    purchase.feed = feed
+                    purchase.purchase_date = purchase_date
+                    purchase.quantity_kg = amount
+                    purchase.cost_per_kg = cost_per_kg if cost_per_kg > 0 else Decimal("0.01")
+                    purchase.supplier = supplier_name
+                    purchase.batch_number = batch_number or f"FT-{reception_id[:8]}"
+                    purchase.notes = f"FishTalk delivery {reception_id}"
+                    purchase.save()
                 
                 # Create stock entry if we have a container
                 container = container_by_store_id.get(store_id)
-                if container:
-                    FeedContainerStock.objects.create(
+                if container and purchase:
+                    existing_stock = FeedContainerStock.objects.filter(
                         feed_container=container,
                         feed_purchase=purchase,
-                        quantity_kg=amount,
-                        entry_date=timezone.make_aware(datetime.combine(purchase_date, datetime.min.time())),
-                    )
+                    ).first()
+                    if not existing_stock:
+                        FeedContainerStock.objects.create(
+                            feed_container=container,
+                            feed_purchase=purchase,
+                            quantity_kg=amount,
+                            entry_date=timezone.make_aware(datetime.combine(purchase_date, datetime.min.time())),
+                        )
         except Exception as e:
             errors.append({"reception_id": reception_id, "error": str(e)})
     

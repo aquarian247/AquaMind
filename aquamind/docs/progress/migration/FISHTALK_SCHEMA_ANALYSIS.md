@@ -1,11 +1,14 @@
 # FishTalk Database Schema Analysis
 
-**Date:** December 2024  
-**Source:** FishTalk Database Export  
+**Date:** December 2024 (base export)  
+**Updated:** 2026-01-22 (input-based stitching + feeding schema corrections)  
+**Source:** FishTalk Database Export + live schema inspection  
 
 ## Executive Summary
 
-This document provides a detailed analysis of the actual FishTalk database schema based on the exported table and column information. The analysis focuses on identifying key entities and their relationships for migration to AquaMind.
+This document provides a detailed analysis of the FishTalk database schema based on exported table/column information and later live inspection. The analysis focuses on identifying key entities and their relationships for migration to AquaMind.
+
+**2026-01-22 Addendum (critical correction):** `dbo.Feeding` is **ActionID-based** and does **not** include PopulationID/ContainerID/FeedingTime columns. Population + timestamp must be joined via `Action` and `Operations`.
 
 ## 1. Database Overview
 
@@ -86,12 +89,16 @@ This document provides a detailed analysis of the actual FishTalk database schem
 - **FeedCalibrationUnit** - Feed calibration data
 - **FeedTransferCauses** - Feed movement reasons
 
-**Key Columns:**
-- FeedingID
-- ContainerID/UnitID
+**Key Columns (verified):**
+- ActionID
 - FeedAmount
-- FeedingTime
+- OperationStartTime
 - FeedBatchID
+- FeedTypeID
+
+**Join path for population + time:**
+- Feeding.ActionID → Action.ActionID → Action.PopulationID
+- Action.OperationID → Operations.StartTime (fallback to Feeding.OperationStartTime)
 
 ### 2.5 Health & Mortality
 
@@ -263,6 +270,198 @@ Based on table sizes and patterns:
 | bit | boolean | Direct mapping |
 
 ---
-**Document Status:** Complete
-**Next Steps:** Update migration scripts with actual table/column names
+
+## 7. CRITICAL DISCOVERY: Batch Identification via Ext_Inputs_v2 (2026-01-22)
+
+### 7.1 The Breakthrough
+
+**Previous approaches failed** because project tuple `(ProjectNumber, InputYear, RunningNumber)` is an **administrative/financial grouping**, not a biological batch identifier. It combines multiple year-classes of fish.
+
+**`Ext_Inputs_v2`** is the key table that tracks **egg inputs/deliveries** - the true biological origin of batches.
+
+### 7.2 Ext_Inputs_v2 Table Structure
+
+| Column | Type | Description |
+|--------|------|-------------|
+| PopulationID | uniqueidentifier | Links to Populations table |
+| InputName | nvarchar | Batch/input name (e.g., "Stofnfiskur S21 okt 25", "BM Jun 24") |
+| InputNumber | int | Numeric identifier for the input |
+| YearClass | nvarchar | Year class (e.g., "2025", "2024") |
+| Supplier | uniqueidentifier | Egg supplier ID |
+| StartTime | datetime | When the input started |
+| InputCount | float | Number of eggs/fish |
+| InputBiomass | float | Input biomass |
+| Species | int | Species identifier |
+| FishType | nvarchar | Type of fish |
+| Broodstock | nvarchar | Broodstock source |
+| DeliveryID | uniqueidentifier | Delivery reference |
+| Transporter | nvarchar | Transport info |
+
+### 7.3 Input-Based Batch Identification
+
+**Batch Key:** `InputName + InputNumber + YearClass`
+
+Sample data showing this approach:
+
+| InputName | InputNumber | YearClass | Populations | Span (days) | Total Fish |
+|-----------|-------------|-----------|-------------|-------------|------------|
+| 22S1 LHS | 2 | 2021 | 317 | 42 | 6.9M |
+| Heyst 2023 | 1 | 2023 | 108 | 275 | 6.3M |
+| Vár 2025 | 1 | 2025 | 104 | 204 | 6.3M |
+| Stofnfiskur Aug 22 | 3 | 2022 | 40 | 21 | 5.1M |
+| Rogn juni 2023 | 1 | 2023 | 46 | 21 | 4.8M |
+| Rogn okt 2023 | 3 | 2023 | 567 | 19 | 4.7M |
+| 13S0 SB | 0 | 2013 | 185 | 1 | 4.1M |
+
+**Key observations:**
+- Most inputs have reasonable time spans (< 300 days)
+- Fish counts are in the expected 3-6M range per batch
+- InputName follows naming conventions: supplier + strain + date
+
+### 7.4 Naming Convention Patterns
+
+| Pattern | Example | Meaning |
+|---------|---------|---------|
+| Supplier + Strain + Date | "Stofnfiskur S21 okt 25" | Stofnfiskur, S21 strain, Oct 2025 |
+| Supplier + Date | "Bakkafrost S-21 okt 25" | Bakkafrost, S-21 strain, Oct 2025 |
+| Season + Year | "Heyst 2023", "Vár 2024" | Harvest/Spring 2023/2024 |
+| Strain Code | "22S1 LHS", "16S0 SF" | Year+Season+Code |
+| Norwegian month | "Rogn okt 2023" | Roe October 2023 |
+
+### 7.5 Related Tables for YearClass
+
+| Table | Has YearClass | Notes |
+|-------|---------------|-------|
+| Ext_Inputs_v2 | ✓ | **Primary source** - links to PopulationID |
+| InputProjects | ✓ | Project-level inputs |
+| PlanPopulation | ✓ | Planning feature |
+| PublicPlanPopulation | ✓ | Planning view |
+
+### 7.6 Recommended Batch Identification Strategy
+
+```
+1. Extract from Ext_Inputs_v2:
+   - Batch key = InputName + InputNumber + YearClass
+   - Get all PopulationIDs for each batch key
+   
+2. For each batch:
+   - Verify single geography (should not span Faroe Islands + Scotland)
+   - Verify stage progression is biologically valid
+   - Verify time span < 900 days
+   
+3. Create AquaMind Batch:
+   - batch_number = InputName (or generate from key)
+   - Use InputCount as initial egg count
+   - Use StartTime as batch start_date
+```
+
+### 7.7 Why This Works Better
+
+| Approach | Problem | Result |
+|----------|---------|--------|
+| Project tuple | Administrative grouping | Multiple year-classes mixed |
+| SubTransfers chain | Only tracks within-environment moves | Missing FW→Sea link |
+| PublicTransfers | Broken since Jan 2023 | No recent data |
+| **Ext_Inputs_v2** | Tracks egg deliveries | **True biological origin** |
+
+---
+
+## 8. Batch Naming Conventions & Supplier Codes (2026-01-22)
+
+### 8.1 Supplier Abbreviations
+
+FishTalk uses abbreviated supplier codes in reporting tools. These map to full `InputName` values in `Ext_Inputs_v2`:
+
+| Abbreviation | Supplier | Primary Station(s) | Example InputName |
+|--------------|----------|-------------------|-------------------|
+| **BM** | Benchmark Genetics | S24 Strond | "Benchmark Gen. Juni 2024" |
+| **BF** | Bakkafrost | S08 Gjógv, S21 Viðareiði | "Bakkafrost S-21 sep24" |
+| **SF** | Stofnfiskur | S03 Norðtoftir, S16 Glyvradalur, S21 Viðareiði | "Stofnfiskur Juni 24" |
+| **AG** | AquaGen | S03 Norðtoftir | "AquaGen juni 25" |
+
+### 8.2 Freshwater Station Summary (as of Oct 2025)
+
+| Station | Code | Primary Suppliers | Fish Count |
+|---------|------|-------------------|------------|
+| S03 Norðtoftir | S03 | Stofnfiskur, AquaGen | ~8.2M |
+| S08 Gjógv | S08 | Bakkafrost | ~700K |
+| S16 Glyvradalur | S16 | Stofnfiskur | ~6.1M |
+| S21 Viðareiði | S21 | Stofnfiskur, Bakkafrost | ~5.1M |
+| S24 Strond | S24 | Benchmark Genetics | ~13M |
+
+### 8.3 Display Name Convention
+
+Reporting tools abbreviate batch names as: `{Supplier Code} {Month} {Year}`
+
+| Full InputName | Display Name |
+|----------------|--------------|
+| Benchmark Gen. Juni 2024 | BM Jun 24 |
+| Benchmark Gen. Mars 2024 | BM Mar 24 |
+| Bakkafrost mai 24 | BF Mai 24 |
+| Stofnfiskur Juni 24 | SF Jun 24 |
+| AquaGen juni 25 | AG Jun 25 |
+
+### 8.4 Mixed Batches
+
+Mixed batches (where two inputs are combined) are indicated by:
+- **BF/BM Mai 2024** = Bakkafrost and Benchmark fish mixed
+- **BM Mar/Jun 24** = March and June inputs mixed
+- **SF/BF** = Stofnfiskur and Bakkafrost fish mixed
+
+These require special handling via `batch_batchcomposition` table in AquaMind.
+
+### 8.5 Ext_Populations_v2 Table
+
+An alternative view that provides structured batch information in the `PopulationName` field:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| PopulationID | uniqueidentifier | Links to Populations table |
+| ContainerID | uniqueidentifier | Container location |
+| PopulationName | nvarchar | Structured name (see format below) |
+| InputYear | char | Year code (e.g., "24") |
+| InputNumber | char | Input sequence |
+| RunningNumber | int | Running sequence |
+| Fishgroup | nvarchar | Fish group code (e.g., "241.0018") |
+| StartDate | date | Population start |
+| EndDate | date | Population end (nullable) |
+
+**PopulationName Format (Sea Populations):**
+```
+"{Ring} {Station} {Supplier} {Month} {Year} ({YearClass})"
+Example: "11 S24 SF MAI 24 (MAR 23)"
+         │   │   │   │   │    └── Original yearclass (March 2023)
+         │   │   │   │   └── Transfer year (2024)
+         │   │   │   └── Transfer month (May)
+         │   │   └── Supplier code (Stofnfiskur)
+         │   └── Source station (S24 Strond)
+         └── Ring/container number
+```
+
+### 8.6 InputName Changes at FW→Sea Transition
+
+**CRITICAL:** When fish transfer from freshwater to sea, a new PopulationID is created AND the InputName in `Ext_Inputs_v2` may change:
+
+| Stage | InputName | Example |
+|-------|-----------|---------|
+| Freshwater (S24 Strond) | Benchmark Gen. Juni 2024 | Fish at smolt stage |
+| Sea (A18 Hov, A06 Argir) | Vár 2024, Summar 2024 | Same fish, new InputName |
+
+This means:
+1. `Ext_Inputs_v2` tracks inputs **per stage**, not across the full lifecycle
+2. Stitching FW-to-sea requires transfer matching, not just InputName
+3. Sea batches (e.g., "Summar 2024") are valid biological groupings for sea-phase analytics
+
+### 8.7 AquaMind Batch Naming Strategy
+
+For migration to AquaMind:
+
+1. **Initial Name:** Use `InputName` from `Ext_Inputs_v2` (e.g., "Benchmark Gen. Juni 2024")
+2. **At Sea Transfer:** Can rename to display format (e.g., "BM Jun 24") using transfer workflow
+3. **History Preserved:** Original name stored in `django-simple-history` via `HistoricalBatch` table
+4. **External Reference:** Store original InputName in `ExternalIdMap.metadata` for traceability
+
+---
+**Document Status:** Updated 2026-01-22
+**Next Steps:** Implement Input-based batch identification in migration scripts
 

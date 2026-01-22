@@ -40,7 +40,7 @@ def calculate_feeding_percentage(amount_kg, biomass_kg):
         biomass_kg: Biomass in kg
 
     Returns:
-        Feeding percentage as a Decimal
+        Feeding percentage as a Decimal, capped at 99.99 to fit decimal(8,6) field
     """
     if not amount_kg or not biomass_kg or biomass_kg <= 0:
         return None
@@ -51,8 +51,13 @@ def calculate_feeding_percentage(amount_kg, biomass_kg):
     if not isinstance(biomass_kg, Decimal):
         biomass_kg = Decimal(str(biomass_kg))
 
-    # Calculate percentage
-    return format_decimal((amount_kg / biomass_kg) * Decimal('100.0'), 2)
+    # Calculate percentage and cap at 99.99 to prevent numeric overflow
+    # The feeding_percentage field is decimal(8,6), max value is 99.999999
+    percentage = (amount_kg / biomass_kg) * Decimal('100.0')
+    max_percentage = Decimal('99.99')
+    if percentage > max_percentage:
+        percentage = max_percentage
+    return format_decimal(percentage, 2)
 
 
 

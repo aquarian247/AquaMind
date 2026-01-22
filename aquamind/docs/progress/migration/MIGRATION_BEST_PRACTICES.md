@@ -22,6 +22,11 @@ This document defines **non‑negotiable migration standards** to preserve data 
 - Validate GUI in the migration preview stack before expanding scope.
 - Reconcile source vs target counts for any table with discrepancies.
 
+## CSV vs Raw Database (Early Development)
+- **CSV mode is recommended** for speed, repeatability, and controlled snapshots.
+- **Use raw SQL** when validating schema changes, missing tables/columns, or unexpected gaps.
+- Re‑extract CSVs after any schema or logic change to keep snapshots aligned.
+
 ## Repeatability & Logging
 - Keep migrations deterministic: explicit ordering, consistent time‑zone conversions, and stable identifiers.
 - Log errors with source identifiers, target model, and action taken (skip/retry/fail).

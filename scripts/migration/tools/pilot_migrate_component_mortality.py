@@ -47,6 +47,7 @@ from apps.batch.models import Batch, MortalityEvent
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 User = get_user_model()
 
@@ -173,7 +174,25 @@ def map_cause(cause_text: str) -> str:
     return "OTHER"
 
 
-def lookup_status_snapshot(extractor: BaseExtractor, *, population_id: str, at_time: datetime) -> tuple[int, Decimal]:
+def lookup_status_snapshot(
+    *, population_id: str, at_time: datetime,
+    extractor: BaseExtractor | None = None, loader: ETLDataLoader | None = None
+) -> tuple[int, Decimal]:
+    """Get population status snapshot near a given time using SQL or CSV."""
+    if loader is not None:
+        # Use CSV data
+        status = loader.get_latest_status_for_population(population_id, before_time=at_time)
+        count = 0
+        biomass = Decimal("0.00")
+        if status:
+            try:
+                count = int(round(float(status.get("CurrentCount") or 0)))
+            except Exception:
+                count = 0
+            biomass = to_decimal(status.get("CurrentBiomassKg"), places="0.01") or Decimal("0.00")
+        return max(count, 0), biomass
+    
+    # Use SQL
     ts = at_time.strftime("%Y-%m-%d %H:%M:%S")
     rows = extractor._run_sqlcmd(
         query=(
@@ -214,6 +233,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     return parser
 
 
@@ -237,40 +262,52 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
-    in_clause = ",".join(f"'{pid}'" for pid in population_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    # Initialize data source
+    use_csv = args.use_csv is not None
+    loader = ETLDataLoader(args.use_csv) if use_csv else None
+    extractor = None if use_csv else BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
-    mortality_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), m.ActionID) AS ActionID, "
-            "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
-            "CONVERT(varchar(32), m.MortalityCount) AS MortalityCount, "
-            "CONVERT(varchar(64), m.MortalityBiomass) AS MortalityBiomass, "
-            "CONVERT(varchar(32), m.MortalityCauseID) AS MortalityCauseID, "
-            "ISNULL(mc.DefaultText, '') AS CauseText, "
-            "ISNULL(m.Comment, '') AS Comment "
-            "FROM dbo.Mortality m "
-            "JOIN dbo.Action a ON a.ActionID = m.ActionID "
-            "JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.MortalityCauses mc ON mc.MortalityCausesID = m.MortalityCauseID "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
-            "ORDER BY o.StartTime ASC"
-        ),
-        headers=[
-            "ActionID",
-            "PopulationID",
-            "OperationStartTime",
-            "MortalityCount",
-            "MortalityBiomass",
-            "MortalityCauseID",
-            "CauseText",
-            "Comment",
-        ],
-    )
+    if use_csv:
+        # Load mortality data from CSV
+        mortality_rows = loader.get_mortality_actions_for_populations(
+            set(population_ids),
+            start_time=window_start,
+            end_time=window_end,
+        )
+    else:
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+
+        mortality_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), m.ActionID) AS ActionID, "
+                "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
+                "CONVERT(varchar(32), m.MortalityCount) AS MortalityCount, "
+                "CONVERT(varchar(64), m.MortalityBiomass) AS MortalityBiomass, "
+                "CONVERT(varchar(32), m.MortalityCauseID) AS MortalityCauseID, "
+                "ISNULL(mc.DefaultText, '') AS CauseText, "
+                "ISNULL(m.Comment, '') AS Comment "
+                "FROM dbo.Mortality m "
+                "JOIN dbo.Action a ON a.ActionID = m.ActionID "
+                "JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.MortalityCauses mc ON mc.MortalityCausesID = m.MortalityCauseID "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
+                "ORDER BY o.StartTime ASC"
+            ),
+            headers=[
+                "ActionID",
+                "PopulationID",
+                "OperationStartTime",
+                "MortalityCount",
+                "MortalityBiomass",
+                "MortalityCauseID",
+                "CauseText",
+                "Comment",
+            ],
+        )
 
     if args.dry_run:
         print(f"[dry-run] Would migrate {len(mortality_rows)} FishTalk mortality rows into batch={batch.batch_number}")
@@ -311,7 +348,10 @@ def main() -> int:
 
             biomass = to_decimal(row.get("MortalityBiomass"), places="0.01")
             if biomass is None or biomass <= 0:
-                snap_count, snap_biomass = lookup_status_snapshot(extractor, population_id=population_id, at_time=op_time)
+                snap_count, snap_biomass = lookup_status_snapshot(
+                    population_id=population_id, at_time=op_time,
+                    extractor=extractor, loader=loader
+                )
                 if snap_count > 0 and snap_biomass > 0:
                     per_fish = (snap_biomass / Decimal(snap_count)).quantize(Decimal("0.000001"))
                     biomass = (per_fish * Decimal(count)).quantize(Decimal("0.01"))

@@ -2,10 +2,13 @@
 # flake8: noqa
 """Pilot migrate a stitched FishTalk population component into AquaMind.
 
-This is intentionally minimal: it creates required infrastructure (geography,
-station/hall or sea area, containers) and then creates one AquaMind Batch with
-one BatchContainerAssignment per FishTalk PopulationID in the stitched
-component.
+This script supports two stitching approaches:
+1. **SubTransfers-based (recommended)**: Use --chain-id with output from subtransfer_chain_stitching.py
+2. **Project-based (legacy)**: Use --component-key with population_members.csv
+
+SubTransfers-based stitching traces actual fish movements and produces
+single-geography batches. Project-based stitching groups by cost center
+and may produce multi-geography anomalies.
 
 It is meant for a dry-run against aquamind_db_migr_dev only.
 """
@@ -61,6 +64,161 @@ from scripts.migration.extractors.base import (  # noqa: E402
     ExtractionContext,
 )
 from scripts.migration.history import save_with_history, get_or_create_with_history  # noqa: E402
+from scripts.migration.tools.etl_loader import ETLDataLoader  # noqa: E402
+
+
+class DataSource:
+    """Unified data source abstraction for SQL or CSV data."""
+    
+    def __init__(self, csv_dir: str | None = None, sql_profile: str = "fishtalk_readonly"):
+        self.use_csv = csv_dir is not None
+        if self.use_csv:
+            self.loader = ETLDataLoader(csv_dir)
+            self.extractor = None
+        else:
+            self.loader = None
+            self.extractor = BaseExtractor(ExtractionContext(profile=sql_profile))
+    
+    def get_global_latest_status_time(self) -> datetime | None:
+        """Get the latest status time across all populations."""
+        if self.use_csv:
+            # Read from status_values CSV - get max StatusTime
+            import pandas as pd
+            df = self.loader._load_csv_pandas("status_values")
+            max_time = df["StatusTime"].max()
+            return parse_dt(max_time) if max_time else None
+        else:
+            rows = self.extractor._run_sqlcmd(
+                query="SELECT TOP 1 StatusTime FROM dbo.PublicStatusValues ORDER BY StatusTime DESC",
+                headers=["StatusTime"],
+            )
+            return parse_dt(rows[0].get("StatusTime", "")) if rows else None
+    
+    def get_latest_status_by_population(self, population_ids: list[str]) -> dict[str, datetime]:
+        """Get latest status time for each population."""
+        result = {}
+        if self.use_csv:
+            pop_set = set(population_ids)
+            for pid in pop_set:
+                status = self.loader.get_latest_status_for_population(pid)
+                if status and status.get("StatusTime"):
+                    dt = parse_dt(status["StatusTime"])
+                    if dt:
+                        result[pid] = dt
+        else:
+            pop_clause = ",".join(f"'{pid}'" for pid in population_ids)
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT PopulationID, MAX(StatusTime) AS MaxStatusTime "
+                    "FROM dbo.PublicStatusValues "
+                    f"WHERE PopulationID IN ({pop_clause}) "
+                    "GROUP BY PopulationID"
+                ),
+                headers=["PopulationID", "MaxStatusTime"],
+            )
+            for row in rows:
+                dt = parse_dt(row.get("MaxStatusTime", ""))
+                if dt:
+                    result[row["PopulationID"]] = dt
+        return result
+    
+    def get_containers(self, container_ids: list[str]) -> list[dict]:
+        """Get container data for specified IDs."""
+        if self.use_csv:
+            return self.loader.get_containers_by_ids(set(container_ids))
+        else:
+            in_clause = ",".join(f"'{cid}'" for cid in container_ids)
+            return self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT c.ContainerID, c.ContainerName, c.OrgUnitID, c.OfficialID "
+                    "FROM dbo.Containers c "
+                    f"WHERE c.ContainerID IN ({in_clause})"
+                ),
+                headers=["ContainerID", "ContainerName", "OrgUnitID", "OfficialID"],
+            )
+    
+    def get_container_grouping(self, container_ids: list[str]) -> list[dict]:
+        """Get container grouping/organization data."""
+        if self.use_csv:
+            # Container grouping is not in our CSV extract - need to query SQL
+            # For now, return empty list (will fall back to OrgUnit-based grouping)
+            return []
+        else:
+            in_clause = ",".join(f"'{cid}'" for cid in container_ids)
+            return self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), ContainerID) AS ContainerID, "
+                    "Site, SiteGroup, Company, ProdStage, ContainerGroup, ContainerGroupID, StandName, StandID "
+                    "FROM dbo.Ext_GroupedOrganisation_v2 "
+                    f"WHERE ContainerID IN ({in_clause})"
+                ),
+                headers=[
+                    "ContainerID", "Site", "SiteGroup", "Company", "ProdStage",
+                    "ContainerGroup", "ContainerGroupID", "StandName", "StandID",
+                ],
+            )
+    
+    def get_org_units(self, org_unit_ids: list[str]) -> list[dict]:
+        """Get organization unit data."""
+        if self.use_csv:
+            all_org_units = self.loader.get_all_org_units()
+            id_set = set(org_unit_ids)
+            return [o for o in all_org_units if o.get("OrgUnitID") in id_set]
+        else:
+            in_clause = ",".join(f"'{oid}'" for oid in org_unit_ids)
+            return self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT ou.OrgUnitID, ou.Name, l.Latitude, l.Longitude "
+                    "FROM dbo.OrganisationUnit ou "
+                    "LEFT JOIN dbo.Locations l ON l.LocationID = ou.LocationID "
+                    f"WHERE ou.OrgUnitID IN ({in_clause})"
+                ),
+                headers=["OrgUnitID", "Name", "Latitude", "Longitude"],
+            )
+    
+    def get_status_snapshot(self, population_id: str, at_time: datetime) -> dict | None:
+        """Get population status snapshot near a given time."""
+        if self.use_csv:
+            snapshot = self.loader.get_status_snapshot_near_time(population_id, at_time)
+            if snapshot and self._has_nonzero_status(snapshot):
+                return snapshot
+            fallback = self.loader.get_first_nonzero_status_after(population_id, at_time)
+            return fallback or snapshot
+        else:
+            ts = at_time.strftime("%Y-%m-%d %H:%M:%S")
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
+                    "FROM dbo.PublicStatusValues "
+                    f"WHERE PopulationID = '{population_id}' AND StatusTime <= '{ts}' "
+                    "ORDER BY StatusTime DESC"
+                ),
+                headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
+            )
+            if not rows:
+                # Try future snapshot
+                rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
+                        "FROM dbo.PublicStatusValues "
+                        f"WHERE PopulationID = '{population_id}' AND StatusTime >= '{ts}' "
+                        "ORDER BY StatusTime ASC"
+                    ),
+                    headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
+                )
+            return rows[0] if rows else None
+
+    @staticmethod
+    def _has_nonzero_status(snapshot: dict) -> bool:
+        try:
+            count = float(snapshot.get("CurrentCount") or 0)
+        except Exception:
+            count = 0
+        try:
+            biomass = float(snapshot.get("CurrentBiomassKg") or 0)
+        except Exception:
+            biomass = 0
+        return count > 0 or biomass > 0
 
 User = get_user_model()
 
@@ -287,12 +445,268 @@ def load_members_from_report(report_dir: Path, *, component_id: int | None, comp
     return members
 
 
+def load_members_from_chain(chain_dir: Path, *, chain_id: str) -> tuple[list[ComponentMember], str]:
+    """Load members from SubTransfers-based chain stitching output.
+    
+    Args:
+        chain_dir: Directory containing batch_chains.csv from subtransfer_chain_stitching.py
+        chain_id: Chain ID (e.g., "CHAIN-00001")
+    
+    Returns:
+        Tuple of (list of ComponentMember, geography string)
+    """
+    import csv
+
+    path = chain_dir / "batch_chains.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing chain file: {path}")
+
+    members: list[ComponentMember] = []
+    geography = None
+    
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            if row.get("chain_id") != chain_id:
+                continue
+            
+            # Capture geography from first row
+            if geography is None:
+                geography = row.get("geography", "Unknown")
+            
+            # Parse start_time (ISO format from chain stitching)
+            start_str = row.get("start_time", "")
+            start = None
+            if start_str:
+                try:
+                    # Handle ISO format with T separator
+                    start = datetime.fromisoformat(start_str)
+                except ValueError:
+                    start = parse_dt(start_str)
+            
+            if start is None:
+                continue
+            
+            # Parse end_time
+            end_str = row.get("end_time", "")
+            end = None
+            if end_str:
+                try:
+                    end = datetime.fromisoformat(end_str)
+                except ValueError:
+                    end = parse_dt(end_str)
+            
+            # Parse stages (semicolon-separated)
+            stages = row.get("stages", "").split(";") if row.get("stages") else []
+            first_stage = stages[0] if stages else ""
+            last_stage = stages[-1] if stages else ""
+            
+            members.append(
+                ComponentMember(
+                    population_id=row.get("population_id", ""),
+                    population_name=row.get("population_name", ""),
+                    container_id=row.get("container_id", ""),
+                    start_time=start,
+                    end_time=end,
+                    first_stage=first_stage,
+                    last_stage=last_stage,
+                )
+            )
+
+    members.sort(key=lambda m: m.start_time)
+    return members, geography or "Unknown"
+
+
+def load_members_from_linked_batch(chain_dir: Path, *, batch_id: str, csv_dir: Path = None, sql_extractor=None) -> tuple[list[ComponentMember], str]:
+    """Load members from linked batch output (full lifecycle batch).
+    
+    Args:
+        chain_dir: Directory containing linked_batches.csv from subtransfer_chain_stitching.py --link-by-project
+        batch_id: Linked batch ID (e.g., "BATCH-00013")
+        csv_dir: Optional directory containing populations.csv for container lookup
+        sql_extractor: Optional SQL extractor for container lookup
+    
+    Returns:
+        Tuple of (list of ComponentMember, geography string)
+    """
+    import csv
+
+    path = chain_dir / "linked_batches.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing linked batches file: {path}")
+
+    # Load container mapping from populations.csv if available
+    pop_to_container: dict[str, str] = {}
+    if csv_dir:
+        pop_csv = csv_dir / "populations.csv"
+        if pop_csv.exists():
+            with pop_csv.open("r", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    pop_to_container[row.get("PopulationID", "")] = row.get("ContainerID", "")
+
+    members: list[ComponentMember] = []
+    geography = None
+    seen_pop_ids = set()  # Avoid duplicates
+    
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            if row.get("batch_id") != batch_id:
+                continue
+            
+            pop_id = row.get("population_id", "")
+            if pop_id in seen_pop_ids:
+                continue
+            seen_pop_ids.add(pop_id)
+            
+            # Capture geography from first non-Unknown row
+            row_geo = row.get("geography", "Unknown")
+            if geography is None or (geography == "Unknown" and row_geo != "Unknown"):
+                geography = row_geo
+            
+            # Parse start_time (ISO format)
+            start_str = row.get("start_time", "")
+            start = None
+            if start_str:
+                try:
+                    start = datetime.fromisoformat(start_str)
+                except ValueError:
+                    start = parse_dt(start_str)
+            
+            if start is None:
+                continue
+            
+            # Parse end_time
+            end_str = row.get("end_time", "")
+            end = None
+            if end_str:
+                try:
+                    end = datetime.fromisoformat(end_str)
+                except ValueError:
+                    end = parse_dt(end_str)
+            
+            # Parse stages (semicolon-separated)
+            stages = row.get("stages", "").split(";") if row.get("stages") else []
+            first_stage = stages[0] if stages else ""
+            last_stage = stages[-1] if stages else ""
+            
+            members.append(
+                ComponentMember(
+                    population_id=pop_id,
+                    population_name="",
+                    container_id="",  # Filled in later
+                    start_time=start,
+                    end_time=end,
+                    first_stage=first_stage,
+                    last_stage=last_stage,
+                )
+            )
+    
+    # Get container IDs from CSV or SQL
+    pop_ids = [m.population_id for m in members]
+    
+    if csv_dir:
+        # Already loaded above
+        pass
+    elif sql_extractor and pop_ids:
+        # Query SQL for containers
+        in_clause = ",".join(f"'{pid}'" for pid in pop_ids[:1000])  # Batch to avoid huge IN clause
+        rows = sql_extractor._run_sqlcmd(
+            query=f"SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, CONVERT(varchar(36), ContainerID) AS ContainerID FROM dbo.Populations WHERE PopulationID IN ({in_clause})",
+            headers=["PopulationID", "ContainerID"],
+        )
+        for row in rows:
+            pop_to_container[row.get("PopulationID", "")] = row.get("ContainerID", "")
+        
+        # Handle remaining populations in batches
+        for i in range(1000, len(pop_ids), 1000):
+            batch_ids = pop_ids[i:i+1000]
+            in_clause = ",".join(f"'{pid}'" for pid in batch_ids)
+            rows = sql_extractor._run_sqlcmd(
+                query=f"SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, CONVERT(varchar(36), ContainerID) AS ContainerID FROM dbo.Populations WHERE PopulationID IN ({in_clause})",
+                headers=["PopulationID", "ContainerID"],
+            )
+            for row in rows:
+                pop_to_container[row.get("PopulationID", "")] = row.get("ContainerID", "")
+    
+    # Update members with container IDs
+    updated_members = []
+    for m in members:
+        container_id = pop_to_container.get(m.population_id, "")
+        updated_members.append(
+            ComponentMember(
+                population_id=m.population_id,
+                population_name=m.population_name,
+                container_id=container_id,
+                start_time=m.start_time,
+                end_time=m.end_time,
+                first_stage=m.first_stage,
+                last_stage=m.last_stage,
+            )
+        )
+
+    updated_members.sort(key=lambda m: m.start_time)
+    return updated_members, geography or "Unknown"
+
+
+def get_chain_info(chain_dir: Path, chain_id: str) -> dict | None:
+    """Get summary info for a chain from batch_summary.csv."""
+    import csv
+    
+    path = chain_dir / "batch_summary.csv"
+    if not path.exists():
+        return None
+    
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            if row.get("chain_id") == chain_id:
+                return row
+    return None
+
+
+CHAIN_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "chain_stitching"
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pilot migrate one stitched FishTalk population component")
-    parser.add_argument("--component-id", type=int, help="Component id from components.csv")
-    parser.add_argument("--component-key", help="Stable component_key from components.csv")
-    parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
-    parser.add_argument("--geography", default="Faroe Islands", help="Target geography name to use/create")
+    parser = argparse.ArgumentParser(
+        description="Pilot migrate one stitched FishTalk population component",
+        epilog="""
+Stitching approaches:
+  SubTransfers-based (recommended):
+    --chain-id CHAIN-00001 --chain-dir scripts/migration/output/chain_stitching/
+    
+  Project-based (legacy):
+    --component-key <uuid> --report-dir scripts/migration/output/population_stitching/
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    
+    # SubTransfers-based stitching (recommended)
+    chain_group = parser.add_argument_group("SubTransfers-based stitching (recommended)")
+    chain_group.add_argument(
+        "--batch-id",
+        help="Linked batch ID from subtransfer_chain_stitching.py --link-by-project (e.g., BATCH-00013)",
+    )
+    chain_group.add_argument(
+        "--chain-id",
+        help="Single chain ID from subtransfer_chain_stitching.py (e.g., CHAIN-00001)",
+    )
+    chain_group.add_argument(
+        "--chain-dir",
+        default=str(CHAIN_DIR_DEFAULT),
+        help="Directory containing batch_chains.csv or linked_batches.csv",
+    )
+    
+    # Project-based stitching (legacy)
+    legacy_group = parser.add_argument_group("Project-based stitching (legacy)")
+    legacy_group.add_argument("--component-id", type=int, help="Component id from components.csv")
+    legacy_group.add_argument("--component-key", help="Stable component_key from components.csv")
+    legacy_group.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
+    
+    # Common options
+    parser.add_argument("--geography", default="Faroe Islands", help="Target geography name (auto-detected for chain-based)")
     parser.add_argument("--batch-number", help="Override batch_number")
     parser.add_argument(
         "--active-window-days",
@@ -300,70 +714,130 @@ def build_parser() -> argparse.ArgumentParser:
         default=365,
         help="Days back from latest FishTalk status to consider active (default: 365)",
     )
+    parser.add_argument(
+        "--assignment-active-window-days",
+        type=int,
+        default=30,
+        help="Days back from latest FishTalk status to treat assignments as active (default: 30)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    if args.component_id is None and not args.component_key:
-        raise SystemExit("Provide --component-id or --component-key")
+    
+    # Determine which stitching approach to use
+    use_linked_batch = args.batch_id is not None
+    use_chain_stitching = args.chain_id is not None
+    use_project_stitching = args.component_id is not None or args.component_key is not None
+    
+    if not use_linked_batch and not use_chain_stitching and not use_project_stitching:
+        raise SystemExit(
+            "Provide one of:\n"
+            "  Linked batch (full lifecycle): --batch-id BATCH-00013\n"
+            "  Single chain: --chain-id CHAIN-00001\n"
+            "  Project-based (legacy): --component-id or --component-key"
+        )
+    
+    if sum([use_linked_batch, use_chain_stitching, use_project_stitching]) > 1:
+        raise SystemExit("Cannot use multiple stitching approaches at once")
+    
+    # Load members based on stitching approach
+    detected_geography = args.geography
+    
+    if use_linked_batch:
+        # Full lifecycle linked batch (recommended)
+        chain_dir = Path(args.chain_dir)
+        csv_dir = Path(args.use_csv) if args.use_csv else None
+        
+        # Create SQL extractor if not using CSV
+        sql_extractor = None
+        if not csv_dir:
+            from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+            sql_extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+        
+        members, detected_geography = load_members_from_linked_batch(
+            chain_dir, batch_id=args.batch_id, csv_dir=csv_dir, sql_extractor=sql_extractor
+        )
+        if not members:
+            raise SystemExit(f"No members found for linked batch {args.batch_id}")
+        
+        # Use batch_id as component_key for ExternalIdMap
+        component_key = f"linked:{args.batch_id}"
+        
+        print(f"Linked batch {args.batch_id}: {len(members)} populations, geography={detected_geography}")
+    elif use_chain_stitching:
+        # SubTransfers-based single chain
+        chain_dir = Path(args.chain_dir)
+        members, detected_geography = load_members_from_chain(chain_dir, chain_id=args.chain_id)
+        if not members:
+            raise SystemExit(f"No members found for chain {args.chain_id}")
+        
+        # Use chain_id as component_key for ExternalIdMap
+        component_key = f"chain:{args.chain_id}"
+        
+        # Get chain summary info
+        chain_info = get_chain_info(chain_dir, args.chain_id)
+        if chain_info:
+            print(f"Chain {args.chain_id}: {chain_info.get('population_count', '?')} populations, "
+                  f"geography={chain_info.get('geography', '?')}, stages={chain_info.get('stages', '?')}")
+            if chain_info.get("is_valid") == "False":
+                print(f"WARNING: Chain {args.chain_id} is flagged as multi-geography anomaly!")
+    else:
+        # Project-based stitching (legacy)
+        report_dir = Path(args.report_dir)
+        members = load_members_from_report(report_dir, component_id=args.component_id, component_key=args.component_key)
+        if not members:
+            raise SystemExit("No members found for the selected component")
 
-    report_dir = Path(args.report_dir)
-    members = load_members_from_report(report_dir, component_id=args.component_id, component_key=args.component_key)
-    if not members:
-        raise SystemExit("No members found for the selected component")
+        component_key = args.component_key
+        if not component_key:
+            # Derive component_key from the first matching row in the report.
+            import csv
 
-    component_key = args.component_key
-    if not component_key:
-        # Derive component_key from the first matching row in the report.
-        import csv
-
-        with (report_dir / "population_members.csv").open("r", encoding="utf-8", newline="") as handle:
-            reader = csv.DictReader(handle)
-            for row in reader:
-                if row.get("component_id") == str(args.component_id):
-                    component_key = row.get("component_key")
-                    break
-    if not component_key:
-        raise SystemExit("Unable to resolve component_key from report")
+            with (report_dir / "population_members.csv").open("r", encoding="utf-8", newline="") as handle:
+                reader = csv.DictReader(handle)
+                for row in reader:
+                    if row.get("component_id") == str(args.component_id):
+                        component_key = row.get("component_key")
+                        break
+        if not component_key:
+            raise SystemExit("Unable to resolve component_key from report")
 
     representative = next((m.population_name for m in members if "TRANSPORTPOP" not in m.population_name.upper()), members[0].population_name)
     batch_start = min(m.start_time for m in members).date()
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+    # Initialize data source (CSV or SQL)
+    data_source = DataSource(csv_dir=args.use_csv, sql_profile=args.sql_profile)
+    # Keep extractor reference for compatibility with existing code paths
+    extractor = data_source.extractor
 
     population_ids = [m.population_id for m in members if m.population_id]
     latest_status_time_by_pop: dict[str, datetime] = {}
     component_status_time: datetime | None = None
 
-    global_rows = extractor._run_sqlcmd(
-        query="SELECT TOP 1 StatusTime FROM dbo.PublicStatusValues ORDER BY StatusTime DESC",
-        headers=["StatusTime"],
-    )
-    global_status_time = parse_dt(global_rows[0].get("StatusTime", "")) if global_rows else None
+    global_status_time = data_source.get_global_latest_status_time()
     active_cutoff = (
         global_status_time - timedelta(days=args.active_window_days)
         if global_status_time
         else None
     )
+    assignment_active_cutoff = (
+        global_status_time - timedelta(days=args.assignment_active_window_days)
+        if global_status_time
+        else None
+    )
 
     if population_ids:
-        pop_clause = ",".join(f"'{pid}'" for pid in population_ids)
-        status_rows = extractor._run_sqlcmd(
-            query=(
-                "SELECT PopulationID, MAX(StatusTime) AS MaxStatusTime "
-                "FROM dbo.PublicStatusValues "
-                f"WHERE PopulationID IN ({pop_clause}) "
-                "GROUP BY PopulationID"
-            ),
-            headers=["PopulationID", "MaxStatusTime"],
-        )
-        for row in status_rows:
-            latest = parse_dt(row.get("MaxStatusTime", ""))
-            if latest:
-                latest_status_time_by_pop[row["PopulationID"]] = latest
+        latest_status_time_by_pop = data_source.get_latest_status_by_population(population_ids)
         component_status_time = max(latest_status_time_by_pop.values(), default=None)
 
     if component_status_time and active_cutoff:
@@ -390,7 +864,19 @@ def main() -> int:
         component_status_time.date() if component_status_time else batch_end_date
     )
 
-    lifecycle_stage_name = fishtalk_stage_to_aquamind(members[0].first_stage or members[0].last_stage)
+    current_member = None
+    current_member_time = None
+    for member in members:
+        candidate_time = latest_status_time_by_pop.get(member.population_id) or member.end_time or member.start_time
+        if not current_member_time or candidate_time > current_member_time:
+            current_member_time = candidate_time
+            current_member = member
+
+    lifecycle_stage_name = fishtalk_stage_to_aquamind(
+        (current_member.last_stage or current_member.first_stage)
+        if current_member
+        else (members[0].first_stage or members[0].last_stage)
+    )
 
     # Resolve species / lifecycle stage.
     species = Species.objects.filter(name="Atlantic Salmon").first() or Species.objects.first()
@@ -409,36 +895,12 @@ def main() -> int:
     if not container_ids:
         raise SystemExit("No container ids found in component members")
 
-    in_clause = ",".join(f"'{cid}'" for cid in container_ids)
-    containers = extractor._run_sqlcmd(
-        query=(
-            "SELECT c.ContainerID, c.ContainerName, c.OrgUnitID, c.OfficialID "
-            "FROM dbo.Containers c "
-            f"WHERE c.ContainerID IN ({in_clause})"
-        ),
-        headers=["ContainerID", "ContainerName", "OrgUnitID", "OfficialID"],
-    )
+    # Get containers using data source (CSV or SQL)
+    containers = data_source.get_containers(container_ids)
     containers_by_id = {row["ContainerID"]: row for row in containers}
 
-    grouping_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), ContainerID) AS ContainerID, "
-            "Site, SiteGroup, Company, ProdStage, ContainerGroup, ContainerGroupID, StandName, StandID "
-            "FROM dbo.Ext_GroupedOrganisation_v2 "
-            f"WHERE ContainerID IN ({in_clause})"
-        ),
-        headers=[
-            "ContainerID",
-            "Site",
-            "SiteGroup",
-            "Company",
-            "ProdStage",
-            "ContainerGroup",
-            "ContainerGroupID",
-            "StandName",
-            "StandID",
-        ],
-    )
+    # Get container grouping
+    grouping_rows = data_source.get_container_grouping(container_ids)
 
     container_grouping: dict[str, dict[str, str]] = {}
     for row in grouping_rows:
@@ -467,17 +929,9 @@ def main() -> int:
             "grouping_bucket": bucket,
         }
 
+    # Get org units using data source
     org_unit_ids = sorted({row.get("OrgUnitID") for row in containers if row.get("OrgUnitID")})
-    org_in_clause = ",".join(f"'{oid}'" for oid in org_unit_ids)
-    org_units = extractor._run_sqlcmd(
-        query=(
-            "SELECT ou.OrgUnitID, ou.Name, l.Latitude, l.Longitude "
-            "FROM dbo.OrganisationUnit ou "
-            "LEFT JOIN dbo.Locations l ON l.LocationID = ou.LocationID "
-            f"WHERE ou.OrgUnitID IN ({org_in_clause})"
-        ),
-        headers=["OrgUnitID", "Name", "Latitude", "Longitude"],
-    )
+    org_units = data_source.get_org_units(org_unit_ids)
     org_by_id = {row["OrgUnitID"]: row for row in org_units}
 
     containers_by_org: dict[str, list[str]] = {}
@@ -512,7 +966,7 @@ def main() -> int:
         history_reason = f"FishTalk migration: component {component_key}"
         def get_geography(name: str) -> Geography:
             if not name:
-                name = args.geography
+                name = detected_geography
             if name not in geography_cache:
                 geography_cache[name], _ = Geography.objects.get_or_create(
                     name=name,
@@ -578,7 +1032,7 @@ def main() -> int:
             if org_geo_candidates:
                 org_geo_name = Counter(org_geo_candidates).most_common(1)[0][0]
             else:
-                org_geo_name = args.geography
+                org_geo_name = detected_geography
             geography = get_geography(org_geo_name)
 
             # LOOKUP FreshwaterStation from pre-migration, fallback to create
@@ -803,46 +1257,41 @@ def main() -> int:
             lifecycle_name = fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
             stage = LifeCycleStage.objects.filter(name=lifecycle_name).first() or lifecycle_stage
 
-            # Grab status snapshot near population start.
-            status_rows = extractor._run_sqlcmd(
-                query=(
-                    "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
-                    "FROM dbo.PublicStatusValues "
-                    f"WHERE PopulationID = '{member.population_id}' "
-                    f"AND StatusTime >= '{member.start_time.strftime('%Y-%m-%d %H:%M:%S')}' "
-                    "ORDER BY StatusTime ASC"
-                ),
-                headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
-            )
-            if not status_rows:
-                status_rows = extractor._run_sqlcmd(
-                    query=(
-                        "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
-                        "FROM dbo.PublicStatusValues "
-                        f"WHERE PopulationID = '{member.population_id}' "
-                        f"AND StatusTime <= '{member.start_time.strftime('%Y-%m-%d %H:%M:%S')}' "
-                        "ORDER BY StatusTime DESC"
-                    ),
-                    headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
-                )
+            latest_status_time = latest_status_time_by_pop.get(member.population_id)
+            
+            # For active assignments (no end_time), use latest status for fish count/biomass
+            # For completed assignments, use status near start time
+            if member.end_time is None and latest_status_time:
+                # Active - get latest status
+                status_snapshot = data_source.get_status_snapshot(member.population_id, latest_status_time)
+            else:
+                # Completed - get status near start
+                status_snapshot = data_source.get_status_snapshot(member.population_id, member.start_time)
 
             count = 0
             biomass = Decimal("0.00")
-            if status_rows:
+            if status_snapshot:
                 try:
-                    count = int(round(float(status_rows[0].get("CurrentCount") or 0)))
+                    count = int(round(float(status_snapshot.get("CurrentCount") or 0)))
                 except ValueError:
                     count = 0
                 try:
-                    biomass = Decimal(str(status_rows[0].get("CurrentBiomassKg") or 0)).quantize(Decimal("0.01"))
+                    biomass = Decimal(str(status_snapshot.get("CurrentBiomassKg") or 0)).quantize(Decimal("0.01"))
                 except Exception:
                     biomass = Decimal("0.00")
-
-            latest_status_time = latest_status_time_by_pop.get(member.population_id)
-            if latest_status_time and active_cutoff:
-                assignment_active = latest_status_time >= active_cutoff
+            if not has_active_member:
+                assignment_active = False
+            elif latest_status_time and assignment_active_cutoff:
+                assignment_active = latest_status_time >= assignment_active_cutoff
             else:
                 assignment_active = member.end_time is None
+
+            active_population_id = active_population_by_container.get(member.container_id)
+            if assignment_active and lifecycle_stage_name and stage and stage.name != lifecycle_stage_name:
+                assignment_active = False
+
+            if assignment_active and active_population_id and active_population_id != member.population_id:
+                assignment_active = False
 
             if assignment_active:
                 assignment_departure = None
@@ -852,13 +1301,6 @@ def main() -> int:
                 assignment_departure = member.end_time.date()
             else:
                 assignment_departure = None
-
-            active_population_id = active_population_by_container.get(member.container_id)
-            if assignment_active and active_population_id and active_population_id != member.population_id:
-                assignment_active = False
-                if assignment_departure is None:
-                    fallback_time = latest_status_time or member.end_time or member.start_time
-                    assignment_departure = fallback_time.date()
 
             defaults = {
                 "batch": batch,

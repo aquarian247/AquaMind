@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 4.1  
-**Date:** January 2026  
-**Status:** Refined - Based on live FishTalk schema inspection  
+**Version:** 4.4  
+**Date:** 2026-01-22  
+**Status:** Updated - aligned with input-based stitching + verified FishTalk schemas  
 
 ## 1. Overview
 
@@ -16,11 +16,12 @@ This document provides detailed field-level mapping specifications for migrating
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
 
-**Key Revision Notes (v4.2 - 2026-01-20):** 
-- **Project-Based Stitching:** FW-to-sea transfers stopped being recorded in `PublicTransfers` since January 2023. Use `(ProjectNumber, InputYear, RunningNumber)` tuple from `dbo.Populations` to group FW and sea populations into logical batches. See `project_based_stitching_report.py`.
-- Updated infrastructure mappings to use OrganisationUnit + Ext_GroupedOrganisation_v2 (hall-per-container-group with Høll→Hall normalization) and clarified geography resolution. 
-- Mappings use exact confirmed columns (e.g., Populations.StartTime). No Plan*-prefixed tables included. 
-- Where direct mappings are absent (e.g., no explicit assignments table), derive from event data (e.g., group Feeding by PopulationID/ContainerID over time to infer assignments).
+**Key Revision Notes (v4.4 - 2026-01-22):** 
+- **Input-Based Stitching:** Use `Ext_Inputs_v2` (InputName + InputNumber + YearClass) as the biological batch key. Project tuples are administrative and can mix year-classes.
+- **Feeding Schema Corrected:** `dbo.Feeding` is ActionID‑based and has no PopulationID/ContainerID columns; join via `Action` and `Operations`.
+- **Health Journal Corrected:** Use `UserSample` + `Action` join path (one JournalEntry per ActionID), not `HealthLog`.
+- **Environmental Sources Updated:** Use `Ext_DailySensorReadings_v2` + `Ext_SensorReadings_v2` (with `is_manual` distinction).
+- **Assignments:** Populate counts/biomass from `PublicStatusValues` snapshots (prefer non‑zero after start).
 
 ## 2. Infrastructure & Geography Mapping
 
@@ -88,24 +89,182 @@ This document provides detailed field-level mapping specifications for migrating
 
 ### 3.0 Population Stitching Strategy (Critical)
 
-**Problem Discovered (2026-01-20):** FishTalk's `PublicTransfers` table stopped recording FW-to-sea transfers since January 2023. The original stitching approach relied on this table, causing batch fragmentation.
+#### 3.0.0 NEW RECOMMENDED APPROACH: Input-Based Stitching via Ext_Inputs_v2 (2026-01-22)
 
-**Solution:** Project-Based Stitching using `(ProjectNumber, InputYear, RunningNumber)` from `dbo.Populations`:
+**CRITICAL DISCOVERY:** The `Ext_Inputs_v2` table tracks **egg inputs/deliveries** - the true biological origin of batches. This is superior to project tuples.
+
+**Why Input-Based Stitching:**
+- Project tuple `(ProjectNumber, InputYear, RunningNumber)` is a **financial/administrative grouping** that can mix multiple year-classes
+- `Ext_Inputs_v2` tracks actual egg deliveries from suppliers (Stofnfiskur, Bakkafrost, etc.)
+- The `InputName` field corresponds to "Árgangur" (year-class) shown in FishTalk exports
+- A batch should stay in ONE station → ONE area (geography changes are biologically impossible)
+
+| Source | Purpose | Records | Status |
+|--------|---------|---------|--------|
+| **`dbo.Ext_Inputs_v2`** | Egg input tracking | Links to ~350K populations | **NEW PRIMARY KEY** |
+| `dbo.Populations` | Population data | ~350K | Linked via PopulationID |
+| `SubTransfers` | Physical movements | ~205K | Transfer workflows |
+
+**Ext_Inputs_v2 Table Structure:**
+
+| Column | Type | Description |
+|--------|------|-------------|
+| PopulationID | uniqueidentifier | **Direct link to Populations** |
+| InputName | nvarchar | Batch name (e.g., "Stofnfiskur S21 okt 25", "BM Jun 24") |
+| InputNumber | int | Numeric identifier for the input |
+| YearClass | nvarchar | Year class (e.g., "2025", "2024") |
+| Supplier | uniqueidentifier | Egg supplier ID |
+| StartTime | datetime | When eggs arrived |
+| InputCount | float | Number of eggs |
+| InputBiomass | float | Input biomass |
+| Species | int | Species identifier |
+
+**Batch Key:** `InputName + InputNumber + YearClass`
 
 ```sql
--- Groups all populations for a logical batch
-SELECT ProjectNumber, InputYear, RunningNumber, PopulationID, PopulationName
-FROM dbo.Populations
-WHERE ProjectNumber IS NOT NULL AND InputYear IS NOT NULL
+-- Input-based batch identification
+SELECT 
+    i.InputName, i.InputNumber, i.YearClass,
+    COUNT(DISTINCT i.PopulationID) as pop_count,
+    MIN(i.StartTime) as earliest,
+    MAX(i.StartTime) as latest,
+    DATEDIFF(day, MIN(i.StartTime), MAX(i.StartTime)) as span_days,
+    SUM(i.InputCount) as total_fish
+FROM dbo.Ext_Inputs_v2 i
+WHERE i.InputName IS NOT NULL AND i.YearClass IS NOT NULL
+GROUP BY i.InputName, i.InputNumber, i.YearClass
+ORDER BY total_fish DESC
+-- Result: Biologically valid batches with 3-7M fish, reasonable time spans
 ```
 
-This groups FW populations (Egg→Smolt) with their sea counterparts (Ongrowing→Harvest) because they share the same project tuple.
+**Sample Results:**
 
-**Scripts:**
-- `project_based_stitching_report.py` - Generates `project_batches.csv` and `recommended_batches.csv`
-- `pilot_migrate_project_batch.py` - Migrates a single project-based batch through the full pipeline
+| InputName | InputNumber | YearClass | Pops | Span (days) | Fish |
+|-----------|-------------|-----------|------|-------------|------|
+| 22S1 LHS | 2 | 2021 | 317 | 42 | 6.9M |
+| Heyst 2023 | 1 | 2023 | 108 | 275 | 6.3M |
+| Stofnfiskur Aug 22 | 3 | 2022 | 40 | 21 | 5.1M |
+| Rogn okt 2023 | 3 | 2023 | 567 | 19 | 4.7M |
 
-**Output:** Batches with 5-6 lifecycle stages spanning FW and sea, with proper transfer workflows typed as `LIFECYCLE_TRANSITION`.
+**Algorithm:**
+1. Group all populations by `(InputName, InputNumber, YearClass)` from Ext_Inputs_v2
+2. Each unique combination = one AquaMind Batch
+3. Validate: single geography, valid stage progression, reasonable time span
+4. Map populations to BatchContainerAssignments
+
+### 3.0.0.1 Supplier Codes & Naming Conventions (2026-01-22)
+
+FishTalk uses supplier abbreviations in reporting. These map to full `InputName` values:
+
+| Abbreviation | Supplier | Station(s) | Example InputName |
+|--------------|----------|------------|-------------------|
+| **BM** | Benchmark Genetics | S24 Strond | "Benchmark Gen. Juni 2024" |
+| **BF** | Bakkafrost | S08 Gjógv, S21 Viðareiði | "Bakkafrost S-21 sep24" |
+| **SF** | Stofnfiskur | S03, S16, S21 | "Stofnfiskur Juni 24" |
+| **AG** | AquaGen | S03 Norðtoftir | "AquaGen juni 25" |
+
+**Display Name Format:** `{Supplier Code} {Month} {Year}` (e.g., "BM Jun 24")
+
+**Mixed Batches:** When two inputs are combined (e.g., "BF/BM Mai 2024" or "BM Mar/Jun 24"), use `batch_batchcomposition` to track source batches.
+
+### 3.0.0.2 InputName Changes at FW→Sea Transition
+
+**CRITICAL FINDING:** When fish transfer from freshwater to sea:
+1. A **new PopulationID** is created (UUID changes)
+2. The **InputName may change** in `Ext_Inputs_v2` records
+
+| Stage | Location | InputName | Notes |
+|-------|----------|-----------|-------|
+| Smolt | S24 Strond (FW) | Benchmark Gen. Juni 2024 | Original FW batch name |
+| Adult | A18 Hov (Sea) | Vár 2024 | New sea-phase InputName |
+
+This means `Ext_Inputs_v2` tracks inputs **per lifecycle phase**, not across the full FW→Sea journey. For sea-phase analytics, use the sea InputName (e.g., "Summar 2024", "Vár 2024").
+
+### 3.0.0.3 AquaMind Batch Naming Strategy
+
+| Phase | Action | Name | History |
+|-------|--------|------|---------|
+| Initial Migration | Create batch | Use `InputName` (e.g., "Benchmark Gen. Juni 2024") | - |
+| Sea Transfer | Update via workflow | Can rename to display format (e.g., "BM Jun 24") | Original name in `HistoricalBatch` |
+| Traceability | Store reference | Keep original in `ExternalIdMap.metadata` | Always available |
+
+**Implementation:**
+```python
+# During batch creation
+batch.batch_number = f"FT-{input_name[:20]}"  # Initial name from InputName
+
+# During sea transfer workflow (optional rename)
+batch.batch_number = "BM Jun 24"  # Display format
+batch.save_with_history(user=migration_user)  # Original preserved in history
+```
+
+The `django-simple-history` integration ensures the original `InputName` is never lost, even if the batch is renamed for user convenience.
+
+### 3.0.0.4 Ext_Populations_v2 - Supplementary Batch Data
+
+The `Ext_Populations_v2` view provides structured batch information in the `PopulationName` field:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| PopulationID | uniqueidentifier | Links to Populations |
+| PopulationName | nvarchar | Structured name with batch info |
+| InputYear | char | Year code (e.g., "24") |
+| InputNumber | char | Input sequence |
+| Fishgroup | nvarchar | Group code (e.g., "241.0018") |
+
+**PopulationName Format (Sea):**
+```
+"{Ring} {Station} {Supplier} {Month} {Year} ({YearClass})"
+Example: "11 S24 SF MAI 24 (MAR 23)"
+```
+
+This can be used to:
+- Extract supplier codes from existing sea populations
+- Verify batch assignments against ring numbers
+- Cross-reference InputYear with `Ext_Inputs_v2.YearClass`
+
+#### 3.0.1 DEPRECATED: Project-Based Stitching
+
+> ⚠️ **WARNING (2026-01-22):** Project tuples can span multiple biological year-classes. Use Input-based stitching instead.
+
+**Key Finding (2026-01-21, SUPERSEDED):** Each FishTalk project tuple `(ProjectNumber, InputYear, RunningNumber)` was believed to represent one biological batch.
+
+**Problem Discovered (2026-01-22):** Analysis of batch 326 (project 1/24/58) revealed:
+- Project tuple contained populations from **5 different year-classes** (May 2023 to March 2024)
+- Populations with Egg stage appearing AFTER Parr stage (biologically impossible)
+- ~20% of project tuples have this issue (>12 month span)
+
+**Root Cause:** Project tuple is a **financial/administrative grouping**, not a biological batch identifier.
+
+| Source | Purpose | Records | Status |
+|--------|---------|---------|--------|
+| `dbo.Populations.ProjectNumber/InputYear/RunningNumber` | Batch grouping | ~350K populations | **DEPRECATED** |
+| `SubTransfers` | Physical movements (within batch) | ~205K | Used for transfer workflows |
+| `PublicStatusValues` | Fish count/biomass snapshots | ~7M | Used for assignment counts |
+
+**Scripts (use with caution):**
+- `pilot_migrate_project_batch.py --project-key "1/25/1"` - End-to-end batch migration
+- `project_based_stitching_report.py` - Generates `project_batches.csv` analysis
+
+#### 3.0.2 SubTransfers for Transfer Workflows (Supplementary)
+
+**Note:** SubTransfers tracks physical fish movements within a batch but does NOT capture FW-to-sea transfers (new population IDs created at handoff).
+
+| Table | Purpose | Records | Usage |
+|-------|---------|---------|-------|
+| `SubTransfers` | Physical movements within environment | ~205K | Transfer workflow creation |
+| `OperationProductionStageChange` | In-place stage changes | ~27K | Stage transition workflows |
+| `PublicTransfers` | Legacy transfers | ~100K | Broken since Jan 2023 - DO NOT USE |
+
+**Use Cases:**
+- `pilot_migrate_component_transfers.py --use-subtransfers` - Uses SubTransfers for accurate transfer workflows
+- Stage transition workflows derived from `OperationProductionStageChange`
+
+#### 3.0.3 Deprecated: Hybrid Cross-Project Linking
+
+**Warning:** Linking chains across project tuples causes over-aggregation (batches with 70+ million fish). Each project tuple should be migrated as a separate batch.
+
+The previous "hybrid" approach attempted to link SubTransfers chains via shared project tuples, but this incorrectly linked multiple biological batches together. **Do not use `--link-by-project` flag.**
 
 ### 3.1 Batch Mapping (FishTalk: Populations)
 
@@ -130,23 +289,23 @@ This groups FW populations (Egg→Smolt) with their sea counterparts (Ongrowing�
 - Set `batch_batch.status = ACTIVE` when component max ≥ `active_cutoff`, else `COMPLETED`.
 - Set `batch_batch.actual_end_date` from the component max status time (fallback to latest population end time if missing).
 
-### 3.2 Container Assignment Mapping (Derived from Events, e.g., Feeding Grouped by PopulationID/ContainerID)
+### 3.2 Container Assignment Mapping (Stitching Output + PublicStatusValues)
 
-| Derived from FishTalk Events (e.g., Feeding) | AquaMind Target | Data Type | Transformation | Notes |
-|----------------------------------------------|-----------------|-----------|----------------|--------|
-| (Group by PopulationID/ContainerID) | batch_batchcontainerassignment.id | bigint | Generate new | Derive from events |
-| PopulationID | batch_batchcontainerassignment.batch_id | bigint | FK lookup | Required; confirmed in Feeding |
-| ContainerID | batch_batchcontainerassignment.container_id | bigint | FK lookup | Required; confirmed in Feeding |
-| ProductionStage (from PopulationAttributes) | batch_batchcontainerassignment.lifecycle_stage_id | bigint | Stage lookup | |
-| (Aggregate SUM(FeedAmount) as proxy) | batch_batchcontainerassignment.population_count | integer | Derive from event volume | Required |
-| (From linked samples) | batch_batchcontainerassignment.avg_weight_g | numeric | Convert to grams | |
-| (Calculate: population * avg_weight / 1000) | batch_batchcontainerassignment.biomass_kg | numeric | Calculate post-load | |
-| MIN(FeedingTime) for group | batch_batchcontainerassignment.assignment_date | date | Earliest event date | Required |
-| MAX(FeedingTime) if inactive | batch_batchcontainerassignment.departure_date | date | Latest status time (fallback end time) | Nullable |
-| (Latest PublicStatusValues.StatusTime) | batch_batchcontainerassignment.is_active | boolean | Active if within active window; only newest population per container stays active | Default true |
-| MAX(SampleDate) from UserSample | batch_batchcontainerassignment.last_weighing_date | date | Most recent | Nullable |
+Assignments are created **per PopulationID** using stitching output (e.g., `input_population_members.csv` or `population_members.csv`).
 
-**Derivation Note**: Group events by PopulationID/ContainerID and continuous date ranges (gaps >7 days start new assignment).
+| FishTalk/Derived Source | AquaMind Target | Data Type | Transformation | Notes |
+|-------------------------|-----------------|-----------|----------------|--------|
+| population_members.population_id | batch_batchcontainerassignment.id | bigint | Generate new | One assignment per population |
+| population_members.population_id | ExternalIdMap (Populations) | uuid | Store for idempotency | `source_model = Populations` |
+| population_members.container_id | batch_batchcontainerassignment.container_id | bigint | FK lookup | Required |
+| population_members.start_time | batch_batchcontainerassignment.assignment_date | date | Date part | Required |
+| population_members.end_time | batch_batchcontainerassignment.departure_date | date | Date part | Nullable |
+| PopulationProductionStages / stage mapping | batch_batchcontainerassignment.lifecycle_stage_id | bigint | Stage lookup | Fallback to batch stage |
+| PublicStatusValues snapshot | batch_batchcontainerassignment.population_count | integer | Prefer first non‑zero after start_time | Avoid zero snapshots |
+| PublicStatusValues snapshot | batch_batchcontainerassignment.biomass_kg | numeric | Prefer first non‑zero after start_time | Avoid zero snapshots |
+| Latest status time | batch_batchcontainerassignment.is_active | boolean | Active if within active window | Only newest per container active |
+
+**Derivation Note**: The first status snapshot at the start time is often zero; the loader must select the first **non‑zero** snapshot after start time.
 
 ### 3.3 Lifecycle Stage Mapping (FishTalk ProductionStages/PopulationAttributes)
 
@@ -163,12 +322,26 @@ This groups FW populations (Egg→Smolt) with their sea counterparts (Ongrowing�
 - Stage names are read from `PopulationProductionStages` → `ProductionStages.StageName` (timeline) and from `PopulationAttributes.ProductionStage` as a fallback.
 - Token matching is applied anywhere in the stage name; unrecognized stages default to `Smolt` for batch/assignment creation, while transfer workflows fall back to the existing assignment stage if mapping returns `None`.
 
-### 3.4 Transfer Workflow Type Mapping (FishTalk: PublicTransfers)
+### 3.4 Transfer Workflow Type Mapping (FishTalk: SubTransfers/PublicTransfers)
 
-- For each `PublicTransfers.OperationID`, determine the stage at operation time for source/destination populations using `PopulationProductionStages` (via `stage_at`), with assignment lifecycle stage as fallback.
+**Data Source Selection:**
+- **SubTransfers (recommended for 2020+):** Active through 2025, provides granular population chain tracing
+- **PublicTransfers (legacy):** Broken since January 2023, use only for pre-2020 batches
+
+**Transfer Processing:**
+- For each `SubTransfers.OperationID` (or `PublicTransfers.OperationID`), determine the stage at operation time for source/destination populations using `PopulationProductionStages` (via `stage_at`), with assignment lifecycle stage as fallback.
 - If mapped source and destination stages differ → `BatchTransferWorkflow.workflow_type = LIFECYCLE_TRANSITION`.
 - Otherwise → `BatchTransferWorkflow.workflow_type = CONTAINER_REDISTRIBUTION`.
-- Lifecycle transitions are also synthesized from ordered `PopulationProductionStages` events across project/year/run groups so stage changes exist even without transfers.
+- Lifecycle transitions are also synthesized from `OperationProductionStageChange` events when available, providing more accurate stage change timestamps than `PopulationProductionStages` alone.
+
+**SubTransfers Fields:**
+| Field | Description |
+|-------|-------------|
+| SourcePopBefore | Population ID before transfer (source) |
+| SourcePopAfter | Population ID after transfer (remnant in source container) |
+| DestPopAfter | Population ID after transfer (fish moved to new location) |
+| ShareCountFwd | Fraction of count transferred (0-1) |
+| ShareBiomFwd | Fraction of biomass transferred (0-1) |
 
 ### 3.5 Batch Creation Workflow Mapping (FishTalk: Stitched Components)
 
@@ -227,22 +400,20 @@ FishTalk does not capture a formal “creation workflow.” For each stitched co
 | Description | inventory_feed.description | text | Direct | |
 | Active | inventory_feed.is_active | boolean | Direct | |
 
-### 4.2 Feeding Event Mapping (FishTalk: Feeding, HWFeeding, WrasseFeeding)
+### 4.2 Feeding Event Mapping (FishTalk: Feeding, HWFeeding)
 
-| FishTalk Column (Feeding) | AquaMind Target | Data Type | Transformation | Notes |
-|---------------------------|-----------------|-----------|----------------|--------|
-| FeedingID | - | uniqueidentifier | Generate new | Store mapping |
-| PopulationID | inventory_feedingevent.batch_id | bigint | FK lookup | Confirmed |
-| ContainerID | inventory_feedingevent.container_id | bigint | FK lookup | Confirmed |
-| FeedBatchID | inventory_feedingevent.feed_id | bigint | FK lookup | Confirmed |
-| FeedingTime | inventory_feedingevent.feeding_date | date | DateTime to Date | Confirmed |
-| FeedingTime | inventory_feedingevent.feeding_time | time | DateTime to Time | |
-| FeedAmount | inventory_feedingevent.amount_kg | decimal(10,4) | Direct | Confirmed |
-| (Derive from batch) | inventory_feedingevent.batch_biomass_kg | decimal(10,2) | Derive post-load | |
-| FeedPercent | inventory_feedingevent.feeding_percentage | decimal(8,6) | Calculate if null | Confirmed |
-| Method | inventory_feedingevent.method | varchar(20) | Map to choices | Confirmed in HWFeeding |
-| Notes | inventory_feedingevent.notes | text | Direct | Confirmed |
-| UserID | inventory_feedingevent.recorded_by_id | integer | User lookup | Confirmed |
+FishTalk `dbo.Feeding` is **ActionID-based** (no PopulationID or ContainerID columns).
+
+| FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
+|-----------------|-----------------|-----------|----------------|--------|
+| Feeding.ActionID | ExternalIdMap (Feeding) | uuid | Store for idempotency | Key for replay |
+| Action.PopulationID | inventory_feedingevent.batch_assignment_id | bigint | ExternalIdMap (Populations) → BatchContainerAssignment | Container inferred from assignment |
+| COALESCE(Operations.StartTime, Feeding.OperationStartTime) | feeding_date / feeding_time | date / time | Split datetime | |
+| Feeding.FeedAmount | amount_kg | decimal(10,4) | **grams → kg** | Confirmed by pilot |
+| FeedBatch + FeedTypes | feed_id | bigint | get_or_create Feed | Use feed name + batch number |
+| PublicStatusValues before/after | batch_biomass_kg | decimal(10,2) | Prefer non‑zero snapshot | Avoid zero biomass overflow |
+| Feeding.ImportedFrom or HWFeeding | method | varchar(20) | AUTO vs MANUAL | Normalize |
+| Operations.Comment | notes | text | Include ActionID + PopulationID | Traceability |
 
 ### 4.3 FCR Calculation Mapping
 ### 4.4 Feed Purchase Mapping (FishTalk: FeedReceptions + FeedReceptionBatches)
@@ -299,20 +470,20 @@ Notes:
 > - Health parameter labels/scores must match `health_healthparameter` + `health_parameterscoredefinition`; seed any missing entries.
 > - Treatment types/vaccine categories require lookup harmonisation (see Sections 5.3 and 5.4).
 
-### 5.1 Health Journal Entry Mapping
+### 5.1 Health Journal Entry Mapping (FishTalk: UserSample)
+
+FishTalk does not expose a clean `HealthLog` table; health observations are inferred from **UserSample** actions.
+We create **one JournalEntry per ActionID**.
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |-----------------|-----------------|-----------|----------------|--------|
-| HealthLog.LogID | health_journalentry.id | bigint | Identity map | |
-| HealthLog.ProjectID | health_journalentry.batch_id | bigint | FK lookup | Required |
-| HealthLog.UnitID | health_journalentry.container_id | bigint | FK lookup | Nullable |
-| HealthLog.LogDate | health_journalentry.entry_date | timestamptz | UTC conversion | |
-| HealthLog.Category | health_journalentry.category | varchar(20) | Map to choices | |
-| HealthLog.Severity | health_journalentry.severity | varchar(10) | Map to choices | |
-| HealthLog.Description | health_journalentry.description | text | Direct | |
-| HealthLog.Resolution | health_journalentry.resolution_status | boolean | Map to boolean | |
-| HealthLog.ResNotes | health_journalentry.resolution_notes | text | Direct | |
-| HealthLog.UserID | health_journalentry.user_id | integer | User lookup | |
+| UserSample.ActionID | ExternalIdMap (UserSampleAction) | uuid | Store for idempotency | One entry per ActionID |
+| Action.PopulationID | health_journalentry.batch_id | bigint | FK lookup | Required |
+| Action.PopulationID | health_journalentry.container_id | bigint | FK lookup | Optional (via assignment) |
+| Operations.StartTime | health_journalentry.entry_date | timestamptz | UTC conversion | |
+| UserSampleTypes + UserSampleType | health_journalentry.category | varchar(20) | Map from sample type | Multi-type → summary text |
+| Aggregated samples | health_journalentry.description | text | Summary (n fish, avg weight, key parameters) | |
+| UserSample.ActionID | health_journalentry.user_id | integer | User lookup | If available |
 
 ### 5.2 Mortality Record Mapping
 
@@ -345,18 +516,16 @@ Notes:
 >
 > **Temporary Source Strategy:** AVEVA historian access is currently pending, so sensor object metadata and early readings will be extracted from FishTalk. Treat FishTalk sensor names as canonical for now—they must remain aligned with the eventual AVEVA sensor catalog. When AVEVA access becomes available, reconcile the two sources and record any divergences in `migration_support.ExternalIdMap` so the loaders can pivot to AVEVA without duplicating historical FishTalk records.
 
-### 6.1 Sensor Reading Mapping (FishTalk: SensorReadings, SensorUnitAssignments) - TimescaleDB
+### 6.1 Sensor Reading Mapping (FishTalk: Ext_SensorReadings_v2 / Ext_DailySensorReadings_v2) - TimescaleDB
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |-----------------|-----------------|-----------|----------------|--------|
-| SensorReadings.ReadingTime | environmental_environmentalreading.reading_time | timestamptz | UTC conversion | PK part 1 |
-| SensorReadings.SensorID | environmental_environmentalreading.sensor_id | bigint | FK lookup | PK part 2 |
-| SensorReadings.ParameterType | environmental_environmentalreading.parameter_id | bigint | Param lookup | |
-| SensorReadings.Value | environmental_environmentalreading.value | numeric | Direct | |
-| SensorUnitAssignments.UnitID | environmental_environmentalreading.container_id | bigint | FK lookup | Via JOIN |
-| PlanContainer.PopulationID | environmental_environmentalreading.batch_id | bigint | FK lookup | Via JOIN |
-| SensorReadings.IsManual | environmental_environmentalreading.is_manual | boolean | Direct | |
-| SensorReadings.Notes | environmental_environmentalreading.notes | text | Direct | |
+| Ext_SensorReadings_v2.ReadingTime | environmental_environmentalreading.reading_time | timestamptz | UTC conversion | Time‑series |
+| Ext_DailySensorReadings_v2.Date | environmental_environmentalreading.reading_time | timestamptz | Date → UTC midnight | Daily aggregates |
+| SensorID | environmental_environmentalreading.sensor_id | bigint | FK lookup/create | Sensor per (ContainerID, SensorID) |
+| Reading | environmental_environmentalreading.value | numeric | Direct | |
+| ContainerID | environmental_environmentalreading.container_id | bigint | FK lookup | Via container mapping |
+| Derived | environmental_environmentalreading.is_manual | boolean | Daily = True, Time‑series = False | Critical for TGC |
 
 ### 6.2 Environmental Parameters
 
@@ -650,9 +819,9 @@ FishTalk does not have dedicated mortality model tables. Create default mortalit
 ---
 
 **Document Control**
-- Version: 4.3
+- Version: 4.4
 - Status: Revised
-- Last Updated: January 2026
+- Last Updated: 2026-01-22
 - Next Review: [Pending]
 
 ## 15. External ID Mapping Tables

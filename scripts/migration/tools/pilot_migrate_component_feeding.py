@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -48,6 +49,7 @@ from apps.batch.models.assignment import BatchContainerAssignment
 from apps.inventory.models import Feed, FeedingEvent
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 REPORT_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "population_stitching"
@@ -94,6 +96,65 @@ def normalize_method(value: str) -> str:
     if upper in {"BROADCAST", "BROAD"}:
         return "BROADCAST"
     return "MANUAL"
+
+
+def build_status_index(
+    loader: "ETLDataLoader",
+    population_ids: list[str],
+    *,
+    window_start: datetime,
+    window_end: datetime,
+) -> dict[str, tuple[list[datetime], list[Decimal]]]:
+    status_rows = loader.get_status_values_for_populations(
+        set(population_ids),
+        start_date=window_start,
+        end_date=window_end,
+    )
+    raw_index: dict[str, list[tuple[datetime, Decimal]]] = {}
+    for row in status_rows:
+        population_id = (row.get("PopulationID") or "").strip()
+        if not population_id:
+            continue
+        status_time = parse_dt(row.get("StatusTime", ""))
+        if status_time is None:
+            continue
+        biomass = to_decimal(row.get("CurrentBiomassKg", ""), places="0.01")
+        if biomass is None:
+            continue
+        raw_index.setdefault(population_id, []).append((status_time, biomass))
+
+    status_index: dict[str, tuple[list[datetime], list[Decimal]]] = {}
+    for population_id, entries in raw_index.items():
+        entries.sort(key=lambda item: item[0])
+        times = [item[0] for item in entries]
+        biomasses = [item[1] for item in entries]
+        status_index[population_id] = (times, biomasses)
+
+    return status_index
+
+
+def lookup_biomass_from_status(
+    status_index: dict[str, tuple[list[datetime], list[Decimal]]] | None,
+    population_id: str,
+    feeding_time: datetime,
+) -> Decimal | None:
+    if not status_index:
+        return None
+    entry = status_index.get(population_id)
+    if not entry:
+        return None
+    times, biomasses = entry
+    if not times:
+        return None
+    idx = bisect_right(times, feeding_time) - 1
+    biomass: Decimal | None = None
+    if idx >= 0:
+        biomass = biomasses[idx]
+    if (biomass is None or biomass <= 0) and idx + 1 < len(biomasses):
+        biomass = biomasses[idx + 1]
+    if biomass is None or biomass <= 0:
+        return None
+    return biomass
 
 
 def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
@@ -169,6 +230,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     return parser
 
 
@@ -199,127 +266,156 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+    # Initialize data source
+    use_csv = args.use_csv is not None
+    loader = ETLDataLoader(args.use_csv) if use_csv else None
+    extractor = None if use_csv else BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
-    in_clause = ",".join(f"'{pid}'" for pid in population_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    if use_csv:
+        # Load feeding data from CSV
+        feeding_rows = loader.get_feeding_actions_for_populations(
+            set(population_ids),
+            start_time=window_start,
+            end_time=window_end,
+        )
+    else:
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    feeding_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), f.ActionID) AS ActionID, "
-            "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(23), COALESCE(o.StartTime, f.OperationStartTime), 121) AS FeedingTime, "
-            "CONVERT(varchar(32), f.FeedAmount) AS FeedAmountG, "
-            "CONVERT(varchar(64), f.FeedBatchID) AS FeedBatchID, "
-            "ISNULL(fb.BatchNumber, '') AS FeedBatchNumber, "
-            "CONVERT(varchar(64), COALESCE(f.FeedTypeID, fb.FeedTypeID)) AS FeedTypeID, "
-            "ISNULL(ft.Name, '') AS FeedTypeName, "
-            "CONVERT(varchar(23), sb.StatusTime, 121) AS StatusTimeBefore, "
-            "CONVERT(varchar(32), sb.CurrentBiomassKg) AS BiomassBeforeKg, "
-            "CONVERT(varchar(32), sb.CurrentCount) AS PopulationCountBefore, "
-            "CONVERT(varchar(23), sa.StatusTime, 121) AS StatusTimeAfter, "
-            "CONVERT(varchar(32), sa.CurrentBiomassKg) AS BiomassAfterKg, "
-            "CONVERT(varchar(32), sa.CurrentCount) AS PopulationCountAfter, "
-            "ISNULL(CONVERT(varchar(64), f.ImportedFrom), '') AS ImportedFrom, "
-            "REPLACE(REPLACE(REPLACE(ISNULL(o.Comment, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS OperationComment "
-            "FROM dbo.Feeding f "
-            "JOIN dbo.Action a ON a.ActionID = f.ActionID "
-            "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.FeedBatch fb ON fb.FeedBatchID = f.FeedBatchID "
-            "LEFT JOIN dbo.FeedTypes ft ON ft.FeedTypeID = COALESCE(f.FeedTypeID, fb.FeedTypeID) "
-            "OUTER APPLY ( "
-            "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
-            "  FROM dbo.PublicStatusValues psv "
-            "  WHERE psv.PopulationID = a.PopulationID "
-            "    AND psv.StatusTime <= COALESCE(o.StartTime, f.OperationStartTime) "
-            "  ORDER BY psv.StatusTime DESC "
-            ") sb "
-            "OUTER APPLY ( "
-            "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
-            "  FROM dbo.PublicStatusValues psv "
-            "  WHERE psv.PopulationID = a.PopulationID "
-            "    AND psv.StatusTime >= COALESCE(o.StartTime, f.OperationStartTime) "
-            "  ORDER BY psv.StatusTime ASC "
-            ") sa "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND COALESCE(o.StartTime, f.OperationStartTime) >= '{start_str}' "
-            f"AND COALESCE(o.StartTime, f.OperationStartTime) <= '{end_str}' "
-            "ORDER BY COALESCE(o.StartTime, f.OperationStartTime) ASC"
-        ),
-        headers=[
-            "ActionID",
-            "PopulationID",
-            "FeedingTime",
-            "FeedAmountG",
-            "FeedBatchID",
-            "FeedBatchNumber",
-            "FeedTypeID",
-            "FeedTypeName",
-            "StatusTimeBefore",
-            "BiomassBeforeKg",
-            "PopulationCountBefore",
-            "StatusTimeAfter",
-            "BiomassAfterKg",
-            "PopulationCountAfter",
+        feeding_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), f.ActionID) AS ActionID, "
+                "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(23), COALESCE(o.StartTime, f.OperationStartTime), 121) AS FeedingTime, "
+                "CONVERT(varchar(32), f.FeedAmount) AS FeedAmountG, "
+                "CONVERT(varchar(64), f.FeedBatchID) AS FeedBatchID, "
+                "ISNULL(fb.BatchNumber, '') AS FeedBatchNumber, "
+                "CONVERT(varchar(64), COALESCE(f.FeedTypeID, fb.FeedTypeID)) AS FeedTypeID, "
+                "ISNULL(ft.Name, '') AS FeedTypeName, "
+                "CONVERT(varchar(23), sb.StatusTime, 121) AS StatusTimeBefore, "
+                "CONVERT(varchar(32), sb.CurrentBiomassKg) AS BiomassBeforeKg, "
+                "CONVERT(varchar(32), sb.CurrentCount) AS PopulationCountBefore, "
+                "CONVERT(varchar(23), sa.StatusTime, 121) AS StatusTimeAfter, "
+                "CONVERT(varchar(32), sa.CurrentBiomassKg) AS BiomassAfterKg, "
+                "CONVERT(varchar(32), sa.CurrentCount) AS PopulationCountAfter, "
+                "ISNULL(CONVERT(varchar(64), f.ImportedFrom), '') AS ImportedFrom, "
+                "REPLACE(REPLACE(REPLACE(ISNULL(o.Comment, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS OperationComment "
+                "FROM dbo.Feeding f "
+                "JOIN dbo.Action a ON a.ActionID = f.ActionID "
+                "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.FeedBatch fb ON fb.FeedBatchID = f.FeedBatchID "
+                "LEFT JOIN dbo.FeedTypes ft ON ft.FeedTypeID = COALESCE(f.FeedTypeID, fb.FeedTypeID) "
+                "OUTER APPLY ( "
+                "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
+                "  FROM dbo.PublicStatusValues psv "
+                "  WHERE psv.PopulationID = a.PopulationID "
+                "    AND psv.StatusTime <= COALESCE(o.StartTime, f.OperationStartTime) "
+                "  ORDER BY psv.StatusTime DESC "
+                ") sb "
+                "OUTER APPLY ( "
+                "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
+                "  FROM dbo.PublicStatusValues psv "
+                "  WHERE psv.PopulationID = a.PopulationID "
+                "    AND psv.StatusTime >= COALESCE(o.StartTime, f.OperationStartTime) "
+                "  ORDER BY psv.StatusTime ASC "
+                ") sa "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND COALESCE(o.StartTime, f.OperationStartTime) >= '{start_str}' "
+                f"AND COALESCE(o.StartTime, f.OperationStartTime) <= '{end_str}' "
+                "ORDER BY COALESCE(o.StartTime, f.OperationStartTime) ASC"
+            ),
+            headers=[
+                "ActionID",
+                "PopulationID",
+                "FeedingTime",
+                "FeedAmountG",
+                "FeedBatchID",
+                "FeedBatchNumber",
+                "FeedTypeID",
+                "FeedTypeName",
+                "StatusTimeBefore",
+                "BiomassBeforeKg",
+                "PopulationCountBefore",
+                "StatusTimeAfter",
+                "BiomassAfterKg",
+                "PopulationCountAfter",
             "ImportedFrom",
             "OperationComment",
-        ],
-    )
+            ],
+        )
 
-    hw_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), hw.FeedingID) AS FeedingID, "
-            "CONVERT(varchar(36), hw.FTActionID) AS ActionID, "
-            "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(23), hw.StartTime, 121) AS FeedingTime, "
-            "CONVERT(varchar(32), hw.FeedAmount) AS FeedAmountG, "
-            "CONVERT(varchar(23), sb.StatusTime, 121) AS StatusTimeBefore, "
-            "CONVERT(varchar(32), sb.CurrentBiomassKg) AS BiomassBeforeKg, "
-            "CONVERT(varchar(32), sb.CurrentCount) AS PopulationCountBefore, "
-            "CONVERT(varchar(23), sa.StatusTime, 121) AS StatusTimeAfter, "
-            "CONVERT(varchar(32), sa.CurrentBiomassKg) AS BiomassAfterKg, "
-            "CONVERT(varchar(32), sa.CurrentCount) AS PopulationCountAfter, "
-            "CONVERT(varchar(36), hw.HWUnitID) AS HWUnitID, "
-            "CONVERT(varchar(36), hw.HWSiloID) AS HWSiloID, "
-            "ISNULL(hw.StopReason, '') AS StopReason "
-            "FROM dbo.HWFeeding hw "
-            "JOIN dbo.Action a ON a.ActionID = hw.FTActionID "
-            "OUTER APPLY ( "
-            "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
-            "  FROM dbo.PublicStatusValues psv "
-            "  WHERE psv.PopulationID = a.PopulationID "
-            "    AND psv.StatusTime <= hw.StartTime "
-            "  ORDER BY psv.StatusTime DESC "
-            ") sb "
-            "OUTER APPLY ( "
-            "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
-            "  FROM dbo.PublicStatusValues psv "
-            "  WHERE psv.PopulationID = a.PopulationID "
-            "    AND psv.StatusTime >= hw.StartTime "
-            "  ORDER BY psv.StatusTime ASC "
-            ") sa "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND hw.StartTime >= '{start_str}' AND hw.StartTime <= '{end_str}' "
-            "ORDER BY hw.StartTime ASC"
-        ),
-        headers=[
-            "FeedingID",
-            "ActionID",
-            "PopulationID",
-            "FeedingTime",
-            "FeedAmountG",
-            "StatusTimeBefore",
-            "BiomassBeforeKg",
-            "PopulationCountBefore",
-            "StatusTimeAfter",
-            "BiomassAfterKg",
-            "PopulationCountAfter",
-            "HWUnitID",
-            "HWSiloID",
-            "StopReason",
-        ],
-    )
+    # Hand weight feeding data (HWFeeding table)
+    if use_csv:
+        # HWFeeding table is typically empty or not extracted - skip in CSV mode
+        hw_rows = []
+    else:
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+        
+        hw_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), hw.FeedingID) AS FeedingID, "
+                "CONVERT(varchar(36), hw.FTActionID) AS ActionID, "
+                "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(23), hw.StartTime, 121) AS FeedingTime, "
+                "CONVERT(varchar(32), hw.FeedAmount) AS FeedAmountG, "
+                "CONVERT(varchar(23), sb.StatusTime, 121) AS StatusTimeBefore, "
+                "CONVERT(varchar(32), sb.CurrentBiomassKg) AS BiomassBeforeKg, "
+                "CONVERT(varchar(32), sb.CurrentCount) AS PopulationCountBefore, "
+                "CONVERT(varchar(23), sa.StatusTime, 121) AS StatusTimeAfter, "
+                "CONVERT(varchar(32), sa.CurrentBiomassKg) AS BiomassAfterKg, "
+                "CONVERT(varchar(32), sa.CurrentCount) AS PopulationCountAfter, "
+                "CONVERT(varchar(36), hw.HWUnitID) AS HWUnitID, "
+                "CONVERT(varchar(36), hw.HWSiloID) AS HWSiloID, "
+                "ISNULL(hw.StopReason, '') AS StopReason "
+                "FROM dbo.HWFeeding hw "
+                "JOIN dbo.Action a ON a.ActionID = hw.FTActionID "
+                "OUTER APPLY ( "
+                "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
+                "  FROM dbo.PublicStatusValues psv "
+                "  WHERE psv.PopulationID = a.PopulationID "
+                "    AND psv.StatusTime <= hw.StartTime "
+                "  ORDER BY psv.StatusTime DESC "
+                ") sb "
+                "OUTER APPLY ( "
+                "  SELECT TOP 1 psv.StatusTime, psv.CurrentBiomassKg, psv.CurrentCount "
+                "  FROM dbo.PublicStatusValues psv "
+                "  WHERE psv.PopulationID = a.PopulationID "
+                "    AND psv.StatusTime >= hw.StartTime "
+                "  ORDER BY psv.StatusTime ASC "
+                ") sa "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND hw.StartTime >= '{start_str}' AND hw.StartTime <= '{end_str}' "
+                "ORDER BY hw.StartTime ASC"
+            ),
+            headers=[
+                "FeedingID",
+                "ActionID",
+                "PopulationID",
+                "FeedingTime",
+                "FeedAmountG",
+                "StatusTimeBefore",
+                "BiomassBeforeKg",
+                "PopulationCountBefore",
+                "StatusTimeAfter",
+                "BiomassAfterKg",
+                "PopulationCountAfter",
+                "HWUnitID",
+                "HWSiloID",
+                "StopReason",
+            ],
+        )
+
+    status_index = None
+    if use_csv and feeding_rows:
+        status_index = build_status_index(
+            loader,
+            population_ids,
+            window_start=window_start,
+            window_end=window_end,
+        )
 
     # Tag the source model for idempotent mapping.
     events: list[tuple[str, dict[str, str]]] = [("Feeding", row) for row in feeding_rows] + [
@@ -373,16 +469,17 @@ def main() -> int:
                 skipped += 1
                 continue
 
-            biomass_before = to_decimal(row.get("BiomassBeforeKg", ""), places="0.01")
-            biomass_after = to_decimal(row.get("BiomassAfterKg", ""), places="0.01")
+            biomass = lookup_biomass_from_status(status_index, population_id, dt)
+            if biomass is None:
+                biomass_before = to_decimal(row.get("BiomassBeforeKg", ""), places="0.01")
+                biomass_after = to_decimal(row.get("BiomassAfterKg", ""), places="0.01")
 
-            biomass: Decimal | None = None
-            if biomass_before is not None and biomass_before > 0:
-                biomass = biomass_before
-            elif biomass_after is not None and biomass_after > 0:
-                biomass = biomass_after
-            elif assignment.biomass_kg and assignment.biomass_kg > 0:
-                biomass = assignment.biomass_kg
+                if biomass_before is not None and biomass_before > 0:
+                    biomass = biomass_before
+                elif biomass_after is not None and biomass_after > 0:
+                    biomass = biomass_after
+                elif assignment.biomass_kg and assignment.biomass_kg > 0:
+                    biomass = assignment.biomass_kg
 
             # If we can't find a sane biomass, skip rather than overflowing feeding_percentage.
             if biomass is None or biomass <= 0:

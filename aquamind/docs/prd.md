@@ -267,7 +267,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 
   - **Detailed Health Sampling & Growth Metrics**:
     - The system shall support creation of `health_healthsamplingevent` records, each representing a specific, detailed sampling session for a `batch_batchcontainerassignment`.
-    - Each `HealthSamplingEvent` can have multiple associated `health_individualfishobservation` records, capturing data for each fish sampled (weight, length, and specific parameter scores).
+    - Each `HealthSamplingEvent` can have multiple associated `health_individualfishobservation` records, capturing data for each fish sampled (weight, length, and specific parameter scores).  
     - For each `IndividualFishObservation`, users can record scores for health parameters using the `health_fishparameterscore` model. Score ranges are defined per parameter (typically 0-3) with flexible configuration support.
     - Based on the collection of `IndividualFishObservation` data within a `HealthSamplingEvent`, the system shall automatically calculate and store the following aggregate growth metrics on the `HealthSamplingEvent` itself:
       - `avg_weight_g`, `std_dev_weight_g`, `min_weight_g`, `max_weight_g`

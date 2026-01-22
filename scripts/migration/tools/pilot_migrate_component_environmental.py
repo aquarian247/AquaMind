@@ -53,6 +53,7 @@ from apps.infrastructure.models import Sensor, Container
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 from scripts.migration.history import save_with_history
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -229,23 +230,99 @@ def get_or_create_sensor(container: Container, sensor_id: str, *, history_user, 
     return sensor
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pilot migrate environmental readings for a stitched FishTalk component")
-    parser.add_argument("--component-id", type=int, help="Component id from components.csv")
-    parser.add_argument("--component-key", help="Stable component_key from components.csv")
-    parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
-    parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
-    parser.add_argument("--daily-only", action="store_true", help="Use Ext_DailySensorReadings_v2 only")
-    parser.add_argument("--limit", type=int, default=0, help="Limit readings per table (0 = no limit)")
-    parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
-    return parser
+def load_environmental_rows(
+    container_ids: list[str],
+    window_start: datetime,
+    window_end: datetime,
+    *,
+    daily_only: bool,
+    limit: int,
+    use_csv_dir: str | Path | None,
+    sqlite_path: str | Path | None,
+    loader: ETLDataLoader | None,
+    extractor: BaseExtractor | None,
+    sql_profile: str,
+) -> tuple[list[dict], list[dict]]:
+    use_loader = loader is not None or use_csv_dir is not None or sqlite_path is not None
+    if use_loader:
+        if loader is None:
+            loader = ETLDataLoader(use_csv_dir, sqlite_path=sqlite_path)
+
+        daily_rows = loader.get_daily_readings_for_containers(
+            set(container_ids),
+            start_date=window_start,
+            end_date=window_end,
+        )
+        time_rows = []
+        if not daily_only:
+            time_rows = loader.get_time_readings_for_containers(
+                set(container_ids),
+                start_time=window_start,
+                end_time=window_end,
+            )
+        if limit:
+            daily_rows = daily_rows[:limit]
+            time_rows = time_rows[:limit]
+        return daily_rows, time_rows
+
+    if extractor is None:
+        extractor = BaseExtractor(ExtractionContext(profile=sql_profile))
+
+    in_clause = ",".join(f"'{cid}'" for cid in container_ids)
+    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    date_start = window_start.strftime("%Y-%m-%d")
+    date_end = window_end.strftime("%Y-%m-%d")
+
+    daily_limit = f"TOP {limit} " if limit else ""
+    daily_rows = extractor._run_sqlcmd(
+        query=(
+            f"SELECT {daily_limit}CONVERT(varchar(36), ContainerID) AS ContainerID, "
+            "CONVERT(varchar(36), SensorID) AS SensorID, "
+            "CONVERT(varchar(10), Date, 120) AS ReadingDate, "
+            "CONVERT(varchar(32), Reading) AS Reading "
+            "FROM dbo.Ext_DailySensorReadings_v2 "
+            f"WHERE ContainerID IN ({in_clause}) AND Date >= '{date_start}' AND Date <= '{date_end}' "
+            "ORDER BY Date ASC"
+        ),
+        headers=["ContainerID", "SensorID", "ReadingDate", "Reading"],
+    )
+
+    time_rows = []
+    if not daily_only:
+        time_limit = f"TOP {limit} " if limit else ""
+        time_rows = extractor._run_sqlcmd(
+            query=(
+                f"SELECT {time_limit}CONVERT(varchar(36), ContainerID) AS ContainerID, "
+                "CONVERT(varchar(36), SensorID) AS SensorID, "
+                "CONVERT(varchar(19), ReadingTime, 120) AS ReadingTime, "
+                "CONVERT(varchar(32), Reading) AS Reading "
+                "FROM dbo.Ext_SensorReadings_v2 "
+                f"WHERE ContainerID IN ({in_clause}) AND ReadingTime >= '{start_str}' AND ReadingTime <= '{end_str}' "
+                "ORDER BY ReadingTime ASC"
+            ),
+            headers=["ContainerID", "SensorID", "ReadingTime", "Reading"],
+        )
+
+    return daily_rows, time_rows
 
 
-def main() -> int:
-    args = build_parser().parse_args()
-    report_dir = Path(args.report_dir)
-    component_key = resolve_component_key(report_dir, component_id=args.component_id, component_key=args.component_key)
-    members = load_members_from_report(report_dir, component_id=args.component_id, component_key=component_key)
+def migrate_component_environmental(
+    *,
+    report_dir: Path,
+    component_id: int | None = None,
+    component_key: str | None = None,
+    sql_profile: str = "fishtalk_readonly",
+    daily_only: bool = False,
+    limit: int = 0,
+    dry_run: bool = False,
+    use_csv_dir: str | Path | None = None,
+    use_sqlite_path: str | Path | None = None,
+    loader: ETLDataLoader | None = None,
+) -> int:
+    report_dir = Path(report_dir)
+    component_key = resolve_component_key(report_dir, component_id=component_id, component_key=component_key)
+    members = load_members_from_report(report_dir, component_id=component_id, component_key=component_key)
     if not members:
         raise SystemExit("No members found for the selected component")
 
@@ -264,54 +341,31 @@ def main() -> int:
     if not user:
         raise SystemExit("No users exist in AquaMind DB; cannot set EnvironmentalReading.recorded_by")
 
-    population_ids = sorted({m.population_id for m in members if m.population_id})
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
-
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
     container_ids = sorted({m.container_id for m in members if m.container_id})
     population_by_container = {m.container_id: m.population_id for m in members if m.container_id and m.population_id}
     if not container_ids:
         raise SystemExit("No container ids found in report")
 
-    in_clause = ",".join(f"'{cid}'" for cid in container_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
-    date_start = window_start.strftime("%Y-%m-%d")
-    date_end = window_end.strftime("%Y-%m-%d")
+    if loader is None and (use_csv_dir is not None or use_sqlite_path is not None):
+        loader = ETLDataLoader(use_csv_dir, sqlite_path=use_sqlite_path)
 
-    daily_limit = f"TOP {args.limit} " if args.limit else ""
-    daily_rows = extractor._run_sqlcmd(
-        query=(
-            f"SELECT {daily_limit}CONVERT(varchar(36), ContainerID) AS ContainerID, "
-            "CONVERT(varchar(36), SensorID) AS SensorID, "
-            "CONVERT(varchar(10), Date, 120) AS ReadingDate, "
-            "CONVERT(varchar(32), Reading) AS Reading "
-            "FROM dbo.Ext_DailySensorReadings_v2 "
-            f"WHERE ContainerID IN ({in_clause}) AND Date >= '{date_start}' AND Date <= '{date_end}' "
-            "ORDER BY Date ASC"
-        ),
-        headers=["ContainerID", "SensorID", "ReadingDate", "Reading"],
+    daily_rows, time_rows = load_environmental_rows(
+        container_ids,
+        window_start,
+        window_end,
+        daily_only=daily_only,
+        limit=limit,
+        use_csv_dir=use_csv_dir,
+        sqlite_path=use_sqlite_path,
+        loader=loader,
+        extractor=None,
+        sql_profile=sql_profile,
     )
 
-    time_rows = []
-    if not args.daily_only:
-        time_limit = f"TOP {args.limit} " if args.limit else ""
-        time_rows = extractor._run_sqlcmd(
-            query=(
-                f"SELECT {time_limit}CONVERT(varchar(36), ContainerID) AS ContainerID, "
-                "CONVERT(varchar(36), SensorID) AS SensorID, "
-                "CONVERT(varchar(19), ReadingTime, 120) AS ReadingTime, "
-                "CONVERT(varchar(32), Reading) AS Reading "
-                "FROM dbo.Ext_SensorReadings_v2 "
-                f"WHERE ContainerID IN ({in_clause}) AND ReadingTime >= '{start_str}' AND ReadingTime <= '{end_str}' "
-                "ORDER BY ReadingTime ASC"
-            ),
-            headers=["ContainerID", "SensorID", "ReadingTime", "Reading"],
-        )
-
-    if args.dry_run:
+    if dry_run:
         print(
             f"[dry-run] Batch={batch.batch_number} daily_rows={len(daily_rows)} time_rows={len(time_rows)}"
         )
@@ -362,7 +416,7 @@ def main() -> int:
                 "batch_container_assignment": assignment,
                 "value": value,
                 "reading_time": reading_dt,
-                "is_manual": False,
+                "is_manual": True,  # Daily aggregates are marked as manual readings
                 "recorded_by": user,
                 "notes": f"FishTalk Ext_DailySensorReadings_v2 {source_id}",
             }
@@ -421,7 +475,7 @@ def main() -> int:
                 "batch_container_assignment": assignment,
                 "value": value,
                 "reading_time": reading_dt,
-                "is_manual": False,
+                "is_manual": False,  # Time-series readings are automated sensor data
                 "recorded_by": user,
                 "notes": f"FishTalk Ext_SensorReadings_v2 {source_id}",
             }
@@ -452,6 +506,45 @@ def main() -> int:
         f"(created={created}, updated={updated}, skipped={skipped}, daily_rows={len(daily_rows)}, time_rows={len(time_rows)})"
     )
     return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Pilot migrate environmental readings for a stitched FishTalk component")
+    parser.add_argument("--component-id", type=int, help="Component id from components.csv")
+    parser.add_argument("--component-key", help="Stable component_key from components.csv")
+    parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
+    parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
+    parser.add_argument("--daily-only", action="store_true", help="Use Ext_DailySensorReadings_v2 only")
+    parser.add_argument("--limit", type=int, default=0, help="Limit readings per table (0 = no limit)")
+    parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
+    parser.add_argument(
+        "--use-sqlite",
+        type=str,
+        metavar="SQLITE_PATH",
+        help="Use a SQLite index for environmental readings (faster than raw CSV)",
+    )
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    return migrate_component_environmental(
+        report_dir=Path(args.report_dir),
+        component_id=args.component_id,
+        component_key=args.component_key,
+        sql_profile=args.sql_profile,
+        daily_only=args.daily_only,
+        limit=args.limit,
+        dry_run=args.dry_run,
+        use_csv_dir=args.use_csv,
+        use_sqlite_path=args.use_sqlite,
+    )
 
 
 if __name__ == "__main__":
