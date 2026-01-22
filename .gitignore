@@ -105,6 +105,8 @@ check_*.py
 **/migrations/__pycache__/
 **/apps/*/__pycache__/
 **/apps/*/*/__pycache__/
+scripts/migration/data/
+scripts/migration/output/
 
 # Keep these files even if they match patterns above
 !.gitkeep

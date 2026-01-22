@@ -13,24 +13,32 @@ This document consolidates learnings from multiple migration sessions to clarify
 | 2026-01-19 | 15-component pilot expansion | ⚠️ Discovered lifecycle/workflow issues |
 | 2026-01-20 | Discovered PublicTransfers broken since Jan 2023 | 🔍 Key finding |
 | 2026-01-21 (AM) | Proposed "Hybrid SubTransfers + Project Linking" | ❌ Over-linked batches (70M+ fish) |
-| 2026-01-21 (PM) | **Project tuple = 1 batch** | ✅ Correct approach (1-3M fish each) |
+| 2026-01-21 (PM) | **Project tuple = 1 batch** | ⚠️ Worked in many cases, later disproven |
+| 2026-01-22 (EOD) | **Ext_Inputs_v2 input-based stitching** | ✅ Current direction |
 
 ---
 
 ## What IS Correct (Use This)
 
-### 1. Batch Identification: Project Tuple
+### 1. Batch Identification: Ext_Inputs_v2 (Input-Based)
 
-**One project tuple = one biological batch.**
+**Primary batch key:** `InputName + InputNumber + YearClass` from `Ext_Inputs_v2`.
 
+Key points:
+- `Ext_Inputs_v2` tracks **egg deliveries** (biological origin).
+- **InputName changes at FW→Sea**, so sea-phase batches (e.g., "Summar 2024") are valid sea-only analytics cohorts.
+- Use **SubTransfers** for transfer workflows (within-environment). FW→Sea linkage still requires explicit logic.
+
+Scripts:
+```bash
+python scripts/migration/tools/input_based_stitching_report.py \
+  --output-dir scripts/migration/output/input_stitching
+
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+  --batch-key "Vár 2024|1|2024" \
+  --use-csv scripts/migration/data/extract/
 ```
-(ProjectNumber, InputYear, RunningNumber) → 1 AquaMind Batch
-```
-
-**Evidence:**
-- Analysis of 924 project tuples shows each contains **1-3 million fish**
-- This matches expected batch size for salmon aquaculture
-- Example: Project `1/25/1` = 2.9M fish across 246 populations
 
 **Script:**
 ```bash
@@ -82,7 +90,15 @@ python scripts/migration/tools/pilot_migrate_environmental_all.py \
 
 ## What IS NOT Correct (Avoid These)
 
-### ❌ 1. Hybrid SubTransfers Chain Linking
+### ❌ 1. Project Tuple as Primary Batch Identifier
+
+**Problem:** Project tuples are administrative and can mix multiple year‑classes.
+They are **not reliable biological batch identifiers** in all cases.
+
+**Do NOT use as the primary batch key** (unless Ext_Inputs_v2 is unavailable and
+you explicitly cohort‑split by year‑class/time gaps).
+
+### ❌ 2. Hybrid SubTransfers Chain Linking
 
 **Problem:** Linking SubTransfers chains via shared project tuples caused **over-aggregation**.
 
@@ -100,23 +116,23 @@ python scripts/migration/tools/subtransfer_chain_stitching.py --link-by-project
 python scripts/migration/tools/pilot_migrate_component.py --batch-id BATCH-00013
 ```
 
-### ❌ 2. UUID-Based Component Keys (Legacy)
+### ❌ 3. UUID-Based Component Keys (Legacy)
 
 The original stitching used arbitrary UUID component keys from `population_stitching_report.py`. These don't correspond to biological batches.
 
-**Use project tuples instead** via `pilot_migrate_project_batch.py`.
+**Use input-based stitching** via `Ext_Inputs_v2` and `pilot_migrate_input_batch.py`.
 
-### ❌ 3. Per-Population Lifecycle Workflows
+### ❌ 4. Per-Population Lifecycle Workflows
 
 **Problem:** Creating one lifecycle workflow per population stage change caused "workflow explosion" (hundreds of workflows per batch).
 
 **Fix:** Lifecycle workflows consolidated to one per batch stage transition.
 
-### ❌ 4. PublicTransfers for FW→Sea Links
+### ❌ 5. PublicTransfers for FW→Sea Links
 
 **Problem:** FishTalk's `PublicTransfers` table stopped recording FW-to-sea transfers since January 2023.
 
-**Fix:** Don't rely on PublicTransfers for batch identity. Project tuples link FW and Sea populations correctly.
+**Fix:** Don't rely on PublicTransfers for batch identity. Use `Ext_Inputs_v2` for batch keys and SubTransfers for within-environment workflows. FW→Sea linkage still requires explicit logic.
 
 ---
 
@@ -126,7 +142,7 @@ The original stitching used arbitrary UUID component keys from `population_stitc
 
 **Symptom:** Lifecycle workflows spanning 6+ months (e.g., Egg→Fry workflow from March to October).
 
-**Cause:** Project-based stitching aggregates populations that entered a stage at different times. This is a **data artifact**, not a bug.
+**Cause:** Legacy stitching (project tuple or multi‑cohort grouping) aggregates populations that entered a stage at different times. This is a **data artifact**, not a bug.
 
 **Options:**
 1. Accept as-is (reflects actual FishTalk data)
@@ -167,19 +183,21 @@ if percentage > max_percentage:
 # 1. Clear migration DB (preserves users)
 python scripts/migration/clear_migration_db.py
 
-# 2. Clear stale ExternalIdMap entries
+# 2. Clear stale ExternalIdMap entries (optional for clean replays)
 python -c "
 from apps.migration_support.models import ExternalIdMap
 ExternalIdMap.objects.all().delete()
 "
 
-# 3. Generate project stitching report
-python scripts/migration/tools/project_based_stitching_report.py --min-stages 4
+# 3. Generate input-based stitching report
+python scripts/migration/tools/input_based_stitching_report.py \
+  --output-dir scripts/migration/output/input_stitching
 
-# 4. Migrate a project batch
+# 4. Migrate an input batch
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_project_batch.py \
-  --project-key "1/25/1"
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+  --batch-key "Vár 2024|1|2024" \
+  --use-csv scripts/migration/data/extract/
 
 # 5. Verify
 python scripts/migration/tools/migration_counts_report.py
@@ -191,8 +209,8 @@ python scripts/migration/tools/migration_counts_report.py
 
 | Script | Purpose | Use When |
 |--------|---------|----------|
-| `pilot_migrate_project_batch.py` | End-to-end project batch migration | **Primary migration script** |
-| `project_based_stitching_report.py` | Generate project batch candidates | Identifying batches to migrate |
+| `pilot_migrate_input_batch.py` | End-to-end input batch migration | **Primary migration script** |
+| `input_based_stitching_report.py` | Generate input batch candidates | Identifying batches to migrate |
 | `bulk_extract_fishtalk.py` | ETL extraction to CSV | Before migration (once) |
 | `clear_migration_db.py` | Reset migration DB | Before clean runs |
 | `migration_counts_report.py` | Verification counts | After each migration |
@@ -203,16 +221,18 @@ python scripts/migration/tools/migration_counts_report.py
 
 | Aspect | Correct Approach | Wrong Approach |
 |--------|------------------|----------------|
-| **Batch ID** | Project tuple (1-3M fish each) | UUID components, hybrid chain linking |
+| **Batch ID** | Ext_Inputs_v2 (InputName + InputNumber + YearClass) | Project tuple as primary, UUID components |
 | **Transfer workflows** | SubTransfers + consolidated lifecycles | Per-population workflows |
 | **ETL** | Bulk CSV extraction | Per-query SQL |
 | **Environmental** | SQLite index + parallel workers | Loading 5GB CSVs per worker |
 
-**Bottom line:** One project tuple = one batch. Simple is correct.
+**Bottom line:** Ext_Inputs_v2 is the biological batch identifier. Project tuple is administrative.
 
 ---
 
 ## 🚨 Critical Finding: Project Tuple Cohort Issue (2026-01-21 Evening)
+
+**Status:** Historical context. This section documents why the project‑tuple approach was abandoned in favor of `Ext_Inputs_v2`.
 
 ### Problem Discovered
 
@@ -253,7 +273,7 @@ The assumption "one project tuple = one batch" is **incorrect for some project t
 
 **All 15 batches in the dry-run had >700 day spans** - the `recommended_batches.csv` inadvertently selected problematic batches (those with 5+ stages are more likely to span multiple cohorts).
 
-### Recommended Solution: Time-Based Cohort Filtering
+### Recommended Solution (Fallback): Time-Based Cohort Filtering
 
 **Immediate action**: Modify `project_based_stitching_report.py` to:
 1. Calculate population start time span per project tuple
@@ -273,6 +293,8 @@ The assumption "one project tuple = one batch" is **incorrect for some project t
 ---
 
 ## 🎯 Solution Discovery: Year-Class Extraction from Population Names (2026-01-22)
+
+**Status:** Fallback strategy. Use only when `Ext_Inputs_v2` is unavailable or for auxiliary FW→Sea linkage research.
 
 ### Key Finding
 
@@ -329,9 +351,9 @@ The 2024-Q1 cohort is invalid because it mixes:
 - Administrative "24Q1" labels (Oct 2023 fish that are 24Q1 project assignments)
 - Actual Feb/Mar 2024 eggs (Alevin/Eye-egg in late 2024)
 
-### Recommended Implementation
+### Recommended Implementation (Fallback)
 
-**Primary strategy: Year-class extraction from population names**
+**Fallback strategy: Year-class extraction from population names**
 
 1. **Parse year-class from names** using these patterns (in priority order):
    - `\(([A-Za-z/]+)\s*(\d{2})\)` - Parenthesized month/year like `(MAI/JUN 23)`
@@ -371,7 +393,7 @@ MONTH_MAP = {
 }
 ```
 
-### Next Steps
+### Next Steps (Fallback)
 
 1. **Modify `project_based_stitching_report.py`** to:
    - Add year-class extraction from PopulationName
@@ -406,7 +428,7 @@ MONTH_MAP = {
 
 **Key finding:** FishTalk's naming convention with year-class indicators `(MONTH YY)` became standard around 2022. For recent data, year-class extraction is highly reliable.
 
-### Recommended Hybrid Approach
+### Recommended Hybrid Approach (Fallback)
 
 ```
 For each project tuple:
@@ -431,13 +453,13 @@ For each project tuple:
 
 ### Status
 
-**Solution validated** - Year-class extraction from population names provides reliable batch identification for recent data (2022+). Hybrid approach with time-gap splitting needed for historical data (pre-2022). Ready to implement in migration scripts.
+**Validated fallback** - Year-class extraction is reliable for recent data (2022+). Use only when `Ext_Inputs_v2` is unavailable or for auxiliary FW→Sea linkage research.
 
 ---
 
-## 📋 Implementation Checklist (2026-01-22)
+## 📋 Implementation Checklist (2026-01-22, Fallback)
 
-### Phase 1: Update Stitching Report (Priority)
+### Phase 1: Update Stitching Report (Fallback Priority)
 - [ ] Modify `project_based_stitching_report.py`:
   - Add PopulationName extraction from FishTalk
   - Implement year-class parsing with month mappings
