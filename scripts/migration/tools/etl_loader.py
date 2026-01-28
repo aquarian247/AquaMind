@@ -188,6 +188,28 @@ class ETLDataLoader:
         """Get populations for a specific container."""
         all_pops = self.get_all_populations()
         return [p for p in all_pops if p.get("ContainerID") == container_id]
+
+    # ====================
+    # INPUTS (Ext_Inputs_v2)
+    # ====================
+
+    def get_ext_inputs(self) -> List[Dict[str, str]]:
+        """Get Ext_Inputs_v2 records."""
+        return self._load_csv_dict("ext_inputs")
+
+    def get_input_counts_by_population(self, population_ids: Set[str]) -> Dict[str, float]:
+        """Get summed InputCount per population."""
+        results: Dict[str, float] = {}
+        for row in self.get_ext_inputs():
+            pop_id = row.get("PopulationID")
+            if pop_id not in population_ids:
+                continue
+            try:
+                count = float(row.get("InputCount") or 0)
+            except Exception:
+                count = 0.0
+            results[pop_id] = results.get(pop_id, 0.0) + count
+        return results
     
     # ====================
     # POPULATION STAGES
@@ -217,6 +239,17 @@ class ETLDataLoader:
         """Get containers for specific IDs."""
         all_containers = self.get_all_containers()
         return [c for c in all_containers if c.get("ContainerID") in container_ids]
+
+    def get_grouped_organisation(self) -> List[Dict[str, str]]:
+        """Get Ext_GroupedOrganisation_v2 rows (if extracted)."""
+        return self._load_csv_dict("grouped_organisation")
+
+    def get_grouped_organisation_by_container_ids(
+        self, container_ids: Set[str]
+    ) -> List[Dict[str, str]]:
+        """Get grouped organisation rows for specific container IDs."""
+        rows = self.get_grouped_organisation()
+        return [r for r in rows if r.get("ContainerID") in container_ids]
     
     # ====================
     # ORG UNITS
@@ -526,6 +559,39 @@ class ETLDataLoader:
         """Get hand weight samples for specific feeding IDs."""
         all_weights = self._load_csv_dict("feeding_hand_weights")
         return [w for w in all_weights if w.get("FeedingID") in feeding_ids]
+
+    # ====================
+    # GROWTH / WEIGHT SAMPLES
+    # ====================
+
+    def get_weight_samples_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        """Get weight sample rows for specific populations."""
+        tables = ["ext_weight_samples_v2", "public_weight_samples"]
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for table_name in tables:
+            try:
+                rows = self._load_csv_dict(table_name)
+            except FileNotFoundError:
+                continue
+            for row in rows:
+                if row.get("PopulationID") not in population_ids:
+                    continue
+                sample_time = row.get("SampleDate", "")
+                if start_str and sample_time < start_str:
+                    continue
+                if end_str and sample_time > end_str:
+                    continue
+                row["_source_table"] = table_name
+                results.append(row)
+        return results
     
     # ====================
     # TRANSFERS

@@ -41,6 +41,8 @@ This document provides detailed field-level mapping specifications for migrating
 
 ### 2.2 Freshwater Station Mapping (FishTalk: OrganisationUnit + Locations + Ext_GroupedOrganisation_v2)
 
+**Reality check (2026-01-22):** `OrganisationUnit.LocationID` is sparsely populated (4106/4215 missing). Geography and station naming should rely primarily on `Ext_GroupedOrganisation_v2.Site/SiteGroup` with `OrganisationUnit.Name` as fallback.
+
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|
 | OrganisationUnit.OrgUnitID | ExternalIdMap (OrganisationUnitStation) | uuid | Store for idempotency | `source_identifier = OrgUnitID` |
@@ -50,6 +52,8 @@ This document provides detailed field-level mapping specifications for migrating
 | Geography (from 2.1) | infrastructure_freshwaterstation.geography_id | bigint | FK lookup | |
 
 ### 2.3 Hall Mapping (FishTalk: Ext_GroupedOrganisation_v2 + Containers)
+
+**Coverage note (2026-01-22):** `Ext_GroupedOrganisation_v2` has 10,183 rows vs 17,066 containers; ~6,883 containers will not have hall metadata and must fall back to `Containers.OfficialID` or remain unmapped.
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|
@@ -69,6 +73,8 @@ This document provides detailed field-level mapping specifications for migrating
 | Derived | infrastructure_area.active | boolean | `true` | |
 
 ### 2.5 Container Mapping (FishTalk: Containers + Ext_GroupedOrganisation_v2)
+
+**Reality check (2026-01-22):** `Containers` contains `OrgUnitID` but not `LocationID`; join path is `Containers.OrgUnitID → OrganisationUnit.LocationID → Locations`. Location is usually missing, so geography should be derived from `Ext_GroupedOrganisation_v2` first.
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|

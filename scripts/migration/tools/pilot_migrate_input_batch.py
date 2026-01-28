@@ -23,8 +23,10 @@ from __future__ import annotations
 import argparse
 import csv
 import os
+import re
 import subprocess
 import sys
+import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +56,7 @@ CSV_SUPPORTED_SCRIPTS = {
     "pilot_migrate_component_feeding.py",
     "pilot_migrate_component_mortality.py",
     "pilot_migrate_component_environmental.py",
+    "pilot_migrate_component_growth_samples.py",
 }
 
 
@@ -63,6 +66,13 @@ DATETIME_FORMATS = (
     "%Y-%m-%dT%H:%M:%S.%f",
     "%Y-%m-%dT%H:%M:%S",
 )
+
+
+def slugify(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+    cleaned = re.sub(r"[^A-Za-z0-9]+", "_", ascii_value).strip("_")
+    return cleaned or "batch"
 
 
 def parse_dt(value: str) -> datetime | None:
@@ -180,13 +190,85 @@ def load_input_populations(batch_key: str) -> list[PopulationMember]:
     return members
 
 
-def generate_component_csv(batch_key: str, members: list[PopulationMember], output_dir: Path) -> Path:
+def load_full_lifecycle_populations(batch_key: str, members_file: Path) -> list[PopulationMember]:
+    """Load population members from full-lifecycle stitching output."""
+    if not members_file.exists():
+        raise FileNotFoundError(f"Full lifecycle members file not found: {members_file}")
+
+    members = []
+    with members_file.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get("batch_key") != batch_key:
+                continue
+            members.append(
+                PopulationMember(
+                    population_id=row.get("population_id", ""),
+                    container_id=row.get("container_id", ""),
+                    container_name=row.get("container_name", ""),
+                    org_unit_name=row.get("org_unit_name", ""),
+                    geography=row.get("geography", ""),
+                    start_time=parse_dt(row.get("start_time", "")),
+                    end_time=parse_dt(row.get("end_time", "")),
+                    fishtalk_stages=row.get("fishtalk_stages", ""),
+                    aquamind_stages=row.get("aquamind_stages", ""),
+                )
+            )
+    return members
+
+
+def full_lifecycle_members_path(batch_key: str) -> Path:
+    slug = slugify(batch_key)
+    return INPUT_STITCHING_DIR / f"full_lifecycle_population_members_{slug}.csv"
+
+
+def load_sea_population_ids(batch_key: str, *, use_csv: str | None) -> list[str]:
+    """Resolve sea population IDs for the given input batch key."""
+    input_name, input_number, year_class = [p.strip() for p in batch_key.split("|")]
+    if use_csv:
+        csv_path = Path(use_csv) / "ext_inputs.csv"
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing ext_inputs.csv: {csv_path}")
+        population_ids = []
+        with csv_path.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if (
+                    row.get("InputName", "").strip() == input_name
+                    and row.get("InputNumber", "").strip() == input_number
+                    and row.get("YearClass", "").strip() == year_class
+                ):
+                    population_ids.append(row.get("PopulationID", ""))
+        return [pid for pid in population_ids if pid]
+
+    # SQL fallback
+    from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+
+    extractor = BaseExtractor(ExtractionContext(profile="fishtalk_readonly"))
+    rows = extractor._run_sqlcmd(
+        query=(
+            "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID "
+            "FROM dbo.Ext_Inputs_v2 "
+            f"WHERE InputName = '{input_name}' AND InputNumber = {input_number} AND YearClass = '{year_class}'"
+        ),
+        headers=["PopulationID"],
+    )
+    return [row.get("PopulationID", "") for row in rows if row.get("PopulationID")]
+
+
+def generate_component_csv(
+    batch_key: str,
+    members: list[PopulationMember],
+    output_dir: Path,
+    *,
+    component_key_override: str | None = None,
+) -> Path:
     """Generate a component-style population_members.csv for the existing migration scripts."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Use a sanitized batch key as component_id
     component_id = batch_key.replace("|", "_").replace(" ", "_").replace("/", "_")
-    component_key = members[0].population_id if members else batch_key
+    component_key = component_key_override or (members[0].population_id if members else batch_key)
 
     csv_path = output_dir / "population_members.csv"
     with csv_path.open("w", encoding="utf-8", newline="") as f:
@@ -339,6 +421,59 @@ def run_migration_script(script_name: str, component_key: str, report_dir: Path,
         return False
 
 
+def build_full_lifecycle_members(
+    batch_key: str,
+    *,
+    use_csv: str | None,
+    include_fw_batches: list[str],
+    skip_population_links: bool,
+) -> bool:
+    script_path = PROJECT_ROOT / "scripts" / "migration" / "tools" / "input_full_lifecycle_stitching.py"
+    if not script_path.exists():
+        print(f"[ERROR] Missing full-lifecycle stitcher: {script_path}")
+        return False
+
+    cmd = [
+        sys.executable,
+        str(script_path),
+        "--batch-key",
+        batch_key,
+        "--output-dir",
+        str(INPUT_STITCHING_DIR),
+    ]
+    if use_csv:
+        cmd.extend(["--csv-dir", use_csv])
+    if skip_population_links:
+        cmd.append("--skip-population-links")
+    for fw_batch in include_fw_batches:
+        cmd.extend(["--include-fw-batch", fw_batch])
+
+    print("\nBuilding full-lifecycle population members...")
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(PROJECT_ROOT)
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=str(PROJECT_ROOT),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+    except subprocess.TimeoutExpired:
+        print("[ERROR] Full-lifecycle stitching timed out after 600 seconds")
+        return False
+
+    if result.returncode != 0:
+        print("[ERROR] Full-lifecycle stitching failed")
+        print(f"STDOUT: {result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout}")
+        print(f"STDERR: {result.stderr[-2000:] if len(result.stderr) > 2000 else result.stderr}")
+        return False
+
+    print(result.stdout.strip().split("\n")[-1])
+    return True
+
+
 def list_available_batches() -> None:
     """List available input batches from the stitching report."""
     batches_file = INPUT_STITCHING_DIR / "input_batches.csv"
@@ -412,6 +547,27 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="CSV_DIR",
         help="Use pre-extracted CSV files from this directory instead of live SQL",
     )
+    parser.add_argument(
+        "--full-lifecycle",
+        action="store_true",
+        help="Use full-lifecycle stitched population members (FW + Sea)",
+    )
+    parser.add_argument(
+        "--full-lifecycle-rebuild",
+        action="store_true",
+        help="Rebuild full-lifecycle stitching output before migrating",
+    )
+    parser.add_argument(
+        "--include-fw-batch",
+        action="append",
+        default=[],
+        help="Explicit FW batch key(s) to include when building full-lifecycle output",
+    )
+    parser.add_argument(
+        "--skip-population-links",
+        action="store_true",
+        help="Skip PopulationLink when building full-lifecycle output",
+    )
     return parser
 
 
@@ -457,7 +613,20 @@ def main() -> int:
 
     # Load population members
     print(f"\nLoading populations for batch {batch_key}...")
-    members = load_input_populations(batch_key)
+    if args.full_lifecycle:
+        members_file = full_lifecycle_members_path(batch_key)
+        if args.full_lifecycle_rebuild or not members_file.exists():
+            ok = build_full_lifecycle_members(
+                batch_key,
+                use_csv=args.use_csv,
+                include_fw_batches=args.include_fw_batch,
+                skip_population_links=args.skip_population_links,
+            )
+            if not ok:
+                return 1
+        members = load_full_lifecycle_populations(batch_key, members_file)
+    else:
+        members = load_input_populations(batch_key)
 
     if not members:
         print(f"[ERROR] No populations found for batch key: {batch_key}")
@@ -480,10 +649,22 @@ def main() -> int:
     dir_name = batch_key.replace("|", "_").replace(" ", "_").replace("/", "_")
     output_dir = BATCH_OUTPUT_DIR / dir_name
     print(f"\nGenerating component CSV in: {output_dir}")
-    csv_path = generate_component_csv(batch_key, members, output_dir)
+    # Ensure deterministic ordering
+    members = sorted(members, key=lambda m: m.start_time or datetime.min)
+    component_key_override = None
+    if args.full_lifecycle:
+        sea_population_ids = load_sea_population_ids(batch_key, use_csv=args.use_csv)
+        if sea_population_ids:
+            component_key_override = sea_population_ids[0]
+    csv_path = generate_component_csv(
+        batch_key,
+        members,
+        output_dir,
+        component_key_override=component_key_override,
+    )
 
-    # Determine the component_key (first population ID)
-    component_key = members[0].population_id
+    # Determine the component_key (first population ID unless overridden)
+    component_key = component_key_override or members[0].population_id
 
     print(f"\nComponent key for migration: {component_key}")
 
@@ -493,6 +674,7 @@ def main() -> int:
             "pilot_migrate_component.py",
             "pilot_migrate_component_transfers.py",
             "pilot_migrate_component_feeding.py",
+            "pilot_migrate_component_growth_samples.py",
             "pilot_migrate_component_mortality.py",
             "pilot_migrate_component_treatments.py",
             "pilot_migrate_component_lice.py",
@@ -515,11 +697,11 @@ def main() -> int:
         ("pilot_migrate_component.py", "Infrastructure + Batch + Assignments"),
         ("pilot_migrate_component_transfers.py", "Transfer Workflows"),
         ("pilot_migrate_component_feeding.py", "Feeding Events"),
+        ("pilot_migrate_component_growth_samples.py", "Growth Samples"),
         ("pilot_migrate_component_mortality.py", "Mortality Events"),
         ("pilot_migrate_component_treatments.py", "Treatments"),
         ("pilot_migrate_component_lice.py", "Lice Counts"),
-        ("pilot_migrate_component_health_journal.py", "Health Journal"),
-    ]
+        ("pilot_migrate_component_health_journal.py", "Health Journal"),    ]
 
     if not args.skip_environmental:
         scripts.append(("pilot_migrate_component_environmental.py", "Environmental Readings"))

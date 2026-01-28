@@ -140,9 +140,11 @@ class DataSource:
     def get_container_grouping(self, container_ids: list[str]) -> list[dict]:
         """Get container grouping/organization data."""
         if self.use_csv:
-            # Container grouping is not in our CSV extract - need to query SQL
-            # For now, return empty list (will fall back to OrgUnit-based grouping)
-            return []
+            try:
+                return self.loader.get_grouped_organisation_by_container_ids(set(container_ids))
+            except FileNotFoundError:
+                # Container grouping not extracted - fall back to OrgUnit-based grouping
+                return []
         else:
             in_clause = ",".join(f"'{cid}'" for cid in container_ids)
             return self.extractor._run_sqlcmd(
@@ -157,6 +159,32 @@ class DataSource:
                     "ContainerGroup", "ContainerGroupID", "StandName", "StandID",
                 ],
             )
+
+    def get_input_counts(self, population_ids: list[str]) -> dict[str, float]:
+        """Get InputCount per population from Ext_Inputs_v2."""
+        if not population_ids:
+            return {}
+        if self.use_csv:
+            return self.loader.get_input_counts_by_population(set(population_ids))
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        rows = self.extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, "
+                "ISNULL(CONVERT(varchar(32), InputCount), '0') AS InputCount "
+                "FROM dbo.Ext_Inputs_v2 "
+                f"WHERE PopulationID IN ({in_clause})"
+            ),
+            headers=["PopulationID", "InputCount"],
+        )
+        results: dict[str, float] = {}
+        for row in rows:
+            pop_id = row.get("PopulationID") or ""
+            try:
+                count = float(row.get("InputCount") or 0)
+            except Exception:
+                count = 0.0
+            results[pop_id] = results.get(pop_id, 0.0) + count
+        return results
     
     def get_org_units(self, org_unit_ids: list[str]) -> list[dict]:
         """Get organization unit data."""
@@ -316,9 +344,16 @@ def hall_label_from_group(group_name: str | None) -> str:
     if not label:
         return ""
     if "Høll" in label:
-        prefix, _, _ = label.partition("Høll")
-        prefix = prefix.strip()
-        return f"Hall {prefix}" if prefix else "Hall"
+        before, _, after = label.partition("Høll")
+        before = before.strip()
+        after = after.strip()
+        if before and not after:
+            return f"Hall {before}"
+        if after and not before:
+            return f"Hall {after}"
+        if before and after:
+            return f"Hall {before}"
+        return "Hall"
     if label.startswith("Hall ") or label.endswith(" Hall"):
         return label
     return label
@@ -346,6 +381,10 @@ def fishtalk_stage_to_aquamind(stage_name: str) -> str:
     if any(token in upper for token in ("ONGROW", "GROWER", "GRILSE")):
         return "Adult"
     return "Smolt"
+
+
+STAGE_ORDER = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"]
+STAGE_INDEX = {name: idx for idx, name in enumerate(STAGE_ORDER)}
 
 
 def parse_dt(value: str) -> datetime | None:
@@ -717,8 +756,14 @@ Stitching approaches:
     parser.add_argument(
         "--assignment-active-window-days",
         type=int,
-        default=30,
-        help="Days back from latest FishTalk status to treat assignments as active (default: 30)",
+        default=365,
+        help="Days back from latest FishTalk status to treat assignments as active (default: 365)",
+    )
+    parser.add_argument(
+        "--creation-window-days",
+        type=int,
+        default=60,
+        help="Days from batch start to include in creation workflow (default: 60)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
@@ -1216,6 +1261,8 @@ def main() -> int:
         batch_map = get_external_map("PopulationComponent", component_key)
         if batch_map:
             batch = Batch.objects.get(pk=batch_map.target_object_id)
+            if not args.batch_number:
+                batch_number = batch.batch_number
             batch.batch_number = batch_number
             batch.species = species
             batch.lifecycle_stage = lifecycle_stage
@@ -1338,12 +1385,36 @@ def main() -> int:
             assignment_by_population_id[member.population_id] = assignment
 
         initial_stage_name = lifecycle_stage.name if lifecycle_stage else lifecycle_stage_name
-        initial_members = [
-            member
+        member_stage_names = {
+            fishtalk_stage_to_aquamind(member.first_stage or member.last_stage)
             for member in members
-            if member.start_time.date() == batch_start
-            and fishtalk_stage_to_aquamind(member.first_stage or member.last_stage) == initial_stage_name
-        ]
+            if (member.first_stage or member.last_stage)
+        }
+        member_stage_names = {stage for stage in member_stage_names if stage in STAGE_INDEX}
+        if member_stage_names:
+            earliest_stage = min(member_stage_names, key=lambda s: STAGE_INDEX.get(s, 999))
+            if initial_stage_name not in STAGE_INDEX or STAGE_INDEX[earliest_stage] < STAGE_INDEX[initial_stage_name]:
+                initial_stage_name = earliest_stage
+
+        def member_stage(member: ComponentMember) -> str | None:
+            return fishtalk_stage_to_aquamind(member.first_stage or member.last_stage)
+
+        initial_members: list[ComponentMember] = []
+        if initial_stage_name in {"Egg&Alevin", "Fry", "Parr", "Smolt"}:
+            window_end = batch_start + timedelta(days=args.creation_window_days)
+            initial_members = [
+                member
+                for member in members
+                if member_stage(member) == initial_stage_name
+                and batch_start <= member.start_time.date() <= window_end
+            ]
+        if not initial_members:
+            initial_members = [
+                member
+                for member in members
+                if member.start_time.date() == batch_start
+                and member_stage(member) == initial_stage_name
+            ]
         if not initial_members:
             initial_members = [member for member in members if member.start_time.date() == batch_start]
         if not initial_members:
@@ -1371,7 +1442,17 @@ def main() -> int:
                 history_reason=history_reason,
             )
 
-            total_eggs_planned = sum(int(assignment.population_count or 0) for _, assignment in creation_assignments)
+            input_counts = data_source.get_input_counts([member.population_id for member, _ in creation_assignments])
+
+            def resolve_egg_count(member: ComponentMember, assignment: BatchContainerAssignment) -> int:
+                candidate = input_counts.get(member.population_id)
+                if candidate and candidate > 0:
+                    return int(round(candidate))
+                return int(assignment.population_count or 0)
+
+            total_eggs_planned = sum(
+                resolve_egg_count(member, assignment) for member, assignment in creation_assignments
+            )
             total_actions = len(creation_assignments)
             planned_start_date = min(member.start_time for member, _ in creation_assignments).date()
             planned_completion_date = max(member.start_time for member, _ in creation_assignments).date()
@@ -1440,13 +1521,14 @@ def main() -> int:
                     creation_action = None
                     action_number = next_available_action_number()
 
+                egg_count = resolve_egg_count(member, assignment)
                 action_payload = {
                     "workflow": creation_workflow,
                     "action_number": action_number,
                     "status": "COMPLETED" if total_actions else "PENDING",
                     "dest_assignment": assignment,
-                    "egg_count_planned": int(assignment.population_count or 0),
-                    "egg_count_actual": int(assignment.population_count or 0),
+                    "egg_count_planned": egg_count,
+                    "egg_count_actual": egg_count,
                     "mortality_on_arrival": 0,
                     "expected_delivery_date": member.start_time.date(),
                     "actual_delivery_date": member.start_time.date(),

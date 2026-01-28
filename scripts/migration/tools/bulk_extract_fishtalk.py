@@ -30,12 +30,17 @@ Output directory structure:
     ├── mortality_actions.csv         # ~5M rows
     ├── feeding_actions.csv           # ~5M rows
     ├── feeding_hand_weights.csv      # ~500K rows
+    ├── public_weight_samples.csv     # ~1M rows (PublicWeightSamples)
+    ├── ext_weight_samples_v2.csv     # ~1M rows (Ext_WeightSamples_v2)
     ├── transfer_operations.csv       # ~50K rows (legacy PublicTransfers operations)
     ├── transfer_edges.csv            # ~100K rows (legacy PublicTransfers - broken since Jan 2023)
     ├── sub_transfers.csv             # ~205K rows (SubTransfers - active through 2025, for chain stitching)
     ├── operation_stage_changes.csv   # ~27K rows (OperationProductionStageChange for stage timeline)
     ├── production_stages.csv         # ~100 rows (reference)
-    └── ext_inputs.csv                # ~350K rows (Ext_Inputs_v2 - TRUE biological batch identifier)
+    ├── ext_inputs.csv                # ~350K rows (Ext_Inputs_v2 - TRUE biological batch identifier)
+    ├── ext_populations.csv           # ~350K rows (Ext_Populations_v2 - population name metadata)
+    ├── population_links.csv          # ~? rows (PopulationLink - FW→Sea linking hints)
+    └── grouped_organisation.csv      # ~17K rows (Ext_GroupedOrganisation_v2 - site/hall grouping)
 """
 
 from __future__ import annotations
@@ -243,6 +248,66 @@ TABLE_CONFIGS = {
         "estimated_rows": 0,  # Table is empty in FishTalk
         "chunk_size": 0,
     },
+    "public_weight_samples": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), ws.SampleID) AS SampleID,
+                CONVERT(varchar(36), ws.PopulationID) AS PopulationID,
+                CONVERT(varchar(23), ws.SampleDate, 121) AS SampleDate,
+                CONVERT(varchar(32), ws.AvgWeight) AS AvgWeight,
+                CONVERT(varchar(32), ws.CVPercent) AS CVPercent,
+                CONVERT(varchar(32), ws.ConditionFactor) AS ConditionFactor,
+                CONVERT(varchar(32), ws.NumberOfFish) AS NumberOfFish,
+                CONVERT(varchar(5), ws.Corrective) AS Corrective,
+                CONVERT(varchar(32), ws.SampleReason) AS SampleReason
+            FROM dbo.PublicWeightSamples ws
+            ORDER BY ws.SampleDate ASC
+        """,
+        "headers": [
+            "SampleID",
+            "PopulationID",
+            "SampleDate",
+            "AvgWeight",
+            "CVPercent",
+            "ConditionFactor",
+            "NumberOfFish",
+            "Corrective",
+            "SampleReason",
+        ],
+        "estimated_rows": 1000000,
+        "chunk_size": 0,
+    },
+    "ext_weight_samples_v2": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), ws.SampleID) AS SampleID,
+                CONVERT(varchar(36), ws.PopulationID) AS PopulationID,
+                CONVERT(varchar(23), ws.SampleDate, 121) AS SampleDate,
+                CONVERT(varchar(32), ws.AvgWeight) AS AvgWeight,
+                CONVERT(varchar(32), ws.CVPercent) AS CVPercent,
+                CONVERT(varchar(32), ws.ConditionFactor) AS ConditionFactor,
+                CONVERT(varchar(32), ws.NumberOfFish) AS NumberOfFish,
+                CONVERT(varchar(5), ws.Corrective) AS Corrective,
+                CONVERT(varchar(32), ws.SampleReason) AS SampleReason,
+                CONVERT(varchar(32), ws.OperationType) AS OperationType
+            FROM dbo.Ext_WeightSamples_v2 ws
+            ORDER BY ws.SampleDate ASC
+        """,
+        "headers": [
+            "SampleID",
+            "PopulationID",
+            "SampleDate",
+            "AvgWeight",
+            "CVPercent",
+            "ConditionFactor",
+            "NumberOfFish",
+            "Corrective",
+            "SampleReason",
+            "OperationType",
+        ],
+        "estimated_rows": 1000000,
+        "chunk_size": 0,
+    },
     "transfer_operations": {
         "query": """
             SELECT 
@@ -342,6 +407,62 @@ TABLE_CONFIGS = {
                    "StartTime", "InputCount", "InputBiomass", "Species", "FishType",
                    "Broodstock", "DeliveryID", "Transporter"],
         "estimated_rows": 25000,
+        "chunk_size": 0,
+    },
+    "ext_populations": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), PopulationID) AS PopulationID,
+                CONVERT(varchar(36), ContainerID) AS ContainerID,
+                ISNULL(PopulationName, '') AS PopulationName,
+                CONVERT(varchar(10), SpeciesID) AS SpeciesID,
+                CONVERT(varchar(19), StartTime, 120) AS StartTime,
+                CONVERT(varchar(19), EndTime, 120) AS EndTime,
+                ISNULL(InputYear, '') AS InputYear,
+                ISNULL(InputNumber, '') AS InputNumber,
+                CONVERT(varchar(10), RunningNumber) AS RunningNumber,
+                ISNULL(Fishgroup, '') AS Fishgroup
+            FROM dbo.Ext_Populations_v2
+        """,
+        "headers": [
+            "PopulationID", "ContainerID", "PopulationName", "SpeciesID",
+            "StartTime", "EndTime", "InputYear", "InputNumber", "RunningNumber", "Fishgroup",
+        ],
+        "estimated_rows": 350000,
+        "chunk_size": 0,
+    },
+    "population_links": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FromPopulationID) AS FromPopulationID,
+                CONVERT(varchar(36), ToPopulationID) AS ToPopulationID,
+                CONVERT(varchar(36), OperationID) AS OperationID,
+                CONVERT(varchar(10), LinkType) AS LinkType
+            FROM dbo.PopulationLink
+        """,
+        "headers": ["FromPopulationID", "ToPopulationID", "OperationID", "LinkType"],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "grouped_organisation": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), ContainerID) AS ContainerID,
+                ISNULL(Site, '') AS Site,
+                ISNULL(SiteGroup, '') AS SiteGroup,
+                ISNULL(Company, '') AS Company,
+                ISNULL(ProdStage, '') AS ProdStage,
+                ISNULL(ContainerGroup, '') AS ContainerGroup,
+                ISNULL(CONVERT(varchar(36), ContainerGroupID), '') AS ContainerGroupID,
+                ISNULL(StandName, '') AS StandName,
+                ISNULL(CONVERT(varchar(36), StandID), '') AS StandID
+            FROM dbo.Ext_GroupedOrganisation_v2
+        """,
+        "headers": [
+            "ContainerID", "Site", "SiteGroup", "Company", "ProdStage",
+            "ContainerGroup", "ContainerGroupID", "StandName", "StandID",
+        ],
+        "estimated_rows": 17000,
         "chunk_size": 0,
     },
 }

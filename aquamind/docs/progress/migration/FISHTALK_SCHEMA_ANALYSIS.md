@@ -51,6 +51,8 @@ This document provides a detailed analysis of the FishTalk database schema based
 
 ### 2.2 Container/Infrastructure
 
+**Live check (2026-01-22):** `Containers` columns = `ContainerID, ContainerType, ContainerName, ContainerSystemType, ContainerFeedingMethod, GroupID, SortIndex, OrgUnitID, StandID, OfficialID`. No `LocationID` on Containers.
+
 **Primary Tables:**
 - **Containers** - Physical container entities
 - **PlanContainer** (489K rows) - Container planning assignments
@@ -65,6 +67,8 @@ This document provides a detailed analysis of the FishTalk database schema based
 - Capacity/Volume metrics
 
 ### 2.3 Site/Location Hierarchy
+
+**Live check (2026-01-22):** `OrganisationUnit` has `LocationID` but most are NULL/0000 (4106/4215). `Locations` has only 112 rows; do not rely on Location for geography.
 
 **Primary Tables:**
 - **PlanSite** - Site planning entities
@@ -133,6 +137,8 @@ This document provides a detailed analysis of the FishTalk database schema based
 
 ### 2.7 Environmental & Sensors
 
+**Live check (2026-01-22):** `Ext_GroupedOrganisation_v2` is a **view** with columns: `ContainerID, Container, Site, Company, Enterprise, SiteGroup, CompanyGroup, SiteID, CompanyID, EnterpriseID, SiteGroupID, CompanyGroupID, ContainerGroupID, ContainerGroup, ProdStage, StandName, StandID`. Row count 10,183.
+
 **Primary Tables:**
 - **SensorReadings** (2.6M rows) - Sensor data
 - **SensorUnitAssignments** - Sensor to unit mapping
@@ -181,6 +187,14 @@ This document provides a detailed analysis of the FishTalk database schema based
 ## 4. Critical Migration Considerations
 
 ### 4.1 Active Data Identification
+
+**Infra coverage stats (2026-01-22):**
+- Containers total: 17,066 (0 missing OrgUnitID)
+- Containers missing Ext_GroupedOrganisation_v2 row: 6,883
+- OrgUnits total: 4,215 (4,106 missing LocationID)
+- Locations total: 112 (109 missing NationID)
+
+Geography should be derived primarily from `Ext_GroupedOrganisation_v2` rather than `Locations`.
 Based on table sizes and patterns:
 - Focus on recent **Populations** (not all 89M status records)
 - Filter **Feeding** and **Mortality** by date range
