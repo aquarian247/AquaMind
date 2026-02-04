@@ -630,5 +630,25 @@ Source: `analysis_reports/2026-02-04/action_type_mapping_2026-02-04.md` (sample 
 - Weight samples (`PublicWeightSamples`, `Ext_WeightSamples_v2`) do **not** carry `ActionID`, so ActionType decoding for those remains unresolved.
 - Lice samples/treatments, environment, counting, vaccination, and sale may be represented via `Operations.OperationType` or domain tables not yet sampled.
 
+### 9.4 OperationType Empirical Mapping (OperationID Tables, 2026-02-04)
+
+Source: `analysis_reports/2026-02-04/operation_type_mapping_2026-02-04.md` (sample size 200 per table, Action excluded).
+
+**Observed OperationType → table associations (sampled):**
+- `1 (Transfer)` → `SubTransfers`, `PublicTransfers`
+- `5 (Input)` → `PopulationLink`, `OperationProductionStageChange`, `SubTransfers`, `PublicTransfers`
+- `7 (Sale)` → `PopulationLink`
+- `8 (Harvest)` → `PublicTransfers`, `SubTransfers`
+- `22 (Hatching)` → `OperationProductionStageChange`
+- `31 (Many to many transfer)` → `SubTransfers`, `PublicTransfers`
+
+**Ext_WeightSamples_v2 (no OperationID, but OperationType present):**
+- OperationType values appear directly on `Ext_WeightSamples_v2` (e.g., `10 Weight sample`, `1 Transfer`, `8 Harvest`, `32 Biomass measurement`, `7 Sale`).
+- These records have `SampleDate` + `PopulationID`, but no `OperationID` or `ActionID`.
+
+**Lice sample tables (schema-only):**
+- `PublicLiceSamples` / `PublicLiceSampleData` (and `Ext_` variants) are keyed by `SampleID` with `PopulationID` + `SampleDate`.
+- No `ActionID` or `OperationID` columns exist in lice sample tables; treat lice sampling as **sample events** anchored by `SampleDate`, not Action/Operation types.
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts

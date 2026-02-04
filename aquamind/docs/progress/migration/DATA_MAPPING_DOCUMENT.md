@@ -363,6 +363,10 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 2. Join those populations to `Populations` / `Ext_Populations_v2` for container/time and to `Ext_GroupedOrganisation_v2` for hall/site context.
 3. If you need a **human‑readable label**, use `InputProjects.ProjectName` (this is how the batch overview reports label fish groups; UI parity is not asserted here).
 
+**UI observation (FishTalk, 2026‑02‑04):**
+- The GUI view **“Input projects for A11 Hvannasund S”** lists per‑site inputs with columns: *Site, Species, Year class, Project number, Input name, # of fish, Avg weight, Biomass (kg), # of eggs, Active*.
+- This supports that `InputProjects` are **site‑scoped** (`InputProjects.SiteID`) and represent what is **entered/active at a site**. The counts shown in the GUI are **not present** in `InputProjects` extract columns, so they are likely computed from status/weight tables rather than stored on `InputProjects`.
+
 **Identity note:** `InputProjects` is a project‑level grouping, not a biological batch key (see 3.0.1). Use `Ext_Inputs_v2` for biological batch identification.
 
 #### 3.0.0.6 Population Semantics (Migration Handling, 2026-01-30)
