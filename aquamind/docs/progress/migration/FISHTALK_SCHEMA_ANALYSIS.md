@@ -522,5 +522,24 @@ Notes:
 - Planning tables (`Plan*`, `PublicPlanPopulationAttributes`) describe **planned** populations and transfers, not necessarily actual movements.
 - `ChangeLog` is a generic audit table; it can be valuable for forensic timelines but requires object‑specific parsing (no direct join path by default).
 
+**Relationship sketch (schema-level only):**
+```mermaid
+graph LR
+  Action["Action"] -->|OperationID| Operations["Operations"]
+  Action -->|PopulationID| Populations["Populations"]
+  ActionMetaData["ActionMetaData"] -->|ActionID| Action
+  PublicTransfers["PublicTransfers"] -->|OperationID| Operations
+  PublicTransfers -->|SourcePop/DestPop| Populations
+  SubTransfers["SubTransfers"] -->|OperationID| Operations
+  SubTransfers -->|SourcePop*/DestPop*| Populations
+  PopulationLink["PopulationLink"] -->|OperationID| Operations
+  PopulationLink -->|From/ToPopulationID| Populations
+  PlanTransfer["PlanTransfer"] -->|From/ToPlanPopulationID| PlanPopulation["PlanPopulation"]
+  PlanAction["PlanAction"] -->|PlanPopulationID| PlanPopulation
+  PlanPopulation -->|PlanContainerID| PlanContainer["PlanContainer"]
+  PlanContainer -->|ContainerID| Containers["Containers"]
+  PlannedActivities["PlannedActivities"] -->|PlannedActivityID| InternalDelivery["InternalDelivery"]
+```
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts

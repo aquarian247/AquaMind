@@ -2,6 +2,7 @@
 
 ## Active tools (current pipeline)
 - bulk_extract_fishtalk.py - bulk CSV extract from FishTalk
+- targeted_action_extract.py - scoped Action/ActionMetaData extract by OperationID or date window
 - input_based_stitching_report.py - input-based batch discovery
 - pilot_migrate_input_batch.py - end-to-end input-batch migration
 - pilot_migrate_component.py - core batch + infrastructure
