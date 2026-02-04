@@ -6,7 +6,7 @@ BREAKTHROUGH (2026-01-22): The Ext_Inputs_v2 table tracks egg inputs/deliveries 
 This is the TRUE biological batch identifier - each batch key (InputName + InputNumber + YearClass)
 represents a cohort of fish from a single egg fertilization event.
 
-Unlike project_based_stitching_report.py which uses administrative project tuples that can mix
+Unlike scripts/migration/legacy/tools/project_based_stitching_report.py (deprecated) which uses administrative project tuples that can mix
 multiple year-classes, this script groups populations by their biological origin.
 
 Batch Key: InputName + InputNumber + YearClass

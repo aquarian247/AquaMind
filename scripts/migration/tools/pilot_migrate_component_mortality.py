@@ -14,6 +14,7 @@ Writes only to aquamind_db_migr_dev.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_right
 import os
 import sys
 from dataclasses import dataclass
@@ -226,6 +227,63 @@ def lookup_status_snapshot(
     return max(count, 0), biomass
 
 
+def build_status_snapshot_index(csv_dir: Path, population_ids: set[str]) -> dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]]:
+    import csv
+
+    path = csv_dir / "status_values.csv"
+    if not path.exists():
+        return {}
+
+    raw: dict[str, list[tuple[datetime, int, Decimal]]] = {}
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if not pop_id or pop_id not in population_ids:
+                continue
+            ts = parse_dt(row.get("StatusTime", ""))
+            if ts is None:
+                continue
+            ts = ensure_aware(ts)
+            try:
+                count = int(float(row.get("CurrentCount") or 0)) if row.get("CurrentCount") not in (None, "") else 0
+            except ValueError:
+                count = 0
+            try:
+                biomass = Decimal(str(row.get("CurrentBiomassKg") or 0)) if row.get("CurrentBiomassKg") not in (None, "") else Decimal("0.00")
+            except Exception:
+                biomass = Decimal("0.00")
+            raw.setdefault(pop_id, []).append((ts, count, biomass))
+
+    index: dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]] = {}
+    for pop_id, items in raw.items():
+        items.sort(key=lambda item: item[0])
+        times = [item[0] for item in items]
+        values = [(item[1], item[2]) for item in items]
+        index[pop_id] = (times, values)
+
+    return index
+
+
+def lookup_status_snapshot_from_index(
+    index: dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]],
+    population_id: str,
+    at_time: datetime,
+) -> tuple[int, Decimal]:
+    if not index or population_id not in index:
+        return 0, Decimal("0.00")
+    times, values = index[population_id]
+    if not times:
+        return 0, Decimal("0.00")
+    at_time = ensure_aware(at_time)
+    pos = bisect_right(times, at_time)
+    if pos > 0:
+        return values[pos - 1]
+    if pos < len(values):
+        return values[pos]
+    return 0, Decimal("0.00")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Pilot migrate mortality events for a stitched FishTalk component")
     parser.add_argument("--component-id", type=int, help="Component id from components.csv")
@@ -267,6 +325,7 @@ def main() -> int:
     loader = ETLDataLoader(args.use_csv) if use_csv else None
     extractor = None if use_csv else BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
+    status_index = {}
     if use_csv:
         # Load mortality data from CSV
         mortality_rows = loader.get_mortality_actions_for_populations(
@@ -274,6 +333,7 @@ def main() -> int:
             start_time=window_start,
             end_time=window_end,
         )
+        status_index = build_status_snapshot_index(Path(args.use_csv), set(population_ids))
     else:
         in_clause = ",".join(f"'{pid}'" for pid in population_ids)
         start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
@@ -348,10 +408,15 @@ def main() -> int:
 
             biomass = to_decimal(row.get("MortalityBiomass"), places="0.01")
             if biomass is None or biomass <= 0:
-                snap_count, snap_biomass = lookup_status_snapshot(
-                    population_id=population_id, at_time=op_time,
-                    extractor=extractor, loader=loader
-                )
+                if use_csv and status_index:
+                    snap_count, snap_biomass = lookup_status_snapshot_from_index(
+                        status_index, population_id=population_id, at_time=op_time
+                    )
+                else:
+                    snap_count, snap_biomass = lookup_status_snapshot(
+                        population_id=population_id, at_time=op_time,
+                        extractor=extractor, loader=loader
+                    )
                 if snap_count > 0 and snap_biomass > 0:
                     per_fish = (snap_biomass / Decimal(snap_count)).quantize(Decimal("0.000001"))
                     biomass = (per_fish * Decimal(count)).quantize(Decimal("0.01"))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a FishTalk population stitching report using project identifiers.
 
-Unlike population_stitching_report.py which relies on PublicTransfers (broken since Jan 2023),
+Unlike scripts/migration/legacy/tools/population_stitching_report.py which relies on PublicTransfers (broken since Jan 2023),
 this script groups populations by (ProjectNumber, InputYear, RunningNumber) tuple to form
 logical batches that span FW and sea stages.
 

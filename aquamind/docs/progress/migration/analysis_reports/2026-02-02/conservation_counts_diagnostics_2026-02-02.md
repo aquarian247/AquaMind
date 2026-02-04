@@ -1,0 +1,109 @@
+# Conservation Counts Diagnostics (2026-02-02)
+Scope: two batches (Benchmark Gen. Juni 2024, Bakkafrost S-21 sep24) using CSV extracts.
+Logic: seed from Ext_Inputs_v2 when present; propagate via SubTransfers.ShareCountFwd; fallback to status snapshots when no conserved count is available.
+
+## Benchmark Gen. Juni 2024
+
+- Component key: `61088D52-8A7E-454B-96FC-7720B2244488`
+- Population members: 359
+- Populations touched by SubTransfers: 355
+
+Seed source breakdown:
+
+| Seed Source | Populations |
+|---|---|
+| input | 39 |
+| transfer | 298 |
+| status | 22 |
+
+Coverage notes:
+
+- Populations with zero conserved count: 243
+- Populations with no SubTransfers rows: 4
+
+Top zero-count populations (sample):
+
+```
+69435256-1A5F-4D81-BE1A-B783A2672DFA
+8D0057A6-A965-40FF-A942-C20626E2AD29
+8D28C88A-F51C-4BBC-BA02-A5E6F47913C5
+9F1544DE-8645-4402-B2B8-789CDCBEDC97
+46B16BAE-E34F-4816-9C2C-BCEA4852DFDF
+5E1FB13F-A729-474C-840C-339D4D358F0E
+B5FCB885-4C99-4590-899F-8FA70C5D7173
+968BD645-C8BD-456C-A6FF-649FC1BDE58A
+A5700AD2-BDAF-456A-9D6B-6C6F29AB8128
+8E730308-4584-48D5-843B-CC8117DC458B
+31025795-5354-4883-B9B7-A38533875EBA
+DA9D9D22-85EF-4911-BA65-2E72BA08FDC6
+7D6C1D73-622A-42C1-ADD9-8D2BF9F78DD9
+9F040EBB-C2B1-40B1-8CBB-91D7A67A87A0
+C7A13014-DBF6-4149-AF50-F8BDFD6695CD
+```
+
+Top status-seeded populations (non-zero counts):
+
+| PopulationID | Count | FirstStage | LastStage |
+|---|---:|---|---|
+| 6E869AC8-C4D8-44C0-BCFF-34FB535CBCCC | 208153 | Smolt | Smolt |
+| 9C6FDC0D-303C-455C-96BD-8E0D19275FBF | 203792 | Smolt | Smolt |
+| AA1A6683-C312-4E28-A116-434BE1F92F1E | 203520 | Smolt | Smolt |
+| C665B3DE-6249-4D4A-8E95-07F5FEBEBCFD | 203423 | Smolt | Smolt |
+| 997EC631-DE8E-441D-97A9-453DBAA5946F | 202773 | Smolt | Smolt |
+| ED9D11E3-6860-4D4E-8503-BA3E7D338C8C | 174280 | Smolt | Smolt |
+| C530F377-16A4-4967-BB28-709E1614D5B5 | 167192 | Smolt | Smolt |
+| 365C2016-686D-4946-9CCB-1FF948824759 | 166032 | Smolt | Smolt |
+| 6481851D-6455-4A03-B510-4D5B7CBE8465 | 161018 | Smolt | Smolt |
+| 46ADCAC7-2686-4C66-9B2A-528C623D0F79 | 147801 | Smolt | Smolt |
+| 32F525C5-1D93-41B1-A7C7-03F3BA5F8035 | 139787 | Smolt | Smolt |
+| 0192A260-1DBF-40D9-A911-AA7E348814CE | 128406 | Smolt | Smolt |
+| 7FD81697-673A-41DD-A42B-2D7D723C40AB | 120954 | Smolt | Smolt |
+| 4F9EF57F-F317-456D-B742-98AA2AE9BF85 | 115763 | Smolt | Smolt |
+| F1877EDD-B92C-414E-99C6-006B7E98A48D | 96879 | Smolt | Smolt |
+
+## Bakkafrost S-21 sep24
+
+- Component key: `C3D0F9B1-635E-4FEC-95DA-39894F99D787`
+- Population members: 321
+- Populations touched by SubTransfers: 277
+
+Seed source breakdown:
+
+| Seed Source | Populations |
+|---|---|
+| input | 7 |
+| transfer | 268 |
+| status | 46 |
+
+Coverage notes:
+
+- Populations with zero conserved count: 265
+- Populations with no SubTransfers rows: 44
+
+Top zero-count populations (sample):
+
+```
+DE3C5CA5-44DB-4EB5-A2A6-28EAB1F0BCFA
+2A30A1ED-7264-41F1-B2CE-73E70696875F
+3CE35244-2C2B-4965-9477-5C73DA84CC88
+9CC41AEE-E41D-4C52-B2E5-2A5D3B7984B4
+2F960081-94DA-48AC-A4BF-DB32166D804C
+8D1B763E-3502-4D30-BB10-E8E410DC7FC8
+2F16A603-AD40-4889-99EE-ABE37B8940B6
+6C4D765A-E029-44E9-B85B-724A7D3AB962
+2AF6953F-BDB5-4EE0-972F-67FBB45EF3E0
+7EAF16C5-7546-40E4-A05E-580FD4CEBE51
+D64C3038-EC8F-418A-A523-791CF00EC0C8
+2C4FBABD-A7C5-4005-8DF7-F556DC9F8A67
+E152D378-4EC0-4B43-9E87-A4A47F2104B5
+E3805544-8DB1-4A84-B85C-10D3E029A307
+FAB499DE-1D59-487D-9C64-B748E83211BD
+```
+
+Top status-seeded populations (non-zero counts):
+
+| PopulationID | Count | FirstStage | LastStage |
+|---|---:|---|---|
+| 79616E48-BC99-4C17-BE71-1AAD568538FD | 28096 | Fry | Fry |
+| 298FC9AB-B93E-4CD9-8EA1-66D7F4F0595F | 24727 | Fry | Fry |
+

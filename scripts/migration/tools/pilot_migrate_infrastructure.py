@@ -6,7 +6,8 @@ This script extracts all org units and containers from FishTalk and creates
 the corresponding AquaMind infrastructure (Areas, FreshwaterStations, Halls,
 Containers) in a SINGLE-THREADED pass to avoid race conditions.
 
-Run this ONCE before running pilot_migrate_batch_parallel.py.
+Run this once before batch migration. The legacy parallel runner lives at
+scripts/migration/legacy/tools/pilot_migrate_batch_parallel.py (deprecated).
 
 Usage:
     python scripts/migration/tools/pilot_migrate_infrastructure.py [--geography "Faroe Islands"]
@@ -482,7 +483,8 @@ def main():
     print(f"  Halls: {halls_created + halls_existed}")
     print(f"  Containers: {containers_created + containers_existed}")
     print("\n[SUCCESS] Infrastructure pre-migration complete")
-    print("You can now run pilot_migrate_batch_parallel.py")
+    print("Next: run pilot_migrate_input_batch.py for batch migration")
+    print("Legacy: scripts/migration/legacy/tools/pilot_migrate_batch_parallel.py")
     
     return 0
 

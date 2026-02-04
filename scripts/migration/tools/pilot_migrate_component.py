@@ -3,7 +3,8 @@
 """Pilot migrate a stitched FishTalk population component into AquaMind.
 
 This script supports two stitching approaches:
-1. **SubTransfers-based (recommended)**: Use --chain-id with output from subtransfer_chain_stitching.py
+1. **SubTransfers-based (legacy)**: Use --chain-id with output from
+   scripts/migration/legacy/tools/subtransfer_chain_stitching.py
 2. **Project-based (legacy)**: Use --component-key with population_members.csv
 
 SubTransfers-based stitching traces actual fish movements and produces
@@ -20,7 +21,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -72,6 +73,7 @@ class DataSource:
     
     def __init__(self, csv_dir: str | None = None, sql_profile: str = "fishtalk_readonly"):
         self.use_csv = csv_dir is not None
+        self.csv_dir = Path(csv_dir) if csv_dir else None
         if self.use_csv:
             self.loader = ETLDataLoader(csv_dir)
             self.extractor = None
@@ -185,6 +187,69 @@ class DataSource:
                 count = 0.0
             results[pop_id] = results.get(pop_id, 0.0) + count
         return results
+
+    def get_subtransfers(self, population_ids: set[str]) -> list[dict]:
+        """Load SubTransfers rows involving the given population IDs."""
+        if not population_ids:
+            return []
+        if self.use_csv:
+            if not self.csv_dir:
+                return []
+            path = self.csv_dir / "sub_transfers.csv"
+            if not path.exists():
+                return []
+            import csv
+
+            rows: list[dict] = []
+            with path.open("r", encoding="utf-8", newline="") as handle:
+                reader = csv.DictReader(handle)
+                for row in reader:
+                    src_before = row.get("SourcePopBefore", "")
+                    src_after = row.get("SourcePopAfter", "")
+                    dst_before = row.get("DestPopBefore", "")
+                    dst_after = row.get("DestPopAfter", "")
+                    if (
+                        src_before in population_ids
+                        or src_after in population_ids
+                        or dst_before in population_ids
+                        or dst_after in population_ids
+                    ):
+                        rows.append(row)
+            return rows
+
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        return self.extractor._run_sqlcmd(
+            query=(
+                "SELECT "
+                "CONVERT(varchar(36), st.SubTransferID) AS SubTransferID, "
+                "CONVERT(varchar(36), st.OperationID) AS OperationID, "
+                "CONVERT(varchar(36), st.SourcePopBefore) AS SourcePopBefore, "
+                "CONVERT(varchar(36), st.SourcePopAfter) AS SourcePopAfter, "
+                "CONVERT(varchar(36), st.DestPopBefore) AS DestPopBefore, "
+                "CONVERT(varchar(36), st.DestPopAfter) AS DestPopAfter, "
+                "CONVERT(varchar(32), st.ShareCountFwd) AS ShareCountFwd, "
+                "CONVERT(varchar(32), st.ShareBiomFwd) AS ShareBiomFwd, "
+                "CONVERT(varchar(19), o.StartTime, 120) AS OperationTime "
+                "FROM dbo.SubTransfers st "
+                "JOIN dbo.Operations o ON o.OperationID = st.OperationID "
+                f"WHERE st.SourcePopBefore IN ({in_clause}) "
+                f"OR st.SourcePopAfter IN ({in_clause}) "
+                f"OR st.DestPopBefore IN ({in_clause}) "
+                f"OR st.DestPopAfter IN ({in_clause}) "
+                "ORDER BY o.StartTime ASC"
+            ),
+            headers=[
+                "SubTransferID",
+                "OperationID",
+                "SourcePopBefore",
+                "SourcePopAfter",
+                "DestPopBefore",
+                "DestPopAfter",
+                "ShareCountFwd",
+                "ShareBiomFwd",
+                "OperationTime",
+            ],
+        )
     
     def get_org_units(self, org_unit_ids: list[str]) -> list[dict]:
         """Get organization unit data."""
@@ -366,7 +431,7 @@ def hall_label_from_official(official_id: str | None) -> str:
     return hall_label_from_group(prefix)
 
 
-def fishtalk_stage_to_aquamind(stage_name: str) -> str:
+def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
     upper = (stage_name or "").upper()
     if any(token in upper for token in ("EGG", "ALEVIN", "SAC")):
         return "Egg&Alevin"
@@ -380,11 +445,93 @@ def fishtalk_stage_to_aquamind(stage_name: str) -> str:
         return "Smolt"
     if any(token in upper for token in ("ONGROW", "GROWER", "GRILSE")):
         return "Adult"
-    return "Smolt"
+    return None
 
 
 STAGE_ORDER = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"]
 STAGE_INDEX = {name: idx for idx, name in enumerate(STAGE_ORDER)}
+
+S24_HALL_STAGE_MAP = {
+    "A HØLL": "Egg&Alevin",
+    "B HØLL": "Fry",
+    "C HØLL": "Parr",
+    "D HØLL": "Parr",
+    "E HØLL": "Smolt",
+    "F HØLL": "Smolt",
+    "G HØLL": "Post-Smolt",
+    "H HØLL": "Post-Smolt",
+    "I HØLL": "Post-Smolt",
+    "J HØLL": "Post-Smolt",
+}
+
+S03_HALL_STAGE_MAP = {
+    "5 M HØLL": "Fry",
+    "11 HØLL A": "Smolt",
+    "11 HØLL B": "Smolt",
+    "18 HØLL A": "Post-Smolt",
+    "18 HØLL B": "Post-Smolt",
+    "800 HØLL": "Parr",
+    "900 HØLL": "Parr",
+}
+
+S08_HALL_STAGE_MAP = {
+    "KLEKING": "Egg&Alevin",
+    "STARTFÓÐRING": "Fry",
+    "T-HØLL": "Post-Smolt",
+}
+
+S16_HALL_STAGE_MAP = {
+    "A HØLL": "Egg&Alevin",
+    "B HØLL": "Fry",
+    "C HØLL": "Parr",
+    "D HØLL": "Smolt",
+    "E1 HØLL": "Post-Smolt",
+    "E2 HØLL": "Post-Smolt",
+    "KLEKIHØLL": "Egg&Alevin",
+    "STARTFÓÐRINGSHØLL": "Fry",
+}
+
+S21_HALL_STAGE_MAP = {
+    "5M": "Fry",
+    "A": "Fry",
+    "BA": "Parr",
+    "BB": "Parr",
+    "C": "Smolt",
+    "D": "Smolt",
+    "E": "Post-Smolt",
+    "F": "Post-Smolt",
+    "ROGN": "Egg&Alevin",
+}
+
+FW22_APPLECROSS_HALL_STAGE_MAP = {
+    "A1": "Egg&Alevin",
+    "A2": "Egg&Alevin",
+    "B1": "Fry",
+    "B2": "Fry",
+    "C1": "Parr",
+    "C2": "Parr",
+    "D1": "Smolt",
+    "E1": "Post-Smolt",
+    "E2": "Post-Smolt",
+}
+
+
+def stage_from_hall(site: str | None, container_group: str | None) -> str | None:
+    site_key = normalize_key(site)
+    hall_key = normalize_key(container_group)
+    if site_key == "S24 STROND" and hall_key in S24_HALL_STAGE_MAP:
+        return S24_HALL_STAGE_MAP[hall_key]
+    if site_key == "S03 NORÐTOFTIR" and hall_key in S03_HALL_STAGE_MAP:
+        return S03_HALL_STAGE_MAP[hall_key]
+    if site_key == "S08 GJÓGV" and hall_key in S08_HALL_STAGE_MAP:
+        return S08_HALL_STAGE_MAP[hall_key]
+    if site_key == "S16 GLYVRADALUR" and hall_key in S16_HALL_STAGE_MAP:
+        return S16_HALL_STAGE_MAP[hall_key]
+    if site_key == "S21 VIÐAREIÐI" and hall_key in S21_HALL_STAGE_MAP:
+        return S21_HALL_STAGE_MAP[hall_key]
+    if site_key == "FW22 APPLECROSS" and hall_key in FW22_APPLECROSS_HALL_STAGE_MAP:
+        return FW22_APPLECROSS_HALL_STAGE_MAP[hall_key]
+    return None
 
 
 def parse_dt(value: str) -> datetime | None:
@@ -396,6 +543,152 @@ def parse_dt(value: str) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+def parse_decimal(value: str | None) -> Decimal:
+    if value is None:
+        return Decimal("0")
+    try:
+        return Decimal(str(value))
+    except Exception:
+        return Decimal("0")
+
+
+def clamp_decimal(value: Decimal, low: Decimal, high: Decimal) -> Decimal:
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
+
+
+def build_conserved_population_counts(
+    members: list["ComponentMember"],
+    data_source: DataSource,
+    stage_by_pop: dict[str, str | None],
+) -> tuple[dict[str, int], set[str]]:
+    """Build population counts using SubTransfers propagation (conservation-based).
+
+    Returns conserved counts and a set of populations superseded by same-stage transfers.
+    """
+    population_ids = {m.population_id for m in members if m.population_id}
+    if not population_ids:
+        return {}, set()
+
+    input_counts = data_source.get_input_counts(list(population_ids))
+    sub_transfers = data_source.get_subtransfers(population_ids)
+    if not sub_transfers:
+        return {}, set()
+
+    member_by_id = {m.population_id: m for m in members}
+
+    def row_time(row: dict) -> datetime:
+        return parse_dt(row.get("OperationTime") or "") or datetime.min
+
+    sub_transfers.sort(key=lambda r: (row_time(r), r.get("SubTransferID", "")))
+
+    counts_at_start: dict[str, Decimal] = {}
+    current_counts: dict[str, Decimal] = {}
+    status_cache: dict[str, Decimal] = {}
+
+    def seed_population(pop_id: str) -> Decimal | None:
+        if pop_id in counts_at_start:
+            return counts_at_start[pop_id]
+
+        if pop_id in input_counts:
+            count = Decimal(str(input_counts.get(pop_id) or 0))
+            counts_at_start[pop_id] = count
+            current_counts[pop_id] = count
+            return count
+
+        member = member_by_id.get(pop_id)
+        if not member:
+            return None
+        if pop_id not in status_cache:
+            snapshot = data_source.get_status_snapshot(pop_id, member.start_time)
+            count = Decimal("0")
+            if snapshot:
+                try:
+                    count = Decimal(str(snapshot.get("CurrentCount") or 0))
+                except Exception:
+                    count = Decimal("0")
+            status_cache[pop_id] = count
+        count = status_cache[pop_id]
+        counts_at_start[pop_id] = count
+        current_counts[pop_id] = count
+        return count
+
+    superseded_same_stage: set[str] = set()
+    for row in sub_transfers:
+        src_before = (row.get("SourcePopBefore") or "").strip()
+        src_after = (row.get("SourcePopAfter") or "").strip()
+        dst_before = (row.get("DestPopBefore") or "").strip()
+        dst_after = (row.get("DestPopAfter") or "").strip()
+
+        stage_src = stage_by_pop.get(src_before)
+        stage_src_after = stage_by_pop.get(src_after)
+        stage_dst_after = stage_by_pop.get(dst_after)
+        if src_before and stage_src:
+            if src_after and stage_src_after and stage_src_after == stage_src:
+                superseded_same_stage.add(src_before)
+            if dst_after and stage_dst_after and stage_dst_after == stage_src:
+                superseded_same_stage.add(src_before)
+
+        stage_dst_before = stage_by_pop.get(dst_before)
+        stage_dst_after = stage_by_pop.get(dst_after)
+        if dst_before and stage_dst_before and stage_dst_after and stage_dst_before == stage_dst_after:
+            superseded_same_stage.add(dst_before)
+
+    # Seed any InputCount populations up-front (helps order-independent transfers)
+    for pop_id in input_counts:
+        if pop_id in population_ids:
+            seed_population(pop_id)
+
+    for row in sub_transfers:
+        src_before = (row.get("SourcePopBefore") or "").strip()
+        src_after = (row.get("SourcePopAfter") or "").strip()
+        dst_before = (row.get("DestPopBefore") or "").strip()
+        dst_after = (row.get("DestPopAfter") or "").strip()
+        share = clamp_decimal(parse_decimal(row.get("ShareCountFwd")), Decimal("0"), Decimal("1"))
+
+        moved_count = None
+
+        if src_before in population_ids and src_before not in current_counts:
+            seed_population(src_before)
+
+        if src_before in current_counts:
+            src_count = current_counts.get(src_before, Decimal("0"))
+            moved_count = (src_count * share).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            remaining = src_count - moved_count
+
+            if src_after and src_after in population_ids:
+                counts_at_start.setdefault(src_after, remaining)
+                current_counts[src_after] = remaining
+
+            current_counts.pop(src_before, None)
+
+        if dst_before in population_ids and dst_before not in current_counts:
+            seed_population(dst_before)
+
+        dest_before_count = None
+        if dst_before in current_counts:
+            dest_before_count = current_counts.pop(dst_before)
+
+        if dst_after and dst_after in population_ids:
+            dest_count = Decimal("0")
+            if dest_before_count is not None:
+                dest_count += dest_before_count
+            if moved_count is not None:
+                dest_count += moved_count
+            counts_at_start.setdefault(dst_after, dest_count)
+            current_counts[dst_after] = dest_count
+
+    # Seed remaining populations that were never touched by transfers.
+    for pop_id in population_ids:
+        if pop_id not in counts_at_start:
+            seed_population(pop_id)
+
+    return {pop_id: int(round(count)) for pop_id, count in counts_at_start.items()}, superseded_same_stage
 
 
 def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
@@ -488,7 +781,7 @@ def load_members_from_chain(chain_dir: Path, *, chain_id: str) -> tuple[list[Com
     """Load members from SubTransfers-based chain stitching output.
     
     Args:
-        chain_dir: Directory containing batch_chains.csv from subtransfer_chain_stitching.py
+        chain_dir: Directory containing batch_chains.csv from scripts/migration/legacy/tools/subtransfer_chain_stitching.py (deprecated)
         chain_id: Chain ID (e.g., "CHAIN-00001")
     
     Returns:
@@ -560,7 +853,7 @@ def load_members_from_linked_batch(chain_dir: Path, *, batch_id: str, csv_dir: P
     """Load members from linked batch output (full lifecycle batch).
     
     Args:
-        chain_dir: Directory containing linked_batches.csv from subtransfer_chain_stitching.py --link-by-project
+        chain_dir: Directory containing linked_batches.csv from scripts/migration/legacy/tools/subtransfer_chain_stitching.py --link-by-project (deprecated)
         batch_id: Linked batch ID (e.g., "BATCH-00013")
         csv_dir: Optional directory containing populations.csv for container lookup
         sql_extractor: Optional SQL extractor for container lookup
@@ -726,11 +1019,11 @@ Stitching approaches:
     chain_group = parser.add_argument_group("SubTransfers-based stitching (recommended)")
     chain_group.add_argument(
         "--batch-id",
-        help="Linked batch ID from subtransfer_chain_stitching.py --link-by-project (e.g., BATCH-00013)",
+        help="Linked batch ID from scripts/migration/legacy/tools/subtransfer_chain_stitching.py --link-by-project (deprecated)",
     )
     chain_group.add_argument(
         "--chain-id",
-        help="Single chain ID from subtransfer_chain_stitching.py (e.g., CHAIN-00001)",
+        help="Single chain ID from scripts/migration/legacy/tools/subtransfer_chain_stitching.py (deprecated)",
     )
     chain_group.add_argument(
         "--chain-dir",
@@ -865,7 +1158,46 @@ def main() -> int:
     # Keep extractor reference for compatibility with existing code paths
     extractor = data_source.extractor
 
+    container_ids = sorted({m.container_id for m in members if m.container_id})
+
+    # Load container grouping early so stage resolution can use hall mappings
+    grouping_rows = data_source.get_container_grouping(container_ids)
+    container_grouping: dict[str, dict[str, str]] = {}
+    for row in grouping_rows:
+        container_id = row.get("ContainerID")
+        if not container_id:
+            continue
+        site = normalize_label(row.get("Site"))
+        site_group = normalize_label(row.get("SiteGroup"))
+        company = normalize_label(row.get("Company"))
+        prod_stage = normalize_label(row.get("ProdStage"))
+        container_group = normalize_label(row.get("ContainerGroup"))
+        container_group_id = normalize_label(row.get("ContainerGroupID"))
+        stand_name = normalize_label(row.get("StandName"))
+        stand_id = normalize_label(row.get("StandID"))
+        geo_name, bucket = resolve_site_grouping(site, site_group)
+        container_grouping[container_id] = {
+            "site": site,
+            "site_group": site_group,
+            "company": company,
+            "prod_stage": prod_stage,
+            "container_group": container_group,
+            "container_group_id": container_group_id,
+            "stand_name": stand_name,
+            "stand_id": stand_id,
+            "geography": geo_name,
+            "grouping_bucket": bucket,
+        }
+
+    def resolve_stage_name(member: ComponentMember) -> str | None:
+        group_meta = container_grouping.get(member.container_id, {})
+        hall_stage = stage_from_hall(group_meta.get("site"), group_meta.get("container_group"))
+        if hall_stage:
+            return hall_stage
+        return fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
+
     population_ids = [m.population_id for m in members if m.population_id]
+    stage_by_pop = {m.population_id: resolve_stage_name(m) for m in members if m.population_id}
     latest_status_time_by_pop: dict[str, datetime] = {}
     component_status_time: datetime | None = None
 
@@ -884,6 +1216,18 @@ def main() -> int:
     if population_ids:
         latest_status_time_by_pop = data_source.get_latest_status_by_population(population_ids)
         component_status_time = max(latest_status_time_by_pop.values(), default=None)
+
+    conserved_counts, superseded_same_stage = build_conserved_population_counts(members, data_source, stage_by_pop)
+    if conserved_counts:
+        nonzero_counts = sum(1 for count in conserved_counts.values() if count > 0)
+        print(
+            f"Conserved counts computed for {len(conserved_counts)} populations "
+            f"({nonzero_counts} non-zero)."
+        )
+    else:
+        print("Conserved counts unavailable; using status snapshots for population_count.")
+    if superseded_same_stage:
+        print(f"Same-stage superseded populations: {len(superseded_same_stage)}")
 
     if component_status_time and active_cutoff:
         has_active_member = component_status_time >= active_cutoff
@@ -917,11 +1261,16 @@ def main() -> int:
             current_member_time = candidate_time
             current_member = member
 
-    lifecycle_stage_name = fishtalk_stage_to_aquamind(
-        (current_member.last_stage or current_member.first_stage)
-        if current_member
-        else (members[0].first_stage or members[0].last_stage)
-    )
+    lifecycle_stage_name = None
+    if current_member:
+        lifecycle_stage_name = resolve_stage_name(current_member)
+    if not lifecycle_stage_name and members:
+        for member in members:
+            lifecycle_stage_name = resolve_stage_name(member)
+            if lifecycle_stage_name:
+                break
+    if not lifecycle_stage_name:
+        raise SystemExit("Unable to resolve lifecycle stage for batch; add stage mapping or hall mapping.")
 
     # Resolve species / lifecycle stage.
     species = Species.objects.filter(name="Atlantic Salmon").first() or Species.objects.first()
@@ -936,43 +1285,12 @@ def main() -> int:
         slug = "".join(ch if ch.isalnum() or ch in ("-", "_") else "-" for ch in representative).strip("-")
         batch_number = f"FT-{component_key[:8]}-{slug}"[:50]
 
-    container_ids = sorted({m.container_id for m in members if m.container_id})
     if not container_ids:
         raise SystemExit("No container ids found in component members")
 
     # Get containers using data source (CSV or SQL)
     containers = data_source.get_containers(container_ids)
     containers_by_id = {row["ContainerID"]: row for row in containers}
-
-    # Get container grouping
-    grouping_rows = data_source.get_container_grouping(container_ids)
-
-    container_grouping: dict[str, dict[str, str]] = {}
-    for row in grouping_rows:
-        container_id = row.get("ContainerID")
-        if not container_id:
-            continue
-        site = normalize_label(row.get("Site"))
-        site_group = normalize_label(row.get("SiteGroup"))
-        company = normalize_label(row.get("Company"))
-        prod_stage = normalize_label(row.get("ProdStage"))
-        container_group = normalize_label(row.get("ContainerGroup"))
-        container_group_id = normalize_label(row.get("ContainerGroupID"))
-        stand_name = normalize_label(row.get("StandName"))
-        stand_id = normalize_label(row.get("StandID"))
-        geo_name, bucket = resolve_site_grouping(site, site_group)
-        container_grouping[container_id] = {
-            "site": site,
-            "site_group": site_group,
-            "company": company,
-            "prod_stage": prod_stage,
-            "container_group": container_group,
-            "container_group_id": container_group_id,
-            "stand_name": stand_name,
-            "stand_id": stand_id,
-            "geography": geo_name,
-            "grouping_bucket": bucket,
-        }
 
     # Get org units using data source
     org_unit_ids = sorted({row.get("OrgUnitID") for row in containers if row.get("OrgUnitID")})
@@ -1301,8 +1619,21 @@ def main() -> int:
             assignment_map = get_external_map("Populations", member.population_id)
             container = aquamind_container_by_source[member.container_id]
 
-            lifecycle_name = fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
-            stage = LifeCycleStage.objects.filter(name=lifecycle_name).first() or lifecycle_stage
+            lifecycle_name = resolve_stage_name(member)
+            if not lifecycle_name:
+                group_meta = container_grouping.get(member.container_id, {})
+                raise SystemExit(
+                    "Unable to resolve lifecycle stage for population "
+                    f"{member.population_id} (site={group_meta.get('site')}, "
+                    f"container_group={group_meta.get('container_group')}). "
+                    "Add stage mapping or hall mapping."
+                )
+            stage = LifeCycleStage.objects.filter(name=lifecycle_name).first()
+            if stage is None:
+                raise SystemExit(
+                    f"Missing LifeCycleStage master data for '{lifecycle_name}'. "
+                    "Run scripts/migration/setup_master_data.py."
+                )
 
             latest_status_time = latest_status_time_by_pop.get(member.population_id)
             
@@ -1315,17 +1646,28 @@ def main() -> int:
                 # Completed - get status near start
                 status_snapshot = data_source.get_status_snapshot(member.population_id, member.start_time)
 
-            count = 0
+            conserved_count = conserved_counts.get(member.population_id) if conserved_counts else None
+            count = int(conserved_count) if conserved_count is not None else 0
             biomass = Decimal("0.00")
             if status_snapshot:
                 try:
-                    count = int(round(float(status_snapshot.get("CurrentCount") or 0)))
+                    status_count = int(round(float(status_snapshot.get("CurrentCount") or 0)))
                 except ValueError:
-                    count = 0
+                    status_count = 0
+                if conserved_count is None:
+                    count = status_count
+                elif count == 0 and status_count > 0:
+                    # Conservation chain produced zero; prefer evidence-based status snapshot.
+                    count = status_count
                 try:
                     biomass = Decimal(str(status_snapshot.get("CurrentBiomassKg") or 0)).quantize(Decimal("0.01"))
                 except Exception:
                     biomass = Decimal("0.00")
+
+            if member.population_id in superseded_same_stage:
+                # Avoid double-counting within the same lifecycle stage across transfers.
+                count = 0
+                biomass = Decimal("0.00")
             if not has_active_member:
                 assignment_active = False
             elif latest_status_time and assignment_active_cutoff:
@@ -1386,9 +1728,9 @@ def main() -> int:
 
         initial_stage_name = lifecycle_stage.name if lifecycle_stage else lifecycle_stage_name
         member_stage_names = {
-            fishtalk_stage_to_aquamind(member.first_stage or member.last_stage)
+            resolve_stage_name(member)
             for member in members
-            if (member.first_stage or member.last_stage)
+            if (member.first_stage or member.last_stage) or container_grouping.get(member.container_id)
         }
         member_stage_names = {stage for stage in member_stage_names if stage in STAGE_INDEX}
         if member_stage_names:
@@ -1397,7 +1739,7 @@ def main() -> int:
                 initial_stage_name = earliest_stage
 
         def member_stage(member: ComponentMember) -> str | None:
-            return fishtalk_stage_to_aquamind(member.first_stage or member.last_stage)
+            return resolve_stage_name(member)
 
         initial_members: list[ComponentMember] = []
         if initial_stage_name in {"Egg&Alevin", "Fry", "Parr", "Smolt"}:

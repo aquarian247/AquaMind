@@ -1,0 +1,2 @@
+batch_key,score_sum,linked_population_count,population_count,candidate_geography,base_geography,geography_match,fw_env_pct,days_to_sea_start,time_window_ok,rejection_reason,station_count
+LHS FEB 23|2|2024,1470,98,56,,Faroe Islands,unknown,100.0,363,yes,geo_unknown,1

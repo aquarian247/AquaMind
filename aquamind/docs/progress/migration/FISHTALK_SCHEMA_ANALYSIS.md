@@ -41,6 +41,8 @@ This document provides a detailed analysis of the FishTalk database schema based
 - **PopulationAttributes** - Additional batch attributes
 - **PopulationProperty** - Extended properties
 - **PopulationLink** - Relationships between populations
+- **FishGroupHistory** - Population → InputProject (fish group anchor)
+- **InputProjects** - Fish group/project metadata (name, year class, site)
 
 **Key Columns Identified:**
 - PopulationID (uniqueidentifier)
@@ -48,6 +50,23 @@ This document provides a detailed analysis of the FishTalk database schema based
 - StartDate/EndDate
 - PopulationStatus
 - ProductionStage
+
+**Fish group linkage (2026-01-29 verification):**
+- **`FishGroupHistory`** has only `PopulationID` and `InputProjectID`.
+- **`InputProjects.ProjectName`** matches the UI “Fish group” label (e.g., “Benchmark Gen. Desembur 2024”).
+- **`Ext_Populations_v2.Fishgroup`** is the fish group **number**; there is **no FishGroupName column**.
+- Use **InputProjectID** as the anchor to retrieve **all populations** that belong to a fish group, then map to containers/stages.
+
+**Gantt/timeline coverage (2026-01-29 verification):**
+- The per‑container timeline bars in FishTalk align with **`Ext_Populations_v2.StartTime/EndTime`** (and by extension `Populations.StartTime/EndTime`).
+- Example: “Stofnfiskur Nov 2024” in S16 Glyvradalur has multi‑month spans in `Ext_Populations_v2`, matching the UI Gantt chart.
+- `FishGroupHistory` carries **no time fields**; it only links populations to the fish‑group project.
+- When EndTime is missing in a segment, a practical fallback is to infer it from the **earliest subsequent population start** (same container or same fish group) or **SubTransfers.OperationTime**.
+
+**Stage coverage caveat (2026-01-29 verification):**
+- For InputProject “Benchmark Gen. Desembur 2024”, stage tables only record **Eye‑egg**, **Sac Fry/Alevin**, and **Fry**.
+- No Parr/Smolt/Post‑Smolt/Adult entries appear in `PopulationProductionStages` or `OperationProductionStageChange`.
+- Later stage labeling therefore requires **inference** (e.g., hall mapping or operational context) unless additional FishTalk tables are identified.
 
 ### 2.2 Container/Infrastructure
 
@@ -201,6 +220,8 @@ Based on table sizes and patterns:
 - Consider only active **Containers** and **PlanSite**
 - Prioritize recent **SensorReadings** (last 12 months)
 
+**Access note (2026-01-29):** `fishtalk_reader` may not have permissions on `InputProjects` and `FishGroupHistory`. Use the `fishtalk` profile (sa) when extracting these two tables for fish group tracing.
+
 ### 4.2 Key Relationships to Preserve
 1. Population → Container assignments (via PlanContainer)
 2. Container → Site hierarchy
@@ -249,6 +270,7 @@ Based on table sizes and patterns:
 - Multiple feeding tables (Feeding, HWFeeding, WrasseFeeding) need consolidation
 - GUID primary keys will need mapping tables
 - Nullable foreign keys may indicate optional relationships
+- CSV extracts can become stale vs. the live FishTalk DB; re‑extract `Populations` + `Ext_Populations_v2` when fish group history shows missing PopulationIDs (e.g., 40 missing rows for “Benchmark Gen. Desembur 2024” resolved after re‑extract on 2026‑01‑29).
 
 ### Validation Requirements:
 - Row count reconciliation after filtering
@@ -468,14 +490,9 @@ This means:
 
 ### 8.7 AquaMind Batch Naming Strategy
 
-For migration to AquaMind:
-
-1. **Initial Name:** Use `InputName` from `Ext_Inputs_v2` (e.g., "Benchmark Gen. Juni 2024")
+For migration to AquaMind:1. **Initial Name:** Use `InputName` from `Ext_Inputs_v2` (e.g., "Benchmark Gen. Juni 2024")
 2. **At Sea Transfer:** Can rename to display format (e.g., "BM Jun 24") using transfer workflow
 3. **History Preserved:** Original name stored in `django-simple-history` via `HistoricalBatch` table
-4. **External Reference:** Store original InputName in `ExternalIdMap.metadata` for traceability
-
----
+4. **External Reference:** Store original InputName in `ExternalIdMap.metadata` for traceability---
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts
-

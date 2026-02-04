@@ -356,13 +356,24 @@ def generate_component_csv(
     return csv_path
 
 
-def run_migration_script(script_name: str, component_key: str, report_dir: Path, 
-                         use_csv: str | None = None, dry_run: bool = False) -> bool:
+def run_migration_script(
+    script_name: str,
+    component_key: str,
+    report_dir: Path,
+    *,
+    use_csv: str | None = None,
+    dry_run: bool = False,
+    batch_number: str | None = None,
+) -> bool:
     """Run a migration script with the given component key."""
     script_path = PROJECT_ROOT / "scripts" / "migration" / "tools" / script_name
 
     if not script_path.exists():
         print(f"  [SKIP] Script not found: {script_path}")
+        return True
+
+    if use_csv and script_name not in CSV_SUPPORTED_SCRIPTS:
+        print(f"  [SKIP] {script_name} does not support --use-csv; skipping to honor CSV-only mode")
         return True
 
     cmd = [
@@ -373,6 +384,9 @@ def run_migration_script(script_name: str, component_key: str, report_dir: Path,
         "--report-dir",
         str(report_dir),
     ]
+
+    if script_name == "pilot_migrate_component.py" and batch_number:
+        cmd.extend(["--batch-number", batch_number])
 
     if script_name == "pilot_migrate_component_transfers.py":
         cmd.append("--use-subtransfers")
@@ -427,8 +441,14 @@ def build_full_lifecycle_members(
     use_csv: str | None,
     include_fw_batches: list[str],
     skip_population_links: bool,
+    heuristic_fw_sea: bool,
+    heuristic_window_days: int,
+    heuristic_min_score: int,
+    heuristic_include_smolt: bool,
+    max_fw_batches: int,
+    max_pre_smolt_batches: int,
 ) -> bool:
-    script_path = PROJECT_ROOT / "scripts" / "migration" / "tools" / "input_full_lifecycle_stitching.py"
+    script_path = PROJECT_ROOT / "scripts" / "migration" / "analysis" / "input_full_lifecycle_stitching.py"
     if not script_path.exists():
         print(f"[ERROR] Missing full-lifecycle stitcher: {script_path}")
         return False
@@ -445,8 +465,18 @@ def build_full_lifecycle_members(
         cmd.extend(["--csv-dir", use_csv])
     if skip_population_links:
         cmd.append("--skip-population-links")
+    if max_fw_batches is not None:
+        cmd.extend(["--max-fw-batches", str(max_fw_batches)])
+    if max_pre_smolt_batches is not None:
+        cmd.extend(["--max-pre-smolt-batches", str(max_pre_smolt_batches)])
     for fw_batch in include_fw_batches:
         cmd.extend(["--include-fw-batch", fw_batch])
+    if heuristic_fw_sea:
+        cmd.append("--heuristic-fw-sea")
+        cmd.extend(["--heuristic-window-days", str(heuristic_window_days)])
+        cmd.extend(["--heuristic-min-score", str(heuristic_min_score)])
+        if heuristic_include_smolt:
+            cmd.append("--heuristic-include-smolt")
 
     print("\nBuilding full-lifecycle population members...")
     env = os.environ.copy()
@@ -564,9 +594,33 @@ def build_parser() -> argparse.ArgumentParser:
         help="Explicit FW batch key(s) to include when building full-lifecycle output",
     )
     parser.add_argument(
+        "--max-fw-batches",
+        type=int,
+        default=2,
+        help="Limit selected FW batches in full-lifecycle stitching (default: 2)",
+    )
+    parser.add_argument(
+        "--max-pre-smolt-batches",
+        type=int,
+        default=2,
+        help="Limit pre-smolt batches in full-lifecycle stitching (default: 2)",
+    )
+    parser.add_argument(
         "--skip-population-links",
         action="store_true",
         help="Skip PopulationLink when building full-lifecycle output",
+    )
+    parser.add_argument(
+        "--heuristic-fw-sea",
+        action="store_true",
+        help="Non-canonical: enable heuristic FW→Sea stitching when rebuilding full-lifecycle output",
+    )
+    parser.add_argument("--heuristic-window-days", type=int, default=60, help="Heuristic FW window in days")
+    parser.add_argument("--heuristic-min-score", type=int, default=70, help="Minimum heuristic score to accept")
+    parser.add_argument(
+        "--heuristic-include-smolt",
+        action="store_true",
+        help="Allow Smolt halls as FW candidates (default: Post-Smolt only)",
     )
     return parser
 
@@ -621,6 +675,12 @@ def main() -> int:
                 use_csv=args.use_csv,
                 include_fw_batches=args.include_fw_batch,
                 skip_population_links=args.skip_population_links,
+                heuristic_fw_sea=args.heuristic_fw_sea,
+                heuristic_window_days=args.heuristic_window_days,
+                heuristic_min_score=args.heuristic_min_score,
+                heuristic_include_smolt=args.heuristic_include_smolt,
+                max_fw_batches=args.max_fw_batches,
+                max_pre_smolt_batches=args.max_pre_smolt_batches,
             )
             if not ok:
                 return 1
@@ -667,6 +727,7 @@ def main() -> int:
     component_key = component_key_override or members[0].population_id
 
     print(f"\nComponent key for migration: {component_key}")
+    batch_number_override = args.batch_number or batch_info.input_name
 
     if args.dry_run:
         print("\n[DRY RUN] Would run the following scripts:")
@@ -714,8 +775,14 @@ def main() -> int:
 
     for script_name, description in scripts:
         print(f"\n[{success_count + 1}/{len(scripts)}] {description}")
-        if run_migration_script(script_name, component_key, output_dir, 
-                               use_csv=args.use_csv, dry_run=args.dry_run):
+        if run_migration_script(
+            script_name,
+            component_key,
+            output_dir,
+            use_csv=args.use_csv,
+            dry_run=args.dry_run,
+            batch_number=batch_number_override,
+        ):
             success_count += 1
         else:
             failed_scripts.append(script_name)

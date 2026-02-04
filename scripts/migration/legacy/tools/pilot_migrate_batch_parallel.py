@@ -121,9 +121,10 @@ def migrate_single_batch(args):
     env['DJANGO_SETTINGS_MODULE'] = 'aquamind.settings'
     
     cmd = [
-        'python', 
-        'scripts/migration/tools/pilot_migrate_project_batch.py',
-        '--project-key', project_key,
+        'python',
+        'scripts/migration/legacy/tools/pilot_migrate_project_batch.py',
+        '--project-key',
+        project_key,
     ]
     
     try:

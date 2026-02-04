@@ -44,6 +44,84 @@ SUPPLIER_CODE_MAP = {
     "AG": ["AquaGen"],
 }
 
+MONTH_MAP = {
+    "JAN": 1,
+    "FEB": 2,
+    "MAR": 3,
+    "APR": 4,
+    "MAY": 5,
+    "MAI": 5,
+    "JUN": 6,
+    "JUL": 7,
+    "AUG": 8,
+    "SEP": 9,
+    "OKT": 10,
+    "OCT": 10,
+    "NOV": 11,
+    "DES": 12,
+    "DEC": 12,
+}
+
+SEA_NAME_RE = re.compile(
+    r"^\s*(?P<unit>S?\d{2})\s+(?P<station>S\d{2})\s+(?P<supplier>[A-Z]{2})\s+"
+    r"(?P<seamonth>[A-Z]{3})\s+(?P<seayear>\d{2}).*\((?P<fwmonth>[A-Z]{3})\s+(?P<fwyer>\d{2})\)",
+    re.IGNORECASE,
+)
+
+STATION_RE = re.compile(r"(S\d{2})")
+
+S24_HALL_STAGE_MAP = {
+    "A HØLL": "Egg&Alevin",
+    "B HØLL": "Fry",
+    "C HØLL": "Parr",
+    "D HØLL": "Parr",
+    "E HØLL": "Smolt",
+    "F HØLL": "Smolt",
+    "G HØLL": "Post-Smolt",
+    "H HØLL": "Post-Smolt",
+    "I HØLL": "Post-Smolt",
+    "J HØLL": "Post-Smolt",
+}
+
+S03_HALL_STAGE_MAP = {
+    "5 M HØLL": "Fry",
+    "11 HØLL A": "Smolt",
+    "11 HØLL B": "Smolt",
+    "18 HØLL A": "Post-Smolt",
+    "18 HØLL B": "Post-Smolt",
+    "800 HØLL": "Parr",
+    "900 HØLL": "Parr",
+}
+
+S08_HALL_STAGE_MAP = {
+    "KLEKING": "Egg&Alevin",
+    "STARTFÓÐRING": "Fry",
+    "T-HØLL": "Post-Smolt",
+}
+
+S16_HALL_STAGE_MAP = {
+    "A HØLL": "Egg&Alevin",
+    "B HØLL": "Fry",
+    "C HØLL": "Parr",
+    "D HØLL": "Smolt",
+    "E1 HØLL": "Post-Smolt",
+    "E2 HØLL": "Post-Smolt",
+    "KLEKIHØLL": "Egg&Alevin",
+    "STARTFÓÐRINGSHØLL": "Fry",
+}
+
+S21_HALL_STAGE_MAP = {
+    "5M": "Fry",
+    "A": "Fry",
+    "BA": "Parr",
+    "BB": "Parr",
+    "C": "Smolt",
+    "D": "Smolt",
+    "E": "Post-Smolt",
+    "F": "Post-Smolt",
+    "ROGN": "Egg&Alevin",
+}
+
 FAROE_SITE_KEYWORDS = {"north", "south", "west", "east", "faroe", "føroyar", "streymoy"}
 SCOTLAND_SITE_KEYWORDS = {"scotland", "scottish", "uk", "loch"}
 
@@ -141,6 +219,101 @@ def hall_label_from_official(official_id: str | None) -> str:
         return ""
     prefix = official_id.split(";")[0].strip()
     return hall_label_from_group(prefix)
+
+
+def normalize_key(value: str | None) -> str:
+    return normalize_label(value).upper()
+
+
+def stage_from_hall(site: str | None, container_group: str | None) -> str | None:
+    site_key = normalize_key(site)
+    hall_key = normalize_key(container_group)
+    if site_key == "S24 STROND" and hall_key in S24_HALL_STAGE_MAP:
+        return S24_HALL_STAGE_MAP[hall_key]
+    if site_key == "S03 NORÐTOFTIR" and hall_key in S03_HALL_STAGE_MAP:
+        return S03_HALL_STAGE_MAP[hall_key]
+    if site_key == "S08 GJÓGV" and hall_key in S08_HALL_STAGE_MAP:
+        return S08_HALL_STAGE_MAP[hall_key]
+    if site_key == "S16 GLYVRADALUR" and hall_key in S16_HALL_STAGE_MAP:
+        return S16_HALL_STAGE_MAP[hall_key]
+    if site_key == "S21 VIÐAREIÐI" and hall_key in S21_HALL_STAGE_MAP:
+        return S21_HALL_STAGE_MAP[hall_key]
+    return None
+
+
+def parse_sea_name(name: str) -> dict | None:
+    match = SEA_NAME_RE.search(name.upper())
+    if not match:
+        return None
+    data = match.groupdict()
+    sea_month = MONTH_MAP.get(data["seamonth"][:3])
+    fw_month = MONTH_MAP.get(data["fwmonth"][:3])
+    sea_year = 2000 + int(data["seayear"])
+    fw_year = 2000 + int(data["fwyer"])
+    sea_date = datetime(sea_year, sea_month, 1) if sea_month else None
+    fw_date = datetime(fw_year, fw_month, 1) if fw_month else None
+    return {
+        "Unit": data["unit"].upper(),
+        "FWStationCode": data["station"].upper(),
+        "SupplierCode": data["supplier"].upper(),
+        "SeaMonth": data["seamonth"][:3].upper(),
+        "SeaYear": sea_year,
+        "SeaDate": sea_date,
+        "FWBatchMonth": data["fwmonth"][:3].upper(),
+        "FWBatchYear": fw_year,
+        "FWBatchDate": fw_date,
+    }
+
+
+def parse_station_code(value: str | None) -> str | None:
+    if not value:
+        return None
+    match = STATION_RE.search(value)
+    return match.group(1) if match else None
+
+
+def parse_batch_month_year(input_name: str) -> tuple[int | None, int | None]:
+    if not input_name:
+        return None, None
+    month_tokens = (
+        "january|jan|february|feb|march|mar|mars|april|apr|may|mai|june|jun|juni|july|jul|"
+        "august|aug|september|sep|sept|septembur|october|oct|oktober|okt|"
+        "november|nov|december|dec|desembur|des"
+    )
+    match = re.search(
+        rf"({month_tokens})\s*([0-9]{{2,4}})",
+        input_name,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None, None
+    month_raw = match.group(1).upper()
+    month_key = month_raw[:3]
+    # Normalize known long forms
+    if month_raw.startswith("MARS"):
+        month_key = "MAR"
+    elif month_raw.startswith("SEPT"):
+        month_key = "SEP"
+    elif month_raw.startswith("DESEMBUR") or month_raw.startswith("DES"):
+        month_key = "DEC"
+    elif month_raw.startswith("OKTOBER") or month_raw.startswith("OKT"):
+        month_key = "OCT"
+    month = MONTH_MAP.get(month_key)
+    year_raw = match.group(2)
+    year = int(year_raw)
+    if year < 100:
+        year += 2000
+    return month, year
+
+
+def supplier_code_from_input_name(input_name: str) -> str | None:
+    if not input_name:
+        return None
+    for code, tokens in SUPPLIER_CODE_MAP.items():
+        for token in tokens:
+            if token.lower() in input_name.lower():
+                return code
+    return None
 
 
 def parse_batch_key(batch_key: str) -> tuple[str, str, str]:
@@ -347,6 +520,229 @@ def write_csv(path: Path, fieldnames: list[str], rows: Iterable[dict[str, object
             writer.writerow({key: ("" if row.get(key) is None else row.get(key)) for key in fieldnames})
 
 
+def build_heuristic_fw_sea_links(
+    *,
+    input_name: str,
+    sea_population_ids: list[str],
+    pop_meta: dict[str, PopulationMeta],
+    names_by_pop: dict[str, str],
+    containers_by_id: dict[str, dict],
+    grouping_by_container: dict[str, dict],
+    csv_dir: Path,
+    window_days: int,
+    min_score: int,
+    include_smolt: bool,
+    output_dir: Path,
+    slug: str,
+) -> tuple[set[str], set[str]]:
+    """Non-canonical heuristic FW→Sea linking using hall + date + count alignment."""
+    try:
+        import pandas as pd  # type: ignore
+    except Exception:
+        print("[WARN] pandas not available; heuristic FW→Sea linking skipped.")
+        return set(), set()
+
+    expected_supplier = supplier_code_from_input_name(input_name)
+    expected_month, expected_year = parse_batch_month_year(input_name)
+    expected_station = parse_station_code(input_name)
+
+    # Build sea candidates from pattern (seeded by ext_inputs + name-based match)
+    sea_rows = []
+    for pop_id in sea_population_ids:
+        name = names_by_pop.get(pop_id, "")
+        parsed = parse_sea_name(name)
+        if not parsed:
+            continue
+        sea_rows.append((pop_id, parsed))
+
+    # If we can infer supplier/month/year from input_name, add matching sea pops by name pattern.
+    if expected_supplier and expected_month and expected_year:
+        for pop_id, name in names_by_pop.items():
+            meta = pop_meta.get(pop_id)
+            if not meta or not meta.start_time:
+                continue
+            grouping = grouping_by_container.get(meta.container_id, {})
+            if grouping.get("ProdStage") != "MarineSite":
+                continue
+            parsed = parse_sea_name(name)
+            if not parsed:
+                continue
+            if parsed["SupplierCode"] != expected_supplier:
+                continue
+            if parsed["FWBatchDate"] is None:
+                continue
+            if parsed["FWBatchDate"].month != expected_month or parsed["FWBatchDate"].year != expected_year:
+                continue
+            if expected_station and parsed["FWStationCode"] != expected_station:
+                continue
+            sea_rows.append((pop_id, parsed))
+
+    if not sea_rows:
+        return set(), set()
+
+    # Build FW candidate index by station code (post-smolt halls only; smolt optional)
+    fw_by_station: dict[str, list[str]] = defaultdict(list)
+    fw_meta = {}
+    for pop_id, meta in pop_meta.items():
+        grouping = grouping_by_container.get(meta.container_id, {})
+        if grouping.get("ProdStage") not in ("FreshWater", "SmoltProduction", "Hatchery"):
+            continue
+        hall_stage = stage_from_hall(grouping.get("Site"), grouping.get("ContainerGroup"))
+        if hall_stage != "Post-Smolt" and not (include_smolt and hall_stage == "Smolt"):
+            continue
+        if not meta.end_time:
+            continue
+        station = parse_station_code(grouping.get("Site"))
+        if not station:
+            continue
+        fw_by_station.setdefault(station, []).append(pop_id)
+        fw_meta[pop_id] = meta
+
+    # Build candidate pairs
+    candidates = []
+    for sea_pop_id, parsed in sea_rows:
+        sea_meta = pop_meta.get(sea_pop_id)
+        if not sea_meta or not sea_meta.start_time:
+            continue
+        station = parsed["FWStationCode"]
+        for fw_pop_id in fw_by_station.get(station, []):
+            fw_pop_meta = fw_meta.get(fw_pop_id)
+            if not fw_pop_meta or not fw_pop_meta.end_time:
+                continue
+            diff_days = (fw_pop_meta.end_time - sea_meta.start_time).days
+            if abs(diff_days) > window_days:
+                continue
+            score = 40
+            if abs(diff_days) <= 7:
+                score += 20
+            elif abs(diff_days) <= 21:
+                score += 10
+            else:
+                score += 5
+
+            if parsed.get("SeaDate") and sea_meta.start_time:
+                if (
+                    sea_meta.start_time.month == parsed["SeaDate"].month
+                    and sea_meta.start_time.year == parsed["SeaDate"].year
+                ):
+                    score += 5
+            if parsed.get("FWBatchDate") and fw_pop_meta.start_time:
+                if (
+                    fw_pop_meta.start_time.month == parsed["FWBatchDate"].month
+                    and fw_pop_meta.start_time.year == parsed["FWBatchDate"].year
+                ):
+                    score += 5
+
+            candidates.append(
+                {
+                    "SeaPopulationID": sea_pop_id,
+                    "SeaPopulationName": names_by_pop.get(sea_pop_id, ""),
+                    "SeaStartTime": sea_meta.start_time,
+                    "SeaSite": grouping_by_container.get(sea_meta.container_id, {}).get("Site", ""),
+                    "FWPopulationID": fw_pop_id,
+                    "FWPopulationName": names_by_pop.get(fw_pop_id, ""),
+                    "FWEndTime": fw_pop_meta.end_time,
+                    "FWStartTime": fw_pop_meta.start_time,
+                    "FWSite": grouping_by_container.get(fw_pop_meta.container_id, {}).get("Site", ""),
+                    "FWContainerGroup": grouping_by_container.get(fw_pop_meta.container_id, {}).get("ContainerGroup", ""),
+                    "DiffDays_FWEnd_to_SeaStart": diff_days,
+                    "Score_Base": score,
+                }
+            )
+
+    if not candidates:
+        return set(), set()
+
+    pairs = pd.DataFrame(candidates)
+    sea_ids = set(pairs["SeaPopulationID"])
+    fw_ids = set(pairs["FWPopulationID"])
+
+    status_path = csv_dir / "status_values.csv"
+    sea_best_time: dict[str, datetime] = {}
+    sea_best_count: dict[str, float] = {}
+    fw_best_time: dict[str, datetime] = {}
+    fw_best_count: dict[str, float] = {}
+
+    if status_path.exists():
+        sea_info = (
+            pairs[["SeaPopulationID", "SeaStartTime"]]
+            .drop_duplicates()
+            .rename(columns={"SeaPopulationID": "PopulationID", "SeaStartTime": "StartTime"})
+        )
+        fw_info = (
+            pairs[["FWPopulationID", "FWEndTime"]]
+            .drop_duplicates()
+            .rename(columns={"FWPopulationID": "PopulationID", "FWEndTime": "EndTime"})
+        )
+        usecols = ["PopulationID", "StatusTime", "CurrentCount"]
+        for chunk in pd.read_csv(status_path, usecols=usecols, chunksize=400_000):
+            chunk = chunk[chunk["PopulationID"].isin(sea_ids.union(fw_ids))]
+            if chunk.empty:
+                continue
+            chunk["StatusTime"] = pd.to_datetime(chunk["StatusTime"], errors="coerce")
+            sea_chunk = chunk[chunk["PopulationID"].isin(sea_ids)].merge(sea_info, on="PopulationID", how="inner")
+            if not sea_chunk.empty:
+                sea_chunk = sea_chunk[sea_chunk["StatusTime"] >= sea_chunk["StartTime"]]
+                if not sea_chunk.empty:
+                    idx = sea_chunk.groupby("PopulationID")["StatusTime"].idxmin()
+                    for _, row in sea_chunk.loc[idx].iterrows():
+                        pid = row["PopulationID"]
+                        st = row["StatusTime"]
+                        if pid not in sea_best_time or st < sea_best_time[pid]:
+                            sea_best_time[pid] = st
+                            sea_best_count[pid] = row["CurrentCount"]
+            fw_chunk = chunk[chunk["PopulationID"].isin(fw_ids)].merge(fw_info, on="PopulationID", how="inner")
+            if not fw_chunk.empty:
+                fw_chunk = fw_chunk[fw_chunk["StatusTime"] <= fw_chunk["EndTime"]]
+                if not fw_chunk.empty:
+                    idx = fw_chunk.groupby("PopulationID")["StatusTime"].idxmax()
+                    for _, row in fw_chunk.loc[idx].iterrows():
+                        pid = row["PopulationID"]
+                        st = row["StatusTime"]
+                        if pid not in fw_best_time or st > fw_best_time[pid]:
+                            fw_best_time[pid] = st
+                            fw_best_count[pid] = row["CurrentCount"]
+
+    pairs["FWLastCount"] = pairs["FWPopulationID"].map(fw_best_count)
+    pairs["FWLastCountTime"] = pairs["FWPopulationID"].map(fw_best_time)
+    pairs["SeaFirstCount"] = pairs["SeaPopulationID"].map(sea_best_count)
+    pairs["SeaFirstCountTime"] = pairs["SeaPopulationID"].map(sea_best_time)
+
+    def ratio(row) -> float | None:
+        if row["FWLastCount"] and row["SeaFirstCount"]:
+            return float(row["SeaFirstCount"]) / float(row["FWLastCount"])
+        return None
+
+    pairs["CountRatio"] = pairs.apply(ratio, axis=1)
+    pairs["Score"] = pairs["Score_Base"]
+    for idx, row in pairs.iterrows():
+        ratio_val = row["CountRatio"]
+        if ratio_val is None:
+            continue
+        if 0.7 <= ratio_val <= 1.3:
+            pairs.at[idx, "Score"] += 20
+        elif 0.5 <= ratio_val <= 1.5:
+            pairs.at[idx, "Score"] += 10
+
+    pairs_sorted = pairs.sort_values(
+        ["SeaPopulationID", "Score", "DiffDays_FWEnd_to_SeaStart"],
+        ascending=[True, False, True],
+    )
+    best = pairs_sorted.groupby("SeaPopulationID").head(1)
+    best = best[best["Score"] >= min_score]
+
+    heuristic_fw_ids = set(best["FWPopulationID"].tolist())
+    heuristic_sea_ids = set(best["SeaPopulationID"].tolist())
+
+    # Write debug output
+    report_path = output_dir / f"heuristic_fw_sea_links_{slug}.csv"
+    pairs_sorted.to_csv(report_path, index=False)
+    print(f"[heuristic] candidate report: {report_path}")
+    print(f"[heuristic] selected links: {len(best)} (min_score={min_score})")
+
+    return heuristic_sea_ids, heuristic_fw_ids
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build full-lifecycle population members for an input batch")
     parser.add_argument("--batch-key", required=True, help="Input batch key (InputName|InputNumber|YearClass)")
@@ -383,6 +779,18 @@ def main() -> int:
         help="Explicit FW batch key(s) to include (repeatable)",
     )
     parser.add_argument("--skip-population-links", action="store_true", help="Ignore PopulationLink if available")
+    parser.add_argument(
+        "--heuristic-fw-sea",
+        action="store_true",
+        help="Non-canonical: attempt heuristic FW→Sea linking using hall + date + count alignment",
+    )
+    parser.add_argument("--heuristic-window-days", type=int, default=60, help="Heuristic FW window in days")
+    parser.add_argument("--heuristic-min-score", type=int, default=70, help="Minimum heuristic score to accept")
+    parser.add_argument(
+        "--heuristic-include-smolt",
+        action="store_true",
+        help="Allow Smolt halls as FW candidates (default: Post-Smolt only)",
+    )
     args = parser.parse_args()
 
     csv_dir = Path(args.csv_dir)
@@ -405,6 +813,27 @@ def main() -> int:
     stages_by_pop = build_stage_index(csv_dir)
     names_by_pop = build_population_name_index(csv_dir)
     containers_by_id, org_units_by_id, grouping_by_container = build_container_indexes(csv_dir)
+    slug = slugify(sea_key)
+
+    heuristic_sea_ids: set[str] = set()
+    heuristic_fw_ids: set[str] = set()
+    if args.heuristic_fw_sea:
+        heuristic_sea_ids, heuristic_fw_ids = build_heuristic_fw_sea_links(
+            input_name=input_name,
+            sea_population_ids=sea_population_ids,
+            pop_meta=pop_meta,
+            names_by_pop=names_by_pop,
+            containers_by_id=containers_by_id,
+            grouping_by_container=grouping_by_container,
+            csv_dir=csv_dir,
+            window_days=args.heuristic_window_days,
+            min_score=args.heuristic_min_score,
+            include_smolt=args.heuristic_include_smolt,
+            output_dir=output_dir,
+            slug=slug,
+        )
+        print(f"[heuristic] added sea populations: {len(heuristic_sea_ids)}")
+        print(f"[heuristic] added FW populations: {len(heuristic_fw_ids)}")
 
     sea_start_times = [pop_meta.get(pid, PopulationMeta(pid, "", None, None)).start_time for pid in sea_population_ids]
     sea_start_times = [t for t in sea_start_times if t]
@@ -583,12 +1012,15 @@ def main() -> int:
     selected_batches = selected_smolt + selected_pre_smolt
 
     selected_population_ids = set(sea_population_ids)
+    if heuristic_sea_ids:
+        selected_population_ids.update(heuristic_sea_ids)
     for candidate in selected_batches:
         selected_population_ids.update(candidate.population_ids)
     selected_population_ids.update(linked_population_ids)
+    if heuristic_fw_ids:
+        selected_population_ids.update(heuristic_fw_ids)
 
     # Output candidates report
-    slug = slugify(sea_key)
     candidates_path = output_dir / f"full_lifecycle_candidates_{slug}.csv"
     candidate_rows = []
     for candidate in ranked_candidates:
@@ -672,6 +1104,7 @@ def main() -> int:
                 "source_year_class": input_record.year_class if input_record else "",
                 "hall_label": hall_label,
                 "official_id": container.get("OfficialID", ""),
+                "heuristic_fw_sea": "true" if pop_id in heuristic_fw_ids or pop_id in heuristic_sea_ids else "",
             }
         )
 
@@ -694,6 +1127,7 @@ def main() -> int:
             "source_year_class",
             "hall_label",
             "official_id",
+            "heuristic_fw_sea",
         ],
         rows=member_rows,
     )

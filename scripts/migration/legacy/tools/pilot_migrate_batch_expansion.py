@@ -79,7 +79,7 @@ def load_project_batches(min_stages: int = 5, active_only: bool = False) -> List
     if not csv_path.exists():
         raise FileNotFoundError(
             f"Project batches file not found: {csv_path}\n"
-            "Run project_based_stitching_report.py first."
+            "Run scripts/migration/legacy/tools/project_based_stitching_report.py first."
         )
 
     batches = []
@@ -160,7 +160,7 @@ def run_batch_migration(
     timeout: int = 600,
 ) -> dict:
     """Run migration pipeline for a single project batch."""
-    script_path = PROJECT_ROOT / "scripts" / "migration" / "tools" / "pilot_migrate_project_batch.py"
+    script_path = PROJECT_ROOT / "scripts" / "migration" / "legacy" / "tools" / "pilot_migrate_project_batch.py"
     
     cmd = [
         sys.executable,

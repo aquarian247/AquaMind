@@ -15,6 +15,7 @@ This document consolidates learnings from multiple migration sessions to clarify
 | 2026-01-21 (AM) | Proposed "Hybrid SubTransfers + Project Linking" | ❌ Over-linked batches (70M+ fish) |
 | 2026-01-21 (PM) | **Project tuple = 1 batch** | ⚠️ Worked in many cases, later disproven |
 | 2026-01-22 (EOD) | **Ext_Inputs_v2 input-based stitching** | ✅ Current direction |
+| 2026-02-03 | Heuristic FW→Sea test + restricted full-lifecycle selection | ✅ Works for targeted QA, non-canonical |
 
 ---
 
@@ -40,10 +41,10 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   --use-csv scripts/migration/data/extract/
 ```
 
-**Script:**
+**Legacy (deprecated):**
 ```bash
-# RECOMMENDED: End-to-end project batch migration
-python scripts/migration/tools/pilot_migrate_project_batch.py \
+# Project-based batch migration (deprecated)
+python scripts/migration/legacy/tools/pilot_migrate_project_batch.py \
   --project-key "1/25/1" \
   --skip-environmental  # Optional: skip slow environmental migration
 ```
@@ -69,6 +70,28 @@ python scripts/migration/tools/pilot_migrate_component.py \
 - Use `--use-subtransfers` flag in transfer migration
 - Stage transition workflows derived from `OperationProductionStageChange`
 - Lifecycle workflows consolidated to **one per batch stage transition** (not per population)
+
+### 3.1 Population Count Conservation (Assignments)
+
+**Use conservation-based counts for assignments to avoid double-counting.**
+
+Rule of thumb:
+- Seed counts from `Ext_Inputs_v2.InputCount`.
+- Propagate via `SubTransfers.ShareCountFwd`.
+- If conserved count is missing or resolves to **0** but a status snapshot is non‑zero, use the snapshot count.
+- If a population is superseded by a **same‑stage** transfer, zero it to avoid double‑counting within that stage.
+
+Reference: `DATA_MAPPING_DOCUMENT.md` → 3.2 (Container Assignment Mapping).
+
+### 3.2 Full-Lifecycle Selection Guardrails (Heuristic Runs)
+
+When running heuristic FW→Sea stitching, **always constrain** the full-lifecycle selection to prevent unrelated FW cohorts from being pulled into the batch:
+
+- Use `--include-fw-batch '<target batch key>'`
+- Set `--max-fw-batches 1`
+- Set `--max-pre-smolt-batches 0`
+
+This keeps the test batch focused on the target cohort + heuristic sea matches only.
 
 ### 4. Environmental Data with SQLite Index
 
@@ -112,13 +135,13 @@ you explicitly cohort‑split by year‑class/time gaps).
 **Do NOT use:**
 ```bash
 # WRONG - causes over-linking
-python scripts/migration/tools/subtransfer_chain_stitching.py --link-by-project
+python scripts/migration/legacy/tools/subtransfer_chain_stitching.py --link-by-project
 python scripts/migration/tools/pilot_migrate_component.py --batch-id BATCH-00013
 ```
 
 ### ❌ 3. UUID-Based Component Keys (Legacy)
 
-The original stitching used arbitrary UUID component keys from `population_stitching_report.py`. These don't correspond to biological batches.
+The original stitching used arbitrary UUID component keys from `scripts/migration/legacy/tools/population_stitching_report.py`. These don't correspond to biological batches.
 
 **Use input-based stitching** via `Ext_Inputs_v2` and `pilot_migrate_input_batch.py`.
 
@@ -152,6 +175,14 @@ The original stitching used arbitrary UUID component keys from `population_stitc
 ### Sparse Stage Data
 
 Many FishTalk populations have only one stage recorded in `PopulationProductionStages`. Assignment timing becomes the primary signal for stage transitions.
+
+### UI Stage Order Depends on Assignment Ordering
+
+Lifecycle charts group assignments **in the order they are returned** by the assignments API. If the API orders by assignment date, stages can appear out of sequence. The backend now orders batch-filtered assignments by `lifecycle_stage.order` (fix applied 2026‑02‑03).
+
+### Deprecated Halls Still Affect Historical Batches
+
+If a batch historically used a hall that is now deprecated, that hall **still needs stage mapping**. Without it, the migration falls back to the **last** FishTalk stage and can collapse Egg/Alevin into Fry.
 
 ---
 
@@ -275,7 +306,7 @@ The assumption "one project tuple = one batch" is **incorrect for some project t
 
 ### Recommended Solution (Fallback): Time-Based Cohort Filtering
 
-**Immediate action**: Modify `project_based_stitching_report.py` to:
+**Immediate action**: Modify `scripts/migration/legacy/tools/project_based_stitching_report.py` to:
 1. Calculate population start time span per project tuple
 2. Filter to project tuples with **<180 day span** (reduces problem batches significantly)
 3. For longer spans, implement **90-day gap cohort splitting**
@@ -377,9 +408,9 @@ The 2024-Q1 cohort is invalid because it mixes:
 
 | Script | Purpose | Status |
 |--------|---------|--------|
-| `analyze_batch_cohorts.py` | Analyze time-gap and stage-based splitting | Created |
-| `analyze_yearclass_from_names.py` | Extract year-class from population names | Created |
-| `project_based_stitching_report.py` | Needs year-class cohort logic | To be updated |
+| `scripts/migration/analysis/analyze_batch_cohorts.py` | Analyze time-gap and stage-based splitting | Created |
+| `scripts/migration/analysis/analyze_yearclass_from_names.py` | Extract year-class from population names | Created |
+| `scripts/migration/legacy/tools/project_based_stitching_report.py` | Needs year-class cohort logic | To be updated |
 
 ### Month Name Mappings (Faroese/Danish/Norwegian/English)
 
@@ -395,12 +426,12 @@ MONTH_MAP = {
 
 ### Next Steps (Fallback)
 
-1. **Modify `project_based_stitching_report.py`** to:
+1. **Modify `scripts/migration/legacy/tools/project_based_stitching_report.py`** to:
    - Add year-class extraction from PopulationName
    - Group populations by project tuple + year-class quarter
    - Generate separate batch candidates per cohort
 
-2. **Update `pilot_migrate_project_batch.py`** to:
+2. **Update `scripts/migration/legacy/tools/pilot_migrate_project_batch.py`** to:
    - Accept cohort-qualified batch keys (e.g., `1/24/58:2023-Q2`)
    - Or auto-split multi-cohort project tuples
 
@@ -447,9 +478,9 @@ For each project tuple:
 
 | Script | Purpose |
 |--------|---------|
-| `analyze_batch_cohorts.py` | Analyze time-gap and stage-based splitting for a project |
-| `analyze_yearclass_from_names.py` | Extract and validate year-class from population names |
-| `validate_yearclass_approach.py` | Validate approach across all project tuples |
+| `scripts/migration/analysis/analyze_batch_cohorts.py` | Analyze time-gap and stage-based splitting for a project |
+| `scripts/migration/analysis/analyze_yearclass_from_names.py` | Extract and validate year-class from population names |
+| `scripts/migration/analysis/validate_yearclass_approach.py` | Validate approach across all project tuples |
 
 ### Status
 
@@ -460,7 +491,7 @@ For each project tuple:
 ## 📋 Implementation Checklist (2026-01-22, Fallback)
 
 ### Phase 1: Update Stitching Report (Fallback Priority)
-- [ ] Modify `project_based_stitching_report.py`:
+- [ ] Modify `scripts/migration/legacy/tools/project_based_stitching_report.py`:
   - Add PopulationName extraction from FishTalk
   - Implement year-class parsing with month mappings
   - Generate cohort-qualified batch keys (e.g., `1/24/58:2023-Q2`)
@@ -468,7 +499,7 @@ For each project tuple:
   - Flag multi-cohort projects in output
 
 ### Phase 2: Update Migration Script
-- [ ] Modify `pilot_migrate_project_batch.py`:
+- [ ] Modify `scripts/migration/legacy/tools/pilot_migrate_project_batch.py`:
   - Accept cohort suffix in project key
   - Auto-detect and report multi-cohort projects
   - Validate cohort stage progression before migration

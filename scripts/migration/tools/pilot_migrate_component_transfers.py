@@ -238,6 +238,101 @@ def load_subtransfers_from_csv(csv_dir: Path, population_ids: set[str]) -> list[
     return transfers
 
 
+def load_stage_names_from_csv(csv_dir: Path) -> dict[str, str]:
+    import csv
+
+    path = csv_dir / "production_stages.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing production stages file: {path}")
+
+    stage_name_by_id: dict[str, str] = {}
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            stage_id = (row.get("StageID") or "").strip()
+            if not stage_id:
+                continue
+            stage_name_by_id[stage_id] = (row.get("StageName") or "").strip()
+
+    return stage_name_by_id
+
+
+def load_population_stages_from_csv(csv_dir: Path, population_ids: set[str]) -> list[dict]:
+    import csv
+
+    path = csv_dir / "population_stages.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing population stages file: {path}")
+
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if pop_id and pop_id in population_ids:
+                rows.append(row)
+
+    return rows
+
+
+def build_status_snapshot_index(csv_dir: Path, population_ids: set[str]) -> dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]]:
+    import csv
+
+    path = csv_dir / "status_values.csv"
+    if not path.exists():
+        return {}
+
+    raw: dict[str, list[tuple[datetime, int, Decimal]]] = {}
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if not pop_id or pop_id not in population_ids:
+                continue
+            ts = parse_dt(row.get("StatusTime", ""))
+            if ts is None:
+                continue
+            ts = ensure_aware(ts)
+            count_val = row.get("CurrentCount")
+            biom_val = row.get("CurrentBiomassKg")
+            try:
+                count = int(float(count_val)) if count_val not in (None, "") else 0
+            except ValueError:
+                count = 0
+            try:
+                biomass = Decimal(str(biom_val)) if biom_val not in (None, "") else Decimal("0.00")
+            except Exception:
+                biomass = Decimal("0.00")
+            raw.setdefault(pop_id, []).append((ts, count, biomass))
+
+    index: dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]] = {}
+    for pop_id, items in raw.items():
+        items.sort(key=lambda item: item[0])
+        times = [item[0] for item in items]
+        values = [(item[1], item[2]) for item in items]
+        index[pop_id] = (times, values)
+
+    return index
+
+
+def lookup_status_snapshot_from_index(
+    index: dict[str, tuple[list[datetime], list[tuple[int, Decimal]]]],
+    population_id: str,
+    at_time: datetime,
+) -> tuple[int, Decimal]:
+    if not index or population_id not in index:
+        return 0, Decimal("0.00")
+    times, values = index[population_id]
+    if not times:
+        return 0, Decimal("0.00")
+    pos = bisect_right(times, at_time)
+    if pos > 0:
+        return values[pos - 1]
+    if pos < len(values):
+        return values[pos]
+    return 0, Decimal("0.00")
+
+
 def resolve_component_key(report_dir: Path, *, component_id: int | None, component_key: str | None) -> str:
     if component_key:
         return component_key
@@ -326,12 +421,12 @@ Transfer data sources:
     chain_group = parser.add_argument_group("SubTransfers-based stitching (recommended)")
     chain_group.add_argument(
         "--chain-id",
-        help="Chain ID from subtransfer_chain_stitching.py (e.g., CHAIN-00001)",
+        help="Chain ID from scripts/migration/legacy/tools/subtransfer_chain_stitching.py (deprecated)",
     )
     chain_group.add_argument(
         "--chain-dir",
         default=str(CHAIN_DIR_DEFAULT),
-        help="Directory containing batch_chains.csv from subtransfer_chain_stitching.py",
+        help="Directory containing batch_chains.csv from scripts/migration/legacy/tools/subtransfer_chain_stitching.py (deprecated)",
     )
     
     # Project-based stitching (legacy)
@@ -410,11 +505,11 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+    extractor = None if args.use_csv else BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
     # For chain-based stitching, skip project lookup (not relevant)
     project_number, input_year, running_number = None, None, None
-    if not use_chain_stitching:
+    if not use_chain_stitching and not args.use_csv:
         project_number, input_year, running_number = lookup_project_info(
             extractor, population_id=component_key
         )
@@ -423,6 +518,7 @@ def main() -> int:
     start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
     end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
     pop_id_set = set(population_ids)
+    status_index = build_status_snapshot_index(Path(args.use_csv), pop_id_set) if args.use_csv else {}
 
     # Load transfers from appropriate source
     if args.use_subtransfers:
@@ -502,27 +598,32 @@ def main() -> int:
         )
         print(f"Loaded {len(transfer_rows)} PublicTransfers edges from SQL")
 
-    stages_raw = extractor._run_sqlcmd(
-        query="SELECT StageID, StageName FROM dbo.ProductionStages",
-        headers=["StageID", "StageName"],
-    )
-    stage_name_by_id = {row["StageID"]: (row.get("StageName", "") or "").strip() for row in stages_raw}
+    if args.use_csv:
+        csv_dir = Path(args.use_csv)
+        stage_name_by_id = load_stage_names_from_csv(csv_dir)
+        stage_events_raw = load_population_stages_from_csv(csv_dir, pop_id_set)
+    else:
+        stages_raw = extractor._run_sqlcmd(
+            query="SELECT StageID, StageName FROM dbo.ProductionStages",
+            headers=["StageID", "StageName"],
+        )
+        stage_name_by_id = {row["StageID"]: (row.get("StageName", "") or "").strip() for row in stages_raw}
 
-    stage_events_raw = extractor._run_sqlcmd(
-        query=(
-            "SELECT pps.PopulationID, pps.StageID, pps.StartTime "
-            "FROM dbo.PopulationProductionStages pps "
-            + (
-                "JOIN dbo.Populations p ON p.PopulationID = pps.PopulationID "
-                f"WHERE p.ProjectNumber = '{project_number}' "
-                f"AND p.InputYear = '{input_year}' "
-                f"AND p.RunningNumber = '{running_number}'"
-                if project_number and input_year and running_number
-                else f"WHERE pps.PopulationID IN ({in_clause})"
-            )
-        ),
-        headers=["PopulationID", "StageID", "StartTime"],
-    )
+        stage_events_raw = extractor._run_sqlcmd(
+            query=(
+                "SELECT pps.PopulationID, pps.StageID, pps.StartTime "
+                "FROM dbo.PopulationProductionStages pps "
+                + (
+                    "JOIN dbo.Populations p ON p.PopulationID = pps.PopulationID "
+                    f"WHERE p.ProjectNumber = '{project_number}' "
+                    f"AND p.InputYear = '{input_year}' "
+                    f"AND p.RunningNumber = '{running_number}'"
+                    if project_number and input_year and running_number
+                    else f"WHERE pps.PopulationID IN ({in_clause})"
+                )
+            ),
+            headers=["PopulationID", "StageID", "StartTime"],
+        )
 
     stage_events: dict[str, list[tuple[datetime, str]]] = {}
     for row in stage_events_raw:
@@ -693,7 +794,12 @@ def main() -> int:
                     continue
 
                 if src not in source_remaining:
-                    source_remaining[src] = lookup_status_snapshot(extractor, population_id=src, at_time=op_time)
+                    if args.use_csv:
+                        source_remaining[src] = lookup_status_snapshot_from_index(
+                            status_index, population_id=src, at_time=op_time
+                        )
+                    else:
+                        source_remaining[src] = lookup_status_snapshot(extractor, population_id=src, at_time=op_time)
 
                 src_count_before, src_biomass_before = source_remaining[src]
 

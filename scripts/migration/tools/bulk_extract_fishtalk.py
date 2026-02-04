@@ -39,7 +39,24 @@ Output directory structure:
     ├── production_stages.csv         # ~100 rows (reference)
     ├── ext_inputs.csv                # ~350K rows (Ext_Inputs_v2 - TRUE biological batch identifier)
     ├── ext_populations.csv           # ~350K rows (Ext_Populations_v2 - population name metadata)
+    ├── fish_group_history.csv        # ~221K rows (FishGroupHistory - population to input project)
+    ├── input_projects.csv            # ~2K rows (InputProjects - fish group/project anchor)
     ├── population_links.csv          # ~? rows (PopulationLink - FW→Sea linking hints)
+    ├── internal_delivery.csv         # ~3K rows (InternalDelivery - FW→Sea delivery header)
+    ├── internal_delivery_operations.csv # ~? rows (Operations linked to InternalDelivery)
+    ├── internal_delivery_actions.csv # ~? rows (Actions linked to InternalDelivery)
+    ├── internal_delivery_planned_activities.csv # ~? rows (PlannedActivities linked to InternalDelivery)
+    ├── transport_carriers.csv        # ~41 rows (TransportCarrier - carrier name/code)
+    ├── transport_methods.csv         # ~14 rows (TransportMethods - transport method metadata)
+    ├── ext_transporters.csv          # ~? rows (Ext_Transporters_v2 - transporter names)
+    ├── ext_transfers.csv             # ~? rows (Ext_Transfers_v2 - transfer totals)
+    ├── plan_transfers.csv            # ~? rows (PlanTransfer - planning transfers)
+    ├── reason_for_transfer.csv       # ~? rows (ReasonForTransfer reference)
+    ├── wrasse_pop_transfers.csv      # ~? rows (WrassePopTransfer - wrasse transfers by pop)
+    ├── wrasse_transfers.csv          # ~? rows (WrasseTransfer - wrasse transfers by container)
+    ├── ff_bio_transfers.csv          # ~? rows (FFBioTransfer - financial transfer rollup)
+    ├── ff_costing_bio_transfers.csv  # ~? rows (FFCostingBioTransfer - financial transfer deltas)
+    ├── ff_costing_bio_transfer_attribute_counts.csv # ~? rows (FFCostingBioTransferAttributeCounts)
     └── grouped_organisation.csv      # ~17K rows (Ext_GroupedOrganisation_v2 - site/hall grouping)
 """
 
@@ -411,7 +428,7 @@ TABLE_CONFIGS = {
     },
     "ext_populations": {
         "query": """
-            SELECT
+            SELECT 
                 CONVERT(varchar(36), PopulationID) AS PopulationID,
                 CONVERT(varchar(36), ContainerID) AS ContainerID,
                 ISNULL(PopulationName, '') AS PopulationName,
@@ -431,6 +448,43 @@ TABLE_CONFIGS = {
         "estimated_rows": 350000,
         "chunk_size": 0,
     },
+    "fish_group_history": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), PopulationID) AS PopulationID,
+                CONVERT(varchar(36), InputProjectID) AS InputProjectID
+            FROM dbo.FishGroupHistory
+        """,
+        "headers": ["PopulationID", "InputProjectID"],
+        "estimated_rows": 221000,
+        "chunk_size": 0,
+    },
+    "input_projects": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), InputProjectID) AS InputProjectID,
+                CONVERT(varchar(36), SiteID) AS SiteID,
+                CONVERT(varchar(20), Species) AS Species,
+                CONVERT(varchar(10), YearClass) AS YearClass,
+                CONVERT(varchar(2), ProjectNumberOld) AS ProjectNumberOld,
+                CONVERT(varchar(100), ProjectName) AS ProjectName,
+                CONVERT(varchar(5), Active) AS Active,
+                CONVERT(varchar(10), ProjectNumber) AS ProjectNumber
+            FROM dbo.InputProjects
+        """,
+        "headers": [
+            "InputProjectID",
+            "SiteID",
+            "Species",
+            "YearClass",
+            "ProjectNumberOld",
+            "ProjectName",
+            "Active",
+            "ProjectNumber",
+        ],
+        "estimated_rows": 2100,
+        "chunk_size": 0,
+    },
     "population_links": {
         "query": """
             SELECT
@@ -442,6 +496,419 @@ TABLE_CONFIGS = {
         """,
         "headers": ["FromPopulationID", "ToPopulationID", "OperationID", "LinkType"],
         "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "internal_delivery": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), SalesOperationID) AS SalesOperationID,
+                CONVERT(varchar(36), InputSiteID) AS InputSiteID,
+                CONVERT(varchar(36), InputOperationID) AS InputOperationID,
+                CONVERT(varchar(36), PlannedActivityID) AS PlannedActivityID
+            FROM dbo.InternalDelivery
+        """,
+        "headers": ["SalesOperationID", "InputSiteID", "InputOperationID", "PlannedActivityID"],
+        "estimated_rows": 3000,
+        "chunk_size": 0,
+    },
+    "internal_delivery_operations": {
+        "query": """
+            SELECT DISTINCT
+                CONVERT(varchar(36), o.OperationID) AS OperationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS StartTime,
+                CONVERT(varchar(19), o.EndTime, 120) AS EndTime,
+                CONVERT(varchar(10), o.OperationType) AS OperationType,
+                REPLACE(REPLACE(REPLACE(ISNULL(o.Comment, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS Comment,
+                CONVERT(varchar(19), o.RegistrationTime, 120) AS RegistrationTime
+            FROM dbo.Operations o
+            JOIN (
+                SELECT SalesOperationID AS OperationID FROM dbo.InternalDelivery
+                UNION
+                SELECT InputOperationID AS OperationID FROM dbo.InternalDelivery WHERE InputOperationID IS NOT NULL
+            ) ids ON o.OperationID = ids.OperationID
+        """,
+        "headers": [
+            "OperationID",
+            "StartTime",
+            "EndTime",
+            "OperationType",
+            "Comment",
+            "RegistrationTime",
+        ],
+        "estimated_rows": 6000,
+        "chunk_size": 0,
+    },
+    "internal_delivery_actions": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), a.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(10), a.ActionType) AS ActionType,
+                CONVERT(varchar(10), a.ActionOrder) AS ActionOrder,
+                CONVERT(varchar(36), a.OperationID) AS OperationID
+            FROM dbo.Action a
+            JOIN (
+                SELECT SalesOperationID AS OperationID FROM dbo.InternalDelivery
+                UNION
+                SELECT InputOperationID AS OperationID FROM dbo.InternalDelivery WHERE InputOperationID IS NOT NULL
+            ) ids ON a.OperationID = ids.OperationID
+        """,
+        "headers": ["ActionID", "PopulationID", "ActionType", "ActionOrder", "OperationID"],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "internal_delivery_planned_activities": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), p.PlannedActivityID) AS PlannedActivityID,
+                CONVERT(varchar(36), p.SiteID) AS SiteID,
+                CONVERT(varchar(19), p.DueDate, 120) AS DueDate,
+                REPLACE(REPLACE(REPLACE(ISNULL(p.Description, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS Description,
+                REPLACE(REPLACE(REPLACE(ISNULL(p.Summary, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS Summary,
+                CONVERT(varchar(10), p.ActivityCategory) AS ActivityCategory,
+                CONVERT(varchar(10), p.ActivityType) AS ActivityType,
+                CONVERT(varchar(36), p.GroupID) AS GroupID
+            FROM dbo.PlannedActivities p
+            JOIN (
+                SELECT PlannedActivityID
+                FROM dbo.InternalDelivery
+                WHERE PlannedActivityID IS NOT NULL
+            ) ids ON p.PlannedActivityID = ids.PlannedActivityID
+        """,
+        "headers": [
+            "PlannedActivityID",
+            "SiteID",
+            "DueDate",
+            "Description",
+            "Summary",
+            "ActivityCategory",
+            "ActivityType",
+            "GroupID",
+        ],
+        "estimated_rows": 3000,
+        "chunk_size": 0,
+    },
+    "transport_carriers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), tc.ID) AS TransportCarrierID,
+                ISNULL(tc.Name, '') AS Name,
+                ISNULL(tc.OfficialCode, '') AS OfficialCode,
+                CONVERT(varchar(10), tc.TransportMethodID) AS TransportMethodID,
+                CONVERT(varchar(36), tc.ContactID) AS ContactID,
+                CONVERT(varchar(5), tc.Active) AS Active
+            FROM dbo.TransportCarrier tc
+        """,
+        "headers": [
+            "TransportCarrierID",
+            "Name",
+            "OfficialCode",
+            "TransportMethodID",
+            "ContactID",
+            "Active",
+        ],
+        "estimated_rows": 50,
+        "chunk_size": 0,
+    },
+    "transport_methods": {
+        "query": """
+            SELECT
+                CONVERT(varchar(10), tm.TransportMethodID) AS TransportMethodID,
+                CONVERT(varchar(10), tm.TextID) AS TextID,
+                ISNULL(tm.DefaultText, '') AS DefaultText,
+                CONVERT(varchar(5), tm.Active) AS Active,
+                CONVERT(varchar(5), tm.SystemDelivered) AS SystemDelivered
+            FROM dbo.TransportMethods tm
+        """,
+        "headers": [
+            "TransportMethodID",
+            "TextID",
+            "DefaultText",
+            "Active",
+            "SystemDelivered",
+        ],
+        "estimated_rows": 20,
+        "chunk_size": 0,
+    },
+    "ext_transporters": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), t.TransporterID) AS TransporterID,
+                ISNULL(t.Name, '') AS Name
+            FROM dbo.Ext_Transporters_v2 t
+        """,
+        "headers": ["TransporterID", "Name"],
+        "estimated_rows": 200,
+        "chunk_size": 0,
+    },
+    "ext_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), SourcePop) AS SourcePop,
+                CONVERT(varchar(36), DestPop) AS DestPop,
+                CONVERT(varchar(32), TransferredCount) AS TransferredCount,
+                CONVERT(varchar(32), TransferredBiomassKg) AS TransferredBiomassKg,
+                CONVERT(varchar(32), ShareCountForward) AS ShareCountForward,
+                CONVERT(varchar(32), ShareBiomassForward) AS ShareBiomassForward,
+                CONVERT(varchar(32), ShareCountBackward) AS ShareCountBackward,
+                CONVERT(varchar(32), ShareBiomassBackward) AS ShareBiomassBackward
+            FROM dbo.Ext_Transfers_v2
+        """,
+        "headers": [
+            "SourcePop",
+            "DestPop",
+            "TransferredCount",
+            "TransferredBiomassKg",
+            "ShareCountForward",
+            "ShareBiomassForward",
+            "ShareCountBackward",
+            "ShareBiomassBackward",
+        ],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "plan_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FromPlanPopulationID) AS FromPlanPopulationID,
+                CONVERT(varchar(36), ToPlanPopulationID) AS ToPlanPopulationID,
+                CONVERT(varchar(32), CountShare) AS CountShare,
+                CONVERT(varchar(32), BiomassShare) AS BiomassShare,
+                CONVERT(varchar(36), TransferID) AS TransferID,
+                CONVERT(varchar(32), CostPrKg) AS CostPrKg,
+                CONVERT(varchar(32), CostPrPiece) AS CostPrPiece,
+                CONVERT(varchar(10), TransferType) AS TransferType
+            FROM dbo.PlanTransfer
+        """,
+        "headers": [
+            "FromPlanPopulationID",
+            "ToPlanPopulationID",
+            "CountShare",
+            "BiomassShare",
+            "TransferID",
+            "CostPrKg",
+            "CostPrPiece",
+            "TransferType",
+        ],
+        "estimated_rows": 20000,
+        "chunk_size": 0,
+    },
+    "reason_for_transfer": {
+        "query": """
+            SELECT
+                CONVERT(varchar(10), ReasonForTransferID) AS ReasonForTransferID,
+                CONVERT(varchar(10), TextID) AS TextID,
+                ISNULL(DefaultText, '') AS DefaultText,
+                CONVERT(varchar(5), Active) AS Active,
+                CONVERT(varchar(5), SystemDelivered) AS SystemDelivered
+            FROM dbo.ReasonForTransfer
+        """,
+        "headers": ["ReasonForTransferID", "TextID", "DefaultText", "Active", "SystemDelivered"],
+        "estimated_rows": 50,
+        "chunk_size": 0,
+    },
+    "wrasse_pop_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), TransferID) AS TransferID,
+                CONVERT(varchar(36), FromPopID) AS FromPopID,
+                CONVERT(varchar(36), ToPopID) AS ToPopID,
+                CONVERT(varchar(36), ExistingPopID) AS ExistingPopID,
+                CONVERT(varchar(36), RemainingPopID) AS RemainingPopID,
+                CONVERT(varchar(10), ReasonForTransferID) AS ReasonForTransferID,
+                CONVERT(varchar(19), TransferTime, 120) AS TransferTime,
+                CONVERT(varchar(32), TransferredCount) AS TransferredCount,
+                CONVERT(varchar(32), RemainingCount) AS RemainingCount,
+                CONVERT(varchar(36), RegisteredBy) AS RegisteredBy,
+                CONVERT(varchar(19), RegistrationTime, 120) AS RegistrationTime
+            FROM dbo.WrassePopTransfer
+        """,
+        "headers": [
+            "TransferID",
+            "FromPopID",
+            "ToPopID",
+            "ExistingPopID",
+            "RemainingPopID",
+            "ReasonForTransferID",
+            "TransferTime",
+            "TransferredCount",
+            "RemainingCount",
+            "RegisteredBy",
+            "RegistrationTime",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "wrasse_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FromContainerID) AS FromContainerID,
+                CONVERT(varchar(36), ToContainerID) AS ToContainerID,
+                CONVERT(varchar(10), SpeciesID) AS SpeciesID,
+                CONVERT(varchar(19), TransferTime, 120) AS TransferTime,
+                CONVERT(varchar(32), TransferredCount) AS TransferredCount,
+                CONVERT(varchar(5), AllTransferred) AS AllTransferred,
+                CONVERT(varchar(36), RegisteredBy) AS RegisteredBy,
+                CONVERT(varchar(19), RegistrationTime, 120) AS RegistrationTime,
+                CONVERT(varchar(10), ReasonID) AS ReasonID
+            FROM dbo.WrasseTransfer
+        """,
+        "headers": [
+            "FromContainerID",
+            "ToContainerID",
+            "SpeciesID",
+            "TransferTime",
+            "TransferredCount",
+            "AllTransferred",
+            "RegisteredBy",
+            "RegistrationTime",
+            "ReasonID",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "ff_bio_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FinancialScenarioID) AS FinancialScenarioID,
+                CONVERT(varchar(36), PeriodID) AS PeriodID,
+                CONVERT(varchar(10), Generation) AS Generation,
+                CONVERT(varchar(10), SpeciesID) AS SpeciesID,
+                CONVERT(varchar(10), FishTypeID) AS FishTypeID,
+                CONVERT(varchar(36), SiteID) AS SiteID,
+                CONVERT(varchar(10), CostingProjectID) AS CostingProjectID,
+                CONVERT(varchar(32), TransferCost) AS TransferCost,
+                CONVERT(varchar(32), TransferCount) AS TransferCount,
+                CONVERT(varchar(32), TransferBiomass) AS TransferBiomass
+            FROM dbo.FFBioTransfer
+        """,
+        "headers": [
+            "FinancialScenarioID",
+            "PeriodID",
+            "Generation",
+            "SpeciesID",
+            "FishTypeID",
+            "SiteID",
+            "CostingProjectID",
+            "TransferCost",
+            "TransferCount",
+            "TransferBiomass",
+        ],
+        "estimated_rows": 20000,
+        "chunk_size": 0,
+    },
+    "ff_costing_bio_transfers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FinancialScenarioID) AS FinancialScenarioID,
+                CONVERT(varchar(36), PeriodID) AS PeriodID,
+                CONVERT(varchar(10), FromGeneration) AS FromGeneration,
+                CONVERT(varchar(10), FromSpeciesID) AS FromSpeciesID,
+                CONVERT(varchar(10), FromFishTypeID) AS FromFishTypeID,
+                CONVERT(varchar(36), FromSiteID) AS FromSiteID,
+                CONVERT(varchar(10), FromCostingProjectID) AS FromCostingProjectID,
+                CONVERT(varchar(10), ToGeneration) AS ToGeneration,
+                CONVERT(varchar(10), ToSpeciesID) AS ToSpeciesID,
+                CONVERT(varchar(10), ToFishTypeID) AS ToFishTypeID,
+                CONVERT(varchar(36), ToSiteID) AS ToSiteID,
+                CONVERT(varchar(10), ToCostingProjectID) AS ToCostingProjectID,
+                CONVERT(varchar(10), Dimension) AS Dimension,
+                CONVERT(varchar(5), Actual) AS Actual,
+                CONVERT(varchar(36), FromCostCenterID) AS FromCostCenterID,
+                CONVERT(varchar(36), ToCostCenterID) AS ToCostCenterID,
+                CONVERT(varchar(32), DeltaCount) AS DeltaCount,
+                CONVERT(varchar(32), DeltaBiomass) AS DeltaBiomass,
+                CONVERT(varchar(32), DeltaInputCount) AS DeltaInputCount,
+                CONVERT(varchar(32), DeltaInputBiomass) AS DeltaInputBiomass,
+                CONVERT(varchar(32), DeltaMortalityCount) AS DeltaMortalityCount,
+                CONVERT(varchar(32), DeltaMortalityBiomass) AS DeltaMortalityBiomass,
+                CONVERT(varchar(32), DeltaFeedUse) AS DeltaFeedUse,
+                CONVERT(varchar(32), DeltaLossAfterStartFeedingCount) AS DeltaLossAfterStartFeedingCount,
+                CONVERT(varchar(32), DeltaLossAfterStartFeedingBiomass) AS DeltaLossAfterStartFeedingBiomass,
+                CONVERT(varchar(32), DeltaFishDays) AS DeltaFishDays,
+                CONVERT(varchar(32), DeltaCulledCount) AS DeltaCulledCount,
+                CONVERT(varchar(32), DeltaCulledBiomass) AS DeltaCulledBiomass,
+                CONVERT(varchar(10), TransferType) AS TransferType
+            FROM dbo.FFCostingBioTransfer
+        """,
+        "headers": [
+            "FinancialScenarioID",
+            "PeriodID",
+            "FromGeneration",
+            "FromSpeciesID",
+            "FromFishTypeID",
+            "FromSiteID",
+            "FromCostingProjectID",
+            "ToGeneration",
+            "ToSpeciesID",
+            "ToFishTypeID",
+            "ToSiteID",
+            "ToCostingProjectID",
+            "Dimension",
+            "Actual",
+            "FromCostCenterID",
+            "ToCostCenterID",
+            "DeltaCount",
+            "DeltaBiomass",
+            "DeltaInputCount",
+            "DeltaInputBiomass",
+            "DeltaMortalityCount",
+            "DeltaMortalityBiomass",
+            "DeltaFeedUse",
+            "DeltaLossAfterStartFeedingCount",
+            "DeltaLossAfterStartFeedingBiomass",
+            "DeltaFishDays",
+            "DeltaCulledCount",
+            "DeltaCulledBiomass",
+            "TransferType",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "ff_costing_bio_transfer_attribute_counts": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FinancialScenarioID) AS FinancialScenarioID,
+                CONVERT(varchar(36), PeriodID) AS PeriodID,
+                CONVERT(varchar(10), FromGeneration) AS FromGeneration,
+                CONVERT(varchar(10), FromSpeciesID) AS FromSpeciesID,
+                CONVERT(varchar(10), FromFishTypeID) AS FromFishTypeID,
+                CONVERT(varchar(36), FromSiteID) AS FromSiteID,
+                CONVERT(varchar(10), FromCostingProjectID) AS FromCostingProjectID,
+                CONVERT(varchar(10), ToGeneration) AS ToGeneration,
+                CONVERT(varchar(10), ToSpeciesID) AS ToSpeciesID,
+                CONVERT(varchar(10), ToFishTypeID) AS ToFishTypeID,
+                CONVERT(varchar(36), ToSiteID) AS ToSiteID,
+                CONVERT(varchar(10), ToCostingProjectID) AS ToCostingProjectID,
+                CONVERT(varchar(10), Dimension) AS Dimension,
+                CONVERT(varchar(10), AttributeID) AS AttributeID,
+                CONVERT(varchar(32), DeltaCount) AS DeltaCount,
+                CONVERT(varchar(32), DeltaCulledCount) AS DeltaCulledCount,
+                CONVERT(varchar(32), DeltaMortalityCount) AS DeltaMortalityCount,
+                CONVERT(varchar(10), TransferType) AS TransferType
+            FROM dbo.FFCostingBioTransferAttributeCounts
+        """,
+        "headers": [
+            "FinancialScenarioID",
+            "PeriodID",
+            "FromGeneration",
+            "FromSpeciesID",
+            "FromFishTypeID",
+            "FromSiteID",
+            "FromCostingProjectID",
+            "ToGeneration",
+            "ToSpeciesID",
+            "ToFishTypeID",
+            "ToSiteID",
+            "ToCostingProjectID",
+            "Dimension",
+            "AttributeID",
+            "DeltaCount",
+            "DeltaCulledCount",
+            "DeltaMortalityCount",
+            "TransferType",
+        ],
+        "estimated_rows": 50000,
         "chunk_size": 0,
     },
     "grouped_organisation": {
@@ -463,6 +930,66 @@ TABLE_CONFIGS = {
             "ContainerGroup", "ContainerGroupID", "StandName", "StandID",
         ],
         "estimated_rows": 17000,
+        "chunk_size": 0,
+    },
+    "feed_suppliers": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FeedSupplierID) AS FeedSupplierID,
+                CONVERT(varchar(200), Name) AS Name
+            FROM dbo.Ext_FeedSuppliers_v2
+        """,
+        "headers": ["FeedSupplierID", "Name"],
+        "estimated_rows": 200,
+        "chunk_size": 0,
+    },
+    "feed_types": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FeedTypeID) AS FeedTypeID,
+                CONVERT(varchar(200), Name) AS Name,
+                CONVERT(varchar(36), FeedSupplierID) AS FeedSupplierID
+            FROM dbo.Ext_FeedTypes_v2
+            WHERE Name IS NOT NULL
+        """,
+        "headers": ["FeedTypeID", "Name", "FeedSupplierID"],
+        "estimated_rows": 5000,
+        "chunk_size": 0,
+    },
+    "feed_stores": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FeedStoreID) AS FeedStoreID,
+                CONVERT(varchar(200), FeedStoreName) AS FeedStoreName,
+                CONVERT(varchar(36), OrgUnitID) AS OrgUnitID,
+                CONVERT(varchar(10), Active) AS Active,
+                CONVERT(varchar(32), Capacity) AS Capacity,
+                CONVERT(varchar(36), FeedStoreTypeID) AS FeedStoreTypeID
+            FROM dbo.Ext_FeedStore_v2
+            WHERE FeedStoreName IS NOT NULL
+        """,
+        "headers": ["FeedStoreID", "FeedStoreName", "OrgUnitID", "Active", "Capacity", "FeedStoreTypeID"],
+        "estimated_rows": 2000,
+        "chunk_size": 0,
+    },
+    "feed_deliveries": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), FeedReceptionID) AS FeedReceptionID,
+                CONVERT(varchar(32), AmountKg) AS AmountKg,
+                CONVERT(varchar(32), Price) AS Price,
+                CONVERT(varchar(36), FeedTypeID) AS FeedTypeID,
+                CONVERT(varchar(36), FeedStoreID) AS FeedStoreID,
+                CONVERT(varchar(36), SupplierID) AS SupplierID,
+                CONVERT(varchar(100), BatchNumber) AS BatchNumber,
+                CONVERT(varchar(19), ReceptionDate, 120) AS ReceptionDate
+            FROM dbo.Ext_FeedDelivery_v2
+        """,
+        "headers": [
+            "FeedReceptionID", "AmountKg", "Price", "FeedTypeID", "FeedStoreID",
+            "SupplierID", "BatchNumber", "ReceptionDate",
+        ],
+        "estimated_rows": 200000,
         "chunk_size": 0,
     },
 }

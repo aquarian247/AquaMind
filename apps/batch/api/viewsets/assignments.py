@@ -93,6 +93,25 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
     ]
     ordering = ['-assignment_date']
 
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        ordering_param = None
+        if self.request:
+            ordering_param = self.request.query_params.get("ordering")
+        if ordering_param:
+            return queryset
+
+        if self.request and self.request.query_params.get("batch"):
+            # When requesting a batch's full lifecycle view, return assignments in lifecycle order
+            # so the UI chart reflects the biological progression without changing frontend logic.
+            return queryset.select_related("lifecycle_stage").order_by(
+                "lifecycle_stage__order",
+                "assignment_date",
+                "id",
+            )
+
+        return queryset
+
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 

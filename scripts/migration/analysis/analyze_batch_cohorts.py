@@ -8,7 +8,7 @@ This script investigates batch identification issues by:
 4. Outputting detailed analysis for debugging
 
 Usage:
-    python scripts/migration/tools/analyze_batch_cohorts.py --project-key "1/24/58"
+    python scripts/migration/analysis/analyze_batch_cohorts.py --project-key "1/24/58"
 """
 
 from __future__ import annotations

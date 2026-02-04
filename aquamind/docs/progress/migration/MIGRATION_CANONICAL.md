@@ -1,6 +1,6 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-01-22
+**Last updated:** 2026-02-03
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
@@ -23,6 +23,16 @@ This is the canonical runbook + status for the FishTalk → AquaMind migration. 
 | `docs/prd.md` | Full AquaMind product requirements |
 | `docs/database/data_model.md` | Complete 161-table schema reference |
 | `docs/user_guides/planning_and_workflows_primer.md` | Operational core integration guide |
+
+---
+
+## 2.1 Batch Workflow Mapping (Quick Reference)
+
+- **Stage transitions are represented as transfer workflows** (`batch_batchtransferworkflow` + `batch_transferaction`), but **UI stage charts are derived from assignments**, not workflows.
+- **Assignments (`batch_batchcontainerassignment`) are created per PopulationID**; transfers create workflow actions, and **synthetic lifecycle transitions** are generated from assignment stages.
+- **UI stage order depends on assignment ordering**; backend now orders batch‑filtered assignments by `lifecycle_stage.order` (fix applied 2026‑02‑03).
+- For FishTalk migration specifics (SubTransfers usage, synthetic transitions, and conservation-based counts), see `DATA_MAPPING_DOCUMENT.md` → sections **3.2** and **3.4**.
+- Product intent and schema grounding live in `docs/prd.md` (3.1.2 / 3.1.2.1) and `docs/database/data_model.md`.
 
 ---
 
@@ -52,61 +62,60 @@ Batch Key = InputName + InputNumber + YearClass
 - FW→Sea linking still needs explicit logic. **Best candidates to explore:**
   - `Ext_Populations_v2.PopulationName` (includes Supplier/Station/Month/Year + YearClass)
   - `PopulationLink` (if populated in this DB)
+  - **Activity Explorer “Input” (GUI):** appears to encode FW unit → Sea unit moves with `TransportCarrier` / trip / compartment metadata. Requires extracting `TransportCarrier`, `TransportMethods`, `Ext_Transporters_v2` and any Input/Transport operation tables tied to `InternalDelivery.InputOperationID` (not in current CSVs).
 
 ---
 
 ## 4) Current Migration Status
 
-**Latest migration run: 2026-01-22**
+**Latest migration run: 2026-02-03 (current migration DB)**
 
-### 4.1 Summary Statistics
+**Note:** The migration DB was wiped via `clear_migration_db.py` before this run, so earlier runs (e.g., 2026-01-22 sea batches) are no longer present in `aquamind_db_migr_dev`.
+
+**Key change (2026‑02‑02):** Population counts now use **conservation-based propagation** (Ext_Inputs_v2 + SubTransfers) with **same‑stage suppression** to prevent double‑counting across intra‑stage transfers. This corrected stage totals in the UI without changing frontend logic.
+**Key change (2026‑02‑03):** Assignment list ordering is now **lifecycle‑stage ordered** when filtering by batch, so stage charts reflect biological progression without UI changes.
+
+### 4.1 Run Summary
+
+- **Input-based batch migrated (CSV mode, environmental skipped):**
+  - `Bakkafrost feb 2024|1|2024` (24 populations selected after restricted full‑lifecycle stitching)
+- **Full‑lifecycle (heuristic) settings:** `--include-fw-batch 'Bakkafrost feb 2024|1|2024' --max-fw-batches 1 --max-pre-smolt-batches 0 --heuristic-fw-sea --heuristic-min-score 70`
+- **Transfers:** 3 stage workflows / 20 actions (synthetic transitions only; **SubTransfers edges = 0** for this component).
+- **Feed inventory:** not re-run after the last wipe (kept empty to focus on batch accuracy).
+
+### 4.2 Counts (migration_counts_report.py, 2026-02-03)
 
 | Category | Count | Notes |
 |----------|-------|-------|
-| **Batches migrated** | 2 | Input-based sea batches (Summar 2024, Vár 2024) |
-| **Container assignments** | 214 | Sea containers only (no FW stations) |
-| **Transfer workflows** | 2 | Stage transition workflows only |
-| **Transfer actions** | 203 | Stage actions (no SubTransfers edges) |
-| **Mortality events** | 3,655 | Daily records |
-| **Feeding events** | 2,454 | 351 (Summar) + 2,103 (Vár) |
-| **Treatments** | 402 | Health treatments administered |
-| **Lice counts** | 697 | Sea lice monitoring data |
-| **Journal entries** | 0 | No UserSample actions for these batches |
-| **Environmental readings** | 233,702 | Daily + time-series |
-| **Infrastructure containers** | 80 | Tanks/pens used by these batches |
-| **Sensors** | 289 | FishTalk sensor IDs mapped |
-| **ExternalIdMap entries** | 241,738 | Source-to-target ID tracking |
+| **Batches migrated** | 1 | Input-based heuristic test batch |
+| **Container assignments** | 24 | Populations in selected full lifecycle |
+| **Transfer workflows** | 3 | Synthetic lifecycle transitions |
+| **Transfer actions** | 20 | From synthetic transitions |
+| **Mortality events** | 720 | CSV extracts |
+| **Feeding events** | 263 | CSV extracts |
+| **Environmental readings** | 0 | Skipped (`--skip-environmental`) |
+| **Infrastructure containers** | 24 | Tanks created from populations |
+| **FW stations / halls** | 1 / 3 | Created from container hierarchy |
+| **Feed purchases** | 0 | Not re-run after last wipe |
+| **Feed container stock** | 0 | Not re-run after last wipe |
+| **ExternalIdMap entries** | 1,145 | Idempotent source mapping |
 
-### 4.2 Tables with Data
-
-**Current run (2 sea batches) populates:**
+### 4.3 Tables with Data (current DB)
 
 | Domain | Tables with Data | Notes |
-|--------|-----------------|------------|
-| Batch Management | Core tables | batch, assignments, workflows, actions, mortality |
-| Infrastructure | Core tables | geography, area, container, sensor, containertype |
-| Inventory | Partial | feed, feedingevent (no purchases/stock yet) |
-| Health | Partial | treatment, lice (no journal entries yet) |
-| Environmental | Core tables | parameters + readings |
-| Migration Support | Core | ExternalIdMap populated |
+|--------|-----------------|-------|
+| Batch Management | batch, assignments, transfers, mortality | Synthetic transitions only |
+| Infrastructure | containers, halls, FW stations | No sea areas, no sensors |
+| Inventory | feeding events only | Feed inventory not re-run |
+| Health | mortalityreason only | Treatments/lice/journal not migrated |
+| Environmental | none | Environmental migration skipped |
+| Migration Support | ExternalIdMap | Populated for all migrated rows |
 
-### 4.3 Tables Intentionally Empty (By Design)
-
-| Category | Tables | Reason |
-|----------|--------|--------|
-| **Broodstock** | All 20 tables | Out of scope for initial migration |
-| **Growth Samples** | growthsample, individualgrowthobservation | Will be populated via assimilation |
-| **Planning** | plannedactivity, activitytemplate | Created fresh in AquaMind, not migrated |
-| **Live Projections** | actualdailyassignmentstate, liveforwardprojection | Computed post-migration by assimilation engine |
-| **Harvest** | harvestevent, harvestlot, harvestwaste | Future harvests, not historical |
-| **Finance** | All 12 tables | Intercompany transactions created during operations |
-
-### 4.4 Expected Empty (Current Sea-Only Run)
-- `infrastructure_freshwaterstation`, `infrastructure_hall` (no FW stages)
-- `inventory_feedpurchase`, `inventory_feedcontainerstock` (no FeedStore data yet)
-- `health_journalentry` (no UserSample actions for these batches)
-
----
+### 4.4 Expected Empty (Current Run)
+- Feed inventory tables (`inventory_feedpurchase`, `inventory_feedcontainerstock`) (not re-run)
+- `health_treatment`, `health_licecount`, `health_journalentry` (SQL-only scripts not run)
+- `environmental_environmentalreading` (skipped)
+- Sea-only tables: `infrastructure_area`, `infrastructure_sensor`
 
 ## 5) ETL Optimization (Bulk Extract + CSV Mode)
 
@@ -132,6 +141,11 @@ python scripts/migration/tools/bulk_extract_fishtalk.py --list-tables
 # Extract specific tables only
 python scripts/migration/tools/bulk_extract_fishtalk.py \
   --tables populations,containers,status_values
+
+# Feed inventory extracts (use sa profile if reader isn't provisioned)
+python scripts/migration/tools/bulk_extract_fishtalk.py \
+  --tables feed_suppliers,feed_types,feed_stores,feed_deliveries \
+  --sql-profile fishtalk
 ```
 
 #### Extracted Data Volumes
@@ -165,6 +179,7 @@ SQL-only (no `--use-csv` yet):
 - `pilot_migrate_component_lice.py`
 - `pilot_migrate_component_health_journal.py`
 - `pilot_migrate_component_feed_inventory.py`
+- `pilot_migrate_feed_inventory.py`
 
 ```bash
 # Migrate component using pre-extracted CSV data
@@ -253,6 +268,29 @@ The migration preview stack runs Django + Node in Docker to resemble test/prod:
 
 Use this stack for GUI validation; avoid local `runserver`/`npm dev` when validating migration data.
 
+### 7.0.1 FishTalk DB Access (Docker + SQL Profiles)
+
+- Ensure Docker Desktop is running and the `sqlserver` container is up (`docker ps`).
+- The FishTalk database in the container is `FISHTALK` (case-insensitive in SQL Server).
+- SQL profiles (see `scripts/migration/config.py`):
+  - `fishtalk_readonly` → login `fishtalk_reader` (default for most scripts)
+  - `fishtalk` → login `sa` (use if permissions fail or reader user is missing)
+- If `fishtalk_reader` login exists but cannot open the DB, create the DB user + grant read access:
+
+```sql
+USE FISHTALK;
+CREATE USER fishtalk_reader FOR LOGIN fishtalk_reader;
+ALTER ROLE db_datareader ADD MEMBER fishtalk_reader;
+```
+
+- Quick connectivity test:
+
+```bash
+docker exec sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -C -S localhost,1433 -U fishtalk_reader -P 'FishtalkReader#2025' -d FISHTALK \
+  -Q "SELECT TOP 1 name FROM sys.tables"
+```
+
 ### 7.1 Setup (once per environment)
 
 ```bash
@@ -294,10 +332,10 @@ This wrapper runs all migration scripts in sequence for a single input batch.
 ### 7.3.1 Legacy: project-based stitching (deprecated)
 
 ```bash
-python scripts/migration/tools/project_based_stitching_report.py --min-stages 4 --print-top 20
+python scripts/migration/legacy/tools/project_based_stitching_report.py --min-stages 4 --print-top 20  # deprecated
 
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
-  python scripts/migration/tools/pilot_migrate_project_batch.py \
+  python scripts/migration/legacy/tools/pilot_migrate_project_batch.py \
   --project-key "1/24/27" \
   --skip-environmental
 ```
@@ -497,10 +535,10 @@ This populates django-simple-history tables automatically. See `MIGRATION_BEST_P
 
 | Issue | Impact | Mitigation |
 |-------|--------|------------|
-| PublicTransfers broken since Jan 2023 | FW→sea transfers not recorded | Use SubTransfers for transfers; input-based for batch identity; FW→Sea linking still pending |
+| PublicTransfers broken since Jan 2023 | FW→sea transfers not recorded for active cohorts | Current backup shows FW→Sea edges only in 2010–2014 (no 2023+); active FW→Sea linking remains pending without a new report |
 | Post-Smolt stage rarely tracked | Most batches show 5/6 stages | Acceptable - reflects FishTalk practice |
 | Feed purchase data sparse | Limited FIFO cost tracking | Optional - not blocking |
-| FishTalk backup from Oct 2025 | Missing recent 3 months | Refresh backup before final migration |
+| FishTalk backup from 2026‑01‑22 | Missing data after backup | Refresh backup before final migration |
 
 ### 10.2 Performance Considerations
 
@@ -593,7 +631,7 @@ This populates django-simple-history tables automatically. See `MIGRATION_BEST_P
 | `scripts/migration/tools/etl_loader.py` | CSV data loader with caching |
 | `scripts/migration/tools/pilot_migrate_component.py` | Core batch migration |
 | `scripts/migration/tools/pilot_migrate_component_*.py` | Domain-specific migrations |
-| `scripts/migration/tools/pilot_migrate_project_batch.py` | End-to-end batch migration |
+| `scripts/migration/legacy/tools/pilot_migrate_project_batch.py` | End-to-end batch migration (deprecated) |
 | `scripts/migration/tools/pilot_migrate_scenario_models.py` | TGC/FCR/Temperature migration |
 | `scripts/migration/tools/pilot_migrate_post_batch_processing.py` | Post-migration processing |
 | `scripts/migration/tools/migration_counts_report.py` | Verification counts |

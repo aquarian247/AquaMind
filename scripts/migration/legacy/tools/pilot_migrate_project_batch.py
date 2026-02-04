@@ -83,7 +83,7 @@ def load_project_populations(project_key: str) -> list[PopulationMember]:
     if not members_file.exists():
         raise FileNotFoundError(
             f"Project population members file not found: {members_file}\n"
-            "Run project_based_stitching_report.py first."
+            "Run scripts/migration/legacy/tools/project_based_stitching_report.py first."
         )
 
     members = []

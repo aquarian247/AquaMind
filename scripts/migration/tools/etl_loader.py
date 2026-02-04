@@ -512,10 +512,8 @@ class ETLDataLoader:
         end_time: Optional[datetime] = None,
     ) -> List[Dict[str, str]]:
         """Get mortality actions for specific populations."""
-        all_actions = self._load_csv_dict("mortality_actions")
-        
         results = []
-        for row in all_actions:
+        for row in self._stream_csv("mortality_actions"):
             if row.get("PopulationID") not in population_ids:
                 continue
             # CSV uses OperationStartTime column
