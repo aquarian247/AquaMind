@@ -380,6 +380,32 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 - Treat `PopulationID` as the **atomic assignment/transfer node** used by event tables and transfer edges.
 - Do **not** create `batch_batch` per PopulationID; batch identity comes from `Ext_Inputs_v2` (biological input) or the stitched component key.
 
+#### 3.0.0.7 Event Replay Blueprint (Schema-Level, 2026-02-04)
+
+**Goal:** Establish a deterministic, schema-driven event stream that can be “replayed” to rebuild batch history in AquaMind. This is **schema-only** guidance; data completeness must be validated per extract.
+
+**Core tables (actuals):**
+- **`Operations`**: time axis (`OperationID`, `StartTime`, `OperationType`).
+- **`Action`**: per‑population event rows (`ActionID`, `OperationID`, `PopulationID`, `ActionType`, `ActionOrder`).
+- **Domain tables** keyed by `ActionID` (e.g., Feeding, Mortality, WeightSamples, Lice, Treatments, etc.).
+- **Transfer edges**: `SubTransfers`, `PublicTransfers`, `PopulationLink` (lineage/moves via `OperationID` + PopulationIDs).
+
+**Reference decoding:**
+- `PublicOperationTypes` maps `Operations.OperationType → Text` (CSV: `public_operation_types.csv`, 44 rows).
+- No schema‑level mapping exists for `Action.ActionType`; decoding must be inferred via domain tables or UI references.
+
+**Replay order (schema‑level):**
+1. Build a chronological event list from `Operations` (use `StartTime` as event time; join to `PublicOperationTypes` for labels).
+2. Attach `Action` rows by `OperationID` to get the affected `PopulationID` set and per‑op event ordering (`ActionOrder`).
+3. Enrich each Action from domain tables via `ActionID` (Feeding, Mortality, Lice, Treatments, WeightSamples, etc.).
+4. Apply lineage/movement edges:
+   - `SubTransfers` for within‑environment lineage and share propagation (`SourcePop*` → `DestPop*`).
+   - `PublicTransfers` for legacy explicit transfers (`SourcePop` → `DestPop`).
+   - `PopulationLink` for additional cross‑population links (when present).
+5. Treat `Plan*` tables (`PlanPopulation`, `PlanTransfer`, `PlanAction`, `PublicPlanPopulationAttributes`) as **planning context**, not actuals.
+
+**Extraction guidance:** `Action` + `ActionMetaData` are very large; use **targeted extraction** by date window or OperationID set (see `scripts/migration/tools/targeted_action_extract.py`).
+
 #### 3.0.1 Deprecated: Project-Based Stitching (Legacy Only)
 
 **Status:** Not used in current migration flow. Kept for historical context and to discourage reuse.

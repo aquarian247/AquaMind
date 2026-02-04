@@ -541,5 +541,58 @@ graph LR
   PlannedActivities["PlannedActivities"] -->|PlannedActivityID| InternalDelivery["InternalDelivery"]
 ```
 
+### 9.1 PublicOperationTypes Mapping (Extracted 2026-02-04)
+
+Source: `scripts/migration/data/extract/public_operation_types.csv` (44 rows).
+
+| OperationType | TextID | Text |
+|---|---|---|
+| 0 | 1181 | Undefined |
+| 1 | 30084 | Transfer |
+| 2 | 77168 | Set status |
+| 3 | 5536 | Feeding |
+| 4 | 5546 | Mortality |
+| 5 | 5544 | Input |
+| 7 | 40018 | Sale |
+| 8 | 5537 | Harvest |
+| 9 | 5533 | Environment |
+| 10 | 74216 | Weight sample |
+| 11 | 5531 | Counting |
+| 12 | 5532 | Culling |
+| 13 | 1135 | Escape |
+| 14 | 5545 | Maturity Sample |
+| 15 | 69409 | Diagnosis |
+| 16 | 50197 | Treatment |
+| 17 | 5542 | Vaccination |
+| 22 | 5538 | Hatching |
+| 23 | 5535 | Fasting |
+| 24 | 5550 | Lice sample |
+| 25 | 69792 | Quarantine Followup |
+| 26 | 5551 | Combined sample |
+| 27 | 5553 | Fat and color sample |
+| 28 | 5554 | Salt tolerance sample |
+| 31 | 58311 | Many to many transfer |
+| 32 | 58615 | Biomass measurement |
+| 33 | 62165 | Spawning |
+| 39 | 75736 | Growth adjustment |
+| 42 | 50550 | Cleaner fish input |
+| 43 | 75737 | Cleaner fish transfer |
+| 44 | 75738 | Cleaner fish release |
+| 45 | 75739 | Cleaner fish counting |
+| 46 | 66275 | Cleaner fish mortality |
+| 47 | 62620 | Shocking |
+| 48 | 67644 | Shuffle trays |
+| 49 | 68243 | Change of net |
+| 50 | 75740 | Wash of net |
+| 52 | 71302 | User defined sample |
+| 53 | 70761 | Feed collection |
+| 54 | 75741 | Feed waste |
+| 56 | 73266 | Predator mortality |
+| 57 | 74682 | Cleaner fish feeding |
+| 58 | -2 | Wrasse culling |
+| 59 | 79849 | Lice treatment |
+
+**Note:** There is no table in the schema snapshot that maps `Action.ActionType` to human‑readable names. Any ActionType decoding must be inferred via domain tables or UI references.
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts

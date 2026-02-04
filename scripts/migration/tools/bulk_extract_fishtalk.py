@@ -37,6 +37,7 @@ Output directory structure:
     ├── sub_transfers.csv             # ~205K rows (SubTransfers - active through 2025, for chain stitching)
     ├── operation_stage_changes.csv   # ~27K rows (OperationProductionStageChange for stage timeline)
     ├── production_stages.csv         # ~100 rows (reference)
+    ├── public_operation_types.csv    # ~? rows (PublicOperationTypes reference)
     ├── ext_inputs.csv                # ~350K rows (Ext_Inputs_v2 - TRUE biological batch identifier)
     ├── ext_populations.csv           # ~350K rows (Ext_Populations_v2 - population name metadata)
     ├── fish_group_history.csv        # ~221K rows (FishGroupHistory - population to input project)
@@ -124,6 +125,18 @@ TABLE_CONFIGS = {
         """,
         "headers": ["StageID", "StageName"],
         "estimated_rows": 100,
+        "chunk_size": 0,
+    },
+    "public_operation_types": {
+        "query": """
+            SELECT
+                CONVERT(varchar(10), OperationType) AS OperationType,
+                CONVERT(varchar(10), TextID) AS TextID,
+                ISNULL(Text, '') AS Text
+            FROM dbo.PublicOperationTypes
+        """,
+        "headers": ["OperationType", "TextID", "Text"],
+        "estimated_rows": 200,
         "chunk_size": 0,
     },
     "containers": {
