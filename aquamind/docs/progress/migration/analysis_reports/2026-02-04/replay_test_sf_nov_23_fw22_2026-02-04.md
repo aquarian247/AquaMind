@@ -4,7 +4,7 @@ Date: 2026-02-04
 InputProjectID: EC44DBBA-067D-4B34-89CD-630BAFFC5BE9
 ProjectName: SF NOV 23
 YearClass: 2023
-Population count: 130
+Population IDs: 130 (count of population rows, not fish count)
 
 Window tested: 2023-11-01 to 2024-06-01 (Operations.StartTime)
 
@@ -92,4 +92,3 @@ Notes
 - Run the same replay query set for the FW halls listed in the transfer report (S03, S24, S16, S08) in the 2025-12 to 2026-02 window.
 - Identify what ActionType 25 represents by sampling its ActionIDs against domain tables or ActionMetaData.
 - Attempt to connect SubTransfers in that window to sea populations at A11/A21 (if any).
-

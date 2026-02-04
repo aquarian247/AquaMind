@@ -139,12 +139,13 @@ Batch identifier: **BM Jun 24**
 **Corresponding Sea Area: A25 Gøtuvík (Sea Report Page 39)**
 
 Rings identified with deployment dates in December 2025:
-- Ring 501: 366 fish, 206,708 stk - 830 mv
-- Ring 507: 498 fish, 199,518 stk - 1,359 mv
-- Ring 508: 351 fish, 192,539 stk - 1,036 mv
-- Ring 509: 404 fish, 197,313 stk - 1,191 mv
-- Ring 515: 505 fish, 193,943 stk - 1,187 mv
-- Ring 516: 307 fish, 92,383 stk - 860 mv
+Note: the first numeric value appears to be **start weight (g)**, `stk` is fish count, and `mv` is likely average weight.
+- Ring 501: start weight 366 g, 206,708 stk - 830 mv
+- Ring 507: start weight 498 g, 199,518 stk - 1,359 mv
+- Ring 508: start weight 351 g, 192,539 stk - 1,036 mv
+- Ring 509: start weight 404 g, 197,313 stk - 1,191 mv
+- Ring 515: start weight 505 g, 193,943 stk - 1,187 mv
+- Ring 516: start weight 307 g, 92,383 stk - 860 mv
 
 **Total A25 Gøtuvík: 1,080,121 fish**
 
@@ -163,12 +164,13 @@ Batch identifier: **BM Aug 24**
 **Corresponding Sea Area: A47 Gøtuvík (Sea Report Page 40)**
 
 Rings identified with deployment dates in November 2025:
-- Ring N01: 326 fish, 190,645 stk - 811 mv
-- Ring N02: 312 fish, 107,279 stk - 555 mv
-- Ring N03: 450 fish, 197,196 stk - 1,017 mv
-- Ring N07: 370 fish, 195,530 stk - 1,363 mv
-- Ring N11: 398 fish, 195,560 stk - 781 mv
-- Ring N12: 462 fish, 192,906 stk - 750 mv
+Note: the first numeric value appears to be **start weight (g)**, `stk` is fish count, and `mv` is likely average weight.
+- Ring N01: start weight 326 g, 190,645 stk - 811 mv
+- Ring N02: start weight 312 g, 107,279 stk - 555 mv
+- Ring N03: start weight 450 g, 197,196 stk - 1,017 mv
+- Ring N07: start weight 370 g, 195,530 stk - 1,363 mv
+- Ring N11: start weight 398 g, 195,560 stk - 781 mv
+- Ring N12: start weight 462 g, 192,906 stk - 750 mv
 
 **Total A47 Gøtuvík: 1,079,516 fish**
 

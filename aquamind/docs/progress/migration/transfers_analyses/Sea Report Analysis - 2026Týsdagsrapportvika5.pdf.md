@@ -114,12 +114,13 @@ Each ring has same detailed metrics as A04
 ### Page 32 - Aliøki A06 Argir
 **Detailed ring-level data for A06 Argir:**
 Shows 6 rings (numbered 1-6) with deployment dates from 02-04-24 to 06-05-24
-- Ring 1: 02-04-24 SF [STØFN] 25 (JUN 24) - 416 fish, 189,303 stk, 3,129 mv
-- Ring 2: 02-04-24 SF [STØFN] 25 (JUN 24) - 616 fish, 193,086 stk, 3,929 mv
-- Ring 3: 02-04-24 SF [STØFN] 25 (JUN 24) - 509 fish, 192,603 stk, 3,528 mv
-- Ring 4: 05-05-24 SF [STØFN] 25 (JUN 24) - 627 fish, 192,660 stk, 3,079 mv
-- Ring 5: 05-05-24 SF [OKT] 25 (JUN 24) - 613 fish, 197,108 stk, 1,424 mv
-- Ring 6: 06-05-24 SF [OKT] 25 (JUN 24) - 503 fish, 196,079 stk, 1,311 mv
+Note: the first numeric value appears to be **start weight (g)**, `stk` is fish count, and `mv` is likely average weight.
+- Ring 1: 02-04-24 SF [STØFN] 25 (JUN 24) - start weight 416 g, 189,303 stk, 3,129 mv
+- Ring 2: 02-04-24 SF [STØFN] 25 (JUN 24) - start weight 616 g, 193,086 stk, 3,929 mv
+- Ring 3: 02-04-24 SF [STØFN] 25 (JUN 24) - start weight 509 g, 192,603 stk, 3,528 mv
+- Ring 4: 05-05-24 SF [STØFN] 25 (JUN 24) - start weight 627 g, 192,660 stk, 3,079 mv
+- Ring 5: 05-05-24 SF [OKT] 25 (JUN 24) - start weight 613 g, 197,108 stk, 1,424 mv
+- Ring 6: 06-05-24 SF [OKT] 25 (JUN 24) - start weight 503 g, 196,079 stk, 1,311 mv
 
 **Total for A06 Argir: 513 rings, 1,161,672 fish, 1,433 tons**
 
@@ -132,15 +133,16 @@ Shows 6 rings (numbered 1-6) with deployment dates from 02-04-24 to 06-05-24
 ### Page 33 - Aliøki A11 Hvannasund S
 **Detailed ring-level data for A11 Hvannasund S:**
 Shows 12 rings (numbered 3, 4, 5, 6, 7, 8, 9, 10, 12) with deployment dates
-- Ring 3: 03-10-24 SF [BM] 25 (AUG 24) [*MAD] - 694 fish, 111,685 stk
-- Ring 4: 04-10-24 SF [BM] 25 (JUNVØKT 24) [*MAD] - 636 fish, 168,615 stk
-- Ring 5: 05-09-24 SF [BM] 25 (JUN 24) [*MAD] - 304 fish, 167,818 stk
-- Ring 6: 05-09-24 SF [BM] 25 (JUN 24) [*MAD] - 359 fish, 167,609 stk
-- Ring 7: 07-10-24 SF [BM] 26 (SEP 24) [*MAD] - 704 fish, 173,504 stk
-- Ring 8: 08-10-24 SF [BM] 25 (SEP 24) - 383 fish, 130,308 stk
-- Ring 9: 09-10-24 SF [BM] 25 (SEP 24) - 346 fish, 167,321 stk
-- Ring 10: 10-10-24 SF [BM] 26 (SEP 24) - 481 fish, 169,987 stk
-- Ring 12: 12-10-24 SF [BM] 26 (SEP 24) - 359 fish, 141,398 stk
+Note: the first numeric value appears to be **start weight (g)**, `stk` is fish count.
+- Ring 3: 03-10-24 SF [BM] 25 (AUG 24) [*MAD] - start weight 694 g, 111,685 stk
+- Ring 4: 04-10-24 SF [BM] 25 (JUNVØKT 24) [*MAD] - start weight 636 g, 168,615 stk
+- Ring 5: 05-09-24 SF [BM] 25 (JUN 24) [*MAD] - start weight 304 g, 167,818 stk
+- Ring 6: 05-09-24 SF [BM] 25 (JUN 24) [*MAD] - start weight 359 g, 167,609 stk
+- Ring 7: 07-10-24 SF [BM] 26 (SEP 24) [*MAD] - start weight 704 g, 173,504 stk
+- Ring 8: 08-10-24 SF [BM] 25 (SEP 24) - start weight 383 g, 130,308 stk
+- Ring 9: 09-10-24 SF [BM] 25 (SEP 24) - start weight 346 g, 167,321 stk
+- Ring 10: 10-10-24 SF [BM] 26 (SEP 24) - start weight 481 g, 169,987 stk
+- Ring 12: 12-10-24 SF [BM] 26 (SEP 24) - start weight 359 g, 141,398 stk
 
 **Total for A11 Hvannasund S: 502 rings, 1,385,154 fish, 632 tons**
 
@@ -188,15 +190,16 @@ Ring identifiers include (A02), (A03), (A04), (A05), (A06) designations
 **This is one of the key areas mentioned in the freshwater transfer plan!**
 
 Shows 14 rings (numbered 1, 2, 3, 4, 5, 6, 12, 13, 14) with deployment dates:
-- Ring 1: 02-10-24 SF [BM] 25 (SEP 24) - 502 fish, 179,407 stk, 725 mv
-- Ring 2: 02-09-24 SF [BM] 26 (OKT 24) - 351 fish, 63,312 stk, 417 mv
-- Ring 3: 03-10-24 SF [BM] 25 (JUN 24) - 584 fish, 139,789 stk, 739 mv
-- Ring 4: 04-10-24 SF [BM] 25 (SEP 24) - 543 fish, 178,707 stk, 717 mv
-- Ring 5: 05-10-24 SF [BM] 25 (AUG 24) [*MAD] - 477 fish, 129,533 stk, 611 mv
-- Ring 6: 06-10-24 SF [BM] 25 (SEP 24) - 693 fish, 176,761 stk, 980 mv
-- Ring 12: 12-10-24 SF [BM] 26 (OKT 24) [*MAD] - 347 fish, 168,638 stk, 447 mv
-- Ring 13: 13-10-24 SF [BM] 26 (SEP 24) [*MAD] - 478 fish, 168,087 stk, 485 mv
-- Ring 14: 14-10-24 SF [BM] 26 (SEP 24) [*MAD] - 544 fish, 86,437 stk, 558 mv
+Note: the first numeric value appears to be **start weight (g)**, `stk` is fish count, and `mv` is likely average weight.
+- Ring 1: 02-10-24 SF [BM] 25 (SEP 24) - start weight 502 g, 179,407 stk, 725 mv
+- Ring 2: 02-09-24 SF [BM] 26 (OKT 24) - start weight 351 g, 63,312 stk, 417 mv
+- Ring 3: 03-10-24 SF [BM] 25 (JUN 24) - start weight 584 g, 139,789 stk, 739 mv
+- Ring 4: 04-10-24 SF [BM] 25 (SEP 24) - start weight 543 g, 178,707 stk, 717 mv
+- Ring 5: 05-10-24 SF [BM] 25 (AUG 24) [*MAD] - start weight 477 g, 129,533 stk, 611 mv
+- Ring 6: 06-10-24 SF [BM] 25 (SEP 24) - start weight 693 g, 176,761 stk, 980 mv
+- Ring 12: 12-10-24 SF [BM] 26 (OKT 24) [*MAD] - start weight 347 g, 168,638 stk, 447 mv
+- Ring 13: 13-10-24 SF [BM] 26 (SEP 24) [*MAD] - start weight 478 g, 168,087 stk, 485 mv
+- Ring 14: 14-10-24 SF [BM] 26 (SEP 24) [*MAD] - start weight 544 g, 86,437 stk, 558 mv
 
 **Total for A21 Hvannasund S: 532 rings, 1,263,743 fish, 664 tons**
 
