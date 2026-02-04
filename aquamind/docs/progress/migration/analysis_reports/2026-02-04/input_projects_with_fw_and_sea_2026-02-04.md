@@ -1,0 +1,44 @@
+# InputProjects with Both FW and Sea Populations
+
+Date: 2026-02-04
+Source: live query against `InputProjects`, `FishGroupHistory`, `Populations`, `Ext_GroupedOrganisation_v2`
+Environment classification by `Ext_GroupedOrganisation_v2.ProdStage`.
+
+Total projects with both FW and Sea populations: **29**
+
+| InputProjectID | ProjectName | YearClass | FW Pops | Sea Pops | Other |
+|---|---|---|---|---|---|
+| 6E42176D-70F9-49A5-A933-D6AC1B031D1E | BV_WLC 17 S1 | 2017 | 44 | 74 | 0 |
+| AD77099D-4507-4C08-ABCD-CF7182EFE9F9 | LG_LHS 17 S1 (families) | 2017 | 19 | 23 | 0 |
+| A61BD170-21F7-4748-A16C-C63BADD5B561 | GE_LHS 16 S1 | 2016 | 43 | 49 | 0 |
+| 69699A41-7B2F-4457-8551-BF402C05F001 | LG_LHT 16 S1 | 2016 | 12 | 13 | 0 |
+| 60CE5BDC-1C46-4752-8D68-1C1F1BFD6A1D | LG_WLC 16 S1 | 2016 | 1 | 4 | 0 |
+| 1463DA79-6438-4A27-B3E7-9B36C3CD1F67 | BV_LHS 15 S1 | 2015 | 23 | 81 | 0 |
+| 7EEFC62C-8926-4FA3-A651-E774AE09F23A | LG_WLC 15 S1 | 2015 | 5 | 4 | 0 |
+| 63F2CB12-C624-4E05-A26C-FE53F2A768B9 | KLM_NUF 14 S1 | 2014 | 16 | 61 | 0 |
+| 4C721632-5E31-4CAF-8AF2-CAC15D569C0F | KLM_WLC 14 S1 | 2014 | 20 | 22 | 0 |
+| D37F664B-5F7F-4EF6-A092-4723C608A51B | Trout | 2014 | 7 | 6 | 0 |
+| DABA3A54-27B0-49E0-A52A-1780746BAE9B | 13S1 WLC | 2013 | 5 | 9 | 0 |
+| 174E1E08-0DBE-4E5B-84F9-71207C6492B7 | NUF_NUF 13 S1 | 2013 | 11 | 33 | 0 |
+| 2CDDEE0C-B66A-483D-AB81-8786CA853FCB | Trout | 2013 | 1 | 10 | 0 |
+| 18F19976-545F-4596-A4B9-FEF8565B20E8 | 12S1SB | 2012 | 1168 | 226 | 0 |
+| 9DA936F4-2C68-4C88-81A2-52F91C38CC0A | GI_NUF 12 S1 | 2012 | 2 | 38 | 0 |
+| 30F80BD8-B8F3-4140-A3E1-24FFD773CEDC | SC_NUF 12 S1 | 2012 | 2 | 34 | 0 |
+| F01454DE-A328-48B6-A938-C9BF61020735 | 11S0SB | 2011 | 752 | 387 | 0 |
+| D6A90190-401E-47CF-A68B-B6316806BA83 | 11S0SB PD | 2011 | 696 | 382 | 0 |
+| 01E16F72-A919-41A6-8F83-4792D8446D38 | Landcatch | 2011 | 346 | 180 | 0 |
+| B29FE1BD-F6F6-45B0-A298-1ABBD7513B71 | salmoBreed/Bolaks | 2011 | 134 | 80 | 0 |
+| 06EF92C5-02BD-496B-AA76-BDF140800167 | SalmoBreed/Bolaks | 2011 | 329 | 28 | 0 |
+| 28176346-2B49-4EB6-AF0A-81A0F3F61ABA | SalmoBreed/Bolaks | 2011 | 474 | 161 | 0 |
+| 1AA9D619-0E59-427F-BD95-1916E50A22F8 | Salmobreed/Bolaks | 2011 | 1225 | 341 | 0 |
+| 62B0D40A-4258-421F-A6C2-F9295A9E2F7F | SalmoBreed/Bolaks | 2011 | 308 | 114 | 0 |
+| 14C535C4-0E23-4CCC-BBD6-596BC64ED506 | SalmoBreed/Bolaks | 2011 | 715 | 571 | 0 |
+| CC3982E7-2753-4A51-A8C9-DE371E496E3A | Salmobreed/Bolaks | 2011 | 1103 | 283 | 0 |
+| CF627E64-E1C3-4D65-AF87-D373064B4639 | Salmobreed/Bolaks | 2011 | 302 | 285 | 0 |
+| 1A8AFC1D-A46B-4A02-B81E-6570959F1F28 | Salmobreed/Bolaks | 2010 | 1395 | 558 | 0 |
+| B685C0CF-FCA5-4BAD-9AF2-B0715B9D2971 | SalmoBreed/Bolaks | 2010 | 280 | 126 | 0 |
+
+Notes
+- These are all older (2010–2017) projects.
+- Recent cohorts (2023–2026) appear to be **single-environment** (FW or Sea only), which supports a parallel replay approach.
+
