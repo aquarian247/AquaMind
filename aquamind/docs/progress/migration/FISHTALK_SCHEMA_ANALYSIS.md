@@ -179,6 +179,11 @@ This document provides a detailed analysis of the FishTalk database schema based
 - **PlannedActivitiesUsers** (1M rows) - User activities
 - **ConnectTreatmentAndFeedingOps** - Treatment linkage
 
+**2026-02-04 Addendum (ActionType 25):**
+- ActionType **25** appears across multiple OperationTypes (Transfer, Weight sample, Lice sample, Combined sample, Hatching, etc.).
+- It does **not** map to ActionID-based domain tables (Feeding, Mortality, Treatment, Culling, HarvestResult, UserSample), only to **ActionMetaData**.
+- Treat it as an **operation-level placeholder** and resolve detail via **SubTransfers** (movement) or sample tables (weight/lice) keyed by **OperationID**.
+
 ### 2.9 Planning & Status
 
 **Primary Tables:**
