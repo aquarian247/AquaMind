@@ -38,3 +38,6 @@ ActionType 25 appears to be a **generic/operation-level Action** that accompanie
 
 For replay, ActionType 25 should be treated as **metadata-only** unless a specific domain table can be linked via OperationID.
 
+## ActionMetaData snapshot
+
+See `analysis_reports/2026-02-04/action_type_25_metadata_snapshot_2026-02-04.md` for the most common ActionMetaData parameters attached to ActionType 25.
