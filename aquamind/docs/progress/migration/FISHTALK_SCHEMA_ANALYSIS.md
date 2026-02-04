@@ -594,5 +594,20 @@ Source: `scripts/migration/data/extract/public_operation_types.csv` (44 rows).
 
 **Note:** There is no table in the schema snapshot that maps `Action.ActionType` to human‑readable names. Any ActionType decoding must be inferred via domain tables or UI references.
 
+### 9.2 ActionType Empirical Mapping (Targeted, 2026-02-04)
+
+Method:
+- Used `scripts/migration/data/extract/targeted_actions/2026-02-04/actions_targeted.csv` (OperationIDs from SubTransfers/PopulationLink/PublicTransfers/transfer_operations/internal_delivery_operations intersected with `Operations.StartTime` in `2026‑01‑01 → 2026‑02‑05`).
+- Scanned extracted CSVs for `ActionID` columns and matched them to the targeted ActionIDs.
+
+Result:
+- Only **`internal_delivery_actions.csv`** matched the targeted ActionIDs.
+- Matched ActionType values: **4, 7, 25** (each with 21 rows).
+- No matches found in feeding/mortality/weight sample extracts within this targeted window.
+
+Implication:
+- Current targeted window is dominated by InternalDelivery‑linked operations; **ActionType decoding remains incomplete**.
+- To map ActionType → domain semantics, we need to **sample ActionIDs** from each domain table (Feeding, Mortality, WeightSamples, Lice, Treatments, etc.) and join them back to `Action` (targeted SQL by ActionID or a wider date window).
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts
