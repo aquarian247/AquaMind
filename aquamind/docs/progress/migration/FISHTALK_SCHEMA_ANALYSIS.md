@@ -494,5 +494,33 @@ For migration to AquaMind:1. **Initial Name:** Use `InputName` from `Ext_Inputs_
 2. **At Sea Transfer:** Can rename to display format (e.g., "BM Jun 24") using transfer workflow
 3. **History Preserved:** Original name stored in `django-simple-history` via `HistoricalBatch` table
 4. **External Reference:** Store original InputName in `ExternalIdMap.metadata` for traceability---
+
+## 9. Schema Sweep: Progression/Audit Tables (2026-02-04)
+
+Goal: identify large “progression” tables and their likely join paths. This is a schema-only scan from `fishtalk_schema_snapshot.json` (no data inference).
+
+| Table | Rows (snapshot) | Key Columns | Likely Joins | Extracted CSV |
+|------|----------------|------------|--------------|---------------|
+| `Action` | 13,319,403 | `ActionID`, `OperationID`, `PopulationID`, `ActionType`, `ActionOrder` | `Operations.OperationID`, `Populations.PopulationID`; domain tables join by `ActionID` (Feeding, Mortality, etc.) | Not extracted |
+| `ActionMetaData` | 6,005,088 | `ActionID`, `ParameterID`, `ParameterString`, `ParameterValue`, `ParameterDate`, `ParameterGuid` | `Action.ActionID` | Not extracted |
+| `Operations` | 7,172,925 | `OperationID`, `StartTime`, `EndTime`, `OperationType`, `Comment` | `Action.OperationID`, `SubTransfers.OperationID`, `PublicTransfers.OperationID`, `PopulationLink.OperationID` | Not extracted (partial: `internal_delivery_operations.csv`, `transfer_operations.csv`) |
+| `PublicTransfers` | 307,417 | `SourcePop`, `DestPop`, `OperationID`, `ShareCountForward`, `ShareBiomassForward` | `Populations.PopulationID`, `Operations.OperationID` | Extracted as `transfer_edges.csv` + `transfer_operations.csv` |
+| `SubTransfers` | 204,788 | `SourcePopBefore/After`, `DestPopBefore/After`, `OperationID`, `TransferType` | `Populations.PopulationID`, `Operations.OperationID` | Extracted as `sub_transfers.csv` |
+| `PopulationLink` | 21,664 | `FromPopulationID`, `ToPopulationID`, `OperationID`, `LinkType` | `Populations.PopulationID`, `Operations.OperationID` | Extracted as `population_links.csv` |
+| `PlanTransfer` | 35,705 | `FromPlanPopulationID`, `ToPlanPopulationID`, `TransferType`, `CountShare`, `BiomassShare` | `PlanPopulation.PlanPopulationID` | Extracted as `plan_transfers.csv` |
+| `PlanPopulation` | 187,512 | `PlanPopulationID`, `PlanContainerID`, `InputProjectID`, `PopulationName`, `StartTime`, `EndTime`, `YearClass` | `PlanContainer.PlanContainerID`, `InputProjects.InputProjectID` | Not extracted |
+| `PlanContainer` | 543,901 | `PlanContainerID`, `ContainerID`, `PlanSiteID`, `PlanningGroupID` | `Containers.ContainerID`, (likely) `OrganisationUnit` via `PlanSiteID` | Not extracted |
+| `PlanAction` | 638,900 | `ActionID`, `PlanPopulationID`, `ActionType`, `StartDate` | `PlanPopulation.PlanPopulationID`; potential `Action.ActionID` (verify) | Not extracted |
+| `PublicPlanPopulationAttributes` | 3,447,616 | `PlanPopulationID`, `ScenarioID`, `AttributeID`, value fields | `PlanPopulation.PlanPopulationID` | Not extracted |
+| `CustomResolutionEntities` | 816,000 | `PopulationID`, `Entity`, `EntityTypeID` | `Populations.PopulationID` | Not extracted |
+| `CustomActivity` | 19,723 | `ActivityID`, `ActivityTypeID`, `OrgUnitID`, `StartTime`, `EndTime` | `OrganisationUnit.OrgUnitID` | Not extracted |
+| `PlannedActivities` | 5,861 | `PlannedActivityID`, `SiteID`, `DueDate`, `ActivityCategory`, `ActivityType`, `Description` | `OrganisationUnit.OrgUnitID`; `InternalDelivery.PlannedActivityID` | Not extracted (partial: `internal_delivery_planned_activities.csv`) |
+| `ChangeLog` | 4,409,385 | `ObjectName`, `GuidID`, `IntID`, `EntryType`, `TimeStamp`, `UserID` | Depends on `ObjectName` + ID columns | Not extracted |
+
+Notes:
+- `Action` + `ActionMetaData` are the largest and most general audit trail. Extracting them in full is likely too heavy; any use should be **targeted by date range or OperationID**.
+- Planning tables (`Plan*`, `PublicPlanPopulationAttributes`) describe **planned** populations and transfers, not necessarily actual movements.
+- `ChangeLog` is a generic audit table; it can be valuable for forensic timelines but requires object‑specific parsing (no direct join path by default).
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts
