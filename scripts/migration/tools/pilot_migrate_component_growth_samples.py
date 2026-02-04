@@ -194,6 +194,7 @@ def load_weight_samples_sql(
         "CONVERT(varchar(32), ws.OperationType) AS OperationType "
         "FROM dbo.Ext_WeightSamples_v2 ws "
         f"WHERE ws.PopulationID IN ({in_clause}) "
+        "AND ws.OperationType = 10 "
         f"AND ws.SampleDate >= '{start_str}' AND ws.SampleDate <= '{end_str}' "
         "ORDER BY ws.SampleDate ASC"
     )

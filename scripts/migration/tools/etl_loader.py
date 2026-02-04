@@ -582,6 +582,11 @@ class ETLDataLoader:
             for row in rows:
                 if row.get("PopulationID") not in population_ids:
                     continue
+                if table_name == "ext_weight_samples_v2":
+                    op_type = (row.get("OperationType") or "").strip()
+                    # Ext_WeightSamples_v2 includes multiple operation types; keep only weight samples (OperationType 10).
+                    if op_type and op_type != "10":
+                        continue
                 sample_time = row.get("SampleDate", "")
                 if start_str and sample_time < start_str:
                     continue
