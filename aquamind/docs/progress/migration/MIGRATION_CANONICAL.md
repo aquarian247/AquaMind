@@ -64,6 +64,14 @@ Batch Key = InputName + InputNumber + YearClass
   - `PopulationLink` (if populated in this DB)
   - **Activity Explorer “Input” (GUI):** appears to encode FW unit → Sea unit moves with `TransportCarrier` / trip / compartment metadata. CSV extracts now include `TransportCarrier`, `TransportMethods`, `Ext_Transporters_v2` (2026‑02‑04), but there is **no** join path from `InternalDelivery`/`Operations` to these transport tables, and trip/compartment tables are still missing (if they exist).
 
+**Contingency (2026‑02‑04): Parallel replay without FW→Sea link**
+- If canonical FW→Sea linkage remains unavailable, replay **freshwater** and **sea** cohorts as **separate, unlinked components**.
+- Use `Ext_GroupedOrganisation_v2.ProdStage` to classify environment:
+  - **Freshwater**: `Hatchery`, `FreshWater`, `SmoltProduction` (and related)
+  - **Sea**: `MarineSite`
+- Build batch components per `InputProjectID`, but **split by environment** to avoid mixing FW and sea populations.
+- Movement lineage is replayed **within** each environment using `SubTransfers`; cross‑environment links are deferred and should be flagged as **link_pending** metadata for later manual resolution.
+
 ---
 
 ## 4) Current Migration Status
