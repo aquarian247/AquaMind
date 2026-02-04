@@ -290,6 +290,7 @@ Note: some fish groups retain the full `InputProjects.ProjectName` (e.g., “Ben
 - **Fallback candidates:** `InternalDelivery` (SalesOperationID / InputSiteID / InputOperationID), Sales/Delivery/Closing tables if present
 - **Activity Explorer “Input” (GUI‑observed):** Appears to encode FW unit → Sea unit moves with **TransportCarrier / trip / compartment** metadata. CSV extracts now include `TransportCarrier`, `TransportMethods`, `Ext_Transporters_v2` (2026‑02‑04), but there is **no** join path from `InternalDelivery`/`Operations` to these transport tables, and `Ext_Inputs_v2.Transporter` is **null** in the 2026‑01‑22 extract. Still missing: Input/Transport operation tables tied to `InternalDelivery.InputOperationID`, and any trip/compartment tables if they exist.
 - **Name hints only:** `Ext_Populations_v2.PopulationName`
+- **External transfer reports (non‑canonical, 2026‑02‑04):** Week‑5 FW/Sea PDF analyses provide **explicit FW hall → sea area** plans (e.g., Hvannasund S transfer plan). See `analysis_reports/2026-02-04/fw_sea_transfer_report_candidate_scan_2026-02-04.md` for a candidate mapping and DB cross‑checks. These links are **external‑report–sourced** unless corroborated by transfer tables.
 
 Use `SubTransfers` for lineage stitching (including FW→Sea). It **can** include FW→MarineSite transitions in the current extract.
 
@@ -410,6 +411,53 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 5. Treat `Plan*` tables (`PlanPopulation`, `PlanTransfer`, `PlanAction`, `PublicPlanPopulationAttributes`) as **planning context**, not actuals.
 
 **Extraction guidance:** `Action` + `ActionMetaData` are very large; use **targeted extraction** by date window or OperationID set (see `scripts/migration/tools/targeted_action_extract.py`).
+
+##### MVP Replay Spec (Draft, 2026‑02‑04)
+
+**Objective:** Build a deterministic, auditable event stream that can reconstruct **within‑environment** history for each PopulationID and persist it in AquaMind. Cross‑environment links are only included when explicit edges exist.
+
+**Inputs (minimum):**
+- `Operations`, `Action`, domain tables keyed by `ActionID` (Feeding, Mortality, Treatment, Culling, UserSample, etc.).
+- Transfer edges: `SubTransfers`, `PublicTransfers`, `PopulationLink`.
+- Reference tables: `PublicOperationTypes`, `ProductionStages`, `Grouped_Organisation`, `Populations`, `Containers`.
+- Sample tables without ActionID: `PublicLiceSamples`/`PublicLiceSampleData` and `PublicWeightSamples`/`Ext_WeightSamples_v2` (eventized by SampleDate).
+
+**Event model (per event row):**
+`event_id`, `event_time`, `population_id`, `operation_id` (nullable), `action_id` (nullable), `event_type`, `event_subtype`, `metrics`, `source_table`, `external_id`.
+
+**Replay steps:**
+1. **Reference maps**:  
+   - `OperationType → label` from `PublicOperationTypes`.  
+   - `ActionType → label` from empirical mapping (domain‑table sampling).  
+   - `PopulationID → container/site/stage` from `Populations` + `Grouped_Organisation`.
+2. **Action events (primary):**  
+   - Join `Action` → `Operations` for time and type, then enrich via domain tables keyed by `ActionID`.  
+   - Use `ActionOrder` for within‑operation ordering.
+3. **Operation events (secondary):**  
+   - Create an event for any `Operations` row that has **no Action** rows (retains timeline continuity).
+4. **Sample events (no ActionID):**  
+   - Lice: `PublicLiceSamples` + `PublicLiceSampleData` (and `Ext_` variants) → event type `lice_sample` (time = `SampleDate`).  
+   - Weight: `PublicWeightSamples`/`Ext_WeightSamples_v2` → event type `weight_sample` (time = `SampleDate`).  
+   - These events are **not** linked to `Action`/`Operation`.
+5. **Transfer/lineage events:**  
+   - `SubTransfers`/`PublicTransfers` become `transfer` events (time from `Operations.StartTime` or `OperationTime`).  
+   - `PopulationLink` becomes `link` events (time from `Operations.StartTime`).
+6. **Ordering:**  
+   - Sort by `event_time`, then by `operation_id`, then `action_order` (if present).  
+   - Stable tie‑break: `event_id`.
+7. **Persistence (AquaMind):**  
+   - Create/attach `batch_batchcontainerassignment` per `PopulationID`.  
+   - Emit events into domain models (feeding, mortality, treatments, weight samples, lice samples).  
+   - Record `ExternalIdMap` per source event (`event_id`) for idempotency.
+
+**Success criteria (MVP):**
+- Replays **within‑environment** history deterministically for a batch/component.  
+- Preserves event ordering and key metrics from FishTalk.  
+- Produces a single event stream that can be re‑run idempotently.
+
+**Known limits (current backup):**
+- FW→Sea links missing for 2023+ (replay cannot create cross‑environment lineage without explicit edges).
+- Some domains lack `ActionID`/`OperationID` (lice/weight samples) → sample‑date eventization only.
 
 #### 3.0.1 Deprecated: Project-Based Stitching (Legacy Only)
 
