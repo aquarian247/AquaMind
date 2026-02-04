@@ -609,5 +609,26 @@ Implication:
 - Current targeted window is dominated by InternalDelivery‑linked operations; **ActionType decoding remains incomplete**.
 - To map ActionType → domain semantics, we need to **sample ActionIDs** from each domain table (Feeding, Mortality, WeightSamples, Lice, Treatments, etc.) and join them back to `Action` (targeted SQL by ActionID or a wider date window).
 
+### 9.3 ActionType Empirical Mapping (Domain Tables, 2026-02-04)
+
+Source: `analysis_reports/2026-02-04/action_type_mapping_2026-02-04.md` (sample size 200 per table).
+
+**Observed ActionType → Domain table associations (sampled):**
+- `3` → `Mortality`
+- `5` → `Feeding`
+- `16` → `Culling`
+- `18` → `Escapes`
+- `21`, `58`, `22` → `Treatment` (multiple ActionTypes observed within `Treatment`)
+- `30` → `HistoricalSpawning`
+- `31` → `HistoricalHatching`
+- `32` → `HistoricalStartFeeding`
+- `46` → `SpawningSelection`
+- `53` → `HarvestResult`
+- `54` → `UserSample`, `UserSampleParameterValue`, `UserSampleTypes` (user‑defined samples)
+
+**Missing/unsupported in current extract:**
+- Weight samples (`PublicWeightSamples`, `Ext_WeightSamples_v2`) do **not** carry `ActionID`, so ActionType decoding for those remains unresolved.
+- Lice samples/treatments, environment, counting, vaccination, and sale may be represented via `Operations.OperationType` or domain tables not yet sampled.
+
 **Document Status:** Updated 2026-01-22
 **Next Steps:** Implement Input-based batch identification in migration scripts

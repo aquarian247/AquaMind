@@ -393,6 +393,7 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 **Reference decoding:**
 - `PublicOperationTypes` maps `Operations.OperationType → Text` (CSV: `public_operation_types.csv`, 44 rows).
 - No schema‑level mapping exists for `Action.ActionType`; decoding must be inferred via domain tables or UI references. **Targeted scan (2026‑02‑04)** only matched InternalDelivery actions (ActionType 4/7/25), so broader sampling is still required.
+- **Empirical ActionType mapping (domain tables, 2026‑02‑04):** `3→Mortality`, `5→Feeding`, `16→Culling`, `18→Escapes`, `21/22/58→Treatment`, `30→HistoricalSpawning`, `31→HistoricalHatching`, `32→HistoricalStartFeeding`, `46→SpawningSelection`, `53→HarvestResult`, `54→UserSample*`. Weight samples and several health/environment categories still lack ActionType decoding because their tables do **not** expose `ActionID`.
 
 **Replay order (schema‑level):**
 1. Build a chronological event list from `Operations` (use `StartTime` as event time; join to `PublicOperationTypes` for labels).
