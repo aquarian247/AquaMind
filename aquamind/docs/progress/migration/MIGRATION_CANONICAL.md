@@ -62,7 +62,7 @@ Batch Key = InputName + InputNumber + YearClass
 - FW→Sea linking still needs explicit logic. **Best candidates to explore:**
   - `Ext_Populations_v2.PopulationName` (includes Supplier/Station/Month/Year + YearClass)
   - `PopulationLink` (if populated in this DB)
-  - **Activity Explorer “Input” (GUI):** appears to encode FW unit → Sea unit moves with `TransportCarrier` / trip / compartment metadata. Requires extracting `TransportCarrier`, `TransportMethods`, `Ext_Transporters_v2` and any Input/Transport operation tables tied to `InternalDelivery.InputOperationID` (not in current CSVs).
+  - **Activity Explorer “Input” (GUI):** appears to encode FW unit → Sea unit moves with `TransportCarrier` / trip / compartment metadata. CSV extracts now include `TransportCarrier`, `TransportMethods`, `Ext_Transporters_v2` (2026‑02‑04), but there is **no** join path from `InternalDelivery`/`Operations` to these transport tables, and trip/compartment tables are still missing (if they exist).
 
 ---
 
