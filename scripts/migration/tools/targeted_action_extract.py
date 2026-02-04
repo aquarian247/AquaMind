@@ -152,8 +152,12 @@ def main() -> None:
 
     extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
-    if not operation_ids and (since or until):
-        operation_ids.update(fetch_operation_ids_by_date(extractor, since, until))
+    if since or until:
+        dated_ids = set(fetch_operation_ids_by_date(extractor, since, until))
+        if operation_ids:
+            operation_ids = operation_ids & dated_ids
+        else:
+            operation_ids = dated_ids
 
     operation_list = sorted(operation_ids)
     if not operation_list:
