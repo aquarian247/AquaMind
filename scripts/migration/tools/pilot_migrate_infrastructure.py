@@ -107,11 +107,7 @@ def hall_label_from_group(group_name: str | None) -> str | None:
     """Extract hall label from container group name."""
     if not group_name:
         return None
-    # Remove common prefixes/suffixes
     label = group_name.strip()
-    for prefix in ["Tank ", "Hall "]:
-        if label.startswith(prefix):
-            label = label[len(prefix):]
     return label[:100] if label else None
 
 
@@ -271,9 +267,10 @@ def main():
         
         # Create FreshwaterStation if org has freshwater containers
         if org_has_freshwater.get(org_id, False):
+            station_name = org_name[:100]
             station, created = get_or_create_with_history(
                 FreshwaterStation,
-                lookup={"name": f"FT {org_name} FW"[:100]},
+                lookup={"name": station_name},
                 defaults={
                     "station_type": "FRESHWATER",
                     "geography": geography,
@@ -304,9 +301,10 @@ def main():
         
         # Create Area if org has sea containers
         if org_has_sea.get(org_id, False):
+            area_name = org_name[:100]
             area, created = get_or_create_with_history(
                 Area,
-                lookup={"name": f"FT {org_name} Sea"[:100], "geography": geography},
+                lookup={"name": area_name, "geography": geography},
                 defaults={
                     "latitude": lat,
                     "longitude": lon,
@@ -381,9 +379,10 @@ def main():
             else:
                 # Fallback hall for containers without group
                 if org_id not in fallback_hall_by_org:
+                    hall_name = f"{org_name} Hall"[:100]
                     hall, created = get_or_create_with_history(
                         Hall,
-                        lookup={"name": f"FT {org_name} Hall"[:100], "freshwater_station": station},
+                        lookup={"name": hall_name, "freshwater_station": station},
                         defaults={
                             "description": "Fallback hall from FishTalk migration",
                             "active": True,

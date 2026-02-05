@@ -399,7 +399,7 @@ class InfrastructureLoader(BaseLoader):
                     continue
                 container_name = normalize_label(row.get("ContainerName")) or container_id
                 container_defaults = {
-                    "name": f"FT {container_name}"[:100],
+                    "name": container_name[:100],
                     "container_type": container_type,
                     "hall": hall,
                     "area": area,

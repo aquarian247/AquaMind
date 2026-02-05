@@ -5,13 +5,15 @@
 This script migrates:
 1. Mortality Cause Groups → MortalityReason (parent=null)
 2. Mortality Causes → MortalityReason (with parent FK)
-3. Vaccination Methods → VaccinationType
-4. Treatment Types → (for reference, stored in metadata)
+3. VaccineTypes → VaccinationType
+4. Sample types → SampleType
+5. Score-like health parameters → HealthParameter
+6. Treatment Types → (for reference, stored in metadata)
 
 Notes:
 - FishTalk "Culling" is both a mortality reason AND an activity - we flag it
-- Health Parameters (0-3 scoring) are NOT in FishTalk - only Scotland uses health scoring
-- Faroes use Excel for health parameters, not FishTalk
+- Health parameters are inferred from FishTalk sample attribute names (score-like only).
+- FishParameterScore data requires per-fish sample values; not seeded here.
 
 Usage:
     # Dry run
@@ -47,7 +49,8 @@ assert_default_db_is_migration_db()
 from django.db import transaction, connection
 from django.contrib.auth import get_user_model
 
-from apps.health.models import MortalityReason, VaccinationType
+from apps.health.models import HealthParameter, MortalityReason, SampleType, VaccinationType
+from apps.health.models.health_observation import ParameterScoreDefinition
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 
@@ -83,7 +86,104 @@ def check_and_add_parent_field():
         return True
 
 
-def migrate_mortality_cause_groups(extractor, dry_run: bool = False) -> dict:
+def normalize_prefixed_name(obj, raw_name: str) -> bool:
+    """If object name starts with 'FT-' and raw name is free, rename it."""
+    if not obj or not raw_name:
+        return False
+    if obj.name == raw_name:
+        return False
+    if not obj.name.startswith("FT-"):
+        return False
+    model = obj.__class__
+    if model.objects.filter(name=raw_name).exclude(pk=obj.pk).exists():
+        return False
+    obj.name = raw_name
+    obj.save()
+    return True
+
+
+def load_used_mortality_cause_ids(csv_dir: Path | None) -> set[str]:
+    if not csv_dir:
+        return set()
+    cause_ids: set[str] = set()
+    for filename, column in (
+        ("mortality_actions.csv", "MortalityCauseID"),
+        ("culling.csv", "CullingCauseID"),
+        ("spawning_selection.csv", "CullingCauseID"),
+    ):
+        path = csv_dir / filename
+        if not path.exists():
+            continue
+        import csv
+
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                value = (row.get(column) or "").strip()
+                if value:
+                    cause_ids.add(value)
+    return cause_ids
+
+
+def load_used_vaccine_type_ids(csv_dir: Path | None) -> set[str]:
+    if not csv_dir:
+        return set()
+    path = csv_dir / "treatments.csv"
+    if not path.exists():
+        return set()
+    import csv
+
+    ids: set[str] = set()
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            value = (row.get("VaccineType") or "").strip()
+            if value:
+                ids.add(value)
+    return ids
+
+
+def load_used_sample_type_names(csv_dir: Path | None) -> set[str]:
+    if not csv_dir:
+        return set()
+    path = csv_dir / "user_sample_types.csv"
+    if not path.exists():
+        return set()
+    import csv
+
+    names: set[str] = set()
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            name = (row.get("SampleTypeName") or "").strip()
+            if name:
+                names.add(name)
+    return names
+
+
+def load_used_health_parameter_names(csv_dir: Path | None) -> set[str]:
+    if not csv_dir:
+        return set()
+    path = csv_dir / "user_sample_attributes.csv"
+    if not path.exists():
+        return set()
+    import csv
+
+    names: set[str] = set()
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            name = (row.get("AttributeName") or "").strip()
+            if name:
+                names.add(name)
+    return names
+
+
+def migrate_mortality_cause_groups(
+    extractor,
+    dry_run: bool = False,
+    used_group_ids: set[str] | None = None,
+) -> dict:
     """Migrate FishTalk mortality cause groups as top-level MortalityReason."""
     print("\n--- Mortality Cause Groups ---")
     
@@ -92,6 +192,9 @@ def migrate_mortality_cause_groups(extractor, dry_run: bool = False) -> dict:
         headers=["MortalityCauseGroupID", "Name"]
     )
     
+    if used_group_ids:
+        groups = [g for g in groups if (g.get("MortalityCauseGroupID") or "").strip() in used_group_ids]
+
     print(f"  Found {len(groups)} cause groups in FishTalk")
     
     if dry_run:
@@ -119,12 +222,16 @@ def migrate_mortality_cause_groups(extractor, dry_run: bool = False) -> dict:
             ).first()
             
             if existing:
+                if not dry_run:
+                    reason = MortalityReason.objects.filter(pk=existing.target_object_id).first()
+                    if reason:
+                        normalize_prefixed_name(reason, name)
                 skipped += 1
                 continue
             
             # Create or get MortalityReason
             reason, was_created = MortalityReason.objects.get_or_create(
-                name=f"FT-{name}",
+                name=name,
                 defaults={"description": f"FishTalk Mortality Cause Group: {name}"}
             )
             
@@ -146,7 +253,11 @@ def migrate_mortality_cause_groups(extractor, dry_run: bool = False) -> dict:
     return {"created": created, "skipped": skipped}
 
 
-def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
+def migrate_mortality_causes(
+    extractor,
+    dry_run: bool = False,
+    used_cause_ids: set[str] | None = None,
+) -> tuple[dict, set[str]]:
     """Migrate FishTalk mortality causes as child MortalityReason."""
     print("\n--- Mortality Causes ---")
     
@@ -159,6 +270,9 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
         headers=["MortalityCauseID", "Name", "MortalityCauseGroupID"]
     )
     
+    if used_cause_ids:
+        causes = [c for c in causes if (c.get("MortalityCauseID") or "").strip() in used_cause_ids]
+
     print(f"  Found {len(causes)} causes in FishTalk")
     
     # Flag problematic "Culling" entry
@@ -172,7 +286,8 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             print(f"    Would create: {c.get('Name', 'N/A')} (group: {group_id})")
         if len(causes) > 15:
             print(f"    ... and {len(causes) - 15} more")
-        return {"causes": len(causes)}
+        group_ids = {c.get("MortalityCauseGroupID", "").strip() for c in causes if c.get("MortalityCauseGroupID")}
+        return {"causes": len(causes)}, group_ids
     
     created = 0
     skipped = 0
@@ -195,6 +310,10 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             ).first()
             
             if existing:
+                if not dry_run:
+                    reason = MortalityReason.objects.filter(pk=existing.target_object_id).first()
+                    if reason:
+                        normalize_prefixed_name(reason, name)
                 skipped += 1
                 continue
             
@@ -217,7 +336,7 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             
             # Create MortalityReason
             reason, was_created = MortalityReason.objects.get_or_create(
-                name=f"FT-{name}",
+                name=name,
                 defaults={"description": description}
             )
             
@@ -251,58 +370,79 @@ def migrate_mortality_causes(extractor, dry_run: bool = False) -> dict:
             )
     
     print(f"  Created: {created}, Skipped: {skipped}")
-    return {"created": created, "skipped": skipped}
+    group_ids = {c.get("MortalityCauseGroupID", "").strip() for c in causes if c.get("MortalityCauseGroupID")}
+    return {"created": created, "skipped": skipped}, group_ids
 
 
-def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
-    """Migrate FishTalk vaccination methods as VaccinationType."""
-    print("\n--- Vaccination Methods ---")
+def migrate_vaccination_types(
+    extractor,
+    dry_run: bool = False,
+    csv_dir: Path | None = None,
+    used_type_ids: set[str] | None = None,
+) -> dict:
+    """Migrate FishTalk vaccination types as VaccinationType."""
+    print("\n--- Vaccination Types ---")
     
-    # Actual columns: VaccinationMethodID, DefaultText, Active, SystemDelivered
-    methods = extractor._run_sqlcmd(
-        query="SELECT VaccinationMethodID, DefaultText, Active FROM dbo.Ext_VaccinationMethod_v2",
-        headers=["VaccinationMethodID", "DefaultText", "Active"]
-    )
+    rows: list[dict] = []
+    if csv_dir:
+        csv_path = csv_dir / "vaccine_types.csv"
+        if csv_path.exists():
+            import csv
+            with csv_path.open("r", encoding="utf-8", newline="") as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+    if not rows:
+        # Actual columns: VaccineTypeID, VaccineName
+        rows = extractor._run_sqlcmd(
+            query="SELECT VaccineTypeID, VaccineName FROM dbo.VaccineTypes ORDER BY VaccineName",
+            headers=["VaccineTypeID", "VaccineName"],
+        )
     
-    print(f"  Found {len(methods)} vaccination methods in FishTalk")
+    if used_type_ids:
+        rows = [r for r in rows if (r.get("VaccineTypeID") or "").strip() in used_type_ids]
+
+    print(f"  Found {len(rows)} vaccination types in FishTalk")
     
     if dry_run:
-        for m in methods:
-            active = "Active" if m.get('Active') == '1' else "Inactive"
-            print(f"    Would create: {m.get('DefaultText', 'N/A')} [{active}]")
-        return {"methods": len(methods)}
+        for m in rows[:15]:
+            print(f"    Would create: {m.get('VaccineName', 'N/A')}")
+        if len(rows) > 15:
+            print(f"    ... and {len(rows) - 15} more")
+        return {"types": len(rows)}
     
     created = 0
     skipped = 0
     
     with transaction.atomic():
-        for m in methods:
-            method_id = m.get("VaccinationMethodID", "").strip()
-            name = m.get("DefaultText", "").strip()
-            is_active = m.get("Active", "1")
+        for m in rows:
+            vaccine_id = (m.get("VaccineTypeID") or "").strip()
+            name = (m.get("VaccineName") or "").strip()
             
-            if not method_id or not name:
+            if not vaccine_id or not name:
                 skipped += 1
                 continue
             
             # Check if already migrated
             existing = ExternalIdMap.objects.filter(
                 source_system="FishTalk",
-                source_model="VaccinationMethod",
-                source_identifier=method_id,
+                source_model="VaccineType",
+                source_identifier=vaccine_id,
             ).first()
             
             if existing:
+                vac = VaccinationType.objects.filter(pk=existing.target_object_id).first()
+                if vac:
+                    normalize_prefixed_name(vac, name)
                 skipped += 1
                 continue
             
             # Create VaccinationType
             vac_type, was_created = VaccinationType.objects.get_or_create(
-                name=f"FT-{name}",
+                name=name,
                 defaults={
                     "manufacturer": "FishTalk Migration",
                     "dosage": "",
-                    "description": f"FishTalk vaccination method: {name}",
+                    "description": f"FishTalk vaccination type: {name}",
                 }
             )
             
@@ -312,16 +452,142 @@ def migrate_vaccination_methods(extractor, dry_run: bool = False) -> dict:
             # Track mapping
             ExternalIdMap.objects.create(
                 source_system="FishTalk",
-                source_model="VaccinationMethod",
-                source_identifier=method_id,
+                source_model="VaccineType",
+                source_identifier=vaccine_id,
                 target_app_label="health",
                 target_model="vaccinationtype",
                 target_object_id=vac_type.pk,
-                metadata={"original_name": name, "is_active": is_active},
+                metadata={"original_name": name},
             )
     
     print(f"  Created: {created}, Skipped: {skipped}")
     return {"created": created, "skipped": skipped}
+
+
+def migrate_sample_types(
+    extractor,
+    dry_run: bool = False,
+    csv_dir: Path | None = None,
+    used_names: set[str] | None = None,
+) -> dict:
+    """Migrate FishTalk sample types as SampleType."""
+    print("\n--- Sample Types ---")
+
+    names: set[str] = set(used_names or [])
+    if not names:
+        rows = extractor._run_sqlcmd(
+            query="SELECT UserSampleTypeID, DefaultText FROM dbo.UserSampleType ORDER BY DefaultText",
+            headers=["UserSampleTypeID", "DefaultText"],
+        )
+        for row in rows:
+            name = (row.get("DefaultText") or "").strip()
+            if name:
+                names.add(name)
+
+    names = {n for n in names if n}
+    print(f"  Found {len(names)} sample types in FishTalk")
+
+    if dry_run:
+        for name in sorted(names)[:15]:
+            print(f"    Would create: {name}")
+        if len(names) > 15:
+            print(f"    ... and {len(names) - 15} more")
+        return {"types": len(names)}
+
+    created = 0
+    skipped = 0
+    with transaction.atomic():
+        for name in sorted(names):
+            st, was_created = SampleType.objects.get_or_create(
+                name=name,
+                defaults={"description": f"FishTalk sample type: {name}"},
+            )
+            if was_created:
+                created += 1
+            else:
+                skipped += 1
+
+    print(f"  Created: {created}, Skipped: {skipped}")
+    return {"created": created, "skipped": skipped}
+
+
+def _infer_score_range(name: str) -> tuple[int, int] | None:
+    import re
+
+    pattern = re.compile(r"[\[\(]\s*(\d+)\s*-\s*(\d+)\s*[\]\)]")
+    match = pattern.search(name)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    return None
+
+
+def migrate_health_parameters(
+    extractor,
+    dry_run: bool = False,
+    csv_dir: Path | None = None,
+    used_names: set[str] | None = None,
+) -> dict:
+    """Seed HealthParameter from FishTalk sample attribute names."""
+    print("\n--- Health Parameters ---")
+
+    attr_names: set[str] = set(used_names or [])
+    if not attr_names:
+        rows = extractor._run_sqlcmd(
+            query="SELECT AttributeID, Name FROM dbo.FishGroupAttributes ORDER BY Name",
+            headers=["AttributeID", "Name"],
+        )
+        for row in rows:
+            name = (row.get("Name") or "").strip()
+            if name:
+                attr_names.add(name)
+
+    # Only keep score-like parameters (avoid numeric measurements)
+    score_names = sorted(
+        name for name in attr_names
+        if "score" in name.lower() or _infer_score_range(name)
+    )
+
+    print(f"  Found {len(score_names)} score-like parameters in FishTalk")
+
+    if dry_run:
+        for name in score_names[:15]:
+            print(f"    Would create: {name}")
+        if len(score_names) > 15:
+            print(f"    ... and {len(score_names) - 15} more")
+        return {"parameters": len(score_names)}
+
+    created = 0
+    skipped = 0
+    definitions_created = 0
+    with transaction.atomic():
+        for name in score_names:
+            score_range = _infer_score_range(name) or (0, 5)
+            hp, was_created = HealthParameter.objects.get_or_create(
+                name=name,
+                defaults={
+                    "description": f"FishTalk health parameter: {name}",
+                    "min_score": score_range[0],
+                    "max_score": score_range[1],
+                    "is_active": True,
+                },
+            )
+            if was_created:
+                created += 1
+            else:
+                skipped += 1
+
+            # Ensure score definitions exist
+            for score_value in range(score_range[0], score_range[1] + 1):
+                _, def_created = ParameterScoreDefinition.objects.get_or_create(
+                    parameter=hp,
+                    score_value=score_value,
+                    defaults={"label": f"Score {score_value}"},
+                )
+                if def_created:
+                    definitions_created += 1
+
+    print(f"  Created: {created}, Skipped: {skipped}, Definitions: {definitions_created}")
+    return {"created": created, "skipped": skipped, "definitions": definitions_created}
 
 
 def migrate_treatment_types(extractor, dry_run: bool = False) -> dict:
@@ -364,6 +630,17 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip adding parent_id field to MortalityReason",
     )
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory when available",
+    )
+    parser.add_argument(
+        "--include-unused",
+        action="store_true",
+        help="Include unused master data (default filters by referenced values when CSVs are provided)",
+    )
     return parser
 
 
@@ -388,17 +665,59 @@ def main() -> int:
     
     # Connect to FishTalk
     extractor = BaseExtractor(ExtractionContext(profile="fishtalk_readonly"))
+    csv_dir = Path(args.use_csv) if args.use_csv else None
+    used_cause_ids = set()
+    used_group_ids: set[str] | None = None
+    used_vaccine_type_ids = set()
+    used_sample_type_names = set()
+    used_parameter_names = set()
+    if csv_dir and not args.include_unused:
+        used_cause_ids = load_used_mortality_cause_ids(csv_dir)
+        used_vaccine_type_ids = load_used_vaccine_type_ids(csv_dir)
+        used_sample_type_names = load_used_sample_type_names(csv_dir)
+        used_parameter_names = load_used_health_parameter_names(csv_dir)
     
     results = {}
     
     # Migrate mortality cause groups (top level)
-    results["groups"] = migrate_mortality_cause_groups(extractor, dry_run=args.dry_run)
-    
     # Migrate mortality causes (with parent links)
-    results["causes"] = migrate_mortality_causes(extractor, dry_run=args.dry_run)
+    causes_result, used_group_ids = migrate_mortality_causes(
+        extractor,
+        dry_run=args.dry_run,
+        used_cause_ids=used_cause_ids or None,
+    )
+    results["causes"] = causes_result
+
+    # Migrate mortality cause groups (top level) after causes to avoid unused
+    results["groups"] = migrate_mortality_cause_groups(
+        extractor,
+        dry_run=args.dry_run,
+        used_group_ids=used_group_ids if not args.include_unused else None,
+    )
     
-    # Migrate vaccination methods
-    results["vaccinations"] = migrate_vaccination_methods(extractor, dry_run=args.dry_run)
+    # Migrate vaccination types
+    results["vaccinations"] = migrate_vaccination_types(
+        extractor,
+        dry_run=args.dry_run,
+        csv_dir=csv_dir,
+        used_type_ids=used_vaccine_type_ids or None,
+    )
+
+    # Migrate sample types
+    results["sample_types"] = migrate_sample_types(
+        extractor,
+        dry_run=args.dry_run,
+        csv_dir=csv_dir,
+        used_names=used_sample_type_names or None,
+    )
+
+    # Migrate health parameters (score-like)
+    results["health_parameters"] = migrate_health_parameters(
+        extractor,
+        dry_run=args.dry_run,
+        csv_dir=csv_dir,
+        used_names=used_parameter_names or None,
+    )
     
     # Document treatment types
     results["treatments"] = migrate_treatment_types(extractor, dry_run=args.dry_run)

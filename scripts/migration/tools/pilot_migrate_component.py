@@ -405,23 +405,7 @@ def resolve_site_grouping(site: str | None, site_group: str | None) -> tuple[str
 
 
 def hall_label_from_group(group_name: str | None) -> str:
-    label = normalize_label(group_name)
-    if not label:
-        return ""
-    if "Høll" in label:
-        before, _, after = label.partition("Høll")
-        before = before.strip()
-        after = after.strip()
-        if before and not after:
-            return f"Hall {before}"
-        if after and not before:
-            return f"Hall {after}"
-        if before and after:
-            return f"Hall {before}"
-        return "Hall"
-    if label.startswith("Hall ") or label.endswith(" Hall"):
-        return label
-    return label
+    return normalize_label(group_name)
 
 
 def hall_label_from_official(official_id: str | None) -> str:
@@ -1410,7 +1394,7 @@ def main() -> int:
             import time
             
             if org_has_freshwater.get(org_id, True):
-                station_name = f"FT {org_name} FW"[:100]
+                station_name = org_name[:100]
                 # Try to find pre-created station from ExternalIdMap
                 station_map = get_external_map("OrgUnit_FW", org_id)
                 if station_map:
@@ -1448,7 +1432,7 @@ def main() -> int:
 
             # LOOKUP Area from pre-migration, fallback to create
             if org_has_sea.get(org_id, False):
-                area_name = f"FT {org_name} Sea"[:100]
+                area_name = org_name[:100]
                 # Try to find pre-created area from ExternalIdMap
                 area_map = get_external_map("OrgUnit_Sea", org_id)
                 if area_map:
@@ -1532,7 +1516,7 @@ def main() -> int:
                         hall, _ = get_or_create_with_history(
                             Hall,
                             lookup={
-                                "name": f"FT {org_name} Hall"[:100],
+                                "name": f"{org_name} Hall"[:100],
                                 "freshwater_station": station,
                             },
                             defaults={
@@ -1545,7 +1529,7 @@ def main() -> int:
                         fallback_hall_by_org[org_id] = hall
 
             container = Container(
-                name=f"FT {src.get('ContainerName') or cid}"[:100],
+                name=(src.get("ContainerName") or cid)[:100],
                 container_type=container_type,
                 hall=hall,
                 area=area,

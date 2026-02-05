@@ -429,6 +429,285 @@ TABLE_CONFIGS = {
         "estimated_rows": 50000,
         "chunk_size": 0,
     },
+    "culling": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), c.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(32), c.CullingCount) AS CullingCount,
+                CONVERT(varchar(64), c.CullingBiomass) AS CullingBiomass,
+                CONVERT(varchar(32), c.CullingCauseID) AS CullingCauseID,
+                CONVERT(varchar(1), c.CulledAll) AS CulledAll,
+                CONVERT(varchar(36), c.IndividID) AS IndividID,
+                ISNULL(mc.DefaultText, '') AS CauseText,
+                ISNULL(c.Comment, '') AS Comment
+            FROM dbo.Culling c
+            JOIN dbo.Action a ON a.ActionID = c.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            LEFT JOIN dbo.MortalityCauses mc ON mc.MortalityCausesID = c.CullingCauseID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "CullingCount",
+            "CullingBiomass",
+            "CullingCauseID",
+            "CulledAll",
+            "IndividID",
+            "CauseText",
+            "Comment",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "escapes": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), e.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(32), e.EscapeCount) AS EscapeCount,
+                CONVERT(varchar(64), e.EscapeBiomass) AS EscapeBiomass,
+                CONVERT(varchar(32), e.EscapeCauseID) AS EscapeCauseID,
+                CONVERT(varchar(19), e.DiscoveryTime, 120) AS DiscoveryTime,
+                CONVERT(varchar(1), e.EscapedAll) AS EscapedAll,
+                ISNULL(ec.DefaultText, '') AS CauseText,
+                ISNULL(e.Comment, '') AS Comment
+            FROM dbo.Escapes e
+            JOIN dbo.Action a ON a.ActionID = e.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            LEFT JOIN dbo.EscapeCauses ec ON ec.EscapeCausesID = e.EscapeCauseID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "EscapeCount",
+            "EscapeBiomass",
+            "EscapeCauseID",
+            "DiscoveryTime",
+            "EscapedAll",
+            "CauseText",
+            "Comment",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "harvest_result": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), h.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(32), h.Count) AS Count,
+                CONVERT(varchar(64), h.GrossBiomass) AS GrossBiomass,
+                CONVERT(varchar(64), h.NetBiomass) AS NetBiomass,
+                CONVERT(varchar(32), h.QualityID) AS QualityID,
+                ISNULL(hq.Name, '') AS QualityName,
+                CONVERT(varchar(32), h.ConditionID) AS ConditionID,
+                ISNULL(hc.DefaultText, '') AS ConditionName,
+                CONVERT(varchar(64), h.FromWeight) AS FromWeight,
+                CONVERT(varchar(64), h.ToWeight) AS ToWeight,
+                CONVERT(varchar(64), h.IncomeTotal) AS IncomeTotal,
+                ISNULL(h.BatchID, '') AS BatchID,
+                CONVERT(varchar(19), h.PackingDate, 120) AS PackingDate,
+                ISNULL(h.DocumentID, '') AS DocumentID,
+                ISNULL(h.Comment, '') AS Comment
+            FROM dbo.HarvestResult h
+            JOIN dbo.Action a ON a.ActionID = h.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            LEFT JOIN dbo.Ext_HarvestQuality_v2 hq ON hq.HarvestQualityID = h.QualityID
+            LEFT JOIN dbo.HarvestCondition hc ON hc.HarvestConditionID = h.ConditionID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "Count",
+            "GrossBiomass",
+            "NetBiomass",
+            "QualityID",
+            "QualityName",
+            "ConditionID",
+            "ConditionName",
+            "FromWeight",
+            "ToWeight",
+            "IncomeTotal",
+            "BatchID",
+            "PackingDate",
+            "DocumentID",
+            "Comment",
+        ],
+        "estimated_rows": 30000,
+        "chunk_size": 0,
+    },
+    "historical_hatching": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), hh.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(19), hh.HatchingFirstDate, 120) AS HatchingFirstDate,
+                CONVERT(varchar(64), hh.HatchingFirstATU) AS HatchingFirstATU,
+                CONVERT(varchar(19), hh.HatchingLastDate, 120) AS HatchingLastDate,
+                CONVERT(varchar(64), hh.HatchingLastATU) AS HatchingLastATU,
+                CONVERT(varchar(64), hh.MinIncubationTemp) AS MinIncubationTemp,
+                CONVERT(varchar(64), hh.MaxIncubationTemp) AS MaxIncubationTemp,
+                CONVERT(varchar(64), hh.AvgIncubationTemp) AS AvgIncubationTemp
+            FROM dbo.HistoricalHatching hh
+            JOIN dbo.Action a ON a.ActionID = hh.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "HatchingFirstDate",
+            "HatchingFirstATU",
+            "HatchingLastDate",
+            "HatchingLastATU",
+            "MinIncubationTemp",
+            "MaxIncubationTemp",
+            "AvgIncubationTemp",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "historical_spawning": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), hs.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(19), hs.SpawningFirstDate, 120) AS SpawningFirstDate,
+                CONVERT(varchar(19), hs.SpawningLastDate, 120) AS SpawningLastDate,
+                CONVERT(varchar(36), hs.SpawningSite) AS SpawningSite
+            FROM dbo.HistoricalSpawning hs
+            JOIN dbo.Action a ON a.ActionID = hs.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "SpawningFirstDate",
+            "SpawningLastDate",
+            "SpawningSite",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "historical_start_feeding": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), hf.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(64), hf.MinSacFryTemp) AS MinSacFryTemp,
+                CONVERT(varchar(64), hf.MaxSacFryTemp) AS MaxSacFryTemp,
+                CONVERT(varchar(64), hf.AvgSacFryTemp) AS AvgSacFryTemp,
+                CONVERT(varchar(19), hf.StartFeedingFirstDate, 120) AS StartFeedingFirstDate,
+                CONVERT(varchar(64), hf.StartFeedingFirstATU) AS StartFeedingFirstATU,
+                CONVERT(varchar(19), hf.StartFeedingLastDate, 120) AS StartFeedingLastDate,
+                CONVERT(varchar(64), hf.StartFeedingLastATU) AS StartFeedingLastATU
+            FROM dbo.HistoricalStartFeeding hf
+            JOIN dbo.Action a ON a.ActionID = hf.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "MinSacFryTemp",
+            "MaxSacFryTemp",
+            "AvgSacFryTemp",
+            "StartFeedingFirstDate",
+            "StartFeedingFirstATU",
+            "StartFeedingLastDate",
+            "StartFeedingLastATU",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "spawning_selection": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), ss.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(36), ss.SpawnID) AS SpawnID,
+                ISNULL(ss.SpawnName, '') AS SpawnName,
+                CONVERT(varchar(36), ss.IndividID) AS IndividID,
+                ISNULL(ss.IndividName, '') AS IndividName,
+                ISNULL(ss.PitTag, '') AS PitTag,
+                CONVERT(varchar(32), ss.Sex) AS Sex,
+                CONVERT(varchar(32), ss.CullingCauseID) AS CullingCauseID,
+                ISNULL(ss.MaleSpermDonors, '') AS MaleSpermDonors,
+                CONVERT(varchar(64), ss.IndividWeight) AS IndividWeight,
+                CONVERT(varchar(1), ss.Returned) AS Returned,
+                CONVERT(varchar(32), ss.InitialEggsPerLitre) AS InitialEggsPerLitre,
+                CONVERT(varchar(64), ss.InitialLitresOfEggs) AS InitialLitresOfEggs,
+                CONVERT(varchar(1), ss.PositiveScreening) AS PositiveScreening,
+                CONVERT(varchar(1), ss.Incubated) AS Incubated,
+                CONVERT(varchar(64), ss.EggMortaliyRateFirst24Hours) AS EggMortaliyRateFirst24Hours,
+                ISNULL(ss.EggSplits, '') AS EggSplits,
+                ISNULL(ss.Comment1, '') AS Comment1,
+                ISNULL(ss.Comment2, '') AS Comment2,
+                ISNULL(ss.Comment3, '') AS Comment3,
+                ISNULL(ss.Comment4, '') AS Comment4
+            FROM dbo.SpawningSelection ss
+            JOIN dbo.Action a ON a.ActionID = ss.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "SpawnID",
+            "SpawnName",
+            "IndividID",
+            "IndividName",
+            "PitTag",
+            "Sex",
+            "CullingCauseID",
+            "MaleSpermDonors",
+            "IndividWeight",
+            "Returned",
+            "InitialEggsPerLitre",
+            "InitialLitresOfEggs",
+            "PositiveScreening",
+            "Incubated",
+            "EggMortaliyRateFirst24Hours",
+            "EggSplits",
+            "Comment1",
+            "Comment2",
+            "Comment3",
+            "Comment4",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "vaccine_types": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(32), vt.VaccineTypeID) AS VaccineTypeID,
+                ISNULL(vt.VaccineName, '') AS VaccineName
+            FROM dbo.VaccineTypes vt
+            ORDER BY vt.VaccineName
+        """,
+        "headers": ["VaccineTypeID", "VaccineName"],
+        "estimated_rows": 500,
+        "chunk_size": 0,
+    },
     "user_sample_sessions": {
         "query": """
             SELECT 
