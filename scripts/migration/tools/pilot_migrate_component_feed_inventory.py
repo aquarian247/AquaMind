@@ -56,6 +56,7 @@ from apps.infrastructure.models import FeedContainer, Container
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 from scripts.migration.history import save_with_history, get_or_create_with_history
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -183,6 +184,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
+    parser.add_argument(
         "--include-all-receptions",
         action="store_true",
         help="Ignore component time window and pull all receptions for matching feed stores",
@@ -220,86 +227,95 @@ def main() -> int:
     if not container_ids:
         raise SystemExit("No container ids found in report")
 
-    in_clause = ",".join(f"'{cid}'" for cid in container_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
-
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
-
-    reception_filter = ""
-    if not args.include_all_receptions:
-        reception_filter = (
-            f"AND fr.ReceptionTime >= '{start_str}' AND fr.ReceptionTime <= '{end_str}' "
+    if args.use_csv:
+        loader = ETLDataLoader(args.use_csv)
+        rows = loader.get_feed_reception_lines(
+            set(container_ids),
+            start_time=window_start,
+            end_time=window_end,
+            include_all_receptions=args.include_all_receptions,
         )
+    else:
+        in_clause = ",".join(f"'{cid}'" for cid in container_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), frb.FeedReceptionID) AS FeedReceptionID, "
-            "CONVERT(varchar(36), frb.FeedBatchID) AS FeedBatchID, "
-            "ISNULL(CONVERT(varchar(32), frb.PricePerKg), '') AS PricePerKg, "
-            "ISNULL(CONVERT(varchar(32), frb.ReceptionAmount), '') AS ReceptionAmount, "
-            "CONVERT(varchar(19), frb.ProductionDate, 120) AS ProductionDate, "
-            "CONVERT(varchar(19), frb.OutOfDate, 120) AS OutOfDate, "
-            "ISNULL(frb.ReceiptNumber, '') AS ReceiptNumber, "
-            "ISNULL(frb.SuppliersBatchNumber, '') AS SuppliersBatchNumber, "
-            "CONVERT(varchar(32), frb.FeedReceptionLineNumber) AS FeedReceptionLineNumber, "
-            "CONVERT(varchar(19), fr.ReceptionTime, 120) AS ReceptionTime, "
-            "ISNULL(fr.OrderNumber, '') AS OrderNumber, "
-            "ISNULL(fr.OurOrderNo, '') AS OurOrderNo, "
-            "ISNULL(fr.OurReference, '') AS OurReference, "
-            "ISNULL(fr.GTIN, '') AS GTIN, "
-            "CONVERT(varchar(36), fr.SupplierID) AS SupplierID, "
-            "ISNULL(fr.Comment, '') AS ReceptionComment, "
-            "CONVERT(varchar(36), fb.FeedStoreID) AS FeedStoreID, "
-            "CONVERT(varchar(32), fb.FeedTypeID) AS FeedTypeID, "
-            "ISNULL(fb.BatchNumber, '') AS FeedBatchNumber, "
-            "CONVERT(varchar(19), fb.StartTime, 120) AS FeedBatchStartTime, "
-            "CONVERT(varchar(19), fb.EndTime, 120) AS FeedBatchEndTime, "
-            "ISNULL(fs.Name, '') AS FeedStoreName, "
-            "ISNULL(CONVERT(varchar(32), fs.Capacity), '') AS FeedStoreCapacity, "
-            "CONVERT(varchar(32), fs.FeedStoreTypeID) AS FeedStoreTypeID, "
-            "CONVERT(varchar(36), fsa.ContainerID) AS ContainerID, "
-            "ISNULL(ft.Name, '') AS FeedTypeName "
-            "FROM dbo.FeedStoreUnitAssignment fsa "
-            "JOIN dbo.FeedStore fs ON fs.FeedStoreID = fsa.FeedStoreID "
-            "JOIN dbo.FeedBatch fb ON fb.FeedStoreID = fs.FeedStoreID "
-            "JOIN dbo.FeedReceptionBatches frb ON frb.FeedBatchID = fb.FeedBatchID "
-            "JOIN dbo.FeedReceptions fr ON fr.FeedReceptionID = frb.FeedReceptionID "
-            "LEFT JOIN dbo.FeedTypes ft ON ft.FeedTypeID = fb.FeedTypeID "
-            f"WHERE fsa.ContainerID IN ({in_clause}) "
-            f"AND fsa.StartDate <= '{end_str}' AND (fsa.EndDate IS NULL OR fsa.EndDate >= '{start_str}') "
-            f"{reception_filter}"
-            "ORDER BY fr.ReceptionTime ASC"
-        ),
-        headers=[
-            "FeedReceptionID",
-            "FeedBatchID",
-            "PricePerKg",
-            "ReceptionAmount",
-            "ProductionDate",
-            "OutOfDate",
-            "ReceiptNumber",
-            "SuppliersBatchNumber",
-            "FeedReceptionLineNumber",
-            "ReceptionTime",
-            "OrderNumber",
-            "OurOrderNo",
-            "OurReference",
-            "GTIN",
-            "SupplierID",
-            "ReceptionComment",
-            "FeedStoreID",
-            "FeedTypeID",
-            "FeedBatchNumber",
-            "FeedBatchStartTime",
-            "FeedBatchEndTime",
-            "FeedStoreName",
-            "FeedStoreCapacity",
-            "FeedStoreTypeID",
-            "ContainerID",
-            "FeedTypeName",
-        ],
-    )
+        extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+
+        reception_filter = ""
+        if not args.include_all_receptions:
+            reception_filter = (
+                f"AND fr.ReceptionTime >= '{start_str}' AND fr.ReceptionTime <= '{end_str}' "
+            )
+
+        rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), frb.FeedReceptionID) AS FeedReceptionID, "
+                "CONVERT(varchar(36), frb.FeedBatchID) AS FeedBatchID, "
+                "ISNULL(CONVERT(varchar(32), frb.PricePerKg), '') AS PricePerKg, "
+                "ISNULL(CONVERT(varchar(32), frb.ReceptionAmount), '') AS ReceptionAmount, "
+                "CONVERT(varchar(19), frb.ProductionDate, 120) AS ProductionDate, "
+                "CONVERT(varchar(19), frb.OutOfDate, 120) AS OutOfDate, "
+                "ISNULL(frb.ReceiptNumber, '') AS ReceiptNumber, "
+                "ISNULL(frb.SuppliersBatchNumber, '') AS SuppliersBatchNumber, "
+                "CONVERT(varchar(32), frb.FeedReceptionLineNumber) AS FeedReceptionLineNumber, "
+                "CONVERT(varchar(19), fr.ReceptionTime, 120) AS ReceptionTime, "
+                "ISNULL(fr.OrderNumber, '') AS OrderNumber, "
+                "ISNULL(fr.OurOrderNo, '') AS OurOrderNo, "
+                "ISNULL(fr.OurReference, '') AS OurReference, "
+                "ISNULL(fr.GTIN, '') AS GTIN, "
+                "CONVERT(varchar(36), fr.SupplierID) AS SupplierID, "
+                "ISNULL(fr.Comment, '') AS ReceptionComment, "
+                "CONVERT(varchar(36), fb.FeedStoreID) AS FeedStoreID, "
+                "CONVERT(varchar(32), fb.FeedTypeID) AS FeedTypeID, "
+                "ISNULL(fb.BatchNumber, '') AS FeedBatchNumber, "
+                "CONVERT(varchar(19), fb.StartTime, 120) AS FeedBatchStartTime, "
+                "CONVERT(varchar(19), fb.EndTime, 120) AS FeedBatchEndTime, "
+                "ISNULL(fs.Name, '') AS FeedStoreName, "
+                "ISNULL(CONVERT(varchar(32), fs.Capacity), '') AS FeedStoreCapacity, "
+                "CONVERT(varchar(32), fs.FeedStoreTypeID) AS FeedStoreTypeID, "
+                "CONVERT(varchar(36), fsa.ContainerID) AS ContainerID, "
+                "ISNULL(ft.Name, '') AS FeedTypeName "
+                "FROM dbo.FeedStoreUnitAssignment fsa "
+                "JOIN dbo.FeedStore fs ON fs.FeedStoreID = fsa.FeedStoreID "
+                "JOIN dbo.FeedBatch fb ON fb.FeedStoreID = fs.FeedStoreID "
+                "JOIN dbo.FeedReceptionBatches frb ON frb.FeedBatchID = fb.FeedBatchID "
+                "JOIN dbo.FeedReceptions fr ON fr.FeedReceptionID = frb.FeedReceptionID "
+                "LEFT JOIN dbo.FeedTypes ft ON ft.FeedTypeID = fb.FeedTypeID "
+                f"WHERE fsa.ContainerID IN ({in_clause}) "
+                f"AND fsa.StartDate <= '{end_str}' AND (fsa.EndDate IS NULL OR fsa.EndDate >= '{start_str}') "
+                f"{reception_filter}"
+                "ORDER BY fr.ReceptionTime ASC"
+            ),
+            headers=[
+                "FeedReceptionID",
+                "FeedBatchID",
+                "PricePerKg",
+                "ReceptionAmount",
+                "ProductionDate",
+                "OutOfDate",
+                "ReceiptNumber",
+                "SuppliersBatchNumber",
+                "FeedReceptionLineNumber",
+                "ReceptionTime",
+                "OrderNumber",
+                "OurOrderNo",
+                "OurReference",
+                "GTIN",
+                "SupplierID",
+                "ReceptionComment",
+                "FeedStoreID",
+                "FeedTypeID",
+                "FeedBatchNumber",
+                "FeedBatchStartTime",
+                "FeedBatchEndTime",
+                "FeedStoreName",
+                "FeedStoreCapacity",
+                "FeedStoreTypeID",
+                "ContainerID",
+                "FeedTypeName",
+            ],
+        )
 
     if args.dry_run:
         print(f"[dry-run] Batch={batch.batch_number} FeedReceptionBatches={len(rows)}")

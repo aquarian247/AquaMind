@@ -23,7 +23,7 @@ import argparse
 import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone as dt_timezone
+from datetime import datetime, timezone as dt_timezone, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -79,6 +79,38 @@ def parse_dt(value: str) -> datetime | None:
         return datetime.fromisoformat(cleaned)
     except ValueError:
         return None
+
+
+def parse_date_or_dt(value: str, *, end_of_day: bool = False) -> datetime | None:
+    if not value:
+        return None
+    value = value.strip()
+    if len(value) == 10:
+        try:
+            dt = datetime.strptime(value, "%Y-%m-%d")
+            if end_of_day:
+                return dt.replace(hour=23, minute=59, second=59)
+            return dt
+        except ValueError:
+            return None
+    return parse_dt(value)
+
+
+def ensure_environmental_parameters(*, history_user, history_reason) -> None:
+    """Seed core EnvironmentalParameter rows if missing."""
+    defaults = [
+        ("Temperature", "°C"),
+        ("Dissolved Oxygen", "mg/L"),
+        ("pH", "pH"),
+        ("Salinity", "ppt"),
+    ]
+    existing = {p.name for p in EnvironmentalParameter.objects.all()}
+    for name, unit in defaults:
+        if name in existing:
+            continue
+        param = EnvironmentalParameter(name=name, unit=unit, description="Seeded for FishTalk migration")
+        save_with_history(param, user=history_user, reason=history_reason)
+        existing.add(name)
 
 
 def ensure_aware(dt: datetime) -> datetime:
@@ -319,6 +351,8 @@ def migrate_component_environmental(
     use_csv_dir: str | Path | None = None,
     use_sqlite_path: str | Path | None = None,
     loader: ETLDataLoader | None = None,
+    window_start_override: datetime | None = None,
+    window_end_override: datetime | None = None,
 ) -> int:
     report_dir = Path(report_dir)
     component_key = resolve_component_key(report_dir, component_id=component_id, component_key=component_key)
@@ -341,8 +375,17 @@ def migrate_component_environmental(
     if not user:
         raise SystemExit("No users exist in AquaMind DB; cannot set EnvironmentalReading.recorded_by")
 
+    ensure_environmental_parameters(
+        history_user=user,
+        history_reason=f"FishTalk migration: environmental master data for component {component_key}",
+    )
+
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
+    if window_start_override is not None:
+        window_start = window_start_override
+    if window_end_override is not None:
+        window_end = window_end_override
 
     container_ids = sorted({m.container_id for m in members if m.container_id})
     population_by_container = {m.container_id: m.population_id for m in members if m.container_id and m.population_id}
@@ -529,11 +572,57 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SQLITE_PATH",
         help="Use a SQLite index for environmental readings (faster than raw CSV)",
     )
+    parser.add_argument(
+        "--start-date",
+        help="Override window start (YYYY-MM-DD or full datetime)",
+    )
+    parser.add_argument(
+        "--end-date",
+        help="Override window end (YYYY-MM-DD or full datetime)",
+    )
+    parser.add_argument(
+        "--chunk-days",
+        type=int,
+        default=0,
+        help="Process environmental readings in N-day chunks (0 = no chunking)",
+    )
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
+    window_start_override = parse_date_or_dt(args.start_date) if args.start_date else None
+    window_end_override = parse_date_or_dt(args.end_date, end_of_day=True) if args.end_date else None
+    if args.chunk_days and args.chunk_days > 0:
+        report_dir = Path(args.report_dir)
+        component_key = resolve_component_key(report_dir, component_id=args.component_id, component_key=args.component_key)
+        members = load_members_from_report(report_dir, component_id=args.component_id, component_key=component_key)
+        if not members:
+            raise SystemExit("No members found for the selected component")
+
+        base_start = window_start_override or min(m.start_time for m in members)
+        base_end = window_end_override or max((m.end_time or datetime.now()) for m in members)
+
+        current = base_start
+        while current <= base_end:
+            chunk_end = min(base_end, current + timedelta(days=args.chunk_days) - timedelta(seconds=1))
+            print(f"[chunk] {current} -> {chunk_end}")
+            migrate_component_environmental(
+                report_dir=report_dir,
+                component_id=args.component_id,
+                component_key=component_key,
+                sql_profile=args.sql_profile,
+                daily_only=args.daily_only,
+                limit=args.limit,
+                dry_run=args.dry_run,
+                use_csv_dir=args.use_csv,
+                use_sqlite_path=args.use_sqlite,
+                window_start_override=current,
+                window_end_override=chunk_end,
+            )
+            current = chunk_end + timedelta(seconds=1)
+        return 0
+
     return migrate_component_environmental(
         report_dir=Path(args.report_dir),
         component_id=args.component_id,
@@ -544,6 +633,8 @@ def main() -> int:
         dry_run=args.dry_run,
         use_csv_dir=args.use_csv,
         use_sqlite_path=args.use_sqlite,
+        window_start_override=window_start_override,
+        window_end_override=window_end_override,
     )
 
 

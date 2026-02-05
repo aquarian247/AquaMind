@@ -53,6 +53,7 @@ from apps.health.models import JournalEntry
 from apps.migration_support.models import ExternalIdMap
 from django.contrib.auth import get_user_model
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -178,6 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--component-key", help="Stable component_key from components.csv")
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     return parser
 
@@ -218,61 +225,72 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+    if args.use_csv:
+        loader = ETLDataLoader(args.use_csv)
+        sessions = loader.get_user_sample_sessions(
+            set(population_ids),
+            start_time=window_start,
+            end_time=window_end,
+        )
+        action_ids = {row.get("ActionID") for row in sessions if row.get("ActionID")}
+        sample_types_rows = loader.get_user_sample_types(action_ids)
+        attr_rows = loader.get_user_sample_attributes(action_ids)
+    else:
+        extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
 
-    in_clause = ",".join(f"'{pid}'" for pid in population_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    # 1) Sampling sessions (one per ActionID)
-    sessions = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), us.ActionID) AS ActionID, "
-            "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(23), COALESCE(o.StartTime, o.RegistrationTime), 121) AS SampleTime, "
-            "CONVERT(varchar(32), COUNT(*)) AS SampleRows, "
-            "CONVERT(varchar(32), SUM(CASE WHEN us.Returned = 1 THEN 1 ELSE 0 END)) AS ReturnedRows, "
-            "CONVERT(varchar(32), AVG(CAST(us.LivingWeight AS float))) AS AvgWeightG, "
-            "CONVERT(varchar(32), MIN(us.LivingWeight)) AS MinWeightG, "
-            "CONVERT(varchar(32), MAX(us.LivingWeight)) AS MaxWeightG "
-            "FROM dbo.UserSample us "
-            "JOIN dbo.Action a ON a.ActionID = us.ActionID "
-            "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
-            "GROUP BY us.ActionID, a.PopulationID, COALESCE(o.StartTime, o.RegistrationTime) "
-            "ORDER BY COALESCE(o.StartTime, o.RegistrationTime) ASC"
-        ),
-        headers=[
-            "ActionID",
-            "PopulationID",
-            "SampleTime",
-            "SampleRows",
-            "ReturnedRows",
-            "AvgWeightG",
-            "MinWeightG",
-            "MaxWeightG",
-        ],
-    )
+        # 1) Sampling sessions (one per ActionID)
+        sessions = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), us.ActionID) AS ActionID, "
+                "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(23), COALESCE(o.StartTime, o.RegistrationTime), 121) AS SampleTime, "
+                "CONVERT(varchar(32), COUNT(*)) AS SampleRows, "
+                "CONVERT(varchar(32), SUM(CASE WHEN us.Returned = 1 THEN 1 ELSE 0 END)) AS ReturnedRows, "
+                "CONVERT(varchar(32), AVG(CAST(us.LivingWeight AS float))) AS AvgWeightG, "
+                "CONVERT(varchar(32), MIN(us.LivingWeight)) AS MinWeightG, "
+                "CONVERT(varchar(32), MAX(us.LivingWeight)) AS MaxWeightG "
+                "FROM dbo.UserSample us "
+                "JOIN dbo.Action a ON a.ActionID = us.ActionID "
+                "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
+                "GROUP BY us.ActionID, a.PopulationID, COALESCE(o.StartTime, o.RegistrationTime) "
+                "ORDER BY COALESCE(o.StartTime, o.RegistrationTime) ASC"
+            ),
+            headers=[
+                "ActionID",
+                "PopulationID",
+                "SampleTime",
+                "SampleRows",
+                "ReturnedRows",
+                "AvgWeightG",
+                "MinWeightG",
+                "MaxWeightG",
+            ],
+        )
 
-    # 2) Sample types (many per ActionID)
-    sample_types_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), ust.ActionID) AS ActionID, "
-            "CONVERT(varchar(32), ust.SampleType) AS UserSampleTypeID, "
-            "ISNULL(st.DefaultText, '') AS SampleTypeName "
-            "FROM dbo.UserSampleTypes ust "
-            "JOIN dbo.Action a ON a.ActionID = ust.ActionID "
-            "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.UserSampleType st ON st.UserSampleTypeID = ust.SampleType "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
-            "ORDER BY ust.ActionID, ust.SampleType"
-        ),
-        headers=["ActionID", "UserSampleTypeID", "SampleTypeName"],
-    )
+        # 2) Sample types (many per ActionID)
+        sample_types_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), ust.ActionID) AS ActionID, "
+                "CONVERT(varchar(32), ust.SampleType) AS UserSampleTypeID, "
+                "ISNULL(st.DefaultText, '') AS SampleTypeName "
+                "FROM dbo.UserSampleTypes ust "
+                "JOIN dbo.Action a ON a.ActionID = ust.ActionID "
+                "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.UserSampleType st ON st.UserSampleTypeID = ust.SampleType "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
+                "ORDER BY ust.ActionID, ust.SampleType"
+            ),
+            headers=["ActionID", "UserSampleTypeID", "SampleTypeName"],
+        )
 
     types_by_action: dict[str, list[str]] = {}
     for row in sample_types_rows:
@@ -284,57 +302,58 @@ def main() -> int:
         if name not in types_by_action[aid]:
             types_by_action[aid].append(name)
 
-    # 3) Attribute aggregates (scores etc)
-    attr_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), uspv.ActionID) AS ActionID, "
-            "CONVERT(varchar(32), uspv.AttributeID) AS AttributeID, "
-            "ISNULL(fga.Name, '') AS AttributeName, "
-            "'INT' AS ValueType, "
-            "CONVERT(varchar(32), AVG(CAST(uspv.IntValue AS float))) AS AvgValue, "
-            "CONVERT(varchar(32), MIN(uspv.IntValue)) AS MinValue, "
-            "CONVERT(varchar(32), MAX(uspv.IntValue)) AS MaxValue, "
-            "CONVERT(varchar(32), COUNT(*)) AS N "
-            "FROM dbo.UserSampleParameterValue uspv "
-            "JOIN dbo.Action a ON a.ActionID = uspv.ActionID "
-            "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
-            "AND uspv.IntValue IS NOT NULL "
-            "GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name "
-            "UNION ALL "
-            "SELECT CONVERT(varchar(36), uspv.ActionID) AS ActionID, "
-            "CONVERT(varchar(32), uspv.AttributeID) AS AttributeID, "
-            "ISNULL(fga.Name, '') AS AttributeName, "
-            "'FLOAT' AS ValueType, "
-            "CONVERT(varchar(32), AVG(CAST(uspv.FloatValue AS float))) AS AvgValue, "
-            "CONVERT(varchar(32), MIN(uspv.FloatValue)) AS MinValue, "
-            "CONVERT(varchar(32), MAX(uspv.FloatValue)) AS MaxValue, "
-            "CONVERT(varchar(32), COUNT(*)) AS N "
-            "FROM dbo.UserSampleParameterValue uspv "
-            "JOIN dbo.Action a ON a.ActionID = uspv.ActionID "
-            "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
-            f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
-            "AND uspv.FloatValue IS NOT NULL "
-            "GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name "
-            "ORDER BY ActionID, AttributeID, ValueType"
-        ),
-        headers=[
-            "ActionID",
-            "AttributeID",
-            "AttributeName",
-            "ValueType",
-            "AvgValue",
-            "MinValue",
-            "MaxValue",
-            "N",
-        ],
-    )
+    if not args.use_csv:
+        # 3) Attribute aggregates (scores etc)
+        attr_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), uspv.ActionID) AS ActionID, "
+                "CONVERT(varchar(32), uspv.AttributeID) AS AttributeID, "
+                "ISNULL(fga.Name, '') AS AttributeName, "
+                "'INT' AS ValueType, "
+                "CONVERT(varchar(32), AVG(CAST(uspv.IntValue AS float))) AS AvgValue, "
+                "CONVERT(varchar(32), MIN(uspv.IntValue)) AS MinValue, "
+                "CONVERT(varchar(32), MAX(uspv.IntValue)) AS MaxValue, "
+                "CONVERT(varchar(32), COUNT(*)) AS N "
+                "FROM dbo.UserSampleParameterValue uspv "
+                "JOIN dbo.Action a ON a.ActionID = uspv.ActionID "
+                "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
+                "AND uspv.IntValue IS NOT NULL "
+                "GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name "
+                "UNION ALL "
+                "SELECT CONVERT(varchar(36), uspv.ActionID) AS ActionID, "
+                "CONVERT(varchar(32), uspv.AttributeID) AS AttributeID, "
+                "ISNULL(fga.Name, '') AS AttributeName, "
+                "'FLOAT' AS ValueType, "
+                "CONVERT(varchar(32), AVG(CAST(uspv.FloatValue AS float))) AS AvgValue, "
+                "CONVERT(varchar(32), MIN(uspv.FloatValue)) AS MinValue, "
+                "CONVERT(varchar(32), MAX(uspv.FloatValue)) AS MaxValue, "
+                "CONVERT(varchar(32), COUNT(*)) AS N "
+                "FROM dbo.UserSampleParameterValue uspv "
+                "JOIN dbo.Action a ON a.ActionID = uspv.ActionID "
+                "LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) >= '{start_str}' "
+                f"AND COALESCE(o.StartTime, o.RegistrationTime) <= '{end_str}' "
+                "AND uspv.FloatValue IS NOT NULL "
+                "GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name "
+                "ORDER BY ActionID, AttributeID, ValueType"
+            ),
+            headers=[
+                "ActionID",
+                "AttributeID",
+                "AttributeName",
+                "ValueType",
+                "AvgValue",
+                "MinValue",
+                "MaxValue",
+                "N",
+            ],
+        )
 
     attrs_by_action: dict[str, list[dict[str, str]]] = {}
     for row in attr_rows:

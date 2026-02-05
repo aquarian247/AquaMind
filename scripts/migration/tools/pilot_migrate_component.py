@@ -1194,6 +1194,12 @@ def main() -> int:
         hall_stage = stage_from_hall(group_meta.get("site"), group_meta.get("container_group"))
         if hall_stage:
             return hall_stage
+        prod_stage = (group_meta.get("prod_stage") or "").upper()
+        if prod_stage:
+            if "MARINE" in prod_stage or "BROOD" in prod_stage:
+                return "Adult"
+            if "SMOLT" in prod_stage:
+                return "Smolt"
         return fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
 
     population_ids = [m.population_id for m in members if m.population_id]

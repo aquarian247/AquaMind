@@ -595,6 +595,137 @@ class ETLDataLoader:
                 row["_source_table"] = table_name
                 results.append(row)
         return results
+
+    # ====================
+    # TREATMENTS
+    # ====================
+
+    def get_treatments_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        """Get treatment rows for specific populations."""
+        rows = self._load_csv_dict("treatments")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            action_time = row.get("OperationStartTime", "") or row.get("TreatmentStartTime", "") or ""
+            if start_str and action_time < start_str:
+                continue
+            if end_str and action_time > end_str:
+                continue
+            results.append(row)
+        return results
+
+    # ====================
+    # LICE SAMPLES
+    # ====================
+
+    def get_lice_samples_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> tuple[List[Dict[str, str]], List[Dict[str, str]], Dict[str, str]]:
+        """Get lice sample rows, data rows, and stage-name mapping."""
+        sample_rows = self._load_csv_dict("public_lice_samples")
+        data_rows = self._load_csv_dict("public_lice_sample_data")
+        stage_rows = self._load_csv_dict("lice_stages")
+
+        stage_name_by_id = {
+            row.get("LiceStagesID", ""): (row.get("DefaultText") or "").strip()
+            for row in stage_rows
+        }
+
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        filtered_samples: List[Dict[str, str]] = []
+        sample_ids: Set[str] = set()
+        for row in sample_rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            sample_time = row.get("SampleDate", "")
+            if start_str and sample_time < start_str:
+                continue
+            if end_str and sample_time > end_str:
+                continue
+            filtered_samples.append(row)
+            if row.get("SampleID"):
+                sample_ids.add(row["SampleID"])
+
+        filtered_data = [row for row in data_rows if row.get("SampleID") in sample_ids]
+        return filtered_samples, filtered_data, stage_name_by_id
+
+    # ====================
+    # HEALTH JOURNAL (USER SAMPLES)
+    # ====================
+
+    def get_user_sample_sessions(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        rows = self._load_csv_dict("user_sample_sessions")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            sample_time = row.get("SampleTime", "")
+            if start_str and sample_time < start_str:
+                continue
+            if end_str and sample_time > end_str:
+                continue
+            results.append(row)
+        return results
+
+    def get_user_sample_types(self, action_ids: Set[str]) -> List[Dict[str, str]]:
+        rows = self._load_csv_dict("user_sample_types")
+        return [row for row in rows if row.get("ActionID") in action_ids]
+
+    def get_user_sample_attributes(self, action_ids: Set[str]) -> List[Dict[str, str]]:
+        rows = self._load_csv_dict("user_sample_attributes")
+        return [row for row in rows if row.get("ActionID") in action_ids]
+
+    # ====================
+    # FEED INVENTORY
+    # ====================
+
+    def get_feed_reception_lines(
+        self,
+        container_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        include_all_receptions: bool = False,
+    ) -> List[Dict[str, str]]:
+        rows = self._load_csv_dict("feed_reception_lines")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("ContainerID") not in container_ids:
+                continue
+            if include_all_receptions:
+                results.append(row)
+                continue
+            rec_time = row.get("ReceptionTime", "")
+            if start_str and rec_time < start_str:
+                continue
+            if end_str and rec_time > end_str:
+                continue
+            results.append(row)
+        return results
     
     # ====================
     # TRANSFERS

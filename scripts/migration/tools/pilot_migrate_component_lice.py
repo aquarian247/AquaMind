@@ -52,6 +52,7 @@ from apps.batch.models.assignment import BatchContainerAssignment
 from apps.health.models import LiceCount, LiceType
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -194,6 +195,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--component-key", help="Stable component_key from components.csv")
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     return parser
 
@@ -222,58 +229,71 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
-    in_clause = ",".join(f"'{pid}'" for pid in population_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    if args.use_csv:
+        loader = ETLDataLoader(args.use_csv)
+        sample_rows, data_rows, stage_name_by_id = loader.get_lice_samples_for_populations(
+            set(population_ids),
+            start_time=window_start,
+            end_time=window_end,
+        )
+        sample_ids = [row.get("SampleID") for row in sample_rows if row.get("SampleID")]
+    else:
+        extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    sample_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), pls.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(36), pls.SampleID) AS SampleID, "
-            "CONVERT(varchar(19), pls.SampleDate, 120) AS SampleDate, "
-            "CONVERT(varchar(32), pls.NumberOfFish) AS NumberOfFish "
-            "FROM dbo.PublicLiceSamples pls "
-            f"WHERE pls.PopulationID IN ({in_clause}) "
-            f"AND pls.SampleDate >= '{start_str}' AND pls.SampleDate <= '{end_str}' "
-            "ORDER BY pls.SampleDate ASC"
-        ),
-        headers=["PopulationID", "SampleID", "SampleDate", "NumberOfFish"],
-    )
-    sample_ids = [row.get("SampleID") for row in sample_rows if row.get("SampleID")]
+        sample_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), pls.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(36), pls.SampleID) AS SampleID, "
+                "CONVERT(varchar(19), pls.SampleDate, 120) AS SampleDate, "
+                "CONVERT(varchar(32), pls.NumberOfFish) AS NumberOfFish "
+                "FROM dbo.PublicLiceSamples pls "
+                f"WHERE pls.PopulationID IN ({in_clause}) "
+                f"AND pls.SampleDate >= '{start_str}' AND pls.SampleDate <= '{end_str}' "
+                "ORDER BY pls.SampleDate ASC"
+            ),
+            headers=["PopulationID", "SampleID", "SampleDate", "NumberOfFish"],
+        )
+        sample_ids = [row.get("SampleID") for row in sample_rows if row.get("SampleID")]
+
+        if not sample_ids:
+            print(f"No lice samples found for component_key={component_key} (batch={batch.batch_number})")
+            return 0
+
+        # Fetch data rows for those samples.
+        sample_in_clause = ",".join(f"'{sid}'" for sid in sample_ids)
+        data_rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), psd.SampleID) AS SampleID, "
+                "CONVERT(varchar(32), psd.LiceStagesID) AS LiceStagesID, "
+                "CONVERT(varchar(64), psd.LiceCount) AS LiceCount "
+                "FROM dbo.PublicLiceSampleData psd "
+                f"WHERE psd.SampleID IN ({sample_in_clause})"
+            ),
+            headers=["SampleID", "LiceStagesID", "LiceCount"],
+        )
+
+        stage_ids = sorted({row.get("LiceStagesID") for row in data_rows if row.get("LiceStagesID")})
+        stage_name_by_id: dict[str, str] = {}
+        if stage_ids:
+            stage_in_clause = ",".join(str(int(sid)) for sid in stage_ids if str(sid).strip().isdigit())
+            if stage_in_clause:
+                stage_rows = extractor._run_sqlcmd(
+                    query=(
+                        "SELECT CONVERT(varchar(32), ls.LiceStagesID) AS LiceStagesID, "
+                        "ISNULL(ls.DefaultText, '') AS DefaultText "
+                        "FROM dbo.LiceStages ls "
+                        f"WHERE ls.LiceStagesID IN ({stage_in_clause})"
+                    ),
+                    headers=["LiceStagesID", "DefaultText"],
+                )
+                stage_name_by_id = {row.get("LiceStagesID", ""): (row.get("DefaultText") or "").strip() for row in stage_rows}
 
     if not sample_ids:
         print(f"No lice samples found for component_key={component_key} (batch={batch.batch_number})")
         return 0
-
-    # Fetch data rows for those samples.
-    sample_in_clause = ",".join(f"'{sid}'" for sid in sample_ids)
-    data_rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), psd.SampleID) AS SampleID, "
-            "CONVERT(varchar(32), psd.LiceStagesID) AS LiceStagesID, "
-            "CONVERT(varchar(64), psd.LiceCount) AS LiceCount "
-            "FROM dbo.PublicLiceSampleData psd "
-            f"WHERE psd.SampleID IN ({sample_in_clause})"
-        ),
-        headers=["SampleID", "LiceStagesID", "LiceCount"],
-    )
-
-    stage_ids = sorted({row.get("LiceStagesID") for row in data_rows if row.get("LiceStagesID")})
-    stage_name_by_id: dict[str, str] = {}
-    if stage_ids:
-        stage_in_clause = ",".join(str(int(sid)) for sid in stage_ids if str(sid).strip().isdigit())
-        if stage_in_clause:
-            stage_rows = extractor._run_sqlcmd(
-                query=(
-                    "SELECT CONVERT(varchar(32), ls.LiceStagesID) AS LiceStagesID, "
-                    "ISNULL(ls.DefaultText, '') AS DefaultText "
-                    "FROM dbo.LiceStages ls "
-                    f"WHERE ls.LiceStagesID IN ({stage_in_clause})"
-                ),
-                headers=["LiceStagesID", "DefaultText"],
-            )
-            stage_name_by_id = {row.get("LiceStagesID", ""): (row.get("DefaultText") or "").strip() for row in stage_rows}
 
     if args.dry_run:
         print(

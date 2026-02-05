@@ -57,6 +57,10 @@ CSV_SUPPORTED_SCRIPTS = {
     "pilot_migrate_component_mortality.py",
     "pilot_migrate_component_environmental.py",
     "pilot_migrate_component_growth_samples.py",
+    "pilot_migrate_component_treatments.py",
+    "pilot_migrate_component_lice.py",
+    "pilot_migrate_component_health_journal.py",
+    "pilot_migrate_component_feed_inventory.py",
 }
 
 
@@ -224,7 +228,10 @@ def full_lifecycle_members_path(batch_key: str) -> Path:
 
 def load_sea_population_ids(batch_key: str, *, use_csv: str | None) -> list[str]:
     """Resolve sea population IDs for the given input batch key."""
-    input_name, input_number, year_class = [p.strip() for p in batch_key.split("|")]
+    parts = [p.strip() for p in batch_key.split("|")]
+    if len(parts) < 3:
+        raise ValueError(f"Invalid batch_key format: {batch_key}")
+    input_name, input_number, year_class = parts[0], parts[1], parts[2]
     if use_csv:
         csv_path = Path(use_csv) / "ext_inputs.csv"
         if not csv_path.exists():

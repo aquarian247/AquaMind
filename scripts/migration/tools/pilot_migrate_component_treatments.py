@@ -49,6 +49,7 @@ from apps.batch.models.assignment import BatchContainerAssignment
 from apps.health.models import Treatment, VaccinationType
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.etl_loader import ETLDataLoader
 
 
 User = get_user_model()
@@ -175,6 +176,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--component-key", help="Stable component_key from components.csv")
     parser.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
+    parser.add_argument(
+        "--use-csv",
+        type=str,
+        metavar="CSV_DIR",
+        help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     return parser
 
@@ -203,64 +210,72 @@ def main() -> int:
     window_start = min(m.start_time for m in members)
     window_end = max((m.end_time or datetime.now()) for m in members)
 
-    extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
-    in_clause = ",".join(f"'{pid}'" for pid in population_ids)
-    start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
-    end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+    if args.use_csv:
+        loader = ETLDataLoader(args.use_csv)
+        rows = loader.get_treatments_for_populations(
+            set(population_ids),
+            start_time=window_start,
+            end_time=window_end,
+        )
+    else:
+        extractor = BaseExtractor(ExtractionContext(profile=args.sql_profile))
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
 
-    rows = extractor._run_sqlcmd(
-        query=(
-            "SELECT CONVERT(varchar(36), t.ActionID) AS ActionID, "
-            "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
-            "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
-            "CONVERT(varchar(19), t.StartTime, 120) AS TreatmentStartTime, "
-            "CONVERT(varchar(19), t.EndTime, 120) AS TreatmentEndTime, "
-            "CONVERT(varchar(19), t.VaccinationDate, 120) AS VaccinationDate, "
-            "CONVERT(varchar(32), t.TreatmentCount) AS TreatmentCount, "
-            "CONVERT(varchar(64), t.AmountKg) AS AmountKg, "
-            "CONVERT(varchar(64), t.AmountLitres) AS AmountLitres, "
-            "CONVERT(varchar(32), t.ReasonForTreatment) AS ReasonForTreatment, "
-            "ISNULL(tr.DefaultText, '') AS ReasonText, "
-            "CONVERT(varchar(32), t.VaccineType) AS VaccineType, "
-            "ISNULL(vt.VaccineName, '') AS VaccineName, "
-            "CONVERT(varchar(32), t.MedicamentID) AS MedicamentID, "
-            "ISNULL(med.MedicamentName, '') AS MedicamentName, "
-            "CONVERT(varchar(32), t.TreatmentCategory) AS TreatmentCategory, "
-            "CONVERT(varchar(32), t.TreatmentMethod) AS TreatmentMethod, "
-            "CONVERT(varchar(32), t.NonMedicalTreatmentMethod) AS NonMedicalTreatmentMethod, "
-            "ISNULL(t.Comment, '') AS Comment "
-            "FROM dbo.Treatment t "
-            "JOIN dbo.Action a ON a.ActionID = t.ActionID "
-            "JOIN dbo.Operations o ON o.OperationID = a.OperationID "
-            "LEFT JOIN dbo.TreatmentReasons tr ON tr.TreatmentReasonsID = t.ReasonForTreatment "
-            "LEFT JOIN dbo.VaccineTypes vt ON vt.VaccineTypeID = t.VaccineType "
-            "LEFT JOIN dbo.Medicaments med ON med.MedicamentID = t.MedicamentID "
-            f"WHERE a.PopulationID IN ({in_clause}) "
-            f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
-            "ORDER BY o.StartTime ASC"
-        ),
-        headers=[
-            "ActionID",
-            "PopulationID",
-            "OperationStartTime",
-            "TreatmentStartTime",
-            "TreatmentEndTime",
-            "VaccinationDate",
-            "TreatmentCount",
-            "AmountKg",
-            "AmountLitres",
-            "ReasonForTreatment",
-            "ReasonText",
-            "VaccineType",
-            "VaccineName",
-            "MedicamentID",
-            "MedicamentName",
-            "TreatmentCategory",
-            "TreatmentMethod",
-            "NonMedicalTreatmentMethod",
-            "Comment",
-        ],
-    )
+        rows = extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), t.ActionID) AS ActionID, "
+                "CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                "CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime, "
+                "CONVERT(varchar(19), t.StartTime, 120) AS TreatmentStartTime, "
+                "CONVERT(varchar(19), t.EndTime, 120) AS TreatmentEndTime, "
+                "CONVERT(varchar(19), t.VaccinationDate, 120) AS VaccinationDate, "
+                "CONVERT(varchar(32), t.TreatmentCount) AS TreatmentCount, "
+                "CONVERT(varchar(64), t.AmountKg) AS AmountKg, "
+                "CONVERT(varchar(64), t.AmountLitres) AS AmountLitres, "
+                "CONVERT(varchar(32), t.ReasonForTreatment) AS ReasonForTreatment, "
+                "ISNULL(tr.DefaultText, '') AS ReasonText, "
+                "CONVERT(varchar(32), t.VaccineType) AS VaccineType, "
+                "ISNULL(vt.VaccineName, '') AS VaccineName, "
+                "CONVERT(varchar(32), t.MedicamentID) AS MedicamentID, "
+                "ISNULL(med.MedicamentName, '') AS MedicamentName, "
+                "CONVERT(varchar(32), t.TreatmentCategory) AS TreatmentCategory, "
+                "CONVERT(varchar(32), t.TreatmentMethod) AS TreatmentMethod, "
+                "CONVERT(varchar(32), t.NonMedicalTreatmentMethod) AS NonMedicalTreatmentMethod, "
+                "ISNULL(t.Comment, '') AS Comment "
+                "FROM dbo.Treatment t "
+                "JOIN dbo.Action a ON a.ActionID = t.ActionID "
+                "JOIN dbo.Operations o ON o.OperationID = a.OperationID "
+                "LEFT JOIN dbo.TreatmentReasons tr ON tr.TreatmentReasonsID = t.ReasonForTreatment "
+                "LEFT JOIN dbo.VaccineTypes vt ON vt.VaccineTypeID = t.VaccineType "
+                "LEFT JOIN dbo.Medicaments med ON med.MedicamentID = t.MedicamentID "
+                f"WHERE a.PopulationID IN ({in_clause}) "
+                f"AND o.StartTime >= '{start_str}' AND o.StartTime <= '{end_str}' "
+                "ORDER BY o.StartTime ASC"
+            ),
+            headers=[
+                "ActionID",
+                "PopulationID",
+                "OperationStartTime",
+                "TreatmentStartTime",
+                "TreatmentEndTime",
+                "VaccinationDate",
+                "TreatmentCount",
+                "AmountKg",
+                "AmountLitres",
+                "ReasonForTreatment",
+                "ReasonText",
+                "VaccineType",
+                "VaccineName",
+                "MedicamentID",
+                "MedicamentName",
+                "TreatmentCategory",
+                "TreatmentMethod",
+                "NonMedicalTreatmentMethod",
+                "Comment",
+            ],
+        )
 
     if args.dry_run:
         print(f"[dry-run] Would migrate {len(rows)} FishTalk treatments into batch={batch.batch_number}")

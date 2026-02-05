@@ -338,6 +338,244 @@ TABLE_CONFIGS = {
         "estimated_rows": 1000000,
         "chunk_size": 0,
     },
+    "public_lice_samples": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), pls.PopulationID) AS PopulationID,
+                CONVERT(varchar(36), pls.SampleID) AS SampleID,
+                CONVERT(varchar(19), pls.SampleDate, 120) AS SampleDate,
+                CONVERT(varchar(32), pls.NumberOfFish) AS NumberOfFish
+            FROM dbo.PublicLiceSamples pls
+            ORDER BY pls.SampleDate ASC
+        """,
+        "headers": ["PopulationID", "SampleID", "SampleDate", "NumberOfFish"],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "public_lice_sample_data": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), psd.SampleID) AS SampleID,
+                CONVERT(varchar(32), psd.LiceStagesID) AS LiceStagesID,
+                CONVERT(varchar(64), psd.LiceCount) AS LiceCount
+            FROM dbo.PublicLiceSampleData psd
+        """,
+        "headers": ["SampleID", "LiceStagesID", "LiceCount"],
+        "estimated_rows": 500000,
+        "chunk_size": 0,
+    },
+    "lice_stages": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(32), ls.LiceStagesID) AS LiceStagesID,
+                ISNULL(ls.DefaultText, '') AS DefaultText
+            FROM dbo.LiceStages ls
+        """,
+        "headers": ["LiceStagesID", "DefaultText"],
+        "estimated_rows": 100,
+        "chunk_size": 0,
+    },
+    "treatments": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), t.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(19), o.StartTime, 120) AS OperationStartTime,
+                CONVERT(varchar(19), t.StartTime, 120) AS TreatmentStartTime,
+                CONVERT(varchar(19), t.EndTime, 120) AS TreatmentEndTime,
+                CONVERT(varchar(19), t.VaccinationDate, 120) AS VaccinationDate,
+                CONVERT(varchar(32), t.TreatmentCount) AS TreatmentCount,
+                CONVERT(varchar(64), t.AmountKg) AS AmountKg,
+                CONVERT(varchar(64), t.AmountLitres) AS AmountLitres,
+                CONVERT(varchar(32), t.ReasonForTreatment) AS ReasonForTreatment,
+                ISNULL(tr.DefaultText, '') AS ReasonText,
+                CONVERT(varchar(32), t.VaccineType) AS VaccineType,
+                ISNULL(vt.VaccineName, '') AS VaccineName,
+                CONVERT(varchar(32), t.MedicamentID) AS MedicamentID,
+                ISNULL(med.MedicamentName, '') AS MedicamentName,
+                CONVERT(varchar(32), t.TreatmentCategory) AS TreatmentCategory,
+                CONVERT(varchar(32), t.TreatmentMethod) AS TreatmentMethod,
+                CONVERT(varchar(32), t.NonMedicalTreatmentMethod) AS NonMedicalTreatmentMethod,
+                ISNULL(t.Comment, '') AS Comment
+            FROM dbo.Treatment t
+            JOIN dbo.Action a ON a.ActionID = t.ActionID
+            JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            LEFT JOIN dbo.TreatmentReasons tr ON tr.TreatmentReasonsID = t.ReasonForTreatment
+            LEFT JOIN dbo.VaccineTypes vt ON vt.VaccineTypeID = t.VaccineType
+            LEFT JOIN dbo.Medicaments med ON med.MedicamentID = t.MedicamentID
+            ORDER BY o.StartTime ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "OperationStartTime",
+            "TreatmentStartTime",
+            "TreatmentEndTime",
+            "VaccinationDate",
+            "TreatmentCount",
+            "AmountKg",
+            "AmountLitres",
+            "ReasonForTreatment",
+            "ReasonText",
+            "VaccineType",
+            "VaccineName",
+            "MedicamentID",
+            "MedicamentName",
+            "TreatmentCategory",
+            "TreatmentMethod",
+            "NonMedicalTreatmentMethod",
+            "Comment",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "user_sample_sessions": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), us.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.PopulationID) AS PopulationID,
+                CONVERT(varchar(23), COALESCE(o.StartTime, o.RegistrationTime), 121) AS SampleTime,
+                CONVERT(varchar(32), COUNT(*)) AS SampleRows,
+                CONVERT(varchar(32), SUM(CASE WHEN us.Returned = 1 THEN 1 ELSE 0 END)) AS ReturnedRows,
+                CONVERT(varchar(32), AVG(CAST(us.LivingWeight AS float))) AS AvgWeightG,
+                CONVERT(varchar(32), MIN(us.LivingWeight)) AS MinWeightG,
+                CONVERT(varchar(32), MAX(us.LivingWeight)) AS MaxWeightG
+            FROM dbo.UserSample us
+            JOIN dbo.Action a ON a.ActionID = us.ActionID
+            LEFT JOIN dbo.Operations o ON o.OperationID = a.OperationID
+            GROUP BY us.ActionID, a.PopulationID, COALESCE(o.StartTime, o.RegistrationTime)
+            ORDER BY COALESCE(o.StartTime, o.RegistrationTime) ASC
+        """,
+        "headers": [
+            "ActionID",
+            "PopulationID",
+            "SampleTime",
+            "SampleRows",
+            "ReturnedRows",
+            "AvgWeightG",
+            "MinWeightG",
+            "MaxWeightG",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "user_sample_types": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), ust.ActionID) AS ActionID,
+                CONVERT(varchar(32), ust.SampleType) AS UserSampleTypeID,
+                ISNULL(st.DefaultText, '') AS SampleTypeName
+            FROM dbo.UserSampleTypes ust
+            LEFT JOIN dbo.UserSampleType st ON st.UserSampleTypeID = ust.SampleType
+            ORDER BY ust.ActionID, ust.SampleType
+        """,
+        "headers": ["ActionID", "UserSampleTypeID", "SampleTypeName"],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
+    "user_sample_attributes": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), uspv.ActionID) AS ActionID,
+                CONVERT(varchar(32), uspv.AttributeID) AS AttributeID,
+                ISNULL(fga.Name, '') AS AttributeName,
+                'INT' AS ValueType,
+                CONVERT(varchar(32), AVG(CAST(uspv.IntValue AS float))) AS AvgValue,
+                CONVERT(varchar(32), MIN(uspv.IntValue)) AS MinValue,
+                CONVERT(varchar(32), MAX(uspv.IntValue)) AS MaxValue,
+                CONVERT(varchar(32), COUNT(*)) AS N
+            FROM dbo.UserSampleParameterValue uspv
+            LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID
+            WHERE uspv.IntValue IS NOT NULL
+            GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name
+            UNION ALL
+            SELECT 
+                CONVERT(varchar(36), uspv.ActionID) AS ActionID,
+                CONVERT(varchar(32), uspv.AttributeID) AS AttributeID,
+                ISNULL(fga.Name, '') AS AttributeName,
+                'FLOAT' AS ValueType,
+                CONVERT(varchar(32), AVG(CAST(uspv.FloatValue AS float))) AS AvgValue,
+                CONVERT(varchar(32), MIN(uspv.FloatValue)) AS MinValue,
+                CONVERT(varchar(32), MAX(uspv.FloatValue)) AS MaxValue,
+                CONVERT(varchar(32), COUNT(*)) AS N
+            FROM dbo.UserSampleParameterValue uspv
+            LEFT JOIN dbo.FishGroupAttributes fga ON fga.AttributeID = uspv.AttributeID
+            WHERE uspv.FloatValue IS NOT NULL
+            GROUP BY uspv.ActionID, uspv.AttributeID, fga.Name
+            ORDER BY ActionID, AttributeID, ValueType
+        """,
+        "headers": ["ActionID", "AttributeID", "AttributeName", "ValueType", "AvgValue", "MinValue", "MaxValue", "N"],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
+    "feed_reception_lines": {
+        "query": """
+            SELECT 
+                CONVERT(varchar(36), frb.FeedReceptionID) AS FeedReceptionID,
+                CONVERT(varchar(36), frb.FeedBatchID) AS FeedBatchID,
+                ISNULL(CONVERT(varchar(32), frb.PricePerKg), '') AS PricePerKg,
+                ISNULL(CONVERT(varchar(32), frb.ReceptionAmount), '') AS ReceptionAmount,
+                CONVERT(varchar(19), frb.ProductionDate, 120) AS ProductionDate,
+                CONVERT(varchar(19), frb.OutOfDate, 120) AS OutOfDate,
+                ISNULL(frb.ReceiptNumber, '') AS ReceiptNumber,
+                ISNULL(frb.SuppliersBatchNumber, '') AS SuppliersBatchNumber,
+                CONVERT(varchar(32), frb.FeedReceptionLineNumber) AS FeedReceptionLineNumber,
+                CONVERT(varchar(19), fr.ReceptionTime, 120) AS ReceptionTime,
+                ISNULL(fr.OrderNumber, '') AS OrderNumber,
+                ISNULL(fr.OurOrderNo, '') AS OurOrderNo,
+                ISNULL(fr.OurReference, '') AS OurReference,
+                ISNULL(fr.GTIN, '') AS GTIN,
+                CONVERT(varchar(36), fr.SupplierID) AS SupplierID,
+                ISNULL(fr.Comment, '') AS ReceptionComment,
+                CONVERT(varchar(36), fb.FeedStoreID) AS FeedStoreID,
+                CONVERT(varchar(32), fb.FeedTypeID) AS FeedTypeID,
+                ISNULL(fb.BatchNumber, '') AS FeedBatchNumber,
+                CONVERT(varchar(19), fb.StartTime, 120) AS FeedBatchStartTime,
+                CONVERT(varchar(19), fb.EndTime, 120) AS FeedBatchEndTime,
+                ISNULL(fs.Name, '') AS FeedStoreName,
+                ISNULL(CONVERT(varchar(32), fs.Capacity), '') AS FeedStoreCapacity,
+                CONVERT(varchar(32), fs.FeedStoreTypeID) AS FeedStoreTypeID,
+                CONVERT(varchar(36), fsa.ContainerID) AS ContainerID,
+                ISNULL(ft.Name, '') AS FeedTypeName
+            FROM dbo.FeedStoreUnitAssignment fsa
+            JOIN dbo.FeedStore fs ON fs.FeedStoreID = fsa.FeedStoreID
+            JOIN dbo.FeedBatch fb ON fb.FeedStoreID = fs.FeedStoreID
+            JOIN dbo.FeedReceptionBatches frb ON frb.FeedBatchID = fb.FeedBatchID
+            JOIN dbo.FeedReceptions fr ON fr.FeedReceptionID = frb.FeedReceptionID
+            LEFT JOIN dbo.FeedTypes ft ON ft.FeedTypeID = fb.FeedTypeID
+            ORDER BY fr.ReceptionTime ASC
+        """,
+        "headers": [
+            "FeedReceptionID",
+            "FeedBatchID",
+            "PricePerKg",
+            "ReceptionAmount",
+            "ProductionDate",
+            "OutOfDate",
+            "ReceiptNumber",
+            "SuppliersBatchNumber",
+            "FeedReceptionLineNumber",
+            "ReceptionTime",
+            "OrderNumber",
+            "OurOrderNo",
+            "OurReference",
+            "GTIN",
+            "SupplierID",
+            "ReceptionComment",
+            "FeedStoreID",
+            "FeedTypeID",
+            "FeedBatchNumber",
+            "FeedBatchStartTime",
+            "FeedBatchEndTime",
+            "FeedStoreName",
+            "FeedStoreCapacity",
+            "FeedStoreTypeID",
+            "ContainerID",
+            "FeedTypeName",
+        ],
+        "estimated_rows": 200000,
+        "chunk_size": 0,
+    },
     "transfer_operations": {
         "query": """
             SELECT 
