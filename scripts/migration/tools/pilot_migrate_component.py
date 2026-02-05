@@ -373,7 +373,17 @@ def stage_bucket(stage_name: str) -> str | None:
 def normalize_label(value: str | None) -> str:
     if not value:
         return ""
-    return " ".join(value.split()).strip()
+    raw = " ".join(value.split()).strip()
+    upper = raw.upper()
+    if upper.startswith("FT "):
+        raw = raw[3:].strip()
+    elif upper.startswith("FT-"):
+        raw = raw[3:].strip()
+    if upper.endswith(" FW"):
+        raw = raw[:-3].strip()
+    if upper.endswith(" SEA"):
+        raw = raw[:-4].strip()
+    return raw
 
 
 def normalize_key(value: str | None) -> str:
@@ -1528,8 +1538,9 @@ def main() -> int:
                         )
                         fallback_hall_by_org[org_id] = hall
 
+            container_name = normalize_label(src.get("ContainerName") or cid) or cid
             container = Container(
-                name=(src.get("ContainerName") or cid)[:100],
+                name=container_name[:100],
                 container_type=container_type,
                 hall=hall,
                 area=area,

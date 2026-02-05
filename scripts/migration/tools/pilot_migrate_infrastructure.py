@@ -121,6 +121,22 @@ def hall_label_from_official(official_id: str | None) -> str | None:
     return None
 
 
+def normalize_infra_name(value: str | None) -> str:
+    if not value:
+        return ""
+    raw = " ".join(str(value).split()).strip()
+    upper = raw.upper()
+    if upper.startswith("FT "):
+        raw = raw[3:].strip()
+    elif upper.startswith("FT-"):
+        raw = raw[3:].strip()
+    if upper.endswith(" FW"):
+        raw = raw[:-3].strip()
+    if upper.endswith(" SEA"):
+        raw = raw[:-4].strip()
+    return raw
+
+
 def main():
     parser = argparse.ArgumentParser(description="Pre-create migration infrastructure")
     parser.add_argument("--geography", default="Faroe Islands",
@@ -248,7 +264,7 @@ def main():
     
     for org_id in sorted(containers_by_org.keys()):
         org = org_by_id.get(org_id, {})
-        org_name = (org.get("Name") or org_id)[:80]
+        org_name = normalize_infra_name(org.get("Name") or org_id)[:80]
         lat = Decimal(str(org.get("Latitude") or 0)).quantize(Decimal("0.000001"))
         lon = Decimal(str(org.get("Longitude") or 0)).quantize(Decimal("0.000001"))
         
@@ -346,7 +362,7 @@ def main():
             continue  # No freshwater station for this org
         
         station = station_by_org[org_id]
-        org_name = (org_by_id.get(org_id, {}).get("Name") or org_id)[:80]
+        org_name = normalize_infra_name(org_by_id.get(org_id, {}).get("Name") or org_id)[:80]
         
         # Group containers by hall label
         for c in org_containers:
@@ -443,7 +459,7 @@ def main():
                 # Skip if no hall for this container
                 continue
         
-        container_name = (c.get("ContainerName") or c.get("OfficialID") or cid)[:100]
+        container_name = normalize_infra_name(c.get("ContainerName") or c.get("OfficialID") or cid)[:100]
         
         container_obj, created = get_or_create_with_history(
             Container,

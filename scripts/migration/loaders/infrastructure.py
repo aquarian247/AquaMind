@@ -62,7 +62,17 @@ FAROE_SITES_OTHER = {"H125 GLYVRAR"}
 def normalize_label(value: str | None) -> str:
     if not value:
         return ""
-    return " ".join(str(value).split()).strip()
+    raw = " ".join(str(value).split()).strip()
+    upper = raw.upper()
+    if upper.startswith("FT "):
+        raw = raw[3:].strip()
+    elif upper.startswith("FT-"):
+        raw = raw[3:].strip()
+    if upper.endswith(" FW"):
+        raw = raw[:-3].strip()
+    if upper.endswith(" SEA"):
+        raw = raw[:-4].strip()
+    return raw
 
 
 def normalize_key(value: str | None) -> str:

@@ -638,16 +638,28 @@ class ETLDataLoader:
         end_time: Optional[datetime] = None,
     ) -> List[Dict[str, str]]:
         """Get weight sample rows for specific populations."""
-        tables = ["ext_weight_samples_v2", "public_weight_samples"]
         start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
         end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
 
         results: List[Dict[str, str]] = []
-        for table_name in tables:
+
+        rows_by_table: List[tuple[str, List[Dict[str, str]]]] = []
+        ext_rows = None
+        try:
+            ext_rows = self._load_csv_dict("ext_weight_samples_v2")
+        except FileNotFoundError:
+            ext_rows = None
+        if ext_rows:
+            rows_by_table.append(("ext_weight_samples_v2", ext_rows))
+        else:
             try:
-                rows = self._load_csv_dict(table_name)
+                pub_rows = self._load_csv_dict("public_weight_samples")
             except FileNotFoundError:
-                continue
+                pub_rows = []
+            if pub_rows:
+                rows_by_table.append(("public_weight_samples", pub_rows))
+
+        for table_name, rows in rows_by_table:
             for row in rows:
                 if row.get("PopulationID") not in population_ids:
                     continue

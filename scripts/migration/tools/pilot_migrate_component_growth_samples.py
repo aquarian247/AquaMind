@@ -103,9 +103,8 @@ def weight_to_grams(value: str) -> Decimal | None:
     raw = to_decimal(value, places="0.01")
     if raw is None or raw <= 0:
         return None
-    # Heuristic: values <= 50 are likely kg, larger values assumed grams.
-    grams = raw * Decimal("1000") if raw <= 50 else raw
-    return grams.quantize(Decimal("0.01"))
+    # FishTalk weight samples are stored in grams (across FW and sea cohorts).
+    return raw.quantize(Decimal("0.01"))
 
 
 def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
