@@ -55,12 +55,15 @@ CSV_SUPPORTED_SCRIPTS = {
     "pilot_migrate_component_transfers.py",
     "pilot_migrate_component_feeding.py",
     "pilot_migrate_component_mortality.py",
+    "pilot_migrate_component_culling.py",
+    "pilot_migrate_component_escapes.py",
     "pilot_migrate_component_environmental.py",
     "pilot_migrate_component_growth_samples.py",
     "pilot_migrate_component_treatments.py",
     "pilot_migrate_component_lice.py",
     "pilot_migrate_component_health_journal.py",
     "pilot_migrate_component_feed_inventory.py",
+    "pilot_migrate_component_harvest.py",
 }
 
 
@@ -744,9 +747,12 @@ def main() -> int:
             "pilot_migrate_component_feeding.py",
             "pilot_migrate_component_growth_samples.py",
             "pilot_migrate_component_mortality.py",
+            "pilot_migrate_component_culling.py",
+            "pilot_migrate_component_escapes.py",
             "pilot_migrate_component_treatments.py",
             "pilot_migrate_component_lice.py",
             "pilot_migrate_component_health_journal.py",
+            "pilot_migrate_component_harvest.py",
         ]
         if not args.skip_environmental:
             scripts.append("pilot_migrate_component_environmental.py")
@@ -767,9 +773,13 @@ def main() -> int:
         ("pilot_migrate_component_feeding.py", "Feeding Events"),
         ("pilot_migrate_component_growth_samples.py", "Growth Samples"),
         ("pilot_migrate_component_mortality.py", "Mortality Events"),
+        ("pilot_migrate_component_culling.py", "Culling Events"),
+        ("pilot_migrate_component_escapes.py", "Escape Events"),
         ("pilot_migrate_component_treatments.py", "Treatments"),
         ("pilot_migrate_component_lice.py", "Lice Counts"),
-        ("pilot_migrate_component_health_journal.py", "Health Journal"),    ]
+        ("pilot_migrate_component_health_journal.py", "Health Journal"),
+        ("pilot_migrate_component_harvest.py", "Harvest Results"),
+    ]
 
     if not args.skip_environmental:
         scripts.append(("pilot_migrate_component_environmental.py", "Environmental Readings"))

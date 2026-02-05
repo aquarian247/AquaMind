@@ -525,6 +525,75 @@ class ETLDataLoader:
             results.append(row)
         
         return results
+
+    def get_culling_actions_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        """Get culling actions for specific populations."""
+        rows = self._load_csv_dict("culling")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            action_time = row.get("OperationStartTime", "") or ""
+            if start_str and action_time < start_str:
+                continue
+            if end_str and action_time > end_str:
+                continue
+            results.append(row)
+        return results
+
+    def get_escape_actions_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        """Get escape actions for specific populations."""
+        rows = self._load_csv_dict("escapes")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            action_time = row.get("OperationStartTime", "") or ""
+            if start_str and action_time < start_str:
+                continue
+            if end_str and action_time > end_str:
+                continue
+            results.append(row)
+        return results
+
+    def get_harvest_results_for_populations(
+        self,
+        population_ids: Set[str],
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> List[Dict[str, str]]:
+        """Get harvest result rows for specific populations."""
+        rows = self._load_csv_dict("harvest_result")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S") if start_time else None
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else None
+
+        results: List[Dict[str, str]] = []
+        for row in rows:
+            if row.get("PopulationID") not in population_ids:
+                continue
+            action_time = row.get("OperationStartTime", "") or row.get("PackingDate", "") or ""
+            if start_str and action_time < start_str:
+                continue
+            if end_str and action_time > end_str:
+                continue
+            results.append(row)
+        return results
     
     # ====================
     # FEEDING
