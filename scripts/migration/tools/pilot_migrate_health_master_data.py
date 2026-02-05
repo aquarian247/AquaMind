@@ -51,6 +51,11 @@ from django.contrib.auth import get_user_model
 
 from apps.health.models import HealthParameter, MortalityReason, SampleType, VaccinationType
 from apps.health.models.health_observation import ParameterScoreDefinition
+from apps.health.models.mortality import MortalityRecord
+from apps.health.models.treatment import Treatment
+from apps.health.models.lab_sample import HealthLabSample
+from apps.health.models.health_observation import FishParameterScore
+from django.db.models import Q
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 
@@ -590,6 +595,137 @@ def migrate_health_parameters(
     return {"created": created, "skipped": skipped, "definitions": definitions_created}
 
 
+def prune_unused_master_data(
+    *,
+    used_cause_ids: set[str],
+    used_group_ids: set[str],
+    used_vaccine_type_ids: set[str],
+    used_sample_type_names: set[str],
+    used_parameter_names: set[str],
+    dry_run: bool,
+) -> dict:
+    print("\n--- Prune Unused Master Data ---")
+
+    results: dict[str, int] = {}
+
+    # Mortality reasons (FishTalk sourced only)
+    mortality_maps = ExternalIdMap.objects.filter(
+        source_system="FishTalk",
+        source_model__in=["MortalityCause", "MortalityCauseGroup"],
+    )
+    cause_keep_ids = set()
+    group_keep_ids = set()
+    if used_cause_ids:
+        cause_keep_ids.update(
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model="MortalityCause",
+                source_identifier__in=used_cause_ids,
+            ).values_list("target_object_id", flat=True)
+        )
+    if used_group_ids:
+        group_keep_ids.update(
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model="MortalityCauseGroup",
+                source_identifier__in=used_group_ids,
+            ).values_list("target_object_id", flat=True)
+        )
+
+    keep_reason_ids = set(MortalityRecord.objects.values_list("reason_id", flat=True))
+    keep_reason_ids.update(cause_keep_ids)
+    keep_reason_ids.update(group_keep_ids)
+    # Keep parents of kept reasons (avoid orphaning group labels)
+    keep_reason_ids.update(
+        MortalityReason.objects.filter(id__in=keep_reason_ids).values_list("parent_id", flat=True)
+    )
+
+    candidate_reason_ids = list(mortality_maps.values_list("target_object_id", flat=True))
+    reasons_to_delete = (
+        MortalityReason.objects.filter(id__in=candidate_reason_ids)
+        .exclude(id__in=keep_reason_ids)
+        .exclude(mortality_records__isnull=False)
+    )
+    delete_reason_ids = list(reasons_to_delete.values_list("id", flat=True))
+    if delete_reason_ids:
+        if not dry_run:
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                target_model="mortalityreason",
+                target_object_id__in=delete_reason_ids,
+            ).delete()
+            reasons_to_delete.delete()
+    results["mortality_reasons_deleted"] = len(delete_reason_ids)
+
+    # Vaccination types (FishTalk sourced only)
+    vacc_keep_ids = set(
+        Treatment.objects.exclude(vaccination_type__isnull=True).values_list("vaccination_type_id", flat=True)
+    )
+    if used_vaccine_type_ids:
+        vacc_keep_ids.update(
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model="VaccineType",
+                source_identifier__in=used_vaccine_type_ids,
+            ).values_list("target_object_id", flat=True)
+        )
+
+    vacc_maps = ExternalIdMap.objects.filter(
+        source_system="FishTalk",
+        source_model__in=["VaccineType", "VaccinationMethod"],
+    )
+    vacc_candidate_ids = list(vacc_maps.values_list("target_object_id", flat=True))
+    vacc_to_delete = (
+        VaccinationType.objects.filter(id__in=vacc_candidate_ids)
+        .exclude(id__in=vacc_keep_ids)
+        .exclude(treatments__isnull=False)
+    )
+    delete_vacc_ids = list(vacc_to_delete.values_list("id", flat=True))
+    if delete_vacc_ids:
+        if not dry_run:
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                target_model="vaccinationtype",
+                target_object_id__in=delete_vacc_ids,
+            ).delete()
+            vacc_to_delete.delete()
+    results["vaccination_types_deleted"] = len(delete_vacc_ids)
+
+    # Sample types (only FishTalk-tagged)
+    sample_to_delete = SampleType.objects.filter(
+        description__startswith="FishTalk sample type:"
+    ).exclude(name__in=used_sample_type_names).exclude(lab_samples__isnull=False)
+    delete_sample_ids = list(sample_to_delete.values_list("id", flat=True))
+    if delete_sample_ids and not dry_run:
+        sample_to_delete.delete()
+    results["sample_types_deleted"] = len(delete_sample_ids)
+
+    # Health parameters (only FishTalk-tagged)
+    param_keep_ids = set(
+        FishParameterScore.objects.values_list("parameter_id", flat=True)
+    )
+    if used_parameter_names:
+        param_keep_ids.update(
+            HealthParameter.objects.filter(name__in=used_parameter_names).values_list("id", flat=True)
+        )
+    params_to_delete = (
+        HealthParameter.objects.filter(description__startswith="FishTalk health parameter:")
+        .exclude(id__in=param_keep_ids)
+    )
+    delete_param_ids = list(params_to_delete.values_list("id", flat=True))
+    if delete_param_ids and not dry_run:
+        params_to_delete.delete()
+    results["health_parameters_deleted"] = len(delete_param_ids)
+
+    print(
+        f"  Deleted: mortality_reasons={results['mortality_reasons_deleted']}, "
+        f"vaccinations={results['vaccination_types_deleted']}, "
+        f"sample_types={results['sample_types_deleted']}, "
+        f"health_parameters={results['health_parameters_deleted']}"
+    )
+    return results
+
+
 def migrate_treatment_types(extractor, dry_run: bool = False) -> dict:
     """Extract and document FishTalk treatment types (for reference)."""
     print("\n--- Treatment Types (Reference) ---")
@@ -640,6 +776,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--include-unused",
         action="store_true",
         help="Include unused master data (default filters by referenced values when CSVs are provided)",
+    )
+    parser.add_argument(
+        "--prune-unused",
+        action="store_true",
+        help="Delete unused FishTalk-seeded master data (safe: skips anything referenced in AquaMind)",
     )
     return parser
 
@@ -718,6 +859,16 @@ def main() -> int:
         csv_dir=csv_dir,
         used_names=used_parameter_names or None,
     )
+
+    if args.prune_unused and not args.dry_run:
+        results["pruned"] = prune_unused_master_data(
+            used_cause_ids=used_cause_ids,
+            used_group_ids=used_group_ids or set(),
+            used_vaccine_type_ids=used_vaccine_type_ids,
+            used_sample_type_names=used_sample_type_names,
+            used_parameter_names=used_parameter_names,
+            dry_run=args.dry_run,
+        )
     
     # Document treatment types
     results["treatments"] = migrate_treatment_types(extractor, dry_run=args.dry_run)
