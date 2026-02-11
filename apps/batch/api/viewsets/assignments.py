@@ -5,6 +5,7 @@ These viewsets provide CRUD operations for batch container assignment
 management, including live forward projection endpoints for growth forecasting.
 """
 from datetime import date as date_cls
+from decimal import Decimal
 from django.db.models import Sum, Count
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
@@ -92,6 +93,14 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
         'biomass_kg'
     ]
     ordering = ['-assignment_date']
+    LIFECYCLE_BASIS_FULL_HISTORY = "full_history"
+    LIFECYCLE_BASIS_STAGE_ENTRY = "stage_entry"
+    LIFECYCLE_BASIS_ACTIVE_SNAPSHOT = "active_snapshot"
+    LIFECYCLE_BASIS_CHOICES = {
+        LIFECYCLE_BASIS_FULL_HISTORY,
+        LIFECYCLE_BASIS_STAGE_ENTRY,
+        LIFECYCLE_BASIS_ACTIVE_SNAPSHOT,
+    }
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -111,6 +120,240 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
             )
 
         return queryset
+
+    @extend_schema(
+        operation_id="batch-container-assignments-lifecycle-progression",
+        summary="Get lifecycle progression aggregates for a batch",
+        description=(
+            "Returns stage-level population and biomass aggregates for a single batch using "
+            "an explicit aggregation basis."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="batch",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Batch ID to aggregate.",
+                required=True,
+            ),
+            OpenApiParameter(
+                name="basis",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description=(
+                    "Aggregation basis. "
+                    "Valid values: full_history, stage_entry, active_snapshot. "
+                    "Default: stage_entry."
+                ),
+                required=False,
+                default=LIFECYCLE_BASIS_STAGE_ENTRY,
+            ),
+            OpenApiParameter(
+                name="geography",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Optional geography filter.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="area",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Optional area filter.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="station",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Optional freshwater station filter.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="hall",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Optional hall filter.",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="container_type",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Optional container type category filter.",
+                required=False,
+            ),
+        ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "batch_id": {"type": "integer"},
+                    "basis": {"type": "string"},
+                    "stages": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "lifecycle_stage_id": {"type": "integer"},
+                                "lifecycle_stage": {"type": "string"},
+                                "stage_order": {"type": "integer"},
+                                "container_assignments": {"type": "integer"},
+                                "active_containers": {"type": "integer"},
+                                "total_population": {"type": "integer"},
+                                "total_biomass_kg": {"type": "number"},
+                                "avg_weight_g": {"type": "number"},
+                            },
+                            "required": [
+                                "lifecycle_stage_id",
+                                "lifecycle_stage",
+                                "stage_order",
+                                "container_assignments",
+                                "active_containers",
+                                "total_population",
+                                "total_biomass_kg",
+                                "avg_weight_g",
+                            ],
+                        },
+                    },
+                    "totals": {
+                        "type": "object",
+                        "properties": {
+                            "container_assignments": {"type": "integer"},
+                            "active_containers": {"type": "integer"},
+                            "total_population": {"type": "integer"},
+                            "total_biomass_kg": {"type": "number"},
+                        },
+                        "required": [
+                            "container_assignments",
+                            "active_containers",
+                            "total_population",
+                            "total_biomass_kg",
+                        ],
+                    },
+                },
+                "required": ["batch_id", "basis", "stages", "totals"],
+            },
+            400: {
+                "type": "object",
+                "properties": {
+                    "detail": {"type": "string"},
+                    "basis": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+    )
+    @action(detail=False, methods=['get'], url_path='lifecycle-progression')
+    def lifecycle_progression(self, request):
+        """Return lifecycle progression aggregates for a batch with explicit basis semantics."""
+        batch_id = request.query_params.get("batch")
+        if not batch_id:
+            return Response(
+                {"detail": "Query parameter 'batch' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        basis = request.query_params.get("basis", self.LIFECYCLE_BASIS_STAGE_ENTRY).strip().lower()
+        if basis not in self.LIFECYCLE_BASIS_CHOICES:
+            valid = ", ".join(sorted(self.LIFECYCLE_BASIS_CHOICES))
+            return Response(
+                {"basis": [f"Invalid basis '{basis}'. Valid values: {valid}."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        assignments = self.get_queryset().filter(batch_id=batch_id).select_related("lifecycle_stage")
+        assignments = self.apply_location_filters(assignments, request).order_by(
+            "lifecycle_stage__order",
+            "assignment_date",
+            "id",
+        )
+        assignment_rows = list(assignments)
+        active_containers_by_stage = {}
+        for assignment in assignment_rows:
+            if not assignment.is_active:
+                continue
+            active_containers_by_stage[assignment.lifecycle_stage_id] = (
+                active_containers_by_stage.get(assignment.lifecycle_stage_id, 0) + 1
+            )
+
+        if basis == self.LIFECYCLE_BASIS_ACTIVE_SNAPSHOT:
+            selected_rows = [assignment for assignment in assignment_rows if assignment.is_active]
+        elif basis == self.LIFECYCLE_BASIS_STAGE_ENTRY:
+            selected_rows = []
+            first_any_by_key = {}
+            first_positive_by_key = {}
+            ordered_keys = []
+            for assignment in assignment_rows:
+                key = (assignment.container_id, assignment.lifecycle_stage_id)
+                if key not in first_any_by_key:
+                    first_any_by_key[key] = assignment
+                    ordered_keys.append(key)
+                if key not in first_positive_by_key and (assignment.population_count or 0) > 0:
+                    first_positive_by_key[key] = assignment
+
+            for key in ordered_keys:
+                selected_rows.append(first_positive_by_key.get(key, first_any_by_key[key]))
+        else:
+            selected_rows = assignment_rows
+
+        stage_map = {}
+        for assignment in selected_rows:
+            stage_id = assignment.lifecycle_stage_id
+            if stage_id not in stage_map:
+                stage_map[stage_id] = {
+                    "lifecycle_stage_id": stage_id,
+                    "lifecycle_stage": assignment.lifecycle_stage.name,
+                    "stage_order": assignment.lifecycle_stage.order,
+                    "container_assignments": 0,
+                    "total_population": 0,
+                    "total_biomass_kg": Decimal("0"),
+                }
+
+            stage_data = stage_map[stage_id]
+            stage_data["container_assignments"] += 1
+            stage_data["total_population"] += assignment.population_count or 0
+            stage_data["total_biomass_kg"] += assignment.biomass_kg or Decimal("0")
+
+        stages = []
+        for stage_data in sorted(stage_map.values(), key=lambda item: item["stage_order"]):
+            total_population = stage_data["total_population"]
+            total_biomass = stage_data["total_biomass_kg"]
+            avg_weight_g = (
+                (total_biomass * Decimal("1000")) / total_population
+                if total_population > 0
+                else Decimal("0")
+            )
+            stages.append(
+                {
+                    "lifecycle_stage_id": stage_data["lifecycle_stage_id"],
+                    "lifecycle_stage": stage_data["lifecycle_stage"],
+                    "stage_order": stage_data["stage_order"],
+                    "container_assignments": stage_data["container_assignments"],
+                    "active_containers": active_containers_by_stage.get(
+                        stage_data["lifecycle_stage_id"], 0
+                    ),
+                    "total_population": total_population,
+                    "total_biomass_kg": float(total_biomass),
+                    "avg_weight_g": float(round(avg_weight_g, 2)),
+                }
+            )
+
+        totals_population = sum(stage["total_population"] for stage in stages)
+        totals_biomass = sum(stage["total_biomass_kg"] for stage in stages)
+
+        return Response(
+            {
+                "batch_id": int(batch_id),
+                "basis": basis,
+                "stages": stages,
+                "totals": {
+                    "container_assignments": sum(stage["container_assignments"] for stage in stages),
+                    "active_containers": sum(stage["active_containers"] for stage in stages),
+                    "total_population": totals_population,
+                    "total_biomass_kg": totals_biomass,
+                },
+            }
+        )
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)

@@ -1,0 +1,21 @@
+batch_name	component_key	gate	failed_gates	candidate_rows	deterministic_rows	ambiguous_rows	deterministic_coverage	marine_target_ratio	max_targets_per_source	incomplete_linkage_fallback_count	gate_summary
+AquaGen Mars 25	D8EEC9E7-59AA-41A8-9D26-0BD881B510FC	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_AquaGen_Mars_25_1_2025.summary.json
+BF mars 2025	7B7E162F-72EC-42E9-B32A-953264EAC124	FAIL	evidence,uniqueness,coverage,marine_target	1	0	1	0.000	0.000	0	1	fwsea_endpoint_gate_BF_mars_2025_2_2025.summary.json
+BF oktober 2025	DCF897C6-A2A3-4914-89E9-D43C8389D887	FAIL	evidence,uniqueness,coverage,marine_target	1	0	1	0.000	0.000	0	0	fwsea_endpoint_gate_BF_oktober_2025_3_2025.summary.json
+Bakkafrost S-21 jan 25	B52612BD-F18B-48A4-BF21-12B5FC246803	FAIL	evidence,uniqueness,coverage,marine_target	1	0	1	0.000	0.000	0	0	fwsea_endpoint_gate_Bakkafrost_S_21_jan_25_1_2025.summary.json
+Bakkafrost S-21 okt 25	829BEAC3-83F0-47F7-AFC3-140AE3A234ED	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Bakkafrost_S_21_okt_25_5_2025.summary.json
+Bakkafrost feb 2025	4A1E4829-7D62-4CBA-A8CF-274E1F611B6D	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Bakkafrost_feb_2025_2_2025.summary.json
+Benchmark Gen Septembur 2025	1E996D42-BDB6-4E88-BFE2-026DC2086563	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Benchmark_Gen_Septembur_2025_3_2025.summary.json
+Benchmark Gen. Desembur 2024	1636C683-E8F2-476D-BC21-0170CA7DCEE8	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	1	fwsea_endpoint_gate_Benchmark_Gen__Desembur_2024_4_2024.summary.json
+Benchmark Gen. Mars 2025	CE636015-595A-44BD-AB37-03B4018FBA4A	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	1	fwsea_endpoint_gate_Benchmark_Gen__Mars_2025_1_2025.summary.json
+Benchmark Gen. Septembur 2024	65370D45-A30A-4810-B8F0-06FE2DB4A001	FAIL	uniqueness,coverage	15	13	2	0.867	1.000	1	0	fwsea_endpoint_gate_Benchmark_Gen__Septembur_2024_3_2024.summary.json
+StofnFiskur S-21 apr 25	3C2D4475-F0D2-4DCA-A2B1-0F00378EE82D	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	1	fwsea_endpoint_gate_StofnFiskur_S_21_apr_25_2_2025.summary.json
+StofnFiskur S-21 juli25	0D5E2166-55AD-4469-B1E4-30A70B22FB72	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_StofnFiskur_S_21_juli25_3_2025.summary.json
+StofnFiskur okt. 2024	F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C	FAIL	evidence,uniqueness,coverage	2	1	1	0.500	1.000	1	2	fwsea_endpoint_gate_StofnFiskur_okt__2024_3_2024.summary.json
+Stofnfiskur Aug 2024	D3FB15A0-71E5-4EEE-8CAE-39C7BE1DD484	PASS	-	10	10	0	1.000	1.000	1	0	fwsea_endpoint_gate_Stofnfiskur_Aug_2024_4_2024.summary.json
+Stofnfiskur Des 24	A538947B-1EDB-4165-AE2A-09B806B640F2	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Stofnfiskur_Des_24_4_2024.summary.json
+Stofnfiskur Nov 2024	94B7E42D-16B1-4CD8-A361-1E99D04E8612	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	3	fwsea_endpoint_gate_Stofnfiskur_Nov_2024_5_2024.summary.json
+Stofnfiskur Okt 25	61D42D9D-D222-4B66-8860-1140C25D440E	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Stofnfiskur_Okt_25_3_2025.summary.json
+Stofnfiskur feb 2025	06A54D02-57F9-47DF-948D-07067891C007	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	1	fwsea_endpoint_gate_Stofnfiskur_feb_2025_1_2025.summary.json
+Stofnfiskur mai 2025	B2490BF6-4503-4651-8E62-06D043A1FD2A	FAIL	evidence,coverage,marine_target	0	0	0	0.000	0.000	0	0	fwsea_endpoint_gate_Stofnfiskur_mai_2025_3_2025.summary.json
+Stofnfiskur sept 24	E9F7C414-399C-4F17-879F-087899496683	PASS	-	4	4	0	1.000	1.000	1	0	fwsea_endpoint_gate_Stofnfiskur_sept_24_3_2024.summary.json

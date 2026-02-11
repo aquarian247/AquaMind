@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 4.4  
-**Date:** 2026-01-22  
-**Status:** Updated - aligned with input-based stitching + verified FishTalk schemas  
+**Version:** 4.5  
+**Date:** 2026-02-06  
+**Status:** Updated - input-based stitching + verified schemas + harvest/weight fixes  
 
 ## 1. Overview
 
@@ -16,12 +16,15 @@ This document provides detailed field-level mapping specifications for migrating
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
 
-**Key Revision Notes (v4.4 - 2026-01-22):** 
+**Key Revision Notes (v4.5 - 2026-02-06):** 
 - **Input-Based Stitching:** Use `Ext_Inputs_v2` (InputName + InputNumber + YearClass) as the biological batch key. Project tuples are administrative and can mix year-classes.
 - **Feeding Schema Corrected:** `dbo.Feeding` is ActionID‑based and has no PopulationID/ContainerID columns; join via `Action` and `Operations`.
 - **Health Journal Corrected:** Use `UserSample` + `Action` join path (one JournalEntry per ActionID), not `HealthLog`.
 - **Environmental Sources Updated:** Use `Ext_DailySensorReadings_v2` + `Ext_SensorReadings_v2` (with `is_manual` distinction).
 - **Assignments:** Populate counts/biomass from `PublicStatusValues` snapshots (prefer non‑zero after start).
+- **Weight Samples:** `Ext_WeightSamples_v2` and `PublicWeightSamples` are duplicates in this backup. Use **Ext only** and treat `AvgWeight` as **grams** (no kg heuristic).
+- **Infrastructure Naming:** Do not prepend `FT` or append `FW`/`Sea`. Strip those tokens if present in source labels.
+- **Harvest Mapping:** Use `HarvestResult` (ActionID‑keyed) for harvest events and lots; `Harvest` table is not used.
 
 ## 2. Infrastructure & Geography Mapping
 
@@ -57,7 +60,7 @@ This document provides detailed field-level mapping specifications for migrating
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|
-| Ext_GroupedOrganisation_v2.ContainerGroup | infrastructure_hall.name | varchar(100) | Normalize whitespace; `A Høll` → `Hall A` | `Høll` is Faroese for Hall |
+| Ext_GroupedOrganisation_v2.ContainerGroup | infrastructure_hall.name | varchar(100) | Normalize whitespace; strip `FT` prefix/`FW`/`Sea` suffix; `A Høll` → `Hall A` | `Høll` is Faroese for Hall |
 | Containers.OfficialID | infrastructure_hall.name | varchar(100) | Fallback: prefix before `;`, normalize | Used when `ContainerGroup` is empty |
 | Ext_GroupedOrganisation_v2.ContainerGroupID | ExternalIdMap (OrganisationUnitHall) | uuid | Store `OrgUnitID:ContainerGroupID` | Ensures per-station uniqueness |
 | OrganisationUnit.OrgUnitID | infrastructure_hall.freshwater_station_id | bigint | FK lookup | Hall belongs to station |
@@ -79,7 +82,7 @@ This document provides detailed field-level mapping specifications for migrating
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|
 | Containers.ContainerID | infrastructure_container (ExternalIdMap) | uuid | Store for idempotency | `source_model = Containers` |
-| Containers.ContainerName | infrastructure_container.name | varchar(100) | Prefix with `FT` | Trim to 100 chars |
+| Containers.ContainerName | infrastructure_container.name | varchar(100) | Use raw name; strip `FT` prefix/`FW`/`Sea` suffix if present | Trim to 100 chars |
 | Containers.ContainerType | infrastructure_container.container_type_id | bigint | Map to `FishTalk Imported Tank` / `FishTalk Imported Pen` | Created during migration |
 | Ext_GroupedOrganisation_v2.ProdStage | classification | - | `MARINE`/`SEA` ⇒ sea | Otherwise freshwater |
 | Ext_GroupedOrganisation_v2.ContainerGroup / Containers.OfficialID | infrastructure_container.hall_id | bigint | Assign hall for freshwater | Uses hall mapping above |
@@ -88,6 +91,7 @@ This document provides detailed field-level mapping specifications for migrating
 **Notes**
 - Infrastructure phase uses `ProdStage` + hall label presence to classify sea vs freshwater; pilot component migration uses population stages (sea if any member stage is sea).
 - Container ExternalIdMap metadata stores `site`, `site_group`, `company`, `prod_stage`, `container_group`, `container_group_id`, `stand_name`, `stand_id`.
+- Names are **presentation only**; `ContainerID` remains the stable identity.
 
 #### Container Type Mapping (unchanged)
 
@@ -333,6 +337,10 @@ Use `SubTransfers` for lineage stitching (including FW→Sea). It **can** includ
 - `PopulationName` is **not uniform**; 5 rows are blank.
 - `InputYear` is **always 2 characters**; 5,889 rows use **non‑digit codes** (e.g., `AA`, `AB`).
 - `InputNumber` can be **digits or letters**; 13,418 rows are non‑numeric.
+- `Fishgroup` format aligns with tuple fields for almost all rows:
+  - `Fishgroup ~= InputYear + InputNumber + "." + RunningNumber(4-digit zero-padded)`
+  - Verified for **184,229 / 184,234** rows in current extract.
+  - 5 observed outliers are all `InputNumber=99` special-format cases (`Fishgroup=23999.000` while tuple formatting would produce `2399.000x`).
 
 **PopulationName patterns (MarineSite only, observed—not guaranteed):**
 Examples from the current extract include:
@@ -358,6 +366,7 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 - All `FishGroupHistory.InputProjectID` values exist in `InputProjects` (**0 missing**).
 - `InputProjects` columns in extract: `InputProjectID`, `SiteID`, `Species`, `YearClass`, `ProjectNumberOld`, `ProjectName`, `Active`, `ProjectNumber`.
 - `Ext_Populations_v2` includes a `Fishgroup` code column (0 blanks in extract) and **does not include a FishGroupName column**.
+- For `Stofnfiskur S-21 nov23` (`B884F78F-1E92-49C0-AE28-39DFC2E18C01`), `FishGroupHistory` resolves all **288** component populations to a single `InputProjectID` (`DE478E8A-34C5-4C12-86BA-6A20B16AEBF2`).
 
 **Recommended usage (for container history tracing, qualified):**
 1. If you have an `InputProjectID`, use `FishGroupHistory` to collect all `PopulationID` values.
@@ -373,7 +382,8 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 #### 3.0.0.6 Population Semantics (Migration Handling, 2026-01-30)
 
 **What the extracts show (current CSVs):**
-- Many operational tables are keyed by `PopulationID` (e.g., `feeding_actions.csv`, `mortality_actions.csv`, `public_weight_samples.csv`, `ext_weight_samples_v2.csv`, `status_values.csv`).
+- Many operational tables are keyed by `PopulationID` (e.g., `feeding_actions.csv`, `mortality_actions.csv`, `ext_weight_samples_v2.csv`, `status_values.csv`).  
+  `public_weight_samples.csv` is a duplicate of `ext_weight_samples_v2.csv` in this backup; **use Ext only**.
 - `Ext_Transfers_v2` links **SourcePop → DestPop** (both PopulationIDs). In the current extract: 311,366 rows and **0 self‑edges** (`SourcePop != DestPop` for all rows).
 - `SubTransfers` tracks `SourcePopBefore/After` and `DestPopBefore/After` (PopulationIDs), implying before/after segment IDs are distinct in transfer history.
 
@@ -420,7 +430,7 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 - `Operations`, `Action`, domain tables keyed by `ActionID` (Feeding, Mortality, Treatment, Culling, UserSample, etc.).
 - Transfer edges: `SubTransfers`, `PublicTransfers`, `PopulationLink`.
 - Reference tables: `PublicOperationTypes`, `ProductionStages`, `Grouped_Organisation`, `Populations`, `Containers`.
-- Sample tables without ActionID: `PublicLiceSamples`/`PublicLiceSampleData` and `PublicWeightSamples`/`Ext_WeightSamples_v2` (eventized by SampleDate).
+- Sample tables without ActionID: `PublicLiceSamples`/`PublicLiceSampleData` and `Ext_WeightSamples_v2` (eventized by SampleDate).
 
 **Event model (per event row):**
 `event_id`, `event_time`, `population_id`, `operation_id` (nullable), `action_id` (nullable), `event_type`, `event_subtype`, `metrics`, `source_table`, `external_id`.
@@ -437,7 +447,7 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
    - Create an event for any `Operations` row that has **no Action** rows (retains timeline continuity).
 4. **Sample events (no ActionID):**  
    - Lice: `PublicLiceSamples` + `PublicLiceSampleData` (and `Ext_` variants) → event type `lice_sample` (time = `SampleDate`).  
-   - Weight: `PublicWeightSamples`/`Ext_WeightSamples_v2` → event type `weight_sample` (time = `SampleDate`).  
+   - Weight: `Ext_WeightSamples_v2` → event type `weight_sample` (time = `SampleDate`), **filter `OperationType=10`**.  
    - These events are **not** linked to `Action`/`Operation`.
 5. **Transfer/lineage events:**  
    - `SubTransfers`/`PublicTransfers` become `transfer` events (time from `Operations.StartTime` or `OperationTime`).  
@@ -533,9 +543,20 @@ Only **1,667 of 56,800** MarineSite names match the previously assumed
 - The script computes `global_status_time = max(StatusTime)` across all populations.
 - `active_cutoff = global_status_time - active_window_days` (default 365; `--active-window-days`).
 - `component_status_time = max(latest_status_time_by_pop)` for the batch’s member populations.
-- If `component_status_time >= active_cutoff`, set `status = ACTIVE`; otherwise `COMPLETED`.
-- If no status data is available, the script falls back to `any(member.end_time is None)` to mark active.
+- The script evaluates whether each population’s **latest** status snapshot is non-zero (`CurrentCount > 0` or `CurrentBiomassKg > 0`).
+- Batch `status = ACTIVE` only when there is non-zero latest status evidence within `active_cutoff` (fallback: open-ended `member.end_time is None` if status evidence is missing).
 - `actual_end_date` is set only when not active; it uses `component_status_time.date()` if available, else latest member `end_time`.
+
+#### Snapshot Alignment with AquaMind Data Model
+
+FishTalk status rows are treated as **state snapshots**, not as identity or event rows. They do **not** map 1:1 to a dedicated runtime table in AquaMind.
+
+Current mapping into `aquamind/docs/database/data_model.md` entities is:
+- `status_values.csv` / `PublicStatusValues` -> `batch_batch.status` + `batch_batch.actual_end_date` (batch activity classification).
+- `status_values.csv` / `PublicStatusValues` -> `batch_batchcontainerassignment.population_count` (fallback only), `batch_batchcontainerassignment.biomass_kg`, `batch_batchcontainerassignment.avg_weight_g`, `batch_batchcontainerassignment.is_active`, `batch_batchcontainerassignment.departure_date`.
+- Snapshot-implied weight/biomass context -> event replay calculations (for example mortality/culling/escape biomass estimation when source biomass is absent).
+
+This keeps AquaMind runtime FishTalk-agnostic: operational truth remains in normalized AquaMind entities (`batch_batchcontainerassignment`, `batch_batchtransferworkflow`, `batch_transferaction`, `batch_mortalityevent`, `inventory_feedingevent`, `batch_growthsample`, `health_*`), while snapshots are migration-time evidence inputs.
 
 ### 3.2 Container Assignment Mapping (Stitching Output + PublicStatusValues)
 
@@ -556,34 +577,49 @@ Assignments are created **per PopulationID** from the component stitching output
 | `container_id` | `batch_batchcontainerassignment.container_id` | bigint | FK lookup | Required. |
 | `start_time` | `batch_batchcontainerassignment.assignment_date` | date | `start_time.date()` | Required; rows without start_time are skipped upstream. |
 | `first_stage` / `last_stage` | `batch_batchcontainerassignment.lifecycle_stage_id` | bigint | `fishtalk_stage_to_aquamind(last_stage or first_stage)` | Falls back to batch lifecycle stage if no match. |
-| SubTransfers propagation (see below) | `batch_batchcontainerassignment.population_count` | int | Seed with `Ext_Inputs_v2.InputCount`, propagate via `SubTransfers.ShareCountFwd`; fallback to status snapshot if no conserved count, **or if conserved count resolves to 0 while snapshot is non‑zero**. If a population is superseded by a **same‑stage** SubTransfer (SourcePopBefore/DestPopBefore → same-stage after), set count to 0 to avoid double‑counting within stage. | Conservation-based within the component; ignores external mixing rows. |
-| Status snapshot (see below) | `batch_batchcontainerassignment.biomass_kg` | numeric | `CurrentBiomassKg` quantized to 0.01 | Defaults to 0.00 if missing. |
-| Derived | `batch_batchcontainerassignment.avg_weight_g` | numeric | `None` | Not set by migration. |
+| SubTransfers propagation (see below) | `batch_batchcontainerassignment.population_count` | int | Seed with `Ext_Inputs_v2.InputCount`, propagate via `SubTransfers.ShareCountFwd`; fallback to status snapshot if no conserved count, **or if conserved count resolves to 0 while snapshot is non‑zero**. Same-stage superseded populations are now classified before suppression: keep status-backed counts for populations with non-transfer operational activity (feeding, mortality/culling/escapes, treatment, growth sample, lice sample, health journal, harvest), and zero only same-stage superseded populations without such activity (temporary bridge rows). | Conservation-based within the component; ignores external mixing rows. |
+| Status snapshot (see below) | `batch_batchcontainerassignment.biomass_kg` | numeric | Start from `CurrentBiomassKg`; if status average weight is available, recompute biomass against the chosen assignment count (`count * status_avg_weight / 1000`) | Keeps count/biomass consistency when count source differs from status count. |
+| Derived | `batch_batchcontainerassignment.avg_weight_g` | numeric | Prefer status-implied average weight (`CurrentBiomassKg / CurrentCount * 1000`); fallback to `biomass_kg / population_count * 1000`; null when count is 0 | Added to avoid null-weight assignment rows with inconsistent biomass. |
 | Derived | `batch_batchcontainerassignment.is_active` | boolean | See rules below | Ensures only one active assignment per container. |
 | Derived | `batch_batchcontainerassignment.departure_date` | date | See rules below | Nullable. |
 | Derived | `batch_batchcontainerassignment.notes` | text | `FishTalk PopulationID={population_id}` | Debug trace. |
+
+**ExternalIdMap metadata for population assignments (code‑verified, 2026‑02‑06):**
+- `component_key` - component replay identity
+- `container_id` - source FishTalk container GUID
+- `baseline_population_count` - pre-removal baseline used by mortality/culling/escape replay synchronization
 
 **Status snapshot selection (code‑verified):**
 - If `member.end_time` is **None** and a latest status time exists → snapshot **at latest status time**.
 - Otherwise → snapshot **near member.start_time**.
 - In CSV mode, if the nearest snapshot has **zero count and biomass**, the loader attempts the **first non‑zero snapshot after** the target time. In SQL mode, the loader uses the nearest snapshot (no non‑zero filtering).
-- **Usage:** snapshots provide `biomass_kg` for all assignments; they only provide `population_count` when no conservation‑based count could be derived.
+- **Usage:** snapshots provide status-derived average weight and biomass context; they provide `population_count` when conservation count is missing/zero, and for outside-component transfer-mixing rows where status count materially exceeds conserved count.
 
 **Conservation-based count flow (code‑verified, 2026‑02‑02):**
 1. **Seed** populations with `Ext_Inputs_v2.InputCount` when present.
 2. **Propagate** via `SubTransfers.ShareCountFwd` (`SourcePopBefore → SourcePopAfter` and `DestPopBefore → DestPopAfter`).
-3. **Fallback** to status snapshot count when no conserved count exists, or when the conserved count is **0** but the snapshot is non‑zero.
-4. **Same‑stage suppression:** if a SubTransfer moves fish **within the same lifecycle stage** (source and dest stages match), the **source population assignment is zeroed** to avoid double‑counting within a stage.
+3. **Fallback** to status snapshot count when:
+   - no conserved count exists, or
+   - conserved count is **0** but snapshot is non-zero, or
+   - the population has SubTransfers edges to outside-component populations and `status_count >= conserved_count * external_mixing_status_multiplier` (default multiplier `10.0`), or
+   - known removals for that population (`mortality + culling + escapes`) exceed conserved count and status count is higher (prevents impossible baseline < removals).
+4. **Same‑stage suppression/classification:** if a SubTransfer moves fish **within the same lifecycle stage** (source and dest stages match), classify superseded rows as:
+   - **operationally material:** has non-transfer operational activity (feeding, mortality/culling/escapes, treatment, growth sample, lice sample, health journal, harvest) → preserve status-backed count.
+   - **temporary bridge:** no operational activity → zero assignment count to avoid double-counting bridge segments.
+5. **Count/biomass consistency:** when status average weight is available, assignment biomass is recomputed from the final chosen count to prevent impossible implied weights.
 
 **Diagnostics:** see `analysis_reports/2026-02-02/conservation_counts_diagnostics_2026-02-02.md`.
 
 **Active assignment rules (code‑verified):**
 1. If the batch itself is not active → all assignments are inactive.
-2. Else, if `latest_status_time` is present → active if `latest_status_time >= (global_max_status_time - assignment_active_window_days)`.
+2. Else, if `latest_status_time` is present → active only when:
+   - latest snapshot for that population is non-zero, and
+   - `latest_status_time >= (global_max_status_time - assignment_active_window_days)`.
 3. Else → active if `member.end_time` is None.
 4. Additional guards:
    - If assignment lifecycle stage ≠ batch lifecycle stage → force inactive.
-   - Only the **latest** population per container (by latest status time, else end_time, else start_time) can be active.
+   - Only the **latest non-zero** population per container can be active.
+   - Assignments with `population_count <= 0` are forced inactive.
 
 **Departure date rules (code‑verified):**
 - If assignment is active → `departure_date = None`.
@@ -626,6 +662,8 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
 
 **Hall‑based override (code‑verified, qualified):**
 - When a hall mapping exists, it **overrides** the token mapping. Hall labels are taken from `Ext_GroupedOrganisation_v2.ContainerGroup` (these are the same labels shown in the FishTalk GUI; “Høll” = “Hall”).
+- `Ext_GroupedOrganisation_v2.ProdStage` is treated as **context only** (not lifecycle truth). In the 2026-02-10 station-focused Benchmark replay, populations spanning `Parr/Smolt/Post‑Smolt` lifecycle assignments still classify as `ProdStage=Hatchery` in grouped-organisation output; lifecycle mapping therefore remains stage/hall-driven.
+- If explicit hall mapping is missing, migration can apply a **component-local hall fallback** only when token-mapped rows for the same `(site, container_group)` unanimously resolve to one lifecycle stage. Mixed/empty evidence remains unresolved and still fails migration.
 - **S24 Strond (qualified 2026‑01‑30):**
   - A Høll → Egg&Alevin
   - B Høll → Fry
@@ -649,11 +687,9 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
   - E1 Høll, E2 Høll → Post‑Smolt
   - Klekihøll → Egg&Alevin
   - Startfóðringshøll → Fry
-  - Klekihøll → Egg&Alevin
-  - Startfóðringshøll → Fry
-- **S21 Viðareiði (qualified mapping, 2026‑02‑02):**
-  - 5M, A → Fry
-  - BA, BB → Parr
+- **S21 Viðareiði (qualified mapping, updated 2026‑02‑06):**
+  - 5M → Fry
+  - A, BA, BB → Parr
   - C, D → Smolt
   - E, F → Post‑Smolt
   - Rogn → Egg&Alevin
@@ -672,8 +708,7 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
 Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, “Smolt”), but **no explicit stage column** was provided in the report. These are **inventory only** until a rule is approved.
 
 **Known gaps / not yet mapped (explicitly left unmapped to avoid guesswork):**
-- **S08 Gjógv:** R‑Høll (listed as Parr/Smolt in the source), Úti (no stage provided).
-- **S16 Glyvradalur:** Gamalt, Uppstilling broytt ‑ A Høll (no stage provided).
+- **S08 Gjógv:** R‑Høll (listed as Parr/Smolt in source), Úti (no explicit static hall mapping; may resolve through component-local unanimous token fallback when stage tokens are present in that replay).
 - **S16 Glyvradalur:** Gamalt, Uppstilling broytt ‑ A Høll (no stage provided).
 - **S21 Viðareiði:** C gamla, CD, Gamalt (no stage provided).
 - **S04 Húsar:** 801–812 (not present in `ContainerGroup` in current extract; only Gamalt appears).
@@ -690,12 +725,15 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 - InputProjectID‑based membership + S21 hall mapping resolved stage‑missing failures for **Bakkafrost S‑21 sep24** and enabled full‑lifecycle migration (transfers + feeding + mortality populated).
 - Full hall inventory captured for Faroe + Scotland stations; only the Faroe list and FW22 Applecross have **explicit stage** mappings so far.
 
+**Progress note (2026‑02‑11, targeted fix check):**
+- `BF mars 2025|2|2025` (`S08 Gjógv`) previously failed at stage resolution (`R‑Høll` unmapped + missing stage token rows). After adding component-local unanimous hall fallback in `pilot_migrate_component.py`, migration completed and semantic gates passed in station-guarded replay (`analysis_reports/2026-02-11/semantic_validation_bf_mars_2025_2026-02-11_fixcheck.md`).
+
 **Domain note (qualitative, not encoded in migration):**
 - Broodstock is a separate breeding division supplying eggs (e.g., Bakkafrost inputs; see 3.0.0.1). Treating Broodstock as a **pre‑Egg&Alevin** stage would require an explicit mapping change plus a controlled re‑run.
 - Some stations use a deeper physical hierarchy for egg/alevin handling (Hall → Skáp → Incubation Tray). AquaMind does not currently model this hierarchy; representing it would require a schema/workflow extension.
 
 **Guidance (qualified):**
-- The migration now **fails** if a population’s stage cannot be resolved via token mapping or hall mapping; this is intentional to avoid guesswork.
+- The migration now **fails** if a population’s stage cannot be resolved via explicit hall mapping, component-local unanimous hall fallback, or token mapping; this is intentional to avoid guesswork.
 - Any correction to the Post‑Smolt rule requires a code change and a controlled re‑run.
 - Do **not** use `Ext_GroupedOrganisation_v2.ProdStage` for lifecycle stage—this field is an organizational bucket, not a biological stage (observed to be coarse in prior analyses).
 
@@ -727,12 +765,14 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 - One `TransferAction` per edge (`SourcePop → DestPop`) grouped by `OperationID`.
 - Counts/biomass are **estimated** from status snapshots at `OperationStartTime` using `ShareCountForward` / `ShareBiomassForward` (clamped to 0–1).
 - For multiple edges from the same source, the script **sequentially reduces** remaining count/biomass to avoid double‑counting.
+- Edges that resolve to `transferred_count <= 0` are skipped (no zero-count action persisted).
 - Idempotency uses `ExternalIdMap` with `source_model = "PublicTransferEdge"` and `source_identifier = "{OperationID}:{SourcePop}:{DestPop}"` (used for both SubTransfers and PublicTransfers paths).
 
-**Synthetic lifecycle transitions (code‑verified):**
-- After edge workflows, the script synthesizes lifecycle transition workflows **from assignment lifecycle stages**, not from `OperationProductionStageChange`.
-- It orders stages by `STAGE_ORDER` and creates `BatchTransferWorkflow` + `TransferAction` pairs for consecutive stages present in assignments.
-- Idempotency uses `ExternalIdMap` with `source_model = "PopulationStageTransition"` / `"PopulationStageTransitionAction"`.
+**Synthetic lifecycle transitions (code‑verified, updated 2026‑02‑09):**
+- Assignment-derived synthetic stage transitions are now **optional** and are skipped when `--skip-synthetic-stage-transitions` is used.
+- `pilot_migrate_input_batch.py` now defaults to skip synthetic stage transitions; legacy behavior is available with `--include-synthetic-stage-transitions`.
+- When synthetic transitions are enabled, they are built from assignment lifecycle stages (not `OperationProductionStageChange`) and tracked as `PopulationStageTransition` / `PopulationStageTransitionAction`.
+- Rationale: synthetic assignment-derived transitions produced many zero-count lifecycle actions in migrated batches due to short-lived intermediate population segments; edge-backed transfer actions (`PublicTransferEdge`) are the canonical transfer-equivalent replay.
 
 **SubTransfers Fields (CSV extract):**
 | Field | Description |
@@ -805,7 +845,13 @@ FishTalk does not capture a formal “creation workflow.” For each stitched co
 - `--require-sea` → require sea stages (`Adult`/`Post‑Smolt`)
 - `--active-only` → require `latest_activity.year >= 2024`
 
-**Note:** These validations/filters **shape the report output**; `pilot_migrate_input_batch.py` consumes that output but does not re‑validate.
+**Migration preflight (code‑verified, 2026‑02‑06):**
+- `pilot_migrate_input_batch.py` cross-checks station evidence from:
+  - `input_projects.csv` site,
+  - `ext_inputs.csv` + `populations.csv` + `grouped_organisation.csv`,
+  - selected member population sites.
+- Preflight mismatches fail by default unless explicitly overridden.
+- `--expected-site "<site>"` enforces strict station identity during replay.
 
 ## 4. Feed & Inventory Mapping
 
@@ -927,6 +973,13 @@ We create **one JournalEntry per ActionID**.
 | Mortality.Cause | batch_mortalityevent.cause | varchar(100) | Direct or map | |
 | Mortality.Description | batch_mortalityevent.description | text | Direct | |
 
+**Replay behavior (code‑verified, 2026‑02‑06):**
+- Migration writes removal events into `batch_mortalityevent` (`MortalityEvent`) for source models:
+  - `Mortality`, `Culling`, `Escapes`.
+- Assignment population counts are synchronized per FishTalk population mapping as:
+  - `resolved_count = baseline_population_count - (mortality + culling + escapes totals)`
+- This replay path is idempotent across reruns because totals are sourced from mapped event rows.
+
 ### 5.3 Treatment Mapping
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
@@ -966,8 +1019,10 @@ We create **one JournalEntry per ActionID**.
 | Oxygen | Dissolved Oxygen | mg/L | 0 to 20 |
 | Salinity | Salinity | ppt | 0 to 40 |
 | pH | pH | - | 0 to 14 |
-| Turbidity | Turbidity | NTU | 0 to 1000 |
-| Ammonia | Ammonia | mg/L | 0 to 10 |
+
+**Current extract-backed coverage (2026‑02‑06):**
+- Replayed parameters are currently limited to: `Temp`, `O2`, `pH`, `Salinity`.
+- CO2 and additional parameters require sensor metadata extraction (sensor → parameter mapping tables).
 
 ### 6.3 Historian Tag Catalog Bridge
 
@@ -1043,16 +1098,18 @@ Workflow:
 
 ## 9. Financial/Harvest Mapping (If Applicable)
 
-### 9.1 Harvest Event Mapping
+### 9.1 Harvest Event Mapping (HarvestResult‑based)
+
+**Canonical source:** `dbo.HarvestResult` (ActionID‑keyed). The legacy `Harvest` table is not used for migration.
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |-----------------|-----------------|-----------|----------------|--------|
-| Harvest.HarvestID | harvest_harvestevent.id | bigint | Identity map | |
-| Harvest.ProjectID | harvest_harvestevent.batch_id | bigint | FK lookup | |
-| Harvest.Date | harvest_harvestevent.event_date | timestamptz | UTC conversion | |
-| Harvest.LiveWeight | harvest_harvestlot.live_weight_kg | decimal | Direct | |
-| Harvest.GuttedWeight | harvest_harvestlot.gutted_weight_kg | decimal | Direct | |
-| Harvest.Count | harvest_harvestlot.unit_count | integer | Direct | |
+| HarvestResult.ActionID | harvest_harvestevent (ExternalIdMap: `HarvestAction`) | uuid | One HarvestEvent per ActionID | Event date = Operations.StartTime |
+| Action.PopulationID | harvest_harvestevent.assignment_id | bigint | Resolve assignment by PopulationID | |
+| HarvestResult.Count | harvest_harvestlot.unit_count | integer | Direct | One HarvestLot per ActionID + row index |
+| HarvestResult.GrossBiomass | harvest_harvestlot.live_weight_kg | decimal | Direct (kg) | |
+| HarvestResult.NetBiomass | harvest_harvestlot.gutted_weight_kg | decimal | Direct (kg) | Optional |
+| HarvestResult.QualityID + ConditionID | harvest_productgrade | FK lookup/create | `ProductGrade.code` = `FT-Q{QualityID}-C{ConditionID}` | |
 
 ## 10. Data Validation Rules
 
@@ -1084,6 +1141,80 @@ RANGE_VALIDATIONS = {
 - FCR values must be positive and typically < 3.0
 - Mortality count cannot exceed population
 - Feed amount must be positive
+- Stage transition sanity: population should not increase across lifecycle stages unless mixed-batch composition exists.
+- Bridge-aware stage transition checks use SubTransfer-conserved counts for linked populations (fallback to assignment counts only when conserved count is missing or zero), and only when all stage-entry destinations are linkage-covered for that transition.
+- Full direct SubTransfer linkage (without temporary bridge hops) is treated as bridge-aware count basis in semantic validation (`entry_window_reason=direct_linkage` on those bridge-aware rows).
+- If direct linkage coverage is incomplete, semantic validation performs deterministic predecessor-graph backtrace across SubTransfer roles (`DestPopAfter<-SourcePopBefore`, `DestPopAfter<-DestPopBefore`, `SourcePopAfter<-SourcePopBefore`) with bounded depth (`--lineage-fallback-max-depth`, default `14`); unresolved transitions still fall back to entry-window totals.
+- If a bridge-aware candidate transition still yields a positive delta with no mixed-batch rows and entry populations receiving outside-component incoming sources, semantic validation downgrades that transition to `entry_window` with `entry_window_reason=incomplete_linkage` for gate handling.
+- Mortality biomass (`FishTalk` vs `AquaMind`) is informational only in semantic reports; FishTalk extract biomass is often zero while AquaMind derives event biomass from status snapshots, and this diff is not a regression gate criterion.
+
+### 10.4 Migration Confidence Ramp (2026-02-10)
+
+**Implemented instrumentation (code + reports):**
+1. Semantic transition linkage coverage fields are now emitted per transition:
+   - `entry_population_count`
+   - `linked_destination_population_count`
+   - `bridge_aware_eligible` (true when linkage covers all entry populations)
+2. Fishgroup tuple-format audit is now part of semantic validation output:
+   - check rule: `Fishgroup == InputYear + InputNumber + "." + RunningNumber(4-digit)`
+   - supports outlier allowlist (`InputYear|InputNumber|Fishgroup`)
+   - default allowlisted pattern: `23|99|23999.000`
+3. Regression gates are now implemented in semantic validation (`--check-regression-gates`):
+   - fail on positive transition deltas without mixed-batch rows, excluding `entry_window_reason=incomplete_linkage` fallback rows (reported as warnings),
+   - fail if zero-count transfer actions reappear (`transferred_count <= 0`),
+   - fail when non-bridge zero assignments exceed threshold (`--max-non-bridge-zero-assignments`).
+4. Pilot cohort runner added:
+   - `scripts/migration/tools/migration_pilot_regression_check.py`
+   - reruns semantic reports for migrated pilot components and writes cohort summary with fallback rates.
+5. Keep migration-specific classification logic in migration tooling and reports, not in AquaMind runtime API endpoints.
+
+**Single-batch linkage update (Benchmark Gen. Juni 2024, station-focused replay, 2026-02-10):**
+- Transition basis changed from `0/4` bridge-aware and `4/4` entry-window to `4/4` bridge-aware and `0/4` entry-window.
+- Bridge-aware transitions using lineage fallback: `4`.
+- `Egg&Alevin -> Fry` linkage improved to `linked_destination_population_count=12 / entry_population_count=12` under bounded lineage fallback.
+- Report: `analysis_reports/2026-02-06/semantic_validation_benchmark_gen_juni_2024_2026-02-10_station_focus.md`
+
+**Additional station-focused replay (Stofnfiskur S-21 feb24, 2026-02-10):**
+- Station guard: `S21 Viðareiði`.
+- Gates: `PASS` with `non_bridge_zero_assignments=0`.
+- Transition basis: `4/4` bridge-aware, `0/4` entry-window.
+- Incomplete-linkage fallback transitions: `0`.
+- Report: `analysis_reports/2026-02-10/semantic_validation_stofnfiskur_s21_feb24_2026-02-10_station_focus.md`
+
+**Additional station-focused replay (Stofnfiskur Juni 24, 2026-02-10):**
+- Station guard: `S03 Norðtoftir`.
+- Gates: `PASS` with `non_bridge_zero_assignments=0`.
+- Transition basis: `3/4` bridge-aware, `1/4` entry-window.
+- Incomplete-linkage fallback transitions: `1` (`Fry -> Parr`).
+- `Egg&Alevin -> Fry` now remains bridge-aware after adding S03 hall mapping `Kleking -> Egg&Alevin`.
+- Report: `analysis_reports/2026-02-10/semantic_validation_stofnfiskur_juni24_2026-02-10_station_focus_kleking_fix_v3.md`
+
+**Deterministic FW->Sea evidence extractor (tooling-only, 2026-02-10):**
+- Script added: `scripts/migration/analysis/fw_to_sea_deterministic_evidence.py`.
+- Inputs:
+  - `population_members.csv` (stitched component),
+  - `sub_transfers.csv` (graph edges),
+  - `populations.csv` + `grouped_organisation.csv` (destination context).
+- Marine criterion is explicit only: destination `ProdStage` contains `Marine`.
+- Heuristic naming/date matching is not used.
+- Current outputs for station-focused FW batches (`Benchmark Gen. Juni 2024`, `Stofnfiskur S-21 feb24`, `Stofnfiskur Juni 24`) all show:
+  - outside-component linkage present,
+  - direct destination context `ProdStage=Hatchery`,
+  - `marine_linkage_evidence=false`.
+
+**Current measured status from cohort rerun (`semantic_validation_pilot_cohort_2026-02-10.md`):**
+- Components checked: `5`
+- Stage transitions checked: `11`
+- Bridge-aware transitions: `4/11` (`36.4%`)
+- Entry-window transitions (fallback): `7/11` (`63.6%`)
+- Positive transition deltas without mixed-batch rows: `0`
+- Zero-count transfer actions: `0` across checked components
+- Fishgroup tuple-format audit (global extract): `184,229 / 184,234` matched, `5` outliers (all allowlisted `23|99|23999.000`)
+- FW-only cohort (`semantic_validation_fw_pilot_cohort_2026-02-09.md`): `3` components, `11` transitions, same basis split (`4` bridge-aware / `7` entry-window), with `Benchmark Gen. Juni 2024` as the only failing gate component.
+
+**Gate result status (current threshold `max_non_bridge_zero_assignments=2`):**
+- PASS: `SF NOV 23`, `Stofnfiskur S-21 nov23`
+- FAIL: `Benchmark Gen. Juni 2024`, `Summar 2024`, `Vár 2024` (high non-bridge zero-assignment counts)
 
 ## 11. Transformation Functions
 
@@ -1100,11 +1231,11 @@ def convert_to_utc(dt_value, source_tz='Europe/London'):
 
 ### 11.2 Weight Conversion
 ```python
-def convert_weight_to_grams(weight_kg):
-    """Convert kg to grams for individual fish weights"""
-    if weight_kg is None or pd.isna(weight_kg):
+def normalize_weight_grams(weight_g):
+    """FishTalk weight samples are stored in grams; do not apply kg heuristics."""
+    if weight_g is None or pd.isna(weight_g):
         return None
-    return round(weight_kg * 1000, 2)
+    return round(float(weight_g), 2)
 ```
 
 ### 11.3 Status Mapping

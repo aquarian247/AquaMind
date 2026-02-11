@@ -1,0 +1,160 @@
+{
+  "run_date": "2026-02-10",
+  "scope": "FW 5-batch station canary v2 (same batch set, same guarded command body)",
+  "gate_pass_before": 3,
+  "gate_fail_before": 2,
+  "gate_pass_after": 5,
+  "gate_fail_after": 0,
+  "rows": [
+    {
+      "batch_key": "Benchmark Gen. Mars 2025|1|2025",
+      "batch_name": "Benchmark Gen. Mars 2025",
+      "station": "S24 Strond",
+      "component_key": "CE636015-595A-44BD-AB37-03B4018FBA4A",
+      "before": {
+        "gate_pass": false,
+        "non_bridge_zero": 45,
+        "bridge_aware": 1,
+        "entry_window": 3,
+        "incomplete_linkage": 1
+      },
+      "after": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 1,
+        "entry_window": 3,
+        "incomplete_linkage": 1,
+        "zero_no_count": 35,
+        "zero_depleted": 10
+      },
+      "counts": {
+        "assignments": 252,
+        "workflows": 28,
+        "actions": 54,
+        "feeding": 1962,
+        "mortality": 2732,
+        "treatments": 16
+      }
+    },
+    {
+      "batch_key": "Bakkafrost mai 24|2|2024",
+      "batch_name": "Bakkafrost mai 24",
+      "station": "S16 Glyvradalur",
+      "component_key": "0CB99E1D-8E9F-4CE0-A323-27608DA573D7",
+      "before": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 1,
+        "entry_window": 3,
+        "incomplete_linkage": 3
+      },
+      "after": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 1,
+        "entry_window": 3,
+        "incomplete_linkage": 3,
+        "zero_no_count": 0,
+        "zero_depleted": 0
+      },
+      "counts": {
+        "assignments": 164,
+        "workflows": 63,
+        "actions": 63,
+        "feeding": 1521,
+        "mortality": 2624,
+        "treatments": 44
+      }
+    },
+    {
+      "batch_key": "StofnFiskur mars 2024|1|2024",
+      "batch_name": "StofnFiskur mars 2024",
+      "station": "S08 Gjógv",
+      "component_key": "0CED8E8A-D16C-4616-9CA9-5D028D32D0B8",
+      "before": {
+        "gate_pass": false,
+        "non_bridge_zero": 24,
+        "bridge_aware": 1,
+        "entry_window": 2,
+        "incomplete_linkage": 2
+      },
+      "after": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 1,
+        "entry_window": 2,
+        "incomplete_linkage": 2,
+        "zero_no_count": 0,
+        "zero_depleted": 24
+      },
+      "counts": {
+        "assignments": 305,
+        "workflows": 149,
+        "actions": 153,
+        "feeding": 4152,
+        "mortality": 3774,
+        "treatments": 12
+      }
+    },
+    {
+      "batch_key": "Stofnfiskur S-21 feb24|1|2024",
+      "batch_name": "Stofnfiskur S-21 feb24",
+      "station": "S21 Viðareiði",
+      "component_key": "BC782146-C921-4AD1-8021-0E1ED2228D7C",
+      "before": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 4,
+        "entry_window": 0,
+        "incomplete_linkage": 0
+      },
+      "after": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 4,
+        "entry_window": 0,
+        "incomplete_linkage": 0,
+        "zero_no_count": 0,
+        "zero_depleted": 0
+      },
+      "counts": {
+        "assignments": 253,
+        "workflows": 107,
+        "actions": 107,
+        "feeding": 3418,
+        "mortality": 3258,
+        "treatments": 26
+      }
+    },
+    {
+      "batch_key": "Stofnfiskur Juni 24|2|2024",
+      "batch_name": "Stofnfiskur Juni 24",
+      "station": "S03 Norðtoftir",
+      "component_key": "EDF931F2-51CC-4A10-9002-128E7BF8067C",
+      "before": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 3,
+        "entry_window": 1,
+        "incomplete_linkage": 1
+      },
+      "after": {
+        "gate_pass": true,
+        "non_bridge_zero": 0,
+        "bridge_aware": 3,
+        "entry_window": 1,
+        "incomplete_linkage": 1,
+        "zero_no_count": 0,
+        "zero_depleted": 0
+      },
+      "counts": {
+        "assignments": 145,
+        "workflows": 57,
+        "actions": 57,
+        "feeding": 3927,
+        "mortality": 3734,
+        "treatments": 64
+      }
+    }
+  ]
+}

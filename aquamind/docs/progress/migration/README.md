@@ -10,6 +10,10 @@ This folder is the canonical home for migration documentation.
 5. MIGRATION_BEST_PRACTICES.md - audit/idempotency standards
 6. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
+## Latest handoff
+- handoffs/HANDOFF_2026-02-06.md - full-action batch migration baseline
+- handoffs/HANDOFF_2026-02-06_FOLLOWUP.md - FW station guard + stage sanity follow-up
+
 ## Supporting documents
 - INFRA_ETL_PLAN.md - infrastructure ETL plan (staging-based)
 - sql/infra_staging_extracts.sql - staging extract SQL for infra
@@ -31,16 +35,43 @@ This folder is the canonical home for migration documentation.
    - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \\
      python scripts/migration/tools/pilot_migrate_input_batch.py \\
      --batch-key \"<InputName>|<InputNumber>|<YearClass>\" \\
+     --expected-site \"<Station Name>\" \\
      --use-csv scripts/migration/data/extract/
-4) Validate
+4) Full action replays (per component, CSV)
+   - python scripts/migration/tools/pilot_migrate_component_transfers.py
+   - python scripts/migration/tools/pilot_migrate_component_feeding.py
+   - python scripts/migration/tools/pilot_migrate_component_mortality.py
+   - python scripts/migration/tools/pilot_migrate_component_culling.py
+   - python scripts/migration/tools/pilot_migrate_component_escapes.py
+   - python scripts/migration/tools/pilot_migrate_component_treatments.py
+   - python scripts/migration/tools/pilot_migrate_component_lice.py
+   - python scripts/migration/tools/pilot_migrate_component_health_journal.py
+   - python scripts/migration/tools/pilot_migrate_component_growth_samples.py
+   - python scripts/migration/tools/pilot_migrate_component_harvest.py
+5) Validate
+   - python scripts/migration/tools/migration_semantic_validation_report.py \\
+     --component-key <component_key> \\
+     --report-dir <component_report_dir> \\
+     --use-csv scripts/migration/data/extract \\
+     --stage-entry-window-days 2
    - python scripts/migration/tools/migration_counts_report.py
    - python scripts/migration/tools/migration_verification_report.py
-5) Environmental at scale (optional)
+6) Environmental at scale (optional)
    - python scripts/migration/tools/build_environmental_sqlite.py \\
      --input-dir scripts/migration/data/extract/ \\
      --output-path scripts/migration/data/extract/environmental_readings.sqlite --replace
    - python scripts/migration/tools/pilot_migrate_environmental_all.py \\
      --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite --workers 16
+
+## Current status snapshot (2026-02-06)
+- Full action migration validated for 4 batches (2 FW, 2 Sea) with semantic reports in:
+  - `analysis_reports/2026-02-05/`
+  - `analysis_reports/2026-02-06/` (rerun/follow-up reports for `SF NOV 23` and `Stofnfiskur S-21 nov23`)
+- FW→Sea linkage is still unresolved; FW and Sea components are replayed separately.
+- Weight samples use `Ext_WeightSamples_v2` only and are treated as grams (re-run required to fix old data).
+- Infra names are normalized at bootstrap (strip `FT` prefix and trailing `FW`/`Sea`).
+- Input-batch and component migration now support strict station guards (`--expected-site`) to prevent station drift.
+- Semantic stage sanity now reports stage-entry deltas (default 2-day window) to reduce in-stage redistribution double-counting.
 
 ## Archive (historical only)
 See archive/README.md. This includes handovers, session prompts, old plans, status reports, and pilot notes.

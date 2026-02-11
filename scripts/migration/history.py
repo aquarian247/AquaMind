@@ -14,7 +14,12 @@ def save_with_history(
         instance._history_user = user
     instance.save()
     if reason and hasattr(instance, "history"):
-        update_change_reason(instance, reason)
+        try:
+            update_change_reason(instance, reason)
+        except Exception:
+            # Some migration update paths can save objects without an immediately
+            # queryable historical row; avoid failing data migration on metadata.
+            pass
 
 
 def get_or_create_with_history(

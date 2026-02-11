@@ -1,0 +1,34 @@
+# Semantic Validation Pilot Cohort Regression Check
+
+- Components checked: 3
+- Stage-entry window days: 2
+- CSV extract: `scripts/migration/data/extract`
+- Non-bridge zero-assignment threshold: 2
+- Aggregate transition basis usage: 4/11 bridge-aware (36.4%), 7/11 entry-window (63.6%).
+
+| Batch | Component key | Transitions | Bridge-aware | Entry-window | Entry-window rate % | Positive delta alerts | Zero-count transfer actions | Non-bridge zero assignments | Gates |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| SF NOV 23 | `FA8EA452-AFE1-490D-B236-0150415B6E6F` | 3 | 2 | 1 | 33.3 | 0 | 0 | 1 | PASS |
+| Stofnfiskur S-21 nov23 | `B884F78F-1E92-49C0-AE28-39DFC2E18C01` | 4 | 2 | 2 | 50.0 | 0 | 0 | 2 | PASS |
+| Benchmark Gen. Juni 2024 | `5DC4DA59-A891-4BBB-BB2E-0CC95C633F20` | 4 | 0 | 4 | 100.0 | 0 | 0 | 106 | FAIL |
+
+## Aggregate Totals
+
+- Total transitions: 11
+- Bridge-aware transitions: 4
+- Entry-window transitions: 7
+- Positive transition alerts (without mixed-batch rows): 0
+- Zero-count transfer actions: 0
+- Non-bridge zero assignments: 109
+
+## Entry-window Reason Breakdown
+
+| Reason | Transition count |
+| --- | ---: |
+| incomplete_linkage | 5 |
+| bridge_aware | 4 |
+| no_bridge_path | 2 |
+
+## Overall Result
+
+- Regression check: FAIL (components with failures: Benchmark Gen. Juni 2024)

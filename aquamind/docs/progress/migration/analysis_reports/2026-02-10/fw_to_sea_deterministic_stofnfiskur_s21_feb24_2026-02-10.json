@@ -1,0 +1,296 @@
+{
+  "component_id": "Stofnfiskur_S-21_feb24_1_2024",
+  "component_key": "BC782146-C921-4AD1-8021-0E1ED2228D7C",
+  "component_population_count": 253,
+  "descendant_summary": {
+    "by_prod_stage": {
+      "Hatchery": 129
+    },
+    "by_site": {
+      "S21 Vi\u00f0arei\u00f0i": 129
+    },
+    "by_site_group": {
+      "Unknown": 129
+    },
+    "explicit_marine_population_count": 0,
+    "explicit_marine_population_examples": [],
+    "explicit_non_hatchery_population_count": 0,
+    "explicit_non_hatchery_population_examples": [],
+    "population_count": 129
+  },
+  "dest_chain_external": {
+    "by_prod_stage": {},
+    "by_site": {},
+    "by_site_group": {},
+    "edge_count": 0,
+    "unique_destination_population_count": 0
+  },
+  "direct_external_edge_examples": [
+    {
+      "dst_population_id": "0C33B812-6D85-4FDA-9E79-41676C71321A",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "F2C225D3-4187-4135-AAF2-ABA4FAE8DE0C",
+      "operation_time": "2024-05-23 12:25:54",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "A40DB03E-FEEF-4B15-875E-5399490201E2",
+      "subtransfer_id": "BCD8A600-F2FD-4BD4-A524-CD84B1B4B047"
+    },
+    {
+      "dst_population_id": "B59A781B-DDBA-4B13-BEBB-9089CF70B5D5",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "5B9351F4-5C66-477F-AD96-7FB931241B73",
+      "operation_time": "2024-08-23 12:05:03",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "3065261B-8BD1-4987-BEE7-B41D2DD43882",
+      "subtransfer_id": "5C338CD6-72AA-4BCA-9E7B-6C97731BFE7C"
+    },
+    {
+      "dst_population_id": "A2918980-7ED6-447A-ABDA-56AA33BA4427",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "937477AE-24E1-4696-B7D7-8DFBBF7BA373",
+      "operation_time": "2024-08-23 14:41:39",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "3AA04ED9-823F-4FDA-B1AD-743109754E3D",
+      "subtransfer_id": "B86BC608-62D6-4BE1-8C85-17631353940A"
+    },
+    {
+      "dst_population_id": "6BAD9971-A365-4688-9502-2DB636F19C8E",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "878FB543-FB69-48D9-B5EC-1667A13BA2AF",
+      "operation_time": "2024-08-26 13:20:47",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "78EC0FB6-3073-40A1-BC72-232D4D7BFA38",
+      "subtransfer_id": "0B6618E7-4100-4E82-87A8-492B94F6FEA3"
+    },
+    {
+      "dst_population_id": "7EDD4F54-F448-4B6F-8915-53EF79B82756",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "1F9107D7-E36D-45EA-81DF-696A471FBACD",
+      "operation_time": "2024-08-26 15:35:47",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "80CE5745-1D05-451E-B43A-9A34C241A3BE",
+      "subtransfer_id": "6046C132-9956-449D-B293-40F18CB063F1"
+    },
+    {
+      "dst_population_id": "32252737-79F7-4AC8-A5AA-33809854A8FE",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "EEF669BB-BC6E-4646-8756-8987D35DE6EE",
+      "operation_time": "2024-08-27 13:15:20",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "476BF3BF-0C61-44B7-B26A-F6C22341D5CC",
+      "subtransfer_id": "99EFA270-5CF0-46CF-8707-2B672EE8115A"
+    },
+    {
+      "dst_population_id": "8453D718-F92F-4CF5-BD8D-CD133C9000D7",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "105098E0-CA9C-48AE-82B1-7BC4092AD2C0",
+      "operation_time": "2024-08-28 08:17:43",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "3E105EE8-9663-4B11-BE33-DEA7FF205D11",
+      "subtransfer_id": "7ECB8EB1-B91C-4DEB-9321-CAD2A3AB2F4A"
+    },
+    {
+      "dst_population_id": "5575BCCB-DD8C-45E2-AEDB-243A51086F9F",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "1FE5DD8F-00DC-4DE6-A4F1-8C23C80FF52A",
+      "operation_time": "2024-10-17 08:30:21",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "1863AA3E-DABA-4BB6-B10F-526C3EA9ED1B",
+      "subtransfer_id": "3619F966-1EEE-4064-8D75-BDBB3320E75F"
+    },
+    {
+      "dst_population_id": "056B283F-0BF9-432A-8191-29C116F62F3A",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "4750470E-3DFB-4244-89C1-DC0695C57616",
+      "operation_time": "2024-10-18 11:55:18",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "5A5B7977-22F9-42FD-9CC8-50C99BEACCB6",
+      "subtransfer_id": "73153930-AE7B-4484-ACEE-2A624B7BA28D"
+    },
+    {
+      "dst_population_id": "93BAEAA0-AE01-46E4-AE0C-4176279270BE",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "E8CF4059-F97E-4E73-B216-CB9DCD0C0EFA",
+      "operation_time": "2024-10-21 11:36:56",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "6A7EBA30-FEAB-4EC7-BB52-868B123DF681",
+      "subtransfer_id": "D5E40CD6-E83C-4E12-AB9B-B21306DF80DD"
+    },
+    {
+      "dst_population_id": "E37BF465-E2AE-49AC-81A9-356F006509E5",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "F0FEA04E-C971-455C-A179-121FDAF8E87E",
+      "operation_time": "2024-10-21 14:52:59",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "091FFD71-427C-47CD-9609-4AF3EC791F37",
+      "subtransfer_id": "922C03D4-507D-4D63-BD27-6FC4B5D1FA78"
+    },
+    {
+      "dst_population_id": "9BE00463-2FFC-4EA8-A57B-50F7B1D6D75E",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "E98A9A4D-A2C8-45EB-803E-7C0FE11DC874",
+      "operation_time": "2024-10-22 12:43:50",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "C1895164-E47C-4089-8B4C-1A6A905E2677",
+      "subtransfer_id": "5F8FADB4-CA7D-4563-A8CB-E4E10F44F3D6"
+    },
+    {
+      "dst_population_id": "29181FE0-F90F-4082-89C9-5D4DBB3DACDB",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "262C2939-415F-4162-8141-A950079A5D73",
+      "operation_time": "2024-10-23 13:47:48",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "78A3FAA9-EA06-4503-837C-4059A58C9FFB",
+      "subtransfer_id": "8273626B-942E-46EA-AB93-37ADBAA05DC4"
+    },
+    {
+      "dst_population_id": "A17ACAC8-0B22-46A7-A2B3-5A3EBA870CE6",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "02A1E739-9A66-43AC-9804-1D60DAE5C19B",
+      "operation_time": "2024-11-11 15:32:22",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "F9981745-5734-4899-9558-1D7ABE29AA0F",
+      "subtransfer_id": "59809974-FBD0-4C8C-BA33-83674804A556"
+    },
+    {
+      "dst_population_id": "9B3A411B-C79E-4048-A2C8-51E4D4246ABA",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "FC9F0722-E27F-4FE0-9B8E-CD13C6FB52CA",
+      "operation_time": "2024-11-11 15:33:45",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "F6251D9D-3BCC-4B8C-9C2F-8ED45D0966C5",
+      "subtransfer_id": "259905FB-5641-49EE-A1E6-58989529FBD7"
+    },
+    {
+      "dst_population_id": "9C30D549-B9DD-48D1-B6F8-C26768FE5C2B",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "413CAB2E-4117-48CF-B3F3-3A6C1A1CA360",
+      "operation_time": "2024-11-12 12:52:58",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "23A535F9-F6C1-42A2-9B4B-B2520B4F9865",
+      "subtransfer_id": "B8CD2A3E-68B7-4CFE-9418-3F8A7834129F"
+    },
+    {
+      "dst_population_id": "3E7BCD5B-C4D3-4265-B4F5-C23CCBF23DBB",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "EFE304EB-5411-4068-9B22-1615DBFFCAD2",
+      "operation_time": "2024-11-12 15:27:50",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "54C3B789-8DBD-44AD-A57C-A5094E19B903",
+      "subtransfer_id": "5955392C-BC7E-4E32-A1C2-14DE79F0D82A"
+    },
+    {
+      "dst_population_id": "056193C7-B13A-441C-A354-2E0F9265728E",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "A08B8648-0100-474D-99CA-BE846FDDFCD7",
+      "operation_time": "2024-11-13 11:24:33",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "4C0EC2AE-D9D0-4B7F-8464-CC46178EC762",
+      "subtransfer_id": "AAB7AE5C-CB12-44D9-9E45-B7971F5E92B2"
+    },
+    {
+      "dst_population_id": "FE27F7B0-098B-4515-943A-A76AFB32C24F",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "F927EE40-AB4D-4CF1-B252-8B9B5B4F9F7A",
+      "operation_time": "2024-11-13 11:26:58",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "94BABA56-44FB-4E5A-84D4-5EA9BA10BB14",
+      "subtransfer_id": "C23C7820-9934-4809-AAFD-CE1991EA49E6"
+    },
+    {
+      "dst_population_id": "9AA4ED4D-D444-426E-B8B3-2B4A32219639",
+      "dst_prod_stage": "Hatchery",
+      "dst_site": "S21 Vi\u00f0arei\u00f0i",
+      "dst_site_group": "Unknown",
+      "operation_id": "2386087B-7C78-44D9-9A58-DF5173F9BAE8",
+      "operation_time": "2024-11-13 13:44:53",
+      "role": "SourcePopBefore -> SourcePopAfter",
+      "src_population_id": "0AFE4DE8-8525-4D55-BD53-80D264DF3F0B",
+      "subtransfer_id": "6582E5AF-F2F6-48F4-89EB-0A1A7275B3FE"
+    }
+  ],
+  "direct_external_population_count": 49,
+  "direct_population_summary": {
+    "by_prod_stage": {
+      "Hatchery": 49
+    },
+    "by_site": {
+      "S21 Vi\u00f0arei\u00f0i": 49
+    },
+    "by_site_group": {
+      "Unknown": 49
+    },
+    "explicit_marine_population_count": 0,
+    "explicit_marine_population_examples": [],
+    "explicit_non_hatchery_population_count": 0,
+    "explicit_non_hatchery_population_examples": [],
+    "population_count": 49
+  },
+  "marine_linkage_evidence": false,
+  "outside_descendant_population_count": 129,
+  "source_chain_external": {
+    "by_prod_stage": {
+      "Hatchery": 47
+    },
+    "by_site": {
+      "S21 Vi\u00f0arei\u00f0i": 47
+    },
+    "by_site_group": {
+      "Unknown": 47
+    },
+    "edge_count": 47,
+    "unique_destination_population_count": 47
+  },
+  "source_to_dest_external": {
+    "by_prod_stage": {
+      "Hatchery": 2
+    },
+    "by_site": {
+      "S21 Vi\u00f0arei\u00f0i": 2
+    },
+    "by_site_group": {
+      "Unknown": 2
+    },
+    "edge_count": 2,
+    "unique_destination_population_count": 2
+  },
+  "subtransfer_rows_considered": 236
+}

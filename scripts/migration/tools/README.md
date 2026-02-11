@@ -21,6 +21,9 @@
 - build_environmental_sqlite.py - environmental SQLite index
 - migration_counts_report.py - count verification
 - migration_verification_report.py - reconciliation report
+- fwsea_deterministic_linkage_report.py - deterministic FW->Sea operation-level evidence report (InternalDelivery + ActionMetaData(184/220) + PopulationLink/SubTransfers diagnostics)
+- fwsea_endpoint_pairing_gate.py - endpoint uniqueness/stability acceptance gate for FWSEA policy-readiness (tooling-only)
+- fwsea_endpoint_gate_matrix.py - run endpoint gate across cohort semantic summaries and publish pass/fail matrix
 - dump_schema.py - schema snapshot utility
 - fix_system_admin_rbac.py - RBAC fix
 - pilot_migrate_feed_inventory.py - optional global feed inventory pass

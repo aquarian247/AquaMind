@@ -46,7 +46,10 @@ Output directory structure:
     ├── internal_delivery.csv         # ~3K rows (InternalDelivery - FW→Sea delivery header)
     ├── internal_delivery_operations.csv # ~? rows (Operations linked to InternalDelivery)
     ├── internal_delivery_actions.csv # ~? rows (Actions linked to InternalDelivery)
+    ├── internal_delivery_action_metadata.csv # ~? rows (ActionMetaData for InternalDelivery ops; params 184/220)
     ├── internal_delivery_planned_activities.csv # ~? rows (PlannedActivities linked to InternalDelivery)
+    ├── contacts.csv                  # ~? rows (Contact entities for ActionMetaData(220) GUID lookup)
+    ├── contact_types.csv             # ~? rows (Contact type IDs for Contact entities)
     ├── transport_carriers.csv        # ~41 rows (TransportCarrier - carrier name/code)
     ├── transport_methods.csv         # ~14 rows (TransportMethods - transport method metadata)
     ├── ext_transporters.csv          # ~? rows (Ext_Transporters_v2 - transporter names)
@@ -1087,6 +1090,68 @@ TABLE_CONFIGS = {
         "estimated_rows": 200000,
         "chunk_size": 0,
     },
+    "internal_delivery_action_metadata": {
+        "query": """
+            SET QUOTED_IDENTIFIER ON;
+            SELECT
+                CONVERT(varchar(36), m.ActionID) AS ActionID,
+                CONVERT(varchar(36), a.OperationID) AS OperationID,
+                CONVERT(varchar(10), m.ParameterID) AS ParameterID,
+                REPLACE(REPLACE(REPLACE(ISNULL(m.ParameterString, ''), '|', '/'), CHAR(13), ' '), CHAR(10), ' ') AS ParameterString,
+                ISNULL(CONVERT(varchar(64), m.ParameterValue), '') AS ParameterValue,
+                CONVERT(varchar(19), m.ParameterDate, 120) AS ParameterDate,
+                ISNULL(CONVERT(varchar(36), m.ParameterGuid), '') AS ParameterGuid,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL THEN '1' ELSE '0' END AS XmlParseable,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL
+                    THEN ISNULL(x.XmlPayload.value('(/TransportXML//TripID/text())[1]', 'nvarchar(200)'), '')
+                    ELSE ''
+                END AS TripID,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL
+                    THEN ISNULL(x.XmlPayload.value('(/TransportXML//CompartmentID/text())[1]', 'nvarchar(200)'), '')
+                    ELSE ''
+                END AS CompartmentID,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL
+                    THEN ISNULL(x.XmlPayload.value('(/TransportXML//CompartmentNr/text())[1]', 'nvarchar(200)'), '')
+                    ELSE ''
+                END AS CompartmentNr,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL
+                    THEN ISNULL(x.XmlPayload.value('(/TransportXML//TransporterID/text())[1]', 'nvarchar(200)'), '')
+                    ELSE ''
+                END AS TransporterID,
+                CASE WHEN m.ParameterID = 184 AND x.XmlPayload IS NOT NULL
+                    THEN ISNULL(x.XmlPayload.value('(/TransportXML//CarrierID/text())[1]', 'nvarchar(200)'), '')
+                    ELSE ''
+                END AS CarrierID
+            FROM dbo.ActionMetaData m
+            JOIN dbo.Action a ON a.ActionID = m.ActionID
+            JOIN (
+                SELECT SalesOperationID AS OperationID FROM dbo.InternalDelivery
+                UNION
+                SELECT InputOperationID AS OperationID FROM dbo.InternalDelivery WHERE InputOperationID IS NOT NULL
+            ) ids ON a.OperationID = ids.OperationID
+            OUTER APPLY (
+                SELECT TRY_CONVERT(xml, m.ParameterString) AS XmlPayload
+            ) x
+            WHERE m.ParameterID IN (184, 220)
+        """,
+        "headers": [
+            "ActionID",
+            "OperationID",
+            "ParameterID",
+            "ParameterString",
+            "ParameterValue",
+            "ParameterDate",
+            "ParameterGuid",
+            "XmlParseable",
+            "TripID",
+            "CompartmentID",
+            "CompartmentNr",
+            "TransporterID",
+            "CarrierID",
+        ],
+        "estimated_rows": 50000,
+        "chunk_size": 0,
+    },
     "internal_delivery_planned_activities": {
         "query": """
             SELECT
@@ -1116,6 +1181,29 @@ TABLE_CONFIGS = {
             "GroupID",
         ],
         "estimated_rows": 3000,
+        "chunk_size": 0,
+    },
+    "contacts": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), c.ID) AS ContactID,
+                ISNULL(c.Name, '') AS Name,
+                CONVERT(varchar(5), c.Active) AS Active
+            FROM dbo.Contact c
+        """,
+        "headers": ["ContactID", "Name", "Active"],
+        "estimated_rows": 10000,
+        "chunk_size": 0,
+    },
+    "contact_types": {
+        "query": """
+            SELECT
+                CONVERT(varchar(36), ct.ContactID) AS ContactID,
+                CONVERT(varchar(10), ct.ContactTypeID) AS ContactTypeID
+            FROM dbo.ContactTypes ct
+        """,
+        "headers": ["ContactID", "ContactTypeID"],
+        "estimated_rows": 50000,
         "chunk_size": 0,
     },
     "transport_carriers": {

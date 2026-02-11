@@ -1,0 +1,310 @@
+{
+  "component_id": "Stofnfiskur_S-21_nov23_5_2023",
+  "component_key": "B884F78F-1E92-49C0-AE28-39DFC2E18C01",
+  "component_population_count": 288,
+  "counts": {
+    "direction_counts": {
+      "sales_to_input": 12
+    },
+    "pair_stage_counts": {
+      "fw->marine": 12
+    },
+    "reason_counts": {
+      "deterministic": 11,
+      "source_candidate_count_out_of_bounds": 1
+    }
+  },
+  "examples": [
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "7D18CFE6-06FE-4B75-8DC5-2AE632216516",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "5610119A-5780-40AA-B878-22F7EE94B046",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "302040C5-2B7B-4265-9968-715CE6F756E6",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "E3CBED28-6040-4AD3-95EE-274313FB1DCA",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "791304D3-27C4-454F-A16F-DAC434542BA7",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "52FBCF90-D20D-467E-96AB-2E79A027A5CC",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": false,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "88A89AC5-0886-459C-AA6D-310876969A27",
+      "input_operation_population_count": 1,
+      "reason": "source_candidate_count_out_of_bounds",
+      "sales_component_population_count": 3,
+      "sales_operation_id": "E70C7F21-117E-4DFF-96AE-2FEEC80773A2",
+      "sales_operation_population_count": 3,
+      "source_component_population_count": 3,
+      "source_stage_class_counts": {
+        "fw": 3
+      },
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "2342ADFD-23FD-460E-AE82-7D907BA9AD99",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 2,
+      "sales_operation_id": "B421401D-F04A-4BA6-B4B1-3F4560620E20",
+      "sales_operation_population_count": 2,
+      "source_component_population_count": 2,
+      "source_stage_class_counts": {
+        "fw": 2
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "9C00250D-E0D6-49A8-8126-0BB8F0D56D51",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "1434C38B-C91F-4999-85CD-412907897287",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "907F71EC-F6C0-44C9-8441-C8BBE5B3AE38",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "C7096906-1762-4D18-8486-87B91A693EFA",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "F9F59D55-B68C-49BC-AFCA-714D851868E8",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "E1B25EFF-026B-4ED1-AF60-A2B26D94AC06",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "ECCD054D-FE84-48C5-B173-8EFD2D862778",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "1FA281AD-A296-4B8A-9E17-B2BE5C961BD2",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "FD8D3999-BFEE-4FB2-BB5A-1C30297835A3",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "D886031D-F23C-4DE3-A467-DCCF4A5110F1",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "C876E47A-D8D2-434E-970B-70736ACBCA07",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 2,
+      "sales_operation_id": "BA4107DD-174F-431E-A900-E9C9974133D3",
+      "sales_operation_population_count": 2,
+      "source_component_population_count": 2,
+      "source_stage_class_counts": {
+        "fw": 2
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "ACE808C2-4D86-46BE-BB9E-2FB508A8753C",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 1,
+      "sales_operation_id": "A4027586-D569-471C-84F9-FC3495930989",
+      "sales_operation_population_count": 1,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    }
+  ],
+  "expected_direction": "sales_to_input",
+  "gates": {
+    "coverage": {
+      "actual_deterministic_coverage": 0.9166666666666666,
+      "min_deterministic_coverage": 0.9,
+      "passed": true
+    },
+    "evidence": {
+      "actual_candidate_rows": 12,
+      "applicable": true,
+      "min_candidate_rows": 10,
+      "passed": true
+    },
+    "incomplete_linkage_fallback": {
+      "actual": null,
+      "applicable": false,
+      "passed": true,
+      "semantic_summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-11/semantic_validation_stofnfiskur_s21_nov23_2026-02-06.summary.json",
+      "threshold": null
+    },
+    "marine_target": {
+      "actual_marine_target_ratio": 1.0,
+      "applicable": true,
+      "min_marine_target_ratio": 1.0,
+      "passed": true
+    },
+    "overall_passed": false,
+    "stability": {
+      "actual_max_targets_per_source": 1,
+      "max_targets_per_source": 1,
+      "passed": true,
+      "sources_with_multiple_targets": 0
+    },
+    "uniqueness": {
+      "actual_ambiguous_rows": 1,
+      "max_ambiguous_rows": 0,
+      "passed": false
+    }
+  },
+  "metrics": {
+    "ambiguous_rows": 1,
+    "both_side_touch_rows": 0,
+    "candidate_rows": 12,
+    "deterministic_coverage": 0.9166666666666666,
+    "deterministic_rows": 11,
+    "incomplete_linkage_fallback_count": null,
+    "marine_target_deterministic_rows": 11,
+    "marine_target_ratio": 1.0,
+    "max_targets_per_source_observed": 1,
+    "sources_with_multiple_targets": 0,
+    "touched_rows": 12
+  }
+}

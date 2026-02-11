@@ -16,16 +16,45 @@ This document defines **non‑negotiable migration standards** to preserve data 
 - `scripts/migration/safety.py` must enforce `aquamind_db_migr_dev` before any write.
 - Use `SKIP_CELERY_SIGNALS=1` for all migration scripts to prevent background tasks from mutating data.
 - Use `scripts/migration/clear_migration_db.py` for clean replays (keeps schema + auth tables).
+- Use station guards for batch/component runs when verifying a known station:
+  - `pilot_migrate_input_batch.py --expected-site "<site name>"`
+  - `pilot_migrate_component.py --expected-site "<site name>"`
+- Do not bypass station preflight errors unless intentionally testing mismatch behavior.
 
 ## Validation Standards
 - Run `scripts/migration/tools/migration_counts_report.py` after each run and confirm expected non‑zero core tables.
+- Run `scripts/migration/tools/migration_semantic_validation_report.py` for batch‑level reconciliation (counts + biomass).
+  - Use `--stage-entry-window-days 2` for transition sanity checks.
 - Validate GUI in the migration preview stack before expanding scope.
 - Reconcile source vs target counts for any table with discrepancies.
+  - Expect **mortality biomass** mismatch: FishTalk extracts provide `0` in many cases; AquaMind computes per‑event biomass from same‑day status snapshots.
+- Treat stage population increases as alert conditions unless mixed-batch composition exists.
 
 ## CSV vs Raw Database (Early Development)
 - **CSV mode is recommended** for speed, repeatability, and controlled snapshots.
 - **Use raw SQL** when validating schema changes, missing tables/columns, or unexpected gaps.
 - Re‑extract CSVs after any schema or logic change to keep snapshots aligned.
+
+## Performance Tuning (Apple Silicon / High-Core Hosts)
+- Keep `pilot_migrate_component.py` and `pilot_migrate_component_transfers.py` **serial** (they establish core batch state and transfer graph).
+- Use optional parallel post-transfer replay in `pilot_migrate_input_batch.py` for independent event scripts:
+  - `--parallel-workers <N>` enables parallel phase (`N=1` keeps full sequential behavior).
+  - `--parallel-blas-threads 1` prevents thread oversubscription when running many CSV-heavy subprocesses.
+  - `--script-timeout-seconds <S>` raises per-script timeout for large batches.
+- Recommended starting point on M4 Max:
+  - `--parallel-workers 6 --parallel-blas-threads 1 --script-timeout-seconds 1200`
+- Keep **DB wipe + station guard + semantic gates** unchanged while tuning performance.
+
+## Source Quirks to Treat as Policy
+- **Weight samples**: `Ext_WeightSamples_v2` and `PublicWeightSamples` are duplicates in this backup. Use **Ext only** and treat `AvgWeight` as **grams**.
+- **Infra naming**: Do not prepend `FT` or append `FW`/`Sea` on names. Normalize by stripping those tokens at load time.
+- **Hall stage over ProductionStage**: where FishTalk source stage is noisy, use qualified hall-stage mapping as the authoritative stage source.
+
+## Mortality Replay Policy
+- Replay mortality/culling/escapes into `batch.MortalityEvent` (with `ExternalIdMap` linkage per source row).
+- Keep assignment population counts deterministic by resolving:
+  - `resolved_count = baseline_population_count - (mortality + culling + escapes totals for that population)`
+- Persist baseline on population assignment mappings so replays remain idempotent.
 
 ## Repeatability & Logging
 - Keep migrations deterministic: explicit ordering, consistent time‑zone conversions, and stable identifiers.

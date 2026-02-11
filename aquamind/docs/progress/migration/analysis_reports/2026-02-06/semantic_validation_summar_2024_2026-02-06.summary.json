@@ -1,0 +1,106 @@
+{
+  "batch": {
+    "batch_number": "Summar 2024",
+    "id": 356
+  },
+  "component_key": "81AC7D6F-3C81-4F36-9875-881C828F62E3",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "241.0005"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "241.0003",
+      "241.0008",
+      "241.0011",
+      "241.0015",
+      "241.0027",
+      "241.0036",
+      "241.0040",
+      "241.0042",
+      "241.0046",
+      "241.0049"
+    ],
+    "real_stage_entry_fishgroup_count": 1,
+    "temporary_bridge_fishgroup_count": 13,
+    "temporary_bridge_population_count": 13
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 106,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 106,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 1250914,
+  "population_count": 106,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 and not classified as temporary bridge: 61 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": false
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 61,
+    "passed": false,
+    "transition_alert_count": 0,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "mixed_rows": 0,
+    "stage_entry_window_days": 2,
+    "transition_basis_counts": {},
+    "transition_bridge_aware_count": 0,
+    "transition_count": 0,
+    "transition_entry_window_count": 0,
+    "transition_entry_window_reason_counts": {},
+    "transitions": [],
+    "zero_assignment_bridge_count": 13,
+    "zero_assignment_non_bridge_count": 61,
+    "zero_assignment_total_count": 74
+  },
+  "transfer_actions": {
+    "total_count": 46,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2025-10-15T00:42:20",
+    "start": "2024-08-06T16:31:08"
+  }
+}

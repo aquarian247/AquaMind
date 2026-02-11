@@ -1,0 +1,95 @@
+{
+  "non_deterministic_row_count": 6,
+  "reason_counts": {
+    "direction_mismatch": 3,
+    "source_candidate_count_out_of_bounds": 3
+  },
+  "reason_counts_by_batch": {
+    "BF mars 2025": {
+      "direction_mismatch": 1
+    },
+    "BF oktober 2025": {
+      "direction_mismatch": 1
+    },
+    "Bakkafrost S-21 jan 25": {
+      "direction_mismatch": 1
+    },
+    "Benchmark Gen. Septembur 2024": {
+      "source_candidate_count_out_of_bounds": 2
+    },
+    "StofnFiskur okt. 2024": {
+      "source_candidate_count_out_of_bounds": 1
+    }
+  },
+  "records_tsv": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-11/fw20_endpoint_blocker_operation_provenance_2026-02-11.tsv",
+  "selected_cohort_count": 5,
+  "selected_cohorts": [
+    {
+      "ambiguous_rows": 1,
+      "batch_name": "BF mars 2025",
+      "candidate_rows": 1,
+      "component_key": "7B7E162F-72EC-42E9-B32A-953264EAC124",
+      "deterministic_coverage": 0.0,
+      "deterministic_rows": 0,
+      "failed_gates": [
+        "evidence",
+        "uniqueness",
+        "coverage",
+        "marine_target"
+      ]
+    },
+    {
+      "ambiguous_rows": 1,
+      "batch_name": "BF oktober 2025",
+      "candidate_rows": 1,
+      "component_key": "DCF897C6-A2A3-4914-89E9-D43C8389D887",
+      "deterministic_coverage": 0.0,
+      "deterministic_rows": 0,
+      "failed_gates": [
+        "evidence",
+        "uniqueness",
+        "coverage",
+        "marine_target"
+      ]
+    },
+    {
+      "ambiguous_rows": 1,
+      "batch_name": "Bakkafrost S-21 jan 25",
+      "candidate_rows": 1,
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "deterministic_coverage": 0.0,
+      "deterministic_rows": 0,
+      "failed_gates": [
+        "evidence",
+        "uniqueness",
+        "coverage",
+        "marine_target"
+      ]
+    },
+    {
+      "ambiguous_rows": 2,
+      "batch_name": "Benchmark Gen. Septembur 2024",
+      "candidate_rows": 15,
+      "component_key": "65370D45-A30A-4810-B8F0-06FE2DB4A001",
+      "deterministic_coverage": 0.8666666666666667,
+      "deterministic_rows": 13,
+      "failed_gates": [
+        "uniqueness",
+        "coverage"
+      ]
+    },
+    {
+      "ambiguous_rows": 1,
+      "batch_name": "StofnFiskur okt. 2024",
+      "candidate_rows": 2,
+      "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C",
+      "deterministic_coverage": 0.5,
+      "deterministic_rows": 1,
+      "failed_gates": [
+        "evidence",
+        "uniqueness",
+        "coverage"
+      ]
+    }
+  ]
+}

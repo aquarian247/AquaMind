@@ -1,0 +1,150 @@
+{
+  "component_scope": {
+    "component_id": "Stofnfiskur_Juni_24_2_2024",
+    "component_key": "EDF931F2-51CC-4A10-9002-128E7BF8067C",
+    "input_operation_touch_count": 0,
+    "population_count": 145,
+    "row_touch_count": 15,
+    "sales_operation_touch_count": 15
+  },
+  "csv_dir": "scripts/migration/data/extract",
+  "internal_delivery": {
+    "input_operation_matched_count": 3114,
+    "input_operation_non_null_count": 3114,
+    "row_count": 3155,
+    "sales_operation_count": 3155,
+    "stage_pair_counts": {
+      "sales=fw, input=fw": 160,
+      "sales=fw, input=marine": 2704,
+      "sales=fw, input=unknown": 47,
+      "sales=marine, input=marine": 30,
+      "sales=unknown, input=fw": 112,
+      "sales=unknown, input=marine": 100,
+      "sales=unknown, input=unknown": 2
+    }
+  },
+  "metadata": {
+    "parameter_184": {
+      "carrier_rows": 0,
+      "compartment_rows": 0,
+      "parseable_xml_rows": 7489,
+      "row_count": 7489,
+      "trip_id_rows": 7489
+    },
+    "parameter_220": {
+      "distinct_guid_count": 119,
+      "guid_contact_match_count": 119,
+      "guid_ext_transporter_match_count": 0,
+      "guid_transport_carrier_match_count": 0,
+      "guid_unmatched_count": 0,
+      "row_count": 6229,
+      "top_contact_hits": [
+        {
+          "contact_id": "3ABACBFF-F796-4BC7-8345-6544B16913D8",
+          "contact_name": "Amhuinnsuidhe",
+          "contact_type_ids": [
+            "12",
+            "13",
+            "2",
+            "3"
+          ],
+          "row_count": 422
+        },
+        {
+          "contact_id": "5DD4D8DF-CC6C-4DCC-8C17-F8EE1D4C4ACD",
+          "contact_name": "S04 H\u00fasar",
+          "contact_type_ids": [
+            "13",
+            "2"
+          ],
+          "row_count": 367
+        },
+        {
+          "contact_id": "02D08D43-5CFF-4070-A1D5-823229D1C5C8",
+          "contact_name": "A71 Funningsfj\u00f8r\u00f0ur",
+          "contact_type_ids": [
+            "12",
+            "13"
+          ],
+          "row_count": 223
+        },
+        {
+          "contact_id": "DFFD7F8E-BECD-4033-9AA8-E952C9AF6055",
+          "contact_name": "Geocrab",
+          "contact_type_ids": [
+            "12",
+            "13",
+            "2",
+            "3"
+          ],
+          "row_count": 209
+        },
+        {
+          "contact_id": "209EE671-DAE1-4E89-9134-07ACE48D61D4",
+          "contact_name": "A57 Fuglafj\u00f8r\u00f0ur",
+          "contact_type_ids": [
+            "12",
+            "13"
+          ],
+          "row_count": 189
+        },
+        {
+          "contact_id": "97EC8BC4-6DB3-4C84-8EAC-A3FE4DB729B0",
+          "contact_name": "A63 \u00c1rnafj\u00f8r\u00f0ur",
+          "contact_type_ids": [
+            "12",
+            "13"
+          ],
+          "row_count": 177
+        },
+        {
+          "contact_id": "0433A22C-4080-4220-93BE-24A1E81AEA53",
+          "contact_name": "A04 Lambav\u00edk",
+          "contact_type_ids": [
+            "12",
+            "13"
+          ],
+          "row_count": 176
+        },
+        {
+          "contact_id": "9089A1F9-408E-41AC-A8D9-CED3E974BEEB",
+          "contact_name": "FW21 Couldoran",
+          "contact_type_ids": [
+            "12",
+            "13",
+            "2",
+            "3"
+          ],
+          "row_count": 162
+        },
+        {
+          "contact_id": "3F9A2EE6-5226-45AC-A981-D902D43A2F28",
+          "contact_name": "A85 Nes",
+          "contact_type_ids": [
+            "12",
+            "13",
+            "2",
+            "3"
+          ],
+          "row_count": 157
+        },
+        {
+          "contact_id": "B0C22A74-DF80-4E7A-80FC-B6F0C2CBF785",
+          "contact_name": "A21 Hvannasund S",
+          "contact_type_ids": [
+            "12",
+            "13"
+          ],
+          "row_count": 155
+        }
+      ],
+      "unmatched_guid_examples": []
+    }
+  },
+  "operation_overlap": {
+    "input_in_population_link": 3037,
+    "input_in_sub_transfers": 1113,
+    "sales_in_population_link": 3037,
+    "sales_in_sub_transfers": 1390
+  }
+}

@@ -441,6 +441,14 @@ Transfer data sources:
         action="store_true",
         help="Use SubTransfers table instead of PublicTransfers (recommended for 2020+ batches)",
     )
+    parser.add_argument(
+        "--skip-synthetic-stage-transitions",
+        action="store_true",
+        help=(
+            "Do not synthesize assignment-derived PopulationStageTransition workflows/actions. "
+            "This keeps only transfer-edge-backed workflows/actions."
+        ),
+    )
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument(
@@ -884,9 +892,10 @@ def main() -> int:
             workflow.recalculate_totals()
 
         stage_assignments: dict[str, list[BatchContainerAssignment]] = {}
-        for assignment in batch.batch_assignments.select_related("lifecycle_stage"):
-            if assignment.lifecycle_stage and assignment.lifecycle_stage.name in STAGE_INDEX:
-                stage_assignments.setdefault(assignment.lifecycle_stage.name, []).append(assignment)
+        if not args.skip_synthetic_stage_transitions:
+            for assignment in batch.batch_assignments.select_related("lifecycle_stage"):
+                if assignment.lifecycle_stage and assignment.lifecycle_stage.name in STAGE_INDEX:
+                    stage_assignments.setdefault(assignment.lifecycle_stage.name, []).append(assignment)
 
         stage_start_dates: dict[str, datetime.date] = {}
         for stage_name, assignments in stage_assignments.items():
@@ -1017,6 +1026,9 @@ def main() -> int:
             workflow.status = "COMPLETED" if workflow.total_actions_planned else workflow.status
             save_with_history(workflow, user=history_user, reason=history_reason)
             workflow.recalculate_totals()
+
+    if args.skip_synthetic_stage_transitions:
+        print("Skipped synthetic PopulationStageTransition workflow/action generation (--skip-synthetic-stage-transitions).")
 
     print(
         f"Migrated transfers for component_key={component_key} into batch={batch.batch_number} "

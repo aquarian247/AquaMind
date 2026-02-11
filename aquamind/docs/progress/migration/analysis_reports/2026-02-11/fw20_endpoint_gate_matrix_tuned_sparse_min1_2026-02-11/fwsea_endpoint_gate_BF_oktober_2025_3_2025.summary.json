@@ -1,0 +1,89 @@
+{
+  "component_id": "BF_oktober_2025_3_2025",
+  "component_key": "DCF897C6-A2A3-4914-89E9-D43C8389D887",
+  "component_population_count": 17,
+  "counts": {
+    "direction_counts": {
+      "input_to_sales": 1
+    },
+    "pair_stage_counts": {
+      "fw->fw": 1
+    },
+    "reason_counts": {
+      "direction_mismatch": 1
+    }
+  },
+  "examples": [
+    {
+      "deterministic": false,
+      "direction": "input_to_sales",
+      "input_component_population_count": 1,
+      "input_operation_id": "7A458ED6-BC39-4F37-8071-40667F768A19",
+      "input_operation_population_count": 1,
+      "reason": "direction_mismatch",
+      "sales_component_population_count": 0,
+      "sales_operation_id": "112C6EDD-F14B-48EE-AD8E-0AB709BD6728",
+      "sales_operation_population_count": 8,
+      "source_component_population_count": 1,
+      "source_stage_class_counts": {
+        "fw": 1
+      },
+      "target_population_count": 8,
+      "target_stage_class_counts": {
+        "fw": 8
+      }
+    }
+  ],
+  "expected_direction": "sales_to_input",
+  "gates": {
+    "coverage": {
+      "actual_deterministic_coverage": 0.0,
+      "min_deterministic_coverage": 0.9,
+      "passed": false
+    },
+    "evidence": {
+      "actual_candidate_rows": 1,
+      "applicable": true,
+      "min_candidate_rows": 1,
+      "passed": true
+    },
+    "incomplete_linkage_fallback": {
+      "actual": 0,
+      "applicable": false,
+      "passed": true,
+      "semantic_summary_json": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-11/semantic_validation_bf_oktober_2025_2026-02-11_fw20_parallel_post_fix.summary.json",
+      "threshold": null
+    },
+    "marine_target": {
+      "actual_marine_target_ratio": 0.0,
+      "applicable": true,
+      "min_marine_target_ratio": 1.0,
+      "passed": false
+    },
+    "overall_passed": false,
+    "stability": {
+      "actual_max_targets_per_source": 0,
+      "max_targets_per_source": 1,
+      "passed": true,
+      "sources_with_multiple_targets": 0
+    },
+    "uniqueness": {
+      "actual_ambiguous_rows": 1,
+      "max_ambiguous_rows": 0,
+      "passed": false
+    }
+  },
+  "metrics": {
+    "ambiguous_rows": 1,
+    "both_side_touch_rows": 0,
+    "candidate_rows": 1,
+    "deterministic_coverage": 0.0,
+    "deterministic_rows": 0,
+    "incomplete_linkage_fallback_count": 0,
+    "marine_target_deterministic_rows": 0,
+    "marine_target_ratio": 0.0,
+    "max_targets_per_source_observed": 0,
+    "sources_with_multiple_targets": 0,
+    "touched_rows": 1
+  }
+}

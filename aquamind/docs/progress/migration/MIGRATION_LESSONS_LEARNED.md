@@ -1,4 +1,4 @@
-# Migration Lessons Learned (2026-01-21)
+# Migration Lessons Learned (2026-01-21 → 2026-02-06)
 
 ## Purpose
 This document consolidates learnings from multiple migration sessions to clarify what works, what doesn't, and the definitive approach going forward.
@@ -16,6 +16,29 @@ This document consolidates learnings from multiple migration sessions to clarify
 | 2026-01-21 (PM) | **Project tuple = 1 batch** | ⚠️ Worked in many cases, later disproven |
 | 2026-01-22 (EOD) | **Ext_Inputs_v2 input-based stitching** | ✅ Current direction |
 | 2026-02-03 | Heuristic FW→Sea test + restricted full-lifecycle selection | ✅ Works for targeted QA, non-canonical |
+| 2026-02-06 | Station/site guard + stage-entry semantic sanity | ✅ Reduced false lifecycle increase alerts |
+
+## 2026-02-06 Addendum (Current Follow-up)
+
+1. **Station drift prevention must be explicit.**
+   - `pilot_migrate_input_batch.py` now runs station preflight and supports `--expected-site`.
+   - `pilot_migrate_component.py` now supports `--expected-site` and station-code guard from batch name.
+
+2. **Container-stage source quality can override ProductionStage labels.**
+   - In S21, hall mapping was corrected so `A` maps to `Parr` (not `Fry`) for validated replay behavior.
+
+3. **Mortality replay must affect assignment counts deterministically.**
+   - Replay now resolves per-population assignment count from:
+     - `baseline_population_count - (mortality + culling + escapes totals)`.
+   - Baseline is stored in `ExternalIdMap.metadata` for idempotent reruns.
+
+4. **Stage monotonic checks need entry-window logic.**
+   - Full summed stage populations are inflated by in-stage redistributions.
+   - Semantic transition checks now use stage-entry populations (default 2-day window, max-per-container).
+
+5. **“Outside component” is not mortality/removal.**
+   - It means SubTransfers destinations outside the selected stitched population set.
+   - “Known removals” remain mortality + culling + escapes + harvest.
 
 ---
 
@@ -228,10 +251,16 @@ python scripts/migration/tools/input_based_stitching_report.py \
 PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   python scripts/migration/tools/pilot_migrate_input_batch.py \
   --batch-key "Vár 2024|1|2024" \
+  --expected-site "<Station Name>" \
   --use-csv scripts/migration/data/extract/
 
 # 5. Verify
 python scripts/migration/tools/migration_counts_report.py
+python scripts/migration/tools/migration_semantic_validation_report.py \
+  --component-key <key> \
+  --report-dir <component_report_dir> \
+  --use-csv scripts/migration/data/extract \
+  --stage-entry-window-days 2
 ```
 
 ---

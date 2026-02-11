@@ -12,6 +12,7 @@ Target (AquaMind): apps.batch.models.MortalityEvent
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 import os
 import sys
 from dataclasses import dataclass
@@ -289,8 +290,41 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="CSV_DIR",
         help="Use pre-extracted CSV files from this directory instead of live SQL",
     )
+    parser.add_argument(
+        "--sync-assignment-counts",
+        action="store_true",
+        help=(
+            "Apply baseline-minus-removals sync to assignment.population_count. "
+            "Default is off to preserve stage-entry assignment semantics."
+        ),
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     return parser
+
+
+def collect_removal_totals_by_population(batch: Batch) -> dict[str, int]:
+    totals: dict[str, int] = defaultdict(int)
+    event_ids = list(MortalityEvent.objects.filter(batch=batch).values_list("id", flat=True))
+    if not event_ids:
+        return totals
+
+    event_count_by_id = {
+        event.id: int(event.count or 0)
+        for event in MortalityEvent.objects.filter(id__in=event_ids).only("id", "count")
+    }
+    mappings = ExternalIdMap.objects.filter(
+        source_system="FishTalk",
+        source_model__in=["Mortality", "Culling", "Escapes"],
+        target_app_label="batch",
+        target_model="mortalityevent",
+        target_object_id__in=event_ids,
+    )
+    for mapping in mappings:
+        pop_id = (mapping.metadata or {}).get("population_id")
+        if not pop_id:
+            continue
+        totals[pop_id] += event_count_by_id.get(mapping.target_object_id, 0)
+    return totals
 
 
 def main() -> int:
@@ -368,12 +402,30 @@ def main() -> int:
         return 0
 
     assignment_by_pop: dict[str, BatchContainerAssignment] = {}
+    population_map_by_pop: dict[str, ExternalIdMap] = {}
     for pid in population_ids:
         mapped = get_external_map("Populations", pid)
         if mapped:
             assignment_by_pop[pid] = BatchContainerAssignment.objects.get(pk=mapped.target_object_id)
+            population_map_by_pop[pid] = mapped
+
+    baseline_count_by_pop: dict[str, int] = {}
+    for pop_id, assignment in assignment_by_pop.items():
+        baseline = None
+        pop_map = population_map_by_pop.get(pop_id)
+        if pop_map:
+            raw = (pop_map.metadata or {}).get("baseline_population_count")
+            if raw is not None:
+                try:
+                    baseline = int(round(float(raw)))
+                except Exception:
+                    baseline = None
+        if baseline is None:
+            baseline = int(assignment.population_count or 0)
+        baseline_count_by_pop[pop_id] = max(baseline, 0)
 
     created = updated = skipped = 0
+    adjusted_assignments = 0
     with transaction.atomic():
         history_reason = f"FishTalk migration: culling for component {component_key}"
         for row in rows:
@@ -465,9 +517,27 @@ def main() -> int:
                 )
                 created += 1
 
+        if args.sync_assignment_counts:
+            removal_totals_by_pop = collect_removal_totals_by_population(batch)
+            for pop_id, assignment in assignment_by_pop.items():
+                baseline_count = baseline_count_by_pop.get(pop_id, int(assignment.population_count or 0))
+                removed = max(removal_totals_by_pop.get(pop_id, 0), 0)
+                resolved_count = max(baseline_count - removed, 0)
+                if int(assignment.population_count or 0) == resolved_count:
+                    continue
+                assignment.population_count = resolved_count
+                save_with_history(
+                    assignment,
+                    user=None,
+                    reason=f"FishTalk culling sync {component_key[:8]}",
+                )
+                adjusted_assignments += 1
+
     print(
         f"Migrated culling for component_key={component_key} into batch={batch.batch_number} "
-        f"(created={created}, updated={updated}, skipped={skipped})"
+        f"(created={created}, updated={updated}, skipped={skipped}, "
+        f"assignments_adjusted={adjusted_assignments}, "
+        f"assignment_sync={'on' if args.sync_assignment_counts else 'off'})"
     )
     return 0
 

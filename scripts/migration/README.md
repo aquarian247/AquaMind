@@ -17,8 +17,30 @@
    - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
      python scripts/migration/tools/pilot_migrate_input_batch.py \
      --batch-key "<InputName>|<InputNumber>|<YearClass>" \
+     --expected-site "<Station Name>" \
      --use-csv scripts/migration/data/extract/
-5) Validate
+5) Full action replays (per component, CSV)
+   - python scripts/migration/tools/pilot_migrate_component_transfers.py
+   - python scripts/migration/tools/pilot_migrate_component_feeding.py
+   - python scripts/migration/tools/pilot_migrate_component_mortality.py
+   - python scripts/migration/tools/pilot_migrate_component_culling.py
+   - python scripts/migration/tools/pilot_migrate_component_escapes.py
+   - python scripts/migration/tools/pilot_migrate_component_treatments.py
+   - python scripts/migration/tools/pilot_migrate_component_lice.py
+   - python scripts/migration/tools/pilot_migrate_component_health_journal.py
+   - python scripts/migration/tools/pilot_migrate_component_growth_samples.py
+   - python scripts/migration/tools/pilot_migrate_component_harvest.py
+6) Validate
+   - python scripts/migration/tools/migration_semantic_validation_report.py \
+     --component-key <component_key> \
+     --report-dir <component_report_dir> \
+     --use-csv scripts/migration/data/extract \
+     --stage-entry-window-days 2
+     # optional regression gate mode:
+     # --check-regression-gates --summary-json <path>
+   - python scripts/migration/tools/migration_pilot_regression_check.py \
+     --analysis-dir aquamind/docs/progress/migration/analysis_reports/2026-02-06 \
+     --use-csv scripts/migration/data/extract
    - python scripts/migration/tools/migration_counts_report.py
    - python scripts/migration/tools/migration_verification_report.py
 
@@ -28,6 +50,7 @@ Environmental at scale (optional):
 
 ## Active entrypoints
 - scripts/migration/setup_master_data.py
+- scripts/migration/tools/pilot_migrate_health_master_data.py
 - scripts/migration/clear_migration_db.py
 - scripts/migration/safety.py
 - scripts/migration/history.py
@@ -37,6 +60,8 @@ Environmental at scale (optional):
 - scripts/migration/tools/pilot_migrate_component*.py
 - scripts/migration/tools/migration_counts_report.py
 - scripts/migration/tools/migration_verification_report.py
+- scripts/migration/tools/migration_semantic_validation_report.py
+- scripts/migration/tools/migration_pilot_regression_check.py
 - scripts/migration/tools/build_environmental_sqlite.py
 - scripts/migration/tools/pilot_migrate_environmental_all.py
 
@@ -51,3 +76,6 @@ Environmental at scale (optional):
 ## Notes
 - Use SKIP_CELERY_SIGNALS=1 for all migration runs.
 - Use --use-csv for performance and repeatability.
+- Weight samples are in grams (FishTalk) and should not be treated as kg.
+- Use `--expected-site` for both `pilot_migrate_input_batch.py` and `pilot_migrate_component.py` when station identity must be strict.
+- Mortality/culling/escape replay synchronizes assignment population count to: `baseline_population_count - known removals` per population mapping.

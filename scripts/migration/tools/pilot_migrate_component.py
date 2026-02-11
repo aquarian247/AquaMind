@@ -18,9 +18,11 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
+from itertools import groupby
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+import re
+from datetime import date, datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
@@ -237,19 +239,179 @@ class DataSource:
                 f"OR st.DestPopBefore IN ({in_clause}) "
                 f"OR st.DestPopAfter IN ({in_clause}) "
                 "ORDER BY o.StartTime ASC"
-            ),
-            headers=[
-                "SubTransferID",
-                "OperationID",
-                "SourcePopBefore",
+                ),
+                headers=[
+                    "SubTransferID",
+                    "OperationID",
+                    "SourcePopBefore",
                 "SourcePopAfter",
                 "DestPopBefore",
                 "DestPopAfter",
                 "ShareCountFwd",
                 "ShareBiomFwd",
                 "OperationTime",
-            ],
-        )
+                ],
+            )
+
+    def get_removal_counts_by_population(self, population_ids: set[str]) -> dict[str, int]:
+        """Return total known removals (mortality+culling+escapes) per population."""
+        if not population_ids:
+            return {}
+
+        totals: defaultdict[str, int] = defaultdict(int)
+
+        def add_rows(rows: list[dict], count_field: str) -> None:
+            for row in rows:
+                pop_id = (row.get("PopulationID") or "").strip()
+                if not pop_id or pop_id not in population_ids:
+                    continue
+                raw = row.get(count_field)
+                try:
+                    value = int(round(float(raw or 0)))
+                except Exception:
+                    value = 0
+                if value > 0:
+                    totals[pop_id] += value
+
+        if self.use_csv:
+            add_rows(self.loader.get_mortality_actions_for_populations(population_ids), "MortalityCount")
+            add_rows(self.loader.get_culling_actions_for_populations(population_ids), "CullingCount")
+            add_rows(self.loader.get_escape_actions_for_populations(population_ids), "EscapeCount")
+            return dict(totals)
+
+        for chunk in self._chunk_population_ids(population_ids):
+            in_clause = ",".join(f"'{pid}'" for pid in chunk)
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                    "SUM(ISNULL(m.MortalityCount, 0)) AS TotalCount "
+                    "FROM dbo.Mortality m "
+                    "JOIN dbo.Action a ON a.ActionID = m.ActionID "
+                    f"WHERE a.PopulationID IN ({in_clause}) "
+                    "GROUP BY a.PopulationID"
+                ),
+                headers=["PopulationID", "TotalCount"],
+            )
+            add_rows(rows, "TotalCount")
+
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                    "SUM(ISNULL(c.CullingCount, 0)) AS TotalCount "
+                    "FROM dbo.Culling c "
+                    "JOIN dbo.Action a ON a.ActionID = c.ActionID "
+                    f"WHERE a.PopulationID IN ({in_clause}) "
+                    "GROUP BY a.PopulationID"
+                ),
+                headers=["PopulationID", "TotalCount"],
+            )
+            add_rows(rows, "TotalCount")
+
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                    "SUM(ISNULL(e.EscapeCount, 0)) AS TotalCount "
+                    "FROM dbo.Escapes e "
+                    "JOIN dbo.Action a ON a.ActionID = e.ActionID "
+                    f"WHERE a.PopulationID IN ({in_clause}) "
+                    "GROUP BY a.PopulationID"
+                ),
+                headers=["PopulationID", "TotalCount"],
+            )
+            add_rows(rows, "TotalCount")
+
+        return dict(totals)
+
+    @staticmethod
+    def _chunk_population_ids(population_ids: set[str], chunk_size: int = 500) -> list[list[str]]:
+        ordered = sorted(pid for pid in population_ids if pid)
+        return [ordered[i : i + chunk_size] for i in range(0, len(ordered), chunk_size)]
+
+    def get_operational_activity_population_ids(self, population_ids: set[str]) -> set[str]:
+        """Return populations that have non-transfer operational events."""
+        pop_set = {pid for pid in population_ids if pid}
+        if not pop_set:
+            return set()
+
+        observed: set[str] = set()
+
+        def collect(rows: list[dict]) -> None:
+            for row in rows:
+                pid = (row.get("PopulationID") or "").strip()
+                if pid in pop_set:
+                    observed.add(pid)
+
+        if self.use_csv:
+            csv_collectors = [
+                self.loader.get_feeding_actions_for_populations,
+                self.loader.get_mortality_actions_for_populations,
+                self.loader.get_culling_actions_for_populations,
+                self.loader.get_escape_actions_for_populations,
+                self.loader.get_treatments_for_populations,
+                self.loader.get_harvest_results_for_populations,
+                self.loader.get_weight_samples_for_populations,
+                self.loader.get_user_sample_sessions,
+            ]
+            for collector in csv_collectors:
+                try:
+                    collect(collector(pop_set))
+                except FileNotFoundError:
+                    continue
+            try:
+                lice_rows, _, _ = self.loader.get_lice_samples_for_populations(pop_set)
+                collect(lice_rows)
+            except FileNotFoundError:
+                pass
+            return observed
+
+        def collect_sql_direct(table: str, column: str, extra_where: str | None = None) -> None:
+            for chunk in self._chunk_population_ids(pop_set):
+                in_clause = ",".join(f"'{pid}'" for pid in chunk)
+                where_parts = [f"{column} IN ({in_clause})"]
+                if extra_where:
+                    where_parts.append(extra_where)
+                rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT DISTINCT "
+                        f"CONVERT(varchar(36), {column}) AS PopulationID "
+                        f"FROM {table} "
+                        f"WHERE {' AND '.join(where_parts)}"
+                    ),
+                    headers=["PopulationID"],
+                )
+                collect(rows)
+
+        def collect_sql_action(table: str, alias: str, extra_where: str | None = None) -> None:
+            for chunk in self._chunk_population_ids(pop_set):
+                in_clause = ",".join(f"'{pid}'" for pid in chunk)
+                where_parts = [f"a.PopulationID IN ({in_clause})"]
+                if extra_where:
+                    where_parts.append(extra_where)
+                rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT DISTINCT "
+                        "CONVERT(varchar(36), a.PopulationID) AS PopulationID "
+                        f"FROM {table} {alias} "
+                        f"JOIN dbo.Action a ON a.ActionID = {alias}.ActionID "
+                        f"WHERE {' AND '.join(where_parts)}"
+                    ),
+                    headers=["PopulationID"],
+                )
+                collect(rows)
+
+        collect_sql_action("dbo.Feeding", "f")
+        collect_sql_action("dbo.Mortality", "m")
+        collect_sql_action("dbo.Culling", "c")
+        collect_sql_action("dbo.Escapes", "e")
+        collect_sql_action("dbo.Treatment", "t")
+        collect_sql_action("dbo.HarvestResult", "h")
+        collect_sql_action("dbo.UserSample", "us")
+        collect_sql_direct("dbo.PublicLiceSamples", "PopulationID")
+        try:
+            collect_sql_direct("dbo.Ext_WeightSamples_v2", "PopulationID", "OperationType = 10")
+        except Exception:
+            collect_sql_direct("dbo.PublicWeightSamples", "PopulationID")
+        return observed
     
     def get_org_units(self, org_unit_ids: list[str]) -> list[dict]:
         """Get organization unit data."""
@@ -459,6 +621,7 @@ S24_HALL_STAGE_MAP = {
 }
 
 S03_HALL_STAGE_MAP = {
+    "KLEKING": "Egg&Alevin",
     "5 M HØLL": "Fry",
     "11 HØLL A": "Smolt",
     "11 HØLL B": "Smolt",
@@ -487,7 +650,8 @@ S16_HALL_STAGE_MAP = {
 
 S21_HALL_STAGE_MAP = {
     "5M": "Fry",
-    "A": "Fry",
+    # S21 operational flow moves 5M fry into A/BA/BB as parr.
+    "A": "Parr",
     "BA": "Parr",
     "BB": "Parr",
     "C": "Smolt",
@@ -526,6 +690,15 @@ def stage_from_hall(site: str | None, container_group: str | None) -> str | None
     if site_key == "FW22 APPLECROSS" and hall_key in FW22_APPLECROSS_HALL_STAGE_MAP:
         return FW22_APPLECROSS_HALL_STAGE_MAP[hall_key]
     return None
+
+
+def extract_station_code(text: str | None) -> str | None:
+    if not text:
+        return None
+    match = re.search(r"\bS[-\s]?(\d{2})\b", text.upper())
+    if not match:
+        return None
+    return f"S{match.group(1)}"
 
 
 def parse_dt(value: str) -> datetime | None:
@@ -579,13 +752,19 @@ def build_conserved_population_counts(
     def row_time(row: dict) -> datetime:
         return parse_dt(row.get("OperationTime") or "") or datetime.min
 
-    sub_transfers.sort(key=lambda r: (row_time(r), r.get("SubTransferID", "")))
+    sub_transfers.sort(
+        key=lambda r: (
+            row_time(r),
+            (r.get("OperationID") or ""),
+            r.get("SubTransferID", ""),
+        )
+    )
 
     counts_at_start: dict[str, Decimal] = {}
     current_counts: dict[str, Decimal] = {}
     status_cache: dict[str, Decimal] = {}
 
-    def seed_population(pop_id: str) -> Decimal | None:
+    def seed_population(pop_id: str) -> Decimal:
         if pop_id in counts_at_start:
             return counts_at_start[pop_id]
 
@@ -597,7 +776,13 @@ def build_conserved_population_counts(
 
         member = member_by_id.get(pop_id)
         if not member:
-            return None
+            # Keep zero-valued placeholders for intermediary populations so
+            # SubTransfers chains can continue propagating counts back into
+            # in-component destinations.
+            count = Decimal("0")
+            counts_at_start[pop_id] = count
+            current_counts[pop_id] = count
+            return count
         if pop_id not in status_cache:
             snapshot = data_source.get_status_snapshot(pop_id, member.start_time)
             count = Decimal("0")
@@ -638,7 +823,7 @@ def build_conserved_population_counts(
         if pop_id in population_ids:
             seed_population(pop_id)
 
-    for row in sub_transfers:
+    def apply_transfer_row(row: dict) -> None:
         src_before = (row.get("SourcePopBefore") or "").strip()
         src_after = (row.get("SourcePopAfter") or "").strip()
         dst_before = (row.get("DestPopBefore") or "").strip()
@@ -647,7 +832,7 @@ def build_conserved_population_counts(
 
         moved_count = None
 
-        if src_before in population_ids and src_before not in current_counts:
+        if src_before and src_before not in current_counts:
             seed_population(src_before)
 
         if src_before in current_counts:
@@ -655,34 +840,112 @@ def build_conserved_population_counts(
             moved_count = (src_count * share).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
             remaining = src_count - moved_count
 
-            if src_after and src_after in population_ids:
-                counts_at_start.setdefault(src_after, remaining)
+            if src_after:
+                if src_after in population_ids:
+                    counts_at_start.setdefault(src_after, remaining)
                 current_counts[src_after] = remaining
 
             current_counts.pop(src_before, None)
 
-        if dst_before in population_ids and dst_before not in current_counts:
+        if dst_before and dst_before not in current_counts:
             seed_population(dst_before)
 
         dest_before_count = None
         if dst_before in current_counts:
             dest_before_count = current_counts.pop(dst_before)
 
-        if dst_after and dst_after in population_ids:
+        if dst_after:
             dest_count = Decimal("0")
             if dest_before_count is not None:
                 dest_count += dest_before_count
             if moved_count is not None:
                 dest_count += moved_count
-            counts_at_start.setdefault(dst_after, dest_count)
+            if dst_after in population_ids:
+                counts_at_start.setdefault(dst_after, dest_count)
             current_counts[dst_after] = dest_count
+
+    for _, op_rows_iter in groupby(
+        sub_transfers,
+        key=lambda r: (
+            row_time(r),
+            (r.get("OperationID") or ""),
+        ),
+    ):
+        pending = list(op_rows_iter)
+        while pending:
+            source_after_candidates = {
+                (row.get("SourcePopAfter") or "").strip()
+                for row in pending
+                if (row.get("SourcePopAfter") or "").strip()
+            }
+            progressed = False
+            next_pending: list[dict] = []
+            for row in pending:
+                src_before = (row.get("SourcePopBefore") or "").strip()
+                if (
+                    src_before
+                    and src_before not in current_counts
+                    and src_before not in input_counts
+                    and src_before not in member_by_id
+                    and src_before in source_after_candidates
+                ):
+                    # Defer this edge until the same-operation row that produces
+                    # src_before has been processed.
+                    next_pending.append(row)
+                    continue
+                apply_transfer_row(row)
+                progressed = True
+
+            if not next_pending:
+                break
+            if not progressed:
+                # Fallback: unresolved dependencies likely originate fully outside
+                # this component chain, so process remaining rows with zero seeding.
+                for row in next_pending:
+                    apply_transfer_row(row)
+                break
+            pending = next_pending
 
     # Seed remaining populations that were never touched by transfers.
     for pop_id in population_ids:
         if pop_id not in counts_at_start:
             seed_population(pop_id)
 
-    return {pop_id: int(round(count)) for pop_id, count in counts_at_start.items()}, superseded_same_stage
+    return {
+        pop_id: int(round(count))
+        for pop_id, count in counts_at_start.items()
+        if pop_id in population_ids
+    }, superseded_same_stage
+
+
+def identify_external_mixing_populations(
+    population_ids: set[str],
+    sub_transfers: list[dict],
+) -> set[str]:
+    """Return in-component populations participating in edges to outside populations."""
+    if not population_ids or not sub_transfers:
+        return set()
+
+    mixed: set[str] = set()
+    for row in sub_transfers:
+        endpoints = {
+            (row.get("SourcePopBefore") or "").strip(),
+            (row.get("SourcePopAfter") or "").strip(),
+            (row.get("DestPopBefore") or "").strip(),
+            (row.get("DestPopAfter") or "").strip(),
+        }
+        endpoints.discard("")
+        if not endpoints:
+            continue
+
+        in_component = {pop_id for pop_id in endpoints if pop_id in population_ids}
+        if not in_component:
+            continue
+        has_outside = any(pop_id not in population_ids for pop_id in endpoints)
+        if has_outside:
+            mixed.update(in_component)
+
+    return mixed
 
 
 def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
@@ -766,6 +1029,119 @@ def load_members_from_report(report_dir: Path, *, component_id: int | None, comp
                     last_stage=row.get("last_stage", ""),
                 )
             )
+
+    members.sort(key=lambda m: m.start_time)
+    return members
+
+
+def load_members_from_existing_component_map(
+    component_key: str,
+    *,
+    csv_dir: str | None,
+    sql_profile: str,
+) -> list[ComponentMember]:
+    """Fallback loader for reruns when report membership is stale or partial.
+
+    Uses existing ExternalIdMap population mappings for this component key and
+    reconstructs ComponentMember rows from extracted Populations data (or SQL).
+    """
+    mapping_rows = list(
+        ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model="Populations",
+            target_app_label="batch",
+            target_model="batchcontainerassignment",
+            metadata__component_key=component_key,
+        )
+    )
+    if not mapping_rows:
+        return []
+
+    population_ids = [row.source_identifier for row in mapping_rows if row.source_identifier]
+    if not population_ids:
+        return []
+
+    population_data_by_id: dict[str, dict] = {}
+    if csv_dir:
+        loader = ETLDataLoader(csv_dir)
+        for row in loader.get_populations_by_ids(set(population_ids)):
+            pop_id = (row.get("PopulationID") or "").strip()
+            if pop_id:
+                population_data_by_id[pop_id] = row
+    else:
+        extractor = BaseExtractor(ExtractionContext(profile=sql_profile))
+        for i in range(0, len(population_ids), 1000):
+            batch = population_ids[i : i + 1000]
+            in_clause = ",".join(f"'{pid}'" for pid in batch)
+            rows = extractor._run_sqlcmd(
+                query=(
+                    "SELECT "
+                    "CONVERT(varchar(36), p.PopulationID) AS PopulationID, "
+                    "CONVERT(varchar(36), p.ContainerID) AS ContainerID, "
+                    "CONVERT(varchar(19), p.StartTime, 120) AS StartTime, "
+                    "CONVERT(varchar(19), p.EndTime, 120) AS EndTime "
+                    "FROM dbo.Populations p "
+                    f"WHERE p.PopulationID IN ({in_clause})"
+                ),
+                headers=["PopulationID", "ContainerID", "StartTime", "EndTime"],
+            )
+            for row in rows:
+                pop_id = (row.get("PopulationID") or "").strip()
+                if pop_id:
+                    population_data_by_id[pop_id] = row
+
+    assignment_by_id = {
+        assignment.id: assignment
+        for assignment in BatchContainerAssignment.objects.filter(
+            id__in=[row.target_object_id for row in mapping_rows if row.target_object_id]
+        )
+    }
+
+    members: list[ComponentMember] = []
+    for mapping in mapping_rows:
+        pop_id = (mapping.source_identifier or "").strip()
+        if not pop_id:
+            continue
+        metadata = mapping.metadata or {}
+        assignment = assignment_by_id.get(mapping.target_object_id)
+        pop_data = population_data_by_id.get(pop_id, {})
+
+        container_id = (
+            (pop_data.get("ContainerID") or "").strip()
+            or (metadata.get("container_id") or "").strip()
+        )
+        if not container_id and assignment:
+            container_map = ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model="Containers",
+                target_app_label="infrastructure",
+                target_model="container",
+                target_object_id=assignment.container_id,
+            ).first()
+            if container_map:
+                container_id = container_map.source_identifier
+
+        start_time = parse_dt(pop_data.get("StartTime") or "")
+        if start_time is None and assignment and assignment.assignment_date:
+            start_time = datetime.combine(assignment.assignment_date, datetime.min.time())
+        if start_time is None:
+            continue
+
+        end_time = parse_dt(pop_data.get("EndTime") or "")
+        if end_time is None and assignment and assignment.departure_date:
+            end_time = datetime.combine(assignment.departure_date, datetime.min.time())
+
+        members.append(
+            ComponentMember(
+                population_id=pop_id,
+                population_name=metadata.get("population_name") or "",
+                container_id=container_id,
+                start_time=start_time,
+                end_time=end_time,
+                first_stage="",
+                last_stage="",
+            )
+        )
 
     members.sort(key=lambda m: m.start_time)
     return members
@@ -1035,6 +1411,13 @@ Stitching approaches:
     parser.add_argument("--geography", default="Faroe Islands", help="Target geography name (auto-detected for chain-based)")
     parser.add_argument("--batch-number", help="Override batch_number")
     parser.add_argument(
+        "--expected-site",
+        help=(
+            "Optional strict site guard (substring match, normalized). "
+            "Example: 'S21 Viðareiði' or 'FW22 Applecross'."
+        ),
+    )
+    parser.add_argument(
         "--active-window-days",
         type=int,
         default=365,
@@ -1051,6 +1434,25 @@ Stitching approaches:
         type=int,
         default=60,
         help="Days from batch start to include in creation workflow (default: 60)",
+    )
+    parser.add_argument(
+        "--same-stage-supersede-max-hours",
+        type=int,
+        default=24,
+        help=(
+            "Zero only short-lived same-stage superseded populations whose lifespan "
+            "is <= this many hours (default: 24)."
+        ),
+    )
+    parser.add_argument(
+        "--external-mixing-status-multiplier",
+        type=float,
+        default=10.0,
+        help=(
+            "When a population has transfer-edge evidence to outside-component populations, "
+            "prefer status count over conserved count if status >= conserved * multiplier "
+            "(default: 10.0)."
+        ),
     )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
@@ -1127,8 +1529,6 @@ def main() -> int:
         # Project-based stitching (legacy)
         report_dir = Path(args.report_dir)
         members = load_members_from_report(report_dir, component_id=args.component_id, component_key=args.component_key)
-        if not members:
-            raise SystemExit("No members found for the selected component")
 
         component_key = args.component_key
         if not component_key:
@@ -1143,6 +1543,21 @@ def main() -> int:
                         break
         if not component_key:
             raise SystemExit("Unable to resolve component_key from report")
+
+        fallback_members = load_members_from_existing_component_map(
+            component_key,
+            csv_dir=args.use_csv,
+            sql_profile=args.sql_profile,
+        )
+        if fallback_members and len(fallback_members) > len(members):
+            print(
+                "Using existing component-mapped members fallback for "
+                f"{component_key}: report={len(members)} rows, fallback={len(fallback_members)} rows"
+            )
+            members = fallback_members
+
+        if not members:
+            raise SystemExit("No members found for the selected component")
 
     representative = next((m.population_name for m in members if "TRANSPORTPOP" not in m.population_name.upper()), members[0].population_name)
     batch_start = min(m.start_time for m in members).date()
@@ -1183,11 +1598,81 @@ def main() -> int:
             "grouping_bucket": bucket,
         }
 
+    member_sites = sorted(
+        {
+            (container_grouping.get(member.container_id, {}).get("site") or "").strip()
+            for member in members
+            if member.container_id
+        }
+    )
+    member_sites = [site for site in member_sites if site]
+    normalized_member_sites = {normalize_key(site) for site in member_sites}
+
+    if args.expected_site:
+        expected_site_key = normalize_key(args.expected_site)
+        if expected_site_key not in normalized_member_sites:
+            raise SystemExit(
+                "Site guard failed: expected site "
+                f"'{args.expected_site}' not found in component sites {member_sites}."
+            )
+
+    name_station_code = extract_station_code(args.batch_number or representative)
+    if name_station_code:
+        station_matches = [
+            site for site in member_sites
+            if name_station_code in normalize_key(site).replace(" ", "")
+        ]
+        if not station_matches:
+            raise SystemExit(
+                "Station-code guard failed: batch name suggests "
+                f"{name_station_code} but component sites are {member_sites}. "
+                "Use --expected-site to override if this is intentional."
+            )
+
+    # Deterministic fallback for unmapped halls: if every token-mapped member in a
+    # site/hall tuple resolves to the same lifecycle stage, reuse that stage.
+    hall_stage_observations: defaultdict[tuple[str, str], Counter[str]] = defaultdict(Counter)
+    for member in members:
+        group_meta = container_grouping.get(member.container_id, {})
+        site_key = normalize_key(group_meta.get("site"))
+        hall_key = normalize_key(group_meta.get("container_group"))
+        if not site_key or not hall_key:
+            continue
+        token_stage = fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
+        if not token_stage:
+            continue
+        hall_stage_observations[(site_key, hall_key)][token_stage] += 1
+
+    hall_stage_hints: dict[tuple[str, str], str] = {}
+    for key, stage_counter in hall_stage_observations.items():
+        if len(stage_counter) != 1:
+            continue
+        hall_stage_hints[key] = next(iter(stage_counter))
+
+    if hall_stage_hints:
+        print("Derived hall-stage fallback hints from component stage tokens:")
+        for (site_key, hall_key), stage_name in sorted(hall_stage_hints.items()):
+            stage_counter = hall_stage_observations[(site_key, hall_key)]
+            observed = stage_counter.get(stage_name, 0)
+            total = sum(stage_counter.values())
+            print(
+                f"  {site_key} / {hall_key} -> {stage_name} "
+                f"({observed}/{total} token-mapped rows)"
+            )
+
     def resolve_stage_name(member: ComponentMember) -> str | None:
         group_meta = container_grouping.get(member.container_id, {})
         hall_stage = stage_from_hall(group_meta.get("site"), group_meta.get("container_group"))
         if hall_stage:
             return hall_stage
+        hint_stage = hall_stage_hints.get(
+            (
+                normalize_key(group_meta.get("site")),
+                normalize_key(group_meta.get("container_group")),
+            )
+        )
+        if hint_stage:
+            return hint_stage
         prod_stage = (group_meta.get("prod_stage") or "").upper()
         if prod_stage:
             if "MARINE" in prod_stage or "BROOD" in prod_stage:
@@ -1199,6 +1684,7 @@ def main() -> int:
     population_ids = [m.population_id for m in members if m.population_id]
     stage_by_pop = {m.population_id: resolve_stage_name(m) for m in members if m.population_id}
     latest_status_time_by_pop: dict[str, datetime] = {}
+    latest_status_nonzero_by_pop: dict[str, bool] = {}
     component_status_time: datetime | None = None
 
     global_status_time = data_source.get_global_latest_status_time()
@@ -1216,8 +1702,18 @@ def main() -> int:
     if population_ids:
         latest_status_time_by_pop = data_source.get_latest_status_by_population(population_ids)
         component_status_time = max(latest_status_time_by_pop.values(), default=None)
+        for population_id, status_time in latest_status_time_by_pop.items():
+            snapshot = data_source.get_status_snapshot(population_id, status_time)
+            latest_status_nonzero_by_pop[population_id] = (
+                data_source._has_nonzero_status(snapshot) if snapshot else False
+            )
 
     conserved_counts, superseded_same_stage = build_conserved_population_counts(members, data_source, stage_by_pop)
+    external_mixing_population_ids = identify_external_mixing_populations(
+        set(population_ids),
+        data_source.get_subtransfers(set(population_ids)),
+    )
+    removal_counts_by_population = data_source.get_removal_counts_by_population(set(population_ids))
     if conserved_counts:
         nonzero_counts = sum(1 for count in conserved_counts.values() if count > 0)
         print(
@@ -1226,18 +1722,66 @@ def main() -> int:
         )
     else:
         print("Conserved counts unavailable; using status snapshots for population_count.")
+    if external_mixing_population_ids:
+        print(
+            "Populations with outside-component SubTransfers edges: "
+            f"{len(external_mixing_population_ids)}"
+        )
     if superseded_same_stage:
         print(f"Same-stage superseded populations: {len(superseded_same_stage)}")
+    superseded_with_operational_activity = data_source.get_operational_activity_population_ids(
+        superseded_same_stage
+    )
+    if superseded_with_operational_activity:
+        print(
+            "Same-stage superseded populations with operational activity: "
+            f"{len(superseded_with_operational_activity)}"
+        )
 
-    if component_status_time and active_cutoff:
-        has_active_member = component_status_time >= active_cutoff
+    same_day_bridge_keys: set[tuple[str, str, date]] = set()
+    for member in members:
+        if member.population_id not in superseded_same_stage:
+            continue
+        if member.end_time is None:
+            continue
+        duration = member.end_time - member.start_time
+        if duration > timedelta(hours=args.same_stage_supersede_max_hours):
+            continue
+        stage_name = stage_by_pop.get(member.population_id) or resolve_stage_name(member)
+        if not stage_name:
+            continue
+        same_day_bridge_keys.add((member.container_id, stage_name, member.start_time.date()))
+        same_day_bridge_keys.add((member.container_id, stage_name, member.end_time.date()))
+
+    stage_start_dates: dict[str, date] = {}
+    for member in members:
+        stage_name = stage_by_pop.get(member.population_id) or resolve_stage_name(member)
+        if not stage_name:
+            continue
+        start_date = member.start_time.date()
+        existing = stage_start_dates.get(stage_name)
+        if existing is None or start_date < existing:
+            stage_start_dates[stage_name] = start_date
+
+    legacy_open_member = any(m.end_time is None for m in members)
+    if latest_status_time_by_pop:
+        if active_cutoff:
+            has_active_member = any(
+                latest_status_nonzero_by_pop.get(population_id, False) and status_time >= active_cutoff
+                for population_id, status_time in latest_status_time_by_pop.items()
+            )
+        else:
+            has_active_member = any(latest_status_nonzero_by_pop.values())
+        has_active_member = has_active_member or legacy_open_member
     else:
-        has_active_member = any(m.end_time is None for m in members)
+        has_active_member = legacy_open_member
 
     active_population_by_container: dict[str, str] = {}
     container_latest: dict[str, tuple[datetime, str]] = {}
     for member in members:
         if not member.container_id:
+            continue
+        if latest_status_time_by_pop and not latest_status_nonzero_by_pop.get(member.population_id, False):
             continue
         candidate_time = latest_status_time_by_pop.get(member.population_id) or member.end_time or member.start_time
         current = container_latest.get(member.container_id)
@@ -1649,7 +2193,10 @@ def main() -> int:
 
             conserved_count = conserved_counts.get(member.population_id) if conserved_counts else None
             count = int(conserved_count) if conserved_count is not None else 0
+            known_removals = int(removal_counts_by_population.get(member.population_id, 0) or 0)
             biomass = Decimal("0.00")
+            status_count: int | None = None
+            status_avg_weight_g: Decimal | None = None
             if status_snapshot:
                 try:
                     status_count = int(round(float(status_snapshot.get("CurrentCount") or 0)))
@@ -1660,19 +2207,136 @@ def main() -> int:
                 elif count == 0 and status_count > 0:
                     # Conservation chain produced zero; prefer evidence-based status snapshot.
                     count = status_count
+                elif count == 0 and known_removals > 0:
+                    # If source actions already removed fish from this population, the
+                    # baseline cannot be zero without violating conservation-of-events.
+                    count = known_removals
+                elif (
+                    count > 0
+                    and status_count > 0
+                    and member.population_id in external_mixing_population_ids
+                    and float(status_count) >= float(count) * max(args.external_mixing_status_multiplier, 1.0)
+                ):
+                    # External mixing edges imply this component-only conservation chain
+                    # underestimates true in-population counts for some segments.
+                    count = status_count
+                elif count > 0 and status_count > count:
+                    if known_removals > count:
+                        # Baseline should not be lower than known source removals.
+                        # Keep this as a conservative floor instead of promoting
+                        # to full status snapshots, which can overstate rows with
+                        # outside-component mixing evidence.
+                        count = known_removals
                 try:
-                    biomass = Decimal(str(status_snapshot.get("CurrentBiomassKg") or 0)).quantize(Decimal("0.01"))
+                    status_biomass = Decimal(str(status_snapshot.get("CurrentBiomassKg") or 0)).quantize(
+                        Decimal("0.01")
+                    )
                 except Exception:
-                    biomass = Decimal("0.00")
+                    status_biomass = Decimal("0.00")
+                biomass = status_biomass
+                if status_count and status_count > 0 and status_biomass > 0:
+                    status_avg_weight_g = (
+                        (status_biomass * Decimal("1000")) / Decimal(status_count)
+                    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            if count == 0 and known_removals > 0:
+                # Status snapshots are sparse in some components; if source
+                # removals exist for this population, baseline cannot remain 0.
+                count = known_removals
 
             if member.population_id in superseded_same_stage:
-                # Avoid double-counting within the same lifecycle stage across transfers.
-                count = 0
+                duration = (member.end_time - member.start_time) if member.end_time else None
+                group_meta = container_grouping.get(member.container_id, {})
+                site_key = normalize_key(group_meta.get("site"))
+                hall_key = normalize_key(group_meta.get("container_group"))
+                is_initial_fry_day = (
+                    lifecycle_name == "Fry"
+                    and member.start_time.date() == stage_start_dates.get("Fry")
+                )
+                parr_start = stage_start_dates.get("Parr")
+                is_s21_parr_handoff_window = (
+                    lifecycle_name == "Parr"
+                    and site_key == "S21 VIÐAREIÐI"
+                    and hall_key in {"A", "BA", "BB"}
+                    and parr_start is not None
+                    and member.start_time.date() <= (parr_start + timedelta(days=2))
+                )
+                allow_bridge_preserve = is_initial_fry_day or is_s21_parr_handoff_window
+                is_long_companion_to_short_bridge = (
+                    status_count is not None
+                    and status_count > 0
+                    and allow_bridge_preserve
+                    and (member.container_id, lifecycle_name, member.start_time.date()) in same_day_bridge_keys
+                    and (duration is None or duration > timedelta(hours=args.same_stage_supersede_max_hours))
+                )
+                if is_long_companion_to_short_bridge:
+                    # Keep long-lived companion rows when paired with short bridge rows
+                    # in the same container+stage on the transfer boundary date.
+                    count = status_count
+                elif member.population_id in superseded_with_operational_activity:
+                    # Keep operationally material rows (feeding/health/mortality/etc.).
+                    # These are not just temporary transfer bridges even if superseded.
+                    # Use a conservative floor (known removals) without promoting to
+                    # status snapshots, to avoid inflating stage-entry populations.
+                    count = max(count, known_removals)
+                else:
+                    # Default same-stage suppression avoids double-counting propagated chains.
+                    count = 0
+                    biomass = Decimal("0.00")
+            elif status_count is not None and status_count > 0:
+                duration = (member.end_time - member.start_time) if member.end_time else None
+                group_meta = container_grouping.get(member.container_id, {})
+                site_key = normalize_key(group_meta.get("site"))
+                hall_key = normalize_key(group_meta.get("container_group"))
+                is_initial_fry_day = (
+                    lifecycle_name == "Fry"
+                    and member.start_time.date() == stage_start_dates.get("Fry")
+                )
+                parr_start = stage_start_dates.get("Parr")
+                is_s21_parr_handoff_window = (
+                    lifecycle_name == "Parr"
+                    and site_key == "S21 VIÐAREIÐI"
+                    and hall_key in {"A", "BA", "BB"}
+                    and parr_start is not None
+                    and member.start_time.date() <= (parr_start + timedelta(days=2))
+                )
+                allow_bridge_preserve = is_initial_fry_day or is_s21_parr_handoff_window
+                is_long_companion_to_short_bridge = (
+                    allow_bridge_preserve
+                    and
+                    (member.container_id, lifecycle_name, member.start_time.date()) in same_day_bridge_keys
+                    and (duration is None or duration > timedelta(hours=args.same_stage_supersede_max_hours))
+                )
+                if is_long_companion_to_short_bridge:
+                    count = status_count
+            count = max(count, 0)
+            if count == 0:
                 biomass = Decimal("0.00")
+                effective_avg_weight_g: Decimal | None = None
+            else:
+                effective_avg_weight_g = status_avg_weight_g
+                if status_avg_weight_g is not None and status_avg_weight_g > 0:
+                    # Keep biomass consistent with the chosen assignment count.
+                    # This avoids impossible implied weights when count comes from
+                    # SubTransfers-conserved chains and biomass comes from status snapshots.
+                    biomass = (
+                        (Decimal(count) * status_avg_weight_g) / Decimal("1000")
+                    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                elif biomass > 0:
+                    # Derive avg weight from biomass as a fallback when status avg is unavailable.
+                    effective_avg_weight_g = (
+                        (biomass * Decimal("1000")) / Decimal(count)
+                    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                else:
+                    biomass = Decimal("0.00")
+                    effective_avg_weight_g = None
+
+            latest_status_nonzero = latest_status_nonzero_by_pop.get(member.population_id, False)
             if not has_active_member:
                 assignment_active = False
             elif latest_status_time and assignment_active_cutoff:
-                assignment_active = latest_status_time >= assignment_active_cutoff
+                assignment_active = latest_status_nonzero and latest_status_time >= assignment_active_cutoff
+            elif latest_status_time:
+                assignment_active = latest_status_nonzero
             else:
                 assignment_active = member.end_time is None
 
@@ -1681,6 +2345,9 @@ def main() -> int:
                 assignment_active = False
 
             if assignment_active and active_population_id and active_population_id != member.population_id:
+                assignment_active = False
+
+            if assignment_active and count <= 0:
                 assignment_active = False
 
             if assignment_active:
@@ -1696,9 +2363,9 @@ def main() -> int:
                 "batch": batch,
                 "container": container,
                 "lifecycle_stage": stage,
-                "population_count": max(count, 0),
+                "population_count": count,
                 "biomass_kg": biomass,
-                "avg_weight_g": None,
+                "avg_weight_g": effective_avg_weight_g,
                 "assignment_date": member.start_time.date(),
                 "departure_date": assignment_departure,
                 "is_active": assignment_active,
@@ -1713,17 +2380,22 @@ def main() -> int:
             else:
                 assignment = BatchContainerAssignment(**defaults)
                 save_with_history(assignment, user=history_user, reason=history_reason)
-                ExternalIdMap.objects.update_or_create(
-                    source_system="FishTalk",
-                    source_model="Populations",
-                    source_identifier=str(member.population_id),
-                    defaults={
-                        "target_app_label": assignment._meta.app_label,
-                        "target_model": assignment._meta.model_name,
-                        "target_object_id": assignment.pk,
-                        "metadata": {"component_key": component_key, "container_id": member.container_id},
+
+            ExternalIdMap.objects.update_or_create(
+                source_system="FishTalk",
+                source_model="Populations",
+                source_identifier=str(member.population_id),
+                defaults={
+                    "target_app_label": assignment._meta.app_label,
+                    "target_model": assignment._meta.model_name,
+                    "target_object_id": assignment.pk,
+                    "metadata": {
+                        "component_key": component_key,
+                        "container_id": member.container_id,
+                        "baseline_population_count": count,
                     },
-                )
+                },
+            )
 
             assignment_by_population_id[member.population_id] = assignment
 

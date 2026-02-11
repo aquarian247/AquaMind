@@ -55,6 +55,10 @@ This document provides a detailed analysis of the FishTalk database schema based
 - **`FishGroupHistory`** has only `PopulationID` and `InputProjectID`.
 - **`InputProjects.ProjectName`** matches the UI “Fish group” label (e.g., “Benchmark Gen. Desembur 2024”).
 - **`Ext_Populations_v2.Fishgroup`** is the fish group **number**; there is **no FishGroupName column**.
+- In the current extract, `Fishgroup` is almost always derived from the same row’s project-tuple fields as:
+  - `Fishgroup ~= InputYear + InputNumber + "." + RunningNumber(4-digit zero-padded)`
+  - Verified for **184,229 / 184,234** `Ext_Populations_v2` rows (5 outliers, all with `InputNumber=99`).
+- For `Stofnfiskur S-21 nov23` component (`B884F78F-1E92-49C0-AE28-39DFC2E18C01`), this derivation matched **288 / 288** populations.
 - Use **InputProjectID** as the anchor to retrieve **all populations** that belong to a fish group, then map to containers/stages.
 
 **Gantt/timeline coverage (2026-01-29 verification):**
@@ -146,13 +150,17 @@ This document provides a detailed analysis of the FishTalk database schema based
 - **UserSample** (1.1M rows) - User-entered samples
 - **UserSampleParameterValue** (1.3M rows) - Sample parameters
 - **UserSampleTypes** - Sample type definitions
-- **PublicWeightSamples** - Weight sampling data
+- **Ext_WeightSamples_v2** - Weight sampling data (use Ext; Public is duplicate in this backup)
 
 **Key Columns:**
 - SampleID
 - SampleDate
 - ParameterID/Value
 - Weight/Length measurements
+
+**2026-02-06 Addendum (weights):**
+- `Ext_WeightSamples_v2` and `PublicWeightSamples` are duplicates in the 2026-01-22 backup.
+- `AvgWeight` values are **grams**. Do not apply kg heuristics.
 
 ### 2.7 Environmental & Sensors
 
@@ -169,6 +177,11 @@ This document provides a detailed analysis of the FishTalk database schema based
 - ReadingTime
 - Value
 - UnitID/ContainerID
+
+**2026-02-06 Addendum (environmental):**
+- Current CSV extracts include `Ext_DailySensorReadings_v2` and `Ext_SensorReadings_v2` only.
+- Sensor metadata tables (e.g., sensor → parameter mapping) are not yet extracted.
+- Result: environmental migration is limited to **4 parameters** (Temp, O2, pH, Salinity). CO2 requires sensor metadata extraction.
 
 ### 2.8 Operations & Actions
 
@@ -246,6 +259,9 @@ Based on table sizes and patterns:
 - FF* tables → Fish farming specific
 - HW* tables → Hardware/automation related
 - Wrasse* tables → Cleaner fish specific (may not apply to all operations)
+- Infrastructure naming normalization for migration replay:
+  - Strip leading `FT` prefix tokens from site/hall/container labels
+  - Strip trailing `FW`/`Sea` suffix tokens from labels
 
 ## 5. Recommended Migration Approach
 
@@ -655,5 +671,140 @@ Source: `analysis_reports/2026-02-04/operation_type_mapping_2026-02-04.md` (samp
 - `PublicLiceSamples` / `PublicLiceSampleData` (and `Ext_` variants) are keyed by `SampleID` with `PopulationID` + `SampleDate`.
 - No `ActionID` or `OperationID` columns exist in lice sample tables; treat lice sampling as **sample events** anchored by `SampleDate`, not Action/Operation types.
 
-**Document Status:** Updated 2026-01-22
-**Next Steps:** Implement Input-based batch identification in migration scripts
+### 9.5 Replay Clarifications (2026-02-06)
+
+- **InputName collisions exist across different input numbers.**
+  - Example from `input_projects.csv`: `SF NOV 23` appears as:
+    - `ProjectNumber=5` (site `FW22 Applecross`)
+    - `ProjectNumber=17` (site `FW21 Couldoran`)
+  - Replay must key on `InputName|InputNumber|YearClass`, not `InputName` alone.
+
+- **Container-level stage labels may be unreliable in source exports.**
+  - For S21 verification, FishTalk “Production Stage” labels were observed as uniform `Fry` across mixed halls.
+  - Hall mapping (`Ext_GroupedOrganisation_v2.ContainerGroup`) is used as the authoritative stage source in replay.
+
+- **Deterministic FW->Sea evidence remains context-limited in current extract paths (2026-02-10).**
+  - New tooling script: `scripts/migration/analysis/fw_to_sea_deterministic_evidence.py`.
+  - Deterministic evidence uses only:
+    - `SubTransfers` edges tied to stitched component populations,
+    - destination context from `populations.csv` + `grouped_organisation.csv`.
+  - For station-focused FW batches checked on 2026-02-10 (`Benchmark Gen. Juni 2024`, `Stofnfiskur S-21 feb24`, `Stofnfiskur Juni 24`):
+    - outside-component destination populations were found,
+    - destination `ProdStage` remained `Hatchery`,
+    - `marine_linkage_evidence` was `false` in all three runs.
+  - Implication: deterministic extract evidence currently confirms outside-component continuity, but does not yet provide explicit marine `ProdStage` linkage for these FW components.
+
+- **Short-lived bridge populations are present in transfer chains.**
+  - In `populations.csv`, some populations have same-day start/end timestamps and participate in SubTransfers as intermediate nodes.
+  - Replay/validation treats these as temporary bridge candidates, not automatically as durable stage-entry populations.
+
+- **FishTalk UI hierarchy observation for S21 (2026-02-09, report screenshot).**
+  - Timeline hierarchy shown in UI: `Fish group` -> `Inputs` -> `Fish group number`.
+  - Example for `Stofnfiskur S-21 nov23`: `Inputs = 23.05`, then `Fish group number` values `23.05.002`, `23.05.003`, ... increase through the timeline.
+  - Extract evidence for the same component stores corresponding values as `Fishgroup = 235.0002`, `235.0003`, ... with tuple fields `InputYear=23`, `InputNumber=5`, `RunningNumber=2,3,...`.
+  - Observed behavior: fish group numbers increment across transfer segments, including short-lived/zero-count bridge actions.
+  - Replay implication: fish group number should be treated as a transfer-segment identifier, not a standalone durable cohort count source.
+
+- **Assignment same-stage supersede classification (2026-02-09).**
+  - `pilot_migrate_component.py` now classifies same-stage superseded populations before zeroing assignment counts.
+  - Classification rule (code-verified):
+    - preserve status-backed count when the superseded population has non-transfer operational activity (feeding, mortality/culling/escapes, treatment, growth sample, lice sample, health journal, harvest),
+    - zero only superseded populations without operational activity (temporary bridge rows).
+  - Observed on `SF NOV 23|5|2023` replay in migration DB:
+    - same-stage superseded populations: `63`
+    - operationally material superseded populations: `51`
+    - temporary bridge superseded populations: `12`
+    - assignment rows with `population_count = 0`: `13` (12 bridge superseded + 1 non-superseded row)
+
+- **Transfer action noise control (2026-02-09).**
+  - `pilot_migrate_component_transfers.py` now supports `--skip-synthetic-stage-transitions` to disable assignment-derived `PopulationStageTransition*` workflows/actions.
+  - `pilot_migrate_input_batch.py` defaults to this mode (legacy behavior requires `--include-synthetic-stage-transitions`).
+  - Observed in the current migration DB after replay of all 5 active components (`SF NOV 23`, `Benchmark Gen. Juni 2024`, `Summar 2024`, `Vár 2024`, `Stofnfiskur S-21 nov23`):
+    - all transfer actions are edge-backed (`source_model = PublicTransferEdge`);
+    - zero-count transfer actions are `0` for each component.
+
+- **Semantic stage-transition count provenance tightening (2026-02-09).**
+  - In fishgroup bridge-aware transitions, semantic validation now prefers SubTransfer-conserved counts for linked populations (fallback to assignment count when conserved is missing/zero).
+  - Bridge-aware totals are applied only when all stage-entry destination populations in that transition are linkage-covered; otherwise semantic validation falls back to entry-window totals for that transition.
+  - This keeps `SF NOV 23` `Parr -> Post-Smolt` and `Fry -> Parr` at `0` delta while avoiding partial-linkage over/undercount in S21 transitions.
+
+- **Semantic transition basis refinement + hall fallback (2026-02-11).**
+  - Full direct SubTransfer linkage (all stage-entry destinations linked to previous-stage sources) is now treated as bridge-aware count basis even when no temporary-bridge hop is present; these rows are tagged `entry_window_reason=direct_linkage` in semantic summaries.
+  - For unmapped halls, `pilot_migrate_component.py` now applies a component-local fallback only when token-mapped rows for the same `(site, container_group)` unanimously resolve to one lifecycle stage; mixed/empty evidence still fails fast.
+  - Targeted replay evidence:
+    - `Stofnfiskur mai 2025|3|2025` and `Stofnfiskur feb 2025|1|2025` moved former `Fry -> Parr` no-bridge-path alerts to bridge-aware direct-linkage basis and passed gates.
+    - `BF mars 2025|2|2025` (`S08 Gjógv`) no longer fails stage resolution on `R-Høll`; migration + semantic gates pass (`analysis_reports/2026-02-11/*_fixcheck.*`).
+
+- **Station/pre-adult stitching hardening (2026-02-10 single-batch focus).**
+  - In `Benchmark Gen. Juni 2024|2|2024` (`S24 Strond`), remaining non-bridge zero rows were concentrated in long-lived populations with strong status counts and SubTransfers edges touching populations outside the stitched component set.
+  - `pilot_migrate_component.py` now supports an outside-component mixing fallback:
+    - identify populations participating in SubTransfers edges that include at least one outside-component endpoint,
+    - prefer status count over conserved count when `status_count >= conserved_count * external_mixing_status_multiplier` (default `10.0`).
+  - Additional baseline floor fallback:
+    - when known removals for a population (`mortality + culling + escapes`) exceed conserved count and status evidence is higher, baseline count is raised from status to avoid artificial post-replay zeroing.
+  - `migration_semantic_validation_report.py` now reports zero-row buckets explicitly:
+    - temporary bridge,
+    - same-stage superseded-zero,
+    - short-lived orphan-zero,
+    - residual non-bridge.
+  - For this single-batch replay, the station-focus semantic report moved from `24` residual non-bridge zero rows to `0` (gate threshold `2`), while transfer zero-count remained `0`.
+  - Positive-delta gate handling now excludes `entry_window_reason=incomplete_linkage` transitions from hard failure (kept as warning-level evidence).
+  - Additional assignment consistency hardening (same single-batch run):
+    - when status average weight is available, assignment biomass is recomputed from the final selected count (`count * status_avg_weight`) instead of persisting mismatched status biomass against a different conserved count,
+    - active assignment eligibility now requires non-zero latest status evidence (and `population_count > 0`), with latest-nonzero-per-container guard.
+  - Observed result on `Benchmark Gen. Juni 2024` after clean replay:
+    - active post-smolt assignments: `13`,
+    - active implied container average-weight range: `125.18g` to `300.10g`,
+    - high-weight low-count outliers (`implied_weight >= 1000g` and `count <= 5000`): `11 -> 0`.
+  - Transition linkage basis did not change in this hardening step:
+    - `0/4` bridge-aware transitions,
+    - `4/4` entry-window transitions (`incomplete_linkage`).
+
+- **Application/runtime separation policy (2026-02-10).**
+  - FishTalk-specific identifiers and bridge classification logic belong in migration tooling (`scripts/migration/tools/*`) and semantic validation reports.
+  - AquaMind runtime API endpoints should remain source-agnostic and must not depend on FishTalk extract CSVs or FishTalk note parsing.
+
+- **Confidence status (current migrated batches, 2026-02-10).**
+  - Checked migrated component batches in the current migration DB: `5` components, `11` transitions.
+  - Transitions with positive delta and no mixed-batch evidence: `0`.
+  - Bridge-aware transitions are now used only where linkage is complete; partial-linkage transitions fall back to entry-window sanity.
+
+- **Confidence-ramp implementation status (2026-02-10).**
+  - Implemented in `migration_semantic_validation_report.py`:
+    - transition linkage coverage fields:
+      - `entry_population_count`,
+      - `linked_destination_population_count`,
+      - `bridge_aware_eligible`;
+    - fishgroup tuple-format audit in report output:
+      - rule: `Fishgroup == InputYear + InputNumber + "." + RunningNumber(4-digit)`,
+      - default allowlisted outlier pattern: `23|99|23999.000`;
+    - regression gates:
+      - no positive transition delta without mixed-batch rows (excluding incomplete-linkage fallback rows),
+      - no zero-count transfer actions (`transferred_count <= 0`),
+      - non-bridge zero assignments under threshold.
+  - Implemented pilot cohort runner:
+    - `scripts/migration/tools/migration_pilot_regression_check.py`.
+  - Measured cohort rerun (current migration DB):
+    - components: `5`,
+    - transitions: `11`,
+    - bridge-aware transitions: `4` (`36.4%`),
+    - entry-window transitions: `7` (`63.6%`),
+    - positive transition alerts without mixed-batch rows: `0`,
+    - zero-count transfer actions: `0`.
+  - FW-only cohort rerun:
+    - components: `3` (`SF NOV 23`, `Stofnfiskur S-21 nov23`, `Benchmark Gen. Juni 2024`),
+    - transitions: `11`,
+    - same basis split (`4` bridge-aware / `7` entry-window),
+    - only failing gate batch: `Benchmark Gen. Juni 2024` (non-bridge zero-assignment threshold breach).
+  - Current risk surfaced by gates:
+    - high non-bridge zero-assignment counts remain for:
+      - `Benchmark Gen. Juni 2024`,
+      - `Summar 2024`,
+      - `Vár 2024`.
+
+- **Semantic report terminology:**
+  - `outside component` = SubTransfer destinations outside the selected stitched population set.
+  - `known removals` = mortality + culling + escapes + harvest counts.
+
+**Document Status:** Updated 2026-02-10
+**Next Steps:** Extract sensor metadata tables and continue FW→Sea linkage research
