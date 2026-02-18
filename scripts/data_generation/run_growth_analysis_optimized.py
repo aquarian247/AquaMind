@@ -103,9 +103,9 @@ def main():
     elif args.status != 'ALL':
         batches = batches.filter(status=args.status)
     
-    # Only process batches with scenarios
+    # Only process batches with projection/scenario context
     batches = batches.filter(
-        models.Q(pinned_scenario__isnull=False) | 
+        models.Q(pinned_projection_run__isnull=False) |
         models.Q(scenarios__isnull=False)
     ).distinct()
     
@@ -183,7 +183,6 @@ if __name__ == '__main__':
     # Need to import models after Django setup for the Q filter
     from django.db import models
     main()
-
 
 
 

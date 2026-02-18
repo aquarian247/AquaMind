@@ -1,0 +1,140 @@
+{
+  "generated_at": "2026-02-17",
+  "backup_cutoff": "2026-01-22",
+  "profile_baseline": "fw_default",
+  "active_scottish_freshwater_stations": [
+    "FW13 Geocrab",
+    "FW21 Couldoran",
+    "FW22 Applecross",
+    "FW24 KinlochMoidart"
+  ],
+  "station_waves": [
+    {
+      "station": "FW13 Geocrab",
+      "wave_mode": "two_pass",
+      "strict": {
+        "migration_success": 2,
+        "semantic_success": 2,
+        "total": 2
+      },
+      "recovery": {
+        "migration_success": 0,
+        "semantic_success": 0,
+        "total": 0
+      },
+      "final": {
+        "migration_success": 2,
+        "semantic_success": 2,
+        "total": 2
+      }
+    },
+    {
+      "station": "FW21 Couldoran",
+      "wave_mode": "two_pass",
+      "strict": {
+        "migration_success": 3,
+        "semantic_success": 3,
+        "total": 7
+      },
+      "recovery": {
+        "migration_success": 4,
+        "semantic_success": 4,
+        "total": 4
+      },
+      "final": {
+        "migration_success": 7,
+        "semantic_success": 7,
+        "total": 7
+      }
+    },
+    {
+      "station": "FW22 Applecross",
+      "wave_mode": "initial_plus_recovery_rerun",
+      "strict_or_initial": {
+        "migration_success": 8,
+        "semantic_success": 0,
+        "total": 10
+      },
+      "recovery_or_rerun": {
+        "migration_net_gain": 2,
+        "semantic_net_gain": 10
+      },
+      "final": {
+        "migration_success": 10,
+        "semantic_success": 10,
+        "total": 10
+      }
+    },
+    {
+      "station": "FW24 KinlochMoidart",
+      "wave_mode": "two_pass",
+      "strict": {
+        "migration_success": 1,
+        "semantic_success": 1,
+        "total": 7
+      },
+      "recovery": {
+        "migration_success": 6,
+        "semantic_success": 6,
+        "total": 6
+      },
+      "final": {
+        "migration_success": 7,
+        "semantic_success": 7,
+        "total": 7
+      }
+    }
+  ],
+  "overall_station_wave_totals": {
+    "migration_success": 26,
+    "semantic_success": 26,
+    "total": 26
+  },
+  "full_environmental_canaries": [
+    {
+      "label": "Faroe S21 canary",
+      "batch_key": "Bakkafrost S-21 jan 25|1|2025",
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "migration_pass": true,
+      "semantic_pass": true,
+      "runtime_pass": true
+    },
+    {
+      "label": "FW22 canary",
+      "batch_key": "SF MAR 25|1|2025",
+      "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A",
+      "migration_pass": true,
+      "semantic_pass": true,
+      "runtime_pass": true
+    }
+  ],
+  "b01_b02_anchor": {
+    "artifact": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B01_B02_regression_anchor_check_after_outside_holder_fix_2026-02-16.json",
+    "b01_pass": true,
+    "b02_pass": true,
+    "overall_pass": true
+  },
+  "archive_station_follow_up": {
+    "time_window": "2023-08-01..2026-02-17",
+    "operator_scan_result": "single signal in archived stations",
+    "validated_signal": {
+      "cohort": "23Q3 SF",
+      "station": "FW14 Harris Lochs (LA09-LA16)",
+      "transfer_in_count": 449242,
+      "transfer_out_count": 0,
+      "culling_count": 12305,
+      "mortality_count": 28729,
+      "classification": "culled_or_depleted_segment"
+    }
+  },
+  "closure_gate": {
+    "status": "PASS",
+    "criteria": [
+      "All active Scottish FW stations covered with final semantic PASS",
+      "Full environmental canaries passed migration+semantic+runtime",
+      "B01/B02 regression anchor remains green",
+      "No unresolved archived-station blocker in current horizon"
+    ]
+  },
+  "next_focus": "Marine cohorts (sea-based) with FW->Sea ingress linkage hardening"
+}

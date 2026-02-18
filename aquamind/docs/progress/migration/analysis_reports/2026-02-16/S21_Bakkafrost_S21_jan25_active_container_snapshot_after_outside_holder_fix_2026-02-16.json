@@ -1,0 +1,78 @@
+{
+  "active_container_count": 7,
+  "batch_id": 464,
+  "batch_lifecycle_stage": "Smolt",
+  "batch_number": "Bakkafrost S-21 jan 25",
+  "batch_status": "ACTIVE",
+  "expected_active_containers": [
+    "C12",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "missing_expected": [],
+  "observed_active_containers": [
+    "C12",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "rows": [
+    {
+      "assignment_date": "2025-10-09",
+      "container": "C12",
+      "departure_date": null,
+      "population_count": 99754,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-11-12",
+      "container": "D1",
+      "departure_date": null,
+      "population_count": 100419,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-17",
+      "container": "D2",
+      "departure_date": null,
+      "population_count": 80659,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-09",
+      "container": "D3",
+      "departure_date": null,
+      "population_count": 102842,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-16",
+      "container": "D4",
+      "departure_date": null,
+      "population_count": 178206,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-10-14",
+      "container": "D5",
+      "departure_date": null,
+      "population_count": 103716,
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-11-18",
+      "container": "D6",
+      "departure_date": null,
+      "population_count": 99386,
+      "stage": "Smolt"
+    }
+  ],
+  "unexpected_observed": []
+}

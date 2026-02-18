@@ -1,0 +1,120 @@
+{
+  "generated_at": "2026-02-16 16:28:44",
+  "station": "S24 Strond",
+  "profile": "fw_default",
+  "backup_horizon": "2026-01-22",
+  "skip_environmental": true,
+  "batch_count": 9,
+  "migration_success_count": 9,
+  "semantic_success_count": 9,
+  "rows": [
+    {
+      "batch_key": "Stofnfiskur Septembur 2023|3|2023",
+      "duration_seconds": 336.5,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "7B085E67-2317-483C-A01E-007DDECB8269",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Stofnfiskur_Septembur_2023_3_2023",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_Septembur_2023_3_2023_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_Septembur_2023_3_2023_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Stofnfiskur desembur 2023|4|2023",
+      "duration_seconds": 314.0,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "5C2A7C3B-7222-4D47-BB12-0D0E318EAF21",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Stofnfiskur_desembur_2023_4_2023",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_desembur_2023_4_2023_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_desembur_2023_4_2023_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Mars 2024|1|2024",
+      "duration_seconds": 258.6,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "79EB0F5F-4762-4F9B-9117-172E4905B03B",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Mars_2024_1_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2024_1_2024_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2024_1_2024_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Juni 2024|2|2024",
+      "duration_seconds": 318.9,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "5DC4DA59-A891-4BBB-BB2E-0CC95C633F20",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Juni_2024_2_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2024_2_2024_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2024_2_2024_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Septembur 2024|3|2024",
+      "duration_seconds": 184.4,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "65370D45-A30A-4810-B8F0-06FE2DB4A001",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Septembur_2024_3_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2024_3_2024_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2024_3_2024_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Desembur 2024|4|2024",
+      "duration_seconds": 223.6,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "1636C683-E8F2-476D-BC21-0170CA7DCEE8",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Desembur_2024_4_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Desembur_2024_4_2024_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Desembur_2024_4_2024_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Mars 2025|1|2025",
+      "duration_seconds": 237.8,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "CE636015-595A-44BD-AB37-03B4018FBA4A",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Mars_2025_1_2025",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2025_1_2025_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2025_1_2025_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen. Juni 2025|2|2025",
+      "duration_seconds": 149.5,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "7181368D-569E-4809-A8A3-029C7353EB24",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen._Juni_2025_2_2025",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2025_2_2025_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2025_2_2025_semantic_validation_2026-02-16.summary.json"
+    },
+    {
+      "batch_key": "Benchmark Gen Septembur 2025|3|2025",
+      "duration_seconds": 121.0,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "component_key": "1E996D42-BDB6-4E88-BFE2-026DC2086563",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/Benchmark_Gen_Septembur_2025_3_2025",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2025_3_2025_semantic_validation_2026-02-16.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2025_3_2025_semantic_validation_2026-02-16.summary.json"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "generated_at": "2026-02-17 13:35:02",
+  "station": "FW21 Couldoran",
+  "profile": "fw_default",
+  "backup_horizon": "2026-01-22",
+  "skip_environmental": true,
+  "allow_station_mismatch": true,
+  "batch_count": 4,
+  "migration_success_count": 4,
+  "semantic_success_count": 4,
+  "rows": [
+    {
+      "batch_key": "SF AUG 23|15|2023",
+      "duration_seconds": 171.5,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "5EB7F4A5-E96F-46BF-964F-05101C02B502",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/SF_AUG_23_15_2023",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_23_15_2023_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_23_15_2023_semantic_validation_2026-02-17.summary.json",
+      "preflight_sites": {
+        "input_projects_sites": "['FW21 Couldoran']",
+        "ext_inputs_sites": "['FW21 Couldoran']",
+        "member_sites": "['FW21 Couldoran', 'FW22 Applecross']",
+        "mismatch_detected": true,
+        "mismatch_override_used": true
+      },
+      "semantic_stdout_tail": "Wrote report to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_23_15_2023_semantic_validation_2026-02-17.md\nWrote summary JSON to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_23_15_2023_semantic_validation_2026-02-17.summary.json\n",
+      "semantic_stderr_tail": ""
+    },
+    {
+      "batch_key": "SF NOV 23|17|2023",
+      "duration_seconds": 214.0,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "720039AF-2D1A-4020-B540-01F48B877A3D",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/SF_NOV_23_17_2023",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.summary.json",
+      "preflight_sites": {
+        "input_projects_sites": "['FW21 Couldoran']",
+        "ext_inputs_sites": "['FW21 Couldoran']",
+        "member_sites": "['FW21 Couldoran', 'FW22 Applecross']",
+        "mismatch_detected": true,
+        "mismatch_override_used": true
+      },
+      "semantic_stdout_tail": "---\npid: 16125\ncwd: \"/Users/aquarian247/Projects/AquaMind\"\ncommand: \"python3 scripts/migration/tools/migration_semantic_validation_report.py --component-key 720039AF-2D1A-4020-B540-01F48B877A3D --report-dir \\\"scripts/migration/output/input_batch_migration/SF_NOV_23_17_2023\\\" --use-csv scripts/migration/data/extract --window-end-cap-date 2026-01-22 --check-regression-gates --output \\\"aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.md\\\" --summary-json \\\"aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.summary.json\\\"\"\nstarted_at: 2026-02-17T13:30:56.217Z\nrunning_for_seconds: 85    \n---\nWrote report to aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.md\nWrote summary JSON to aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_NOV_23_17_2023_semantic_validation_2026-02-17.summary.json\n\n---\nexit_code: 0\nelapsed_ms: 88408\nended_at: 2026-02-17T13:32:24.625Z\n---\n",
+      "semantic_stderr_tail": ""
+    },
+    {
+      "batch_key": "NH FEB 24|1|2024",
+      "duration_seconds": 199.4,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "A75471B6-FCB1-4719-8F63-0210AF14B4BE",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/NH_FEB_24_1_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_NH_FEB_24_1_2024_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_NH_FEB_24_1_2024_semantic_validation_2026-02-17.summary.json",
+      "preflight_sites": {
+        "input_projects_sites": "['FW21 Couldoran']",
+        "ext_inputs_sites": "['FW21 Couldoran']",
+        "member_sites": "['BRS3 Geocrab', 'FW21 Couldoran']",
+        "mismatch_detected": true,
+        "mismatch_override_used": true
+      },
+      "semantic_stdout_tail": "Wrote report to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_NH_FEB_24_1_2024_semantic_validation_2026-02-17.md\nWrote summary JSON to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_NH_FEB_24_1_2024_semantic_validation_2026-02-17.summary.json\n",
+      "semantic_stderr_tail": ""
+    },
+    {
+      "batch_key": "SF AUG 24|3|2024",
+      "duration_seconds": 228.6,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "F8A75447-CFA6-4CCD-A15D-0603783992EA",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/SF_AUG_24_3_2024",
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_24_3_2024_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_24_3_2024_semantic_validation_2026-02-17.summary.json",
+      "preflight_sites": {
+        "input_projects_sites": "['FW21 Couldoran']",
+        "ext_inputs_sites": "['FW21 Couldoran']",
+        "member_sites": "['FW13 Geocrab', 'FW21 Couldoran']",
+        "mismatch_detected": true,
+        "mismatch_override_used": true
+      },
+      "semantic_stdout_tail": "Wrote report to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_24_3_2024_semantic_validation_2026-02-17.md\nWrote summary JSON to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW21_allow_mismatch_SF_AUG_24_3_2024_semantic_validation_2026-02-17.summary.json\n",
+      "semantic_stderr_tail": ""
+    }
+  ],
+  "notes": [
+    "SF NOV 23|17|2023 required targeted rerun with --batch-number 'SF NOV 23 17' to avoid batch_number collision with existing 'SF NOV 23' record from another component."
+  ]
+}

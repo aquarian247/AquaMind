@@ -1,0 +1,105 @@
+{
+  "batch_id": 464,
+  "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+  "containers": [
+    {
+      "container": "B04",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B04_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 11,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B04_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "B05",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B05_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 5,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B05_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "C12",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_C12_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 3,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_C12_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D1",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D1_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 2,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D1_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D2",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D2_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 3,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D2_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D3",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D3_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 2,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D3_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D4",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D4_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 3,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D4_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D5",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D5_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 2,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D5_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "D6",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D6_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 2,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_D6_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "B01",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B01_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 8,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B01_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    },
+    {
+      "container": "B02",
+      "csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B02_population_segment_diagnostics_2026-02-16.csv",
+      "mismatch_segment_count": 0,
+      "parity_status": "match",
+      "segment_count": 6,
+      "summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_B02_population_segment_diagnostics_2026-02-16.summary.json",
+      "uncertain_segment_count": 0
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "batch_id": 465,
+  "batch_number": "StofnFiskur okt. 2024",
+  "investigation_date": "2026-02-16",
+  "signal": "active_container_latest_holder_outside_component",
+  "pre_fix": {
+    "active_container_count": 6,
+    "observed_active_containers": [
+      "E01",
+      "E02",
+      "F03",
+      "R2",
+      "R3",
+      "Skiljing"
+    ],
+    "latest_holder_in_component_count": 0,
+    "latest_holder_outside_component_count": 6,
+    "containers_checked": 6
+  },
+  "post_fix": {
+    "active_container_count": 0,
+    "observed_active_containers": [],
+    "latest_holder_in_component_count": null,
+    "latest_holder_outside_component_count": null,
+    "containers_checked": null
+  },
+  "migration_log_signal": {
+    "filtered_active_container_candidates_due_to_later_outside_holder": 52,
+    "source": "pilot_migrate_component.py stdout during StofnFiskur rerun (2026-02-16)"
+  },
+  "interpretation": [
+    "Pre-fix active assignments were stale relative to extract-level latest non-zero container holders.",
+    "Post-fix active assignment set is empty for this component at current cutoff after outside-holder consistency filtering.",
+    "This resolves the specific false-active signal; FT swimlane confirmation still recommended when available."
+  ]
+}

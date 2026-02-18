@@ -10,7 +10,7 @@ The same tables — particularly `PopulationLink` and `ActionMetaData` — are c
 
 This revised version incorporates deterministic evidence generated later on 2026-02-11 (canary + bounded FW20 sweep), so next-agent decisions can start from verified outcomes rather than hypotheses.
 
-## Status Update (Executed Evidence, 2026-02-11)
+## Status Update (Executed Evidence, 2026-02-11 plus 2026-02-12 follow-up)
 
 | Evidence | Result | Migration Decision |
 |----------|--------|--------------------|
@@ -20,6 +20,11 @@ This revised version incorporates deterministic evidence generated later on 2026
 | FW20 endpoint blocker provenance (`5` cohorts, `6` rows) | Blockers split cleanly into `direction_mismatch` (`3`) and `source_candidate_count_out_of_bounds` (`3`); SQL + CSV provenance aligned | Keep strict release gate and NO-GO policy; use blocker-family diagnostics to target next evidence step |
 | FW20 endpoint source3 diagnostic (`max-source-candidates=3`) | strict `1/20` PASS -> source3 `2/20` PASS; added `Benchmark Gen. Septembur 2024` while evidence-relaxed profiles added a different cohort (`Stofnfiskur sept 24`) | Keep strict release gate and NO-GO policy; profile relaxations are non-generalizing diagnostics |
 | FW20 endpoint combined diagnostic (`max-source-candidates=3`, `min-candidate-rows=4`) | strict `1/20` PASS -> combined `3/20` PASS; adds both previously profile-specific cohorts but leaves broad fail signal (`coverage` and `marine_target` each `16/20` fails) | Keep strict release gate and NO-GO policy; combined profile is diagnostic overlap mapping, not policy evidence |
+| FW20 Part B high-signal FAIL follow-up (`source3 + min4` non-zero cohorts) | Non-zero candidate cohorts classified `7`: true FW->Sea candidates `4` (`3` full + `1` sparse), reverse-flow FW-only `3`; persistent high-signal FAIL set is exactly the reverse-flow family (`direction_mismatch`, `input_to_sales`, `fw->fw`) | GO for tooling-only blocker-family classification in acceptance reporting; NO-GO for global FW/Sea policy promotion and runtime changes |
+| FW20 blocker-family classification integrated in matrix tooling (`strict` + `source3,min4`) | Tool now emits per-cohort deterministic blocker-family labels in JSON/TSV/MD (`reverse_flow_fw_only`, `true_fw_to_sea_candidate`, `true_fw_to_sea_sparse_evidence`, `unclassified_nonzero_candidate`) with strict `1/20` PASS and combined `3/20` PASS preserved | GO for tooling-only reporting enhancement; NO-GO for runtime changes and NO-GO for global FW/Sea policy promotion |
+| FW20 reverse-flow trace-target prepack (`reverse_flow_fw_only`) | Built deterministic pre-trace pack for all persistent reverse-flow blockers (`3` rows, `6` operation IDs) with operation context signature: sales-side `OperationType=7` + Param220 presence vs component-side `OperationType=5` + Param184-only, all stage class `fw` | Keep reverse-flow family excluded from FW->Sea policy evidence; use published operation ID pack as direct input for local XE/Profiler capture |
+| FW20 reverse-flow targeted SQL extract confirmation (`6` operation IDs) | Read-only source extract confirms stable pair signature across all blockers: Type7 + broad metadata palette (includes `220`) on sales side vs Type5 + no `220` on component side; all FW stage class | Keep reverse-flow blockers excluded from FW->Sea policy evidence; proceed to local XE/Profiler capture using published operation ID set |
+| FW20 reverse-flow XE capture readiness (tooling + self-test) | Added XE lifecycle/analyze helper (`fwsea_xe_trace_capture.py`), validated local capture pipeline with ring-buffer self-test (`total_events=62`) and operation-id hit detection for all `6` target IDs; session can be armed for GUI trace runs | GO for local Activity Explorer trace capture against published operation ID set; no runtime or policy change |
 | Runtime/UI behavior | Lifecycle chart behavior depends on migrated assignment materialization; no runtime FishTalk coupling introduced | Continue fixing in migration tooling/reporting only |
 
 Evidence references:
@@ -31,6 +36,21 @@ Evidence references:
 - `aquamind/docs/progress/migration/analysis_reports/2026-02-11/fw20_endpoint_blocker_operation_provenance_report_2026-02-11.md`
 - `aquamind/docs/progress/migration/analysis_reports/2026-02-11/fw20_endpoint_gate_matrix_diag_source3_comparison_2026-02-11.md`
 - `aquamind/docs/progress/migration/analysis_reports/2026-02-11/fw20_endpoint_gate_matrix_diag_source3_min4_comparison_2026-02-11.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_partb_high_signal_fail_cohort_followup_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_nonzero_candidate_classification_2026-02-12.summary.json`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_gate_matrix_blocker_family_tooling_integration_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_fwsea_endpoint_gate_matrix_with_blocker_family_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_fwsea_endpoint_gate_matrix_diag_source3_min4_with_blocker_family_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_gate_matrix_with_blocker_family_2026-02-12/fw20_endpoint_gate_matrix.summary.json`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_gate_matrix_diag_source3_min4_with_blocker_family_2026-02-12/fw20_endpoint_gate_matrix.summary.json`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_trace_target_pack_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_trace_target_pack_2026-02-12.tsv`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_trace_target_pack_2026-02-12.summary.json`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_targeted_sql_extract_signature_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_xe_capture_readiness_2026-02-12.md`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_xe_capture_selftest_2026-02-12.summary.json`
+- `aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_reverse_flow_xe_session_status_2026-02-12.summary.json`
+- `aquamind/docs/progress/migration/handoffs/HANDOFF_2026-02-12_FWSEA_PARTB_HIGH_SIGNAL_FAIL_CLASSIFICATION.md`
 - `aquamind/docs/progress/migration/handoffs/HANDOFF_2026-02-11_FW20_EXTERNAL_MIXING_SENSITIVITY.md`
 
 ## Phase 0: Programmable Object Recon (Run Before Part A/B)

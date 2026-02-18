@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-02-17T10:08:06.979597+00:00",
+  "backup_cutoff": "2026-01-22",
+  "rows": [
+    {
+      "label": "Faroe S21 canary",
+      "batch_key": "Bakkafrost S-21 jan 25|1|2025",
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "migration_pass": true,
+      "migration_scripts_completed": "13/13",
+      "migration_elapsed_seconds": 627.9,
+      "environmental_created_rows": 187986,
+      "environmental_daily_rows": 94141,
+      "environmental_time_rows": 93845,
+      "semantic_pass": true,
+      "semantic_transition_alert_count": 0,
+      "semantic_non_bridge_zero_assignments": 0,
+      "runtime_pass": true,
+      "runtime_batch_id": 464,
+      "runtime_batch_status": "ACTIVE",
+      "runtime_lifecycle_stage": "Smolt",
+      "runtime_active_assignments": 7,
+      "runtime_active_population_count_total": 764982,
+      "runtime_active_containers": [
+        "D2",
+        "D4",
+        "D3",
+        "D6",
+        "D1",
+        "D5",
+        "C12"
+      ],
+      "artifacts": {
+        "migration_terminal": "/Users/aquarian247/.cursor/projects/Users-aquarian247-Projects/terminals/4327.txt",
+        "semantic_report": "aquamind/docs/progress/migration/analysis_reports/2026-02-17/S21_Bakkafrost_S21_jan25_semantic_validation_full_environmental_canary_2026-02-17.md",
+        "semantic_summary": "aquamind/docs/progress/migration/analysis_reports/2026-02-17/S21_Bakkafrost_S21_jan25_semantic_validation_full_environmental_canary_2026-02-17.summary.json"
+      }
+    },
+    {
+      "label": "FW22 canary",
+      "batch_key": "SF MAR 25|1|2025",
+      "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A",
+      "migration_pass": true,
+      "migration_scripts_completed": "13/13",
+      "migration_elapsed_seconds": 1142.9,
+      "environmental_created_rows": 305656,
+      "environmental_daily_rows": 152828,
+      "environmental_time_rows": 152828,
+      "semantic_pass": true,
+      "semantic_transition_alert_count": 0,
+      "semantic_non_bridge_zero_assignments": 0,
+      "runtime_pass": true,
+      "runtime_batch_id": 496,
+      "runtime_batch_status": "ACTIVE",
+      "runtime_lifecycle_stage": "Smolt",
+      "runtime_active_assignments": 6,
+      "runtime_active_population_count_total": 838547,
+      "runtime_active_containers": [
+        "S07",
+        "S05",
+        "S2_B4",
+        "S2_B3",
+        "S2_A2",
+        "S2_A1"
+      ],
+      "artifacts": {
+        "migration_terminal": "/Users/aquarian247/.cursor/projects/Users-aquarian247-Projects/terminals/52870.txt",
+        "semantic_report": "aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW22_SF_MAR_25_1_2025_semantic_validation_full_environmental_canary_2026-02-17.md",
+        "semantic_summary": "aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW22_SF_MAR_25_1_2025_semantic_validation_full_environmental_canary_2026-02-17.summary.json"
+      }
+    }
+  ]
+}

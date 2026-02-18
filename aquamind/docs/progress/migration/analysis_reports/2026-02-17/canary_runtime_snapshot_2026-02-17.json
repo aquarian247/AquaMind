@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-02-17T10:08:06.979597+00:00",
+  "rows": [
+    {
+      "label": "S21_Bakkafrost_S21_jan25",
+      "batch_key": "Bakkafrost S-21 jan 25|1|2025",
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "runtime_ok": true,
+      "batch_id": 464,
+      "batch_number": "Bakkafrost S-21 jan 25",
+      "batch_status": "ACTIVE",
+      "batch_lifecycle_stage": "Smolt",
+      "batch_start_date": "2025-01-06",
+      "batch_actual_end_date": null,
+      "assignments_total": 183,
+      "assignments_active": 7,
+      "active_containers": [
+        "D2",
+        "D4",
+        "D3",
+        "D6",
+        "D1",
+        "D5",
+        "C12"
+      ],
+      "active_population_count_total": 764982
+    },
+    {
+      "label": "FW22_SF_MAR_25_1_2025",
+      "batch_key": "SF MAR 25|1|2025",
+      "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A",
+      "runtime_ok": true,
+      "batch_id": 496,
+      "batch_number": "SF MAR 25",
+      "batch_status": "ACTIVE",
+      "batch_lifecycle_stage": "Smolt",
+      "batch_start_date": "2025-03-27",
+      "batch_actual_end_date": null,
+      "assignments_total": 128,
+      "assignments_active": 6,
+      "active_containers": [
+        "S07",
+        "S05",
+        "S2_B4",
+        "S2_B3",
+        "S2_A2",
+        "S2_A1"
+      ],
+      "active_population_count_total": 838547
+    }
+  ]
+}

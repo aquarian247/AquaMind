@@ -1,0 +1,13 @@
+{
+  "station": "S08 Gj\u00f3gv",
+  "strict_summary_json": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/S08_station_wave_migration_summary_2026-02-17.json",
+  "strict_summary_md": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/S08_station_wave_migration_summary_2026-02-17.md",
+  "strict_migration_success": 6,
+  "strict_semantic_success": 6,
+  "strict_total": 6,
+  "recovery_summary_json": null,
+  "recovery_summary_md": null,
+  "recovery_migration_success": 0,
+  "recovery_semantic_success": 0,
+  "recovery_total": 0
+}

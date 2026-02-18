@@ -1,0 +1,92 @@
+{
+  "generated_at": "2026-02-16",
+  "station": "FW22 Applecross",
+  "profile": "fw_default",
+  "backup_horizon": "2026-01-22",
+  "skip_environmental": true,
+  "initial_wave": {
+    "migration_success_count": 8,
+    "semantic_success_count": 0,
+    "batch_count": 10,
+    "source_summary_json": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_migration_summary_2026-02-16.json"
+  },
+  "final_wave": {
+    "migration_success_count": 10,
+    "semantic_success_count": 10,
+    "batch_count": 10
+  },
+  "applied_fixes": [
+    "pilot_migrate_component.py: add FW22 D2->Smolt hall stage mapping",
+    "pilot_migrate_component.py: FW22 token-priority stage resolution when stage token exists",
+    "pilot_migrate_component.py: lifecycle-stage fallback for sparse metadata populations",
+    "migration_semantic_validation_report.py: treat external DestPopBefore as incomplete linkage evidence",
+    "migration_semantic_validation_report.py: treat positive lineage-graph fallback deltas as incomplete linkage for gating"
+  ],
+  "rows": [
+    {
+      "batch_key": "SF NOV 23|5|2023",
+      "component_key": "FA8EA452-AFE1-490D-B236-0150415B6E6F",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "AG FEB 24|1|2024",
+      "component_key": "9A2FCED1-721F-4893-AED7-0C07E24C715F",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF FEB 24|5|2024",
+      "component_key": "1E81696F-1749-4036-945B-0290B466B32C",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF MAY 24|6|2024",
+      "component_key": "E8FE9380-69EE-4D31-864D-0387E9880FB5",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF SEP 24|7|2024",
+      "component_key": "F78C939E-6282-46E9-8219-0B38550AF4BF",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF DEC 24|8|2024",
+      "component_key": "2626A8C5-1C77-40B4-89FF-00CDE7CE5D2F",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF MAR 25|1|2025",
+      "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF JUN 25|2|2025",
+      "component_key": "1A7421E3-6F19-4BEC-8749-00EC01B61CB7",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF JUL 25|3|2025",
+      "component_key": "95045310-2FE0-4533-B3CA-0329E953A705",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    },
+    {
+      "batch_key": "SF SEP 25|4|2025",
+      "component_key": "A88689DA-143C-490D-86FA-03661F67C7F6",
+      "migration_final": "PASS",
+      "semantic_final": "PASS"
+    }
+  ],
+  "artifacts": [
+    "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_semantic_rerun_after_linkage_patch_2026-02-16.json",
+    "aquamind/docs/progress/migration/analysis_reports/2026-02-16/profile_cohort_classification_post_fw22_recovery_2026-02-16.md",
+    "aquamind/docs/progress/migration/analysis_reports/2026-02-16/profile_cohort_classification_post_fw22_recovery_2026-02-16.summary.json"
+  ]
+}

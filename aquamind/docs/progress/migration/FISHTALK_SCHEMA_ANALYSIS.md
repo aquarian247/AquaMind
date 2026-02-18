@@ -1,8 +1,10 @@
 # FishTalk Database Schema Analysis
 
 **Date:** December 2024 (base export)  
-**Updated:** 2026-01-22 (input-based stitching + feeding schema corrections)  
+**Updated:** 2026-02-13 (usage positioning note; latest mapping rules live elsewhere)  
 **Source:** FishTalk Database Export + live schema inspection  
+
+> **Usage note (2026-02-13):** Treat this as a schema/reference dossier, not the primary migration runbook. For current execution rules and assignment-count behavior, start with `DATA_MAPPING_DOCUMENT.md` and `handoffs/HANDOFF_2026-02-13_S21_ASSIGNMENT_HISTORY_CALIBRATION.md`. Open `handoffs/HANDOFF_2026-02-11_FWSEA_LINKAGE_INVESTIGATION.md` only for FWSEA linkage / PopulationLink / XE trace tasks.
 
 ## Executive Summary
 
@@ -806,5 +808,5 @@ Source: `analysis_reports/2026-02-04/operation_type_mapping_2026-02-04.md` (samp
   - `outside component` = SubTransfer destinations outside the selected stitched population set.
   - `known removals` = mortality + culling + escapes + harvest counts.
 
-**Document Status:** Updated 2026-02-10
+**Document Status:** Reference document (schema-focused), updated 2026-02-13
 **Next Steps:** Extract sensor metadata tables and continue FW→Sea linkage research

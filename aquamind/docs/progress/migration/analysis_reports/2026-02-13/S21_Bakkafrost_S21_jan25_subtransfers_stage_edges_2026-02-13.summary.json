@@ -1,0 +1,42 @@
+{
+  "batch_key": {
+    "input_name": "Bakkafrost S-21 jan 25",
+    "input_number": "1",
+    "year_class": "2025"
+  },
+  "edge_csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-13/S21_Bakkafrost_S21_jan25_subtransfers_stage_edges_2026-02-13.csv",
+  "lineage_population_count": 160,
+  "lineage_site_counts": {
+    "S21 Vi\u00f0arei\u00f0i": 160
+  },
+  "lineage_stage_counts": {
+    "Egg&Alevin": 12,
+    "Fry": 24,
+    "Parr": 119,
+    "Smolt": 5
+  },
+  "seed_population_count": 7,
+  "stage_transition_pair_windows": {
+    "Egg&Alevin->Fry": {
+      "count": 12,
+      "max_time": "2025-04-02 09:25:57",
+      "min_time": "2025-04-02 09:24:17"
+    },
+    "Fry->Parr": {
+      "count": 18,
+      "max_time": "2025-07-09 13:01:26",
+      "min_time": "2025-07-07 08:29:12"
+    },
+    "Parr->Parr": {
+      "count": 66,
+      "max_time": "2025-10-29 09:08:41",
+      "min_time": "2025-08-26 11:54:43"
+    },
+    "Parr->Smolt": {
+      "count": 5,
+      "max_time": "2025-10-14 08:52:57",
+      "min_time": "2025-10-08 10:45:49"
+    }
+  },
+  "station_site_filter": "S21 Vi\u00f0arei\u00f0i"
+}

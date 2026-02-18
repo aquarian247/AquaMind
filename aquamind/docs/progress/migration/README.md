@@ -2,15 +2,26 @@
 
 This folder is the canonical home for migration documentation.
 
-## Start here (current, canonical)
+## Low-context bootstrap (default for new agents)
+Read only these 2 docs first:
+1. handoffs/HANDOFF_2026-02-13_S21_ASSIGNMENT_HISTORY_CALIBRATION.md
+2. DATA_MAPPING_DOCUMENT.md
+
+Read a 3rd doc only when the task explicitly concerns FWSEA linkage or SQL tracing:
+- handoffs/HANDOFF_2026-02-11_FWSEA_LINKAGE_INVESTIGATION.md
+
+Avoid preloading `analysis_reports/*` at startup; open only the report directly tied to the discrepancy being debugged.
+
+## Extended reference set
 1. MIGRATION_CANONICAL.md - runbook + current status
 2. MIGRATION_LESSONS_LEARNED.md - what works vs what does not
-3. DATA_MAPPING_DOCUMENT.md - field-level mapping blueprint
-4. FISHTALK_SCHEMA_ANALYSIS.md - source schema corrections/notes
-5. MIGRATION_BEST_PRACTICES.md - audit/idempotency standards
-6. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
+3. FISHTALK_SCHEMA_ANALYSIS.md - source schema corrections/notes (schema reference)
+4. MIGRATION_BEST_PRACTICES.md - audit/idempotency standards
+5. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
 ## Latest handoff
+- handoffs/HANDOFF_2026-02-13_S21_ASSIGNMENT_HISTORY_CALIBRATION.md - current assignment parity calibration baseline (S21)
+- handoffs/HANDOFF_2026-02-11_FWSEA_LINKAGE_INVESTIGATION.md - FWSEA linkage investigation track
 - handoffs/HANDOFF_2026-02-06.md - full-action batch migration baseline
 - handoffs/HANDOFF_2026-02-06_FOLLOWUP.md - FW station guard + stage sanity follow-up
 

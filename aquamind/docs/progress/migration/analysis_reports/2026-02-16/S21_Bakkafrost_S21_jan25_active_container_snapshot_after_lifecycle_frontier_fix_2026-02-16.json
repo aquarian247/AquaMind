@@ -1,0 +1,85 @@
+{
+  "active_container_count": 7,
+  "batch_id": 464,
+  "batch_lifecycle_stage": "Smolt",
+  "batch_number": "Bakkafrost S-21 jan 25",
+  "batch_status": "ACTIVE",
+  "expected_active_containers": [
+    "C12",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "missing_expected": [],
+  "observed_active_containers": [
+    "C12",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "rows": [
+    {
+      "assignment_date": "2025-10-09",
+      "container": "C12",
+      "departure_date": null,
+      "population_count": 99754,
+      "population_id": "9104535D-ED59-414B-AB2A-91230BC4BBFA",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-11-12",
+      "container": "D1",
+      "departure_date": null,
+      "population_count": 100419,
+      "population_id": "E2CCF882-96DC-4BAE-B041-038211291B62",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-17",
+      "container": "D2",
+      "departure_date": null,
+      "population_count": 80659,
+      "population_id": "A63B3748-9946-4D91-B63A-06CE5CC5A8F6",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-09",
+      "container": "D3",
+      "departure_date": null,
+      "population_count": 102842,
+      "population_id": "8CC87AFE-AC81-499C-84D6-B0D7EF4AE869",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-12-16",
+      "container": "D4",
+      "departure_date": null,
+      "population_count": 178206,
+      "population_id": "86E8B32B-1404-400F-A08C-613B1056F6B4",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-10-14",
+      "container": "D5",
+      "departure_date": null,
+      "population_count": 103716,
+      "population_id": "A8B2808F-8D88-432D-8305-395054A7181E",
+      "stage": "Smolt"
+    },
+    {
+      "assignment_date": "2025-11-18",
+      "container": "D6",
+      "departure_date": null,
+      "population_count": 99386,
+      "population_id": "4E8EAE3C-FA4C-4AE9-9EE6-5C17083581D7",
+      "stage": "Smolt"
+    }
+  ],
+  "unexpected_observed": []
+}

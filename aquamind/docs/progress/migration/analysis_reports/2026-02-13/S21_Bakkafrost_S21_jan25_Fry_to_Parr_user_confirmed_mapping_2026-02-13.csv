@@ -1,0 +1,23 @@
+source_container,target_container,mapping_confidence,mapping_source
+5M 1,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 1,A03,deterministic,user_zoom_confirmation_2026-02-13
+5M 1,A05,deterministic,user_zoom_confirmation_2026-02-13
+5M 1,B10,deterministic,user_zoom_confirmation_2026-02-13
+5M 1,B11,deterministic,user_zoom_confirmation_2026-02-13
+5M 2,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 2,A03,deterministic,user_zoom_confirmation_2026-02-13
+5M 2,A05,deterministic,user_zoom_confirmation_2026-02-13
+5M 2,B10,deterministic,user_zoom_confirmation_2026-02-13
+5M 2,B11,deterministic,user_zoom_confirmation_2026-02-13
+5M 3,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 3,A05,deterministic,user_zoom_confirmation_2026-02-13
+5M 3,B10,deterministic,user_zoom_confirmation_2026-02-13
+5M 4,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 4,A03,deterministic,user_zoom_confirmation_2026-02-13
+5M 4,B11,deterministic,user_zoom_confirmation_2026-02-13
+5M 5,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 5,A03,deterministic,user_zoom_confirmation_2026-02-13
+5M 5,B11,deterministic,user_zoom_confirmation_2026-02-13
+5M 6,A01,deterministic,user_zoom_confirmation_2026-02-13
+5M 6,A03,deterministic,user_zoom_confirmation_2026-02-13
+5M 6,B11,deterministic,user_zoom_confirmation_2026-02-13

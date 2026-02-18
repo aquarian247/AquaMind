@@ -67,7 +67,13 @@ from scripts.migration.extractors.base import (  # noqa: E402
     ExtractionContext,
 )
 from scripts.migration.history import save_with_history, get_or_create_with_history  # noqa: E402
-from scripts.migration.tools.etl_loader import ETLDataLoader  # noqa: E402
+from scripts.migration.tools.etl_loader import ETLDataLoader, HAS_PANDAS  # noqa: E402
+from scripts.migration.tools.migration_profiles import (  # noqa: E402
+    MIGRATION_PROFILE_NAMES,
+    STAGE_SELECTION_FRONTIER,
+    STAGE_SELECTION_LATEST_MEMBER,
+    get_migration_profile,
+)
 
 
 class DataSource:
@@ -82,6 +88,9 @@ class DataSource:
         else:
             self.loader = None
             self.extractor = BaseExtractor(ExtractionContext(profile=sql_profile))
+        # Cache latest non-zero status holder per source container id.
+        self._latest_nonzero_holder_by_container: dict[str, tuple[str, datetime] | None] = {}
+        self._container_latest_nonzero_holder_index: dict[str, tuple[str, datetime]] | None = None
     
     def get_global_latest_status_time(self) -> datetime | None:
         """Get the latest status time across all populations."""
@@ -463,6 +472,107 @@ class DataSource:
                 )
             return rows[0] if rows else None
 
+    def _build_container_latest_nonzero_holder_index_csv(self) -> dict[str, tuple[str, datetime]]:
+        """Build container -> latest non-zero holder index for CSV mode."""
+        if self._container_latest_nonzero_holder_index is not None:
+            return self._container_latest_nonzero_holder_index
+
+        index: dict[str, tuple[str, datetime]] = {}
+        if not HAS_PANDAS:
+            self._container_latest_nonzero_holder_index = index
+            return index
+
+        try:
+            import pandas as pd
+
+            populations_df = self.loader._load_csv_pandas("populations")[["PopulationID", "ContainerID"]]
+            status_df = self.loader._load_csv_pandas("status_values")[
+                ["PopulationID", "StatusTime", "CurrentCount", "CurrentBiomassKg"]
+            ]
+            status_df = status_df[status_df["StatusTime"] != ""]
+            if status_df.empty:
+                self._container_latest_nonzero_holder_index = index
+                return index
+
+            counts = pd.to_numeric(status_df["CurrentCount"], errors="coerce").fillna(0)
+            biomass = pd.to_numeric(status_df["CurrentBiomassKg"], errors="coerce").fillna(0)
+            nonzero_df = status_df[(counts > 0) | (biomass > 0)]
+            if nonzero_df.empty:
+                self._container_latest_nonzero_holder_index = index
+                return index
+
+            latest_by_population = (
+                nonzero_df.sort_values("StatusTime")
+                .groupby("PopulationID", as_index=False)
+                .tail(1)[["PopulationID", "StatusTime"]]
+            )
+            merged = latest_by_population.merge(populations_df, on="PopulationID", how="left")
+            merged = merged[merged["ContainerID"] != ""]
+            if merged.empty:
+                self._container_latest_nonzero_holder_index = index
+                return index
+
+            latest_by_container = (
+                merged.sort_values("StatusTime")
+                .groupby("ContainerID", as_index=False)
+                .tail(1)[["ContainerID", "PopulationID", "StatusTime"]]
+            )
+            for row in latest_by_container.to_dict("records"):
+                container_id = (row.get("ContainerID") or "").strip()
+                pop_id = (row.get("PopulationID") or "").strip()
+                status_time = parse_dt(row.get("StatusTime") or "")
+                if container_id and pop_id and status_time:
+                    index[container_id] = (pop_id, status_time)
+        except Exception as exc:
+            print(f"Warning: failed to build CSV latest-holder index: {exc}")
+            index = {}
+
+        self._container_latest_nonzero_holder_index = index
+        return index
+
+    def get_latest_nonzero_status_holder_for_container(
+        self,
+        container_id: str,
+    ) -> tuple[str, datetime] | None:
+        """Return latest non-zero status holder for a source container.
+
+        Returns:
+            tuple(population_id, status_time) when evidence exists, else None.
+        """
+        key = (container_id or "").strip()
+        if not key:
+            return None
+        if key in self._latest_nonzero_holder_by_container:
+            return self._latest_nonzero_holder_by_container[key]
+
+        holder: tuple[str, datetime] | None = None
+
+        if self.use_csv:
+            index = self._build_container_latest_nonzero_holder_index_csv()
+            holder = index.get(key)
+        else:
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT TOP 1 "
+                    "CONVERT(varchar(36), p.PopulationID) AS PopulationID, "
+                    "CONVERT(varchar(19), sv.StatusTime, 120) AS StatusTime "
+                    "FROM dbo.Populations p "
+                    "JOIN dbo.PublicStatusValues sv ON sv.PopulationID = p.PopulationID "
+                    f"WHERE p.ContainerID = '{key}' "
+                    "AND (ISNULL(sv.CurrentCount, 0) > 0 OR ISNULL(sv.CurrentBiomassKg, 0) > 0) "
+                    "ORDER BY sv.StatusTime DESC"
+                ),
+                headers=["PopulationID", "StatusTime"],
+            )
+            if rows:
+                pop_id = (rows[0].get("PopulationID") or "").strip()
+                status_time = parse_dt(rows[0].get("StatusTime") or "")
+                if pop_id and status_time:
+                    holder = (pop_id, status_time)
+
+        self._latest_nonzero_holder_by_container[key] = holder
+        return holder
+
     @staticmethod
     def _has_nonzero_status(snapshot: dict) -> bool:
         try:
@@ -661,6 +771,14 @@ S21_HALL_STAGE_MAP = {
     "ROGN": "Egg&Alevin",
 }
 
+SITE_STAGE_FALLBACK_MAP = {
+    # S04 cohorts can arrive without hall metadata in grouped organisation.
+    # Token evidence across S04 hatchery members is overwhelmingly Fry, so we
+    # use this as the deterministic fallback when hall-based resolution is
+    # unavailable.
+    "S04 HÚSAR": "Fry",
+}
+
 FW22_APPLECROSS_HALL_STAGE_MAP = {
     "A1": "Egg&Alevin",
     "A2": "Egg&Alevin",
@@ -669,6 +787,7 @@ FW22_APPLECROSS_HALL_STAGE_MAP = {
     "C1": "Parr",
     "C2": "Parr",
     "D1": "Smolt",
+    "D2": "Smolt",
     "E1": "Post-Smolt",
     "E2": "Post-Smolt",
 }
@@ -1418,6 +1537,15 @@ Stitching approaches:
         ),
     )
     parser.add_argument(
+        "--migration-profile",
+        default="fw_default",
+        choices=MIGRATION_PROFILE_NAMES,
+        help=(
+            "Migration profile preset to apply (default: fw_default). "
+            "Profiles allow cohort-family behavior without forking scripts."
+        ),
+    )
+    parser.add_argument(
         "--active-window-days",
         type=int,
         default=365,
@@ -1436,12 +1564,23 @@ Stitching approaches:
         help="Days from batch start to include in creation workflow (default: 60)",
     )
     parser.add_argument(
+        "--lifecycle-frontier-window-hours",
+        type=int,
+        default=None,
+        help=(
+            "Override profile value: when stage selection mode is frontier, "
+            "consider latest per-container non-zero holders within this many "
+            "hours of the component frontier timestamp and pick the most "
+            "advanced stage among candidates."
+        ),
+    )
+    parser.add_argument(
         "--same-stage-supersede-max-hours",
         type=int,
-        default=24,
+        default=None,
         help=(
-            "Zero only short-lived same-stage superseded populations whose lifespan "
-            "is <= this many hours (default: 24)."
+            "Override profile value: zero only short-lived same-stage "
+            "superseded populations whose lifespan is <= this many hours."
         ),
     )
     parser.add_argument(
@@ -1467,6 +1606,34 @@ Stitching approaches:
 
 def main() -> int:
     args = build_parser().parse_args()
+
+    migration_profile = get_migration_profile(args.migration_profile)
+    lifecycle_frontier_window_hours = (
+        int(args.lifecycle_frontier_window_hours)
+        if args.lifecycle_frontier_window_hours is not None
+        else int(migration_profile.lifecycle_frontier_window_hours)
+    )
+    same_stage_supersede_max_hours = (
+        int(args.same_stage_supersede_max_hours)
+        if args.same_stage_supersede_max_hours is not None
+        else int(migration_profile.same_stage_supersede_max_hours)
+    )
+    stage_selection_mode = migration_profile.stage_selection_mode
+    enforce_latest_holder_consistency = (
+        migration_profile.enforce_latest_container_holder_consistency
+    )
+    suppress_orphan_zero_assignments = (
+        migration_profile.suppress_orphan_zero_assignments
+    )
+    print(
+        "Migration profile selected: "
+        f"{migration_profile.name} "
+        f"(stage_mode={stage_selection_mode}, "
+        f"frontier_window_h={lifecycle_frontier_window_hours}, "
+        f"supersede_max_h={same_stage_supersede_max_hours}, "
+        f"latest_holder_consistency={enforce_latest_holder_consistency}, "
+        f"suppress_orphan_zero={suppress_orphan_zero_assignments})"
+    )
     
     # Determine which stitching approach to use
     use_linked_batch = args.batch_id is not None
@@ -1662,26 +1829,36 @@ def main() -> int:
 
     def resolve_stage_name(member: ComponentMember) -> str | None:
         group_meta = container_grouping.get(member.container_id, {})
+        site_key = normalize_key(group_meta.get("site"))
+        token_stage = fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
+        # FW22 cohorts show hall-stage drift over time; trust explicit member
+        # stage tokens first when present, then fall back to static hall maps.
+        if site_key == "FW22 APPLECROSS" and token_stage:
+            return token_stage
         hall_stage = stage_from_hall(group_meta.get("site"), group_meta.get("container_group"))
         if hall_stage:
             return hall_stage
         hint_stage = hall_stage_hints.get(
             (
-                normalize_key(group_meta.get("site")),
+                site_key,
                 normalize_key(group_meta.get("container_group")),
             )
         )
         if hint_stage:
             return hint_stage
+        site_stage_fallback = SITE_STAGE_FALLBACK_MAP.get(site_key)
+        if site_stage_fallback:
+            return site_stage_fallback
         prod_stage = (group_meta.get("prod_stage") or "").upper()
         if prod_stage:
             if "MARINE" in prod_stage or "BROOD" in prod_stage:
                 return "Adult"
             if "SMOLT" in prod_stage:
                 return "Smolt"
-        return fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
+        return token_stage
 
     population_ids = [m.population_id for m in members if m.population_id]
+    member_by_population_id = {m.population_id: m for m in members if m.population_id}
     stage_by_pop = {m.population_id: resolve_stage_name(m) for m in members if m.population_id}
     latest_status_time_by_pop: dict[str, datetime] = {}
     latest_status_nonzero_by_pop: dict[str, bool] = {}
@@ -1708,11 +1885,18 @@ def main() -> int:
                 data_source._has_nonzero_status(snapshot) if snapshot else False
             )
 
+    component_subtransfers = data_source.get_subtransfers(set(population_ids))
     conserved_counts, superseded_same_stage = build_conserved_population_counts(members, data_source, stage_by_pop)
     external_mixing_population_ids = identify_external_mixing_populations(
         set(population_ids),
-        data_source.get_subtransfers(set(population_ids)),
+        component_subtransfers,
     )
+    subtransfer_touched_population_ids: set[str] = set()
+    for row in component_subtransfers:
+        for key in ("SourcePopBefore", "SourcePopAfter", "DestPopBefore", "DestPopAfter"):
+            pop_id = (row.get(key) or "").strip()
+            if pop_id:
+                subtransfer_touched_population_ids.add(pop_id)
     removal_counts_by_population = data_source.get_removal_counts_by_population(set(population_ids))
     if conserved_counts:
         nonzero_counts = sum(1 for count in conserved_counts.values() if count > 0)
@@ -1745,13 +1929,30 @@ def main() -> int:
         if member.end_time is None:
             continue
         duration = member.end_time - member.start_time
-        if duration > timedelta(hours=args.same_stage_supersede_max_hours):
+        if duration > timedelta(hours=same_stage_supersede_max_hours):
             continue
         stage_name = stage_by_pop.get(member.population_id) or resolve_stage_name(member)
         if not stage_name:
             continue
         same_day_bridge_keys.add((member.container_id, stage_name, member.start_time.date()))
         same_day_bridge_keys.add((member.container_id, stage_name, member.end_time.date()))
+
+    def is_long_companion_same_day_bridge(
+        member: ComponentMember,
+        lifecycle_name: str | None,
+        status_count: int | None,
+    ) -> bool:
+        if status_count is None or status_count <= 0:
+            return False
+        if not lifecycle_name:
+            return False
+        bridge_key = (member.container_id, lifecycle_name, member.start_time.date())
+        if bridge_key not in same_day_bridge_keys:
+            return False
+        if member.end_time is None:
+            return True
+        duration = member.end_time - member.start_time
+        return duration > timedelta(hours=same_stage_supersede_max_hours)
 
     stage_start_dates: dict[str, date] = {}
     for member in members:
@@ -1787,8 +1988,27 @@ def main() -> int:
         current = container_latest.get(member.container_id)
         if not current or candidate_time > current[0]:
             container_latest[member.container_id] = (candidate_time, member.population_id)
-    for container_id, (_, population_id) in container_latest.items():
+
+    skipped_due_outside_holder = 0
+    for container_id, (candidate_time, population_id) in container_latest.items():
+        if enforce_latest_holder_consistency:
+            latest_holder = data_source.get_latest_nonzero_status_holder_for_container(container_id)
+            # If the source container's latest non-zero holder is a different
+            # population after this component's candidate timestamp, this cohort no
+            # longer owns the latest occupancy in that container.
+            if latest_holder and latest_holder[0] != population_id and latest_holder[1] > candidate_time:
+                skipped_due_outside_holder += 1
+                continue
         active_population_by_container[container_id] = population_id
+    if enforce_latest_holder_consistency and skipped_due_outside_holder:
+        print(
+            "Filtered active-container candidates due to later outside-component "
+            f"latest holders: {skipped_due_outside_holder}"
+        )
+    elif not enforce_latest_holder_consistency:
+        print("Latest-holder consistency gate disabled by selected migration profile.")
+    if has_active_member and not active_population_by_container:
+        has_active_member = False
 
     batch_end = max((m.end_time for m in members if m.end_time), default=None)
     batch_end_date = batch_end.date() if batch_end else None
@@ -1797,17 +2017,55 @@ def main() -> int:
         component_status_time.date() if component_status_time else batch_end_date
     )
 
-    current_member = None
-    current_member_time = None
-    for member in members:
-        candidate_time = latest_status_time_by_pop.get(member.population_id) or member.end_time or member.start_time
-        if not current_member_time or candidate_time > current_member_time:
-            current_member_time = candidate_time
-            current_member = member
-
     lifecycle_stage_name = None
-    if current_member:
-        lifecycle_stage_name = resolve_stage_name(current_member)
+    frontier_rows: list[tuple[datetime, str, str]] = []
+    for container_id, population_id in active_population_by_container.items():
+        member = member_by_population_id.get(population_id)
+        if member is None:
+            continue
+        stage_name = stage_by_pop.get(population_id) or resolve_stage_name(member)
+        if not stage_name:
+            continue
+        candidate_time = latest_status_time_by_pop.get(population_id) or member.end_time or member.start_time
+        frontier_rows.append((candidate_time, stage_name, population_id))
+
+    if stage_selection_mode == STAGE_SELECTION_FRONTIER and frontier_rows:
+        frontier_anchor_time = max(row[0] for row in frontier_rows)
+        frontier_window = timedelta(hours=max(int(lifecycle_frontier_window_hours), 1))
+        frontier_cutoff = frontier_anchor_time - frontier_window
+        frontier_near_cutoff = [row for row in frontier_rows if row[0] >= frontier_cutoff]
+        frontier_stage_counts = Counter(
+            stage_name
+            for _, stage_name, _ in frontier_near_cutoff
+            if stage_name in STAGE_INDEX
+        )
+        if frontier_stage_counts:
+            lifecycle_stage_name = max(
+                frontier_stage_counts,
+                key=lambda stage_name: (
+                    STAGE_INDEX.get(stage_name, -1),
+                    frontier_stage_counts[stage_name],
+                    stage_name,
+                ),
+            )
+            print(
+                "Lifecycle stage selected from active frontier "
+                f"(anchor={frontier_anchor_time}, window={frontier_window}): "
+                f"{lifecycle_stage_name} from {dict(frontier_stage_counts)}"
+            )
+    elif stage_selection_mode == STAGE_SELECTION_LATEST_MEMBER:
+        print("Lifecycle stage mode=latest_member: skipping frontier aggregation.")
+
+    if not lifecycle_stage_name:
+        current_member = None
+        current_member_time = None
+        for member in members:
+            candidate_time = latest_status_time_by_pop.get(member.population_id) or member.end_time or member.start_time
+            if not current_member_time or candidate_time > current_member_time:
+                current_member_time = candidate_time
+                current_member = member
+        if current_member:
+            lifecycle_stage_name = resolve_stage_name(current_member)
     if not lifecycle_stage_name and members:
         for member in members:
             lifecycle_stage_name = resolve_stage_name(member)
@@ -2158,21 +2416,20 @@ def main() -> int:
             )
 
         assignment_by_population_id: dict[str, BatchContainerAssignment] = {}
+        lifecycle_fallback_population_ids: list[str] = []
 
         # Create assignments (1 per FishTalk PopulationID)
+        skipped_orphan_zero_assignments = 0
         for member in members:
             assignment_map = get_external_map("Populations", member.population_id)
             container = aquamind_container_by_source[member.container_id]
 
             lifecycle_name = resolve_stage_name(member)
             if not lifecycle_name:
-                group_meta = container_grouping.get(member.container_id, {})
-                raise SystemExit(
-                    "Unable to resolve lifecycle stage for population "
-                    f"{member.population_id} (site={group_meta.get('site')}, "
-                    f"container_group={group_meta.get('container_group')}). "
-                    "Add stage mapping or hall mapping."
-                )
+                # Last-resort fallback for sparse source metadata rows. This
+                # keeps migration progressing while still surfacing telemetry.
+                lifecycle_name = lifecycle_stage_name
+                lifecycle_fallback_population_ids.append(member.population_id)
             stage = LifeCycleStage.objects.filter(name=lifecycle_name).first()
             if stage is None:
                 raise SystemExit(
@@ -2243,71 +2500,57 @@ def main() -> int:
                 # removals exist for this population, baseline cannot remain 0.
                 count = known_removals
 
+            member_has_stage_tokens = bool(
+                (member.first_stage or "").strip() or (member.last_stage or "").strip()
+            )
+            duration = (member.end_time - member.start_time) if member.end_time else None
+            is_short_superseded = (
+                duration is not None
+                and duration <= timedelta(hours=same_stage_supersede_max_hours)
+            )
+            long_bridge_companion = is_long_companion_same_day_bridge(
+                member=member,
+                lifecycle_name=lifecycle_name,
+                status_count=status_count,
+            )
+
             if member.population_id in superseded_same_stage:
-                duration = (member.end_time - member.start_time) if member.end_time else None
-                group_meta = container_grouping.get(member.container_id, {})
-                site_key = normalize_key(group_meta.get("site"))
-                hall_key = normalize_key(group_meta.get("container_group"))
-                is_initial_fry_day = (
-                    lifecycle_name == "Fry"
-                    and member.start_time.date() == stage_start_dates.get("Fry")
-                )
-                parr_start = stage_start_dates.get("Parr")
-                is_s21_parr_handoff_window = (
-                    lifecycle_name == "Parr"
-                    and site_key == "S21 VIÐAREIÐI"
-                    and hall_key in {"A", "BA", "BB"}
-                    and parr_start is not None
-                    and member.start_time.date() <= (parr_start + timedelta(days=2))
-                )
-                allow_bridge_preserve = is_initial_fry_day or is_s21_parr_handoff_window
-                is_long_companion_to_short_bridge = (
-                    status_count is not None
-                    and status_count > 0
-                    and allow_bridge_preserve
-                    and (member.container_id, lifecycle_name, member.start_time.date()) in same_day_bridge_keys
-                    and (duration is None or duration > timedelta(hours=args.same_stage_supersede_max_hours))
-                )
-                if is_long_companion_to_short_bridge:
+                if long_bridge_companion:
                     # Keep long-lived companion rows when paired with short bridge rows
                     # in the same container+stage on the transfer boundary date.
                     count = status_count
-                elif member.population_id in superseded_with_operational_activity:
-                    # Keep operationally material rows (feeding/health/mortality/etc.).
-                    # These are not just temporary transfer bridges even if superseded.
-                    # Use a conservative floor (known removals) without promoting to
-                    # status snapshots, to avoid inflating stage-entry populations.
-                    count = max(count, known_removals)
-                else:
-                    # Default same-stage suppression avoids double-counting propagated chains.
+                elif (
+                    is_short_superseded
+                    and member.population_id not in superseded_with_operational_activity
+                ):
+                    # Suppress short-lived same-stage bridge rows by default.
                     count = 0
                     biomass = Decimal("0.00")
-            elif status_count is not None and status_count > 0:
-                duration = (member.end_time - member.start_time) if member.end_time else None
-                group_meta = container_grouping.get(member.container_id, {})
-                site_key = normalize_key(group_meta.get("site"))
-                hall_key = normalize_key(group_meta.get("container_group"))
-                is_initial_fry_day = (
-                    lifecycle_name == "Fry"
-                    and member.start_time.date() == stage_start_dates.get("Fry")
-                )
-                parr_start = stage_start_dates.get("Parr")
-                is_s21_parr_handoff_window = (
-                    lifecycle_name == "Parr"
-                    and site_key == "S21 VIÐAREIÐI"
-                    and hall_key in {"A", "BA", "BB"}
-                    and parr_start is not None
-                    and member.start_time.date() <= (parr_start + timedelta(days=2))
-                )
-                allow_bridge_preserve = is_initial_fry_day or is_s21_parr_handoff_window
-                is_long_companion_to_short_bridge = (
-                    allow_bridge_preserve
-                    and
-                    (member.container_id, lifecycle_name, member.start_time.date()) in same_day_bridge_keys
-                    and (duration is None or duration > timedelta(hours=args.same_stage_supersede_max_hours))
-                )
-                if is_long_companion_to_short_bridge:
+                else:
+                    # For long-lived superseded rows, prefer status-at-start where available.
+                    # This improves lane-level alignment when SubTransfers conservation and
+                    # status snapshots diverge in externally mixed chains.
+                    if status_count is not None and status_count > 0:
+                        count = max(status_count, known_removals)
+                    elif member.population_id in superseded_with_operational_activity:
+                        count = max(count, known_removals)
+                    elif is_short_superseded:
+                        count = 0
+                        biomass = Decimal("0.00")
+            elif long_bridge_companion:
+                # Preserve entry snapshot for long row paired with short same-day bridge.
+                # This keeps assignment history aligned with lane-level swimlane evidence.
+                if status_count is not None:
                     count = status_count
+            elif (
+                status_count is not None
+                and status_count > 0
+                and not member_has_stage_tokens
+                and member.population_id in external_mixing_population_ids
+            ):
+                # For blank-token same-container rows in externally mixed chains,
+                # prefer lane-level status-at-start evidence.
+                count = status_count
             count = max(count, 0)
             if count == 0:
                 biomass = Decimal("0.00")
@@ -2344,6 +2587,9 @@ def main() -> int:
             if assignment_active and lifecycle_stage_name and stage and stage.name != lifecycle_stage_name:
                 assignment_active = False
 
+            if assignment_active and member.container_id not in active_population_by_container:
+                assignment_active = False
+
             if assignment_active and active_population_id and active_population_id != member.population_id:
                 assignment_active = False
 
@@ -2358,6 +2604,19 @@ def main() -> int:
                 assignment_departure = member.end_time.date()
             else:
                 assignment_departure = None
+
+            suppress_orphan_zero_assignment = (
+                not assignment_active
+                and count <= 0
+                and not member_has_stage_tokens
+                and stage.name != "Post-Smolt"
+                and member.population_id not in subtransfer_touched_population_ids
+                and known_removals <= 0
+                and (status_count is None or status_count <= 0)
+            )
+            if suppress_orphan_zero_assignments and suppress_orphan_zero_assignment:
+                skipped_orphan_zero_assignments += 1
+                continue
 
             defaults = {
                 "batch": batch,
@@ -2398,6 +2657,13 @@ def main() -> int:
             )
 
             assignment_by_population_id[member.population_id] = assignment
+
+        if skipped_orphan_zero_assignments:
+            print(
+                "Suppressed orphan zero-count assignment rows "
+                f"(blank stage tokens + no subtransfer edge + no count evidence): "
+                f"{skipped_orphan_zero_assignments}"
+            )
 
         initial_stage_name = lifecycle_stage.name if lifecycle_stage else lifecycle_stage_name
         member_stage_names = {
@@ -2531,7 +2797,13 @@ def main() -> int:
                 action_map = get_external_map("PopulationCreationAction", member.population_id)
                 if action_map:
                     creation_action = CreationAction.objects.get(pk=action_map.target_object_id)
-                    action_number = creation_action.action_number or next_available_action_number()
+                    same_workflow = creation_action.workflow_id == creation_workflow.pk
+                    if same_workflow and creation_action.action_number:
+                        action_number = creation_action.action_number
+                    else:
+                        # Re-mapped actions from another workflow cannot safely
+                        # reuse their prior ordinal in this workflow.
+                        action_number = next_available_action_number()
                 else:
                     creation_action = None
                     action_number = next_available_action_number()
@@ -2579,6 +2851,14 @@ def main() -> int:
 
         print(f"Migrated component_key={component_key} into Batch(batch_number={batch.batch_number})")
         print(f"Assignments created/updated: {len(members)}")
+        if lifecycle_fallback_population_ids:
+            sample_ids = ", ".join(lifecycle_fallback_population_ids[:5])
+            print(
+                "Lifecycle-stage fallback applied to "
+                f"{len(lifecycle_fallback_population_ids)} population(s) "
+                f"using batch stage '{lifecycle_stage_name}'. "
+                f"Sample IDs: {sample_ids}"
+            )
 
     return 0
 

@@ -1,0 +1,44 @@
+{
+  "assignment_counts": [
+    {
+      "assignment_population_count": 177853,
+      "conserved_count": 295051,
+      "population_id": "F17CB304-A568-43EA-A950-26E8933D0F70",
+      "status_at_start_count": 177853
+    },
+    {
+      "assignment_population_count": 118966,
+      "conserved_count": 229648,
+      "population_id": "04255994-08CF-41B6-A52E-1D8264A6C99A",
+      "status_at_start_count": 118966
+    },
+    {
+      "assignment_population_count": 47912,
+      "conserved_count": 81783,
+      "population_id": "18752ED9-C157-4247-80FF-B4E2DD4B7BE8",
+      "status_at_start_count": 47912
+    },
+    {
+      "assignment_population_count": 47349,
+      "conserved_count": 82038,
+      "population_id": "9C2252EE-31F0-4184-90EC-8DE919BBAFDE",
+      "status_at_start_count": 47349
+    },
+    {
+      "assignment_population_count": 0,
+      "conserved_count": 88497,
+      "population_id": "F1CFAB0C-E3DE-40E1-AC0B-A1E0AB76E3DE",
+      "status_at_start_count": 53308
+    },
+    {
+      "assignment_population_count": 73853,
+      "conserved_count": 125190,
+      "population_id": "98B9B6BE-06DC-42A3-9731-9E0242EB5439",
+      "status_at_start_count": 73853
+    }
+  ],
+  "batch_id": 464,
+  "container": "B02",
+  "materialized_assignments": 6,
+  "segment_count": 6
+}

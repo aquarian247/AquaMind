@@ -1,0 +1,353 @@
+{
+  "batch": {
+    "batch_number": "StofnFiskur mars 2024",
+    "id": 543
+  },
+  "component_key": "0CED8E8A-D16C-4616-9CA9-5D028D32D0B8",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "241.0002",
+      "241.0012",
+      "241.0013",
+      "241.0014",
+      "241.0015",
+      "241.0016",
+      "241.0017",
+      "241.0018",
+      "241.0019",
+      "241.0020"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "241.0028",
+      "241.0030",
+      "241.0034",
+      "241.0036",
+      "241.0040",
+      "241.0042",
+      "241.0046",
+      "241.0048",
+      "241.0052",
+      "241.0054"
+    ],
+    "real_stage_entry_fishgroup_count": 13,
+    "temporary_bridge_fishgroup_count": 98,
+    "temporary_bridge_population_count": 98
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 305,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 305,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 242086,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": true
+  },
+  "population_count": 305,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 1)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 1,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {},
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {
+          "Hatchery": 97
+        },
+        "by_site": {
+          "S08 Gj\u00f3gv": 97
+        },
+        "by_site_group": {
+          "Unknown": 97
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 97
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {
+          "Hatchery": 2
+        },
+        "by_site": {
+          "S08 Gj\u00f3gv": 2
+        },
+        "edge_count": 2
+      },
+      "direct_external_population_count": 43,
+      "direct_population_summary": {
+        "by_prod_stage": {
+          "Hatchery": 43
+        },
+        "by_site": {
+          "S08 Gj\u00f3gv": 43
+        },
+        "by_site_group": {
+          "Unknown": 43
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 43
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {
+          "Hatchery": 13
+        },
+        "by_site": {
+          "S08 Gj\u00f3gv": 13
+        },
+        "edge_count": 13
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {
+          "Hatchery": 30
+        },
+        "by_site": {
+          "S08 Gj\u00f3gv": 30
+        },
+        "edge_count": 30
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {
+      "Fry": 40000,
+      "Smolt": 0
+    },
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 1,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 1,
+        "entry_date": "2024-03-12",
+        "entry_population_ids": [
+          "0CED8E8A-D16C-4616-9CA9-5D028D32D0B8"
+        ],
+        "entry_real_fishgroup_count": 1,
+        "entry_window_end": "2024-03-14",
+        "full_to_entry_ratio": 1.0,
+        "full_to_peak_ratio": 1.0,
+        "nonzero_assignment_count": 1,
+        "order": 1,
+        "peak_concurrent_date": "2024-03-12",
+        "peak_concurrent_population": 400000,
+        "population_entry": 400000,
+        "population_total": 400000,
+        "stage": "Egg&Alevin"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 147,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 10,
+        "entry_date": "2024-06-03",
+        "entry_population_ids": [
+          "17634AA6-8B2F-4375-9966-87C46D1C58A0",
+          "58DB4D48-5D11-4B3D-9DB8-B2A17766E1F2",
+          "5AB00864-41C8-4BB7-9D06-98E715DC37C6",
+          "63F8D7CA-9D07-46A1-A347-70C0585FD219",
+          "6430194D-BC66-4E57-A6B4-40334B1D7F65",
+          "7BF5A60C-4117-42BD-8FF0-825B2FE8050F",
+          "7E8D2621-2A9F-4E2D-BD53-32376A7C861E",
+          "86A25E6E-B532-46DB-8594-DFABE76C6974",
+          "8C934995-7C8A-4DE2-B5DE-50B47DBF7885",
+          "CE240C99-7AF3-4119-B5E5-798CA82113F9"
+        ],
+        "entry_real_fishgroup_count": 10,
+        "entry_window_end": "2024-06-05",
+        "full_to_entry_ratio": 4.19,
+        "full_to_peak_ratio": 2.13,
+        "nonzero_assignment_count": 121,
+        "order": 2,
+        "peak_concurrent_date": "2024-07-09",
+        "peak_concurrent_population": 764796,
+        "population_entry": 388110,
+        "population_total": 1627373,
+        "stage": "Fry"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 135,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 1,
+        "entry_date": "2024-09-10",
+        "entry_population_ids": [
+          "9B1FCBF1-4D25-451D-B21F-016DFA333977"
+        ],
+        "entry_real_fishgroup_count": 1,
+        "entry_window_end": "2024-09-12",
+        "full_to_entry_ratio": 26.67,
+        "full_to_peak_ratio": 3.26,
+        "nonzero_assignment_count": 63,
+        "order": 4,
+        "peak_concurrent_date": "2025-02-25",
+        "peak_concurrent_population": 418352,
+        "population_entry": 51157,
+        "population_total": 1364468,
+        "stage": "Smolt"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 22,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 1,
+        "entry_date": "2024-08-20",
+        "entry_population_ids": [
+          "7E89BBC9-4076-4A63-B98F-AD0C16605FFB"
+        ],
+        "entry_real_fishgroup_count": 1,
+        "entry_window_end": "2024-08-22",
+        "full_to_entry_ratio": 6.04,
+        "full_to_peak_ratio": 2.39,
+        "nonzero_assignment_count": 14,
+        "order": 5,
+        "peak_concurrent_date": "2024-11-26",
+        "peak_concurrent_population": 331215,
+        "population_entry": 131166,
+        "population_total": 791691,
+        "stage": "Post-Smolt"
+      }
+    ],
+    "transition_basis_counts": {
+      "entry_window": 2,
+      "fishgroup_bridge_aware": 1
+    },
+    "transition_bridge_aware_count": 1,
+    "transition_count": 3,
+    "transition_entry_window_count": 2,
+    "transition_entry_window_reason_counts": {
+      "bridge_aware": 1,
+      "incomplete_linkage": 2
+    },
+    "transition_lineage_graph_count": 1,
+    "transitions": [
+      {
+        "basis": "fishgroup_bridge_aware",
+        "bridge_aware_eligible": true,
+        "delta": 0,
+        "drop": 0,
+        "entry_population_count": 10,
+        "entry_population_external_source_count": 9,
+        "entry_window_reason": "bridge_aware",
+        "from_population": 400000,
+        "from_stage": "Egg&Alevin",
+        "increase": 0,
+        "lineage_graph_used": true,
+        "linked_destination_population_count": 10,
+        "linked_source_population_count": 1,
+        "to_population": 400000,
+        "to_stage": "Fry",
+        "unexplained_drop_vs_known_losses": 0
+      },
+      {
+        "basis": "entry_window",
+        "bridge_aware_eligible": false,
+        "delta": -336953,
+        "drop": 336953,
+        "entry_population_count": 1,
+        "entry_population_external_source_count": 0,
+        "entry_window_reason": "incomplete_linkage",
+        "from_population": 388110,
+        "from_stage": "Fry",
+        "increase": 0,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 0,
+        "linked_source_population_count": 0,
+        "to_population": 51157,
+        "to_stage": "Smolt",
+        "unexplained_drop_vs_known_losses": 94867
+      },
+      {
+        "basis": "entry_window",
+        "bridge_aware_eligible": false,
+        "delta": 80009,
+        "drop": 0,
+        "entry_population_count": 1,
+        "entry_population_external_source_count": 1,
+        "entry_window_reason": "incomplete_linkage",
+        "from_population": 51157,
+        "from_stage": "Smolt",
+        "increase": 80009,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 0,
+        "linked_source_population_count": 0,
+        "to_population": 131166,
+        "to_stage": "Post-Smolt",
+        "unexplained_drop_vs_known_losses": 0
+      }
+    ],
+    "zero_assignment_bridge_count": 86,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 20,
+    "zero_assignment_total_count": 106
+  },
+  "transfer_actions": {
+    "total_count": 151,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2025-07-21T18:31:04",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2025-07-21T18:31:04",
+    "end_was_capped": false,
+    "start": "2024-03-12T14:35:02"
+  }
+}

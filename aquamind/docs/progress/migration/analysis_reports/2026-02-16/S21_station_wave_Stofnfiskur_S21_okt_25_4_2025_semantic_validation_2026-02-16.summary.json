@@ -1,0 +1,200 @@
+{
+  "batch": {
+    "batch_number": "Stofnfiskur S21 okt 25",
+    "id": 473
+  },
+  "component_key": "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "254.0001",
+      "254.0002"
+    ],
+    "example_temporary_bridge_fishgroups": [],
+    "real_stage_entry_fishgroup_count": 2,
+    "temporary_bridge_fishgroup_count": 0,
+    "temporary_bridge_population_count": 0
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 2,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 2,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 270,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": false
+  },
+  "population_count": 2,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 0,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {
+      "containers_checked": 2,
+      "latest_holder_in_component_count": 2,
+      "latest_holder_outside_component_count": 0,
+      "latest_holder_unknown_count": 0,
+      "rows": [
+        {
+          "component_population_id": "BEA67C9F-2059-4056-B3EB-C26D0C0ECBA8",
+          "container_name": "R6",
+          "latest_biomass_kg": 44.7,
+          "latest_count": 223509,
+          "latest_in_component": true,
+          "latest_population_id": "BEA67C9F-2059-4056-B3EB-C26D0C0ECBA8",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "S21 Vi\u00f0arei\u00f0i",
+          "source_container_id": "C6D5D466-7600-44FF-B93F-747AD75443BC"
+        },
+        {
+          "component_population_id": "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F",
+          "container_name": "R7",
+          "latest_biomass_kg": 50.25,
+          "latest_count": 251266,
+          "latest_in_component": true,
+          "latest_population_id": "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "S21 Vi\u00f0arei\u00f0i",
+          "source_container_id": "ED570DCD-204C-4C30-A694-8C1C4CE4C81E"
+        }
+      ]
+    },
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "by_site_group": {},
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 0
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "direct_external_population_count": 0,
+      "direct_population_summary": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "by_site_group": {},
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 0
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {},
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 2,
+        "active_population_total": 474775,
+        "assignment_count": 2,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 2,
+        "entry_date": "2025-10-29",
+        "entry_population_ids": [
+          "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F",
+          "BEA67C9F-2059-4056-B3EB-C26D0C0ECBA8"
+        ],
+        "entry_real_fishgroup_count": 2,
+        "entry_window_end": "2025-10-31",
+        "full_to_entry_ratio": 1.0,
+        "full_to_peak_ratio": 1.0,
+        "nonzero_assignment_count": 2,
+        "order": 1,
+        "peak_concurrent_date": "2025-10-29",
+        "peak_concurrent_population": 474775,
+        "population_entry": 474775,
+        "population_total": 474775,
+        "stage": "Egg&Alevin"
+      }
+    ],
+    "transition_basis_counts": {},
+    "transition_bridge_aware_count": 0,
+    "transition_count": 0,
+    "transition_entry_window_count": 0,
+    "transition_entry_window_reason_counts": {},
+    "transition_lineage_graph_count": 0,
+    "transitions": [],
+    "zero_assignment_bridge_count": 0,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 0,
+    "zero_assignment_total_count": 0
+  },
+  "transfer_actions": {
+    "total_count": 0,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2026-02-16T15:32:59.505715",
+    "start": "2025-10-29T13:13:47"
+  }
+}

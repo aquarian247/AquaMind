@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "classification_tsv": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_nonzero_candidate_classification_2026-02-12.tsv",
+    "reverse_flow_rows_tsv": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_reverse_flow_rows_2026-02-12.tsv"
+  },
+  "classification_counts": {
+    "reverse_flow_fw_only": 3,
+    "true_fw_to_sea_candidate": 3,
+    "true_fw_to_sea_sparse_evidence": 1
+  },
+  "high_signal_persistent_fail_cohort_count": 3,
+  "matrix_source": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-11/fw20_endpoint_gate_matrix_diag_source3_min4_2026-02-11/fw20_endpoint_gate_matrix.summary.json",
+  "nonzero_candidate_cohort_count": 7,
+  "reverse_flow_row_count": 3
+}

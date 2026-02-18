@@ -1,0 +1,13 @@
+source_container,target_container,transferred_count,transferred_biomass_kg,mapping_basis
+R1,5M 1,200364,20.04,direct_lane_plus_residual_proof
+R2,5M 2,209198,20.92,direct_lane_plus_residual_proof
+R3,5M 3,215280,21.53,direct_lane_plus_residual_proof
+R4,5M 4,198185,19.82,direct_lane_plus_residual_proof
+R5,5M 5,195865,19.59,direct_lane_plus_residual_proof
+R6,5M 6,191417,19.14,direct_lane_plus_residual_proof
+R7,5M 1,29928,2.99,residual_even_split
+R7,5M 2,29928,2.99,residual_even_split
+R7,5M 3,29928,2.99,residual_even_split
+R7,5M 4,29928,2.99,residual_even_split
+R7,5M 5,29928,2.99,residual_even_split
+R7,5M 6,29928,2.99,residual_even_split

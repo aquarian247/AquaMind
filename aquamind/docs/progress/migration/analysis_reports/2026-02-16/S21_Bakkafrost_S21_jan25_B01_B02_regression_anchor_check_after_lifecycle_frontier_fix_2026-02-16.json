@@ -1,0 +1,127 @@
+{
+  "all_anchor_match": true,
+  "b01_anchor_match": true,
+  "b02_anchor_match": true,
+  "batch_id": 464,
+  "expected_nonzero_sequences": {
+    "B01": [
+      74983,
+      47516,
+      75490,
+      51505
+    ],
+    "B02": [
+      177853,
+      118966,
+      47912,
+      47349,
+      73853
+    ]
+  },
+  "observed_nonzero_sequences": {
+    "B01": [
+      74983,
+      28167,
+      47516,
+      75490,
+      51505
+    ],
+    "B02": [
+      177853,
+      118966,
+      47912,
+      47349,
+      73853
+    ]
+  },
+  "rows": {
+    "B01": [
+      {
+        "assignment_date": "2025-09-09",
+        "departure_date": "2025-09-09",
+        "is_active": false,
+        "population_count": 0
+      },
+      {
+        "assignment_date": "2025-09-09",
+        "departure_date": "2025-10-23",
+        "is_active": false,
+        "population_count": 74983
+      },
+      {
+        "assignment_date": "2025-10-23",
+        "departure_date": "2025-10-24",
+        "is_active": false,
+        "population_count": 28167
+      },
+      {
+        "assignment_date": "2025-10-24",
+        "departure_date": "2025-11-13",
+        "is_active": false,
+        "population_count": 47516
+      },
+      {
+        "assignment_date": "2025-11-14",
+        "departure_date": "2025-12-10",
+        "is_active": false,
+        "population_count": 75490
+      },
+      {
+        "assignment_date": "2025-11-14",
+        "departure_date": "2025-11-14",
+        "is_active": false,
+        "population_count": 0
+      },
+      {
+        "assignment_date": "2025-12-10",
+        "departure_date": "2025-12-11",
+        "is_active": false,
+        "population_count": 0
+      },
+      {
+        "assignment_date": "2025-12-11",
+        "departure_date": "2026-01-22",
+        "is_active": false,
+        "population_count": 51505
+      }
+    ],
+    "B02": [
+      {
+        "assignment_date": "2025-08-26",
+        "departure_date": "2025-09-11",
+        "is_active": false,
+        "population_count": 177853
+      },
+      {
+        "assignment_date": "2025-09-11",
+        "departure_date": "2025-11-28",
+        "is_active": false,
+        "population_count": 118966
+      },
+      {
+        "assignment_date": "2025-11-28",
+        "departure_date": "2025-12-11",
+        "is_active": false,
+        "population_count": 47912
+      },
+      {
+        "assignment_date": "2025-12-11",
+        "departure_date": "2026-01-22",
+        "is_active": false,
+        "population_count": 47349
+      },
+      {
+        "assignment_date": "2026-01-22",
+        "departure_date": "2026-01-22",
+        "is_active": false,
+        "population_count": 0
+      },
+      {
+        "assignment_date": "2026-01-22",
+        "departure_date": "2026-01-22",
+        "is_active": false,
+        "population_count": 73853
+      }
+    ]
+  }
+}

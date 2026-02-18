@@ -1,0 +1,9 @@
+population_id,start_time,end_time,first_stage_token,last_stage_token,resolved_stage,conserved_count,known_removals,subtransfer_touched,superseded_same_stage,status_near_start_time,status_near_start_count,latest_status_time,latest_status_count,assignment_materialized,assignment_id,assignment_date,assignment_departure_date,assignment_population_count,assignment_biomass_kg,assignment_is_active,inferred_rule_outcome
+86CDCD39-2A17-4426-B129-B4679A3D78A0,2025-09-09 08:41:47,2025-09-09 08:43:47,Fry,Fry,Parr,102381,0,Y,Y,2025-09-09 08:41:47,58873,2025-09-09 08:43:47,58873,Y,62154,2025-09-09,2025-09-09,0,0.00,N,same_stage_superseded_zeroed
+51A08A5A-ECEE-4151-998C-64AA031D7E60,2025-09-09 08:43:47,2025-10-23 12:40:31,Fry,Fry,Parr,131534,137,Y,Y,2025-09-09 08:43:47,74983,2025-10-23 12:40:31,70196,Y,62156,2025-09-09,2025-10-23,131534,2574.12,N,conserved_count_applied
+E5858FB8-9EAE-49F0-B60F-63324E7021D4,2025-10-23 15:09:54,2025-10-24 11:21:17,Fry,Fry,Parr,50958,7,Y,Y,2025-10-23 15:09:54,28167,2025-10-24 11:21:17,28160,Y,62207,2025-10-23,2025-10-24,50958,1222.99,N,conserved_count_applied
+4195A5D0-BA0B-4762-83F3-61EC09C49A06,2025-10-24 11:21:17,2025-11-13 15:21:49,Fry,Fry,Parr,89098,869,Y,N,2025-10-24 11:21:17,47516,2025-10-31 00:00:00,46647,Y,62212,2025-10-24,,89098,2396.74,Y,conserved_count_applied
+A7F4009D-A5AF-4D58-894B-4074E1DFE004,2025-11-14 15:12:59,2025-11-14 15:35:30,,,Parr,0,0,N,N,,0,,0,N,,,,,,N,suppressed_orphan_zero_assignment
+CD9EDB9F-1604-45B0-ABE3-6A4776EFCC03,2025-11-14 15:35:30,2025-12-10 16:04:14,,,Parr,0,2185,N,N,,0,,0,Y,62223,2025-11-14,2025-12-10,2185,0.00,N,known_removals_floor_applied
+FD48652D-029E-4CDF-B960-13DF47CE2D7A,2025-12-10 16:06:25,2025-12-11 13:45:12,,,Parr,0,0,N,N,,0,,0,N,,,,,,N,suppressed_orphan_zero_assignment
+2BB7ACE9-BC49-4786-B38F-4F405668777B,2025-12-11 13:45:12,2026-01-22 12:05:16,,,Parr,0,0,N,N,,0,,0,N,,,,,,N,suppressed_orphan_zero_assignment

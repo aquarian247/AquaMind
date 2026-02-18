@@ -1259,6 +1259,47 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/batch/batches/{id}/insights-timeseries/:
+    get:
+      operationId: api_v1_batch_batches_insights_timeseries_retrieve
+      description: |-
+        Return daily aggregated insights for a batch, container, or container lineage.
+
+        Query params:
+        - start_date (YYYY-MM-DD, optional; default: last 90 days)
+        - end_date (YYYY-MM-DD, optional; default: today)
+        - scope: batch | container | lineage (optional)
+        - container_id (int, optional)
+        - assignment_id (int, optional; required for lineage unless inferred)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/batch/batches/{id}/performance_metrics/:
     get:
       operationId: api_v1_batch_batches_performance_metrics_retrieve
@@ -2332,6 +2373,166 @@ paths:
           description: Live forward projection series with provenance
         '404':
           description: No projections found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/container-assignments/lifecycle-progression/:
+    get:
+      operationId: batch-container-assignments-lifecycle-progression
+      description: Returns stage-level population and biomass aggregates for a single
+        batch using an explicit aggregation basis.
+      summary: Get lifecycle progression aggregates for a batch
+      parameters:
+      - in: query
+        name: area
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Optional area filter.
+      - in: query
+        name: basis
+        schema:
+          type: string
+          default: stage_entry
+        description: 'Aggregation basis. Valid values: full_history, stage_entry,
+          active_snapshot. Default: stage_entry.'
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Batch ID to aggregate.
+        required: true
+      - in: query
+        name: container_type
+        schema:
+          type: string
+        description: Optional container type category filter.
+      - in: query
+        name: geography
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Optional geography filter.
+      - in: query
+        name: hall
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Optional hall filter.
+      - in: query
+        name: station
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Optional freshwater station filter.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id:
+                    type: integer
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  basis:
+                    type: string
+                  stages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        lifecycle_stage_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        lifecycle_stage:
+                          type: string
+                        stage_order:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        container_assignments:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        active_containers:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        total_population:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        total_biomass_kg:
+                          type: number
+                        avg_weight_g:
+                          type: number
+                      required:
+                      - lifecycle_stage_id
+                      - lifecycle_stage
+                      - stage_order
+                      - container_assignments
+                      - active_containers
+                      - total_population
+                      - total_biomass_kg
+                      - avg_weight_g
+                  totals:
+                    type: object
+                    properties:
+                      container_assignments:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      active_containers:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      total_population:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      total_biomass_kg:
+                        type: number
+                    required:
+                    - container_assignments
+                    - active_containers
+                    - total_population
+                    - total_biomass_kg
+                required:
+                - batch_id
+                - basis
+                - stages
+                - totals
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                  basis:
+                    type: array
+                    items:
+                      type: string
+          description: ''
         '401':
           description: Unauthorized
         '403':
@@ -16333,12 +16534,24 @@ paths:
           type: integer
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+      - in: query
+        name: parent
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by parent reason ID
       - name: search
         required: false
         in: query
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: top_level
+        schema:
+          type: boolean
+        description: Filter to only top-level reasons (no parent)
       tags:
       - api
       security:
@@ -38226,10 +38439,7 @@ components:
       - stage_display
     MortalityReason:
       type: object
-      description: |-
-        Serializer for the MortalityReason model.
-
-        Uses HealthBaseSerializer for consistent error handling and field management.
+      description: Serializer for hierarchical MortalityReason model.
       properties:
         id:
           type: integer
@@ -38238,14 +38448,29 @@ components:
           minimum: -9223372036854775808
         name:
           type: string
-          description: Name of the mortality reason (e.g., 'Disease', 'Predation').
+          description: Name of the mortality reason.
         description:
           type: string
-          description: Detailed description of the mortality reason.
+          description: Detailed description.
+        parent:
+          type: integer
+          nullable: true
+          description: Parent reason ID for sub-reasons.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        parent_name:
+          type: string
+          readOnly: true
+          description: Name of parent reason (read-only).
+        children:
+          type: string
+          readOnly: true
+          description: Child reasons (read-only, only on detail view).
       required:
-      - description
+      - children
       - id
       - name
+      - parent_name
     MortalityRecord:
       type: object
       description: |-
@@ -44133,10 +44358,7 @@ components:
           readOnly: true
     PatchedMortalityReason:
       type: object
-      description: |-
-        Serializer for the MortalityReason model.
-
-        Uses HealthBaseSerializer for consistent error handling and field management.
+      description: Serializer for hierarchical MortalityReason model.
       properties:
         id:
           type: integer
@@ -44145,10 +44367,24 @@ components:
           minimum: -9223372036854775808
         name:
           type: string
-          description: Name of the mortality reason (e.g., 'Disease', 'Predation').
+          description: Name of the mortality reason.
         description:
           type: string
-          description: Detailed description of the mortality reason.
+          description: Detailed description.
+        parent:
+          type: integer
+          nullable: true
+          description: Parent reason ID for sub-reasons.
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        parent_name:
+          type: string
+          readOnly: true
+          description: Name of parent reason (read-only).
+        children:
+          type: string
+          readOnly: true
+          description: Child reasons (read-only, only on detail view).
     PatchedMortalityRecord:
       type: object
       description: |-

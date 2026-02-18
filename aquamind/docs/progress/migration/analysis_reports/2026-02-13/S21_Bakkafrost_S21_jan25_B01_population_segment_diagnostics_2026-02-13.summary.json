@@ -1,0 +1,22 @@
+{
+  "b01_population_segments": 8,
+  "batch_id": 464,
+  "container": "B01",
+  "db_name": "aquamind_db_migr_dev",
+  "global_extract_max": {
+    "status_values_max": "2025-10-31 14:58:32",
+    "sub_transfers_max": "2025-10-31 14:58:32"
+  },
+  "materialized_assignments": 5,
+  "rule_outcomes": {
+    "conserved_count_applied": 3,
+    "known_removals_floor_applied": 1,
+    "same_stage_superseded_zeroed": 1,
+    "suppressed_orphan_zero_assignment": 3
+  },
+  "suppressed_segments": [
+    "A7F4009D-A5AF-4D58-894B-4074E1DFE004",
+    "FD48652D-029E-4CDF-B960-13DF47CE2D7A",
+    "2BB7ACE9-BC49-4786-B38F-4F405668777B"
+  ]
+}

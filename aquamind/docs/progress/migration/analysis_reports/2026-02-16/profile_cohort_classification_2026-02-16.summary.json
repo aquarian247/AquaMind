@@ -1,0 +1,164 @@
+{
+  "generated_at": "2026-02-16 14:51:14",
+  "analysis_dir": "aquamind/docs/progress/migration/analysis_reports/2026-02-16",
+  "summary_glob": "*semantic_validation*.summary.json",
+  "cohort_count": 3,
+  "extract_preflight": {
+    "passed": true,
+    "failures": [],
+    "warnings": [
+      "operation_stage_changes max date is before requested horizon: 2026-01-18 < 2026-01-22"
+    ],
+    "horizon_date": "2026-01-22",
+    "status_subtransfer_skew_hours": 0.0,
+    "operation_stage_lag_days": 4.068530092592592,
+    "tables": {
+      "status_values": {
+        "table": "status_values",
+        "path": "scripts/migration/data/extract/status_values.csv",
+        "row_count": 7668407,
+        "time_column": "StatusTime",
+        "max_time_raw": "2026-01-22 12:46:55",
+        "max_time_iso": "2026-01-22 12:46:55",
+        "missing": false,
+        "missing_column": false
+      },
+      "sub_transfers": {
+        "table": "sub_transfers",
+        "path": "scripts/migration/data/extract/sub_transfers.csv",
+        "row_count": 207353,
+        "time_column": "OperationTime",
+        "max_time_raw": "2026-01-22 12:46:55",
+        "max_time_iso": "2026-01-22 12:46:55",
+        "missing": false,
+        "missing_column": false
+      },
+      "operation_stage_changes": {
+        "table": "operation_stage_changes",
+        "path": "scripts/migration/data/extract/operation_stage_changes.csv",
+        "row_count": 28574,
+        "time_column": "OperationTime",
+        "max_time_raw": "2026-01-18 11:08:14",
+        "max_time_iso": "2026-01-18 11:08:14",
+        "missing": false,
+        "missing_column": false
+      },
+      "populations": {
+        "table": "populations",
+        "path": "scripts/migration/data/extract/populations.csv",
+        "row_count": 355024,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      },
+      "ext_inputs": {
+        "table": "ext_inputs",
+        "path": "scripts/migration/data/extract/ext_inputs.csv",
+        "row_count": 24205,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      },
+      "containers": {
+        "table": "containers",
+        "path": "scripts/migration/data/extract/containers.csv",
+        "row_count": 17066,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      }
+    }
+  },
+  "cohorts": [
+    {
+      "batch_name": "Benchmark Gen. Desembur 2024",
+      "batch_id": 463,
+      "component_key": "1636C683-E8F2-476D-BC21-0170CA7DCEE8",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/Benchmark_Gen_Desembur_2024_semantic_validation_after_outside_holder_fix_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 14:17:01",
+      "summary_mtime_epoch": 1771251421.8731868,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Bakkafrost S-21 jan 25",
+      "batch_id": 464,
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_Bakkafrost_S21_jan25_semantic_validation_after_profile_framework_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 14:31:56",
+      "summary_mtime_epoch": 1771252316.7397223,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "StofnFiskur okt. 2024",
+      "batch_id": 465,
+      "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/StofnFiskur_okt_2024_semantic_validation_after_outside_holder_fix_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 14:16:57",
+      "summary_mtime_epoch": 1771251417.076168,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    }
+  ],
+  "groups": [
+    {
+      "recommended_profile": "fw_default",
+      "signatures": [
+        "clean"
+      ],
+      "cohort_count": 3,
+      "cohorts": [
+        {
+          "batch_name": "Bakkafrost S-21 jan 25",
+          "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803"
+        },
+        {
+          "batch_name": "Benchmark Gen. Desembur 2024",
+          "component_key": "1636C683-E8F2-476D-BC21-0170CA7DCEE8"
+        },
+        {
+          "batch_name": "StofnFiskur okt. 2024",
+          "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C"
+        }
+      ]
+    }
+  ],
+  "skipped_files": []
+}

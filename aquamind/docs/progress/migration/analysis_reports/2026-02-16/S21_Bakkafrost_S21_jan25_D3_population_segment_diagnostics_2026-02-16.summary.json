@@ -1,0 +1,20 @@
+{
+  "batch_id": 464,
+  "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+  "container": "D3",
+  "extract_max": {
+    "status_values_max": "2026-01-22 12:05:16",
+    "sub_transfers_max": "2026-01-22 12:05:16"
+  },
+  "materialized_assignments": 2,
+  "mismatch_population_ids": [],
+  "mismatch_segment_count": 0,
+  "parity_status": "match",
+  "rule_outcomes": {
+    "active_latest_status_match": 1,
+    "blank_token_external_mixing_status_match": 1
+  },
+  "segment_count": 2,
+  "status_match_segments": 2,
+  "uncertain_segment_count": 0
+}

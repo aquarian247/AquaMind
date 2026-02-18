@@ -1,0 +1,131 @@
+{
+  "active_container_count": 15,
+  "batch_id": 463,
+  "batch_lifecycle_stage": "Post-Smolt",
+  "batch_number": "Benchmark Gen. Desembur 2024",
+  "batch_status": "ACTIVE",
+  "observed_active_containers": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "I1",
+    "I2",
+    "I3",
+    "J1",
+    "J2",
+    "J3",
+    "J4"
+  ],
+  "rows": [
+    {
+      "assignment_date": "2025-11-17",
+      "container": "G1",
+      "departure_date": null,
+      "population_count": 150356,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-14",
+      "container": "G2",
+      "departure_date": null,
+      "population_count": 148934,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-17",
+      "container": "G3",
+      "departure_date": null,
+      "population_count": 155056,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-18",
+      "container": "G4",
+      "departure_date": null,
+      "population_count": 160559,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H1",
+      "departure_date": null,
+      "population_count": 131498,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-23",
+      "container": "H2",
+      "departure_date": null,
+      "population_count": 146195,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H3",
+      "departure_date": null,
+      "population_count": 157677,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H4",
+      "departure_date": null,
+      "population_count": 151467,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I1",
+      "departure_date": null,
+      "population_count": 123760,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I2",
+      "departure_date": null,
+      "population_count": 122676,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I3",
+      "departure_date": null,
+      "population_count": 125823,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-29",
+      "container": "J1",
+      "departure_date": null,
+      "population_count": 149794,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-23",
+      "container": "J2",
+      "departure_date": null,
+      "population_count": 153047,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-30",
+      "container": "J3",
+      "departure_date": null,
+      "population_count": 158217,
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-30",
+      "container": "J4",
+      "departure_date": null,
+      "population_count": 156453,
+      "stage": "Post-Smolt"
+    }
+  ]
+}

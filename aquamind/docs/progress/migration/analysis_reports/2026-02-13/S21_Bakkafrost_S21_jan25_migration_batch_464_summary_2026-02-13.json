@@ -1,0 +1,69 @@
+{
+  "artifacts": {
+    "assignments_csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-13/S21_Bakkafrost_S21_jan25_migration_batch_464_assignments_2026-02-13.csv",
+    "transfer_actions_csv": "aquamind/docs/progress/migration/analysis_reports/2026-02-13/S21_Bakkafrost_S21_jan25_migration_batch_464_transfer_actions_2026-02-13.csv"
+  },
+  "assignment_stage_counts": {
+    "Egg&Alevin": 7,
+    "Fry": 12,
+    "Parr": 99,
+    "Smolt": 5
+  },
+  "batch": {
+    "batch_number": "Bakkafrost S-21 jan 25",
+    "created_at": "2026-02-13 13:50:47.599048+00:00",
+    "id": 464,
+    "lifecycle_stage": "Parr",
+    "updated_at": "2026-02-13 13:51:25.108046+00:00"
+  },
+  "counts": {
+    "assignments_active": 17,
+    "assignments_departed": 106,
+    "assignments_total": 123,
+    "feeding_events": 872,
+    "mortality_events": 1494,
+    "transfer_actions": 51,
+    "transfer_workflows": 46,
+    "treatments": 22
+  },
+  "coverage_windows": {
+    "assignment_date_max": "2025-12-16",
+    "assignment_date_min": "2025-01-06",
+    "feeding_date_max": "2025-10-30",
+    "feeding_date_min": "2025-04-02",
+    "mortality_date_max": "2026-01-22",
+    "mortality_date_min": "2025-01-06",
+    "transfer_action_date_max": "2025-10-29",
+    "transfer_action_date_min": "2025-04-02",
+    "treatment_date_max": "2025-12-18T12:25:04+00:00",
+    "treatment_date_min": "2025-10-22T09:08:13+00:00"
+  },
+  "db_name": "aquamind_db_migr_dev",
+  "top_container_assignment_counts": {
+    "5M 1": 2,
+    "5M 2": 2,
+    "5M 3": 2,
+    "5M 5": 2,
+    "5M 6": 2,
+    "A01": 7,
+    "A03": 4,
+    "A05": 4,
+    "B01": 5,
+    "B02": 2,
+    "B03": 3,
+    "B04": 11,
+    "B05": 5,
+    "B06": 7,
+    "B07": 4,
+    "B08": 6,
+    "B09": 2,
+    "B10": 4,
+    "B11": 7,
+    "B12": 10,
+    "B13": 5,
+    "B14": 8,
+    "B15": 5,
+    "C12": 3,
+    "D5": 2
+  }
+}

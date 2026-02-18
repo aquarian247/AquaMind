@@ -1,0 +1,138 @@
+{
+  "batch_id": 464,
+  "batch_number": "Bakkafrost S-21 jan 25",
+  "check_date": "2026-02-16",
+  "anchors": {
+    "B01_expected_long_counts": [
+      74983,
+      47516,
+      75490,
+      51505
+    ],
+    "B01_observed_long_counts": [
+      47516,
+      51505,
+      74983,
+      75490
+    ],
+    "B01_pass": true,
+    "B02_expected_long_counts": [
+      177853,
+      118966,
+      47912,
+      47349,
+      73853
+    ],
+    "B02_observed_long_counts": [
+      47349,
+      47912,
+      73853,
+      118966,
+      177853
+    ],
+    "B02_expected_short_zero_on_2026_01_22": true,
+    "B02_observed_short_zero_on_2026_01_22": true,
+    "B02_pass": true
+  },
+  "rows": [
+    {
+      "container": "B01",
+      "assignment_date": "2025-09-09",
+      "departure_date": "2025-09-09",
+      "population_count": 0,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-09-09",
+      "departure_date": "2025-10-23",
+      "population_count": 74983,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-10-23",
+      "departure_date": "2025-10-24",
+      "population_count": 28167,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-10-24",
+      "departure_date": "2025-11-13",
+      "population_count": 47516,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-11-14",
+      "departure_date": "2025-12-10",
+      "population_count": 75490,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-11-14",
+      "departure_date": "2025-11-14",
+      "population_count": 0,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-12-10",
+      "departure_date": "2025-12-11",
+      "population_count": 0,
+      "is_active": false
+    },
+    {
+      "container": "B01",
+      "assignment_date": "2025-12-11",
+      "departure_date": "2026-01-22",
+      "population_count": 51505,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2025-08-26",
+      "departure_date": "2025-09-11",
+      "population_count": 177853,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2025-09-11",
+      "departure_date": "2025-11-28",
+      "population_count": 118966,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2025-11-28",
+      "departure_date": "2025-12-11",
+      "population_count": 47912,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2025-12-11",
+      "departure_date": "2026-01-22",
+      "population_count": 47349,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2026-01-22",
+      "departure_date": "2026-01-22",
+      "population_count": 0,
+      "is_active": false
+    },
+    {
+      "container": "B02",
+      "assignment_date": "2026-01-22",
+      "departure_date": "2026-01-22",
+      "population_count": 73853,
+      "is_active": false
+    }
+  ],
+  "overall_pass": true
+}

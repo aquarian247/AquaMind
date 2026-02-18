@@ -1,0 +1,22 @@
+# FW22 Station Wave Migration Summary (2026-02-16)
+
+- Station: `FW22 Applecross`
+- Profile: `fw_default`
+- Backup horizon: `2026-01-22`
+- Skip environmental: `true`
+- Cohorts attempted: `10`
+- Migration successes: `8`
+- Semantic gate passes: `0`
+
+| Batch key | Migrate | Semantic gates | Duration (s) | Component key |
+| --- | --- | --- | ---: | --- |
+| SF NOV 23|5|2023 | PASS | FAIL | 177.3 | `FA8EA452-AFE1-490D-B236-0150415B6E6F` |
+| AG FEB 24|1|2024 | PASS | FAIL | 116.5 | `9A2FCED1-721F-4893-AED7-0C07E24C715F` |
+| SF FEB 24|5|2024 | PASS | FAIL | 151.0 | `1E81696F-1749-4036-945B-0290B466B32C` |
+| SF MAY 24|6|2024 | PASS | FAIL | 200.9 | `E8FE9380-69EE-4D31-864D-0387E9880FB5` |
+| SF SEP 24|7|2024 | PASS | FAIL | 192.0 | `F78C939E-6282-46E9-8219-0B38550AF4BF` |
+| SF DEC 24|8|2024 | PASS | FAIL | 191.3 | `2626A8C5-1C77-40B4-89FF-00CDE7CE5D2F` |
+| SF MAR 25|1|2025 | FAIL | FAIL | 105.9 | `232FE340-5BBE-4C3A-96A4-0CA91C0B181A` |
+| SF JUN 25|2|2025 | FAIL | FAIL | 75.3 | `1A7421E3-6F19-4BEC-8749-00EC01B61CB7` |
+| SF JUL 25|3|2025 | PASS | FAIL | 146.0 | `95045310-2FE0-4533-B3CA-0329E953A705` |
+| SF SEP 25|4|2025 | PASS | FAIL | 120.5 | `A88689DA-143C-490D-86FA-03661F67C7F6` |

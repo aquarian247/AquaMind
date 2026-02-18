@@ -1,0 +1,4 @@
+batch_name	component_key	reason	direction	sales_operation_id	input_operation_id	source_component_population_count	target_population_count	source_stage_class_counts	target_stage_class_counts
+BF mars 2025	7B7E162F-72EC-42E9-B32A-953264EAC124	direction_mismatch	input_to_sales	68E185BA-CCA3-4981-BAF1-0976CC11B8BB	7AE24FFE-A8A6-40DE-B8B4-0776C9274637	1	73	"{""fw"": 1}"	"{""fw"": 73}"
+BF oktober 2025	DCF897C6-A2A3-4914-89E9-D43C8389D887	direction_mismatch	input_to_sales	112C6EDD-F14B-48EE-AD8E-0AB709BD6728	7A458ED6-BC39-4F37-8071-40667F768A19	1	8	"{""fw"": 1}"	"{""fw"": 8}"
+Bakkafrost S-21 jan 25	B52612BD-F18B-48A4-BF21-12B5FC246803	direction_mismatch	input_to_sales	A5D37465-7D85-4313-813E-3AD59EC2000B	CDF4B384-2F03-4827-B562-B1AF9A0A0019	7	17	"{""fw"": 7}"	"{""fw"": 17}"

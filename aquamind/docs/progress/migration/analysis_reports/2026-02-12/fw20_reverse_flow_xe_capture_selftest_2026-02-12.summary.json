@@ -1,0 +1,69 @@
+{
+  "keyword_hits": [
+    {
+      "event_count": "1",
+      "keyword": "internaldelivery"
+    },
+    {
+      "event_count": "1",
+      "keyword": "actionmetadata"
+    },
+    {
+      "event_count": "1",
+      "keyword": "populationlink"
+    },
+    {
+      "event_count": "1",
+      "keyword": "subtransfers"
+    },
+    {
+      "event_count": "1",
+      "keyword": "publictransfers"
+    },
+    {
+      "event_count": "2",
+      "keyword": "operations"
+    }
+  ],
+  "operation_id_hits": [
+    {
+      "event_count": "2",
+      "operation_id": "112C6EDD-F14B-48EE-AD8E-0AB709BD6728"
+    },
+    {
+      "event_count": "2",
+      "operation_id": "68E185BA-CCA3-4981-BAF1-0976CC11B8BB"
+    },
+    {
+      "event_count": "1",
+      "operation_id": "7A458ED6-BC39-4F37-8071-40667F768A19"
+    },
+    {
+      "event_count": "2",
+      "operation_id": "7AE24FFE-A8A6-40DE-B8B4-0776C9274637"
+    },
+    {
+      "event_count": "1",
+      "operation_id": "A5D37465-7D85-4313-813E-3AD59EC2000B"
+    },
+    {
+      "event_count": "1",
+      "operation_id": "CDF4B384-2F03-4827-B562-B1AF9A0A0019"
+    }
+  ],
+  "top_client_apps": [
+    {
+      "client_app_name": "SQLCMD",
+      "event_count": "60"
+    },
+    {
+      "client_app_name": "SQLServerCEIP",
+      "event_count": "5"
+    }
+  ],
+  "totals": {
+    "first_event_utc": "2026-02-12T13:11:17.7480000",
+    "last_event_utc": "2026-02-12T13:12:33.2330000",
+    "total_events": "62"
+  }
+}

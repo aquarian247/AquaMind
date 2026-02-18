@@ -1,0 +1,110 @@
+{
+  "component_id": "StofnFiskur_okt._2024_3_2024",
+  "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C",
+  "component_population_count": 222,
+  "counts": {
+    "direction_counts": {
+      "sales_to_input": 2
+    },
+    "pair_stage_counts": {
+      "fw->marine": 2
+    },
+    "reason_counts": {
+      "deterministic": 2
+    }
+  },
+  "examples": [
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "5BA0A92A-4EB6-40FA-BEEC-48CB574EE78E",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 2,
+      "sales_operation_id": "788F01C5-6EA2-4724-A267-AD4CE787607F",
+      "sales_operation_population_count": 2,
+      "source_component_population_count": 2,
+      "source_stage_class_counts": {
+        "fw": 2
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    },
+    {
+      "deterministic": true,
+      "direction": "sales_to_input",
+      "input_component_population_count": 0,
+      "input_operation_id": "DA76D788-7698-4C5F-B021-CA7260C9AB37",
+      "input_operation_population_count": 1,
+      "reason": "deterministic",
+      "sales_component_population_count": 3,
+      "sales_operation_id": "99A3A39A-D21B-4F8F-81FE-C9264DE107C8",
+      "sales_operation_population_count": 3,
+      "source_component_population_count": 3,
+      "source_stage_class_counts": {
+        "fw": 3
+      },
+      "target_all_marine": true,
+      "target_population_count": 1,
+      "target_stage_class_counts": {
+        "marine": 1
+      }
+    }
+  ],
+  "expected_direction": "sales_to_input",
+  "gates": {
+    "coverage": {
+      "actual_deterministic_coverage": 1.0,
+      "min_deterministic_coverage": 0.9,
+      "passed": true
+    },
+    "evidence": {
+      "actual_candidate_rows": 2,
+      "applicable": true,
+      "min_candidate_rows": 4,
+      "passed": false
+    },
+    "incomplete_linkage_fallback": {
+      "actual": 2,
+      "applicable": false,
+      "passed": true,
+      "semantic_summary_json": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-11/semantic_validation_stofnfiskur_okt_2024_2026-02-11_fw20_parallel_post_fix.summary.json",
+      "threshold": null
+    },
+    "marine_target": {
+      "actual_marine_target_ratio": 1.0,
+      "applicable": true,
+      "min_marine_target_ratio": 1.0,
+      "passed": true
+    },
+    "overall_passed": false,
+    "stability": {
+      "actual_max_targets_per_source": 1,
+      "max_targets_per_source": 1,
+      "passed": true,
+      "sources_with_multiple_targets": 0
+    },
+    "uniqueness": {
+      "actual_ambiguous_rows": 0,
+      "max_ambiguous_rows": 0,
+      "passed": true
+    }
+  },
+  "metrics": {
+    "ambiguous_rows": 0,
+    "both_side_touch_rows": 0,
+    "candidate_rows": 2,
+    "deterministic_coverage": 1.0,
+    "deterministic_rows": 2,
+    "incomplete_linkage_fallback_count": 2,
+    "marine_target_deterministic_rows": 2,
+    "marine_target_ratio": 1.0,
+    "max_targets_per_source_observed": 1,
+    "sources_with_multiple_targets": 0,
+    "touched_rows": 2
+  }
+}

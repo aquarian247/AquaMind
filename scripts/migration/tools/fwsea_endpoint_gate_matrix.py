@@ -32,6 +32,88 @@ def normalize(value: str | None) -> str:
     return (value or "").strip()
 
 
+def dominant_key(counts: dict[str, int] | None) -> str:
+    if not counts:
+        return "none"
+    ranked = sorted(
+        ((normalize(key), int(value or 0)) for key, value in counts.items() if normalize(key)),
+        key=lambda item: (-item[1], item[0]),
+    )
+    return ranked[0][0] if ranked else "none"
+
+
+def classify_nonzero_candidate_row(
+    *,
+    overall_passed: bool,
+    failed_gates: list[str],
+    candidate_rows: int,
+    deterministic_rows: int,
+    deterministic_coverage: float,
+    marine_target_ratio: float,
+    dominant_direction: str,
+    dominant_stage_pair: str,
+    primary_reason: str,
+    min_deterministic_coverage: float,
+    min_marine_target_ratio: float,
+) -> dict[str, str]:
+    if candidate_rows <= 0:
+        return {
+            "classification": "no_candidate_rows",
+            "deterministic_linkage_found": "N",
+            "classification_confidence": "n/a",
+            "recommended_action": (
+                "No endpoint candidate evidence; keep strict FW/Sea unlinked policy."
+            ),
+        }
+
+    if (
+        primary_reason == "direction_mismatch"
+        and dominant_direction == "input_to_sales"
+        and dominant_stage_pair == "fw->fw"
+        and ("coverage" in failed_gates or "marine_target" in failed_gates or not overall_passed)
+    ):
+        return {
+            "classification": "reverse_flow_fw_only",
+            "deterministic_linkage_found": "N",
+            "classification_confidence": "High",
+            "recommended_action": (
+                "Exclude from FW->Sea policy evidence; retain as reverse-flow blocker diagnostics."
+            ),
+        }
+
+    if (
+        deterministic_rows > 0
+        and deterministic_coverage >= min_deterministic_coverage
+        and marine_target_ratio >= min_marine_target_ratio
+    ):
+        if "evidence" in failed_gates:
+            return {
+                "classification": "true_fw_to_sea_sparse_evidence",
+                "deterministic_linkage_found": "Y",
+                "classification_confidence": "Medium-High",
+                "recommended_action": (
+                    "Treat as true candidate with sparse evidence; keep strict evidence floor for release."
+                ),
+            }
+        return {
+            "classification": "true_fw_to_sea_candidate",
+            "deterministic_linkage_found": "Y",
+            "classification_confidence": "High",
+            "recommended_action": (
+                "Retain as deterministic candidate evidence for diagnostics; no global policy promotion."
+            ),
+        }
+
+    return {
+        "classification": "unclassified_nonzero_candidate",
+        "deterministic_linkage_found": "N",
+        "classification_confidence": "Medium",
+        "recommended_action": (
+            "Requires manual deterministic drill-down before policy use."
+        ),
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run FWSEA endpoint pairing gates across a semantic cohort set"
@@ -178,6 +260,8 @@ def main() -> int:
         metrics = gate_payload.get("metrics") or {}
         gates = gate_payload.get("gates") or {}
         reason_counts = ((gate_payload.get("counts") or {}).get("reason_counts") or {})
+        direction_counts = ((gate_payload.get("counts") or {}).get("direction_counts") or {})
+        pair_stage_counts = ((gate_payload.get("counts") or {}).get("pair_stage_counts") or {})
 
         failed_gates: list[str] = []
         for gate_name in (
@@ -194,6 +278,32 @@ def main() -> int:
             if gate_data and gate_data.get("passed") is False:
                 failed_gates.append(gate_name)
 
+        touched_rows = int(metrics.get("touched_rows") or 0)
+        candidate_rows = int(metrics.get("candidate_rows") or 0)
+        deterministic_rows = int(metrics.get("deterministic_rows") or 0)
+        ambiguous_rows = int(metrics.get("ambiguous_rows") or 0)
+        deterministic_coverage = float(metrics.get("deterministic_coverage") or 0.0)
+        marine_target_ratio = float(metrics.get("marine_target_ratio") or 0.0)
+        max_targets_per_source = int(metrics.get("max_targets_per_source_observed") or 0)
+        incomplete_linkage_fallback_count = metrics.get("incomplete_linkage_fallback_count")
+        overall_passed = bool(gates.get("overall_passed"))
+        dominant_direction = dominant_key(direction_counts)
+        dominant_stage_pair = dominant_key(pair_stage_counts)
+        primary_reason = dominant_key(reason_counts)
+        classification = classify_nonzero_candidate_row(
+            overall_passed=overall_passed,
+            failed_gates=failed_gates,
+            candidate_rows=candidate_rows,
+            deterministic_rows=deterministic_rows,
+            deterministic_coverage=deterministic_coverage,
+            marine_target_ratio=marine_target_ratio,
+            dominant_direction=dominant_direction,
+            dominant_stage_pair=dominant_stage_pair,
+            primary_reason=primary_reason,
+            min_deterministic_coverage=args.min_deterministic_coverage,
+            min_marine_target_ratio=args.min_marine_target_ratio,
+        )
+
         rows.append(
             {
                 "batch_name": batch_name,
@@ -203,23 +313,43 @@ def main() -> int:
                 "gate_summary": gate_json.name,
                 "gate_report": gate_md.name,
                 "returncode": run.returncode,
-                "overall_passed": bool(gates.get("overall_passed")),
+                "overall_passed": overall_passed,
                 "failed_gates": failed_gates,
-                "touched_rows": int(metrics.get("touched_rows") or 0),
-                "candidate_rows": int(metrics.get("candidate_rows") or 0),
-                "deterministic_rows": int(metrics.get("deterministic_rows") or 0),
-                "ambiguous_rows": int(metrics.get("ambiguous_rows") or 0),
-                "deterministic_coverage": float(metrics.get("deterministic_coverage") or 0.0),
-                "marine_target_ratio": float(metrics.get("marine_target_ratio") or 0.0),
-                "max_targets_per_source": int(metrics.get("max_targets_per_source_observed") or 0),
-                "incomplete_linkage_fallback_count": metrics.get("incomplete_linkage_fallback_count"),
+                "touched_rows": touched_rows,
+                "candidate_rows": candidate_rows,
+                "deterministic_rows": deterministic_rows,
+                "ambiguous_rows": ambiguous_rows,
+                "deterministic_coverage": deterministic_coverage,
+                "marine_target_ratio": marine_target_ratio,
+                "max_targets_per_source": max_targets_per_source,
+                "incomplete_linkage_fallback_count": incomplete_linkage_fallback_count,
+                "dominant_direction": dominant_direction,
+                "dominant_stage_pair": dominant_stage_pair,
+                "primary_reason": primary_reason,
+                "classification": classification["classification"],
+                "deterministic_linkage_found": classification["deterministic_linkage_found"],
+                "classification_confidence": classification["classification_confidence"],
+                "recommended_action": classification["recommended_action"],
                 "reason_counts": reason_counts,
+                "direction_counts": direction_counts,
+                "pair_stage_counts": pair_stage_counts,
             }
         )
 
     rows.sort(key=lambda row: row["batch_name"])
     pass_count = sum(1 for row in rows if row["overall_passed"])
     fail_count = len(rows) - pass_count
+    nonzero_candidate_count = sum(1 for row in rows if row["candidate_rows"] > 0)
+    classification_counts = Counter(
+        row["classification"] for row in rows if row["candidate_rows"] > 0
+    )
+    high_signal_persistent_fail_count = sum(
+        1
+        for row in rows
+        if row["candidate_rows"] > 0
+        and not row["overall_passed"]
+        and ("coverage" in (row.get("failed_gates") or []) or "marine_target" in (row.get("failed_gates") or []))
+    )
 
     fail_gate_counts: Counter[str] = Counter()
     for row in rows:
@@ -235,6 +365,9 @@ def main() -> int:
                 "pass_count": pass_count,
                 "fail_count": fail_count,
                 "fail_gate_counts": dict(fail_gate_counts),
+                "nonzero_candidate_count": nonzero_candidate_count,
+                "classification_counts": dict(sorted(classification_counts.items())),
+                "high_signal_persistent_fail_count": high_signal_persistent_fail_count,
                 "config": {
                     "expected_direction": args.expected_direction,
                     "max_source_candidates": args.max_source_candidates,
@@ -270,6 +403,12 @@ def main() -> int:
                 "marine_target_ratio",
                 "max_targets_per_source",
                 "incomplete_linkage_fallback_count",
+                "dominant_direction",
+                "dominant_stage_pair",
+                "primary_reason",
+                "classification",
+                "deterministic_linkage_found",
+                "classification_confidence",
                 "gate_summary",
             ]
         )
@@ -287,6 +426,12 @@ def main() -> int:
                     f"{row['marine_target_ratio']:.3f}",
                     row["max_targets_per_source"],
                     row["incomplete_linkage_fallback_count"],
+                    row["dominant_direction"],
+                    row["dominant_stage_pair"],
+                    row["primary_reason"],
+                    row["classification"],
+                    row["deterministic_linkage_found"],
+                    row["classification_confidence"],
                     row["gate_summary"],
                 ]
             )
@@ -320,6 +465,12 @@ def main() -> int:
     lines.append("")
     lines.append(f"- Gate PASS: `{pass_count}/{len(rows)}`")
     lines.append(f"- Gate FAIL: `{fail_count}/{len(rows)}`")
+    lines.append(f"- Non-zero candidate cohorts: `{nonzero_candidate_count}`")
+    lines.append(f"- High-signal persistent FAIL cohorts: `{high_signal_persistent_fail_count}`")
+    if classification_counts:
+        lines.append("- Non-zero candidate classification counts:")
+        for name, count in sorted(classification_counts.items(), key=lambda item: (-item[1], item[0])):
+            lines.append(f"  - `{name}`: {count}")
     lines.append("")
     lines.append("## Gate-Failure Totals")
     lines.append("")
@@ -328,10 +479,11 @@ def main() -> int:
     lines.append("")
     lines.append(
         "| batch | gate | failed gates | candidate rows | deterministic rows | ambiguous rows | "
-        "coverage | marine ratio | max targets/source | incomplete-linkage fallback |"
+        "coverage | marine ratio | max targets/source | incomplete-linkage fallback | "
+        "dominant direction | dominant pair | primary reason | classification |"
     )
     lines.append(
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |"
     )
     for row in rows:
         failed_gates = ", ".join(row.get("failed_gates") or []) or "-"
@@ -340,7 +492,9 @@ def main() -> int:
             f"| {row['batch_name']} | {'PASS' if row['overall_passed'] else 'FAIL'} | {failed_gates} | "
             f"{row['candidate_rows']} | {row['deterministic_rows']} | {row['ambiguous_rows']} | "
             f"{row['deterministic_coverage']:.3f} | {row['marine_target_ratio']:.3f} | "
-            f"{row['max_targets_per_source']} | {incomplete if incomplete is not None else 'n/a'} |"
+            f"{row['max_targets_per_source']} | {incomplete if incomplete is not None else 'n/a'} | "
+            f"{row['dominant_direction']} | {row['dominant_stage_pair']} | {row['primary_reason']} | "
+            f"{row['classification']} |"
         )
 
     lines.append("")

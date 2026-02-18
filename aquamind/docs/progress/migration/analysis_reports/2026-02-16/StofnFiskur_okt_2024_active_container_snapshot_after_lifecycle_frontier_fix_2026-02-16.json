@@ -1,0 +1,71 @@
+{
+  "active_container_count": 6,
+  "active_rows": [
+    {
+      "assignment_date": "2025-08-26",
+      "container": "E01",
+      "departure_date": null,
+      "population_count": 16000,
+      "population_id": "47EB2337-843C-4CBC-924D-81D20A136DD9",
+      "stage": "Parr"
+    },
+    {
+      "assignment_date": "2025-09-01",
+      "container": "E02",
+      "departure_date": null,
+      "population_count": 5561,
+      "population_id": "0B7C2705-1D44-4FBA-BA2F-21E520C15748",
+      "stage": "Parr"
+    },
+    {
+      "assignment_date": "2025-08-27",
+      "container": "F03",
+      "departure_date": null,
+      "population_count": 21964,
+      "population_id": "C5B2BD66-AA09-40D5-B021-3019BC56C453",
+      "stage": "Parr"
+    },
+    {
+      "assignment_date": "2025-09-01",
+      "container": "R2",
+      "departure_date": null,
+      "population_count": 42397,
+      "population_id": "5A6376AA-F54F-4D78-919E-667735B628DB",
+      "stage": "Parr"
+    },
+    {
+      "assignment_date": "2025-08-26",
+      "container": "R3",
+      "departure_date": null,
+      "population_count": 44000,
+      "population_id": "C643B963-C5D6-48EC-84C0-AC119B06B6FB",
+      "stage": "Parr"
+    },
+    {
+      "assignment_date": "2025-04-01",
+      "container": "Skiljing",
+      "departure_date": null,
+      "population_count": 400520,
+      "population_id": "0AC83AE6-A706-4C83-99AD-D63A4308DDDC",
+      "stage": "Parr"
+    }
+  ],
+  "batch_id": 465,
+  "batch_lifecycle_stage": "Parr",
+  "batch_number": "StofnFiskur okt. 2024",
+  "batch_stage_matches_frontier": true,
+  "batch_status": "ACTIVE",
+  "frontier_anchor_time": "2025-10-03 10:07:40",
+  "frontier_stage_counts_24h": {
+    "Parr": 1
+  },
+  "frontier_stage_selected_24h": "Parr",
+  "observed_active_containers": [
+    "E01",
+    "E02",
+    "F03",
+    "R2",
+    "R3",
+    "Skiljing"
+  ]
+}

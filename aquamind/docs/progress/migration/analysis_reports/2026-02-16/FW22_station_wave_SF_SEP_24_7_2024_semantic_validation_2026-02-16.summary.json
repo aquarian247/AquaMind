@@ -1,0 +1,419 @@
+{
+  "batch": {
+    "batch_number": "SF SEP 24",
+    "id": 486
+  },
+  "component_key": "F78C939E-6282-46E9-8219-0B38550AF4BF",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [
+      "247.0125",
+      "247.0127"
+    ],
+    "example_real_stage_entry_fishgroups": [
+      "247.0002",
+      "247.0003",
+      "247.0004",
+      "247.0005",
+      "247.0006",
+      "247.0007",
+      "247.0008",
+      "247.0009",
+      "247.0010",
+      "247.0011"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "247.0082",
+      "247.0083",
+      "247.0084",
+      "247.0090",
+      "247.0094",
+      "247.0098",
+      "247.0101",
+      "247.0102",
+      "247.0103",
+      "247.0104"
+    ],
+    "real_stage_entry_fishgroup_count": 80,
+    "temporary_bridge_fishgroup_count": 29,
+    "temporary_bridge_population_count": 29
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 146,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 146,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 927644,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": true
+  },
+  "population_count": 146,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 1)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 1,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {},
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {
+          "Hatchery": 89
+        },
+        "by_site": {
+          "FW22 Applecross": 89
+        },
+        "by_site_group": {
+          "Unknown": 89
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 89
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "direct_external_population_count": 74,
+      "direct_population_summary": {
+        "by_prod_stage": {
+          "Hatchery": 74
+        },
+        "by_site": {
+          "FW22 Applecross": 74
+        },
+        "by_site_group": {
+          "Unknown": 74
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 74
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {
+          "Hatchery": 9
+        },
+        "by_site": {
+          "FW22 Applecross": 9
+        },
+        "edge_count": 9
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {
+          "Hatchery": 65
+        },
+        "by_site": {
+          "FW22 Applecross": 65
+        },
+        "edge_count": 65
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {
+      "Egg&Alevin": 1988752,
+      "Fry": 88884
+    },
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 69,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 68,
+        "entry_date": "2024-09-26",
+        "entry_population_ids": [
+          "0244FE2C-2C1A-496D-AF5A-0E3A9B903A64",
+          "05581498-0351-45D4-AA3C-33275B3C4079",
+          "09365545-8FFB-4BA3-AFB2-96EB384248EF",
+          "0D093A46-5A2F-479E-8457-764FF3CD13FD",
+          "11CD378B-D582-40BD-A4AB-89E8D69D17D7",
+          "1397C71C-8793-49ED-BFF3-50C010E7E038",
+          "1958B263-8856-4E95-84EB-273A940E2187",
+          "237F5CBF-2FE9-4017-BDE5-F2C4ACDF913F",
+          "26F0163B-220F-4FB8-BC2C-840EA6040DC6",
+          "2D58913F-CC9A-480B-9BB8-6A7450C41422",
+          "2F2DBEE1-85EC-4446-B7EE-5234FB051DC1",
+          "31A02A8E-F7A9-489B-822F-14E0E2B07E3B",
+          "3E0036D2-057D-49F8-9191-0FA4EF26C7C6",
+          "3F2F1A01-40F9-42FE-B4B6-942C799798B2",
+          "47BACAE0-4F6A-4F0D-829E-58C5D3FC90E3",
+          "53A89688-0AF1-429E-9CD4-1C9D775074AB",
+          "555F218A-D7B4-470E-A967-F2B00BCD4C9B",
+          "59B5C602-451E-4D72-B324-B9201440DDD0",
+          "5C93A505-9483-4421-9B39-A63DA940A316",
+          "5EB59346-1C1F-442E-AE91-480E238773FA",
+          "6922BEBF-86F7-4FA5-84EC-DF3890A630B8",
+          "69C8778F-7155-46C0-825C-158D35C107DD",
+          "6E76BE29-E18A-41ED-A316-3C873DACB4A5",
+          "6EFB9CBC-29D8-4407-98CB-DB2C8F7A6BAA",
+          "6FD2C29A-847F-4A62-BD1A-7792EEA7E457",
+          "703B1A44-5574-4596-9DD5-E28C087A7B28",
+          "7284A12A-C155-4CA0-85F3-10FD1F09B007",
+          "75D4AE4E-79E6-4170-B7BF-7D10F6D286ED",
+          "76B83DAD-0D31-49BB-82FD-88132670EE96",
+          "7B575A46-A514-496E-AE6F-F12A923E0385",
+          "7C9272A7-F139-47A6-AA2C-7BA8A6AAD763",
+          "822FA5B9-6951-44D0-8EE3-33A761BF8F70",
+          "8281C5AE-9351-4A4F-86A3-92491D5A37C1",
+          "82CDA010-399F-4BE1-8B91-7F3638E1380D",
+          "83DBBC54-5D07-42BF-A8F1-F050D136403F",
+          "85F62923-825A-4C3C-B987-C8DAB7D1BB13",
+          "87972ED0-0E64-4496-AF53-2259B487C353",
+          "8978250D-EDE7-48B8-B25C-AB02D1288F9A",
+          "8FB5F115-6CB7-404B-9D53-9641A2A6CA48",
+          "90E67270-F7CF-4AF7-84B1-9C0BEFBCA2F4",
+          "911ED9B1-04A2-40A8-B09A-25A583259A9D",
+          "93DE75EB-5DA6-49D2-B44C-B4588DFD21E8",
+          "9DE4D958-4ECF-4974-908F-0E802F97A355",
+          "A6300C24-C2B5-4ECD-B884-C25C5C563178",
+          "A6306EA0-B826-4819-BC16-5AAEA9E281A9",
+          "A6789A3A-2FD9-4F7C-BE82-F51078CCDCD3",
+          "A777B6FB-74D2-46CE-976D-60C7AAE1A727",
+          "AD7F48E7-E036-4EA5-A510-8EA944FA778D",
+          "ADEC65D5-F037-49EF-A904-0C99492C92AE",
+          "B680946C-FFA2-42AD-9215-EF19647694CB",
+          "B6D3DD89-EBDE-4A66-81ED-FF8A5BB16B23",
+          "B89E5EEA-48FA-440F-BABD-EB2F8840D6A9",
+          "BB63EEC8-9FD7-4221-92B9-86003E65BC94",
+          "BD5F3EC0-BA07-4055-9EC5-F85569773FFE",
+          "C0B07E0D-9F52-49FF-A3F3-807185621243",
+          "C1AE61CB-D796-40ED-B625-D30FB4A0C69E",
+          "C224D3A3-7EE2-4082-983C-EE4886BF4795",
+          "C5613AD8-A8D1-45D0-9282-D9DB6C8ED970",
+          "CA88A5B1-0DD2-498B-89EA-3B9FF3E90D84",
+          "CB8C2BAC-FB9B-4040-8105-92F0AF6ED6B3",
+          "D05955D5-6B0A-45B6-AA67-11773CA1E67B",
+          "D241CBBD-DC91-4E27-8B6D-A56FB4C9A381",
+          "D3CA3D46-AD40-404D-B12D-CCCAE33DB317",
+          "D8142916-2FA1-47A2-A1EC-736D04EEC7EC",
+          "E67D4D0E-D55F-4145-87AC-997C9BE10C6C",
+          "F32B5D46-E80F-4F63-8FB5-DBBE29C41416",
+          "F78C939E-6282-46E9-8219-0B38550AF4BF",
+          "FA9A0DDA-551C-48C2-892A-60F6AD7823F2"
+        ],
+        "entry_real_fishgroup_count": 68,
+        "entry_window_end": "2024-09-28",
+        "full_to_entry_ratio": 1.01,
+        "full_to_peak_ratio": 1.0,
+        "nonzero_assignment_count": 69,
+        "order": 1,
+        "peak_concurrent_date": "2024-12-16",
+        "peak_concurrent_population": 2195351,
+        "population_entry": 2182000,
+        "population_total": 2195351,
+        "stage": "Egg&Alevin"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 13,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 8,
+        "entry_date": "2024-12-16",
+        "entry_population_ids": [
+          "03196F7D-CDB6-4001-81DF-C926FFD6EE9B",
+          "0D044129-8DFF-4970-AA7E-865B13FAE99F",
+          "11AC26A3-2216-441A-B8EF-5ECB93400589",
+          "5A359CCB-0657-43AC-AB47-C4A25E6D1103",
+          "66E5E48B-067D-464A-8F5D-B22D4F02C2C3",
+          "DBA6745F-C0D5-45B5-9795-97E8A3BF028A",
+          "E2981536-93E0-4C84-815D-0DA4DFBFB0B0",
+          "FA8DE9B1-0F7F-43FC-8AAC-A4E84AC4B330"
+        ],
+        "entry_real_fishgroup_count": 8,
+        "entry_window_end": "2024-12-18",
+        "full_to_entry_ratio": 1.68,
+        "full_to_peak_ratio": 1.68,
+        "nonzero_assignment_count": 11,
+        "order": 2,
+        "peak_concurrent_date": "2024-12-16",
+        "peak_concurrent_population": 799651,
+        "population_entry": 799651,
+        "population_total": 1345111,
+        "stage": "Fry"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 46,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 3,
+        "entry_date": "2025-03-10",
+        "entry_population_ids": [
+          "60C59A5C-A71B-4D10-9BC7-E1EFFCF01AB3",
+          "C21AEB48-CDE0-4248-8E79-09E70F7DD5D5",
+          "CDCAD91C-C801-4166-9D35-1AA7797C2EDE"
+        ],
+        "entry_real_fishgroup_count": 3,
+        "entry_window_end": "2025-03-12",
+        "full_to_entry_ratio": 6.02,
+        "full_to_peak_ratio": 2.89,
+        "nonzero_assignment_count": 46,
+        "order": 3,
+        "peak_concurrent_date": "2025-04-10",
+        "peak_concurrent_population": 3018652,
+        "population_entry": 1450034,
+        "population_total": 8724054,
+        "stage": "Parr"
+      },
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 18,
+        "entry_bridge_excluded_count": 2,
+        "entry_container_count": 1,
+        "entry_date": "2025-06-20",
+        "entry_population_ids": [
+          "9903CFD7-F6F5-4BFB-B8FC-AB599832577D"
+        ],
+        "entry_real_fishgroup_count": 1,
+        "entry_window_end": "2025-06-22",
+        "full_to_entry_ratio": 7.55,
+        "full_to_peak_ratio": 2.1,
+        "nonzero_assignment_count": 17,
+        "order": 5,
+        "peak_concurrent_date": "2025-07-18",
+        "peak_concurrent_population": 1525919,
+        "population_entry": 425099,
+        "population_total": 3208684,
+        "stage": "Post-Smolt"
+      }
+    ],
+    "transition_basis_counts": {
+      "entry_window": 2,
+      "fishgroup_bridge_aware": 1
+    },
+    "transition_bridge_aware_count": 1,
+    "transition_count": 3,
+    "transition_entry_window_count": 2,
+    "transition_entry_window_reason_counts": {
+      "bridge_aware": 1,
+      "incomplete_linkage": 2
+    },
+    "transition_lineage_graph_count": 0,
+    "transitions": [
+      {
+        "basis": "entry_window",
+        "bridge_aware_eligible": true,
+        "delta": -1382349,
+        "drop": 1382349,
+        "entry_population_count": 8,
+        "entry_population_external_source_count": 8,
+        "entry_window_reason": "incomplete_linkage",
+        "from_population": 2182000,
+        "from_stage": "Egg&Alevin",
+        "increase": 0,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 8,
+        "linked_source_population_count": 8,
+        "to_population": 799651,
+        "to_stage": "Fry",
+        "unexplained_drop_vs_known_losses": 454705
+      },
+      {
+        "basis": "entry_window",
+        "bridge_aware_eligible": true,
+        "delta": 650383,
+        "drop": 0,
+        "entry_population_count": 3,
+        "entry_population_external_source_count": 3,
+        "entry_window_reason": "incomplete_linkage",
+        "from_population": 799651,
+        "from_stage": "Fry",
+        "increase": 650383,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 3,
+        "linked_source_population_count": 3,
+        "to_population": 1450034,
+        "to_stage": "Parr",
+        "unexplained_drop_vs_known_losses": 0
+      },
+      {
+        "basis": "fishgroup_bridge_aware",
+        "bridge_aware_eligible": true,
+        "delta": -37512,
+        "drop": 37512,
+        "entry_population_count": 1,
+        "entry_population_external_source_count": 0,
+        "entry_window_reason": "bridge_aware",
+        "from_population": 111640,
+        "from_stage": "Parr",
+        "increase": 0,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 1,
+        "linked_source_population_count": 4,
+        "to_population": 74128,
+        "to_stage": "Post-Smolt",
+        "unexplained_drop_vs_known_losses": 0
+      }
+    ],
+    "zero_assignment_bridge_count": 3,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 0,
+    "zero_assignment_total_count": 3
+  },
+  "transfer_actions": {
+    "total_count": 41,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2025-10-15T17:00:00",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2025-10-15T17:00:00",
+    "end_was_capped": false,
+    "start": "2024-09-26T11:13:31"
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "batch": {
+    "batch_number": "24Q1 LHS",
+    "id": 507
+  },
+  "component_key": "533595CB-E74C-4357-8C66-2A1C8C81DC9E",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 2,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "241.0008",
+      "241.0010",
+      "241.0013",
+      "241.0016",
+      "241.0017"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "241.0009",
+      "241.0012",
+      "241.0014",
+      "241.0022",
+      "241.0024",
+      "241.0026",
+      "241.0031",
+      "241.0035",
+      "241.0036",
+      "241.0037"
+    ],
+    "real_stage_entry_fishgroup_count": 5,
+    "temporary_bridge_fishgroup_count": 27,
+    "temporary_bridge_population_count": 29
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 79,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 79,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 161697,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": true
+  },
+  "population_count": 79,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 0,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {},
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {
+          "FreshWater": 36,
+          "Hatchery": 1
+        },
+        "by_site": {
+          "FW22 Applecross": 1,
+          "FW24 KinlochMoidart": 36
+        },
+        "by_site_group": {
+          "Unknown": 37
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 37
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {
+          "FreshWater": 4,
+          "Hatchery": 1
+        },
+        "by_site": {
+          "FW22 Applecross": 1,
+          "FW24 KinlochMoidart": 4
+        },
+        "edge_count": 5
+      },
+      "direct_external_population_count": 25,
+      "direct_population_summary": {
+        "by_prod_stage": {
+          "FreshWater": 24,
+          "Hatchery": 1
+        },
+        "by_site": {
+          "FW22 Applecross": 1,
+          "FW24 KinlochMoidart": 24
+        },
+        "by_site_group": {
+          "Unknown": 25
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 25
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {
+          "FreshWater": 16
+        },
+        "by_site": {
+          "FW24 KinlochMoidart": 16
+        },
+        "edge_count": 16
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {
+          "FreshWater": 6,
+          "Hatchery": 1
+        },
+        "by_site": {
+          "FW22 Applecross": 1,
+          "FW24 KinlochMoidart": 6
+        },
+        "edge_count": 7
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {
+      "Parr": 77536
+    },
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 79,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 5,
+        "entry_date": "2023-08-02",
+        "entry_population_ids": [
+          "533595CB-E74C-4357-8C66-2A1C8C81DC9E",
+          "6A6879DE-C688-4A4D-8ACB-BD80D70C68C5",
+          "71CAFC18-6411-47DE-8265-3032297CD582",
+          "C3AD126C-26B0-488E-96D3-FB6A23203F0A",
+          "E1260FE3-39FD-4A22-A33E-17FA7C1D16ED"
+        ],
+        "entry_real_fishgroup_count": 5,
+        "entry_window_end": "2023-08-04",
+        "full_to_entry_ratio": 7.44,
+        "full_to_peak_ratio": 3.41,
+        "nonzero_assignment_count": 73,
+        "order": 3,
+        "peak_concurrent_date": "2023-10-18",
+        "peak_concurrent_population": 1389417,
+        "population_entry": 636156,
+        "population_total": 4733884,
+        "stage": "Parr"
+      }
+    ],
+    "transition_basis_counts": {},
+    "transition_bridge_aware_count": 0,
+    "transition_count": 0,
+    "transition_entry_window_count": 0,
+    "transition_entry_window_reason_counts": {},
+    "transition_lineage_graph_count": 0,
+    "transitions": [],
+    "zero_assignment_bridge_count": 5,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 1,
+    "zero_assignment_total_count": 6
+  },
+  "transfer_actions": {
+    "total_count": 32,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2024-03-01T14:41:43",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2024-03-01T14:41:43",
+    "end_was_capped": false,
+    "start": "2023-08-02T20:59:09"
+  }
+}

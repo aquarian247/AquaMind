@@ -1,0 +1,694 @@
+{
+  "batch": {
+    "batch_number": "NH FEB 25",
+    "id": 500
+  },
+  "component_key": "EB666567-9CBA-45D7-9149-053827161D0C",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "251.0002",
+      "251.0003",
+      "251.0004",
+      "251.0005",
+      "251.0006",
+      "251.0007",
+      "251.0008",
+      "251.0009",
+      "251.0010",
+      "251.0011"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "251.0093",
+      "251.0098",
+      "251.0115",
+      "251.0116",
+      "251.0117",
+      "251.0118",
+      "251.0120",
+      "251.0121",
+      "251.0122",
+      "251.0123"
+    ],
+    "real_stage_entry_fishgroup_count": 47,
+    "temporary_bridge_fishgroup_count": 72,
+    "temporary_bridge_population_count": 72
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 216,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 216,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 952197,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": true
+  },
+  "population_count": 216,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 0,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {
+      "containers_checked": 32,
+      "latest_holder_in_component_count": 32,
+      "latest_holder_outside_component_count": 0,
+      "latest_holder_unknown_count": 0,
+      "rows": [
+        {
+          "component_population_id": "8E70690E-F0CE-4839-B17D-BB1F44BFA0E1",
+          "container_name": "CA01",
+          "latest_biomass_kg": 196.34,
+          "latest_count": 12017,
+          "latest_in_component": true,
+          "latest_population_id": "8E70690E-F0CE-4839-B17D-BB1F44BFA0E1",
+          "latest_status_time": "2025-12-15 12:04:09",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "5A27E660-95EF-45F0-B478-A50A4392734B"
+        },
+        {
+          "component_population_id": "D7754D35-0F5F-4F8D-B094-C7D64E975F47",
+          "container_name": "CA02",
+          "latest_biomass_kg": 160.35,
+          "latest_count": 7699,
+          "latest_in_component": true,
+          "latest_population_id": "D7754D35-0F5F-4F8D-B094-C7D64E975F47",
+          "latest_status_time": "2025-12-16 15:25:10",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "324D66C8-C9DF-4CB4-A912-1368CB90BA0F"
+        },
+        {
+          "component_population_id": "EB6BFA3F-7644-4BC7-965D-6A587734EC5D",
+          "container_name": "CA03",
+          "latest_biomass_kg": 456.31,
+          "latest_count": 24382,
+          "latest_in_component": true,
+          "latest_population_id": "EB6BFA3F-7644-4BC7-965D-6A587734EC5D",
+          "latest_status_time": "2025-12-17 11:04:07",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "11790AF5-DFBB-45EE-AB86-C45D5D7307B9"
+        },
+        {
+          "component_population_id": "8FCCFA78-9EC5-4E0A-99BD-2C5B3E6F8CE7",
+          "container_name": "CA05",
+          "latest_biomass_kg": 483.12,
+          "latest_count": 24501,
+          "latest_in_component": true,
+          "latest_population_id": "8FCCFA78-9EC5-4E0A-99BD-2C5B3E6F8CE7",
+          "latest_status_time": "2025-12-18 17:14:45",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "C5C226D6-ECC0-489D-B2F3-4B15AB9D906D"
+        },
+        {
+          "component_population_id": "EF94BBA6-091D-4BE1-A891-FD4FE2F12F93",
+          "container_name": "CB05",
+          "latest_biomass_kg": 727.47,
+          "latest_count": 24847,
+          "latest_in_component": true,
+          "latest_population_id": "EF94BBA6-091D-4BE1-A891-FD4FE2F12F93",
+          "latest_status_time": "2025-12-12 16:16:48",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "E1FE2841-4CA2-4882-87EC-01EC1C11D89A"
+        },
+        {
+          "component_population_id": "F4935ACB-D966-4749-8092-88D8F5B2B567",
+          "container_name": "CC01",
+          "latest_biomass_kg": 2838.58,
+          "latest_count": 68717,
+          "latest_in_component": true,
+          "latest_population_id": "F4935ACB-D966-4749-8092-88D8F5B2B567",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "9EF06CCA-4B1B-43AA-95A5-109CF000BA68"
+        },
+        {
+          "component_population_id": "1FFF67B0-DA03-49A6-856A-6E6E2D093C24",
+          "container_name": "CC02",
+          "latest_biomass_kg": 2629.9,
+          "latest_count": 69045,
+          "latest_in_component": true,
+          "latest_population_id": "1FFF67B0-DA03-49A6-856A-6E6E2D093C24",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "4641162D-60D6-456A-9E7F-45666B478ED2"
+        },
+        {
+          "component_population_id": "D5A1B060-F34A-48E9-94A7-9414391DEA0F",
+          "container_name": "CC03",
+          "latest_biomass_kg": 2535.74,
+          "latest_count": 67945,
+          "latest_in_component": true,
+          "latest_population_id": "D5A1B060-F34A-48E9-94A7-9414391DEA0F",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "2761421B-E1F8-43DA-B45F-ED925F7D3404"
+        },
+        {
+          "component_population_id": "D1423419-A407-4819-B856-54F9F88970B0",
+          "container_name": "CC04",
+          "latest_biomass_kg": 2387.13,
+          "latest_count": 59462,
+          "latest_in_component": true,
+          "latest_population_id": "D1423419-A407-4819-B856-54F9F88970B0",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "E62938AF-1925-4A97-8449-65B037C84C03"
+        },
+        {
+          "component_population_id": "259645E4-5F47-4956-AB6D-111D24C2E14C",
+          "container_name": "CD01",
+          "latest_biomass_kg": 941.78,
+          "latest_count": 43401,
+          "latest_in_component": true,
+          "latest_population_id": "259645E4-5F47-4956-AB6D-111D24C2E14C",
+          "latest_status_time": "2025-12-10 12:28:53",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "7D5ADC8D-D8A6-4430-8471-16695B2E6B13"
+        },
+        {
+          "component_population_id": "6454726B-D74B-444C-9233-33A7A81F56C4",
+          "container_name": "CD03",
+          "latest_biomass_kg": 533.77,
+          "latest_count": 21154,
+          "latest_in_component": true,
+          "latest_population_id": "6454726B-D74B-444C-9233-33A7A81F56C4",
+          "latest_status_time": "2025-12-10 14:48:20",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "DA89260D-BA76-40D6-AC20-73D4670E695D"
+        },
+        {
+          "component_population_id": "AE1175E2-A989-4F10-A303-01B4A9FC3E18",
+          "container_name": "CD04",
+          "latest_biomass_kg": 813.2,
+          "latest_count": 31939,
+          "latest_in_component": true,
+          "latest_population_id": "AE1175E2-A989-4F10-A303-01B4A9FC3E18",
+          "latest_status_time": "2025-12-10 11:05:18",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "19A376D8-691D-483D-B65E-9720871B46D6"
+        },
+        {
+          "component_population_id": "DAFA43E4-9344-49B2-9820-E700122077C2",
+          "container_name": "CD05",
+          "latest_biomass_kg": 676.61,
+          "latest_count": 27064,
+          "latest_in_component": true,
+          "latest_population_id": "DAFA43E4-9344-49B2-9820-E700122077C2",
+          "latest_status_time": "2025-12-11 08:59:32",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "93081285-99C7-465B-8ADA-CF81C4BA2E6F"
+        },
+        {
+          "component_population_id": "E894A338-CB89-4EFD-9B05-F447B438FE19",
+          "container_name": "CD06",
+          "latest_biomass_kg": 605.94,
+          "latest_count": 29507,
+          "latest_in_component": true,
+          "latest_population_id": "E894A338-CB89-4EFD-9B05-F447B438FE19",
+          "latest_status_time": "2025-12-10 09:45:25",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "AC0D82FB-3354-4F43-BBF2-94584F4A94BD"
+        },
+        {
+          "component_population_id": "4CE2C94A-86D8-4FCB-B473-7A20F9352C50",
+          "container_name": "CD07",
+          "latest_biomass_kg": 876.09,
+          "latest_count": 33489,
+          "latest_in_component": true,
+          "latest_population_id": "4CE2C94A-86D8-4FCB-B473-7A20F9352C50",
+          "latest_status_time": "2025-12-09 09:29:37",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "94AACCC0-7535-4B8D-B5DB-F71843C5E1B9"
+        },
+        {
+          "component_population_id": "737F425B-FED7-4931-9F03-BB48B7DBA53B",
+          "container_name": "CD08",
+          "latest_biomass_kg": 876.09,
+          "latest_count": 33489,
+          "latest_in_component": true,
+          "latest_population_id": "737F425B-FED7-4931-9F03-BB48B7DBA53B",
+          "latest_status_time": "2025-12-09 09:29:37",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "828945AB-A9B4-4241-B844-7EF3B0B90C82"
+        },
+        {
+          "component_population_id": "E9BBF697-F81A-4BF9-B5CE-6946583C9F08",
+          "container_name": "CE03",
+          "latest_biomass_kg": 741.86,
+          "latest_count": 90000,
+          "latest_in_component": true,
+          "latest_population_id": "E9BBF697-F81A-4BF9-B5CE-6946583C9F08",
+          "latest_status_time": "2025-09-16 17:01:20",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "6F063E87-F489-48EA-A95E-3836231608B8"
+        },
+        {
+          "component_population_id": "30A1F00C-0851-4DB2-8EDA-E35DA447E628",
+          "container_name": "CE07",
+          "latest_biomass_kg": 581.35,
+          "latest_count": 25458,
+          "latest_in_component": true,
+          "latest_population_id": "30A1F00C-0851-4DB2-8EDA-E35DA447E628",
+          "latest_status_time": "2025-12-11 11:41:11",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "B5465D6F-ED28-43E2-BF61-D88F63608AC3"
+        },
+        {
+          "component_population_id": "3B3FB0C5-34B3-4C8F-8A11-1CDEE93F3567",
+          "container_name": "CE08",
+          "latest_biomass_kg": 717.19,
+          "latest_count": 56587,
+          "latest_in_component": true,
+          "latest_population_id": "3B3FB0C5-34B3-4C8F-8A11-1CDEE93F3567",
+          "latest_status_time": "2025-09-23 11:24:26",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "EBB2D528-E5C5-4EC5-B210-39C144454421"
+        },
+        {
+          "component_population_id": "A71B8639-661A-4F34-95F7-DD2C31207033",
+          "container_name": "CE09",
+          "latest_biomass_kg": 756.8,
+          "latest_count": 25735,
+          "latest_in_component": true,
+          "latest_population_id": "A71B8639-661A-4F34-95F7-DD2C31207033",
+          "latest_status_time": "2025-12-11 12:53:22",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "88812444-EB65-4970-A714-20553D0CE8A2"
+        },
+        {
+          "component_population_id": "CC42FFE1-D9DE-4251-8330-FEAAC222AD7A",
+          "container_name": "CE10",
+          "latest_biomass_kg": 694.67,
+          "latest_count": 22835,
+          "latest_in_component": true,
+          "latest_population_id": "CC42FFE1-D9DE-4251-8330-FEAAC222AD7A",
+          "latest_status_time": "2025-12-11 15:01:13",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "2AEA7641-AAD0-4A2F-B2FB-D6504E8B3C33"
+        },
+        {
+          "component_population_id": "D0EB2E18-E858-4694-8B5F-8F78E9605C6C",
+          "container_name": "CE11",
+          "latest_biomass_kg": 629.29,
+          "latest_count": 24223,
+          "latest_in_component": true,
+          "latest_population_id": "D0EB2E18-E858-4694-8B5F-8F78E9605C6C",
+          "latest_status_time": "2025-12-11 14:01:05",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "2F2D8984-E8D4-428A-AA0B-D967C37DE9B8"
+        },
+        {
+          "component_population_id": "20B89574-56EB-4CA4-A757-00DA2E21F150",
+          "container_name": "CR01",
+          "latest_biomass_kg": 2368.98,
+          "latest_count": 96255,
+          "latest_in_component": true,
+          "latest_population_id": "20B89574-56EB-4CA4-A757-00DA2E21F150",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "CCB09475-EF13-41DD-BA28-F1C952754B62"
+        },
+        {
+          "component_population_id": "337A69E1-6194-4C74-A5D7-3B5564C89C56",
+          "container_name": "CR02",
+          "latest_biomass_kg": 1891.8,
+          "latest_count": 47295,
+          "latest_in_component": true,
+          "latest_population_id": "337A69E1-6194-4C74-A5D7-3B5564C89C56",
+          "latest_status_time": "2026-01-15 17:20:21",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "37380E55-06B8-4E50-BBCB-B0C6C1A449FB"
+        },
+        {
+          "component_population_id": "061D2B7E-EC1D-43DD-A299-648CAB3AAB21",
+          "container_name": "CR03",
+          "latest_biomass_kg": 447.06,
+          "latest_count": 12549,
+          "latest_in_component": true,
+          "latest_population_id": "061D2B7E-EC1D-43DD-A299-648CAB3AAB21",
+          "latest_status_time": "2026-01-14 17:19:19",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "8F942DF8-FE5C-4395-9F87-FEA044135ADC"
+        },
+        {
+          "component_population_id": "17240E25-DF39-4745-8BC6-5F4136920B9D",
+          "container_name": "CR04",
+          "latest_biomass_kg": 2836.15,
+          "latest_count": 135757,
+          "latest_in_component": true,
+          "latest_population_id": "17240E25-DF39-4745-8BC6-5F4136920B9D",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "1B94D87A-F852-4C16-AFF1-4444B65A69C0"
+        },
+        {
+          "component_population_id": "239AB8C9-04B8-482E-93CA-AEA4DBB62788",
+          "container_name": "CR05",
+          "latest_biomass_kg": 1356.25,
+          "latest_count": 39395,
+          "latest_in_component": true,
+          "latest_population_id": "239AB8C9-04B8-482E-93CA-AEA4DBB62788",
+          "latest_status_time": "2026-01-22 12:46:55",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "0AFC1E8D-C310-4A6D-B4C2-E131B9E831F2"
+        },
+        {
+          "component_population_id": "1F8F88CE-EA11-48A4-B8AD-4F5B30BF13F5",
+          "container_name": "CR06",
+          "latest_biomass_kg": 1356.28,
+          "latest_count": 39396,
+          "latest_in_component": true,
+          "latest_population_id": "54EB4030-B52B-446D-9FC7-0F5245C04D2E",
+          "latest_status_time": "2026-01-22 12:46:55",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "A9FF6558-CF6E-4376-8A16-ADA457BD4E49"
+        },
+        {
+          "component_population_id": "AA218394-804D-46F1-8E4F-E6732EC76387",
+          "container_name": "CR07",
+          "latest_biomass_kg": 1374.53,
+          "latest_count": 56473,
+          "latest_in_component": true,
+          "latest_population_id": "AA218394-804D-46F1-8E4F-E6732EC76387",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "DA2EF724-84A3-4A1F-B195-AC20D9244331"
+        },
+        {
+          "component_population_id": "CE549AF6-C673-4191-880E-8D9EB18816D5",
+          "container_name": "CR08",
+          "latest_biomass_kg": 1377.33,
+          "latest_count": 56588,
+          "latest_in_component": true,
+          "latest_population_id": "CE549AF6-C673-4191-880E-8D9EB18816D5",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "CF9D26E0-44D7-429D-863A-EE62D806E106"
+        },
+        {
+          "component_population_id": "13C357C2-5BB3-4355-8ADA-7CB4506F9987",
+          "container_name": "CR09",
+          "latest_biomass_kg": 1297.97,
+          "latest_count": 38663,
+          "latest_in_component": true,
+          "latest_population_id": "13C357C2-5BB3-4355-8ADA-7CB4506F9987",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "20D6D4D9-A75B-471C-9A8C-6B7FBD91D443"
+        },
+        {
+          "component_population_id": "EB5D2D3C-5B8C-4B83-8430-6C6992CB0387",
+          "container_name": "CR10",
+          "latest_biomass_kg": 1329.15,
+          "latest_count": 38774,
+          "latest_in_component": true,
+          "latest_population_id": "EB5D2D3C-5B8C-4B83-8430-6C6992CB0387",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "Hatchery",
+          "site": "FW21 Couldoran",
+          "source_container_id": "1D56587F-D695-43F4-9CBF-EF225C9DE282"
+        }
+      ]
+    },
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {
+          "Hatchery": 116
+        },
+        "by_site": {
+          "FW21 Couldoran": 116
+        },
+        "by_site_group": {
+          "Unknown": 116
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 116
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "direct_external_population_count": 88,
+      "direct_population_summary": {
+        "by_prod_stage": {
+          "Hatchery": 88
+        },
+        "by_site": {
+          "FW21 Couldoran": 88
+        },
+        "by_site_group": {
+          "Unknown": 88
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 88
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {
+          "Hatchery": 33
+        },
+        "by_site": {
+          "FW21 Couldoran": 33
+        },
+        "edge_count": 33
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {
+          "Hatchery": 55
+        },
+        "by_site": {
+          "FW21 Couldoran": 55
+        },
+        "edge_count": 55
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {
+      "Egg&Alevin": 1546295,
+      "Fry": 6511
+    },
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 93,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 46,
+        "entry_date": "2025-02-12",
+        "entry_population_ids": [
+          "02B2A21A-EC30-41B9-A0A5-31A7560AFD5E",
+          "03B4EC92-736D-4E67-B90F-86D0B28EA4D9",
+          "094D1D45-E1A0-41FD-AE48-BD6EAEA2D84C",
+          "0F277EB7-90E5-4550-9139-F8A06B6608E6",
+          "17539C40-0ED8-4E90-AFA8-211BCD9627F0",
+          "2FD1526D-6610-4B8B-8D42-9EC4F4F17BEF",
+          "306A5063-1922-4D01-8EE3-EA2EF4EBC7FC",
+          "34B0A403-8C74-4EA6-BF0D-BAC5D657E4E6",
+          "35DC7478-7668-4266-ABBE-29C3E0B3CBC9",
+          "36A8D35F-DA0D-43DE-BEF9-4B8819E08682",
+          "412BC6FF-F51A-418D-82A0-DD44CF328DAB",
+          "42626111-FAF5-4539-BDAD-B7479C57A412",
+          "4AF89F49-D240-43AC-AB56-C7635902B5DC",
+          "59F6A818-5BF0-4435-8807-0CB90C1F5AF8",
+          "62F2CBAD-4F7A-4E70-AFAD-A9461F031388",
+          "659CC009-0B3C-43F6-9F9E-D80B233F4C14",
+          "6F8F7E72-CE7C-4A4D-BE4B-D56A54736368",
+          "731E751C-5DD4-4FDF-B3D3-53365DA95460",
+          "73CEBF8B-C20E-4E5E-9D2A-BB76ECCA8E68",
+          "860F04BC-B75B-4BA6-9B13-1D1BCAE7BA13",
+          "87E1BD1D-800B-4327-94CB-9872A7781512",
+          "8A548D13-D08B-47FF-A0C3-6BA213AE9A42",
+          "8C8438B9-AECB-4924-870D-66C8DBCE2BBF",
+          "8FC53E23-3488-409C-BE78-E56D36BD5773",
+          "91463E11-6F06-4B9B-9626-83E16CB833D4",
+          "958518F1-14A1-453D-B947-11DAE8E8C580",
+          "9D2C8E07-F342-47D3-9D59-14B2CBAD5BE2",
+          "A8E44BCB-E2D2-4908-84B8-CF876E2DE12E",
+          "AA046F16-24B3-4E46-A559-700838AD584C",
+          "AC70043F-83B0-4FBC-85FA-3D1F579BB93D",
+          "AE13154A-69EE-4789-990F-889B9B3B955C",
+          "AF466089-EAC4-4FDA-8C1B-E30A462791DB",
+          "AFBF0FDE-6FE8-4493-9E6F-A89BB683E9CC",
+          "AFF43304-82F3-42EC-BACB-812AA81F48FC",
+          "B7E30E1B-AC5B-4C42-B839-82DECF5F2E68",
+          "B836A617-E099-4B2B-85D6-B27BFBEF5CA9",
+          "BF7A6F8F-3260-4EA7-9669-20B8987A4DC0",
+          "C3FB1BF3-6E6A-4769-A4D9-A1075FCCDC4F",
+          "C5258085-83AF-45C0-9E23-A773257DB05F",
+          "CA895E3A-FAAC-4DE8-941C-E9B3F48398BE",
+          "D2F076FB-A50B-44C5-AD49-4CDF059FA28B",
+          "E6A39316-D726-4C3E-9228-3874CC741CE8",
+          "E7CB9C6F-6A22-4AF0-9779-31E13684B0F1",
+          "EB666567-9CBA-45D7-9149-053827161D0C",
+          "F595A140-390B-4FE8-8BB2-4096DF1297B3",
+          "FF104FBE-90A3-4E52-9837-CC91E89530C5"
+        ],
+        "entry_real_fishgroup_count": 46,
+        "entry_window_end": "2025-02-14",
+        "full_to_entry_ratio": 3.35,
+        "full_to_peak_ratio": 1.66,
+        "nonzero_assignment_count": 92,
+        "order": 1,
+        "peak_concurrent_date": "2025-04-28",
+        "peak_concurrent_population": 2926467,
+        "population_entry": 1455805,
+        "population_total": 4871250,
+        "stage": "Egg&Alevin"
+      },
+      {
+        "active_assignment_count": 32,
+        "active_population_total": 1001699,
+        "assignment_count": 123,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 1,
+        "entry_date": "2025-04-29",
+        "entry_population_ids": [
+          "FE8B5B9F-8C2B-4D96-A4BE-66F2BBDEC8D7"
+        ],
+        "entry_real_fishgroup_count": 1,
+        "entry_window_end": "2025-05-01",
+        "full_to_entry_ratio": 21.25,
+        "full_to_peak_ratio": 3.32,
+        "nonzero_assignment_count": 123,
+        "order": 2,
+        "peak_concurrent_date": "2025-12-12",
+        "peak_concurrent_population": 1753268,
+        "population_entry": 274314,
+        "population_total": 5828370,
+        "stage": "Fry"
+      }
+    ],
+    "transition_basis_counts": {
+      "fishgroup_bridge_aware": 1
+    },
+    "transition_bridge_aware_count": 1,
+    "transition_count": 1,
+    "transition_entry_window_count": 0,
+    "transition_entry_window_reason_counts": {
+      "direct_linkage": 1
+    },
+    "transition_lineage_graph_count": 0,
+    "transitions": [
+      {
+        "basis": "fishgroup_bridge_aware",
+        "bridge_aware_eligible": true,
+        "delta": 0,
+        "drop": 0,
+        "entry_population_count": 1,
+        "entry_population_external_source_count": 1,
+        "entry_window_reason": "direct_linkage",
+        "from_population": 35530,
+        "from_stage": "Egg&Alevin",
+        "increase": 0,
+        "lineage_graph_used": false,
+        "linked_destination_population_count": 1,
+        "linked_source_population_count": 1,
+        "to_population": 35530,
+        "to_stage": "Fry",
+        "unexplained_drop_vs_known_losses": 0
+      }
+    ],
+    "zero_assignment_bridge_count": 0,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 1,
+    "zero_assignment_total_count": 1
+  },
+  "transfer_actions": {
+    "total_count": 70,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2026-01-22T23:59:59.999999",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2026-02-17T10:03:51.718083",
+    "end_was_capped": true,
+    "start": "2025-02-12T10:15:00"
+  }
+}

@@ -43,6 +43,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aquamind.settings")
 os.environ.setdefault("SKIP_CELERY_SIGNALS", "1")
 
 from scripts.migration.safety import configure_migration_environment, assert_default_db_is_migration_db
+from scripts.migration.tools.extract_freshness_guard import (
+    DEFAULT_BACKUP_HORIZON_DATE,
+    evaluate_extract_freshness,
+    print_summary as print_extract_freshness_summary,
+)
+from scripts.migration.tools.migration_profiles import MIGRATION_PROFILE_NAMES
 
 configure_migration_environment()
 
@@ -548,7 +554,9 @@ def run_migration_script(
     use_csv: str | None = None,
     dry_run: bool = False,
     batch_number: str | None = None,
+    migration_profile: str | None = None,
     external_mixing_status_multiplier: float | None = None,
+    lifecycle_frontier_window_hours: int | None = None,
     skip_synthetic_stage_transitions: bool = False,
     timeout_seconds: int = 600,
     extra_env: dict[str, str] | None = None,
@@ -585,11 +593,20 @@ def run_migration_script(
 
     if script_name == "pilot_migrate_component.py" and batch_number:
         cmd.extend(["--batch-number", batch_number])
+    if script_name == "pilot_migrate_component.py" and migration_profile:
+        cmd.extend(["--migration-profile", migration_profile])
     if script_name == "pilot_migrate_component.py" and external_mixing_status_multiplier is not None:
         cmd.extend(
             [
                 "--external-mixing-status-multiplier",
                 str(external_mixing_status_multiplier),
+            ]
+        )
+    if script_name == "pilot_migrate_component.py" and lifecycle_frontier_window_hours is not None:
+        cmd.extend(
+            [
+                "--lifecycle-frontier-window-hours",
+                str(lifecycle_frontier_window_hours),
             ]
         )
 
@@ -779,6 +796,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override the generated batch number",
     )
     parser.add_argument(
+        "--migration-profile",
+        default="fw_default",
+        choices=MIGRATION_PROFILE_NAMES,
+        help=(
+            "Migration profile preset passed to pilot_migrate_component.py "
+            "(default: fw_default)."
+        ),
+    )
+    parser.add_argument(
         "--list-batches",
         action="store_true",
         help="List available input batches and exit",
@@ -803,6 +829,65 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         metavar="CSV_DIR",
         help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
+    parser.add_argument(
+        "--skip-extract-freshness-preflight",
+        action="store_true",
+        help=(
+            "Skip CSV extract freshness/cutoff guard. "
+            "Not recommended outside diagnostics."
+        ),
+    )
+    parser.add_argument(
+        "--extract-horizon-date",
+        default=DEFAULT_BACKUP_HORIZON_DATE,
+        help=(
+            "Required horizon date (YYYY-MM-DD) for extract preflight. "
+            "status_values/sub_transfers max dates must be >= this. "
+            f"(default: {DEFAULT_BACKUP_HORIZON_DATE})"
+        ),
+    )
+    parser.add_argument(
+        "--extract-max-status-subtransfer-skew-hours",
+        type=int,
+        default=24,
+        help=(
+            "Preflight threshold for max skew between status_values and "
+            "sub_transfers max timestamps (default: 24)."
+        ),
+    )
+    parser.add_argument(
+        "--extract-max-operation-stage-lag-days",
+        type=int,
+        default=14,
+        help=(
+            "Preflight threshold for operation_stage_changes lag behind "
+            "status/sub anchor in days (default: 14)."
+        ),
+    )
+    extract_lag_group = parser.add_mutually_exclusive_group()
+    extract_lag_group.add_argument(
+        "--extract-enforce-operation-stage-lag",
+        dest="extract_enforce_operation_stage_lag",
+        action="store_true",
+        help=(
+            "Treat operation_stage_changes lag threshold breaches as failures "
+            "(default)."
+        ),
+    )
+    extract_lag_group.add_argument(
+        "--extract-allow-operation-stage-lag",
+        dest="extract_enforce_operation_stage_lag",
+        action="store_false",
+        help=(
+            "Downgrade operation_stage_changes lag threshold breaches to warnings."
+        ),
+    )
+    parser.set_defaults(extract_enforce_operation_stage_lag=True)
+    parser.add_argument(
+        "--extract-fail-on-warnings",
+        action="store_true",
+        help="Fail extract preflight when warnings are present.",
     )
     parser.add_argument(
         "--full-lifecycle",
@@ -876,6 +961,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--lifecycle-frontier-window-hours",
+        type=int,
+        help=(
+            "Optional pass-through for pilot_migrate_component.py lifecycle-stage "
+            "selection near cutoff (hours)."
+        ),
+    )
+    parser.add_argument(
         "--parallel-workers",
         type=int,
         default=1,
@@ -924,12 +1017,30 @@ def main() -> int:
         print("Error: --script-timeout-seconds must be >= 30")
         return 1
 
+    if args.use_csv and not args.skip_extract_freshness_preflight:
+        freshness = evaluate_extract_freshness(
+            csv_dir=Path(args.use_csv),
+            horizon_date=args.extract_horizon_date,
+            max_status_subtransfer_skew_hours=args.extract_max_status_subtransfer_skew_hours,
+            max_operation_stage_lag_days=args.extract_max_operation_stage_lag_days,
+            enforce_operation_stage_lag=args.extract_enforce_operation_stage_lag,
+            fail_on_warnings=args.extract_fail_on_warnings,
+        )
+        print_extract_freshness_summary(freshness)
+        if not freshness.passed:
+            print(
+                "\n[ERROR] Extract freshness preflight failed. "
+                "Aborting migration to avoid stale/cutoff-debug loops."
+            )
+            return 1
+
     batch_key = args.batch_key
 
     print(f"\n{'='*70}")
     print(f"INPUT-BASED BATCH MIGRATION")
     print("=" * 70)
     print(f"Batch Key: {batch_key}")
+    print(f"Migration Profile: {args.migration_profile}")
     print()
 
     # Load batch info
@@ -1102,7 +1213,9 @@ def main() -> int:
             use_csv=args.use_csv,
             dry_run=args.dry_run,
             batch_number=batch_number_override,
+            migration_profile=args.migration_profile,
             external_mixing_status_multiplier=args.external_mixing_status_multiplier,
+            lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
             skip_synthetic_stage_transitions=not args.include_synthetic_stage_transitions,
             timeout_seconds=args.script_timeout_seconds,
             extra_env=parallel_env,
@@ -1145,7 +1258,9 @@ def main() -> int:
                         use_csv=args.use_csv,
                         dry_run=args.dry_run,
                         batch_number=batch_number_override,
+                        migration_profile=args.migration_profile,
                         external_mixing_status_multiplier=args.external_mixing_status_multiplier,
+                        lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
                         skip_synthetic_stage_transitions=not args.include_synthetic_stage_transitions,
                         timeout_seconds=args.script_timeout_seconds,
                         extra_env=parallel_env,

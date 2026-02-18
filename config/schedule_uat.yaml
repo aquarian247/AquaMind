@@ -1,5 +1,5 @@
 metadata:
-  generated_date: '2026-01-12'
+  generated_date: '2026-02-18'
   schedule_type: UAT_OPTIMIZED
   description: Lifecycle ladder distribution for comprehensive UAT testing
   total_batches: 136
@@ -201,11 +201,11 @@ metadata:
       count: 9
 batches:
 - batch_id: FAR-UAT-025
-  start_date: '2025-12-18'
+  start_date: '2026-01-24'
   eggs: 3000000
   duration: 25
   effective_duration: 451
-  harvest_target_kg: 5.7494748688769395
+  harvest_target_kg: 5.502085503466667
   geography: Faroe Islands
   station: FI-FW-01
   purpose: early_stage
@@ -227,11 +227,11 @@ batches:
       end_day: 25
   sea: null
 - batch_id: FAR-UAT-045
-  start_date: '2025-11-28'
+  start_date: '2026-01-04'
   eggs: 3123456
   duration: 45
   effective_duration: 451
-  harvest_target_kg: 4.9731000471338085
+  harvest_target_kg: 6.211832647386494
   geography: Faroe Islands
   station: FI-FW-02
   purpose: mid_stage
@@ -253,11 +253,11 @@ batches:
       end_day: 45
   sea: null
 - batch_id: FAR-UAT-065
-  start_date: '2025-11-08'
+  start_date: '2025-12-15'
   eggs: 3246912
   duration: 65
   effective_duration: 451
-  harvest_target_kg: 5.143013738064336
+  harvest_target_kg: 4.514484377480688
   geography: Faroe Islands
   station: FI-FW-03
   purpose: mid_stage
@@ -279,11 +279,11 @@ batches:
       end_day: 65
   sea: null
 - batch_id: FAR-UAT-082
-  start_date: '2025-10-22'
+  start_date: '2025-11-28'
   eggs: 3370368
   duration: 82
   effective_duration: 451
-  harvest_target_kg: 5.4093997311523605
+  harvest_target_kg: 5.383923658164698
   geography: Faroe Islands
   station: FI-FW-04
   purpose: pre_transition
@@ -305,11 +305,11 @@ batches:
       end_day: 82
   sea: null
 - batch_id: FAR-UAT-088
-  start_date: '2025-10-16'
+  start_date: '2025-11-22'
   eggs: 3493824
   duration: 88
   effective_duration: 451
-  harvest_target_kg: 4.77204671245525
+  harvest_target_kg: 5.064286967007893
   geography: Faroe Islands
   station: FI-FW-05
   purpose: transition_ready
@@ -331,11 +331,11 @@ batches:
       end_day: 88
   sea: null
 - batch_id: FAR-UAT-105
-  start_date: '2025-09-29'
+  start_date: '2025-11-05'
   eggs: 3617280
   duration: 105
   effective_duration: 451
-  harvest_target_kg: 6.368465623417938
+  harvest_target_kg: 6.066433923888862
   geography: Faroe Islands
   station: FI-FW-06
   purpose: early_stage
@@ -372,11 +372,11 @@ batches:
       end_day: 105
   sea: null
 - batch_id: FAR-UAT-130
-  start_date: '2025-09-04'
+  start_date: '2025-10-11'
   eggs: 3740736
   duration: 130
   effective_duration: 451
-  harvest_target_kg: 5.012752525982111
+  harvest_target_kg: 5.69266890915324
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_stage
@@ -413,11 +413,11 @@ batches:
       end_day: 130
   sea: null
 - batch_id: FAR-UAT-155
-  start_date: '2025-08-10'
+  start_date: '2025-09-16'
   eggs: 3064192
   duration: 155
   effective_duration: 451
-  harvest_target_kg: 6.189628049232087
+  harvest_target_kg: 6.3534863240005155
   geography: Faroe Islands
   station: FI-FW-02
   purpose: mid_stage
@@ -454,11 +454,11 @@ batches:
       end_day: 155
   sea: null
 - batch_id: FAR-UAT-175
-  start_date: '2025-07-21'
+  start_date: '2025-08-27'
   eggs: 3187648
   duration: 175
   effective_duration: 451
-  harvest_target_kg: 5.836893315217894
+  harvest_target_kg: 5.130108215472488
   geography: Faroe Islands
   station: FI-FW-03
   purpose: transition_ready
@@ -495,11 +495,11 @@ batches:
       end_day: 175
   sea: null
 - batch_id: FAR-UAT-195
-  start_date: '2025-07-01'
+  start_date: '2025-08-07'
   eggs: 3311104
   duration: 195
   effective_duration: 451
-  harvest_target_kg: 5.557856717131213
+  harvest_target_kg: 5.436523880085299
   geography: Faroe Islands
   station: FI-FW-04
   purpose: early_stage
@@ -551,11 +551,11 @@ batches:
       end_day: 195
   sea: null
 - batch_id: FAR-UAT-220
-  start_date: '2025-06-06'
+  start_date: '2025-07-13'
   eggs: 3434560
   duration: 220
   effective_duration: 451
-  harvest_target_kg: 5.68496928029511
+  harvest_target_kg: 4.666891427450189
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_stage
@@ -607,11 +607,11 @@ batches:
       end_day: 220
   sea: null
 - batch_id: FAR-UAT-245
-  start_date: '2025-05-12'
+  start_date: '2025-06-18'
   eggs: 3558016
   duration: 245
   effective_duration: 451
-  harvest_target_kg: 4.51032776326424
+  harvest_target_kg: 5.938942370420241
   geography: Faroe Islands
   station: FI-FW-02
   purpose: mid_stage
@@ -663,11 +663,11 @@ batches:
       end_day: 245
   sea: null
 - batch_id: FAR-UAT-265
-  start_date: '2025-04-22'
+  start_date: '2025-05-29'
   eggs: 3681472
   duration: 265
   effective_duration: 451
-  harvest_target_kg: 6.161705648653479
+  harvest_target_kg: 5.201152941101105
   geography: Faroe Islands
   station: FI-FW-03
   purpose: transition_ready
@@ -719,11 +719,11 @@ batches:
       end_day: 265
   sea: null
 - batch_id: FAR-UAT-285
-  start_date: '2025-04-02'
+  start_date: '2025-05-09'
   eggs: 3004928
   duration: 285
   effective_duration: 451
-  harvest_target_kg: 5.179583650514522
+  harvest_target_kg: 5.1058038347208115
   geography: Faroe Islands
   station: FI-FW-04
   purpose: early_stage
@@ -790,11 +790,11 @@ batches:
       end_day: 285
   sea: null
 - batch_id: FAR-UAT-315
-  start_date: '2025-03-03'
+  start_date: '2025-04-09'
   eggs: 3128384
   duration: 315
   effective_duration: 451
-  harvest_target_kg: 6.2914524185935825
+  harvest_target_kg: 5.235971589367297
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_stage
@@ -861,11 +861,11 @@ batches:
       end_day: 315
   sea: null
 - batch_id: FAR-UAT-345
-  start_date: '2025-02-01'
+  start_date: '2025-03-10'
   eggs: 3251840
   duration: 345
   effective_duration: 451
-  harvest_target_kg: 5.107962754032257
+  harvest_target_kg: 6.427245319900287
   geography: Faroe Islands
   station: FI-FW-02
   purpose: pre_transition
@@ -932,11 +932,11 @@ batches:
       end_day: 345
   sea: null
 - batch_id: FAR-UAT-358
-  start_date: '2025-01-19'
+  start_date: '2025-02-25'
   eggs: 3375296
   duration: 358
   effective_duration: 451
-  harvest_target_kg: 6.2777619923445
+  harvest_target_kg: 5.095529177770642
   geography: Faroe Islands
   station: FI-FW-03
   purpose: transition_critical
@@ -1003,11 +1003,11 @@ batches:
       end_day: 358
   sea: null
 - batch_id: FAR-UAT-375
-  start_date: '2025-01-02'
+  start_date: '2025-02-08'
   eggs: 3498752
   duration: 375
   effective_duration: 451
-  harvest_target_kg: 5.8713576101031295
+  harvest_target_kg: 6.4792779850367
   geography: Faroe Islands
   station: FI-FW-04
   purpose: early_stage
@@ -1089,11 +1089,11 @@ batches:
       end_day: 375
   sea: null
 - batch_id: FAR-UAT-405
-  start_date: '2024-12-03'
+  start_date: '2025-01-09'
   eggs: 3622208
   duration: 405
   effective_duration: 451
-  harvest_target_kg: 5.1513076955144586
+  harvest_target_kg: 5.241474415563227
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_stage
@@ -1175,11 +1175,11 @@ batches:
       end_day: 405
   sea: null
 - batch_id: FAR-UAT-435
-  start_date: '2024-11-03'
+  start_date: '2024-12-10'
   eggs: 3745664
   duration: 435
   effective_duration: 451
-  harvest_target_kg: 4.995098717048914
+  harvest_target_kg: 6.408661899688355
   geography: Faroe Islands
   station: FI-FW-02
   purpose: mid_stage
@@ -1261,11 +1261,11 @@ batches:
       end_day: 435
   sea: null
 - batch_id: FAR-UAT-448
-  start_date: '2024-10-21'
+  start_date: '2024-11-27'
   eggs: 3069120
   duration: 448
   effective_duration: 451
-  harvest_target_kg: 6.120064327855378
+  harvest_target_kg: 5.447946415285721
   geography: Faroe Islands
   station: FI-FW-03
   purpose: transition_ready
@@ -1347,11 +1347,11 @@ batches:
       end_day: 448
   sea: null
 - batch_id: FAR-UAT-480
-  start_date: '2024-09-19'
+  start_date: '2024-10-26'
   eggs: 3192576
   duration: 480
   effective_duration: 480
-  harvest_target_kg: 5.497421642056804
+  harvest_target_kg: 6.257858109710836
   geography: Faroe Islands
   station: FI-FW-04
   purpose: early_adult
@@ -1448,11 +1448,11 @@ batches:
     start_day: 450
     end_day: 480
 - batch_id: FAR-UAT-550
-  start_date: '2024-07-11'
+  start_date: '2024-08-17'
   eggs: 3316032
   duration: 550
   effective_duration: 550
-  harvest_target_kg: 4.791229113442971
+  harvest_target_kg: 5.03437552061617
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_adult
@@ -1533,27 +1533,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: Faroe Islands Sea Area 1
+    area: FI-SEA-01
     rings:
-    - Ring-01
-    - Ring-02
-    - Ring-03
-    - Ring-04
-    - Ring-05
-    - Ring-06
-    - Ring-07
-    - Ring-08
-    - Ring-09
-    - Ring-10
+    - FI-SEA-01-Ring-01
+    - FI-SEA-01-Ring-02
+    - FI-SEA-01-Ring-03
+    - FI-SEA-01-Ring-04
+    - FI-SEA-01-Ring-05
+    - FI-SEA-01-Ring-06
+    - FI-SEA-01-Ring-07
+    - FI-SEA-01-Ring-08
+    - FI-SEA-01-Ring-09
+    - FI-SEA-01-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 550
 - batch_id: FAR-UAT-650
-  start_date: '2024-04-02'
+  start_date: '2024-05-09'
   eggs: 3439488
   duration: 650
   effective_duration: 650
-  harvest_target_kg: 5.74438357772484
+  harvest_target_kg: 5.935843084737159
   geography: Faroe Islands
   station: FI-FW-01
   purpose: mid_adult
@@ -1634,27 +1634,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-01
+    area: FI-SEA-02
     rings:
-    - FI-SEA-01-Ring-01
-    - FI-SEA-01-Ring-02
-    - FI-SEA-01-Ring-03
-    - FI-SEA-01-Ring-04
-    - FI-SEA-01-Ring-05
-    - FI-SEA-01-Ring-06
-    - FI-SEA-01-Ring-07
-    - FI-SEA-01-Ring-08
-    - FI-SEA-01-Ring-09
-    - FI-SEA-01-Ring-10
+    - FI-SEA-02-Ring-01
+    - FI-SEA-02-Ring-02
+    - FI-SEA-02-Ring-03
+    - FI-SEA-02-Ring-04
+    - FI-SEA-02-Ring-05
+    - FI-SEA-02-Ring-06
+    - FI-SEA-02-Ring-07
+    - FI-SEA-02-Ring-08
+    - FI-SEA-02-Ring-09
+    - FI-SEA-02-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 650
 - batch_id: FAR-UAT-720
-  start_date: '2024-01-23'
+  start_date: '2024-02-29'
   eggs: 3562944
   duration: 720
   effective_duration: 720
-  harvest_target_kg: 6.4994449467793665
+  harvest_target_kg: 6.399459239188271
   geography: Faroe Islands
   station: FI-FW-02
   purpose: late_adult
@@ -1735,27 +1735,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-02
+    area: FI-SEA-03
     rings:
-    - FI-SEA-02-Ring-01
-    - FI-SEA-02-Ring-02
-    - FI-SEA-02-Ring-03
-    - FI-SEA-02-Ring-04
-    - FI-SEA-02-Ring-05
-    - FI-SEA-02-Ring-06
-    - FI-SEA-02-Ring-07
-    - FI-SEA-02-Ring-08
-    - FI-SEA-02-Ring-09
-    - FI-SEA-02-Ring-10
+    - FI-SEA-03-Ring-01
+    - FI-SEA-03-Ring-02
+    - FI-SEA-03-Ring-03
+    - FI-SEA-03-Ring-04
+    - FI-SEA-03-Ring-05
+    - FI-SEA-03-Ring-06
+    - FI-SEA-03-Ring-07
+    - FI-SEA-03-Ring-08
+    - FI-SEA-03-Ring-09
+    - FI-SEA-03-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 720
 - batch_id: FAR-UAT-780
-  start_date: '2023-11-24'
+  start_date: '2023-12-31'
   eggs: 3686400
   duration: 780
   effective_duration: 780
-  harvest_target_kg: 5.4271784571695125
+  harvest_target_kg: 5.892495330825775
   geography: Faroe Islands
   station: FI-FW-01
   purpose: pre_harvest
@@ -1836,27 +1836,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-03
+    area: FI-SEA-04
     rings:
-    - FI-SEA-03-Ring-01
-    - FI-SEA-03-Ring-02
-    - FI-SEA-03-Ring-03
-    - FI-SEA-03-Ring-04
-    - FI-SEA-03-Ring-05
-    - FI-SEA-03-Ring-06
-    - FI-SEA-03-Ring-07
-    - FI-SEA-03-Ring-08
-    - FI-SEA-03-Ring-09
-    - FI-SEA-03-Ring-10
+    - FI-SEA-04-Ring-01
+    - FI-SEA-04-Ring-02
+    - FI-SEA-04-Ring-03
+    - FI-SEA-04-Ring-04
+    - FI-SEA-04-Ring-05
+    - FI-SEA-04-Ring-06
+    - FI-SEA-04-Ring-07
+    - FI-SEA-04-Ring-08
+    - FI-SEA-04-Ring-09
+    - FI-SEA-04-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 780
 - batch_id: FAR-UAT-820
-  start_date: '2023-10-15'
+  start_date: '2023-11-21'
   eggs: 3009856
   duration: 820
   effective_duration: 820
-  harvest_target_kg: 5.704491132702575
+  harvest_target_kg: 5.346457228928258
   geography: Faroe Islands
   station: FI-FW-02
   purpose: harvest_threshold
@@ -1937,27 +1937,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-04
+    area: FI-SEA-05
     rings:
-    - FI-SEA-04-Ring-01
-    - FI-SEA-04-Ring-02
-    - FI-SEA-04-Ring-03
-    - FI-SEA-04-Ring-04
-    - FI-SEA-04-Ring-05
-    - FI-SEA-04-Ring-06
-    - FI-SEA-04-Ring-07
-    - FI-SEA-04-Ring-08
-    - FI-SEA-04-Ring-09
-    - FI-SEA-04-Ring-10
+    - FI-SEA-05-Ring-01
+    - FI-SEA-05-Ring-02
+    - FI-SEA-05-Ring-03
+    - FI-SEA-05-Ring-04
+    - FI-SEA-05-Ring-05
+    - FI-SEA-05-Ring-06
+    - FI-SEA-05-Ring-07
+    - FI-SEA-05-Ring-08
+    - FI-SEA-05-Ring-09
+    - FI-SEA-05-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 820
 - batch_id: FAR-UAT-860
-  start_date: '2023-09-05'
+  start_date: '2023-10-12'
   eggs: 3133312
   duration: 860
   effective_duration: 860
-  harvest_target_kg: 6.435498186520622
+  harvest_target_kg: 4.584562904464088
   geography: Faroe Islands
   station: FI-FW-03
   purpose: harvest_ready
@@ -2038,27 +2038,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-05
+    area: FI-SEA-06
     rings:
-    - FI-SEA-05-Ring-01
-    - FI-SEA-05-Ring-02
-    - FI-SEA-05-Ring-03
-    - FI-SEA-05-Ring-04
-    - FI-SEA-05-Ring-05
-    - FI-SEA-05-Ring-06
-    - FI-SEA-05-Ring-07
-    - FI-SEA-05-Ring-08
-    - FI-SEA-05-Ring-09
-    - FI-SEA-05-Ring-10
+    - FI-SEA-06-Ring-01
+    - FI-SEA-06-Ring-02
+    - FI-SEA-06-Ring-03
+    - FI-SEA-06-Ring-04
+    - FI-SEA-06-Ring-05
+    - FI-SEA-06-Ring-06
+    - FI-SEA-06-Ring-07
+    - FI-SEA-06-Ring-08
+    - FI-SEA-06-Ring-09
+    - FI-SEA-06-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 860
 - batch_id: SCO-UAT-025
-  start_date: '2025-12-18'
+  start_date: '2026-01-24'
   eggs: 3256768
   duration: 25
   effective_duration: 451
-  harvest_target_kg: 5.810109821869906
+  harvest_target_kg: 5.031253394535505
   geography: Scotland
   station: S-FW-01
   purpose: early_stage
@@ -2080,11 +2080,11 @@ batches:
       end_day: 25
   sea: null
 - batch_id: SCO-UAT-045
-  start_date: '2025-11-28'
+  start_date: '2026-01-04'
   eggs: 3380224
   duration: 45
   effective_duration: 451
-  harvest_target_kg: 5.3152601681982095
+  harvest_target_kg: 5.404209079110061
   geography: Scotland
   station: S-FW-02
   purpose: mid_stage
@@ -2106,11 +2106,11 @@ batches:
       end_day: 45
   sea: null
 - batch_id: SCO-UAT-065
-  start_date: '2025-11-08'
+  start_date: '2025-12-15'
   eggs: 3503680
   duration: 65
   effective_duration: 451
-  harvest_target_kg: 5.701813971217356
+  harvest_target_kg: 5.168833530965506
   geography: Scotland
   station: S-FW-03
   purpose: mid_stage
@@ -2132,11 +2132,11 @@ batches:
       end_day: 65
   sea: null
 - batch_id: SCO-UAT-082
-  start_date: '2025-10-22'
+  start_date: '2025-11-28'
   eggs: 3627136
   duration: 82
   effective_duration: 451
-  harvest_target_kg: 4.980517818788201
+  harvest_target_kg: 6.309546298247218
   geography: Scotland
   station: S-FW-04
   purpose: pre_transition
@@ -2158,11 +2158,11 @@ batches:
       end_day: 82
   sea: null
 - batch_id: SCO-UAT-088
-  start_date: '2025-10-16'
+  start_date: '2025-11-22'
   eggs: 3750592
   duration: 88
   effective_duration: 451
-  harvest_target_kg: 5.144193371272989
+  harvest_target_kg: 5.535544319440593
   geography: Scotland
   station: S-FW-05
   purpose: transition_ready
@@ -2184,11 +2184,11 @@ batches:
       end_day: 88
   sea: null
 - batch_id: SCO-UAT-105
-  start_date: '2025-09-29'
+  start_date: '2025-11-05'
   eggs: 3074048
   duration: 105
   effective_duration: 451
-  harvest_target_kg: 5.157968372409511
+  harvest_target_kg: 5.764069633623075
   geography: Scotland
   station: S-FW-06
   purpose: early_stage
@@ -2225,11 +2225,11 @@ batches:
       end_day: 105
   sea: null
 - batch_id: SCO-UAT-130
-  start_date: '2025-09-04'
+  start_date: '2025-10-11'
   eggs: 3197504
   duration: 130
   effective_duration: 451
-  harvest_target_kg: 5.441493825181553
+  harvest_target_kg: 4.890467205335756
   geography: Scotland
   station: S-FW-01
   purpose: mid_stage
@@ -2266,11 +2266,11 @@ batches:
       end_day: 130
   sea: null
 - batch_id: SCO-UAT-155
-  start_date: '2025-08-10'
+  start_date: '2025-09-16'
   eggs: 3320960
   duration: 155
   effective_duration: 451
-  harvest_target_kg: 5.0342750819023045
+  harvest_target_kg: 4.915071891660764
   geography: Scotland
   station: S-FW-02
   purpose: mid_stage
@@ -2307,11 +2307,11 @@ batches:
       end_day: 155
   sea: null
 - batch_id: SCO-UAT-175
-  start_date: '2025-07-21'
+  start_date: '2025-08-27'
   eggs: 3444416
   duration: 175
   effective_duration: 451
-  harvest_target_kg: 6.243626329254454
+  harvest_target_kg: 5.805833901224094
   geography: Scotland
   station: S-FW-03
   purpose: transition_ready
@@ -2348,11 +2348,11 @@ batches:
       end_day: 175
   sea: null
 - batch_id: SCO-UAT-195
-  start_date: '2025-07-01'
+  start_date: '2025-08-07'
   eggs: 3567872
   duration: 195
   effective_duration: 451
-  harvest_target_kg: 5.086144608844867
+  harvest_target_kg: 5.972116756171856
   geography: Scotland
   station: S-FW-04
   purpose: early_stage
@@ -2404,11 +2404,11 @@ batches:
       end_day: 195
   sea: null
 - batch_id: SCO-UAT-220
-  start_date: '2025-06-06'
+  start_date: '2025-07-13'
   eggs: 3691328
   duration: 220
   effective_duration: 451
-  harvest_target_kg: 5.963178315096666
+  harvest_target_kg: 5.933363608669412
   geography: Scotland
   station: S-FW-01
   purpose: mid_stage
@@ -2460,11 +2460,11 @@ batches:
       end_day: 220
   sea: null
 - batch_id: SCO-UAT-245
-  start_date: '2025-05-12'
+  start_date: '2025-06-18'
   eggs: 3014784
   duration: 245
   effective_duration: 451
-  harvest_target_kg: 5.188478821866214
+  harvest_target_kg: 6.015599765611667
   geography: Scotland
   station: S-FW-02
   purpose: mid_stage
@@ -2516,11 +2516,11 @@ batches:
       end_day: 245
   sea: null
 - batch_id: SCO-UAT-265
-  start_date: '2025-04-22'
+  start_date: '2025-05-29'
   eggs: 3138240
   duration: 265
   effective_duration: 451
-  harvest_target_kg: 5.1950782727099405
+  harvest_target_kg: 5.101847143107309
   geography: Scotland
   station: S-FW-03
   purpose: transition_ready
@@ -2572,11 +2572,11 @@ batches:
       end_day: 265
   sea: null
 - batch_id: SCO-UAT-285
-  start_date: '2025-04-02'
+  start_date: '2025-05-09'
   eggs: 3261696
   duration: 285
   effective_duration: 451
-  harvest_target_kg: 5.546077313938802
+  harvest_target_kg: 5.482200343321276
   geography: Scotland
   station: S-FW-04
   purpose: early_stage
@@ -2643,11 +2643,11 @@ batches:
       end_day: 285
   sea: null
 - batch_id: SCO-UAT-315
-  start_date: '2025-03-03'
+  start_date: '2025-04-09'
   eggs: 3385152
   duration: 315
   effective_duration: 451
-  harvest_target_kg: 4.907785062617498
+  harvest_target_kg: 5.302813304158428
   geography: Scotland
   station: S-FW-01
   purpose: mid_stage
@@ -2714,11 +2714,11 @@ batches:
       end_day: 315
   sea: null
 - batch_id: SCO-UAT-345
-  start_date: '2025-02-01'
+  start_date: '2025-03-10'
   eggs: 3508608
   duration: 345
   effective_duration: 451
-  harvest_target_kg: 5.951090827391921
+  harvest_target_kg: 4.540008618666886
   geography: Scotland
   station: S-FW-02
   purpose: pre_transition
@@ -2785,11 +2785,11 @@ batches:
       end_day: 345
   sea: null
 - batch_id: SCO-UAT-358
-  start_date: '2025-01-19'
+  start_date: '2025-02-25'
   eggs: 3632064
   duration: 358
   effective_duration: 451
-  harvest_target_kg: 5.835959279027028
+  harvest_target_kg: 5.128577953399715
   geography: Scotland
   station: S-FW-03
   purpose: transition_critical
@@ -2856,11 +2856,11 @@ batches:
       end_day: 358
   sea: null
 - batch_id: SCO-UAT-375
-  start_date: '2025-01-02'
+  start_date: '2025-02-08'
   eggs: 3755520
   duration: 375
   effective_duration: 451
-  harvest_target_kg: 5.463850319353621
+  harvest_target_kg: 5.683357203777559
   geography: Scotland
   station: S-FW-04
   purpose: early_stage
@@ -2942,11 +2942,11 @@ batches:
       end_day: 375
   sea: null
 - batch_id: SCO-UAT-405
-  start_date: '2024-12-03'
+  start_date: '2025-01-09'
   eggs: 3078976
   duration: 405
   effective_duration: 451
-  harvest_target_kg: 6.028068227066685
+  harvest_target_kg: 4.768479829184386
   geography: Scotland
   station: S-FW-01
   purpose: mid_stage
@@ -3028,11 +3028,11 @@ batches:
       end_day: 405
   sea: null
 - batch_id: SCO-UAT-435
-  start_date: '2024-11-03'
+  start_date: '2024-12-10'
   eggs: 3202432
   duration: 435
   effective_duration: 451
-  harvest_target_kg: 4.767653998975595
+  harvest_target_kg: 5.760410334912974
   geography: Scotland
   station: S-FW-02
   purpose: mid_stage
@@ -3114,11 +3114,11 @@ batches:
       end_day: 435
   sea: null
 - batch_id: SCO-UAT-448
-  start_date: '2024-10-21'
+  start_date: '2024-11-27'
   eggs: 3325888
   duration: 448
   effective_duration: 451
-  harvest_target_kg: 4.9413856528420315
+  harvest_target_kg: 4.729905312600612
   geography: Scotland
   station: S-FW-03
   purpose: transition_ready
@@ -3200,11 +3200,11 @@ batches:
       end_day: 448
   sea: null
 - batch_id: SCO-UAT-480
-  start_date: '2024-09-19'
+  start_date: '2024-10-26'
   eggs: 3449344
   duration: 480
   effective_duration: 480
-  harvest_target_kg: 4.9509843678662
+  harvest_target_kg: 4.850753196591491
   geography: Scotland
   station: S-FW-04
   purpose: early_adult
@@ -3301,11 +3301,11 @@ batches:
     start_day: 450
     end_day: 480
 - batch_id: SCO-UAT-550
-  start_date: '2024-07-11'
+  start_date: '2024-08-17'
   eggs: 3572800
   duration: 550
   effective_duration: 550
-  harvest_target_kg: 5.81285296023201
+  harvest_target_kg: 5.750346381588832
   geography: Scotland
   station: S-FW-01
   purpose: mid_adult
@@ -3402,11 +3402,11 @@ batches:
     start_day: 450
     end_day: 550
 - batch_id: SCO-UAT-650
-  start_date: '2024-04-02'
+  start_date: '2024-05-09'
   eggs: 3696256
   duration: 650
   effective_duration: 650
-  harvest_target_kg: 6.307531696441589
+  harvest_target_kg: 5.622681431966907
   geography: Scotland
   station: S-FW-01
   purpose: mid_adult
@@ -3503,11 +3503,11 @@ batches:
     start_day: 450
     end_day: 650
 - batch_id: SCO-UAT-720
-  start_date: '2024-01-23'
+  start_date: '2024-02-29'
   eggs: 3019712
   duration: 720
   effective_duration: 720
-  harvest_target_kg: 4.843682592015674
+  harvest_target_kg: 5.937893498486405
   geography: Scotland
   station: S-FW-02
   purpose: late_adult
@@ -3604,11 +3604,11 @@ batches:
     start_day: 450
     end_day: 720
 - batch_id: SCO-UAT-780
-  start_date: '2023-11-24'
+  start_date: '2023-12-31'
   eggs: 3143168
   duration: 780
   effective_duration: 780
-  harvest_target_kg: 4.938892400529308
+  harvest_target_kg: 4.990203614883414
   geography: Scotland
   station: S-FW-01
   purpose: pre_harvest
@@ -3705,11 +3705,11 @@ batches:
     start_day: 450
     end_day: 780
 - batch_id: SCO-UAT-820
-  start_date: '2023-10-15'
+  start_date: '2023-11-21'
   eggs: 3266624
   duration: 820
   effective_duration: 820
-  harvest_target_kg: 4.690743044415376
+  harvest_target_kg: 6.035038213521718
   geography: Scotland
   station: S-FW-02
   purpose: harvest_threshold
@@ -3806,11 +3806,11 @@ batches:
     start_day: 450
     end_day: 820
 - batch_id: SCO-UAT-860
-  start_date: '2023-09-05'
+  start_date: '2023-10-12'
   eggs: 3390080
   duration: 860
   effective_duration: 860
-  harvest_target_kg: 6.191149847594422
+  harvest_target_kg: 6.316871346946334
   geography: Scotland
   station: S-FW-03
   purpose: harvest_ready
@@ -3907,11 +3907,11 @@ batches:
     start_day: 450
     end_day: 860
 - batch_id: FAR-2018-001
-  start_date: '2018-07-28'
+  start_date: '2018-09-03'
   eggs: 3513536
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.130375164091422
+  harvest_target_kg: 4.516403701702541
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -3989,208 +3989,6 @@ batches:
       - FI-FW-01-E-C08
       - FI-FW-01-E-C09
       - FI-FW-01-E-C10
-      start_day: 360
-      end_day: 450
-  sea:
-    area: FI-SEA-11
-    rings:
-    - FI-SEA-11-Ring-01
-    - FI-SEA-11-Ring-02
-    - FI-SEA-11-Ring-03
-    - FI-SEA-11-Ring-04
-    - FI-SEA-11-Ring-05
-    - FI-SEA-11-Ring-06
-    - FI-SEA-11-Ring-07
-    - FI-SEA-11-Ring-08
-    - FI-SEA-11-Ring-09
-    - FI-SEA-11-Ring-10
-    rings_count: 10
-    start_day: 450
-    end_day: 900
-- batch_id: FAR-2018-002
-  start_date: '2018-08-27'
-  eggs: 3636992
-  duration: 900
-  effective_duration: 900
-  harvest_target_kg: 6.22035626587068
-  geography: Faroe Islands
-  station: FI-FW-02
-  purpose: completed
-  freshwater:
-    egg_alevin:
-      hall: FI-FW-02-Hall-A
-      containers:
-      - FI-FW-02-A-C01
-      - FI-FW-02-A-C02
-      - FI-FW-02-A-C03
-      - FI-FW-02-A-C04
-      - FI-FW-02-A-C05
-      - FI-FW-02-A-C06
-      - FI-FW-02-A-C07
-      - FI-FW-02-A-C08
-      - FI-FW-02-A-C09
-      - FI-FW-02-A-C10
-      start_day: 0
-      end_day: 90
-    fry:
-      hall: FI-FW-02-Hall-B
-      containers:
-      - FI-FW-02-B-C01
-      - FI-FW-02-B-C02
-      - FI-FW-02-B-C03
-      - FI-FW-02-B-C04
-      - FI-FW-02-B-C05
-      - FI-FW-02-B-C06
-      - FI-FW-02-B-C07
-      - FI-FW-02-B-C08
-      - FI-FW-02-B-C09
-      - FI-FW-02-B-C10
-      start_day: 90
-      end_day: 180
-    parr:
-      hall: FI-FW-02-Hall-C
-      containers:
-      - FI-FW-02-C-C01
-      - FI-FW-02-C-C02
-      - FI-FW-02-C-C03
-      - FI-FW-02-C-C04
-      - FI-FW-02-C-C05
-      - FI-FW-02-C-C06
-      - FI-FW-02-C-C07
-      - FI-FW-02-C-C08
-      - FI-FW-02-C-C09
-      - FI-FW-02-C-C10
-      start_day: 180
-      end_day: 270
-    smolt:
-      hall: FI-FW-02-Hall-D
-      containers:
-      - FI-FW-02-D-C01
-      - FI-FW-02-D-C02
-      - FI-FW-02-D-C03
-      - FI-FW-02-D-C04
-      - FI-FW-02-D-C05
-      - FI-FW-02-D-C06
-      - FI-FW-02-D-C07
-      - FI-FW-02-D-C08
-      - FI-FW-02-D-C09
-      - FI-FW-02-D-C10
-      start_day: 270
-      end_day: 360
-    post_smolt:
-      hall: FI-FW-02-Hall-E
-      containers:
-      - FI-FW-02-E-C01
-      - FI-FW-02-E-C02
-      - FI-FW-02-E-C03
-      - FI-FW-02-E-C04
-      - FI-FW-02-E-C05
-      - FI-FW-02-E-C06
-      - FI-FW-02-E-C07
-      - FI-FW-02-E-C08
-      - FI-FW-02-E-C09
-      - FI-FW-02-E-C10
-      start_day: 360
-      end_day: 450
-  sea:
-    area: FI-SEA-12
-    rings:
-    - FI-SEA-12-Ring-01
-    - FI-SEA-12-Ring-02
-    - FI-SEA-12-Ring-03
-    - FI-SEA-12-Ring-04
-    - FI-SEA-12-Ring-05
-    - FI-SEA-12-Ring-06
-    - FI-SEA-12-Ring-07
-    - FI-SEA-12-Ring-08
-    - FI-SEA-12-Ring-09
-    - FI-SEA-12-Ring-10
-    rings_count: 10
-    start_day: 450
-    end_day: 900
-- batch_id: FAR-2018-003
-  start_date: '2018-09-26'
-  eggs: 3760448
-  duration: 900
-  effective_duration: 900
-  harvest_target_kg: 5.933415198182675
-  geography: Faroe Islands
-  station: FI-FW-03
-  purpose: completed
-  freshwater:
-    egg_alevin:
-      hall: FI-FW-03-Hall-A
-      containers:
-      - FI-FW-03-A-C01
-      - FI-FW-03-A-C02
-      - FI-FW-03-A-C03
-      - FI-FW-03-A-C04
-      - FI-FW-03-A-C05
-      - FI-FW-03-A-C06
-      - FI-FW-03-A-C07
-      - FI-FW-03-A-C08
-      - FI-FW-03-A-C09
-      - FI-FW-03-A-C10
-      start_day: 0
-      end_day: 90
-    fry:
-      hall: FI-FW-03-Hall-B
-      containers:
-      - FI-FW-03-B-C01
-      - FI-FW-03-B-C02
-      - FI-FW-03-B-C03
-      - FI-FW-03-B-C04
-      - FI-FW-03-B-C05
-      - FI-FW-03-B-C06
-      - FI-FW-03-B-C07
-      - FI-FW-03-B-C08
-      - FI-FW-03-B-C09
-      - FI-FW-03-B-C10
-      start_day: 90
-      end_day: 180
-    parr:
-      hall: FI-FW-03-Hall-C
-      containers:
-      - FI-FW-03-C-C01
-      - FI-FW-03-C-C02
-      - FI-FW-03-C-C03
-      - FI-FW-03-C-C04
-      - FI-FW-03-C-C05
-      - FI-FW-03-C-C06
-      - FI-FW-03-C-C07
-      - FI-FW-03-C-C08
-      - FI-FW-03-C-C09
-      - FI-FW-03-C-C10
-      start_day: 180
-      end_day: 270
-    smolt:
-      hall: FI-FW-03-Hall-D
-      containers:
-      - FI-FW-03-D-C01
-      - FI-FW-03-D-C02
-      - FI-FW-03-D-C03
-      - FI-FW-03-D-C04
-      - FI-FW-03-D-C05
-      - FI-FW-03-D-C06
-      - FI-FW-03-D-C07
-      - FI-FW-03-D-C08
-      - FI-FW-03-D-C09
-      - FI-FW-03-D-C10
-      start_day: 270
-      end_day: 360
-    post_smolt:
-      hall: FI-FW-03-Hall-E
-      containers:
-      - FI-FW-03-E-C01
-      - FI-FW-03-E-C02
-      - FI-FW-03-E-C03
-      - FI-FW-03-E-C04
-      - FI-FW-03-E-C05
-      - FI-FW-03-E-C06
-      - FI-FW-03-E-C07
-      - FI-FW-03-E-C08
-      - FI-FW-03-E-C09
-      - FI-FW-03-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4209,89 +4007,89 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2018-004
-  start_date: '2018-10-26'
-  eggs: 3083904
+- batch_id: FAR-2018-002
+  start_date: '2018-10-03'
+  eggs: 3636992
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.702278986375598
+  harvest_target_kg: 6.068981214068664
   geography: Faroe Islands
-  station: FI-FW-01
+  station: FI-FW-02
   purpose: completed
   freshwater:
     egg_alevin:
-      hall: FI-FW-01-Hall-A
+      hall: FI-FW-02-Hall-A
       containers:
-      - FI-FW-01-A-C01
-      - FI-FW-01-A-C02
-      - FI-FW-01-A-C03
-      - FI-FW-01-A-C04
-      - FI-FW-01-A-C05
-      - FI-FW-01-A-C06
-      - FI-FW-01-A-C07
-      - FI-FW-01-A-C08
-      - FI-FW-01-A-C09
-      - FI-FW-01-A-C10
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
       start_day: 0
       end_day: 90
     fry:
-      hall: FI-FW-01-Hall-B
+      hall: FI-FW-02-Hall-B
       containers:
-      - FI-FW-01-B-C01
-      - FI-FW-01-B-C02
-      - FI-FW-01-B-C03
-      - FI-FW-01-B-C04
-      - FI-FW-01-B-C05
-      - FI-FW-01-B-C06
-      - FI-FW-01-B-C07
-      - FI-FW-01-B-C08
-      - FI-FW-01-B-C09
-      - FI-FW-01-B-C10
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
       start_day: 90
       end_day: 180
     parr:
-      hall: FI-FW-01-Hall-C
+      hall: FI-FW-02-Hall-C
       containers:
-      - FI-FW-01-C-C01
-      - FI-FW-01-C-C02
-      - FI-FW-01-C-C03
-      - FI-FW-01-C-C04
-      - FI-FW-01-C-C05
-      - FI-FW-01-C-C06
-      - FI-FW-01-C-C07
-      - FI-FW-01-C-C08
-      - FI-FW-01-C-C09
-      - FI-FW-01-C-C10
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
       start_day: 180
       end_day: 270
     smolt:
-      hall: FI-FW-01-Hall-D
+      hall: FI-FW-02-Hall-D
       containers:
-      - FI-FW-01-D-C01
-      - FI-FW-01-D-C02
-      - FI-FW-01-D-C03
-      - FI-FW-01-D-C04
-      - FI-FW-01-D-C05
-      - FI-FW-01-D-C06
-      - FI-FW-01-D-C07
-      - FI-FW-01-D-C08
-      - FI-FW-01-D-C09
-      - FI-FW-01-D-C10
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
       start_day: 270
       end_day: 360
     post_smolt:
-      hall: FI-FW-01-Hall-E
+      hall: FI-FW-02-Hall-E
       containers:
-      - FI-FW-01-E-C01
-      - FI-FW-01-E-C02
-      - FI-FW-01-E-C03
-      - FI-FW-01-E-C04
-      - FI-FW-01-E-C05
-      - FI-FW-01-E-C06
-      - FI-FW-01-E-C07
-      - FI-FW-01-E-C08
-      - FI-FW-01-E-C09
-      - FI-FW-01-E-C10
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4310,89 +4108,89 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2018-005
-  start_date: '2018-11-25'
-  eggs: 3207360
+- batch_id: FAR-2018-003
+  start_date: '2018-11-02'
+  eggs: 3760448
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.970066672845611
+  harvest_target_kg: 6.456320047785737
   geography: Faroe Islands
-  station: FI-FW-02
+  station: FI-FW-03
   purpose: completed
   freshwater:
     egg_alevin:
-      hall: FI-FW-02-Hall-A
+      hall: FI-FW-03-Hall-A
       containers:
-      - FI-FW-02-A-C01
-      - FI-FW-02-A-C02
-      - FI-FW-02-A-C03
-      - FI-FW-02-A-C04
-      - FI-FW-02-A-C05
-      - FI-FW-02-A-C06
-      - FI-FW-02-A-C07
-      - FI-FW-02-A-C08
-      - FI-FW-02-A-C09
-      - FI-FW-02-A-C10
+      - FI-FW-03-A-C01
+      - FI-FW-03-A-C02
+      - FI-FW-03-A-C03
+      - FI-FW-03-A-C04
+      - FI-FW-03-A-C05
+      - FI-FW-03-A-C06
+      - FI-FW-03-A-C07
+      - FI-FW-03-A-C08
+      - FI-FW-03-A-C09
+      - FI-FW-03-A-C10
       start_day: 0
       end_day: 90
     fry:
-      hall: FI-FW-02-Hall-B
+      hall: FI-FW-03-Hall-B
       containers:
-      - FI-FW-02-B-C01
-      - FI-FW-02-B-C02
-      - FI-FW-02-B-C03
-      - FI-FW-02-B-C04
-      - FI-FW-02-B-C05
-      - FI-FW-02-B-C06
-      - FI-FW-02-B-C07
-      - FI-FW-02-B-C08
-      - FI-FW-02-B-C09
-      - FI-FW-02-B-C10
+      - FI-FW-03-B-C01
+      - FI-FW-03-B-C02
+      - FI-FW-03-B-C03
+      - FI-FW-03-B-C04
+      - FI-FW-03-B-C05
+      - FI-FW-03-B-C06
+      - FI-FW-03-B-C07
+      - FI-FW-03-B-C08
+      - FI-FW-03-B-C09
+      - FI-FW-03-B-C10
       start_day: 90
       end_day: 180
     parr:
-      hall: FI-FW-02-Hall-C
+      hall: FI-FW-03-Hall-C
       containers:
-      - FI-FW-02-C-C01
-      - FI-FW-02-C-C02
-      - FI-FW-02-C-C03
-      - FI-FW-02-C-C04
-      - FI-FW-02-C-C05
-      - FI-FW-02-C-C06
-      - FI-FW-02-C-C07
-      - FI-FW-02-C-C08
-      - FI-FW-02-C-C09
-      - FI-FW-02-C-C10
+      - FI-FW-03-C-C01
+      - FI-FW-03-C-C02
+      - FI-FW-03-C-C03
+      - FI-FW-03-C-C04
+      - FI-FW-03-C-C05
+      - FI-FW-03-C-C06
+      - FI-FW-03-C-C07
+      - FI-FW-03-C-C08
+      - FI-FW-03-C-C09
+      - FI-FW-03-C-C10
       start_day: 180
       end_day: 270
     smolt:
-      hall: FI-FW-02-Hall-D
+      hall: FI-FW-03-Hall-D
       containers:
-      - FI-FW-02-D-C01
-      - FI-FW-02-D-C02
-      - FI-FW-02-D-C03
-      - FI-FW-02-D-C04
-      - FI-FW-02-D-C05
-      - FI-FW-02-D-C06
-      - FI-FW-02-D-C07
-      - FI-FW-02-D-C08
-      - FI-FW-02-D-C09
-      - FI-FW-02-D-C10
+      - FI-FW-03-D-C01
+      - FI-FW-03-D-C02
+      - FI-FW-03-D-C03
+      - FI-FW-03-D-C04
+      - FI-FW-03-D-C05
+      - FI-FW-03-D-C06
+      - FI-FW-03-D-C07
+      - FI-FW-03-D-C08
+      - FI-FW-03-D-C09
+      - FI-FW-03-D-C10
       start_day: 270
       end_day: 360
     post_smolt:
-      hall: FI-FW-02-Hall-E
+      hall: FI-FW-03-Hall-E
       containers:
-      - FI-FW-02-E-C01
-      - FI-FW-02-E-C02
-      - FI-FW-02-E-C03
-      - FI-FW-02-E-C04
-      - FI-FW-02-E-C05
-      - FI-FW-02-E-C06
-      - FI-FW-02-E-C07
-      - FI-FW-02-E-C08
-      - FI-FW-02-E-C09
-      - FI-FW-02-E-C10
+      - FI-FW-03-E-C01
+      - FI-FW-03-E-C02
+      - FI-FW-03-E-C03
+      - FI-FW-03-E-C04
+      - FI-FW-03-E-C05
+      - FI-FW-03-E-C06
+      - FI-FW-03-E-C07
+      - FI-FW-03-E-C08
+      - FI-FW-03-E-C09
+      - FI-FW-03-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4411,89 +4209,89 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2018-006
-  start_date: '2018-12-25'
-  eggs: 3330816
+- batch_id: FAR-2018-004
+  start_date: '2018-12-02'
+  eggs: 3083904
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.072903353079186
+  harvest_target_kg: 6.4199373688032235
   geography: Faroe Islands
-  station: FI-FW-03
+  station: FI-FW-01
   purpose: completed
   freshwater:
     egg_alevin:
-      hall: FI-FW-03-Hall-A
+      hall: FI-FW-01-Hall-A
       containers:
-      - FI-FW-03-A-C01
-      - FI-FW-03-A-C02
-      - FI-FW-03-A-C03
-      - FI-FW-03-A-C04
-      - FI-FW-03-A-C05
-      - FI-FW-03-A-C06
-      - FI-FW-03-A-C07
-      - FI-FW-03-A-C08
-      - FI-FW-03-A-C09
-      - FI-FW-03-A-C10
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
       start_day: 0
       end_day: 90
     fry:
-      hall: FI-FW-03-Hall-B
+      hall: FI-FW-01-Hall-B
       containers:
-      - FI-FW-03-B-C01
-      - FI-FW-03-B-C02
-      - FI-FW-03-B-C03
-      - FI-FW-03-B-C04
-      - FI-FW-03-B-C05
-      - FI-FW-03-B-C06
-      - FI-FW-03-B-C07
-      - FI-FW-03-B-C08
-      - FI-FW-03-B-C09
-      - FI-FW-03-B-C10
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
       start_day: 90
       end_day: 180
     parr:
-      hall: FI-FW-03-Hall-C
+      hall: FI-FW-01-Hall-C
       containers:
-      - FI-FW-03-C-C01
-      - FI-FW-03-C-C02
-      - FI-FW-03-C-C03
-      - FI-FW-03-C-C04
-      - FI-FW-03-C-C05
-      - FI-FW-03-C-C06
-      - FI-FW-03-C-C07
-      - FI-FW-03-C-C08
-      - FI-FW-03-C-C09
-      - FI-FW-03-C-C10
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
       start_day: 180
       end_day: 270
     smolt:
-      hall: FI-FW-03-Hall-D
+      hall: FI-FW-01-Hall-D
       containers:
-      - FI-FW-03-D-C01
-      - FI-FW-03-D-C02
-      - FI-FW-03-D-C03
-      - FI-FW-03-D-C04
-      - FI-FW-03-D-C05
-      - FI-FW-03-D-C06
-      - FI-FW-03-D-C07
-      - FI-FW-03-D-C08
-      - FI-FW-03-D-C09
-      - FI-FW-03-D-C10
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
       start_day: 270
       end_day: 360
     post_smolt:
-      hall: FI-FW-03-Hall-E
+      hall: FI-FW-01-Hall-E
       containers:
-      - FI-FW-03-E-C01
-      - FI-FW-03-E-C02
-      - FI-FW-03-E-C03
-      - FI-FW-03-E-C04
-      - FI-FW-03-E-C05
-      - FI-FW-03-E-C06
-      - FI-FW-03-E-C07
-      - FI-FW-03-E-C08
-      - FI-FW-03-E-C09
-      - FI-FW-03-E-C10
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4512,89 +4310,89 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-007
-  start_date: '2019-01-24'
-  eggs: 3454272
+- batch_id: FAR-2019-005
+  start_date: '2019-01-01'
+  eggs: 3207360
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.246926093934773
+  harvest_target_kg: 5.577382960819604
   geography: Faroe Islands
-  station: FI-FW-01
+  station: FI-FW-02
   purpose: completed
   freshwater:
     egg_alevin:
-      hall: FI-FW-01-Hall-A
+      hall: FI-FW-02-Hall-A
       containers:
-      - FI-FW-01-A-C01
-      - FI-FW-01-A-C02
-      - FI-FW-01-A-C03
-      - FI-FW-01-A-C04
-      - FI-FW-01-A-C05
-      - FI-FW-01-A-C06
-      - FI-FW-01-A-C07
-      - FI-FW-01-A-C08
-      - FI-FW-01-A-C09
-      - FI-FW-01-A-C10
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
       start_day: 0
       end_day: 90
     fry:
-      hall: FI-FW-01-Hall-B
+      hall: FI-FW-02-Hall-B
       containers:
-      - FI-FW-01-B-C01
-      - FI-FW-01-B-C02
-      - FI-FW-01-B-C03
-      - FI-FW-01-B-C04
-      - FI-FW-01-B-C05
-      - FI-FW-01-B-C06
-      - FI-FW-01-B-C07
-      - FI-FW-01-B-C08
-      - FI-FW-01-B-C09
-      - FI-FW-01-B-C10
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
       start_day: 90
       end_day: 180
     parr:
-      hall: FI-FW-01-Hall-C
+      hall: FI-FW-02-Hall-C
       containers:
-      - FI-FW-01-C-C01
-      - FI-FW-01-C-C02
-      - FI-FW-01-C-C03
-      - FI-FW-01-C-C04
-      - FI-FW-01-C-C05
-      - FI-FW-01-C-C06
-      - FI-FW-01-C-C07
-      - FI-FW-01-C-C08
-      - FI-FW-01-C-C09
-      - FI-FW-01-C-C10
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
       start_day: 180
       end_day: 270
     smolt:
-      hall: FI-FW-01-Hall-D
+      hall: FI-FW-02-Hall-D
       containers:
-      - FI-FW-01-D-C01
-      - FI-FW-01-D-C02
-      - FI-FW-01-D-C03
-      - FI-FW-01-D-C04
-      - FI-FW-01-D-C05
-      - FI-FW-01-D-C06
-      - FI-FW-01-D-C07
-      - FI-FW-01-D-C08
-      - FI-FW-01-D-C09
-      - FI-FW-01-D-C10
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
       start_day: 270
       end_day: 360
     post_smolt:
-      hall: FI-FW-01-Hall-E
+      hall: FI-FW-02-Hall-E
       containers:
-      - FI-FW-01-E-C01
-      - FI-FW-01-E-C02
-      - FI-FW-01-E-C03
-      - FI-FW-01-E-C04
-      - FI-FW-01-E-C05
-      - FI-FW-01-E-C06
-      - FI-FW-01-E-C07
-      - FI-FW-01-E-C08
-      - FI-FW-01-E-C09
-      - FI-FW-01-E-C10
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4613,89 +4411,89 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-008
-  start_date: '2019-02-23'
-  eggs: 3577728
+- batch_id: FAR-2019-006
+  start_date: '2019-01-31'
+  eggs: 3330816
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.85924559607656
+  harvest_target_kg: 4.85824850518963
   geography: Faroe Islands
-  station: FI-FW-02
+  station: FI-FW-03
   purpose: completed
   freshwater:
     egg_alevin:
-      hall: FI-FW-02-Hall-A
+      hall: FI-FW-03-Hall-A
       containers:
-      - FI-FW-02-A-C01
-      - FI-FW-02-A-C02
-      - FI-FW-02-A-C03
-      - FI-FW-02-A-C04
-      - FI-FW-02-A-C05
-      - FI-FW-02-A-C06
-      - FI-FW-02-A-C07
-      - FI-FW-02-A-C08
-      - FI-FW-02-A-C09
-      - FI-FW-02-A-C10
+      - FI-FW-03-A-C01
+      - FI-FW-03-A-C02
+      - FI-FW-03-A-C03
+      - FI-FW-03-A-C04
+      - FI-FW-03-A-C05
+      - FI-FW-03-A-C06
+      - FI-FW-03-A-C07
+      - FI-FW-03-A-C08
+      - FI-FW-03-A-C09
+      - FI-FW-03-A-C10
       start_day: 0
       end_day: 90
     fry:
-      hall: FI-FW-02-Hall-B
+      hall: FI-FW-03-Hall-B
       containers:
-      - FI-FW-02-B-C01
-      - FI-FW-02-B-C02
-      - FI-FW-02-B-C03
-      - FI-FW-02-B-C04
-      - FI-FW-02-B-C05
-      - FI-FW-02-B-C06
-      - FI-FW-02-B-C07
-      - FI-FW-02-B-C08
-      - FI-FW-02-B-C09
-      - FI-FW-02-B-C10
+      - FI-FW-03-B-C01
+      - FI-FW-03-B-C02
+      - FI-FW-03-B-C03
+      - FI-FW-03-B-C04
+      - FI-FW-03-B-C05
+      - FI-FW-03-B-C06
+      - FI-FW-03-B-C07
+      - FI-FW-03-B-C08
+      - FI-FW-03-B-C09
+      - FI-FW-03-B-C10
       start_day: 90
       end_day: 180
     parr:
-      hall: FI-FW-02-Hall-C
+      hall: FI-FW-03-Hall-C
       containers:
-      - FI-FW-02-C-C01
-      - FI-FW-02-C-C02
-      - FI-FW-02-C-C03
-      - FI-FW-02-C-C04
-      - FI-FW-02-C-C05
-      - FI-FW-02-C-C06
-      - FI-FW-02-C-C07
-      - FI-FW-02-C-C08
-      - FI-FW-02-C-C09
-      - FI-FW-02-C-C10
+      - FI-FW-03-C-C01
+      - FI-FW-03-C-C02
+      - FI-FW-03-C-C03
+      - FI-FW-03-C-C04
+      - FI-FW-03-C-C05
+      - FI-FW-03-C-C06
+      - FI-FW-03-C-C07
+      - FI-FW-03-C-C08
+      - FI-FW-03-C-C09
+      - FI-FW-03-C-C10
       start_day: 180
       end_day: 270
     smolt:
-      hall: FI-FW-02-Hall-D
+      hall: FI-FW-03-Hall-D
       containers:
-      - FI-FW-02-D-C01
-      - FI-FW-02-D-C02
-      - FI-FW-02-D-C03
-      - FI-FW-02-D-C04
-      - FI-FW-02-D-C05
-      - FI-FW-02-D-C06
-      - FI-FW-02-D-C07
-      - FI-FW-02-D-C08
-      - FI-FW-02-D-C09
-      - FI-FW-02-D-C10
+      - FI-FW-03-D-C01
+      - FI-FW-03-D-C02
+      - FI-FW-03-D-C03
+      - FI-FW-03-D-C04
+      - FI-FW-03-D-C05
+      - FI-FW-03-D-C06
+      - FI-FW-03-D-C07
+      - FI-FW-03-D-C08
+      - FI-FW-03-D-C09
+      - FI-FW-03-D-C10
       start_day: 270
       end_day: 360
     post_smolt:
-      hall: FI-FW-02-Hall-E
+      hall: FI-FW-03-Hall-E
       containers:
-      - FI-FW-02-E-C01
-      - FI-FW-02-E-C02
-      - FI-FW-02-E-C03
-      - FI-FW-02-E-C04
-      - FI-FW-02-E-C05
-      - FI-FW-02-E-C06
-      - FI-FW-02-E-C07
-      - FI-FW-02-E-C08
-      - FI-FW-02-E-C09
-      - FI-FW-02-E-C10
+      - FI-FW-03-E-C01
+      - FI-FW-03-E-C02
+      - FI-FW-03-E-C03
+      - FI-FW-03-E-C04
+      - FI-FW-03-E-C05
+      - FI-FW-03-E-C06
+      - FI-FW-03-E-C07
+      - FI-FW-03-E-C08
+      - FI-FW-03-E-C09
+      - FI-FW-03-E-C10
       start_day: 360
       end_day: 450
   sea:
@@ -4714,113 +4512,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-009
-  start_date: '2019-03-25'
-  eggs: 3701184
+- batch_id: FAR-2019-007
+  start_date: '2019-03-02'
+  eggs: 3454272
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.935330564391476
-  geography: Faroe Islands
-  station: FI-FW-03
-  purpose: completed
-  freshwater:
-    egg_alevin:
-      hall: FI-FW-03-Hall-A
-      containers:
-      - FI-FW-03-A-C01
-      - FI-FW-03-A-C02
-      - FI-FW-03-A-C03
-      - FI-FW-03-A-C04
-      - FI-FW-03-A-C05
-      - FI-FW-03-A-C06
-      - FI-FW-03-A-C07
-      - FI-FW-03-A-C08
-      - FI-FW-03-A-C09
-      - FI-FW-03-A-C10
-      start_day: 0
-      end_day: 90
-    fry:
-      hall: FI-FW-03-Hall-B
-      containers:
-      - FI-FW-03-B-C01
-      - FI-FW-03-B-C02
-      - FI-FW-03-B-C03
-      - FI-FW-03-B-C04
-      - FI-FW-03-B-C05
-      - FI-FW-03-B-C06
-      - FI-FW-03-B-C07
-      - FI-FW-03-B-C08
-      - FI-FW-03-B-C09
-      - FI-FW-03-B-C10
-      start_day: 90
-      end_day: 180
-    parr:
-      hall: FI-FW-03-Hall-C
-      containers:
-      - FI-FW-03-C-C01
-      - FI-FW-03-C-C02
-      - FI-FW-03-C-C03
-      - FI-FW-03-C-C04
-      - FI-FW-03-C-C05
-      - FI-FW-03-C-C06
-      - FI-FW-03-C-C07
-      - FI-FW-03-C-C08
-      - FI-FW-03-C-C09
-      - FI-FW-03-C-C10
-      start_day: 180
-      end_day: 270
-    smolt:
-      hall: FI-FW-03-Hall-D
-      containers:
-      - FI-FW-03-D-C01
-      - FI-FW-03-D-C02
-      - FI-FW-03-D-C03
-      - FI-FW-03-D-C04
-      - FI-FW-03-D-C05
-      - FI-FW-03-D-C06
-      - FI-FW-03-D-C07
-      - FI-FW-03-D-C08
-      - FI-FW-03-D-C09
-      - FI-FW-03-D-C10
-      start_day: 270
-      end_day: 360
-    post_smolt:
-      hall: FI-FW-03-Hall-E
-      containers:
-      - FI-FW-03-E-C01
-      - FI-FW-03-E-C02
-      - FI-FW-03-E-C03
-      - FI-FW-03-E-C04
-      - FI-FW-03-E-C05
-      - FI-FW-03-E-C06
-      - FI-FW-03-E-C07
-      - FI-FW-03-E-C08
-      - FI-FW-03-E-C09
-      - FI-FW-03-E-C10
-      start_day: 360
-      end_day: 450
-  sea:
-    area: FI-SEA-19
-    rings:
-    - FI-SEA-19-Ring-01
-    - FI-SEA-19-Ring-02
-    - FI-SEA-19-Ring-03
-    - FI-SEA-19-Ring-04
-    - FI-SEA-19-Ring-05
-    - FI-SEA-19-Ring-06
-    - FI-SEA-19-Ring-07
-    - FI-SEA-19-Ring-08
-    - FI-SEA-19-Ring-09
-    - FI-SEA-19-Ring-10
-    rings_count: 10
-    start_day: 450
-    end_day: 900
-- batch_id: FAR-2019-010
-  start_date: '2019-04-24'
-  eggs: 3024640
-  duration: 900
-  effective_duration: 900
-  harvest_target_kg: 5.0305741049746375
+  harvest_target_kg: 5.724747814359896
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -4901,27 +4598,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-20
+    area: FI-SEA-19
     rings:
-    - FI-SEA-20-Ring-01
-    - FI-SEA-20-Ring-02
-    - FI-SEA-20-Ring-03
-    - FI-SEA-20-Ring-04
-    - FI-SEA-20-Ring-05
-    - FI-SEA-20-Ring-06
-    - FI-SEA-20-Ring-07
-    - FI-SEA-20-Ring-08
-    - FI-SEA-20-Ring-09
-    - FI-SEA-20-Ring-10
+    - FI-SEA-19-Ring-01
+    - FI-SEA-19-Ring-02
+    - FI-SEA-19-Ring-03
+    - FI-SEA-19-Ring-04
+    - FI-SEA-19-Ring-05
+    - FI-SEA-19-Ring-06
+    - FI-SEA-19-Ring-07
+    - FI-SEA-19-Ring-08
+    - FI-SEA-19-Ring-09
+    - FI-SEA-19-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-011
-  start_date: '2019-05-24'
-  eggs: 3148096
+- batch_id: FAR-2019-008
+  start_date: '2019-04-01'
+  eggs: 3577728
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.055753780497534
+  harvest_target_kg: 5.934047012138698
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -5002,27 +4699,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-21
+    area: FI-SEA-20
     rings:
-    - FI-SEA-21-Ring-01
-    - FI-SEA-21-Ring-02
-    - FI-SEA-21-Ring-03
-    - FI-SEA-21-Ring-04
-    - FI-SEA-21-Ring-05
-    - FI-SEA-21-Ring-06
-    - FI-SEA-21-Ring-07
-    - FI-SEA-21-Ring-08
-    - FI-SEA-21-Ring-09
-    - FI-SEA-21-Ring-10
+    - FI-SEA-20-Ring-01
+    - FI-SEA-20-Ring-02
+    - FI-SEA-20-Ring-03
+    - FI-SEA-20-Ring-04
+    - FI-SEA-20-Ring-05
+    - FI-SEA-20-Ring-06
+    - FI-SEA-20-Ring-07
+    - FI-SEA-20-Ring-08
+    - FI-SEA-20-Ring-09
+    - FI-SEA-20-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-012
-  start_date: '2019-06-23'
-  eggs: 3271552
+- batch_id: FAR-2019-009
+  start_date: '2019-05-01'
+  eggs: 3701184
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.359506870090842
+  harvest_target_kg: 5.898591034163603
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -5103,27 +4800,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-22
+    area: FI-SEA-21
     rings:
-    - FI-SEA-22-Ring-01
-    - FI-SEA-22-Ring-02
-    - FI-SEA-22-Ring-03
-    - FI-SEA-22-Ring-04
-    - FI-SEA-22-Ring-05
-    - FI-SEA-22-Ring-06
-    - FI-SEA-22-Ring-07
-    - FI-SEA-22-Ring-08
-    - FI-SEA-22-Ring-09
-    - FI-SEA-22-Ring-10
+    - FI-SEA-21-Ring-01
+    - FI-SEA-21-Ring-02
+    - FI-SEA-21-Ring-03
+    - FI-SEA-21-Ring-04
+    - FI-SEA-21-Ring-05
+    - FI-SEA-21-Ring-06
+    - FI-SEA-21-Ring-07
+    - FI-SEA-21-Ring-08
+    - FI-SEA-21-Ring-09
+    - FI-SEA-21-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-013
-  start_date: '2019-07-23'
-  eggs: 3395008
+- batch_id: FAR-2019-010
+  start_date: '2019-05-31'
+  eggs: 3024640
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.159846793471896
+  harvest_target_kg: 5.3205979094838085
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -5204,27 +4901,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: Faroe Islands Sea Area 1
+    area: FI-SEA-22
     rings:
-    - Ring-01
-    - Ring-02
-    - Ring-03
-    - Ring-04
-    - Ring-05
-    - Ring-06
-    - Ring-07
-    - Ring-08
-    - Ring-09
-    - Ring-10
+    - FI-SEA-22-Ring-01
+    - FI-SEA-22-Ring-02
+    - FI-SEA-22-Ring-03
+    - FI-SEA-22-Ring-04
+    - FI-SEA-22-Ring-05
+    - FI-SEA-22-Ring-06
+    - FI-SEA-22-Ring-07
+    - FI-SEA-22-Ring-08
+    - FI-SEA-22-Ring-09
+    - FI-SEA-22-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-014
-  start_date: '2019-08-22'
-  eggs: 3518464
+- batch_id: FAR-2019-011
+  start_date: '2019-06-30'
+  eggs: 3148096
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.825534744810125
+  harvest_target_kg: 6.463239751708951
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -5320,12 +5017,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-015
-  start_date: '2019-09-21'
-  eggs: 3641920
+- batch_id: FAR-2019-012
+  start_date: '2019-07-30'
+  eggs: 3271552
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.307075658435885
+  harvest_target_kg: 5.582042454964465
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -5421,12 +5118,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-016
-  start_date: '2019-10-21'
-  eggs: 3765376
+- batch_id: FAR-2019-013
+  start_date: '2019-08-29'
+  eggs: 3395008
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.368328503838779
+  harvest_target_kg: 5.212256337831128
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -5522,12 +5219,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-017
-  start_date: '2019-11-20'
-  eggs: 3088832
+- batch_id: FAR-2019-014
+  start_date: '2019-09-28'
+  eggs: 3518464
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.16218598720802
+  harvest_target_kg: 4.634355919592887
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -5623,12 +5320,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2019-018
-  start_date: '2019-12-20'
-  eggs: 3212288
+- batch_id: FAR-2019-015
+  start_date: '2019-10-28'
+  eggs: 3641920
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.234860909414745
+  harvest_target_kg: 5.194925875367814
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -5724,12 +5421,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-019
-  start_date: '2020-01-19'
-  eggs: 3335744
+- batch_id: FAR-2019-016
+  start_date: '2019-11-27'
+  eggs: 3765376
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.829318493936866
+  harvest_target_kg: 6.1231630155582195
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -5825,12 +5522,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-020
-  start_date: '2020-02-18'
-  eggs: 3459200
+- batch_id: FAR-2019-017
+  start_date: '2019-12-27'
+  eggs: 3088832
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.82906662292415
+  harvest_target_kg: 6.019397531553489
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -5926,12 +5623,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-021
-  start_date: '2020-03-19'
-  eggs: 3582656
+- batch_id: FAR-2020-018
+  start_date: '2020-01-26'
+  eggs: 3212288
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.685027029740935
+  harvest_target_kg: 5.881320055965276
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -6027,12 +5724,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-022
-  start_date: '2020-04-18'
-  eggs: 3706112
+- batch_id: FAR-2020-019
+  start_date: '2020-02-25'
+  eggs: 3335744
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.804572600958142
+  harvest_target_kg: 6.230242687855568
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -6128,12 +5825,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-023
-  start_date: '2020-05-18'
-  eggs: 3029568
+- batch_id: FAR-2020-020
+  start_date: '2020-03-26'
+  eggs: 3459200
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.054527872420103
+  harvest_target_kg: 5.155524450612705
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -6229,12 +5926,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-024
-  start_date: '2020-06-17'
-  eggs: 3153024
+- batch_id: FAR-2020-021
+  start_date: '2020-04-25'
+  eggs: 3582656
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.758970106971139
+  harvest_target_kg: 5.886751533463582
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -6330,12 +6027,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-025
-  start_date: '2020-07-17'
-  eggs: 3276480
+- batch_id: FAR-2020-022
+  start_date: '2020-05-25'
+  eggs: 3706112
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.207895474073116
+  harvest_target_kg: 5.308681845469522
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -6431,12 +6128,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-026
-  start_date: '2020-08-16'
-  eggs: 3399936
+- batch_id: FAR-2020-023
+  start_date: '2020-06-24'
+  eggs: 3029568
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.512532755207795
+  harvest_target_kg: 5.683201032675217
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -6532,12 +6229,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-027
-  start_date: '2020-09-15'
-  eggs: 3523392
+- batch_id: FAR-2020-024
+  start_date: '2020-07-24'
+  eggs: 3153024
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.337569181427307
+  harvest_target_kg: 6.01717986225051
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -6633,12 +6330,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-028
-  start_date: '2020-10-15'
-  eggs: 3646848
+- batch_id: FAR-2020-025
+  start_date: '2020-08-23'
+  eggs: 3276480
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.477673158641292
+  harvest_target_kg: 6.211889624051623
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -6734,12 +6431,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-029
-  start_date: '2020-11-14'
-  eggs: 3770304
+- batch_id: FAR-2020-026
+  start_date: '2020-09-22'
+  eggs: 3399936
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.309582294208369
+  harvest_target_kg: 6.367527588437347
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -6835,12 +6532,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2020-030
-  start_date: '2020-12-14'
-  eggs: 3093760
+- batch_id: FAR-2020-027
+  start_date: '2020-10-22'
+  eggs: 3523392
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.328849424860502
+  harvest_target_kg: 5.837197166731041
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -6936,12 +6633,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-031
-  start_date: '2021-01-13'
-  eggs: 3217216
+- batch_id: FAR-2020-028
+  start_date: '2020-11-21'
+  eggs: 3646848
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.18204733950631
+  harvest_target_kg: 5.28977982797668
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -7037,12 +6734,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-032
-  start_date: '2021-02-12'
-  eggs: 3340672
+- batch_id: FAR-2020-029
+  start_date: '2020-12-21'
+  eggs: 3770304
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.328071853532403
+  harvest_target_kg: 5.720182104138868
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -7138,12 +6835,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-033
-  start_date: '2021-03-14'
-  eggs: 3464128
+- batch_id: FAR-2021-030
+  start_date: '2021-01-20'
+  eggs: 3093760
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.8829868903891125
+  harvest_target_kg: 5.063545629238641
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -7239,12 +6936,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-034
-  start_date: '2021-04-13'
-  eggs: 3587584
+- batch_id: FAR-2021-031
+  start_date: '2021-02-19'
+  eggs: 3217216
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.918240400627716
+  harvest_target_kg: 4.784098117048346
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -7340,12 +7037,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-035
-  start_date: '2021-05-13'
-  eggs: 3711040
+- batch_id: FAR-2021-032
+  start_date: '2021-03-21'
+  eggs: 3340672
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.170632775678493
+  harvest_target_kg: 4.71127432085191
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -7441,12 +7138,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-036
-  start_date: '2021-06-12'
-  eggs: 3034496
+- batch_id: FAR-2021-033
+  start_date: '2021-04-20'
+  eggs: 3464128
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.360847098699389
+  harvest_target_kg: 4.664450334481152
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -7527,27 +7224,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: Faroe Islands Sea Area 1
+    area: FI-SEA-01
     rings:
-    - Ring-01
-    - Ring-02
-    - Ring-03
-    - Ring-04
-    - Ring-05
-    - Ring-06
-    - Ring-07
-    - Ring-08
-    - Ring-09
-    - Ring-10
+    - FI-SEA-01-Ring-01
+    - FI-SEA-01-Ring-02
+    - FI-SEA-01-Ring-03
+    - FI-SEA-01-Ring-04
+    - FI-SEA-01-Ring-05
+    - FI-SEA-01-Ring-06
+    - FI-SEA-01-Ring-07
+    - FI-SEA-01-Ring-08
+    - FI-SEA-01-Ring-09
+    - FI-SEA-01-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-037
-  start_date: '2021-07-12'
-  eggs: 3157952
+- batch_id: FAR-2021-034
+  start_date: '2021-05-20'
+  eggs: 3587584
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.2317378821993215
+  harvest_target_kg: 6.4960043416438875
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -7628,27 +7325,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-01
+    area: FI-SEA-02
     rings:
-    - FI-SEA-01-Ring-01
-    - FI-SEA-01-Ring-02
-    - FI-SEA-01-Ring-03
-    - FI-SEA-01-Ring-04
-    - FI-SEA-01-Ring-05
-    - FI-SEA-01-Ring-06
-    - FI-SEA-01-Ring-07
-    - FI-SEA-01-Ring-08
-    - FI-SEA-01-Ring-09
-    - FI-SEA-01-Ring-10
+    - FI-SEA-02-Ring-01
+    - FI-SEA-02-Ring-02
+    - FI-SEA-02-Ring-03
+    - FI-SEA-02-Ring-04
+    - FI-SEA-02-Ring-05
+    - FI-SEA-02-Ring-06
+    - FI-SEA-02-Ring-07
+    - FI-SEA-02-Ring-08
+    - FI-SEA-02-Ring-09
+    - FI-SEA-02-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-038
-  start_date: '2021-08-11'
-  eggs: 3281408
+- batch_id: FAR-2021-035
+  start_date: '2021-06-19'
+  eggs: 3711040
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.820914527969799
+  harvest_target_kg: 5.069667136142264
   geography: Faroe Islands
   station: FI-FW-02
   purpose: completed
@@ -7729,27 +7426,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-02
+    area: FI-SEA-03
     rings:
-    - FI-SEA-02-Ring-01
-    - FI-SEA-02-Ring-02
-    - FI-SEA-02-Ring-03
-    - FI-SEA-02-Ring-04
-    - FI-SEA-02-Ring-05
-    - FI-SEA-02-Ring-06
-    - FI-SEA-02-Ring-07
-    - FI-SEA-02-Ring-08
-    - FI-SEA-02-Ring-09
-    - FI-SEA-02-Ring-10
+    - FI-SEA-03-Ring-01
+    - FI-SEA-03-Ring-02
+    - FI-SEA-03-Ring-03
+    - FI-SEA-03-Ring-04
+    - FI-SEA-03-Ring-05
+    - FI-SEA-03-Ring-06
+    - FI-SEA-03-Ring-07
+    - FI-SEA-03-Ring-08
+    - FI-SEA-03-Ring-09
+    - FI-SEA-03-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-039
-  start_date: '2021-09-10'
-  eggs: 3404864
+- batch_id: FAR-2021-036
+  start_date: '2021-07-19'
+  eggs: 3034496
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.528833845644543
+  harvest_target_kg: 4.632369283619344
   geography: Faroe Islands
   station: FI-FW-03
   purpose: completed
@@ -7830,27 +7527,27 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-03
+    area: FI-SEA-04
     rings:
-    - FI-SEA-03-Ring-01
-    - FI-SEA-03-Ring-02
-    - FI-SEA-03-Ring-03
-    - FI-SEA-03-Ring-04
-    - FI-SEA-03-Ring-05
-    - FI-SEA-03-Ring-06
-    - FI-SEA-03-Ring-07
-    - FI-SEA-03-Ring-08
-    - FI-SEA-03-Ring-09
-    - FI-SEA-03-Ring-10
+    - FI-SEA-04-Ring-01
+    - FI-SEA-04-Ring-02
+    - FI-SEA-04-Ring-03
+    - FI-SEA-04-Ring-04
+    - FI-SEA-04-Ring-05
+    - FI-SEA-04-Ring-06
+    - FI-SEA-04-Ring-07
+    - FI-SEA-04-Ring-08
+    - FI-SEA-04-Ring-09
+    - FI-SEA-04-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: FAR-2021-040
-  start_date: '2021-10-10'
-  eggs: 3528320
+- batch_id: FAR-2021-037
+  start_date: '2021-08-18'
+  eggs: 3157952
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.380382036619886
+  harvest_target_kg: 6.245320899259485
   geography: Faroe Islands
   station: FI-FW-01
   purpose: completed
@@ -7931,27 +7628,330 @@ batches:
       start_day: 360
       end_day: 450
   sea:
-    area: FI-SEA-04
+    area: FI-SEA-05
     rings:
-    - FI-SEA-04-Ring-01
-    - FI-SEA-04-Ring-02
-    - FI-SEA-04-Ring-03
-    - FI-SEA-04-Ring-04
-    - FI-SEA-04-Ring-05
-    - FI-SEA-04-Ring-06
-    - FI-SEA-04-Ring-07
-    - FI-SEA-04-Ring-08
-    - FI-SEA-04-Ring-09
-    - FI-SEA-04-Ring-10
+    - FI-SEA-05-Ring-01
+    - FI-SEA-05-Ring-02
+    - FI-SEA-05-Ring-03
+    - FI-SEA-05-Ring-04
+    - FI-SEA-05-Ring-05
+    - FI-SEA-05-Ring-06
+    - FI-SEA-05-Ring-07
+    - FI-SEA-05-Ring-08
+    - FI-SEA-05-Ring-09
+    - FI-SEA-05-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 900
+- batch_id: FAR-2021-038
+  start_date: '2021-09-17'
+  eggs: 3281408
+  duration: 900
+  effective_duration: 900
+  harvest_target_kg: 5.701160616476862
+  geography: Faroe Islands
+  station: FI-FW-02
+  purpose: completed
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-02-Hall-A
+      containers:
+      - FI-FW-02-A-C01
+      - FI-FW-02-A-C02
+      - FI-FW-02-A-C03
+      - FI-FW-02-A-C04
+      - FI-FW-02-A-C05
+      - FI-FW-02-A-C06
+      - FI-FW-02-A-C07
+      - FI-FW-02-A-C08
+      - FI-FW-02-A-C09
+      - FI-FW-02-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-02-Hall-B
+      containers:
+      - FI-FW-02-B-C01
+      - FI-FW-02-B-C02
+      - FI-FW-02-B-C03
+      - FI-FW-02-B-C04
+      - FI-FW-02-B-C05
+      - FI-FW-02-B-C06
+      - FI-FW-02-B-C07
+      - FI-FW-02-B-C08
+      - FI-FW-02-B-C09
+      - FI-FW-02-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-02-Hall-C
+      containers:
+      - FI-FW-02-C-C01
+      - FI-FW-02-C-C02
+      - FI-FW-02-C-C03
+      - FI-FW-02-C-C04
+      - FI-FW-02-C-C05
+      - FI-FW-02-C-C06
+      - FI-FW-02-C-C07
+      - FI-FW-02-C-C08
+      - FI-FW-02-C-C09
+      - FI-FW-02-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-02-Hall-D
+      containers:
+      - FI-FW-02-D-C01
+      - FI-FW-02-D-C02
+      - FI-FW-02-D-C03
+      - FI-FW-02-D-C04
+      - FI-FW-02-D-C05
+      - FI-FW-02-D-C06
+      - FI-FW-02-D-C07
+      - FI-FW-02-D-C08
+      - FI-FW-02-D-C09
+      - FI-FW-02-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-02-Hall-E
+      containers:
+      - FI-FW-02-E-C01
+      - FI-FW-02-E-C02
+      - FI-FW-02-E-C03
+      - FI-FW-02-E-C04
+      - FI-FW-02-E-C05
+      - FI-FW-02-E-C06
+      - FI-FW-02-E-C07
+      - FI-FW-02-E-C08
+      - FI-FW-02-E-C09
+      - FI-FW-02-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-06
+    rings:
+    - FI-SEA-06-Ring-01
+    - FI-SEA-06-Ring-02
+    - FI-SEA-06-Ring-03
+    - FI-SEA-06-Ring-04
+    - FI-SEA-06-Ring-05
+    - FI-SEA-06-Ring-06
+    - FI-SEA-06-Ring-07
+    - FI-SEA-06-Ring-08
+    - FI-SEA-06-Ring-09
+    - FI-SEA-06-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 900
+- batch_id: FAR-2021-039
+  start_date: '2021-10-17'
+  eggs: 3404864
+  duration: 900
+  effective_duration: 900
+  harvest_target_kg: 6.222655841858198
+  geography: Faroe Islands
+  station: FI-FW-03
+  purpose: completed
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-03-Hall-A
+      containers:
+      - FI-FW-03-A-C01
+      - FI-FW-03-A-C02
+      - FI-FW-03-A-C03
+      - FI-FW-03-A-C04
+      - FI-FW-03-A-C05
+      - FI-FW-03-A-C06
+      - FI-FW-03-A-C07
+      - FI-FW-03-A-C08
+      - FI-FW-03-A-C09
+      - FI-FW-03-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-03-Hall-B
+      containers:
+      - FI-FW-03-B-C01
+      - FI-FW-03-B-C02
+      - FI-FW-03-B-C03
+      - FI-FW-03-B-C04
+      - FI-FW-03-B-C05
+      - FI-FW-03-B-C06
+      - FI-FW-03-B-C07
+      - FI-FW-03-B-C08
+      - FI-FW-03-B-C09
+      - FI-FW-03-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-03-Hall-C
+      containers:
+      - FI-FW-03-C-C01
+      - FI-FW-03-C-C02
+      - FI-FW-03-C-C03
+      - FI-FW-03-C-C04
+      - FI-FW-03-C-C05
+      - FI-FW-03-C-C06
+      - FI-FW-03-C-C07
+      - FI-FW-03-C-C08
+      - FI-FW-03-C-C09
+      - FI-FW-03-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-03-Hall-D
+      containers:
+      - FI-FW-03-D-C01
+      - FI-FW-03-D-C02
+      - FI-FW-03-D-C03
+      - FI-FW-03-D-C04
+      - FI-FW-03-D-C05
+      - FI-FW-03-D-C06
+      - FI-FW-03-D-C07
+      - FI-FW-03-D-C08
+      - FI-FW-03-D-C09
+      - FI-FW-03-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-03-Hall-E
+      containers:
+      - FI-FW-03-E-C01
+      - FI-FW-03-E-C02
+      - FI-FW-03-E-C03
+      - FI-FW-03-E-C04
+      - FI-FW-03-E-C05
+      - FI-FW-03-E-C06
+      - FI-FW-03-E-C07
+      - FI-FW-03-E-C08
+      - FI-FW-03-E-C09
+      - FI-FW-03-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-07
+    rings:
+    - FI-SEA-07-Ring-01
+    - FI-SEA-07-Ring-02
+    - FI-SEA-07-Ring-03
+    - FI-SEA-07-Ring-04
+    - FI-SEA-07-Ring-05
+    - FI-SEA-07-Ring-06
+    - FI-SEA-07-Ring-07
+    - FI-SEA-07-Ring-08
+    - FI-SEA-07-Ring-09
+    - FI-SEA-07-Ring-10
+    rings_count: 10
+    start_day: 450
+    end_day: 900
+- batch_id: FAR-2021-040
+  start_date: '2021-11-16'
+  eggs: 3528320
+  duration: 900
+  effective_duration: 900
+  harvest_target_kg: 5.184911748553548
+  geography: Faroe Islands
+  station: FI-FW-01
+  purpose: completed
+  freshwater:
+    egg_alevin:
+      hall: FI-FW-01-Hall-A
+      containers:
+      - FI-FW-01-A-C01
+      - FI-FW-01-A-C02
+      - FI-FW-01-A-C03
+      - FI-FW-01-A-C04
+      - FI-FW-01-A-C05
+      - FI-FW-01-A-C06
+      - FI-FW-01-A-C07
+      - FI-FW-01-A-C08
+      - FI-FW-01-A-C09
+      - FI-FW-01-A-C10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: FI-FW-01-Hall-B
+      containers:
+      - FI-FW-01-B-C01
+      - FI-FW-01-B-C02
+      - FI-FW-01-B-C03
+      - FI-FW-01-B-C04
+      - FI-FW-01-B-C05
+      - FI-FW-01-B-C06
+      - FI-FW-01-B-C07
+      - FI-FW-01-B-C08
+      - FI-FW-01-B-C09
+      - FI-FW-01-B-C10
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: FI-FW-01-Hall-C
+      containers:
+      - FI-FW-01-C-C01
+      - FI-FW-01-C-C02
+      - FI-FW-01-C-C03
+      - FI-FW-01-C-C04
+      - FI-FW-01-C-C05
+      - FI-FW-01-C-C06
+      - FI-FW-01-C-C07
+      - FI-FW-01-C-C08
+      - FI-FW-01-C-C09
+      - FI-FW-01-C-C10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: FI-FW-01-Hall-D
+      containers:
+      - FI-FW-01-D-C01
+      - FI-FW-01-D-C02
+      - FI-FW-01-D-C03
+      - FI-FW-01-D-C04
+      - FI-FW-01-D-C05
+      - FI-FW-01-D-C06
+      - FI-FW-01-D-C07
+      - FI-FW-01-D-C08
+      - FI-FW-01-D-C09
+      - FI-FW-01-D-C10
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: FI-FW-01-Hall-E
+      containers:
+      - FI-FW-01-E-C01
+      - FI-FW-01-E-C02
+      - FI-FW-01-E-C03
+      - FI-FW-01-E-C04
+      - FI-FW-01-E-C05
+      - FI-FW-01-E-C06
+      - FI-FW-01-E-C07
+      - FI-FW-01-E-C08
+      - FI-FW-01-E-C09
+      - FI-FW-01-E-C10
+      start_day: 360
+      end_day: 450
+  sea:
+    area: FI-SEA-08
+    rings:
+    - FI-SEA-08-Ring-01
+    - FI-SEA-08-Ring-02
+    - FI-SEA-08-Ring-03
+    - FI-SEA-08-Ring-04
+    - FI-SEA-08-Ring-05
+    - FI-SEA-08-Ring-06
+    - FI-SEA-08-Ring-07
+    - FI-SEA-08-Ring-08
+    - FI-SEA-08-Ring-09
+    - FI-SEA-08-Ring-10
     rings_count: 10
     start_day: 450
     end_day: 900
 - batch_id: SCO-2018-001
-  start_date: '2018-08-12'
+  start_date: '2018-09-18'
   eggs: 3651776
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.61605333016233
+  harvest_target_kg: 5.0511305967444295
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -8048,11 +8048,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2018-002
-  start_date: '2018-09-11'
+  start_date: '2018-10-18'
   eggs: 3775232
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.455663367510532
+  harvest_target_kg: 4.772137246513393
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -8149,11 +8149,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2018-003
-  start_date: '2018-10-11'
+  start_date: '2018-11-17'
   eggs: 3098688
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.35668971233941
+  harvest_target_kg: 5.668928061762225
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -8250,11 +8250,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2018-004
-  start_date: '2018-11-10'
+  start_date: '2018-12-17'
   eggs: 3222144
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.852357553419929
+  harvest_target_kg: 6.022791120287654
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -8350,12 +8350,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: SCO-2018-005
-  start_date: '2018-12-10'
+- batch_id: SCO-2019-005
+  start_date: '2019-01-16'
   eggs: 3345600
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.382826947115939
+  harvest_target_kg: 5.201375479951082
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -8452,11 +8452,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-006
-  start_date: '2019-01-09'
+  start_date: '2019-02-15'
   eggs: 3469056
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.415973884375875
+  harvest_target_kg: 5.213696436077454
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -8553,11 +8553,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-007
-  start_date: '2019-02-08'
+  start_date: '2019-03-17'
   eggs: 3592512
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.578773318224177
+  harvest_target_kg: 4.689199203185508
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -8654,11 +8654,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-008
-  start_date: '2019-03-10'
+  start_date: '2019-04-16'
   eggs: 3715968
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.13385151537266
+  harvest_target_kg: 5.814247944660237
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -8755,11 +8755,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-009
-  start_date: '2019-04-09'
+  start_date: '2019-05-16'
   eggs: 3039424
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.1223807253280675
+  harvest_target_kg: 6.20243583715474
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -8856,11 +8856,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-010
-  start_date: '2019-05-09'
+  start_date: '2019-06-15'
   eggs: 3162880
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.85817381807726
+  harvest_target_kg: 5.661245917782148
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -8957,11 +8957,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-011
-  start_date: '2019-06-08'
+  start_date: '2019-07-15'
   eggs: 3286336
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.801823215024736
+  harvest_target_kg: 5.816816757113012
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -9058,11 +9058,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-012
-  start_date: '2019-07-08'
+  start_date: '2019-08-14'
   eggs: 3409792
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.579858973235613
+  harvest_target_kg: 4.920142112914496
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -9159,11 +9159,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-013
-  start_date: '2019-08-07'
+  start_date: '2019-09-13'
   eggs: 3533248
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.130756797396541
+  harvest_target_kg: 6.021234520401346
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -9260,11 +9260,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-014
-  start_date: '2019-09-06'
+  start_date: '2019-10-13'
   eggs: 3656704
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.190161172554572
+  harvest_target_kg: 5.5211727197316245
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -9361,11 +9361,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-015
-  start_date: '2019-10-06'
+  start_date: '2019-11-12'
   eggs: 3780160
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.501224676263574
+  harvest_target_kg: 5.311906022854021
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -9462,11 +9462,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2019-016
-  start_date: '2019-11-05'
+  start_date: '2019-12-12'
   eggs: 3103616
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.979601386394687
+  harvest_target_kg: 5.123330909619325
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -9562,12 +9562,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: SCO-2019-017
-  start_date: '2019-12-05'
+- batch_id: SCO-2020-017
+  start_date: '2020-01-11'
   eggs: 3227072
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.383086208616023
+  harvest_target_kg: 5.817218930635796
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -9664,11 +9664,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-018
-  start_date: '2020-01-04'
+  start_date: '2020-02-10'
   eggs: 3350528
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.716357288713072
+  harvest_target_kg: 5.800531180947266
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -9765,11 +9765,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-019
-  start_date: '2020-02-03'
+  start_date: '2020-03-11'
   eggs: 3473984
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.126327656923163
+  harvest_target_kg: 5.5604384042890835
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -9866,11 +9866,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-020
-  start_date: '2020-03-04'
+  start_date: '2020-04-10'
   eggs: 3597440
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.275363175846458
+  harvest_target_kg: 4.838574397805585
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -9967,11 +9967,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-021
-  start_date: '2020-04-03'
+  start_date: '2020-05-10'
   eggs: 3720896
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.454473253560991
+  harvest_target_kg: 5.743246700222277
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -10068,11 +10068,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-022
-  start_date: '2020-05-03'
+  start_date: '2020-06-09'
   eggs: 3044352
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.8280498896884305
+  harvest_target_kg: 6.2645769607552415
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -10169,11 +10169,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-023
-  start_date: '2020-06-02'
+  start_date: '2020-07-09'
   eggs: 3167808
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.465203025944834
+  harvest_target_kg: 5.467076128284487
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -10270,11 +10270,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-024
-  start_date: '2020-07-02'
+  start_date: '2020-08-08'
   eggs: 3291264
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.09673406402772
+  harvest_target_kg: 6.4954600038552615
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -10371,11 +10371,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-025
-  start_date: '2020-08-01'
+  start_date: '2020-09-07'
   eggs: 3414720
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.714752576165605
+  harvest_target_kg: 6.0173447013783505
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -10472,11 +10472,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-026
-  start_date: '2020-08-31'
+  start_date: '2020-10-07'
   eggs: 3538176
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.088896773257439
+  harvest_target_kg: 6.0731806738266565
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -10573,11 +10573,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-027
-  start_date: '2020-09-30'
+  start_date: '2020-11-06'
   eggs: 3661632
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.946242943876905
+  harvest_target_kg: 6.499818314081908
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -10674,11 +10674,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2020-028
-  start_date: '2020-10-30'
+  start_date: '2020-12-06'
   eggs: 3785088
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.751245346411025
+  harvest_target_kg: 5.193225730746173
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -10774,12 +10774,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: SCO-2020-029
-  start_date: '2020-11-29'
+- batch_id: SCO-2021-029
+  start_date: '2021-01-05'
   eggs: 3108544
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.76809827490074
+  harvest_target_kg: 5.477702170263768
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -10875,12 +10875,12 @@ batches:
     rings_count: 10
     start_day: 450
     end_day: 900
-- batch_id: SCO-2020-030
-  start_date: '2020-12-29'
+- batch_id: SCO-2021-030
+  start_date: '2021-02-04'
   eggs: 3232000
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.146286586827145
+  harvest_target_kg: 4.646777223291207
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -10977,11 +10977,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-031
-  start_date: '2021-01-28'
+  start_date: '2021-03-06'
   eggs: 3355456
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.863330316838496
+  harvest_target_kg: 5.699284826604325
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -11078,11 +11078,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-032
-  start_date: '2021-02-27'
+  start_date: '2021-04-05'
   eggs: 3478912
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.1381257205995565
+  harvest_target_kg: 4.869904101038855
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -11179,11 +11179,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-033
-  start_date: '2021-03-29'
+  start_date: '2021-05-05'
   eggs: 3602368
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.197929033196731
+  harvest_target_kg: 6.484240617089272
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -11280,11 +11280,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-034
-  start_date: '2021-04-28'
+  start_date: '2021-06-04'
   eggs: 3725824
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.620287035947886
+  harvest_target_kg: 4.789180529164882
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -11381,11 +11381,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-035
-  start_date: '2021-05-28'
+  start_date: '2021-07-04'
   eggs: 3049280
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 6.237519722936132
+  harvest_target_kg: 5.019873405820666
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -11482,11 +11482,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-036
-  start_date: '2021-06-27'
+  start_date: '2021-08-03'
   eggs: 3172736
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.572622559720194
+  harvest_target_kg: 6.303418439800047
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -11583,11 +11583,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-037
-  start_date: '2021-07-27'
+  start_date: '2021-09-02'
   eggs: 3296192
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.171306951281247
+  harvest_target_kg: 4.9398502573970475
   geography: Scotland
   station: S-FW-01
   purpose: completed
@@ -11684,11 +11684,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-038
-  start_date: '2021-08-26'
+  start_date: '2021-10-02'
   eggs: 3419648
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 4.6799930141518455
+  harvest_target_kg: 5.989362266146056
   geography: Scotland
   station: S-FW-02
   purpose: completed
@@ -11785,11 +11785,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-039
-  start_date: '2021-09-25'
+  start_date: '2021-11-01'
   eggs: 3543104
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.753844673661519
+  harvest_target_kg: 5.676259574063725
   geography: Scotland
   station: S-FW-03
   purpose: completed
@@ -11886,11 +11886,11 @@ batches:
     start_day: 450
     end_day: 900
 - batch_id: SCO-2021-040
-  start_date: '2021-10-25'
+  start_date: '2021-12-01'
   eggs: 3666560
   duration: 900
   effective_duration: 900
-  harvest_target_kg: 5.964707159252936
+  harvest_target_kg: 6.231838556976926
   geography: Scotland
   station: S-FW-01
   purpose: completed

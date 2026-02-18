@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-02-17 14:40:32",
+  "station": "FW13 Geocrab",
+  "profile": "fw_default",
+  "backup_horizon": "2026-01-22",
+  "skip_environmental": true,
+  "batch_count": 2,
+  "migration_success_count": 2,
+  "semantic_success_count": 2,
+  "rows": [
+    {
+      "batch_key": "SF SEP 23|13|2024",
+      "duration_seconds": 200.6,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "AA69BFC2-4B6C-4455-844B-0296B5B12A1B",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/SF_SEP_23_13_2024",
+      "station": "FW13 Geocrab",
+      "profile": "fw_default",
+      "backup_horizon": "2026-01-22",
+      "allow_station_mismatch": false,
+      "batch_number_override": "SF SEP 23 13",
+      "retry_reason": "batch_number_collision",
+      "command": "python3 scripts/migration/tools/pilot_migrate_input_batch.py --batch-key SF SEP 23|13|2024 --migration-profile fw_default --use-csv scripts/migration/data/extract --expected-site FW13 Geocrab --extract-horizon-date 2026-01-22 --skip-environmental --script-timeout-seconds 1800 --batch-number SF SEP 23 13",
+      "preflight_sites": {
+        "input_projects_sites": "['FW13 Geocrab']",
+        "ext_inputs_sites": "['FW13 Geocrab']",
+        "member_sites": "['FW13 Geocrab']",
+        "mismatch_detected": false
+      },
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_SF_SEP_23_13_2024_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_SF_SEP_23_13_2024_semantic_validation_2026-02-17.summary.json",
+      "semantic_stdout_tail": "Wrote report to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_SF_SEP_23_13_2024_semantic_validation_2026-02-17.md\nWrote summary JSON to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_SF_SEP_23_13_2024_semantic_validation_2026-02-17.summary.json\n",
+      "semantic_stderr_tail": ""
+    },
+    {
+      "batch_key": "24Q1 LHS ex-LC|13|2023",
+      "duration_seconds": 105.6,
+      "migration_return_code": 0,
+      "migration_success": true,
+      "migration_scripts_completed": "12/12",
+      "component_key": "0A591501-C131-4E69-B4FA-63DC62297049",
+      "report_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_batch_migration/24Q1_LHS_ex-LC_13_2023",
+      "station": "FW13 Geocrab",
+      "profile": "fw_default",
+      "backup_horizon": "2026-01-22",
+      "allow_station_mismatch": false,
+      "batch_number_override": null,
+      "retry_reason": null,
+      "command": "python3 scripts/migration/tools/pilot_migrate_input_batch.py --batch-key 24Q1 LHS ex-LC|13|2023 --migration-profile fw_default --use-csv scripts/migration/data/extract --expected-site FW13 Geocrab --extract-horizon-date 2026-01-22 --skip-environmental --script-timeout-seconds 1800",
+      "preflight_sites": {
+        "input_projects_sites": "['FW13 Geocrab']",
+        "ext_inputs_sites": "['FW13 Geocrab']",
+        "member_sites": "['FW13 Geocrab']",
+        "mismatch_detected": false
+      },
+      "semantic_return_code": 0,
+      "semantic_success": true,
+      "semantic_report": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_24Q1_LHS_ex_LC_13_2023_semantic_validation_2026-02-17.md",
+      "semantic_summary": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_24Q1_LHS_ex_LC_13_2023_semantic_validation_2026-02-17.summary.json",
+      "semantic_stdout_tail": "Wrote report to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_24Q1_LHS_ex_LC_13_2023_semantic_validation_2026-02-17.md\nWrote summary JSON to /Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-17/FW13_station_wave_24Q1_LHS_ex_LC_13_2023_semantic_validation_2026-02-17.summary.json\n",
+      "semantic_stderr_tail": ""
+    }
+  ],
+  "notes": []
+}

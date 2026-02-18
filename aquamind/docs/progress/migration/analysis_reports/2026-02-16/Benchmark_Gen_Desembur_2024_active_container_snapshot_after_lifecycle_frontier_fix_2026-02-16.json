@@ -1,0 +1,152 @@
+{
+  "active_container_count": 15,
+  "active_rows": [
+    {
+      "assignment_date": "2025-11-17",
+      "container": "G1",
+      "departure_date": null,
+      "population_count": 150356,
+      "population_id": "FAD92079-BBE3-4602-BB32-19D1517C4DE1",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-14",
+      "container": "G2",
+      "departure_date": null,
+      "population_count": 148934,
+      "population_id": "C1C11B30-3557-4AF7-929F-9D2855847947",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-17",
+      "container": "G3",
+      "departure_date": null,
+      "population_count": 155056,
+      "population_id": "500AE2D4-01A9-4372-9F8F-76DC844A410E",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-11-18",
+      "container": "G4",
+      "departure_date": null,
+      "population_count": 160559,
+      "population_id": "DD43441C-D0A0-4715-B48B-E93C7B09A706",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H1",
+      "departure_date": null,
+      "population_count": 131498,
+      "population_id": "336383E4-EF6E-4D6D-A7E6-E25A9B14FFF9",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-23",
+      "container": "H2",
+      "departure_date": null,
+      "population_count": 146195,
+      "population_id": "A8AF5595-F89E-4853-8356-6DFF8B3562E5",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H3",
+      "departure_date": null,
+      "population_count": 157677,
+      "population_id": "4B57C78A-2273-4168-9581-5A66EE2AE8EA",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-10-28",
+      "container": "H4",
+      "departure_date": null,
+      "population_count": 151467,
+      "population_id": "C55327FC-14CC-4F30-A286-959E5D29487E",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I1",
+      "departure_date": null,
+      "population_count": 123760,
+      "population_id": "27143FD9-F838-4CA3-A9C9-174C5D7B8620",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I2",
+      "departure_date": null,
+      "population_count": 122676,
+      "population_id": "972321A9-8AC8-40EB-ADF6-2B28E4EE66C2",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2026-01-16",
+      "container": "I3",
+      "departure_date": null,
+      "population_count": 125823,
+      "population_id": "25C70360-4D85-4C3C-AA7C-77F935A6366C",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-29",
+      "container": "J1",
+      "departure_date": null,
+      "population_count": 149794,
+      "population_id": "74BD8BBB-D9E0-4383-BC3A-B2F58047735E",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-23",
+      "container": "J2",
+      "departure_date": null,
+      "population_count": 153047,
+      "population_id": "19A46CC3-7DC6-417D-B42E-9154D61A40FC",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-30",
+      "container": "J3",
+      "departure_date": null,
+      "population_count": 158217,
+      "population_id": "94AD1B24-52A1-464B-8A05-5A2D54998B86",
+      "stage": "Post-Smolt"
+    },
+    {
+      "assignment_date": "2025-12-30",
+      "container": "J4",
+      "departure_date": null,
+      "population_count": 156453,
+      "population_id": "1A406CCD-00B1-41D2-B558-05D6AC2A2B91",
+      "stage": "Post-Smolt"
+    }
+  ],
+  "batch_id": 463,
+  "batch_lifecycle_stage": "Post-Smolt",
+  "batch_number": "Benchmark Gen. Desembur 2024",
+  "batch_stage_matches_frontier": true,
+  "batch_status": "ACTIVE",
+  "frontier_anchor_time": "2026-01-22 00:00:00",
+  "frontier_stage_counts_24h": {
+    "Post-Smolt": 15
+  },
+  "frontier_stage_selected_24h": "Post-Smolt",
+  "observed_active_containers": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "I1",
+    "I2",
+    "I3",
+    "J1",
+    "J2",
+    "J3",
+    "J4"
+  ]
+}

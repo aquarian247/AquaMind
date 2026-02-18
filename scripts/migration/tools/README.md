@@ -6,6 +6,9 @@
 - input_based_stitching_report.py - input-based batch discovery
 - pilot_migrate_input_batch.py - end-to-end input-batch migration
 - pilot_migrate_component.py - core batch + infrastructure
+- extract_freshness_guard.py - detect stale/cutoff CSV extracts before migration
+- migration_profiles.py - cohort-profile presets for migration behavior
+- migration_profile_cohort_classifier.py - group semantic summaries into profile recommendations
 - pilot_migrate_component_transfers.py - transfer workflows
 - pilot_migrate_component_feeding.py - feeding events
 - pilot_migrate_component_mortality.py - mortality events
@@ -24,6 +27,9 @@
 - fwsea_deterministic_linkage_report.py - deterministic FW->Sea operation-level evidence report (InternalDelivery + ActionMetaData(184/220) + PopulationLink/SubTransfers diagnostics)
 - fwsea_endpoint_pairing_gate.py - endpoint uniqueness/stability acceptance gate for FWSEA policy-readiness (tooling-only)
 - fwsea_endpoint_gate_matrix.py - run endpoint gate across cohort semantic summaries and publish pass/fail matrix
+- fwsea_trace_target_pack.py - build deterministic SQL trace target packs from matrix blocker classifications (operation IDs + signatures)
+- fwsea_xe_trace_capture.py - arm/disarm/analyze SQL Server Extended Events capture for FWSEA trace packs
+- cohort_subtransfer_transition_report.py - derive deterministic SB->DA stage-transition topology for a cohort from ExtInputs + SubTransfers lineage
 - dump_schema.py - schema snapshot utility
 - fix_system_admin_rbac.py - RBAC fix
 - pilot_migrate_feed_inventory.py - optional global feed inventory pass

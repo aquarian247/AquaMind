@@ -1,0 +1,788 @@
+{
+  "generated_at": "2026-02-16 18:29:12",
+  "analysis_dir": "aquamind/docs/progress/migration/analysis_reports/2026-02-16",
+  "summary_glob": "*semantic_validation*.summary.json",
+  "cohort_count": 29,
+  "extract_preflight": {
+    "passed": true,
+    "failures": [],
+    "warnings": [
+      "operation_stage_changes max date is before requested horizon: 2026-01-18 < 2026-01-22"
+    ],
+    "horizon_date": "2026-01-22",
+    "status_subtransfer_skew_hours": 0.0,
+    "operation_stage_lag_days": 4.068530092592592,
+    "tables": {
+      "status_values": {
+        "table": "status_values",
+        "path": "scripts/migration/data/extract/status_values.csv",
+        "row_count": 7668407,
+        "time_column": "StatusTime",
+        "max_time_raw": "2026-01-22 12:46:55",
+        "max_time_iso": "2026-01-22 12:46:55",
+        "missing": false,
+        "missing_column": false
+      },
+      "sub_transfers": {
+        "table": "sub_transfers",
+        "path": "scripts/migration/data/extract/sub_transfers.csv",
+        "row_count": 207353,
+        "time_column": "OperationTime",
+        "max_time_raw": "2026-01-22 12:46:55",
+        "max_time_iso": "2026-01-22 12:46:55",
+        "missing": false,
+        "missing_column": false
+      },
+      "operation_stage_changes": {
+        "table": "operation_stage_changes",
+        "path": "scripts/migration/data/extract/operation_stage_changes.csv",
+        "row_count": 28574,
+        "time_column": "OperationTime",
+        "max_time_raw": "2026-01-18 11:08:14",
+        "max_time_iso": "2026-01-18 11:08:14",
+        "missing": false,
+        "missing_column": false
+      },
+      "populations": {
+        "table": "populations",
+        "path": "scripts/migration/data/extract/populations.csv",
+        "row_count": 355024,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      },
+      "ext_inputs": {
+        "table": "ext_inputs",
+        "path": "scripts/migration/data/extract/ext_inputs.csv",
+        "row_count": 24205,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      },
+      "containers": {
+        "table": "containers",
+        "path": "scripts/migration/data/extract/containers.csv",
+        "row_count": 17066,
+        "time_column": null,
+        "max_time_raw": null,
+        "max_time_iso": null,
+        "missing": false,
+        "missing_column": false
+      }
+    }
+  },
+  "cohorts": [
+    {
+      "batch_name": "Benchmark Gen. Desembur 2024",
+      "batch_id": 463,
+      "component_key": "1636C683-E8F2-476D-BC21-0170CA7DCEE8",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Desembur_2024_4_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:16:43",
+      "summary_mtime_epoch": 1771258603.3275082,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "AG FEB 24",
+      "batch_id": 483,
+      "component_key": "9A2FCED1-721F-4893-AED7-0C07E24C715F",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_AG_FEB_24_1_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:19:47",
+      "summary_mtime_epoch": 1771265987.165698,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF DEC 24",
+      "batch_id": 487,
+      "component_key": "2626A8C5-1C77-40B4-89FF-00CDE7CE5D2F",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_DEC_24_8_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:24:28",
+      "summary_mtime_epoch": 1771266268.8652925,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF FEB 24",
+      "batch_id": 484,
+      "component_key": "1E81696F-1749-4036-945B-0290B466B32C",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_FEB_24_5_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:20:39",
+      "summary_mtime_epoch": 1771266039.7573626,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF JUL 25",
+      "batch_id": 490,
+      "component_key": "95045310-2FE0-4533-B3CA-0329E953A705",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_JUL_25_3_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:27:30",
+      "summary_mtime_epoch": 1771266450.1076183,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF JUN 25",
+      "batch_id": 497,
+      "component_key": "1A7421E3-6F19-4BEC-8749-00EC01B61CB7",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_JUN_25_2_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:26:28",
+      "summary_mtime_epoch": 1771266388.2944229,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF MAR 25",
+      "batch_id": 496,
+      "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_MAR_25_1_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:25:39",
+      "summary_mtime_epoch": 1771266339.808983,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF MAY 24",
+      "batch_id": 485,
+      "component_key": "E8FE9380-69EE-4D31-864D-0387E9880FB5",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_MAY_24_6_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:21:56",
+      "summary_mtime_epoch": 1771266116.202794,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF NOV 23",
+      "batch_id": 482,
+      "component_key": "FA8EA452-AFE1-490D-B236-0150415B6E6F",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_NOV_23_5_2023_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:19:12",
+      "summary_mtime_epoch": 1771265952.1237755,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF SEP 24",
+      "batch_id": 486,
+      "component_key": "F78C939E-6282-46E9-8219-0B38550AF4BF",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_SEP_24_7_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:23:12",
+      "summary_mtime_epoch": 1771266192.0040426,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "SF SEP 25",
+      "batch_id": 491,
+      "component_key": "A88689DA-143C-490D-86FA-03661F67C7F6",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/FW22_station_wave_SF_SEP_25_4_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 18:28:29",
+      "summary_mtime_epoch": 1771266509.6624644,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Bakkafrost S-21 jan 25",
+      "batch_id": 464,
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Bakkafrost_S_21_jan_25_1_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:23:57",
+      "summary_mtime_epoch": 1771255437.0934632,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Bakkafrost S-21 okt 25",
+      "batch_id": 472,
+      "component_key": "829BEAC3-83F0-47F7-AFC3-140AE3A234ED",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Bakkafrost_S_21_okt_25_5_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:31:46",
+      "summary_mtime_epoch": 1771255906.7536378,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Bakkafrost S-21 sep24",
+      "batch_id": 469,
+      "component_key": "B12D319D-8F65-4C87-8818-05C5A388D41C",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Bakkafrost_S_21_sep24_3_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:19:32",
+      "summary_mtime_epoch": 1771255172.2232158,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "StofnFiskur S-21 apr 25",
+      "batch_id": 470,
+      "component_key": "3C2D4475-F0D2-4DCA-A2B1-0F00378EE82D",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_StofnFiskur_S_21_apr_25_2_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:27:16",
+      "summary_mtime_epoch": 1771255636.6478918,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "StofnFiskur S-21 juli25",
+      "batch_id": 471,
+      "component_key": "0D5E2166-55AD-4469-B1E4-30A70B22FB72",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_StofnFiskur_S_21_juli25_3_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:29:43",
+      "summary_mtime_epoch": 1771255783.6362965,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur S21 okt 25",
+      "batch_id": 473,
+      "component_key": "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Stofnfiskur_S21_okt_25_4_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:33:25",
+      "summary_mtime_epoch": 1771256005.4720473,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur S-21 feb24",
+      "batch_id": 467,
+      "component_key": "BC782146-C921-4AD1-8021-0E1ED2228D7C",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Stofnfiskur_S_21_feb24_1_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:07:37",
+      "summary_mtime_epoch": 1771254457.3474667,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur S-21 juni24",
+      "batch_id": 468,
+      "component_key": "E84F1BB3-E175-4B25-84AC-15614864DD75",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Stofnfiskur_S_21_juni24_2_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:13:16",
+      "summary_mtime_epoch": 1771254796.3004022,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur S-21 nov23",
+      "batch_id": 466,
+      "component_key": "B884F78F-1E92-49C0-AE28-39DFC2E18C01",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S21_station_wave_Stofnfiskur_S_21_nov23_5_2023_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:02:10",
+      "summary_mtime_epoch": 1771254130.1553996,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen. Juni 2024",
+      "batch_id": 477,
+      "component_key": "5DC4DA59-A891-4BBB-BB2E-0CC95C633F20",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2024_2_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:07:05",
+      "summary_mtime_epoch": 1771258025.078265,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen. Juni 2025",
+      "batch_id": 480,
+      "component_key": "7181368D-569E-4809-A8A3-029C7353EB24",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Juni_2025_2_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:25:54",
+      "summary_mtime_epoch": 1771259154.0285747,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen. Mars 2024",
+      "batch_id": 476,
+      "component_key": "79EB0F5F-4762-4F9B-9117-172E4905B03B",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2024_1_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:59:34",
+      "summary_mtime_epoch": 1771257574.3455675,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen. Mars 2025",
+      "batch_id": 479,
+      "component_key": "CE636015-595A-44BD-AB37-03B4018FBA4A",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Mars_2025_1_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:22:23",
+      "summary_mtime_epoch": 1771258943.665742,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen. Septembur 2024",
+      "batch_id": 478,
+      "component_key": "65370D45-A30A-4810-B8F0-06FE2DB4A001",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2024_3_2024_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:11:26",
+      "summary_mtime_epoch": 1771258286.2887778,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Benchmark Gen Septembur 2025",
+      "batch_id": 481,
+      "component_key": "1E996D42-BDB6-4E88-BFE2-026DC2086563",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Benchmark_Gen_Septembur_2025_3_2025_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 16:28:44",
+      "summary_mtime_epoch": 1771259324.0116282,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur Septembur 2023",
+      "batch_id": 474,
+      "component_key": "7B085E67-2317-483C-A01E-007DDECB8269",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_Septembur_2023_3_2023_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:46:12",
+      "summary_mtime_epoch": 1771256772.7616675,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "Stofnfiskur desembur 2023",
+      "batch_id": 475,
+      "component_key": "5C2A7C3B-7222-4D47-BB12-0D0E318EAF21",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/S24_station_wave_Stofnfiskur_desembur_2023_4_2023_semantic_validation_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 15:53:33",
+      "summary_mtime_epoch": 1771257213.5234957,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    },
+    {
+      "batch_name": "StofnFiskur okt. 2024",
+      "batch_id": 465,
+      "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C",
+      "summary_path": "aquamind/docs/progress/migration/analysis_reports/2026-02-16/StofnFiskur_okt_2024_semantic_validation_after_outside_holder_fix_2026-02-16.summary.json",
+      "summary_mtime_iso": "2026-02-16 14:16:57",
+      "summary_mtime_epoch": 1771251417.076168,
+      "signatures": [
+        "clean"
+      ],
+      "recommended_profile": "fw_default",
+      "confidence": "high",
+      "rationale": "No semantic or gate signatures indicate divergence from baseline.",
+      "recommended_override": null,
+      "regression_gates_passed": true,
+      "outside_holder_count": 0,
+      "transition_alert_count": 0,
+      "non_bridge_zero_assignments": 0,
+      "zero_count_transfer_actions": 0
+    }
+  ],
+  "groups": [
+    {
+      "recommended_profile": "fw_default",
+      "signatures": [
+        "clean"
+      ],
+      "cohort_count": 29,
+      "cohorts": [
+        {
+          "batch_name": "AG FEB 24",
+          "component_key": "9A2FCED1-721F-4893-AED7-0C07E24C715F"
+        },
+        {
+          "batch_name": "Bakkafrost S-21 jan 25",
+          "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803"
+        },
+        {
+          "batch_name": "Bakkafrost S-21 okt 25",
+          "component_key": "829BEAC3-83F0-47F7-AFC3-140AE3A234ED"
+        },
+        {
+          "batch_name": "Bakkafrost S-21 sep24",
+          "component_key": "B12D319D-8F65-4C87-8818-05C5A388D41C"
+        },
+        {
+          "batch_name": "Benchmark Gen Septembur 2025",
+          "component_key": "1E996D42-BDB6-4E88-BFE2-026DC2086563"
+        },
+        {
+          "batch_name": "Benchmark Gen. Desembur 2024",
+          "component_key": "1636C683-E8F2-476D-BC21-0170CA7DCEE8"
+        },
+        {
+          "batch_name": "Benchmark Gen. Juni 2024",
+          "component_key": "5DC4DA59-A891-4BBB-BB2E-0CC95C633F20"
+        },
+        {
+          "batch_name": "Benchmark Gen. Juni 2025",
+          "component_key": "7181368D-569E-4809-A8A3-029C7353EB24"
+        },
+        {
+          "batch_name": "Benchmark Gen. Mars 2024",
+          "component_key": "79EB0F5F-4762-4F9B-9117-172E4905B03B"
+        },
+        {
+          "batch_name": "Benchmark Gen. Mars 2025",
+          "component_key": "CE636015-595A-44BD-AB37-03B4018FBA4A"
+        },
+        {
+          "batch_name": "Benchmark Gen. Septembur 2024",
+          "component_key": "65370D45-A30A-4810-B8F0-06FE2DB4A001"
+        },
+        {
+          "batch_name": "SF DEC 24",
+          "component_key": "2626A8C5-1C77-40B4-89FF-00CDE7CE5D2F"
+        },
+        {
+          "batch_name": "SF FEB 24",
+          "component_key": "1E81696F-1749-4036-945B-0290B466B32C"
+        },
+        {
+          "batch_name": "SF JUL 25",
+          "component_key": "95045310-2FE0-4533-B3CA-0329E953A705"
+        },
+        {
+          "batch_name": "SF JUN 25",
+          "component_key": "1A7421E3-6F19-4BEC-8749-00EC01B61CB7"
+        },
+        {
+          "batch_name": "SF MAR 25",
+          "component_key": "232FE340-5BBE-4C3A-96A4-0CA91C0B181A"
+        },
+        {
+          "batch_name": "SF MAY 24",
+          "component_key": "E8FE9380-69EE-4D31-864D-0387E9880FB5"
+        },
+        {
+          "batch_name": "SF NOV 23",
+          "component_key": "FA8EA452-AFE1-490D-B236-0150415B6E6F"
+        },
+        {
+          "batch_name": "SF SEP 24",
+          "component_key": "F78C939E-6282-46E9-8219-0B38550AF4BF"
+        },
+        {
+          "batch_name": "SF SEP 25",
+          "component_key": "A88689DA-143C-490D-86FA-03661F67C7F6"
+        },
+        {
+          "batch_name": "Stofnfiskur desembur 2023",
+          "component_key": "5C2A7C3B-7222-4D47-BB12-0D0E318EAF21"
+        },
+        {
+          "batch_name": "StofnFiskur okt. 2024",
+          "component_key": "F7D08CC6-083F-4CB4-9271-ECABFA6D3F2C"
+        },
+        {
+          "batch_name": "StofnFiskur S-21 apr 25",
+          "component_key": "3C2D4475-F0D2-4DCA-A2B1-0F00378EE82D"
+        },
+        {
+          "batch_name": "Stofnfiskur S-21 feb24",
+          "component_key": "BC782146-C921-4AD1-8021-0E1ED2228D7C"
+        },
+        {
+          "batch_name": "StofnFiskur S-21 juli25",
+          "component_key": "0D5E2166-55AD-4469-B1E4-30A70B22FB72"
+        },
+        {
+          "batch_name": "Stofnfiskur S-21 juni24",
+          "component_key": "E84F1BB3-E175-4B25-84AC-15614864DD75"
+        },
+        {
+          "batch_name": "Stofnfiskur S-21 nov23",
+          "component_key": "B884F78F-1E92-49C0-AE28-39DFC2E18C01"
+        },
+        {
+          "batch_name": "Stofnfiskur S21 okt 25",
+          "component_key": "9C8AC1D7-47AE-47DE-8E7A-B5062E138D2F"
+        },
+        {
+          "batch_name": "Stofnfiskur Septembur 2023",
+          "component_key": "7B085E67-2317-483C-A01E-007DDECB8269"
+        }
+      ]
+    }
+  ],
+  "skipped_files": []
+}

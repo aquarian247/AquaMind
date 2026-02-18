@@ -50,6 +50,7 @@ from scripts.migration.tools.pilot_migrate_component import (
     DataSource as ComponentDataSource,
     build_conserved_population_counts,
 )
+from scripts.migration.tools.extract_freshness_guard import DEFAULT_BACKUP_HORIZON_DATE
 
 
 REPORT_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "population_stitching"
@@ -81,6 +82,25 @@ def parse_dt(value: str) -> datetime | None:
         return datetime.fromisoformat(cleaned)
     except ValueError:
         return None
+
+
+def parse_window_end_cap(value: str | None) -> datetime | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    parsed = parse_dt(cleaned)
+    if parsed is None:
+        raise ValueError(
+            f"Invalid --window-end-cap-date '{value}'. Use YYYY-MM-DD or an ISO datetime."
+        )
+
+    # Date-only inputs should include the full day.
+    if "T" not in cleaned and " " not in cleaned and len(cleaned) == 10:
+        return parsed + timedelta(days=1) - timedelta(microseconds=1)
+    return parsed
 
 
 @dataclass(frozen=True)
@@ -1260,13 +1280,21 @@ def build_stage_sanity(
                 has_external_source = False
                 for incoming_row in incoming_by_dest_after.get(dest_pop_id, []):
                     source_before = (incoming_row.get("SourcePopBefore") or "").strip()
+                    dest_before = (incoming_row.get("DestPopBefore") or "").strip()
                     if source_before and source_before not in population_id_set:
+                        has_external_source = True
+                        break
+                    if dest_before and dest_before not in population_id_set:
                         has_external_source = True
                         break
                 if not has_external_source:
                     for incoming_row in incoming_by_source_after.get(dest_pop_id, []):
                         source_before = (incoming_row.get("SourcePopBefore") or "").strip()
+                        dest_before = (incoming_row.get("DestPopBefore") or "").strip()
                         if source_before and source_before not in population_id_set:
+                            has_external_source = True
+                            break
+                        if dest_before and dest_before not in population_id_set:
                             has_external_source = True
                             break
                 if has_external_source:
@@ -1317,12 +1345,23 @@ def build_stage_sanity(
             bridge_delta = bridge_destination_population - bridge_source_population
 
             # If bridge-derived counts imply population growth without mixed-batch
-            # evidence and some entry populations have external incoming sources,
-            # treat linkage as incomplete for transition sanity gating.
+            # evidence, degrade to incomplete linkage when either:
+            # - entry populations have external incoming/pre-existing signals, or
+            # - lineage-graph fallback was needed (we lack direct edge certainty), or
+            # - bridge-aware consolidation (many linked sources -> fewer linked
+            #   destinations) indicates likely missing lineage context.
+            bridge_consolidation_without_mixed = (
+                bridge_used_for_transition
+                and len(linked_source_populations) > len(linked_destination_populations)
+            )
             if (
                 bridge_delta > 0
                 and mixed_rows == 0
-                and entry_populations_with_external_sources
+                and (
+                    entry_populations_with_external_sources
+                    or lineage_graph_used_for_transition
+                    or bridge_consolidation_without_mixed
+                )
             ):
                 transition_basis = "entry_window"
                 entry_window_reason = "incomplete_linkage"
@@ -1655,6 +1694,15 @@ def main() -> int:
     parser.add_argument("--output", type=str, help="Optional output markdown path")
     parser.add_argument("--summary-json", type=str, help="Optional output JSON summary path")
     parser.add_argument(
+        "--window-end-cap-date",
+        default=DEFAULT_BACKUP_HORIZON_DATE,
+        help=(
+            "Cap semantic aggregation window end to this date/datetime. "
+            "Use YYYY-MM-DD to include the full day. "
+            f"(default: {DEFAULT_BACKUP_HORIZON_DATE})"
+        ),
+    )
+    parser.add_argument(
         "--fishgroup-outlier-allowlist",
         action="append",
         default=[],
@@ -1704,7 +1752,17 @@ def main() -> int:
 
     population_ids = sorted({m.population_id for m in members if m.population_id})
     window_start = min(m.start_time for m in members)
-    window_end = max((m.end_time or datetime.utcnow()) for m in members)
+    window_end_uncapped = max((m.end_time or datetime.utcnow()) for m in members)
+    try:
+        window_end_cap = parse_window_end_cap(args.window_end_cap_date)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+    window_end = window_end_uncapped
+    if window_end_cap is not None and window_end > window_end_cap:
+        window_end = window_end_cap
+    if window_end < window_start:
+        window_end = window_start
+    window_end_was_capped = window_end != window_end_uncapped
 
     loader = ETLDataLoader(args.use_csv)
 
@@ -1861,7 +1919,13 @@ def main() -> int:
     lines.append(f"- Component key: `{component_key}`")
     lines.append(f"- Batch: `{batch.batch_number}` (id={batch.id})")
     lines.append(f"- Populations: {len(population_ids)}")
-    lines.append(f"- Window: {window_start} → {window_end}")
+    if window_end_was_capped and window_end_cap is not None:
+        lines.append(
+            f"- Window: {window_start} → {window_end} "
+            f"(uncapped end {window_end_uncapped}, cap {window_end_cap})"
+        )
+    else:
+        lines.append(f"- Window: {window_start} → {window_end}")
     lines.append("")
     lines.append("| Metric | FishTalk | AquaMind | Diff (FT - AM) |")
     lines.append("| --- | ---: | ---: | ---: |")
@@ -2227,6 +2291,9 @@ def main() -> int:
         "window": {
             "start": window_start.isoformat(),
             "end": window_end.isoformat(),
+            "end_uncapped": window_end_uncapped.isoformat(),
+            "end_cap": window_end_cap.isoformat() if window_end_cap is not None else None,
+            "end_was_capped": window_end_was_capped,
         },
         "population_count": len(population_ids),
         "known_loss_count": known_loss_count,

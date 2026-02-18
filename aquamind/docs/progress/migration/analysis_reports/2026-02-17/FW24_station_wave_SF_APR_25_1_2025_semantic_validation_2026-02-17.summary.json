@@ -1,0 +1,639 @@
+{
+  "batch": {
+    "batch_number": "SF APR 25",
+    "id": 506
+  },
+  "component_key": "D6F4E237-C220-4DC8-9660-026D3871FFD6",
+  "fishgroup_classification": {
+    "bridge_mixed_fishgroup_count": 0,
+    "entry_window_bridge_fishgroups": [],
+    "example_real_stage_entry_fishgroups": [
+      "251.0002",
+      "251.0003",
+      "251.0004",
+      "251.0005",
+      "251.0006",
+      "251.0007",
+      "251.0008",
+      "251.0009",
+      "251.0010",
+      "251.0011"
+    ],
+    "example_temporary_bridge_fishgroups": [
+      "251.0052",
+      "251.0053",
+      "251.0055",
+      "251.0056",
+      "251.0059",
+      "251.0061",
+      "251.0063",
+      "251.0066",
+      "251.0071",
+      "251.0078"
+    ],
+    "real_stage_entry_fishgroup_count": 49,
+    "temporary_bridge_fishgroup_count": 10,
+    "temporary_bridge_population_count": 10
+  },
+  "fishgroup_format_audit": {
+    "allowlist_patterns": [
+      "23|99|23999.000"
+    ],
+    "component": {
+      "allowlisted_outlier_rows": 0,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 78,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 0,
+      "rows_checked": 78,
+      "scope": "component_members",
+      "top_non_allowlisted_outlier_patterns": []
+    },
+    "ext_populations_found": true,
+    "global": {
+      "allowlisted_outlier_rows": 5,
+      "example_non_allowlisted_outliers": [],
+      "invalid_running_number_rows": 0,
+      "matched_pct": 100.0,
+      "matched_rows": 184229,
+      "non_allowlisted_outlier_rows": 0,
+      "outlier_rows": 5,
+      "rows_checked": 184234,
+      "scope": "global_extract",
+      "top_non_allowlisted_outlier_patterns": []
+    }
+  },
+  "known_loss_count": 122517,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": true
+  },
+  "population_count": 78,
+  "regression_gates": {
+    "checks": [
+      {
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0)",
+        "name": "no_positive_transition_delta_without_mixed_batch",
+        "passed": true
+      },
+      {
+        "details": "Transfer actions with transferred_count <= 0: 0",
+        "name": "no_zero_count_transfer_actions",
+        "passed": true
+      },
+      {
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
+        "name": "non_bridge_zero_assignments_within_threshold",
+        "passed": true
+      }
+    ],
+    "max_non_bridge_zero_assignments": 2,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
+    "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 0,
+    "zero_count_transfer_actions": 0
+  },
+  "stage_sanity": {
+    "active_container_occupancy_evidence": {
+      "containers_checked": 31,
+      "latest_holder_in_component_count": 31,
+      "latest_holder_outside_component_count": 0,
+      "latest_holder_unknown_count": 0,
+      "rows": [
+        {
+          "component_population_id": "BAA5AB95-24F1-48BB-BC29-FA695AE06B73",
+          "container_name": "CH1.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30809,
+          "latest_in_component": true,
+          "latest_population_id": "BAA5AB95-24F1-48BB-BC29-FA695AE06B73",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "E847ABB7-D14E-4F87-852A-EF906F2015C2"
+        },
+        {
+          "component_population_id": "DABBA46F-133E-44FC-98A5-8266783C462C",
+          "container_name": "CH2.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30741,
+          "latest_in_component": true,
+          "latest_population_id": "DABBA46F-133E-44FC-98A5-8266783C462C",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "F3B53ECB-FD00-4593-9167-D6B8827AAFF8"
+        },
+        {
+          "component_population_id": "456AFC04-56C3-4692-B3C6-53D6E0730328",
+          "container_name": "CH3.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30774,
+          "latest_in_component": true,
+          "latest_population_id": "456AFC04-56C3-4692-B3C6-53D6E0730328",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "DE96EC3C-ADB0-4D7E-924B-DB0F9A309093"
+        },
+        {
+          "component_population_id": "BB0D1A78-A77A-435D-B668-B30324C4253B",
+          "container_name": "CH4.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30820,
+          "latest_in_component": true,
+          "latest_population_id": "BB0D1A78-A77A-435D-B668-B30324C4253B",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "EE558714-F1B7-4066-8A33-9B7E8B474B78"
+        },
+        {
+          "component_population_id": "0A7EC9EB-4EF6-4BBF-90F4-4FE0D26E9AFE",
+          "container_name": "CH5.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30804,
+          "latest_in_component": true,
+          "latest_population_id": "0A7EC9EB-4EF6-4BBF-90F4-4FE0D26E9AFE",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "3B4958CC-6CE2-44A3-ABA8-437592365BDD"
+        },
+        {
+          "component_population_id": "121EAED4-6E9A-40E0-B6D8-D1A6CD3669AF",
+          "container_name": "CH6.02",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30712,
+          "latest_in_component": true,
+          "latest_population_id": "121EAED4-6E9A-40E0-B6D8-D1A6CD3669AF",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "EA7DB48C-EA36-4F24-974C-2BDAE8E68D85"
+        },
+        {
+          "component_population_id": "34C64A97-D478-464D-A712-1B35A175C788",
+          "container_name": "CH6.03",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30720,
+          "latest_in_component": true,
+          "latest_population_id": "34C64A97-D478-464D-A712-1B35A175C788",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "9DF75700-883B-4381-9E84-E426EAC756D1"
+        },
+        {
+          "component_population_id": "946EBEC4-76A7-423D-9EF4-C4529C7AA9C8",
+          "container_name": "CH6.04",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30785,
+          "latest_in_component": true,
+          "latest_population_id": "946EBEC4-76A7-423D-9EF4-C4529C7AA9C8",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "01D0D7D2-1C3B-48A8-AF34-D8D0D1799419"
+        },
+        {
+          "component_population_id": "185CB38F-7856-46C5-B2FB-1F262A8F3175",
+          "container_name": "CH6.05",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30859,
+          "latest_in_component": true,
+          "latest_population_id": "185CB38F-7856-46C5-B2FB-1F262A8F3175",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "35013F65-92A6-4B32-BF41-93B0B4ADBD91"
+        },
+        {
+          "component_population_id": "393C0DB8-60E5-4A56-980C-96547D5F83F2",
+          "container_name": "CH6.06",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30798,
+          "latest_in_component": true,
+          "latest_population_id": "393C0DB8-60E5-4A56-980C-96547D5F83F2",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "5863EE5C-9D61-47EB-9C2C-5E02DE551F84"
+        },
+        {
+          "component_population_id": "9F4F3A67-3328-46D5-B181-240CE8029BE6",
+          "container_name": "CH6.07",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30740,
+          "latest_in_component": true,
+          "latest_population_id": "9F4F3A67-3328-46D5-B181-240CE8029BE6",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "307784D9-1D18-4D4B-952A-6290089854AB"
+        },
+        {
+          "component_population_id": "DC523F46-98A5-4C8C-949A-BB0DB98DF24F",
+          "container_name": "CH6.08",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30800,
+          "latest_in_component": true,
+          "latest_population_id": "DC523F46-98A5-4C8C-949A-BB0DB98DF24F",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "30D9415B-F145-4481-97B9-B2A075D5D722"
+        },
+        {
+          "component_population_id": "81AF26D8-3A5F-410E-BD3B-DCD2BAEB220E",
+          "container_name": "CH7.02",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30872,
+          "latest_in_component": true,
+          "latest_population_id": "81AF26D8-3A5F-410E-BD3B-DCD2BAEB220E",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "9F973ABC-C10A-4E64-A4E8-61F4AFF06BF4"
+        },
+        {
+          "component_population_id": "048D548D-62DF-470C-BB83-DA09F7EC7A97",
+          "container_name": "CH7.03",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30854,
+          "latest_in_component": true,
+          "latest_population_id": "048D548D-62DF-470C-BB83-DA09F7EC7A97",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "54F06B86-D2BA-489B-9631-50DE5BC3617F"
+        },
+        {
+          "component_population_id": "AAE4FBA0-A953-4540-BB44-487B0C22F4D2",
+          "container_name": "CH7.04",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30721,
+          "latest_in_component": true,
+          "latest_population_id": "AAE4FBA0-A953-4540-BB44-487B0C22F4D2",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "6E4557A2-B4AC-474C-8E5F-B92B552EC57F"
+        },
+        {
+          "component_population_id": "4EF02E97-C995-4466-978C-0B54666CB455",
+          "container_name": "CH7.05",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30762,
+          "latest_in_component": true,
+          "latest_population_id": "4EF02E97-C995-4466-978C-0B54666CB455",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "7A2DC153-B2C6-4E88-B118-C49C510EBBF2"
+        },
+        {
+          "component_population_id": "7B359C9B-3369-4B21-980E-7A8B80DCF4D9",
+          "container_name": "CH7.06",
+          "latest_biomass_kg": 1.53,
+          "latest_count": 30641,
+          "latest_in_component": true,
+          "latest_population_id": "7B359C9B-3369-4B21-980E-7A8B80DCF4D9",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "26B5325A-5F40-4B98-A0B8-57D29CD86BA0"
+        },
+        {
+          "component_population_id": "29641B36-A643-430A-82E9-DADF99829C2D",
+          "container_name": "CH7.07",
+          "latest_biomass_kg": 1.54,
+          "latest_count": 30768,
+          "latest_in_component": true,
+          "latest_population_id": "29641B36-A643-430A-82E9-DADF99829C2D",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "6B1FB348-830F-404F-8AE9-D8ACCBC5C606"
+        },
+        {
+          "component_population_id": "32E1E5BC-5C0B-4453-A581-081EC78C60E4",
+          "container_name": "CH7.08",
+          "latest_biomass_kg": 0.76,
+          "latest_count": 15116,
+          "latest_in_component": true,
+          "latest_population_id": "32E1E5BC-5C0B-4453-A581-081EC78C60E4",
+          "latest_status_time": "2025-07-31 12:02:51",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "0F48C515-2F8E-40C5-BBBF-8051F011CFFC"
+        },
+        {
+          "component_population_id": "F87AD6BC-BCC9-441A-830A-723C8F2FF568",
+          "container_name": "FT03",
+          "latest_biomass_kg": 1611.45,
+          "latest_count": 156665,
+          "latest_in_component": true,
+          "latest_population_id": "F87AD6BC-BCC9-441A-830A-723C8F2FF568",
+          "latest_status_time": "2025-12-18 15:53:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "BF3C4402-61F3-4D68-9D12-04329F799EC2"
+        },
+        {
+          "component_population_id": "8AA843B6-D7D7-44CC-8E3D-19BEE4C6300B",
+          "container_name": "FT04",
+          "latest_biomass_kg": 2453.49,
+          "latest_count": 156191,
+          "latest_in_component": true,
+          "latest_population_id": "8AA843B6-D7D7-44CC-8E3D-19BEE4C6300B",
+          "latest_status_time": "2026-01-20 12:45:24",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "30334C89-B0CB-464E-AF53-14B4F967E455"
+        },
+        {
+          "component_population_id": "73790D39-6BB3-4209-8270-162CFB025069",
+          "container_name": "FT05",
+          "latest_biomass_kg": 2536.71,
+          "latest_count": 156855,
+          "latest_in_component": true,
+          "latest_population_id": "73790D39-6BB3-4209-8270-162CFB025069",
+          "latest_status_time": "2026-01-21 12:46:02",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "7FA9633F-B966-4C54-A2E2-9D4CD9164FBB"
+        },
+        {
+          "component_population_id": "5736863F-8F2E-49E0-8CB2-DAB2B29D3617",
+          "container_name": "FT06",
+          "latest_biomass_kg": 2544.79,
+          "latest_count": 156827,
+          "latest_in_component": true,
+          "latest_population_id": "5736863F-8F2E-49E0-8CB2-DAB2B29D3617",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "3AC5B51C-44BA-4FFE-AD97-F087D20A07DD"
+        },
+        {
+          "component_population_id": "87D9C185-B39D-46F9-83BF-0B9223213B02",
+          "container_name": "FT08",
+          "latest_biomass_kg": 1611.42,
+          "latest_count": 156755,
+          "latest_in_component": true,
+          "latest_population_id": "87D9C185-B39D-46F9-83BF-0B9223213B02",
+          "latest_status_time": "2025-12-18 15:53:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "0AAAB62E-F0DC-46D7-A64A-FEBB4E7284A1"
+        },
+        {
+          "component_population_id": "65E9A8A2-6564-4104-A7F3-3D724E629420",
+          "container_name": "FT09",
+          "latest_biomass_kg": 1667.01,
+          "latest_count": 156723,
+          "latest_in_component": true,
+          "latest_population_id": "65E9A8A2-6564-4104-A7F3-3D724E629420",
+          "latest_status_time": "2025-12-24 09:56:09",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "5D71BA48-4F01-4FC2-8E6C-061C8968183D"
+        },
+        {
+          "component_population_id": "D06EF877-5D07-4747-9A1B-CE81F56C5CED",
+          "container_name": "FT10",
+          "latest_biomass_kg": 2348.77,
+          "latest_count": 155737,
+          "latest_in_component": true,
+          "latest_population_id": "D06EF877-5D07-4747-9A1B-CE81F56C5CED",
+          "latest_status_time": "2026-01-19 12:43:38",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "7E117397-621B-41D2-BFF3-131C576D4806"
+        },
+        {
+          "component_population_id": "89D8F183-3342-4183-A8B8-F523B173CC9C",
+          "container_name": "FT11",
+          "latest_biomass_kg": 2395.02,
+          "latest_count": 156361,
+          "latest_in_component": true,
+          "latest_population_id": "89D8F183-3342-4183-A8B8-F523B173CC9C",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "12652119-4BF0-4D95-93F0-E653459733EB"
+        },
+        {
+          "component_population_id": "62E85D6D-F0FE-4A7D-9339-CD6925EF2EDA",
+          "container_name": "FT12",
+          "latest_biomass_kg": 2438.9,
+          "latest_count": 156833,
+          "latest_in_component": true,
+          "latest_population_id": "62E85D6D-F0FE-4A7D-9339-CD6925EF2EDA",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "283461F0-89AA-4DDE-A3D6-C5E5CF225A02"
+        },
+        {
+          "component_population_id": "118162A0-591B-4AF2-8608-967D0FF45E59",
+          "container_name": "RC21",
+          "latest_biomass_kg": 5014.99,
+          "latest_count": 310192,
+          "latest_in_component": true,
+          "latest_population_id": "118162A0-591B-4AF2-8608-967D0FF45E59",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "FEAFF3ED-72CD-4EC0-AF99-FB775F667574"
+        },
+        {
+          "component_population_id": "851A1A11-DAE7-430D-BAC4-9164DC2792C2",
+          "container_name": "RC22",
+          "latest_biomass_kg": 4990.2,
+          "latest_count": 313046,
+          "latest_in_component": true,
+          "latest_population_id": "851A1A11-DAE7-430D-BAC4-9164DC2792C2",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "9D7744D8-D36E-46EF-BAD8-897D83B0EE51"
+        },
+        {
+          "component_population_id": "F41A0558-CC4D-407A-B556-F0F17298CB95",
+          "container_name": "RC24",
+          "latest_biomass_kg": 4767.84,
+          "latest_count": 311559,
+          "latest_in_component": true,
+          "latest_population_id": "F41A0558-CC4D-407A-B556-F0F17298CB95",
+          "latest_status_time": "2026-01-22 00:00:00",
+          "prod_stage": "FreshWater",
+          "site": "FW24 KinlochMoidart",
+          "source_container_id": "3807B887-8267-4CF2-8121-89927B1D0221"
+        }
+      ]
+    },
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {
+          "FreshWater": 47
+        },
+        "by_site": {
+          "FW24 KinlochMoidart": 47
+        },
+        "by_site_group": {
+          "Unknown": 47
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 47
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "direct_external_population_count": 47,
+      "direct_population_summary": {
+        "by_prod_stage": {
+          "FreshWater": 47
+        },
+        "by_site": {
+          "FW24 KinlochMoidart": 47
+        },
+        "by_site_group": {
+          "Unknown": 47
+        },
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 47
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {
+          "FreshWater": 4
+        },
+        "by_site": {
+          "FW24 KinlochMoidart": 4
+        },
+        "edge_count": 4
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {
+          "FreshWater": 43
+        },
+        "by_site": {
+          "FW24 KinlochMoidart": 43
+        },
+        "edge_count": 43
+      }
+    },
+    "lineage_fallback_max_depth": 14,
+    "mixed_rows": 0,
+    "outflow_by_stage": {
+      "Egg&Alevin": 1325606
+    },
+    "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 31,
+        "active_population_total": 2155569,
+        "assignment_count": 78,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 49,
+        "entry_date": "2025-04-30",
+        "entry_population_ids": [
+          "048D548D-62DF-470C-BB83-DA09F7EC7A97",
+          "0975B8E0-D3C5-44C5-9236-C0BE0C5B118C",
+          "0A7EC9EB-4EF6-4BBF-90F4-4FE0D26E9AFE",
+          "0BBBFF22-5BEE-43A6-9E02-D26175226C02",
+          "121EAED4-6E9A-40E0-B6D8-D1A6CD3669AF",
+          "13F6DD03-A931-4978-B362-54225B42E5EA",
+          "185CB38F-7856-46C5-B2FB-1F262A8F3175",
+          "1E9D1D4E-2343-4844-846C-65C782D261FE",
+          "22992F30-A9EB-4128-8EC4-DE209FE33D87",
+          "29641B36-A643-430A-82E9-DADF99829C2D",
+          "32E1E5BC-5C0B-4453-A581-081EC78C60E4",
+          "34184489-4D01-49B7-B820-7F8504840A56",
+          "34C64A97-D478-464D-A712-1B35A175C788",
+          "393C0DB8-60E5-4A56-980C-96547D5F83F2",
+          "42EFB8D5-9B53-4B41-9849-D21AF9521FEF",
+          "456AFC04-56C3-4692-B3C6-53D6E0730328",
+          "4C5B9D17-AF23-4F6D-9463-BF698864336E",
+          "4EF02E97-C995-4466-978C-0B54666CB455",
+          "5ADA360D-7EDE-4197-AB57-E1EA875B7514",
+          "5E93F3FF-BB69-439E-8FDB-D626E2AA0C04",
+          "5F79C450-AEEF-4A37-8549-D779F3A1BD69",
+          "609036F7-8E41-4CEC-8561-78CD82A4A3BA",
+          "76DE3886-6E59-4580-BD49-E1A2883510E7",
+          "78B2AA19-2B3F-4D86-93B4-66A2910D37D2",
+          "7B359C9B-3369-4B21-980E-7A8B80DCF4D9",
+          "81AF26D8-3A5F-410E-BD3B-DCD2BAEB220E",
+          "88C33DEC-BAAB-403C-9AFA-F05AEF5BB619",
+          "946EBEC4-76A7-423D-9EF4-C4529C7AA9C8",
+          "9722B06D-77E0-4BEF-964E-A0A8D9C6A5E0",
+          "9BD900DD-4B89-465A-890D-DC76AC56F2DD",
+          "9F4F3A67-3328-46D5-B181-240CE8029BE6",
+          "A1B6F6D4-4945-4B12-BCF7-37BF7C736AC8",
+          "AAE4FBA0-A953-4540-BB44-487B0C22F4D2",
+          "ACCE84F0-CA6D-4514-BCB3-6A6456777346",
+          "AD5B2883-F4C8-4635-A5CC-87E07AA413C6",
+          "AFD3D531-B6CB-4665-8FCF-F7F2EE696238",
+          "BA0F4AF9-DB84-4174-A0D6-6E464B51C576",
+          "BAA5AB95-24F1-48BB-BC29-FA695AE06B73",
+          "BB0D1A78-A77A-435D-B668-B30324C4253B",
+          "C5FF8FD5-73B4-4507-BF60-56F723F844BF",
+          "C8AC4F4D-EE65-48F7-A578-6F0D74B239AE",
+          "D50BF808-28A6-4529-ABF8-831EF2666054",
+          "D6F4E237-C220-4DC8-9660-026D3871FFD6",
+          "DABBA46F-133E-44FC-98A5-8266783C462C",
+          "DC523F46-98A5-4C8C-949A-BB0DB98DF24F",
+          "DFB93591-C752-4D44-92C3-3EF7529CBF30",
+          "F2848065-77AD-41C7-A57F-03C84D95AD79",
+          "F69C149C-3C78-4148-809E-62464737E105",
+          "FF285A92-F9D9-4A2E-8D88-156ABA2B5CC7"
+        ],
+        "entry_real_fishgroup_count": 49,
+        "entry_window_end": "2025-05-02",
+        "full_to_entry_ratio": 3.17,
+        "full_to_peak_ratio": 1.61,
+        "nonzero_assignment_count": 69,
+        "order": 1,
+        "peak_concurrent_date": "2025-07-31",
+        "peak_concurrent_population": 3021920,
+        "population_entry": 1530757,
+        "population_total": 4851815,
+        "stage": "Egg&Alevin"
+      }
+    ],
+    "transition_basis_counts": {},
+    "transition_bridge_aware_count": 0,
+    "transition_count": 0,
+    "transition_entry_window_count": 0,
+    "transition_entry_window_reason_counts": {},
+    "transition_lineage_graph_count": 0,
+    "transitions": [],
+    "zero_assignment_bridge_count": 9,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 0,
+    "zero_assignment_total_count": 9
+  },
+  "transfer_actions": {
+    "total_count": 21,
+    "zero_count": 0
+  },
+  "window": {
+    "end": "2026-01-22T23:59:59.999999",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2026-02-17T13:47:18.230254",
+    "end_was_capped": true,
+    "start": "2025-04-30T14:01:38"
+  }
+}

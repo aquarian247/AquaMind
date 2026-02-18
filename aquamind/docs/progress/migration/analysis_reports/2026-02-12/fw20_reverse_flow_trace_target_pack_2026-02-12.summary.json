@@ -1,0 +1,112 @@
+{
+  "classification_counts": {
+    "reverse_flow_fw_only": 3
+  },
+  "classification_filter": [
+    "reverse_flow_fw_only"
+  ],
+  "csv_dir": "/Users/aquarian247/Projects/AquaMind/scripts/migration/data/extract",
+  "direction_counts": {
+    "input_to_sales": 3
+  },
+  "matrix_summary_json": "/Users/aquarian247/Projects/AquaMind/aquamind/docs/progress/migration/analysis_reports/2026-02-12/fw20_endpoint_gate_matrix_diag_source3_min4_with_blocker_family_2026-02-12/fw20_endpoint_gate_matrix.summary.json",
+  "operation_ids": [
+    "112C6EDD-F14B-48EE-AD8E-0AB709BD6728",
+    "68E185BA-CCA3-4981-BAF1-0976CC11B8BB",
+    "7A458ED6-BC39-4F37-8071-40667F768A19",
+    "7AE24FFE-A8A6-40DE-B8B4-0776C9274637",
+    "A5D37465-7D85-4313-813E-3AD59EC2000B",
+    "CDF4B384-2F03-4827-B562-B1AF9A0A0019"
+  ],
+  "reason_counts": {
+    "direction_mismatch": 3
+  },
+  "rows": [
+    {
+      "batch_name": "BF mars 2025",
+      "classification": "reverse_flow_fw_only",
+      "component_key": "7B7E162F-72EC-42E9-B32A-953264EAC124",
+      "direction": "input_to_sales",
+      "input_action_count": 1,
+      "input_guid_rows": 0,
+      "input_operation_id": "7AE24FFE-A8A6-40DE-B8B4-0776C9274637",
+      "input_operation_type": "5",
+      "input_parameter_counts": "184:1",
+      "input_population_count": 1,
+      "input_stage_class_counts": "fw:1",
+      "input_start_time": "2025-03-11 23:21:22",
+      "input_trip_rows": 1,
+      "pair_start_delta_minutes": 801,
+      "reason": "direction_mismatch",
+      "sales_action_count": 74,
+      "sales_guid_rows": 37,
+      "sales_operation_id": "68E185BA-CCA3-4981-BAF1-0976CC11B8BB",
+      "sales_operation_type": "7",
+      "sales_parameter_counts": "184:1,220:37",
+      "sales_population_count": 73,
+      "sales_stage_class_counts": "fw:73",
+      "sales_start_time": "2025-03-11 10:00:01",
+      "sales_trip_rows": 1,
+      "source_component_population_count": 1,
+      "target_population_count": 73
+    },
+    {
+      "batch_name": "BF oktober 2025",
+      "classification": "reverse_flow_fw_only",
+      "component_key": "DCF897C6-A2A3-4914-89E9-D43C8389D887",
+      "direction": "input_to_sales",
+      "input_action_count": 1,
+      "input_guid_rows": 0,
+      "input_operation_id": "7A458ED6-BC39-4F37-8071-40667F768A19",
+      "input_operation_type": "5",
+      "input_parameter_counts": "184:1",
+      "input_population_count": 1,
+      "input_stage_class_counts": "fw:1",
+      "input_start_time": "2025-10-09 10:14:20",
+      "input_trip_rows": 1,
+      "pair_start_delta_minutes": 4339,
+      "reason": "direction_mismatch",
+      "sales_action_count": 8,
+      "sales_guid_rows": 4,
+      "sales_operation_id": "112C6EDD-F14B-48EE-AD8E-0AB709BD6728",
+      "sales_operation_type": "7",
+      "sales_parameter_counts": "184:1,220:4",
+      "sales_population_count": 8,
+      "sales_stage_class_counts": "fw:8",
+      "sales_start_time": "2025-10-06 09:54:59",
+      "sales_trip_rows": 1,
+      "source_component_population_count": 1,
+      "target_population_count": 8
+    },
+    {
+      "batch_name": "Bakkafrost S-21 jan 25",
+      "classification": "reverse_flow_fw_only",
+      "component_key": "B52612BD-F18B-48A4-BF21-12B5FC246803",
+      "direction": "input_to_sales",
+      "input_action_count": 7,
+      "input_guid_rows": 0,
+      "input_operation_id": "CDF4B384-2F03-4827-B562-B1AF9A0A0019",
+      "input_operation_type": "5",
+      "input_parameter_counts": "184:7",
+      "input_population_count": 7,
+      "input_stage_class_counts": "fw:7",
+      "input_start_time": "2025-01-06 15:08:04",
+      "input_trip_rows": 7,
+      "pair_start_delta_minutes": 0,
+      "reason": "direction_mismatch",
+      "sales_action_count": 34,
+      "sales_guid_rows": 17,
+      "sales_operation_id": "A5D37465-7D85-4313-813E-3AD59EC2000B",
+      "sales_operation_type": "7",
+      "sales_parameter_counts": "184:1,220:17",
+      "sales_population_count": 17,
+      "sales_stage_class_counts": "fw:17",
+      "sales_start_time": "2025-01-06 15:08:04",
+      "sales_trip_rows": 1,
+      "source_component_population_count": 7,
+      "target_population_count": 17
+    }
+  ],
+  "trace_target_count": 3,
+  "unique_operation_count": 6
+}
