@@ -37,11 +37,13 @@ def format_weight(value):
 
 from .models import (
     Geography, 
+    AreaGroup,
     Area, 
     FreshwaterStation, 
     Hall, 
     ContainerType, 
     Container, 
+    TransportCarrier,
     Sensor, 
     FeedContainer
 )
@@ -53,6 +55,13 @@ class GeographyAdmin(SimpleHistoryAdmin):
     search_fields = ('name', 'description')
     list_filter = ('created_at',)
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(AreaGroup)
+class AreaGroupAdmin(SimpleHistoryAdmin):
+    list_display = ("name", "code", "geography", "parent", "active")
+    list_filter = ("geography", "active")
+    search_fields = ("name", "code")
 
 
 class AreaAdminForm(forms.ModelForm):
@@ -74,7 +83,15 @@ class AreaAdminForm(forms.ModelForm):
 @admin.register(Area)
 class AreaAdmin(SimpleHistoryAdmin):
     form = AreaAdminForm
-    list_display = ('name', 'geography', 'latitude_display', 'longitude_display', 'max_biomass_display', 'active')
+    list_display = (
+        'name',
+        'geography',
+        'area_group',
+        'latitude_display',
+        'longitude_display',
+        'max_biomass_display',
+        'active',
+    )
     
     def latitude_display(self, obj):
         return format_coordinates(obj.latitude)
@@ -91,7 +108,7 @@ class AreaAdmin(SimpleHistoryAdmin):
     search_fields = ('name',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'geography', 'max_biomass', 'active')
+            'fields': ('name', 'geography', 'area_group', 'max_biomass', 'active')
         }),
         ('Location', {
             'fields': ('latitude', 'longitude'),
@@ -175,7 +192,17 @@ class ContainerTypeAdmin(SimpleHistoryAdmin):
 
 @admin.register(Container)
 class ContainerAdmin(SimpleHistoryAdmin):
-    list_display = ('name', 'container_type', 'get_location', 'volume_m3_display', 'max_biomass_kg_display', 'active')
+    list_display = (
+        'name',
+        'container_type',
+        'hierarchy_role',
+        'parent_container',
+        'carrier',
+        'get_location',
+        'volume_m3_display',
+        'max_biomass_kg_display',
+        'active',
+    )
     
     def volume_m3_display(self, obj):
         return f"{obj.volume_m3:.2f}" if obj.volume_m3 else "-"
@@ -184,11 +211,17 @@ class ContainerAdmin(SimpleHistoryAdmin):
     def max_biomass_kg_display(self, obj):
         return f"{obj.max_biomass_kg:.2f}" if obj.max_biomass_kg else "-"
     max_biomass_kg_display.short_description = "Max Biomass (kg)"
-    list_filter = ('container_type', 'active')
+    list_filter = ('container_type', 'hierarchy_role', 'carrier', 'active')
     search_fields = ('name',)
     
     def get_location(self, obj):
-        return obj.hall.name if obj.hall else obj.area.name
+        if obj.hall:
+            return obj.hall.name
+        if obj.area:
+            return obj.area.name
+        if obj.carrier:
+            return obj.carrier.name
+        return "-"
     get_location.short_description = 'Location'
 
 
@@ -214,3 +247,16 @@ class FeedContainerAdmin(SimpleHistoryAdmin):
     def get_location(self, obj):
         return obj.hall.name if obj.hall else obj.area.name
     get_location.short_description = 'Location'
+
+
+@admin.register(TransportCarrier)
+class TransportCarrierAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "name",
+        "carrier_type",
+        "geography",
+        "capacity_m3",
+        "active",
+    )
+    list_filter = ("carrier_type", "geography", "active")
+    search_fields = ("name", "license_plate", "imo_number", "captain_contact")

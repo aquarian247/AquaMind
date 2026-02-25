@@ -9,11 +9,13 @@ import django_filters as filters
 from aquamind.utils.history_utils import HistoryFilter
 from apps.infrastructure.models import (
     Geography,
+    AreaGroup,
     Area,
     FreshwaterStation,
     Hall,
     ContainerType,
     Container,
+    TransportCarrier,
     Sensor,
     FeedContainer
 )
@@ -33,6 +35,14 @@ class AreaHistoryFilter(HistoryFilter):
     class Meta:
         model = Area.history.model
         fields = ['name', 'geography', 'active']
+
+
+class AreaGroupHistoryFilter(HistoryFilter):
+    """Filter class for AreaGroup historical records."""
+
+    class Meta:
+        model = AreaGroup.history.model
+        fields = ['name', 'code', 'geography', 'parent', 'active']
 
 
 class FreshwaterStationHistoryFilter(HistoryFilter):
@@ -64,7 +74,15 @@ class ContainerHistoryFilter(HistoryFilter):
 
     class Meta:
         model = Container.history.model
-        fields = ['name', 'container_type', 'hall', 'area', 'active']
+        fields = ['name', 'container_type', 'hall', 'area', 'carrier', 'active']
+
+
+class TransportCarrierHistoryFilter(HistoryFilter):
+    """Filter class for TransportCarrier historical records."""
+
+    class Meta:
+        model = TransportCarrier.history.model
+        fields = ['name', 'carrier_type', 'geography', 'active']
 
 
 class SensorHistoryFilter(HistoryFilter):

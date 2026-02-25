@@ -46,10 +46,13 @@ python scripts/data_generation/03_event_engine_core.py \
 **Usage**: `python 00_wipe_operational_data.py --confirm`
 
 ### 01_bootstrap_infrastructure.py
-**Purpose**: One-time infrastructure setup  
-**Creates**: Geographies (3), Stations (25), Halls (120), Containers (2,017), Sensors (11,060)  
+**Purpose**: One-time infrastructure setup (synthetic default or realistic reference-pack mode)  
+**Creates**:
+- Synthetic mode (default): geographies/stations/halls/containers/sensors using legacy deterministic layout
+- Realistic mode (`--reference-pack`): imports familiar FT-backed infrastructure names + area groups + rack/tray hierarchy via migration compatibility loader, then ensures feed containers/sensors for event generation  
 **Run**: Once per database  
-**Usage**: `python 01_bootstrap_infrastructure.py`
+**Usage (synthetic)**: `python 01_bootstrap_infrastructure.py`  
+**Usage (realistic)**: `python 01_bootstrap_infrastructure.py --reference-pack scripts/data_generation/reference_pack/latest`
 
 ### 01_initialize_scenario_master_data.py ⚡ NEW
 **Purpose**: Initialize scenario configuration data  
@@ -376,4 +379,3 @@ TEST 4: Stage Transitions ✅
 ---
 
 *End of README v3.0*
-

@@ -27,6 +27,7 @@ class Role(models.TextChoices):
     ADMIN = 'ADMIN', _('Administrator')
     MANAGER = 'MGR', _('Manager')
     OPERATOR = 'OPR', _('Operator')
+    SHIP_CREW = 'SHIP_CREW', _('Ship Crew')
     VETERINARIAN = 'VET', _('Veterinarian')
     QA = 'QA', _('Quality Assurance')
     FINANCE = 'FIN', _('Finance')
@@ -75,7 +76,7 @@ class UserProfile(models.Model):
     )
     
     role = models.CharField(
-        max_length=5,
+        max_length=20,
         choices=Role.choices,
         default=Role.VIEWER,
         help_text='User role and permission level'

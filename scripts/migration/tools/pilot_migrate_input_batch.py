@@ -614,6 +614,8 @@ def run_migration_script(
         cmd.append("--use-subtransfers")
         if skip_synthetic_stage_transitions:
             cmd.append("--skip-synthetic-stage-transitions")
+        else:
+            cmd.append("--include-synthetic-stage-transitions")
 
     if use_csv and script_name in CSV_SUPPORTED_SCRIPTS:
         cmd.extend(["--use-csv", use_csv])
@@ -947,8 +949,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--include-synthetic-stage-transitions",
         action="store_true",
         help=(
-            "Legacy behavior: synthesize assignment-derived stage transition workflows/actions "
-            "during transfer migration."
+            "Force synthetic assignment-derived stage-transition workflows/actions "
+            "during transfer migration regardless of run mode."
         ),
     )
     parser.add_argument(
@@ -1153,8 +1155,18 @@ def main() -> int:
 
     print(f"\nComponent key for migration: {component_key}")
     batch_number_override = args.batch_number or batch_info.input_name
-    if not args.include_synthetic_stage_transitions:
-        print("Transfer migration will skip synthetic stage-transition workflows/actions (edge-backed only).")
+    is_linked_full_lifecycle_run = bool(args.full_lifecycle and args.include_fw_batch)
+    transfer_include_synthetic_stage_transitions = bool(args.include_synthetic_stage_transitions)
+    if transfer_include_synthetic_stage_transitions:
+        print("Transfer migration synthetic stage transitions: ENABLED (CLI override).")
+    else:
+        if is_linked_full_lifecycle_run:
+            print(
+                "Transfer migration will skip synthetic stage-transition workflows/actions "
+                "(edge-backed only; linked full-lifecycle default guardrail)."
+            )
+        else:
+            print("Transfer migration will skip synthetic stage-transition workflows/actions (edge-backed only).")
 
     if args.dry_run:
         print("\n[DRY RUN] Would run the following scripts:")
@@ -1216,7 +1228,7 @@ def main() -> int:
             migration_profile=args.migration_profile,
             external_mixing_status_multiplier=args.external_mixing_status_multiplier,
             lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
-            skip_synthetic_stage_transitions=not args.include_synthetic_stage_transitions,
+            skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,
             timeout_seconds=args.script_timeout_seconds,
             extra_env=parallel_env,
             announce=True,
@@ -1261,7 +1273,7 @@ def main() -> int:
                         migration_profile=args.migration_profile,
                         external_mixing_status_multiplier=args.external_mixing_status_multiplier,
                         lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
-                        skip_synthetic_stage_transitions=not args.include_synthetic_stage_transitions,
+                        skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,
                         timeout_seconds=args.script_timeout_seconds,
                         extra_env=parallel_env,
                         announce=False,

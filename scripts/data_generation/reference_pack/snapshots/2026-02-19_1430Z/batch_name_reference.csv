@@ -1,0 +1,8 @@
+batch_id,batch_number,status,lifecycle_stage,start_date,actual_end_date,geography_hint,total_assignments,active_assignments,active_population,source_component_key,notes
+7,Summar 2025,ACTIVE,Adult,2025-08-01,,Faroe Islands,32,8,1042236,F12F9479-E82C-499C-99E4-4BB3F5EF991F,FishTalk stitched component F12F9479-E82C-499C-99E4-4BB3F5EF991F; representative='02 (A92)'
+6,Heyst 2025,ACTIVE,Adult,2025-09-30,,Faroe Islands,24,6,1169057,C78845D7-8A8D-4B31-968B-8127642563D7,FishTalk stitched component C78845D7-8A8D-4B31-968B-8127642563D7; representative='02'
+5,Vár 2025,ACTIVE,Adult,2025-10-16,,Faroe Islands,6,6,562191,67677EF3-C7D0-431C-9BFE-2533D67EF523,FishTalk stitched component 67677EF3-C7D0-431C-9BFE-2533D67EF523; representative='03'
+4,Vetur 2025,ACTIVE,Adult,2024-12-11,,Faroe Islands,78,7,620525,04A3BDDC-344A-4CDE-A6D2-2184FA7F3870,FishTalk stitched component 04A3BDDC-344A-4CDE-A6D2-2184FA7F3870; representative='Kleking 03'
+3,Heyst 2023,COMPLETED,Adult,2023-10-27,2025-02-27,Faroe Islands,12,0,0,33BD2243-57BE-437E-B026-BACBFDA640BB,FishTalk stitched component 33BD2243-57BE-437E-B026-BACBFDA640BB; representative='33'
+2,Vetur 2024/2025,ACTIVE,Adult,2024-09-16,,Faroe Islands,57,5,476318,73B6F838-24D5-4F5D-A1A4-CC57DF375D05,FishTalk stitched component 73B6F838-24D5-4F5D-A1A4-CC57DF375D05; representative='R4'
+1,Vetur 2024,ACTIVE,Adult,2024-09-18,,Faroe Islands,58,6,511795,152E8378-B673-4C7F-8EF9-1933627F4143,FishTalk stitched component 152E8378-B673-4C7F-8EF9-1933627F4143; representative='A08'

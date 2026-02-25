@@ -7,6 +7,7 @@ multiple containers simultaneously.
 """
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 from simple_history.models import HistoricalRecords
 
@@ -105,6 +106,11 @@ class BatchContainerAssignment(models.Model):
 
         Calculates biomass_kg if population_count and avg_weight_g are provided.
         """
+        if self.container_id and self.container.hierarchy_role == "STRUCTURAL":
+            raise ValidationError(
+                "Cannot assign fish population directly to STRUCTURAL containers."
+            )
+
         if self.population_count is not None and self.avg_weight_g is not None and self.avg_weight_g > Decimal('0'):
             self.biomass_kg = (Decimal(str(self.population_count)) * Decimal(str(self.avg_weight_g))) / Decimal('1000')
         else:

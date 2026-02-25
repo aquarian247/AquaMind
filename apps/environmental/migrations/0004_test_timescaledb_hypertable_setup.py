@@ -62,6 +62,8 @@ class Migration(migrations.Migration):
     Modified to skip operations when not using PostgreSQL to ensure SQLite compatibility.
     """
 
+    atomic = False
+
     dependencies = [
         ('environmental', '0003_update_primary_keys'),
     ]

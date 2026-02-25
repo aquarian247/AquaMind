@@ -34,6 +34,7 @@ class BatchTransferWorkflowListSerializer(
     initiated_by_username = serializers.StringRelatedField(
         source='initiated_by', read_only=True
     )
+    is_vessel_transfer = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BatchTransferWorkflow
@@ -58,6 +59,8 @@ class BatchTransferWorkflowListSerializer(
             'actions_completed',
             'completion_percentage',
             'is_intercompany',
+            'is_dynamic_execution',
+            'is_vessel_transfer',
             'initiated_by',
             'initiated_by_username',
             'created_at',
@@ -103,6 +106,7 @@ class BatchTransferWorkflowDetailSerializer(
     completed_by_username = serializers.StringRelatedField(
         source='completed_by', read_only=True
     )
+    is_vessel_transfer = serializers.BooleanField(read_only=True)
     # Actions will be serialized via nested serializer
     actions = serializers.SerializerMethodField()
 
@@ -206,5 +210,11 @@ class BatchTransferWorkflowCreateSerializer(
         
         workflow_number = f'TRF-{year}-{next_num:03d}'
         validated_data['workflow_number'] = workflow_number
-        
+
+        if 'is_dynamic_execution' not in validated_data:
+            prototype = BatchTransferWorkflow(**validated_data)
+            validated_data['is_dynamic_execution'] = (
+                prototype.infer_dynamic_execution()
+            )
+
         return super().create(validated_data)

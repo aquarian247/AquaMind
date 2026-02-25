@@ -1,0 +1,111 @@
+hall_id,hall_name,station_id,station_name,geography,container_count,active,description
+171,FI-FW-01-Hall-A,37,FI-FW-01,Faroe Islands,10,True,Egg & Alevin Hall
+172,FI-FW-01-Hall-B,37,FI-FW-01,Faroe Islands,10,True,Fry Hall
+173,FI-FW-01-Hall-C,37,FI-FW-01,Faroe Islands,10,True,Parr Hall
+174,FI-FW-01-Hall-D,37,FI-FW-01,Faroe Islands,10,True,Smolt Hall
+175,FI-FW-01-Hall-E,37,FI-FW-01,Faroe Islands,10,True,Post-Smolt Hall
+176,FI-FW-02-Hall-A,38,FI-FW-02,Faroe Islands,10,True,Egg & Alevin Hall
+177,FI-FW-02-Hall-B,38,FI-FW-02,Faroe Islands,10,True,Fry Hall
+178,FI-FW-02-Hall-C,38,FI-FW-02,Faroe Islands,10,True,Parr Hall
+179,FI-FW-02-Hall-D,38,FI-FW-02,Faroe Islands,10,True,Smolt Hall
+180,FI-FW-02-Hall-E,38,FI-FW-02,Faroe Islands,10,True,Post-Smolt Hall
+181,FI-FW-03-Hall-A,39,FI-FW-03,Faroe Islands,10,True,Egg & Alevin Hall
+182,FI-FW-03-Hall-B,39,FI-FW-03,Faroe Islands,10,True,Fry Hall
+183,FI-FW-03-Hall-C,39,FI-FW-03,Faroe Islands,10,True,Parr Hall
+184,FI-FW-03-Hall-D,39,FI-FW-03,Faroe Islands,10,True,Smolt Hall
+185,FI-FW-03-Hall-E,39,FI-FW-03,Faroe Islands,10,True,Post-Smolt Hall
+186,FI-FW-04-Hall-A,40,FI-FW-04,Faroe Islands,10,True,Egg & Alevin Hall
+187,FI-FW-04-Hall-B,40,FI-FW-04,Faroe Islands,10,True,Fry Hall
+188,FI-FW-04-Hall-C,40,FI-FW-04,Faroe Islands,10,True,Parr Hall
+189,FI-FW-04-Hall-D,40,FI-FW-04,Faroe Islands,10,True,Smolt Hall
+190,FI-FW-04-Hall-E,40,FI-FW-04,Faroe Islands,10,True,Post-Smolt Hall
+191,FI-FW-05-Hall-A,41,FI-FW-05,Faroe Islands,10,True,Egg & Alevin Hall
+192,FI-FW-05-Hall-B,41,FI-FW-05,Faroe Islands,10,True,Fry Hall
+193,FI-FW-05-Hall-C,41,FI-FW-05,Faroe Islands,10,True,Parr Hall
+194,FI-FW-05-Hall-D,41,FI-FW-05,Faroe Islands,10,True,Smolt Hall
+195,FI-FW-05-Hall-E,41,FI-FW-05,Faroe Islands,10,True,Post-Smolt Hall
+196,FI-FW-06-Hall-A,42,FI-FW-06,Faroe Islands,10,True,Egg & Alevin Hall
+197,FI-FW-06-Hall-B,42,FI-FW-06,Faroe Islands,10,True,Fry Hall
+198,FI-FW-06-Hall-C,42,FI-FW-06,Faroe Islands,10,True,Parr Hall
+199,FI-FW-06-Hall-D,42,FI-FW-06,Faroe Islands,10,True,Smolt Hall
+200,FI-FW-06-Hall-E,42,FI-FW-06,Faroe Islands,10,True,Post-Smolt Hall
+201,FI-FW-07-Hall-A,43,FI-FW-07,Faroe Islands,10,True,Egg & Alevin Hall
+202,FI-FW-07-Hall-B,43,FI-FW-07,Faroe Islands,10,True,Fry Hall
+203,FI-FW-07-Hall-C,43,FI-FW-07,Faroe Islands,10,True,Parr Hall
+204,FI-FW-07-Hall-D,43,FI-FW-07,Faroe Islands,10,True,Smolt Hall
+205,FI-FW-07-Hall-E,43,FI-FW-07,Faroe Islands,10,True,Post-Smolt Hall
+206,FI-FW-08-Hall-A,44,FI-FW-08,Faroe Islands,10,True,Egg & Alevin Hall
+207,FI-FW-08-Hall-B,44,FI-FW-08,Faroe Islands,10,True,Fry Hall
+208,FI-FW-08-Hall-C,44,FI-FW-08,Faroe Islands,10,True,Parr Hall
+209,FI-FW-08-Hall-D,44,FI-FW-08,Faroe Islands,10,True,Smolt Hall
+210,FI-FW-08-Hall-E,44,FI-FW-08,Faroe Islands,10,True,Post-Smolt Hall
+211,FI-FW-09-Hall-A,45,FI-FW-09,Faroe Islands,10,True,Egg & Alevin Hall
+212,FI-FW-09-Hall-B,45,FI-FW-09,Faroe Islands,10,True,Fry Hall
+213,FI-FW-09-Hall-C,45,FI-FW-09,Faroe Islands,10,True,Parr Hall
+214,FI-FW-09-Hall-D,45,FI-FW-09,Faroe Islands,10,True,Smolt Hall
+215,FI-FW-09-Hall-E,45,FI-FW-09,Faroe Islands,10,True,Post-Smolt Hall
+216,FI-FW-10-Hall-A,46,FI-FW-10,Faroe Islands,10,True,Egg & Alevin Hall
+217,FI-FW-10-Hall-B,46,FI-FW-10,Faroe Islands,10,True,Fry Hall
+218,FI-FW-10-Hall-C,46,FI-FW-10,Faroe Islands,10,True,Parr Hall
+219,FI-FW-10-Hall-D,46,FI-FW-10,Faroe Islands,10,True,Smolt Hall
+220,FI-FW-10-Hall-E,46,FI-FW-10,Faroe Islands,10,True,Post-Smolt Hall
+221,FI-FW-11-Hall-A,47,FI-FW-11,Faroe Islands,10,True,Egg & Alevin Hall
+222,FI-FW-11-Hall-B,47,FI-FW-11,Faroe Islands,10,True,Fry Hall
+223,FI-FW-11-Hall-C,47,FI-FW-11,Faroe Islands,10,True,Parr Hall
+224,FI-FW-11-Hall-D,47,FI-FW-11,Faroe Islands,10,True,Smolt Hall
+225,FI-FW-11-Hall-E,47,FI-FW-11,Faroe Islands,10,True,Post-Smolt Hall
+226,FI-FW-12-Hall-A,48,FI-FW-12,Faroe Islands,10,True,Egg & Alevin Hall
+227,FI-FW-12-Hall-B,48,FI-FW-12,Faroe Islands,10,True,Fry Hall
+228,FI-FW-12-Hall-C,48,FI-FW-12,Faroe Islands,10,True,Parr Hall
+229,FI-FW-12-Hall-D,48,FI-FW-12,Faroe Islands,10,True,Smolt Hall
+230,FI-FW-12-Hall-E,48,FI-FW-12,Faroe Islands,10,True,Post-Smolt Hall
+121,S-FW-01-Hall-A,27,S-FW-01,Scotland,10,True,Egg & Alevin Hall
+122,S-FW-01-Hall-B,27,S-FW-01,Scotland,10,True,Fry Hall
+123,S-FW-01-Hall-C,27,S-FW-01,Scotland,10,True,Parr Hall
+124,S-FW-01-Hall-D,27,S-FW-01,Scotland,10,True,Smolt Hall
+125,S-FW-01-Hall-E,27,S-FW-01,Scotland,10,True,Post-Smolt Hall
+126,S-FW-02-Hall-A,28,S-FW-02,Scotland,10,True,Egg & Alevin Hall
+127,S-FW-02-Hall-B,28,S-FW-02,Scotland,10,True,Fry Hall
+128,S-FW-02-Hall-C,28,S-FW-02,Scotland,10,True,Parr Hall
+129,S-FW-02-Hall-D,28,S-FW-02,Scotland,10,True,Smolt Hall
+130,S-FW-02-Hall-E,28,S-FW-02,Scotland,10,True,Post-Smolt Hall
+131,S-FW-03-Hall-A,29,S-FW-03,Scotland,10,True,Egg & Alevin Hall
+132,S-FW-03-Hall-B,29,S-FW-03,Scotland,10,True,Fry Hall
+133,S-FW-03-Hall-C,29,S-FW-03,Scotland,10,True,Parr Hall
+134,S-FW-03-Hall-D,29,S-FW-03,Scotland,10,True,Smolt Hall
+135,S-FW-03-Hall-E,29,S-FW-03,Scotland,10,True,Post-Smolt Hall
+136,S-FW-04-Hall-A,30,S-FW-04,Scotland,10,True,Egg & Alevin Hall
+137,S-FW-04-Hall-B,30,S-FW-04,Scotland,10,True,Fry Hall
+138,S-FW-04-Hall-C,30,S-FW-04,Scotland,10,True,Parr Hall
+139,S-FW-04-Hall-D,30,S-FW-04,Scotland,10,True,Smolt Hall
+140,S-FW-04-Hall-E,30,S-FW-04,Scotland,10,True,Post-Smolt Hall
+141,S-FW-05-Hall-A,31,S-FW-05,Scotland,10,True,Egg & Alevin Hall
+142,S-FW-05-Hall-B,31,S-FW-05,Scotland,10,True,Fry Hall
+143,S-FW-05-Hall-C,31,S-FW-05,Scotland,10,True,Parr Hall
+144,S-FW-05-Hall-D,31,S-FW-05,Scotland,10,True,Smolt Hall
+145,S-FW-05-Hall-E,31,S-FW-05,Scotland,10,True,Post-Smolt Hall
+146,S-FW-06-Hall-A,32,S-FW-06,Scotland,10,True,Egg & Alevin Hall
+147,S-FW-06-Hall-B,32,S-FW-06,Scotland,10,True,Fry Hall
+148,S-FW-06-Hall-C,32,S-FW-06,Scotland,10,True,Parr Hall
+149,S-FW-06-Hall-D,32,S-FW-06,Scotland,10,True,Smolt Hall
+150,S-FW-06-Hall-E,32,S-FW-06,Scotland,10,True,Post-Smolt Hall
+151,S-FW-07-Hall-A,33,S-FW-07,Scotland,10,True,Egg & Alevin Hall
+152,S-FW-07-Hall-B,33,S-FW-07,Scotland,10,True,Fry Hall
+153,S-FW-07-Hall-C,33,S-FW-07,Scotland,10,True,Parr Hall
+154,S-FW-07-Hall-D,33,S-FW-07,Scotland,10,True,Smolt Hall
+155,S-FW-07-Hall-E,33,S-FW-07,Scotland,10,True,Post-Smolt Hall
+156,S-FW-08-Hall-A,34,S-FW-08,Scotland,10,True,Egg & Alevin Hall
+157,S-FW-08-Hall-B,34,S-FW-08,Scotland,10,True,Fry Hall
+158,S-FW-08-Hall-C,34,S-FW-08,Scotland,10,True,Parr Hall
+159,S-FW-08-Hall-D,34,S-FW-08,Scotland,10,True,Smolt Hall
+160,S-FW-08-Hall-E,34,S-FW-08,Scotland,10,True,Post-Smolt Hall
+161,S-FW-09-Hall-A,35,S-FW-09,Scotland,10,True,Egg & Alevin Hall
+162,S-FW-09-Hall-B,35,S-FW-09,Scotland,10,True,Fry Hall
+163,S-FW-09-Hall-C,35,S-FW-09,Scotland,10,True,Parr Hall
+164,S-FW-09-Hall-D,35,S-FW-09,Scotland,10,True,Smolt Hall
+165,S-FW-09-Hall-E,35,S-FW-09,Scotland,10,True,Post-Smolt Hall
+166,S-FW-10-Hall-A,36,S-FW-10,Scotland,10,True,Egg & Alevin Hall
+167,S-FW-10-Hall-B,36,S-FW-10,Scotland,10,True,Fry Hall
+168,S-FW-10-Hall-C,36,S-FW-10,Scotland,10,True,Parr Hall
+169,S-FW-10-Hall-D,36,S-FW-10,Scotland,10,True,Smolt Hall
+170,S-FW-10-Hall-E,36,S-FW-10,Scotland,10,True,Post-Smolt Hall

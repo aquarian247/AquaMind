@@ -15,6 +15,7 @@ import yaml
 import argparse
 import subprocess
 import multiprocessing as mp
+import re
 from datetime import datetime
 from pathlib import Path
 import time
@@ -27,7 +28,10 @@ def _resolve_log_path(log_dir, batch_id):
     """Resolve log file path for batch."""
     log_dir = Path(log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
-    return log_dir / f"batch_{batch_id}.log"
+    safe_batch_id = re.sub(r"[^A-Za-z0-9._-]+", "_", str(batch_id)).strip("_")
+    if not safe_batch_id:
+        safe_batch_id = "batch"
+    return log_dir / f"batch_{safe_batch_id}.log"
 
 
 def _write_batch_log(log_path, stdout, stderr, success):
@@ -44,7 +48,7 @@ def _write_batch_log(log_path, stdout, stderr, success):
         f.write(stderr or "(empty)\n")
 
 
-def execute_batch_from_schedule(batch_config, log_dir=None):
+def execute_batch_from_schedule(batch_config, log_dir=None, reference_pack_dir=None):
     """
     Execute single batch using pre-allocated containers from schedule.
     Running in a separate process via subprocess.
@@ -59,6 +63,11 @@ def execute_batch_from_schedule(batch_config, log_dir=None):
     env['CONTAINER_SCHEDULE'] = json.dumps(batch_config['freshwater'])
     if 'sea' in batch_config and batch_config['sea']:
         env['SEA_SCHEDULE'] = json.dumps(batch_config['sea'])
+    if reference_pack_dir:
+        env['REFERENCE_PACK_DIR'] = str(reference_pack_dir)
+    sea_batch_number_target = (batch_config.get('sea_batch_number_target') or "").strip()
+    if sea_batch_number_target:
+        env['SEA_BATCH_NUMBER_TARGET'] = sea_batch_number_target
 
     # Pass harvest target if specified (for deterministic randomness)
     if 'harvest_target_kg' in batch_config:
@@ -73,6 +82,9 @@ def execute_batch_from_schedule(batch_config, log_dir=None):
         '--batch-number', batch_id,  # Pass batch_id to avoid race conditions
         '--use-schedule'
     ]
+    station_name = batch_config.get('station')
+    if station_name:
+        cmd.extend(['--station', station_name])
     
     try:
         # Capture output to avoid terminal spam, but save logs if needed
@@ -112,11 +124,15 @@ def execute_batch_from_schedule(batch_config, log_dir=None):
 
 def execute_worker_partition(args):
     """Execute a partition of batches assigned to a single worker."""
-    worker_id, batch_configs, log_dir = args
+    worker_id, batch_configs, log_dir, reference_pack_dir = args
     results = []
     
     for batch_config in batch_configs:
-        result = execute_batch_from_schedule(batch_config, log_dir)
+        result = execute_batch_from_schedule(
+            batch_config,
+            log_dir=log_dir,
+            reference_pack_dir=reference_pack_dir,
+        )
         result['worker_id'] = worker_id
         results.append(result)
     
@@ -130,6 +146,15 @@ def main():
                        help='Use pre-planned worker partitions (eliminates races)')
     parser.add_argument('--log-dir', type=str, default='scripts/data_generation/logs',
                        help='Directory for per-batch execution logs (default: scripts/data_generation/logs)')
+    parser.add_argument(
+        '--reference-pack',
+        type=str,
+        default=None,
+        help=(
+            'Optional reference-pack path to pass through execution context. '
+            'If omitted, metadata.reference_pack_dir from the schedule is used when present.'
+        ),
+    )
     args = parser.parse_args()
     
     if not os.path.exists(args.schedule_file):
@@ -150,8 +175,11 @@ def main():
     total_batches = len(batches)
     metadata = schedule.get('metadata', {})
     worker_partitions = metadata.get('worker_partitions', {})
+    reference_pack_dir = args.reference_pack or metadata.get('reference_pack_dir')
     
     print(f"Loaded {total_batches} batches from schedule.")
+    if reference_pack_dir:
+        print(f"Reference-pack context: {reference_pack_dir}")
     
     start_time = time.time()
     results = []
@@ -166,7 +194,7 @@ def main():
         for worker_id, partition_info in worker_partitions.items():
             batch_indices = partition_info['batch_indices']
             worker_batches = [batches[i] for i in batch_indices]
-            worker_tasks.append((worker_id, worker_batches, args.log_dir))
+            worker_tasks.append((worker_id, worker_batches, args.log_dir, reference_pack_dir))
             print(f"  {worker_id}: {partition_info['count']} batches (indices {partition_info['batch_range']})")
         
         print(f"\nStarting {len(worker_tasks)} workers with partitioned execution...\n")
@@ -192,7 +220,11 @@ def main():
         # STANDARD MODE: Workers compete for batches (may have races)
         print(f"Starting parallel execution with {args.workers} workers...")
         from functools import partial
-        execute_with_log = partial(execute_batch_from_schedule, log_dir=args.log_dir)
+        execute_with_log = partial(
+            execute_batch_from_schedule,
+            log_dir=args.log_dir,
+            reference_pack_dir=reference_pack_dir,
+        )
         with mp.Pool(processes=args.workers) as pool:
             for i, result in enumerate(pool.imap_unordered(execute_with_log, batches)):
                 status = "✅" if result['success'] else "❌"
@@ -207,7 +239,11 @@ def main():
         # SEQUENTIAL MODE
         print("Starting sequential execution...")
         for i, batch in enumerate(batches):
-            result = execute_batch_from_schedule(batch, args.log_dir)
+            result = execute_batch_from_schedule(
+                batch,
+                log_dir=args.log_dir,
+                reference_pack_dir=reference_pack_dir,
+            )
             status = "✅" if result['success'] else "❌"
             print(f"[{i+1}/{total_batches}] {status} Batch {result['batch_id']} ({result.get('duration', 0):.1f}s)")
             results.append(result)

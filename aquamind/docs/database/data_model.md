@@ -13,8 +13,8 @@ This document defines the data model for AquaMind, an aquaculture management sys
 - **Time-Series Data**: `environmental_environmentalreading` and `environmental_weatherdata` are TimescaleDB hypertables partitioned by their respective timestamp columns (`reading_time`, `timestamp`). Automatic compression enabled after 7 days with segmentation by container_id/parameter_id and area_id respectively.
 - **Audit Trails**: Comprehensive change tracking implemented via django-simple-history for critical models across all major business domains, providing regulatory compliance and operational transparency.
 - **Implementation Status**:
-  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`), `finance`, `broodstock`, `scenario`, `harvest`.
-  - **Planned Apps/Domains**: Operational Planning, Advanced Analytics.
+  - **Implemented Apps/Domains**: `infrastructure`, `batch`, `inventory`, `health`, `environmental`, `users` (including `auth`), `finance`, `broodstock`, `scenario`, `harvest`, `planning`.
+  - **Planned Apps/Domains**: Advanced Analytics.
   - **Removed Components**: Advanced audit analytics functionality (Core app) was removed to prioritize system stability and core operational features.
 
 ## 3. Audit Trail Implementation
@@ -62,15 +62,17 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`health_treatment`**: Medical treatment administration ✓
 - **`health_vaccinationtype`**: Vaccination type definitions
 
-**Infrastructure App (8 models)**
+**Infrastructure App (10 models)**
 - **`infrastructure_container`**: Container modifications and status changes
 - **`infrastructure_containertype`**: Container type definitions
 - **`infrastructure_sensor`**: Sensor configuration and calibration
 - **`infrastructure_feedcontainer`**: Feed container management
 - **`infrastructure_geography`**: Geographic location definitions
+- **`infrastructure_areagroup`**: Optional hierarchical grouping for sea areas
 - **`infrastructure_area`**: Operational area configurations
 - **`infrastructure_freshwaterstation`**: Freshwater station management
 - **`infrastructure_hall`**: Facility hall definitions
+- **`infrastructure_transportcarrier`**: Live transport assets (truck/vessel)
 
 **Inventory App (6 models)**
 - **`inventory_feed`**: Feed type and specification changes
@@ -80,8 +82,8 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`inventory_batchfeedingsummary`**: Batch-level feeding and FCR analysis
 - **`inventory_feedcontainerstock`**: FIFO inventory tracking
 
-**Operational App (0 models)**
-- No operational models currently tracked
+**Planning App (1 model with HistoricalRecords())**
+- **`planning_plannedactivity`**: Scenario-linked operational activity scheduling and execution tracking
 
 **Environmental App (0 models)**
 - Environmental readings use TimescaleDB hypertables but are excluded from audit trails
@@ -136,10 +138,21 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `description`: text (blank=True)
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
+- **`infrastructure_areagroup`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100)
+  - `code`: varchar(32) (blank=True)
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
+  - `parent_id`: bigint (self-FK to `infrastructure_areagroup`, on_delete=SET_NULL, nullable)
+  - `active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+  - Constraint: unique (`geography_id`, `parent_id`, `name`)
 - **`infrastructure_area`**
   - `id`: bigint (PK, auto-increment)
   - `name`: varchar(100)
   - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
+  - `area_group_id`: bigint (FK to `infrastructure_areagroup`, on_delete=SET_NULL, nullable)
   - `latitude`: numeric(9,6) (validators: -90 to 90)
   - `longitude`: numeric(9,6) (validators: -180 to 180)
   - `max_biomass`: numeric
@@ -180,8 +193,25 @@ All historical tables follow the naming convention `{app}_historical{model}` and
   - `container_type_id`: bigint (FK to `infrastructure_containertype`, on_delete=PROTECT)
   - `hall_id`: bigint (FK to `infrastructure_hall`, on_delete=CASCADE, nullable)
   - `area_id`: bigint (FK to `infrastructure_area`, on_delete=CASCADE, nullable)
+  - `carrier_id`: bigint (FK to `infrastructure_transportcarrier`, on_delete=SET_NULL, nullable)
+  - `parent_container_id`: bigint (self-FK to `infrastructure_container`, on_delete=SET_NULL, nullable)
+  - `hierarchy_role`: varchar(20) (choices: `HOLDING`, `STRUCTURAL`)
   - `volume_m3`: numeric(10,2)
   - `max_biomass_kg`: numeric(10,2)
+  - `feed_recommendations_enabled`: boolean
+  - `active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+  - Constraint: exactly one location context must be populated (`hall_id` xor `area_id` xor `carrier_id`)
+- **`infrastructure_transportcarrier`**
+  - `id`: bigint (PK, auto-increment)
+  - `name`: varchar(100) (Unique)
+  - `carrier_type`: varchar(20) (choices: `TRUCK`, `VESSEL`)
+  - `geography_id`: bigint (FK to `infrastructure_geography`, on_delete=PROTECT)
+  - `capacity_m3`: numeric(10,2)
+  - `license_plate`: varchar(32) (blank=True)
+  - `imo_number`: varchar(20) (blank=True)
+  - `captain_contact`: varchar(255) (blank=True)
   - `active`: boolean
   - `created_at`: timestamptz
   - `updated_at`: timestamptz
@@ -219,6 +249,10 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `history_type`: varchar (+, ~, - for create/update/delete)
   - `history_user_id`: integer (FK to user who made change, nullable)
 
+- **`infrastructure_historicalareagroup`**
+  - Mirrors `infrastructure_areagroup` plus history tracking fields
+  - Same history fields as above
+
 - **`infrastructure_historicalarea`**
   - Mirrors `infrastructure_area` plus history tracking fields
   - Same history fields as above
@@ -247,12 +281,22 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - Mirrors `infrastructure_feedcontainer` plus history tracking fields
   - Same history fields as above
 
+- **`infrastructure_historicaltransportcarrier`**
+  - Mirrors `infrastructure_transportcarrier` plus history tracking fields
+  - Same history fields as above
+
 #### Relationships (Inferred `on_delete` where script failed)
+- `infrastructure_geography` ← `infrastructure_areagroup` (PROTECT)
+- `infrastructure_areagroup` ← `infrastructure_areagroup` (SET_NULL via `parent_id`)
 - `infrastructure_geography` ← `infrastructure_area` (PROTECT)
+- `infrastructure_areagroup` ← `infrastructure_area` (SET_NULL)
 - `infrastructure_geography` ← `infrastructure_freshwaterstation` (PROTECT)
+- `infrastructure_geography` ← `infrastructure_transportcarrier` (PROTECT)
 - `infrastructure_freshwaterstation` ← `infrastructure_hall` (CASCADE)
 - `infrastructure_hall` ← `infrastructure_container` (CASCADE)
 - `infrastructure_area` ← `infrastructure_container` (CASCADE)
+- `infrastructure_transportcarrier` ← `infrastructure_container` (SET_NULL)
+- `infrastructure_container` ← `infrastructure_container` (SET_NULL via `parent_container_id`)
 - `infrastructure_containertype` ← `infrastructure_container` (PROTECT)
 - `infrastructure_container` ← `infrastructure_sensor` (CASCADE)
 - `infrastructure_hall` ← `infrastructure_feedcontainer` (CASCADE)
@@ -323,45 +367,63 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `workflow_number`: varchar(50) (Unique, NOT NULL) # e.g., "TRF-2024-001"
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, NOT NULL) # Batch being transferred
-  - `workflow_type`: varchar(50) (NOT NULL) # LIFECYCLE_TRANSITION, CONTAINER_REDISTRIBUTION, EMERGENCY_CASCADE, HARVEST_PREP
+  - `planned_activity_id`: bigint (OneToOne FK to `planning_plannedactivity`.`id`, on_delete=SET_NULL, nullable) # Planned activity that spawned this workflow (optional)
+  - `workflow_type`: varchar(30) (NOT NULL) # LIFECYCLE_TRANSITION, CONTAINER_REDISTRIBUTION, EMERGENCY_CASCADE
   - `status`: varchar(20) (NOT NULL, default: 'DRAFT') # DRAFT, PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
-  - `source_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, nullable) # For LIFECYCLE_TRANSITION
+  - `source_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, NOT NULL)
   - `dest_lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, nullable) # For LIFECYCLE_TRANSITION
-  - `planned_start_date`: date (NOT NULL) # When workflow is expected to begin
+  - `planned_start_date`: date (NOT NULL)
+  - `planned_completion_date`: date (nullable)
   - `actual_start_date`: date (nullable) # When first action was executed
   - `actual_completion_date`: date (nullable) # When workflow completed
+  - `total_source_count`: integer (NOT NULL, default: 0)
+  - `total_transferred_count`: integer (NOT NULL, default: 0)
+  - `total_mortality_count`: integer (NOT NULL, default: 0)
+  - `total_biomass_kg`: decimal(12, 2) (NOT NULL, default: 0.00)
   - `total_actions_planned`: integer (NOT NULL, default: 0) # Total number of actions in workflow
   - `actions_completed`: integer (NOT NULL, default: 0) # Number of completed actions
   - `completion_percentage`: decimal(5, 2) (NOT NULL, default: 0.00) # Auto-calculated progress
+  - `is_dynamic_execution`: boolean (NOT NULL, default: False) # Dynamic station-to-sea mode (actions can be created during execution)
   - `is_intercompany`: boolean (NOT NULL, default: False) # Crosses subsidiary boundaries
-  - `estimated_total_value`: decimal(12, 2) (nullable) # For intercompany transfers
-  - `finance_transaction_id`: bigint (FK to `finance_intercompanytransaction`.`id`, on_delete=SET_NULL, nullable) # Linked transaction
+  - `source_subsidiary`: varchar(20) (nullable)
+  - `dest_subsidiary`: varchar(20) (nullable)
+  - `finance_transaction_id`: bigint (FK to `finance_intercompanytransaction`.`id`, on_delete=PROTECT, nullable) # Linked transaction
   - `initiated_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, NOT NULL) # User who created workflow
+  - `completed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, nullable)
   - `notes`: text (NOT NULL, default: '')
+  - `cancellation_reason`: text (NOT NULL, default: '')
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
-  - Meta: `ordering = ['-created_at']`, `indexes = ['workflow_number', 'batch_id', 'status', 'workflow_type']`
+  - Meta: `ordering = ['-created_at']`, `indexes = [('batch_id', 'status'), 'planned_start_date', 'workflow_type', 'status']`
 - **`batch_transferaction`** # Individual container-to-container movements within a workflow
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `workflow_id`: bigint (FK to `batch_batchtransferworkflow`.`id`, on_delete=CASCADE, NOT NULL)
   - `action_number`: integer (NOT NULL) # Sequential number within workflow (1, 2, 3...)
   - `status`: varchar(20) (NOT NULL, default: 'PENDING') # PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED
   - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, NOT NULL) # Source container assignment
-  - `dest_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, NOT NULL) # Destination container assignment
+  - `dest_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, nullable) # Destination container assignment (optional in dynamic handoffs)
   - `source_population_before`: integer (NOT NULL) # Population in source before action
   - `transferred_count`: integer (NOT NULL) # Number of fish to transfer
   - `transferred_biomass_kg`: decimal(10, 2) (NOT NULL) # Biomass being transferred
-  - `mortality_during_transfer`: integer (nullable) # Mortalities during execution
+  - `mortality_during_transfer`: integer (NOT NULL, default: 0) # Mortalities during execution
+  - `allow_mixed`: boolean (NOT NULL, default: False)
+  - `planned_date`: date (nullable)
   - `transfer_method`: varchar(20) (nullable) # NET, PUMP, GRAVITY, MANUAL
   - `water_temp_c`: decimal(5, 2) (nullable) # Water temperature during transfer
   - `oxygen_level`: decimal(5, 2) (nullable) # Oxygen level (mg/L) during transfer
+  - `measured_avg_weight_g`: decimal(10, 2) (nullable)
+  - `measured_std_dev_weight_g`: decimal(10, 2) (nullable)
+  - `measured_sample_size`: integer (nullable)
+  - `measured_avg_length_cm`: decimal(10, 2) (nullable)
+  - `measured_notes`: text (NOT NULL, default: '')
+  - `selection_method`: varchar(16) (NOT NULL, default: 'AVERAGE') # AVERAGE, LARGEST, SMALLEST
   - `execution_duration_minutes`: integer (nullable) # How long the transfer took
   - `actual_execution_date`: date (nullable) # When action was executed
-  - `executed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=SET_NULL, nullable) # User who executed action
+  - `executed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, nullable) # User who executed action
   - `notes`: text (NOT NULL, default: '')
   - `created_at`: timestamptz (NOT NULL)
   - `updated_at`: timestamptz (NOT NULL)
-  - Meta: `ordering = ['workflow_id', 'action_number']`, `unique_together = [['workflow_id', 'action_number']]`
+  - Meta: `ordering = ['workflow_id', 'action_number']`, `unique_together = [['workflow_id', 'action_number']]`, indexes = [('workflow_id', 'status'), 'actual_execution_date', 'status']
 - **`batch_mortalityevent`**
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, NOT NULL) # Link to the batch experiencing mortality
@@ -438,12 +500,15 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `batch_lifecyclestage` ← `batch_batchcontainerassignment` (PROTECT)
 - `batch_batch` ← `batch_batchcomposition` (CASCADE, both FKs)
 - `batch_batch` ← `batch_batchtransferworkflow` (PROTECT)
+- `planning_plannedactivity` ← `batch_batchtransferworkflow` (SET_NULL, OneToOne via `planned_activity_id`, related_name='spawned_workflow')
 - `batch_lifecyclestage` ← `batch_batchtransferworkflow` (PROTECT, source_lifecycle_stage and dest_lifecycle_stage FKs)
-- `finance_intercompanytransaction` ← `batch_batchtransferworkflow` (SET_NULL, finance_transaction FK)
+- `finance_intercompanytransaction` ← `batch_batchtransferworkflow` (PROTECT, finance_transaction FK)
 - `auth_user` ← `batch_batchtransferworkflow` (PROTECT, initiated_by FK)
+- `auth_user` ← `batch_batchtransferworkflow` (PROTECT, completed_by FK)
 - `batch_batchtransferworkflow` ← `batch_transferaction` (CASCADE)
-- `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, source_assignment and dest_assignment FKs)
-- `auth_user` ← `batch_transferaction` (SET_NULL, executed_by FK)
+- `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, source_assignment FK)
+- `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, dest_assignment FK, nullable)
+- `auth_user` ← `batch_transferaction` (PROTECT, executed_by FK, nullable)
 - `batch_batch` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 - `batch_growthsample` ← `batch_individualgrowthobservation` (CASCADE)
@@ -1103,7 +1168,7 @@ All health models with `history = HistoricalRecords()` create corresponding hist
   - `profile_picture`: ImageField (nullable, upload_to='profile_pictures/')
   - `job_title`: varchar(100) (nullable)
   - `department`: varchar(100) (nullable)
-  - `role`: varchar(5) (choices: 'ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN', 'VIEW', default='VIEW')
+  - `role`: varchar(20) (choices: 'ADMIN', 'MGR', 'OPR', 'SHIP_CREW', 'VET', 'QA', 'FIN', 'VIEW', default='VIEW')
   - `geography`: varchar(3) (choices: 'FO', 'SC', 'ALL', default='ALL')
   - `subsidiary`: varchar(3) (choices: 'BS', 'FW', 'FM', 'LG', 'ALL', default='ALL')
   
@@ -1674,13 +1739,13 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 - `scenario.scenario` ← `planning_plannedactivity` (CASCADE, related_name='planned_activities')
 - `batch_batch` ← `planning_plannedactivity` (CASCADE, related_name='planned_activities')
 - `infrastructure_container` ← `planning_plannedactivity` (SET_NULL, optional)
-- `batch_batchtransferworkflow` ← `planning_plannedactivity` (SET_NULL, related_name='spawned_from_activity')
+- `batch_batchtransferworkflow` ← `planning_plannedactivity` (SET_NULL via `transfer_workflow_id`)
+- `planning_plannedactivity` ← `batch_batchtransferworkflow` (SET_NULL, OneToOne via `planned_activity_id`, related_name='spawned_workflow')
 - `batch_lifecyclestage` ← `planning_activitytemplate` (SET_NULL, related_name='target_templates')
 
 **Bidirectional Transfer Workflow Link:**
-- `planning_plannedactivity` ↔ `batch_batchtransferworkflow` (OneToOne via `planned_activity_id` field on workflow)
-  - PlannedActivity can spawn one TransferWorkflow
-  - TransferWorkflow optionally links back to originating PlannedActivity
+- PlannedActivity can spawn one TransferWorkflow, and workflow records the origin via `planned_activity_id` (OneToOne).
+- PlannedActivity also stores a nullable `transfer_workflow_id` link for execution UX and filtering.
   - Completion synchronization via signal handlers
 
 **User Attribution:**

@@ -1,0 +1,123 @@
+hall_id,hall_name,station_id,station_name,geography,container_count,active,description
+109,Hall,21,H01 Svínoy,Faroe Islands,59,True,Imported placeholder from FishTalk
+122,H125 Glyvrar Hall,31,H125 Glyvrar,Faroe Islands,1,True,Imported placeholder from FishTalk
+9,Fryst sil,1,L01 Við Áir,Faroe Islands,1,True,Imported placeholder from FishTalk
+3,Gamalt,1,L01 Við Áir,Faroe Islands,63,True,Imported placeholder from FishTalk
+8,Klekistova 1,1,L01 Við Áir,Faroe Islands,3,True,Imported placeholder from FishTalk
+7,Klekistova 2,1,L01 Við Áir,Faroe Islands,4,True,Imported placeholder from FishTalk
+6,Miðstova,1,L01 Við Áir,Faroe Islands,28,True,Imported placeholder from FishTalk
+5,Niðristova,1,L01 Við Áir,Faroe Islands,6,True,Imported placeholder from FishTalk
+2,Nýggjastova,1,L01 Við Áir,Faroe Islands,414,True,Imported placeholder from FishTalk
+1,Uppistova 1,1,L01 Við Áir,Faroe Islands,753,True,Imported placeholder from FishTalk
+4,Uppistova 2,1,L01 Við Áir,Faroe Islands,198,True,Imported placeholder from FishTalk
+104,L02 Skopun Hall,19,L02 Skopun,Faroe Islands,1,True,Imported placeholder from FishTalk
+102,høll A,19,L02 Skopun,Faroe Islands,2,True,Imported placeholder from FishTalk
+103,høll B,19,L02 Skopun,Faroe Islands,2,True,Imported placeholder from FishTalk
+101,høll C,19,L02 Skopun,Faroe Islands,4,True,Imported placeholder from FishTalk
+105,høll D,19,L02 Skopun,Faroe Islands,3,True,Imported placeholder from FishTalk
+38,Gamalt,6,S03 Norðtoftir,Faroe Islands,52,True,Imported placeholder from FishTalk
+43,Hall 11,6,S03 Norðtoftir,Faroe Islands,10,True,Imported placeholder from FishTalk
+42,Hall 18,6,S03 Norðtoftir,Faroe Islands,8,True,Imported placeholder from FishTalk
+39,Hall 5 M,6,S03 Norðtoftir,Faroe Islands,12,True,Imported placeholder from FishTalk
+44,Hall 800,6,S03 Norðtoftir,Faroe Islands,7,True,Imported placeholder from FishTalk
+41,Hall 900,6,S03 Norðtoftir,Faroe Islands,7,True,Imported placeholder from FishTalk
+40,Kleking,6,S03 Norðtoftir,Faroe Islands,15,True,Imported placeholder from FishTalk
+114,Gamalt,25,S04 Húsar,Faroe Islands,8,True,Imported placeholder from FishTalk
+116,Vakstrarhøll 1,25,S04 Húsar,Faroe Islands,6,True,Imported placeholder from FishTalk
+115,Vakstrarhøll 2,25,S04 Húsar,Faroe Islands,6,True,Imported placeholder from FishTalk
+83,Hall R-,12,S08 Gjógv,Faroe Islands,4,True,Imported placeholder from FishTalk
+80,Hall T-,12,S08 Gjógv,Faroe Islands,4,True,Imported placeholder from FishTalk
+82,Kleking,12,S08 Gjógv,Faroe Islands,3,True,Imported placeholder from FishTalk
+81,Startfóðring,12,S08 Gjógv,Faroe Islands,41,True,Imported placeholder from FishTalk
+79,Úti,12,S08 Gjógv,Faroe Islands,54,True,Imported placeholder from FishTalk
+111,S10 Svínoy Hall,23,S10 Svínoy,Faroe Islands,66,True,Imported placeholder from FishTalk
+57,Gamalt,10,S16 Glyvradalur,Faroe Islands,66,True,Imported placeholder from FishTalk
+59,Hall A,10,S16 Glyvradalur,Faroe Islands,85,True,Imported placeholder from FishTalk
+64,Hall B,10,S16 Glyvradalur,Faroe Islands,8,True,Imported placeholder from FishTalk
+58,Hall C,10,S16 Glyvradalur,Faroe Islands,18,True,Imported placeholder from FishTalk
+62,Hall D,10,S16 Glyvradalur,Faroe Islands,4,True,Imported placeholder from FishTalk
+65,Hall E1,10,S16 Glyvradalur,Faroe Islands,4,True,Imported placeholder from FishTalk
+66,Hall E2,10,S16 Glyvradalur,Faroe Islands,4,True,Imported placeholder from FishTalk
+63,Hall Uppstilling broytt - A,10,S16 Glyvradalur,Faroe Islands,16,True,Imported placeholder from FishTalk
+61,Klekihøll,10,S16 Glyvradalur,Faroe Islands,68,True,Imported placeholder from FishTalk
+60,Startfóðringshøll,10,S16 Glyvradalur,Faroe Islands,31,True,Imported placeholder from FishTalk
+76,5m,11,S21 Viðareiði,Faroe Islands,6,True,Imported placeholder from FishTalk
+71,A,11,S21 Viðareiði,Faroe Islands,6,True,Imported placeholder from FishTalk
+70,BA,11,S21 Viðareiði,Faroe Islands,9,True,Imported placeholder from FishTalk
+78,BB,11,S21 Viðareiði,Faroe Islands,6,True,Imported placeholder from FishTalk
+77,C,11,S21 Viðareiði,Faroe Islands,4,True,Imported placeholder from FishTalk
+73,C gamla,11,S21 Viðareiði,Faroe Islands,4,True,Imported placeholder from FishTalk
+74,CD,11,S21 Viðareiði,Faroe Islands,14,True,Imported placeholder from FishTalk
+72,D,11,S21 Viðareiði,Faroe Islands,8,True,Imported placeholder from FishTalk
+68,E,11,S21 Viðareiði,Faroe Islands,8,True,Imported placeholder from FishTalk
+69,F,11,S21 Viðareiði,Faroe Islands,8,True,Imported placeholder from FishTalk
+67,Gamalt,11,S21 Viðareiði,Faroe Islands,59,True,Imported placeholder from FishTalk
+75,Rogn,11,S21 Viðareiði,Faroe Islands,7,True,Imported placeholder from FishTalk
+46,Hall A,8,S24 Strond,Faroe Islands,39,True,Imported placeholder from FishTalk
+49,Hall B,8,S24 Strond,Faroe Islands,12,True,Imported placeholder from FishTalk
+48,Hall C,8,S24 Strond,Faroe Islands,8,True,Imported placeholder from FishTalk
+47,Hall D,8,S24 Strond,Faroe Islands,8,True,Imported placeholder from FishTalk
+53,Hall E,8,S24 Strond,Faroe Islands,6,True,Imported placeholder from FishTalk
+52,Hall F,8,S24 Strond,Faroe Islands,6,True,Imported placeholder from FishTalk
+55,Hall G,8,S24 Strond,Faroe Islands,4,True,Imported placeholder from FishTalk
+54,Hall H,8,S24 Strond,Faroe Islands,4,True,Imported placeholder from FishTalk
+51,Hall I,8,S24 Strond,Faroe Islands,4,True,Imported placeholder from FishTalk
+50,Hall J,8,S24 Strond,Faroe Islands,4,True,Imported placeholder from FishTalk
+27,BRS1 Langass Hall,4,BRS1 Langass,Scotland,28,True,Imported placeholder from FishTalk
+25,Broodstock,4,BRS1 Langass,Scotland,8,True,Imported placeholder from FishTalk
+23,Compatch,4,BRS1 Langass,Scotland,174,True,Imported placeholder from FishTalk
+24,Family tanks,4,BRS1 Langass,Scotland,200,True,Imported placeholder from FishTalk
+21,Hatchery,4,BRS1 Langass,Scotland,860,True,Imported placeholder from FishTalk
+22,Incubators,4,BRS1 Langass,Scotland,600,True,Imported placeholder from FishTalk
+26,Zoug,4,BRS1 Langass,Scotland,50,True,Imported placeholder from FishTalk
+20,A,3,BRS2 Langass,Scotland,32,True,Imported placeholder from FishTalk
+17,B,3,BRS2 Langass,Scotland,600,True,Imported placeholder from FishTalk
+19,C,3,BRS2 Langass,Scotland,240,True,Imported placeholder from FishTalk
+18,D,3,BRS2 Langass,Scotland,256,True,Imported placeholder from FishTalk
+16,E,3,BRS2 Langass,Scotland,200,True,Imported placeholder from FishTalk
+15,F,3,BRS2 Langass,Scotland,8,True,Imported placeholder from FishTalk
+106,Fry,20,BRS3 Geocrab,Scotland,28,True,Imported placeholder from FishTalk
+107,Hatchery,20,BRS3 Geocrab,Scotland,51,True,Imported placeholder from FishTalk
+108,Mill,20,BRS3 Geocrab,Scotland,9,True,Imported placeholder from FishTalk
+117,Buckieburn Smolt Unit Hall,26,Buckieburn Smolt Unit,Scotland,15,True,Imported placeholder from FishTalk
+120,Dunblane Loch Hall,29,Dunblane Loch,Scotland,8,True,Imported placeholder from FishTalk
+95,FW11 Barvas Hall,17,FW11 Barvas,Scotland,112,True,Imported placeholder from FishTalk
+56,FW12 Amhuinnsuidhe Hall,9,FW12 Amhuinnsuidhe,Scotland,94,True,Imported placeholder from FishTalk
+14,FW13 Geocrab Hall,2,FW13 Geocrab,Scotland,1,True,Imported placeholder from FishTalk
+12,Fry,2,FW13 Geocrab,Scotland,28,True,Imported placeholder from FishTalk
+10,Hatchery,2,FW13 Geocrab,Scotland,63,True,Imported placeholder from FishTalk
+11,Parr,2,FW13 Geocrab,Scotland,13,True,Imported placeholder from FishTalk
+13,Smolt,2,FW13 Geocrab,Scotland,6,True,Imported placeholder from FishTalk
+113,Loch Humavat,24,FW14 Harris Lochs,Scotland,9,True,Imported placeholder from FishTalk
+112,Loch Langavat,24,FW14 Harris Lochs,Scotland,17,True,Imported placeholder from FishTalk
+87,A row,15,FW21 Couldoran,Scotland,6,True,Imported placeholder from FishTalk
+91,B row,15,FW21 Couldoran,Scotland,6,True,Imported placeholder from FishTalk
+92,C row,15,FW21 Couldoran,Scotland,4,True,Imported placeholder from FishTalk
+89,D row,15,FW21 Couldoran,Scotland,10,True,Imported placeholder from FishTalk
+90,E row,15,FW21 Couldoran,Scotland,12,True,Imported placeholder from FishTalk
+88,F row,15,FW21 Couldoran,Scotland,12,True,Imported placeholder from FishTalk
+86,Hatchery,15,FW21 Couldoran,Scotland,72,True,Imported placeholder from FishTalk
+93,RAS,15,FW21 Couldoran,Scotland,10,True,Imported placeholder from FishTalk
+31,A1,5,FW22 Applecross,Scotland,80,True,Imported placeholder from FishTalk
+28,A2,5,FW22 Applecross,Scotland,96,True,Imported placeholder from FishTalk
+30,B1,5,FW22 Applecross,Scotland,8,True,Imported placeholder from FishTalk
+32,B2,5,FW22 Applecross,Scotland,8,True,Imported placeholder from FishTalk
+29,C1,5,FW22 Applecross,Scotland,8,True,Imported placeholder from FishTalk
+35,C2,5,FW22 Applecross,Scotland,8,True,Imported placeholder from FishTalk
+34,D1,5,FW22 Applecross,Scotland,7,True,Imported placeholder from FishTalk
+36,D2,5,FW22 Applecross,Scotland,4,True,Imported placeholder from FishTalk
+33,E1,5,FW22 Applecross,Scotland,4,True,Imported placeholder from FishTalk
+37,E2,5,FW22 Applecross,Scotland,4,True,Imported placeholder from FishTalk
+84,FW22 Russel Burn Hall,13,FW22 Russel Burn,Scotland,222,True,Imported placeholder from FishTalk
+118,FW23 Loch Damph South Hall,27,FW23 Loch Damph South,Scotland,14,True,Imported placeholder from FishTalk
+98,Archive,18,FW24 KinlochMoidart,Scotland,14,True,Imported placeholder from FishTalk
+97,Hatchery,18,FW24 KinlochMoidart,Scotland,56,True,Imported placeholder from FishTalk
+96,Parr,18,FW24 KinlochMoidart,Scotland,12,True,Imported placeholder from FishTalk
+100,Smolt (RAS1),18,FW24 KinlochMoidart,Scotland,3,True,Imported placeholder from FishTalk
+99,Smolt (RAS2),18,FW24 KinlochMoidart,Scotland,4,True,Imported placeholder from FishTalk
+94,HO Hatchery Hall,16,HO Hatchery,Scotland,42,True,Imported placeholder from FishTalk
+110,HSU Hall,22,HSU,Scotland,27,True,Imported placeholder from FishTalk
+85,Langass old to summer 15 Hall,14,Langass old to summer 15,Scotland,215,True,Imported placeholder from FishTalk
+119,Loch Geirean Hall,28,Loch Geirean,Scotland,8,True,Imported placeholder from FishTalk
+121,Loch Tormasad Hall,30,Loch Tormasad,Scotland,4,True,Imported placeholder from FishTalk
+45,Tullich Hall,7,Tullich,Scotland,276,True,Imported placeholder from FishTalk

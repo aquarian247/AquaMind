@@ -1,0 +1,116 @@
+metadata:
+  generated_date: '2026-02-19'
+  total_batches: 1
+  batches_per_geography: 1
+  target_saturation: 0.85
+  stagger_days: 7
+  reference_pack_dir: /Users/aquarian247/Projects/AquaMind/scripts/data_generation/reference_pack/snapshots/2026-02-19_1430Z
+  worker_partitions:
+    worker_1:
+      batch_indices:
+      - 0
+      batch_range: '1'
+      count: 1
+batches:
+- batch_id: Vetur 2025
+  start_date: '2025-12-31'
+  eggs: 3000000
+  duration: 50
+  effective_duration: 496.70231684124474
+  harvest_target_kg: 5.2650494932660665
+  geography: Faroe Islands
+  station: "S03 Nor\xF0toftir"
+  freshwater:
+    egg_alevin:
+      hall: Kleking
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - Kleking 01
+      - Kleking 02
+      - Kleking 03
+      - Kleking 04
+      - Kleking 05
+      - Kleking 06
+      - Kleking 07
+      - Kleking 08
+      - Kleking 09
+      - Kleking 10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: "5 M H\xF8ll"
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - '501'
+      - '502'
+      - '503'
+      - '504'
+      - '505'
+      - '506'
+      - '507'
+      - '508'
+      - '509'
+      - '510'
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: "MULTI(800 H\xF8ll, 900 H\xF8ll)"
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - '801'
+      - '802'
+      - '803'
+      - '804'
+      - '805'
+      - '806'
+      - '901'
+      - '902'
+      - '903'
+      - '904'
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: "MULTI(11 H\xF8ll A, 11 H\xF8ll B)"
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - '1101'
+      - '1102'
+      - '1103'
+      - '1104'
+      - '1105'
+      - '1106'
+      - '1107'
+      - '1108'
+      - '1109'
+      - '1110'
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: "MULTI(18 H\xF8ll A, 18 H\xF8ll B, T-H\xF8ll)"
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - '1801'
+      - '1802'
+      - '1803'
+      - '1804'
+      - '1805'
+      - '1806'
+      - '1807'
+      - '1808'
+      - T1
+      - T2
+      start_day: 360
+      end_day: 450
+  sea:
+    area: A06 Argir
+    rings:
+    - '01'
+    - '02'
+    - '03'
+    - '04'
+    - '05'
+    - '06'
+    rings_count: 6
+    start_day: 450
+    end_day: 496.70231684124474
+    note: Minimal allocation (6/20 rings)

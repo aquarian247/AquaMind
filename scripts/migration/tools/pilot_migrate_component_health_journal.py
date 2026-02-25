@@ -54,6 +54,7 @@ from apps.migration_support.models import ExternalIdMap
 from django.contrib.auth import get_user_model
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 from scripts.migration.tools.etl_loader import ETLDataLoader
+from scripts.migration.tools.population_assignment_mapping import get_assignment_external_map
 
 
 User = get_user_model()
@@ -107,7 +108,17 @@ def to_int(value: str) -> int | None:
         return None
 
 
-def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
+def get_external_map(
+    source_model: str,
+    source_identifier: str,
+    *,
+    component_key: str | None = None,
+) -> ExternalIdMap | None:
+    if source_model == "Populations":
+        return get_assignment_external_map(
+            str(source_identifier),
+            component_key=component_key,
+        )
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
     ).first()
@@ -383,7 +394,11 @@ def main() -> int:
                 skipped += 1
                 continue
 
-            assignment_map = get_external_map("Populations", population_id)
+            assignment_map = get_external_map(
+                "Populations",
+                population_id,
+                component_key=component_key,
+            )
             if not assignment_map:
                 skipped += 1
                 continue

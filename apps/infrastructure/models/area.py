@@ -19,6 +19,13 @@ class Area(models.Model):
     """
     name = models.CharField(max_length=100)
     geography = models.ForeignKey(Geography, on_delete=models.PROTECT, related_name='areas')
+    area_group = models.ForeignKey(
+        "AreaGroup",
+        on_delete=models.SET_NULL,
+        related_name="areas",
+        null=True,
+        blank=True,
+    )
     latitude = models.DecimalField(
         max_digits=9, 
         decimal_places=6,

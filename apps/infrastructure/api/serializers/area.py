@@ -10,6 +10,7 @@ from rest_framework import serializers
 
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.models.geography import Geography # Added for PrimaryKeyRelatedField queryset
+from apps.infrastructure.models.area_group import AreaGroup
 from apps.infrastructure.api.serializers.geography import GeographySerializer
 from apps.infrastructure.api.serializers.base import (
     TimestampedModelSerializer,
@@ -34,6 +35,18 @@ class AreaSerializer(TimestampedModelSerializer, NamedModelSerializer,
         source='geography',
         read_only=True,
         help_text="Detailed information about the associated geographical zone."
+    )
+    area_group = serializers.PrimaryKeyRelatedField(
+        queryset=AreaGroup.objects.all(),
+        allow_null=True,
+        required=False,
+        help_text="Optional parent area-group node for hierarchical sea geography.",
+    )
+    area_group_name = serializers.CharField(
+        source="area_group.name",
+        read_only=True,
+        allow_null=True,
+        help_text="Name of the linked area group.",
     )
     latitude = serializers.DecimalField(
         max_digits=9,
@@ -67,10 +80,10 @@ class AreaSerializer(TimestampedModelSerializer, NamedModelSerializer,
         model = Area
         fields = [
             'id', 'name', 'geography', 'geography_details', 'latitude',
-            'longitude', 'max_biomass', 'active',
+            'longitude', 'max_biomass', 'active', 'area_group', 'area_group_name',
             'created_at', 'updated_at'
         ] # Explicitly list fields
-        read_only_fields = ['id', 'created_at', 'updated_at', 'geography_details']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'geography_details', 'area_group_name']
 
     def validate(self, data):
         """Validate the latitude and longitude values."""

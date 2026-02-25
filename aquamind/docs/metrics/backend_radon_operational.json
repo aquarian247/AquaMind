@@ -1,10 +1,10 @@
 {
   "app": "operational",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "files": [
     {
       "file": "apps/operational/models.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -43,7 +43,7 @@
     },
     {
       "file": "apps/operational/serializers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -82,7 +82,7 @@
     },
     {
       "file": "apps/operational/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -121,7 +121,7 @@
     },
     {
       "file": "apps/operational/apps.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -169,7 +169,7 @@
     },
     {
       "file": "apps/operational/admin.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -208,7 +208,7 @@
     },
     {
       "file": "apps/operational/urls.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 14,
         "sloc": 7,
@@ -247,7 +247,7 @@
     },
     {
       "file": "apps/operational/views.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -286,7 +286,7 @@
     },
     {
       "file": "apps/operational/api/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 3,
         "sloc": 0,
@@ -325,7 +325,7 @@
     },
     {
       "file": "apps/operational/api/routers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 19,
         "sloc": 8,
@@ -364,7 +364,7 @@
     },
     {
       "file": "apps/operational/api/viewsets/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 6,
         "sloc": 2,
@@ -403,7 +403,7 @@
     },
     {
       "file": "apps/operational/api/viewsets/fcr_trends.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 403,
         "sloc": 315,
@@ -491,7 +491,7 @@
     },
     {
       "file": "apps/operational/api/serializers/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 6,
         "sloc": 2,
@@ -530,7 +530,7 @@
     },
     {
       "file": "apps/operational/api/serializers/fcr_trends.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 160,
         "sloc": 115,
@@ -594,13 +594,13 @@
     },
     {
       "file": "apps/operational/services/fcr_trends_service.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 629,
-        "sloc": 459,
-        "comments": 50,
-        "multi": 31,
-        "blank": 80
+        "loc": 635,
+        "sloc": 456,
+        "comments": 53,
+        "multi": 37,
+        "blank": 82
       },
       "cyclomatic_complexity": {
         "functions": [
@@ -625,7 +625,7 @@
             "complexity": 6,
             "lineno": 36,
             "col_offset": 0,
-            "endline": 629,
+            "endline": 635,
             "type": "Class"
           },
           {
@@ -649,111 +649,111 @@
             "complexity": 7,
             "lineno": 113,
             "col_offset": 4,
-            "endline": 149,
+            "endline": 155,
             "type": "Function"
           },
           {
             "name": "_ensure_container_summaries_exist",
             "complexity": 5,
-            "lineno": 153,
+            "lineno": 159,
             "col_offset": 4,
-            "endline": 188,
+            "endline": 194,
             "type": "Function"
           },
           {
             "name": "_get_relevant_assignments",
             "complexity": 4,
-            "lineno": 192,
+            "lineno": 198,
             "col_offset": 4,
-            "endline": 210,
+            "endline": 216,
             "type": "Function"
           },
           {
             "name": "_generate_time_periods",
             "complexity": 7,
-            "lineno": 213,
+            "lineno": 219,
             "col_offset": 4,
-            "endline": 253,
+            "endline": 259,
             "type": "Function"
           },
           {
             "name": "_get_container_assignment_series",
             "complexity": 3,
-            "lineno": 256,
+            "lineno": 262,
             "col_offset": 4,
-            "endline": 283,
+            "endline": 289,
             "type": "Function"
           },
           {
             "name": "_get_batch_aggregated_series",
             "complexity": 3,
-            "lineno": 286,
+            "lineno": 292,
             "col_offset": 4,
-            "endline": 312,
+            "endline": 318,
             "type": "Function"
           },
           {
             "name": "_get_geography_aggregated_series",
             "complexity": 15,
-            "lineno": 315,
+            "lineno": 321,
             "col_offset": 4,
-            "endline": 378,
+            "endline": 384,
             "type": "Function"
           },
           {
             "name": "_get_predicted_fcr_series",
             "complexity": 17,
-            "lineno": 381,
+            "lineno": 387,
             "col_offset": 4,
-            "endline": 488,
+            "endline": 494,
             "type": "Function"
           },
           {
             "name": "_get_fcr_for_date",
             "complexity": 4,
-            "lineno": 491,
+            "lineno": 497,
             "col_offset": 4,
-            "endline": 511,
+            "endline": 517,
             "type": "Function"
           },
           {
             "name": "_merge_series",
             "complexity": 8,
-            "lineno": 514,
+            "lineno": 520,
             "col_offset": 4,
-            "endline": 575,
+            "endline": 581,
             "type": "Function"
           },
           {
             "name": "_numeric_to_confidence_level",
             "complexity": 4,
-            "lineno": 578,
+            "lineno": 584,
             "col_offset": 4,
-            "endline": 587,
+            "endline": 593,
             "type": "Function"
           },
           {
             "name": "_calculate_period_end",
             "complexity": 4,
-            "lineno": 590,
+            "lineno": 596,
             "col_offset": 4,
-            "endline": 603,
+            "endline": 609,
             "type": "Function"
           },
           {
             "name": "_get_bucket_start",
             "complexity": 3,
-            "lineno": 606,
+            "lineno": 612,
             "col_offset": 4,
-            "endline": 616,
+            "endline": 622,
             "type": "Function"
           },
           {
             "name": "_get_next_bucket_date",
             "complexity": 4,
-            "lineno": 619,
+            "lineno": 625,
             "col_offset": 4,
-            "endline": 629,
+            "endline": 635,
             "type": "Function"
           }
         ],
@@ -782,11 +782,11 @@
         "time": 1041.1750642168179,
         "bugs": 0.579672620108443
       },
-      "maintainability_index": 29.227814248282343
+      "maintainability_index": 29.766213895738385
     },
     {
       "file": "apps/operational/services/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 3,
         "sloc": 0,
@@ -829,8 +829,8 @@
     "total_functions": 29,
     "cc_average": 4.620689655172414,
     "cc_max": 17,
-    "mi_average": 92.22879117686892,
-    "mi_min": 29.227814248282343,
+    "mi_average": 92.26468448669932,
+    "mi_min": 29.766213895738385,
     "halstead_avg_volume": 119.63496373982971,
     "halstead_avg_difficulty": 0.8517906336088154,
     "halstead_avg_effort": 1256.8109564964636

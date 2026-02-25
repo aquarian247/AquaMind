@@ -1,0 +1,8 @@
+geography,station_name,hall_name,dominant_lifecycle_stage,dominant_stage_rows,dominant_stage_population,assignment_rows_total,population_total,first_assignment_date,last_assignment_date,stage_breakdown_json
+Faroe Islands,S03 Norðtoftir,Kleking,Egg&Alevin,12,1761814,12,1761814,2024-12-11,2024-12-11,"{""Egg&Alevin"": {""assignment_rows"": 12, ""population_total"": 1761814}}"
+Faroe Islands,S08 Gjógv,Kleking,Parr,1,400520,1,400520,2024-10-02,2024-10-02,"{""Parr"": {""assignment_rows"": 1, ""population_total"": 400520}}"
+Faroe Islands,S16 Glyvradalur,Hall A,Fry,5,1800784,5,1800784,2024-11-20,2024-11-20,"{""Fry"": {""assignment_rows"": 5, ""population_total"": 1800784}}"
+Faroe Islands,S16 Glyvradalur,Hall C,Fry,2,227058,2,227058,2024-06-06,2024-06-06,"{""Fry"": {""assignment_rows"": 2, ""population_total"": 227058}}"
+Faroe Islands,S16 Glyvradalur,Klekihøll,Fry,4,1399996,4,1399996,2023-10-27,2023-10-27,"{""Fry"": {""assignment_rows"": 4, ""population_total"": 1399996}}"
+Faroe Islands,S21 Viðareiði,Rogn,Egg&Alevin,7,1500408,7,1500408,2024-09-16,2024-09-16,"{""Egg&Alevin"": {""assignment_rows"": 7, ""population_total"": 1500408}}"
+Faroe Islands,S24 Strond,Hall A,Egg&Alevin,39,3504525,78,7004525,2024-09-18,2024-12-18,"{""Egg&Alevin"": {""assignment_rows"": 39, ""population_total"": 3504525}, ""Fry"": {""assignment_rows"": 39, ""population_total"": 3500000}}"

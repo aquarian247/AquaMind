@@ -8,6 +8,9 @@ from rest_framework import serializers
 from apps.batch.models import TransferAction
 from apps.batch.api.serializers.utils import NestedModelMixin
 from typing import Dict, Any, Optional
+from apps.environmental.models import EnvironmentalReading
+
+SNAPSHOT_NOTE_PREFIX = "[transfer_snapshot]"
 
 
 class TransferActionListSerializer(
@@ -83,6 +86,8 @@ class TransferActionDetailSerializer(
     )
     source_assignment_info = serializers.SerializerMethodField()
     dest_assignment_info = serializers.SerializerMethodField()
+    source_readings_snapshot = serializers.SerializerMethodField()
+    dest_readings_snapshot = serializers.SerializerMethodField()
     executed_by_username = serializers.StringRelatedField(
         source='executed_by', read_only=True
     )
@@ -104,6 +109,7 @@ class TransferActionDetailSerializer(
             'workflow_number': 'workflow_number',
             'status': 'status',
             'batch_number': 'batch.batch_number',
+            'is_dynamic_execution': 'is_dynamic_execution',
         })
 
     def get_source_assignment_info(self, obj) -> Optional[Dict[str, Any]]:
@@ -116,6 +122,20 @@ class TransferActionDetailSerializer(
             'id': assignment.id,
             'container_id': assignment.container_id,
             'container_name': str(assignment.container),
+            'carrier_type': (
+                assignment.container.carrier.carrier_type
+                if assignment.container and assignment.container.carrier
+                else None
+            ),
+            'location_type': (
+                'SEA'
+                if assignment.container and assignment.container.area_id
+                else 'STATION'
+                if assignment.container and assignment.container.hall_id
+                else 'CARRIER'
+                if assignment.container and assignment.container.carrier_id
+                else None
+            ),
             'population_count': assignment.population_count,
             'avg_weight_g': (
                 float(assignment.avg_weight_g)
@@ -137,6 +157,20 @@ class TransferActionDetailSerializer(
             'id': assignment.id,
             'container_id': assignment.container_id,
             'container_name': str(assignment.container),
+            'carrier_type': (
+                assignment.container.carrier.carrier_type
+                if assignment.container and assignment.container.carrier
+                else None
+            ),
+            'location_type': (
+                'SEA'
+                if assignment.container and assignment.container.area_id
+                else 'STATION'
+                if assignment.container and assignment.container.hall_id
+                else 'CARRIER'
+                if assignment.container and assignment.container.carrier_id
+                else None
+            ),
             'population_count': assignment.population_count,
             'avg_weight_g': (
                 float(assignment.avg_weight_g)
@@ -147,6 +181,48 @@ class TransferActionDetailSerializer(
                 if assignment.biomass_kg else None
             ),
         }
+
+    def _get_snapshot(self, obj, side: str):
+        assignment = (
+            obj.source_assignment if side == 'source' else obj.dest_assignment
+        )
+        if not assignment:
+            return None
+
+        marker = f"{SNAPSHOT_NOTE_PREFIX} action={obj.id};side={side};"
+        readings = (
+            EnvironmentalReading.objects.filter(
+                batch_container_assignment=assignment,
+                notes__contains=marker,
+            )
+            .select_related('parameter')
+            .order_by('parameter__name', '-reading_time')
+        )
+        if not readings:
+            return None
+
+        captured_at = max(reading.reading_time for reading in readings)
+        return {
+            'captured_at': captured_at,
+            'container_id': assignment.container_id,
+            'container_name': str(assignment.container),
+            'readings': [
+                {
+                    'parameter_id': reading.parameter_id,
+                    'parameter_name': reading.parameter.name,
+                    'unit': reading.parameter.unit,
+                    'value': float(reading.value),
+                    'reading_time': reading.reading_time,
+                }
+                for reading in readings
+            ],
+        }
+
+    def get_source_readings_snapshot(self, obj):
+        return self._get_snapshot(obj, 'source')
+
+    def get_dest_readings_snapshot(self, obj):
+        return self._get_snapshot(obj, 'dest')
 
     def validate(self, data):
         """
@@ -241,6 +317,20 @@ class TransferActionExecuteSerializer(serializers.Serializer):
                 f"transfer count ({action.transferred_count})"
             )
         return value
+
+
+class TransferActionSnapshotSerializer(serializers.Serializer):
+    """Serializer for capturing point-in-time transport snapshots."""
+
+    moment = serializers.ChoiceField(
+        choices=[
+            ("start", "Start"),
+            ("in_transit", "In Transit"),
+            ("finish", "Finish"),
+        ],
+        required=True,
+        help_text="Snapshot moment to capture for this transfer handoff.",
+    )
 
 
 class TransferActionSkipSerializer(serializers.Serializer):

@@ -9,11 +9,13 @@ from rest_framework import serializers
 from aquamind.utils.history_utils import HistorySerializer
 from apps.infrastructure.models import (
     Geography,
+    AreaGroup,
     Area,
     FreshwaterStation,
     Hall,
     ContainerType,
     Container,
+    TransportCarrier,
     Sensor,
     FeedContainer
 )
@@ -32,6 +34,14 @@ class AreaHistorySerializer(HistorySerializer):
 
     class Meta:
         model = Area.history.model
+        fields = '__all__'
+
+
+class AreaGroupHistorySerializer(HistorySerializer):
+    """History serializer for AreaGroup model."""
+
+    class Meta:
+        model = AreaGroup.history.model
         fields = '__all__'
 
 
@@ -64,6 +74,14 @@ class ContainerHistorySerializer(HistorySerializer):
 
     class Meta:
         model = Container.history.model
+        fields = '__all__'
+
+
+class TransportCarrierHistorySerializer(HistorySerializer):
+    """History serializer for TransportCarrier model."""
+
+    class Meta:
+        model = TransportCarrier.history.model
         fields = '__all__'
 
 

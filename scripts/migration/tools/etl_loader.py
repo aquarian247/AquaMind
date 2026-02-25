@@ -46,6 +46,46 @@ class ETLDataLoader:
     
     # Class-level cache for DataFrames (shared across instances)
     _cache: Dict[str, Any] = {}
+
+    @staticmethod
+    def _status_row_rank(row: Dict[str, str]) -> tuple[int, float, float]:
+        """Rank status rows at the same timestamp.
+
+        Prefer materially populated snapshots over zero snapshots, then
+        prefer larger count/biomass values for deterministic tie-breaking.
+        """
+        try:
+            count_val = float(row.get("CurrentCount") or 0)
+        except Exception:
+            count_val = 0.0
+        try:
+            bio_val = float(row.get("CurrentBiomassKg") or 0)
+        except Exception:
+            bio_val = 0.0
+        nonzero = 1 if (count_val > 0 or bio_val > 0) else 0
+        return (nonzero, count_val, bio_val)
+
+    @classmethod
+    def _prefer_status_row(cls, candidate: Dict[str, str], incumbent: Optional[Dict[str, str]]) -> bool:
+        if incumbent is None:
+            return True
+        return cls._status_row_rank(candidate) > cls._status_row_rank(incumbent)
+
+    def _pick_best_status_row_df(self, df: "pd.DataFrame", *, time_ascending: bool) -> Optional[Dict[str, str]]:
+        """Pick best row by time, then deterministic in-timestamp rank."""
+        if df.empty:
+            return None
+        ranked = df.copy()
+        ranked["_count_num"] = pd.to_numeric(ranked["CurrentCount"], errors="coerce").fillna(0)
+        ranked["_biomass_num"] = pd.to_numeric(ranked["CurrentBiomassKg"], errors="coerce").fillna(0)
+        ranked["_nonzero"] = ((ranked["_count_num"] > 0) | (ranked["_biomass_num"] > 0)).astype(int)
+        ranked = ranked.sort_values(
+            ["StatusTime", "_nonzero", "_count_num", "_biomass_num"],
+            ascending=[time_ascending, False, False, False],
+            kind="mergesort",
+        )
+        row = ranked.iloc[0].drop(labels=["_count_num", "_biomass_num", "_nonzero"], errors="ignore")
+        return row.to_dict()
     
     def __init__(self, data_dir: str | Path | None = None, *, sqlite_path: str | Path | None = None):
         """Initialize the loader with the directory containing CSV files.
@@ -210,6 +250,35 @@ class ETLDataLoader:
                 count = 0.0
             results[pop_id] = results.get(pop_id, 0.0) + count
         return results
+
+    def get_input_suppliers_by_population(self, population_ids: Set[str]) -> Dict[str, Set[str]]:
+        """Get SupplierID set per population from Ext_Inputs_v2."""
+        results: Dict[str, Set[str]] = {}
+        if not population_ids:
+            return results
+
+        for row in self.get_ext_inputs():
+            pop_id = row.get("PopulationID")
+            if pop_id not in population_ids:
+                continue
+            supplier_id = (row.get("SupplierID") or "").strip()
+            if not supplier_id:
+                continue
+            results.setdefault(pop_id, set()).add(supplier_id)
+        return results
+
+    def get_input_rows_by_population(self, population_ids: Set[str]) -> Dict[str, List[Dict[str, str]]]:
+        """Get Ext_Inputs_v2 rows keyed by PopulationID."""
+        results: Dict[str, List[Dict[str, str]]] = {}
+        if not population_ids:
+            return results
+
+        for row in self.get_ext_inputs():
+            pop_id = row.get("PopulationID")
+            if pop_id not in population_ids:
+                continue
+            results.setdefault(pop_id, []).append(row)
+        return results
     
     # ====================
     # POPULATION STAGES
@@ -305,10 +374,8 @@ class ETLDataLoader:
             if before_time:
                 mask &= df["StatusTime"] <= before_time.strftime("%Y-%m-%d %H:%M:%S")
             
-            filtered = df[mask].sort_values("StatusTime", ascending=False)
-            if len(filtered) > 0:
-                return filtered.iloc[0].to_dict()
-            return None
+            filtered = df[mask]
+            return self._pick_best_status_row_df(filtered, time_ascending=False)
         else:
             # Fallback
             latest = None
@@ -321,6 +388,8 @@ class ETLDataLoader:
                     continue
                 if status_time > latest_time:
                     latest_time = status_time
+                    latest = row
+                elif status_time == latest_time and self._prefer_status_row(row, latest):
                     latest = row
             return latest
 
@@ -339,11 +408,11 @@ class ETLDataLoader:
             ts = at_time.strftime("%Y-%m-%d %H:%M:%S")
             before_df = pop_df[pop_df["StatusTime"] <= ts]
             if not before_df.empty:
-                return before_df.sort_values("StatusTime", ascending=False).iloc[0].to_dict()
+                return self._pick_best_status_row_df(before_df, time_ascending=False)
 
             after_df = pop_df[pop_df["StatusTime"] >= ts]
             if not after_df.empty:
-                return after_df.sort_values("StatusTime", ascending=True).iloc[0].to_dict()
+                return self._pick_best_status_row_df(after_df, time_ascending=True)
             return None
 
         # Streaming fallback
@@ -362,9 +431,13 @@ class ETLDataLoader:
                 if status_time > latest_before_time:
                     latest_before_time = status_time
                     latest_before = row
+                elif status_time == latest_before_time and self._prefer_status_row(row, latest_before):
+                    latest_before = row
             else:
                 if not earliest_after_time or status_time < earliest_after_time:
                     earliest_after_time = status_time
+                    earliest_after = row
+                elif status_time == earliest_after_time and self._prefer_status_row(row, earliest_after):
                     earliest_after = row
 
         return latest_before or earliest_after
@@ -389,7 +462,7 @@ class ETLDataLoader:
             mask = (counts > 0) | (biomasses > 0)
             if not mask.any():
                 return None
-            return after_df[mask].sort_values("StatusTime", ascending=True).iloc[0].to_dict()
+            return self._pick_best_status_row_df(after_df[mask], time_ascending=True)
 
         earliest_after = None
         earliest_after_time = ""
@@ -411,6 +484,8 @@ class ETLDataLoader:
                 continue
             if not earliest_after_time or status_time < earliest_after_time:
                 earliest_after_time = status_time
+                earliest_after = row
+            elif status_time == earliest_after_time and self._prefer_status_row(row, earliest_after):
                 earliest_after = row
 
         return earliest_after

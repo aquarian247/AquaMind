@@ -112,6 +112,8 @@ class Migration(migrations.Migration):
     conditional handling to support both PostgreSQL and SQLite testing.
     """
 
+    atomic = False
+
     dependencies = [
         ('environmental', '0004_test_timescaledb_hypertable_setup'),
     ]

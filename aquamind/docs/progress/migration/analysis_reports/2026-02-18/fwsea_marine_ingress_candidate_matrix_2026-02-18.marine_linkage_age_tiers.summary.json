@@ -1,0 +1,19 @@
+{
+  "backup_cutoff_date": "2026-01-22",
+  "fw_age_gate_months": 30,
+  "fw_age_gate_window_start_date": "2023-07-22",
+  "linked_fw_in_scope_component_count": 7,
+  "linked_fw_out_of_scope_component_count": 0,
+  "linked_fw_unknown_scope_component_count": 0,
+  "recommended_action_counts": {
+    "eligible_for_marine_wave": 4,
+    "hold_for_linkage_confirmation": 30
+  },
+  "sea_out_of_age_gate_count": 5,
+  "sea_total_with_stage_signal": 39,
+  "sea_under_age_gate_count": 34,
+  "tier_counts": {
+    "linked_fw_in_scope": 4,
+    "unlinked_sea": 30
+  }
+}

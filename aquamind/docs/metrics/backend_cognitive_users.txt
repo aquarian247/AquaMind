@@ -1,0 +1,8 @@
+# Cognitive Complexity Report for users
+# Generated: 2026-02-20
+# Files analyzed: 19
+# Total violations: 0
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## No violations found

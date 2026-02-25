@@ -1,10 +1,58 @@
 {
   "app": "health",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "files": [
     {
+      "file": "apps/health/signals.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 105,
+        "sloc": 53,
+        "comments": 8,
+        "multi": 24,
+        "blank": 20
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "on_treatment_with_weighing",
+            "complexity": 7,
+            "lineno": 22,
+            "col_offset": 0,
+            "endline": 103,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 7.0,
+          "max_complexity": 7,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 1,
+        "h2": 4,
+        "N1": 4,
+        "N2": 4,
+        "vocabulary": 5,
+        "length": 8,
+        "volume": 18.575424759098897,
+        "difficulty": 0.5,
+        "effort": 9.287712379549449,
+        "time": 0.5159840210860804,
+        "bugs": 0.006191808253032966
+      },
+      "maintainability_index": 78.71841695338432
+    },
+    {
       "file": "apps/health/models.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 40,
         "sloc": 22,
@@ -43,7 +91,7 @@
     },
     {
       "file": "apps/health/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -82,31 +130,39 @@
     },
     {
       "file": "apps/health/apps.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 6,
-        "sloc": 4,
-        "comments": 0,
+        "loc": 10,
+        "sloc": 6,
+        "comments": 1,
         "multi": 0,
-        "blank": 2
+        "blank": 3
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "HealthConfig",
-            "complexity": 1,
+            "complexity": 2,
             "lineno": 4,
             "col_offset": 0,
-            "endline": 6,
+            "endline": 10,
             "type": "Class"
+          },
+          {
+            "name": "ready",
+            "complexity": 1,
+            "lineno": 8,
+            "col_offset": 4,
+            "endline": 10,
+            "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 1,
-          "average_complexity": 1.0,
-          "max_complexity": 1,
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
           "complexity_distribution": {
-            "low": 1,
+            "low": 2,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -130,191 +186,215 @@
     },
     {
       "file": "apps/health/admin.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 285,
-        "sloc": 240,
-        "comments": 21,
+        "loc": 362,
+        "sloc": 307,
+        "comments": 20,
         "multi": 0,
-        "blank": 32
+        "blank": 40
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "JournalEntryAdmin",
             "complexity": 1,
-            "lineno": 19,
+            "lineno": 20,
             "col_offset": 0,
-            "endline": 35,
+            "endline": 36,
             "type": "Class"
           },
           {
             "name": "MortalityReasonAdmin",
             "complexity": 1,
-            "lineno": 40,
+            "lineno": 41,
             "col_offset": 0,
-            "endline": 42,
+            "endline": 43,
+            "type": "Class"
+          },
+          {
+            "name": "LiceTypeAdmin",
+            "complexity": 1,
+            "lineno": 46,
+            "col_offset": 0,
+            "endline": 60,
             "type": "Class"
           },
           {
             "name": "LiceCountAdmin",
             "complexity": 1,
-            "lineno": 45,
+            "lineno": 66,
             "col_offset": 0,
-            "endline": 49,
+            "endline": 87,
             "type": "Class"
           },
           {
             "name": "MortalityRecordAdmin",
             "complexity": 1,
-            "lineno": 52,
+            "lineno": 92,
             "col_offset": 0,
-            "endline": 56,
+            "endline": 96,
             "type": "Class"
           },
           {
             "name": "TreatmentAdmin",
             "complexity": 1,
-            "lineno": 59,
+            "lineno": 99,
             "col_offset": 0,
-            "endline": 63,
+            "endline": 103,
             "type": "Class"
           },
           {
             "name": "VaccinationTypeAdmin",
             "complexity": 1,
-            "lineno": 66,
+            "lineno": 106,
             "col_offset": 0,
-            "endline": 68,
+            "endline": 108,
             "type": "Class"
           },
           {
             "name": "SampleTypeAdmin",
             "complexity": 1,
-            "lineno": 71,
+            "lineno": 111,
             "col_offset": 0,
-            "endline": 73,
+            "endline": 113,
+            "type": "Class"
+          },
+          {
+            "name": "ParameterScoreDefinitionInline",
+            "complexity": 1,
+            "lineno": 115,
+            "col_offset": 0,
+            "endline": 120,
+            "type": "Class"
+          },
+          {
+            "name": "ParameterScoreDefinitionAdmin",
+            "complexity": 1,
+            "lineno": 124,
+            "col_offset": 0,
+            "endline": 141,
             "type": "Class"
           },
           {
             "name": "HealthParameterAdmin",
             "complexity": 1,
-            "lineno": 77,
+            "lineno": 145,
             "col_offset": 0,
-            "endline": 86,
+            "endline": 165,
             "type": "Class"
           },
           {
             "name": "IndividualFishObservationInline",
             "complexity": 1,
-            "lineno": 90,
+            "lineno": 167,
             "col_offset": 0,
-            "endline": 93,
+            "endline": 170,
             "type": "Class"
           },
           {
             "name": "FishParameterScoreInline",
             "complexity": 1,
-            "lineno": 96,
+            "lineno": 173,
             "col_offset": 0,
-            "endline": 100,
+            "endline": 177,
             "type": "Class"
           },
           {
             "name": "HealthSamplingEventAdmin",
             "complexity": 2,
-            "lineno": 103,
+            "lineno": 180,
             "col_offset": 0,
-            "endline": 139,
+            "endline": 216,
             "type": "Class"
           },
           {
             "name": "save_model",
             "complexity": 1,
-            "lineno": 134,
+            "lineno": 211,
             "col_offset": 4,
-            "endline": 139,
+            "endline": 216,
             "type": "Function"
           },
           {
             "name": "IndividualFishObservationAdmin",
             "complexity": 1,
-            "lineno": 142,
+            "lineno": 219,
             "col_offset": 0,
-            "endline": 152,
+            "endline": 229,
             "type": "Class"
           },
           {
             "name": "FishParameterScoreAdmin",
             "complexity": 1,
-            "lineno": 155,
+            "lineno": 232,
             "col_offset": 0,
-            "endline": 159,
+            "endline": 236,
             "type": "Class"
           },
           {
             "name": "HealthLabSampleForm",
             "complexity": 7,
-            "lineno": 163,
+            "lineno": 240,
             "col_offset": 0,
-            "endline": 217,
+            "endline": 294,
             "type": "Class"
           },
           {
             "name": "__init__",
             "complexity": 4,
-            "lineno": 169,
+            "lineno": 246,
             "col_offset": 4,
-            "endline": 189,
+            "endline": 266,
             "type": "Function"
           },
           {
             "name": "batch_container_assignment_label",
             "complexity": 3,
-            "lineno": 191,
+            "lineno": 268,
             "col_offset": 4,
-            "endline": 194,
+            "endline": 271,
             "type": "Function"
           },
           {
             "name": "clean",
             "complexity": 12,
-            "lineno": 196,
+            "lineno": 273,
             "col_offset": 4,
-            "endline": 217,
+            "endline": 294,
             "type": "Function"
           },
           {
             "name": "HealthLabSampleAdmin",
             "complexity": 4,
-            "lineno": 220,
+            "lineno": 297,
             "col_offset": 0,
-            "endline": 285,
+            "endline": 362,
             "type": "Class"
           },
           {
             "name": "batch_container_assignment_info",
             "complexity": 4,
-            "lineno": 274,
+            "lineno": 351,
             "col_offset": 4,
-            "endline": 279,
+            "endline": 356,
             "type": "Function"
           },
           {
             "name": "save_model",
             "complexity": 2,
-            "lineno": 282,
+            "lineno": 359,
             "col_offset": 4,
-            "endline": 285,
+            "endline": 362,
             "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 21,
-          "average_complexity": 2.4285714285714284,
+          "total_functions": 24,
+          "average_complexity": 2.25,
           "max_complexity": 12,
           "complexity_distribution": {
-            "low": 19,
+            "low": 22,
             "medium": 1,
             "high": 1,
             "very_high": 0
@@ -334,11 +414,11 @@
         "time": 43.816462868473806,
         "bugs": 0.05729845144338883
       },
-      "maintainability_index": 50.324595881399944
+      "maintainability_index": 46.43311918584214
     },
     {
       "file": "apps/health/urls.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 9,
         "sloc": 7,
@@ -377,7 +457,7 @@
     },
     {
       "file": "apps/health/views.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 36,
         "sloc": 22,
@@ -424,8 +504,222 @@
       "maintainability_index": 87.50565379328751
     },
     {
+      "file": "apps/health/management/__init__.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/health/management/commands/generate_health_assessments.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 196,
+        "sloc": 135,
+        "comments": 16,
+        "multi": 8,
+        "blank": 40
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 7,
+            "lineno": 25,
+            "col_offset": 0,
+            "endline": 192,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 28,
+            "col_offset": 4,
+            "endline": 49,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 9,
+            "lineno": 52,
+            "col_offset": 4,
+            "endline": 140,
+            "type": "Function"
+          },
+          {
+            "name": "_generate_event",
+            "complexity": 7,
+            "lineno": 142,
+            "col_offset": 4,
+            "endline": 192,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 4,
+          "average_complexity": 6.0,
+          "max_complexity": 9,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 3,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 7,
+        "h2": 28,
+        "N1": 23,
+        "N2": 44,
+        "vocabulary": 35,
+        "length": 67,
+        "volume": 343.66196213531276,
+        "difficulty": 5.5,
+        "effort": 1890.1407917442202,
+        "time": 105.00782176356779,
+        "bugs": 0.11455398737843758
+      },
+      "maintainability_index": 57.09174427964116
+    },
+    {
+      "file": "apps/health/management/commands/__init__.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 0,
+        "sloc": 0,
+        "comments": 0,
+        "multi": 0,
+        "blank": 0
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/health/management/commands/populate_parameter_scores.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 232,
+        "sloc": 178,
+        "comments": 13,
+        "multi": 7,
+        "blank": 35
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "Command",
+            "complexity": 9,
+            "lineno": 15,
+            "col_offset": 0,
+            "endline": 228,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 76,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 14,
+            "lineno": 83,
+            "col_offset": 4,
+            "endline": 228,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 8.0,
+          "max_complexity": 14,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 1,
+            "high": 1,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 8,
+        "h2": 21,
+        "N1": 18,
+        "N2": 35,
+        "vocabulary": 29,
+        "length": 53,
+        "volume": 257.47299274176135,
+        "difficulty": 6.666666666666667,
+        "effort": 1716.486618278409,
+        "time": 95.36036768213383,
+        "bugs": 0.08582433091392044
+      },
+      "maintainability_index": 55.22501230360703
+    },
+    {
       "file": "apps/health/models/journal_entry.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 76,
         "sloc": 55,
@@ -481,13 +775,13 @@
     },
     {
       "file": "apps/health/models/treatment.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 105,
-        "sloc": 82,
-        "comments": 0,
+        "loc": 130,
+        "sloc": 105,
+        "comments": 1,
         "multi": 9,
-        "blank": 12
+        "blank": 13
       },
       "cyclomatic_complexity": {
         "functions": [
@@ -496,23 +790,23 @@
             "complexity": 3,
             "lineno": 20,
             "col_offset": 0,
-            "endline": 105,
+            "endline": 130,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 91,
+            "lineno": 116,
             "col_offset": 4,
-            "endline": 93,
+            "endline": 118,
             "type": "Function"
           },
           {
             "name": "withholding_end_date",
             "complexity": 2,
-            "lineno": 96,
+            "lineno": 121,
             "col_offset": 4,
-            "endline": 105,
+            "endline": 130,
             "type": "Function"
           }
         ],
@@ -541,14 +835,14 @@
         "time": 0.861654166907052,
         "bugs": 0.005169925001442312
       },
-      "maintainability_index": 56.41792683369554
+      "maintainability_index": 61.58833309896089
     },
     {
       "file": "apps/health/models/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 29,
-        "sloc": 22,
+        "loc": 33,
+        "sloc": 26,
         "comments": 0,
         "multi": 4,
         "blank": 3
@@ -584,103 +878,135 @@
     },
     {
       "file": "apps/health/models/mortality.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 123,
-        "sloc": 89,
-        "comments": 0,
-        "multi": 8,
-        "blank": 20
+        "loc": 441,
+        "sloc": 332,
+        "comments": 26,
+        "multi": 22,
+        "blank": 56
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "MortalityReason",
             "complexity": 2,
-            "lineno": 18,
+            "lineno": 21,
             "col_offset": 0,
-            "endline": 29,
+            "endline": 40,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 27,
+            "lineno": 38,
             "col_offset": 4,
-            "endline": 29,
+            "endline": 40,
             "type": "Function"
           },
           {
             "name": "MortalityRecord",
-            "complexity": 2,
-            "lineno": 32,
+            "complexity": 12,
+            "lineno": 43,
             "col_offset": 0,
-            "endline": 65,
+            "endline": 219,
             "type": "Class"
           },
           {
-            "name": "__str__",
-            "complexity": 1,
-            "lineno": 63,
+            "name": "clean",
+            "complexity": 4,
+            "lineno": 86,
             "col_offset": 4,
-            "endline": 65,
+            "endline": 92,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 2,
+            "lineno": 95,
+            "col_offset": 4,
+            "endline": 99,
+            "type": "Function"
+          },
+          {
+            "name": "save",
+            "complexity": 27,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 219,
             "type": "Function"
           },
           {
             "name": "LiceCount",
-            "complexity": 3,
-            "lineno": 68,
+            "complexity": 6,
+            "lineno": 223,
             "col_offset": 0,
-            "endline": 123,
+            "endline": 440,
             "type": "Class"
           },
           {
             "name": "__str__",
-            "complexity": 1,
-            "lineno": 108,
+            "complexity": 3,
+            "lineno": 333,
             "col_offset": 4,
-            "endline": 111,
+            "endline": 347,
+            "type": "Function"
+          },
+          {
+            "name": "clean",
+            "complexity": 12,
+            "lineno": 349,
+            "col_offset": 4,
+            "endline": 403,
             "type": "Function"
           },
           {
             "name": "average_per_fish",
-            "complexity": 2,
-            "lineno": 114,
+            "complexity": 3,
+            "lineno": 409,
             "col_offset": 4,
-            "endline": 123,
+            "endline": 426,
+            "type": "Function"
+          },
+          {
+            "name": "total_count",
+            "complexity": 2,
+            "lineno": 429,
+            "col_offset": 4,
+            "endline": 440,
             "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 7,
-          "average_complexity": 1.7142857142857142,
-          "max_complexity": 3,
+          "total_functions": 11,
+          "average_complexity": 6.7272727272727275,
+          "max_complexity": 27,
           "complexity_distribution": {
             "low": 7,
-            "medium": 0,
-            "high": 0,
-            "very_high": 0
+            "medium": 1,
+            "high": 2,
+            "very_high": 1
           }
         }
       },
       "halstead": {
-        "h1": 3,
-        "h2": 11,
-        "N1": 6,
-        "N2": 12,
-        "vocabulary": 14,
-        "length": 18,
-        "volume": 68.53238859703687,
-        "difficulty": 1.6363636363636365,
-        "effort": 112.14390861333307,
-        "time": 6.23021714518517,
-        "bugs": 0.022844129532345624
+        "h1": 13,
+        "h2": 71,
+        "N1": 66,
+        "N2": 125,
+        "vocabulary": 84,
+        "length": 191,
+        "volume": 1220.9326277507432,
+        "difficulty": 11.443661971830986,
+        "effort": 13971.940282358857,
+        "time": 776.218904575492,
+        "bugs": 0.4069775425835811
       },
-      "maintainability_index": 47.708713343859856
+      "maintainability_index": 37.97276622551992
     },
     {
       "file": "apps/health/models/vaccination.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 23,
         "sloc": 11,
@@ -736,119 +1062,159 @@
     },
     {
       "file": "apps/health/models/health_observation.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 340,
-        "sloc": 265,
-        "comments": 23,
+        "loc": 391,
+        "sloc": 304,
+        "comments": 16,
         "multi": 10,
-        "blank": 35
+        "blank": 49
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "HealthParameter",
-            "complexity": 2,
-            "lineno": 20,
+            "complexity": 3,
+            "lineno": 22,
             "col_offset": 0,
-            "endline": 53,
+            "endline": 64,
             "type": "Class"
+          },
+          {
+            "name": "clean",
+            "complexity": 2,
+            "lineno": 57,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 51,
+            "lineno": 62,
             "col_offset": 4,
-            "endline": 53,
+            "endline": 64,
+            "type": "Function"
+          },
+          {
+            "name": "ParameterScoreDefinition",
+            "complexity": 3,
+            "lineno": 67,
+            "col_offset": 0,
+            "endline": 111,
+            "type": "Class"
+          },
+          {
+            "name": "clean",
+            "complexity": 3,
+            "lineno": 100,
+            "col_offset": 4,
+            "endline": 106,
+            "type": "Function"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 109,
+            "col_offset": 4,
+            "endline": 111,
             "type": "Function"
           },
           {
             "name": "HealthSamplingEvent",
-            "complexity": 9,
-            "lineno": 56,
+            "complexity": 6,
+            "lineno": 114,
             "col_offset": 0,
-            "endline": 267,
+            "endline": 304,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 156,
+            "lineno": 216,
             "col_offset": 4,
-            "endline": 163,
+            "endline": 223,
             "type": "Function"
           },
           {
             "name": "calculate_aggregate_metrics",
-            "complexity": 15,
-            "lineno": 165,
+            "complexity": 8,
+            "lineno": 225,
             "col_offset": 4,
-            "endline": 267,
+            "endline": 304,
             "type": "Function"
           },
           {
             "name": "IndividualFishObservation",
             "complexity": 2,
-            "lineno": 270,
+            "lineno": 307,
             "col_offset": 0,
-            "endline": 309,
+            "endline": 348,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 307,
+            "lineno": 346,
             "col_offset": 4,
-            "endline": 309,
+            "endline": 348,
             "type": "Function"
           },
           {
             "name": "FishParameterScore",
-            "complexity": 2,
-            "lineno": 312,
+            "complexity": 3,
+            "lineno": 351,
             "col_offset": 0,
-            "endline": 340,
+            "endline": 391,
             "type": "Class"
+          },
+          {
+            "name": "clean",
+            "complexity": 3,
+            "lineno": 379,
+            "col_offset": 4,
+            "endline": 386,
+            "type": "Function"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 338,
+            "lineno": 389,
             "col_offset": 4,
-            "endline": 340,
+            "endline": 391,
             "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 9,
-          "average_complexity": 3.7777777777777777,
-          "max_complexity": 15,
+          "total_functions": 14,
+          "average_complexity": 2.7142857142857144,
+          "max_complexity": 8,
           "complexity_distribution": {
-            "low": 7,
-            "medium": 1,
-            "high": 1,
+            "low": 12,
+            "medium": 2,
+            "high": 0,
             "very_high": 0
           }
         }
       },
       "halstead": {
         "h1": 8,
-        "h2": 30,
-        "N1": 18,
-        "N2": 35,
-        "vocabulary": 38,
-        "length": 53,
-        "volume": 278.14015821251,
-        "difficulty": 4.666666666666667,
-        "effort": 1297.9874049917134,
-        "time": 72.11041138842853,
-        "bugs": 0.09271338607083668
+        "h2": 21,
+        "N1": 16,
+        "N2": 27,
+        "vocabulary": 29,
+        "length": 43,
+        "volume": 208.89318279048564,
+        "difficulty": 5.142857142857143,
+        "effort": 1074.307797208212,
+        "time": 59.68376651156733,
+        "bugs": 0.06963106093016189
       },
-      "maintainability_index": 50.77029176670792
+      "maintainability_index": 46.39900145124107
     },
     {
       "file": "apps/health/models/lab_sample.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 133,
         "sloc": 93,
@@ -935,8 +1301,72 @@
       "maintainability_index": 59.987615595032
     },
     {
+      "file": "apps/health/models/lice_type.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 108,
+        "sloc": 72,
+        "comments": 3,
+        "multi": 15,
+        "blank": 16
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "LiceType",
+            "complexity": 5,
+            "lineno": 12,
+            "col_offset": 0,
+            "endline": 106,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 2,
+            "lineno": 77,
+            "col_offset": 4,
+            "endline": 90,
+            "type": "Function"
+          },
+          {
+            "name": "clean",
+            "complexity": 5,
+            "lineno": 93,
+            "col_offset": 4,
+            "endline": 106,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.0,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 10,
+        "N1": 7,
+        "N2": 10,
+        "vocabulary": 13,
+        "length": 17,
+        "volume": 62.907475208398566,
+        "difficulty": 1.5,
+        "effort": 94.36121281259784,
+        "time": 5.2422896006998805,
+        "bugs": 0.02096915840279952
+      },
+      "maintainability_index": 64.12257350553348
+    },
+    {
       "file": "apps/health/api/mixins.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 114,
         "sloc": 36,
@@ -1040,7 +1470,7 @@
     },
     {
       "file": "apps/health/api/viewsets.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 144,
         "sloc": 99,
@@ -1200,10 +1630,10 @@
     },
     {
       "file": "apps/health/api/serializers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 41,
-        "sloc": 23,
+        "loc": 42,
+        "sloc": 24,
         "comments": 2,
         "multi": 11,
         "blank": 5
@@ -1239,7 +1669,7 @@
     },
     {
       "file": "apps/health/api/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -1278,7 +1708,7 @@
     },
     {
       "file": "apps/health/api/utils.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 274,
         "sloc": 82,
@@ -1422,7 +1852,7 @@
     },
     {
       "file": "apps/health/api/urls.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 8,
         "sloc": 6,
@@ -1461,10 +1891,10 @@
     },
     {
       "file": "apps/health/api/routers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 56,
-        "sloc": 45,
+        "loc": 62,
+        "sloc": 51,
         "comments": 8,
         "multi": 0,
         "blank": 8
@@ -1500,7 +1930,7 @@
     },
     {
       "file": "apps/health/api/validation.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 175,
         "sloc": 80,
@@ -1580,63 +2010,71 @@
     },
     {
       "file": "apps/health/api/filters/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 56,
-        "sloc": 29,
+        "loc": 65,
+        "sloc": 34,
         "comments": 0,
         "multi": 5,
-        "blank": 17
+        "blank": 20
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "JournalEntryHistoryFilter",
             "complexity": 1,
-            "lineno": 19,
+            "lineno": 20,
             "col_offset": 0,
-            "endline": 20,
+            "endline": 21,
             "type": "Class"
           },
           {
             "name": "LiceCountHistoryFilter",
             "complexity": 1,
-            "lineno": 27,
+            "lineno": 28,
             "col_offset": 0,
-            "endline": 28,
+            "endline": 29,
+            "type": "Class"
+          },
+          {
+            "name": "LiceTypeHistoryFilter",
+            "complexity": 1,
+            "lineno": 36,
+            "col_offset": 0,
+            "endline": 37,
             "type": "Class"
           },
           {
             "name": "MortalityRecordHistoryFilter",
             "complexity": 1,
-            "lineno": 35,
+            "lineno": 44,
             "col_offset": 0,
-            "endline": 36,
+            "endline": 45,
             "type": "Class"
           },
           {
             "name": "TreatmentHistoryFilter",
             "complexity": 1,
-            "lineno": 43,
+            "lineno": 52,
             "col_offset": 0,
-            "endline": 44,
+            "endline": 53,
             "type": "Class"
           },
           {
             "name": "HealthLabSampleHistoryFilter",
             "complexity": 1,
-            "lineno": 51,
+            "lineno": 60,
             "col_offset": 0,
-            "endline": 52,
+            "endline": 61,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 5,
+          "total_functions": 6,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 5,
+            "low": 6,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -1660,22 +2098,22 @@
     },
     {
       "file": "apps/health/api/viewsets/journal_entry.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 39,
-        "sloc": 18,
-        "comments": 3,
-        "multi": 10,
-        "blank": 8
+        "loc": 58,
+        "sloc": 25,
+        "comments": 6,
+        "multi": 16,
+        "blank": 11
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "JournalEntryViewSet",
             "complexity": 1,
-            "lineno": 15,
+            "lineno": 18,
             "col_offset": 0,
-            "endline": 39,
+            "endline": 58,
             "type": "Class"
           }
         ],
@@ -1708,47 +2146,39 @@
     },
     {
       "file": "apps/health/api/viewsets/treatment.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 81,
-        "sloc": 43,
-        "comments": 8,
-        "multi": 14,
-        "blank": 16
+        "loc": 85,
+        "sloc": 38,
+        "comments": 4,
+        "multi": 25,
+        "blank": 18
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "VaccinationTypeViewSet",
             "complexity": 1,
-            "lineno": 15,
+            "lineno": 18,
             "col_offset": 0,
-            "endline": 30,
+            "endline": 40,
             "type": "Class"
           },
           {
             "name": "TreatmentViewSet",
-            "complexity": 5,
-            "lineno": 33,
+            "complexity": 1,
+            "lineno": 43,
             "col_offset": 0,
-            "endline": 81,
+            "endline": 85,
             "type": "Class"
-          },
-          {
-            "name": "filter_queryset",
-            "complexity": 4,
-            "lineno": 62,
-            "col_offset": 4,
-            "endline": 80,
-            "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 3,
-          "average_complexity": 3.3333333333333335,
-          "max_complexity": 5,
+          "total_functions": 2,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
           "complexity_distribution": {
-            "low": 3,
+            "low": 2,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -1772,10 +2202,10 @@
     },
     {
       "file": "apps/health/api/viewsets/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 33,
-        "sloc": 24,
+        "loc": 36,
+        "sloc": 27,
         "comments": 2,
         "multi": 4,
         "blank": 3
@@ -1811,143 +2241,183 @@
     },
     {
       "file": "apps/health/api/viewsets/mortality.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 142,
-        "sloc": 80,
-        "comments": 14,
-        "multi": 19,
-        "blank": 29
+        "loc": 553,
+        "sloc": 404,
+        "comments": 25,
+        "multi": 59,
+        "blank": 69
       },
       "cyclomatic_complexity": {
         "functions": [
           {
-            "name": "MortalityReasonViewSet",
+            "name": "MortalityReasonFilter",
             "complexity": 3,
-            "lineno": 19,
+            "lineno": 37,
             "col_offset": 0,
-            "endline": 45,
+            "endline": 44,
             "type": "Class"
           },
           {
-            "name": "filter_queryset",
+            "name": "filter_top_level",
             "complexity": 2,
-            "lineno": 35,
+            "lineno": 41,
             "col_offset": 4,
             "endline": 44,
             "type": "Function"
           },
           {
-            "name": "MortalityRecordViewSet",
-            "complexity": 8,
-            "lineno": 48,
+            "name": "MortalityReasonViewSet",
+            "complexity": 3,
+            "lineno": 53,
             "col_offset": 0,
-            "endline": 97,
+            "endline": 105,
             "type": "Class"
           },
           {
             "name": "filter_queryset",
-            "complexity": 7,
-            "lineno": 71,
+            "complexity": 2,
+            "lineno": 76,
             "col_offset": 4,
-            "endline": 96,
+            "endline": 85,
             "type": "Function"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 104,
+            "col_offset": 4,
+            "endline": 105,
+            "type": "Function"
+          },
+          {
+            "name": "MortalityRecordViewSet",
+            "complexity": 1,
+            "lineno": 108,
+            "col_offset": 0,
+            "endline": 149,
+            "type": "Class"
           },
           {
             "name": "LiceCountViewSet",
-            "complexity": 6,
-            "lineno": 100,
+            "complexity": 12,
+            "lineno": 152,
             "col_offset": 0,
-            "endline": 142,
+            "endline": 526,
             "type": "Class"
           },
           {
-            "name": "filter_queryset",
-            "complexity": 5,
-            "lineno": 123,
+            "name": "summary",
+            "complexity": 10,
+            "lineno": 275,
             "col_offset": 4,
-            "endline": 141,
+            "endline": 350,
             "type": "Function"
+          },
+          {
+            "name": "trends",
+            "complexity": 12,
+            "lineno": 430,
+            "col_offset": 4,
+            "endline": 526,
+            "type": "Function"
+          },
+          {
+            "name": "LiceTypeViewSet",
+            "complexity": 1,
+            "lineno": 529,
+            "col_offset": 0,
+            "endline": 553,
+            "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 6,
-          "average_complexity": 5.166666666666667,
-          "max_complexity": 8,
+          "total_functions": 10,
+          "average_complexity": 4.7,
+          "max_complexity": 12,
           "complexity_distribution": {
-            "low": 3,
-            "medium": 3,
-            "high": 0,
+            "low": 7,
+            "medium": 1,
+            "high": 2,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 1,
-        "h2": 4,
-        "N1": 3,
-        "N2": 6,
-        "vocabulary": 5,
-        "length": 9,
-        "volume": 20.89735285398626,
-        "difficulty": 0.75,
-        "effort": 15.673014640489694,
-        "time": 0.8707230355827608,
-        "bugs": 0.0069657842846620865
+        "h1": 10,
+        "h2": 32,
+        "N1": 22,
+        "N2": 42,
+        "vocabulary": 42,
+        "length": 64,
+        "volume": 345.1083150578407,
+        "difficulty": 6.5625,
+        "effort": 2264.7733175670796,
+        "time": 125.82073986483776,
+        "bugs": 0.11503610501928023
       },
-      "maintainability_index": 70.38129237054952
+      "maintainability_index": 45.15764634382626
     },
     {
       "file": "apps/health/api/viewsets/health_observation.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 120,
-        "sloc": 68,
-        "comments": 8,
-        "multi": 23,
-        "blank": 22
+        "loc": 163,
+        "sloc": 86,
+        "comments": 11,
+        "multi": 34,
+        "blank": 33
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "HealthParameterViewSet",
             "complexity": 1,
-            "lineno": 30,
+            "lineno": 33,
             "col_offset": 0,
-            "endline": 46,
+            "endline": 57,
+            "type": "Class"
+          },
+          {
+            "name": "ParameterScoreDefinitionViewSet",
+            "complexity": 1,
+            "lineno": 60,
+            "col_offset": 0,
+            "endline": 83,
             "type": "Class"
           },
           {
             "name": "HealthSamplingEventViewSet",
             "complexity": 1,
-            "lineno": 49,
+            "lineno": 86,
             "col_offset": 0,
-            "endline": 76,
+            "endline": 115,
             "type": "Class"
           },
           {
             "name": "IndividualFishObservationViewSet",
             "complexity": 1,
-            "lineno": 79,
+            "lineno": 118,
             "col_offset": 0,
-            "endline": 97,
+            "endline": 138,
             "type": "Class"
           },
           {
             "name": "FishParameterScoreViewSet",
             "complexity": 1,
-            "lineno": 101,
+            "lineno": 142,
             "col_offset": 0,
-            "endline": 119,
+            "endline": 162,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 4,
+          "total_functions": 5,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 4,
+            "low": 5,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -1971,38 +2441,38 @@
     },
     {
       "file": "apps/health/api/viewsets/lab_sample.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 87,
-        "sloc": 47,
+        "loc": 92,
+        "sloc": 48,
         "comments": 6,
-        "multi": 19,
-        "blank": 17
+        "multi": 21,
+        "blank": 19
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "SampleTypeViewSet",
             "complexity": 1,
-            "lineno": 16,
+            "lineno": 17,
             "col_offset": 0,
-            "endline": 30,
+            "endline": 33,
             "type": "Class"
           },
           {
             "name": "HealthLabSampleViewSet",
             "complexity": 5,
-            "lineno": 33,
+            "lineno": 36,
             "col_offset": 0,
-            "endline": 87,
+            "endline": 92,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 4,
-            "lineno": 66,
+            "lineno": 71,
             "col_offset": 4,
-            "endline": 87,
+            "endline": 92,
             "type": "Function"
           }
         ],
@@ -2035,63 +2505,71 @@
     },
     {
       "file": "apps/health/api/viewsets/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 65,
-        "sloc": 43,
+        "loc": 75,
+        "sloc": 50,
         "comments": 0,
         "multi": 5,
-        "blank": 12
+        "blank": 14
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "JournalEntryHistoryViewSet",
             "complexity": 1,
-            "lineno": 33,
+            "lineno": 36,
             "col_offset": 0,
-            "endline": 37,
+            "endline": 40,
             "type": "Class"
           },
           {
             "name": "LiceCountHistoryViewSet",
             "complexity": 1,
-            "lineno": 40,
+            "lineno": 43,
             "col_offset": 0,
-            "endline": 44,
+            "endline": 47,
+            "type": "Class"
+          },
+          {
+            "name": "LiceTypeHistoryViewSet",
+            "complexity": 1,
+            "lineno": 50,
+            "col_offset": 0,
+            "endline": 54,
             "type": "Class"
           },
           {
             "name": "MortalityRecordHistoryViewSet",
             "complexity": 1,
-            "lineno": 47,
+            "lineno": 57,
             "col_offset": 0,
-            "endline": 51,
+            "endline": 61,
             "type": "Class"
           },
           {
             "name": "TreatmentHistoryViewSet",
             "complexity": 1,
-            "lineno": 54,
+            "lineno": 64,
             "col_offset": 0,
-            "endline": 58,
+            "endline": 68,
             "type": "Class"
           },
           {
             "name": "HealthLabSampleHistoryViewSet",
             "complexity": 1,
-            "lineno": 61,
+            "lineno": 71,
             "col_offset": 0,
-            "endline": 65,
+            "endline": 75,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 5,
+          "total_functions": 6,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 5,
+            "low": 6,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -2114,11 +2592,178 @@
       "maintainability_index": 100.0
     },
     {
-      "file": "apps/health/api/serializers/journal_entry.py",
-      "timestamp": "2025-10-03",
+      "file": "apps/health/api/permissions/treatment_editor.py",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 97,
-        "sloc": 58,
+        "loc": 75,
+        "sloc": 18,
+        "comments": 8,
+        "multi": 29,
+        "blank": 19
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "IsTreatmentEditor",
+            "complexity": 5,
+            "lineno": 8,
+            "col_offset": 0,
+            "endline": 75,
+            "type": "Class"
+          },
+          {
+            "name": "has_permission",
+            "complexity": 6,
+            "lineno": 27,
+            "col_offset": 4,
+            "endline": 60,
+            "type": "Function"
+          },
+          {
+            "name": "has_object_permission",
+            "complexity": 1,
+            "lineno": 62,
+            "col_offset": 4,
+            "endline": 75,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.0,
+          "max_complexity": 6,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 1,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 10,
+        "N1": 7,
+        "N2": 11,
+        "vocabulary": 13,
+        "length": 18,
+        "volume": 66.60791492653966,
+        "difficulty": 1.65,
+        "effort": 109.90305962879044,
+        "time": 6.105725534932803,
+        "bugs": 0.022202638308846556
+      },
+      "maintainability_index": 85.58888878562367
+    },
+    {
+      "file": "apps/health/api/permissions/__init__.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 6,
+        "sloc": 3,
+        "comments": 0,
+        "multi": 0,
+        "blank": 2
+      },
+      "cyclomatic_complexity": {
+        "functions": [],
+        "summary": {
+          "total_functions": 0,
+          "average_complexity": 0,
+          "max_complexity": 0,
+          "complexity_distribution": {
+            "low": 0,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/health/api/permissions/health_contributor.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 84,
+        "sloc": 20,
+        "comments": 8,
+        "multi": 34,
+        "blank": 21
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "IsHealthContributor",
+            "complexity": 5,
+            "lineno": 8,
+            "col_offset": 0,
+            "endline": 84,
+            "type": "Class"
+          },
+          {
+            "name": "has_permission",
+            "complexity": 5,
+            "lineno": 28,
+            "col_offset": 4,
+            "endline": 55,
+            "type": "Function"
+          },
+          {
+            "name": "has_object_permission",
+            "complexity": 3,
+            "lineno": 57,
+            "col_offset": 4,
+            "endline": 84,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 3,
+          "average_complexity": 4.333333333333333,
+          "max_complexity": 5,
+          "complexity_distribution": {
+            "low": 3,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 8,
+        "N1": 6,
+        "N2": 8,
+        "vocabulary": 11,
+        "length": 14,
+        "volume": 48.43204266092217,
+        "difficulty": 1.5,
+        "effort": 72.64806399138325,
+        "time": 4.036003555076848,
+        "bugs": 0.016144014220307392
+      },
+      "maintainability_index": 85.13704355794096
+    },
+    {
+      "file": "apps/health/api/serializers/journal_entry.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 98,
+        "sloc": 59,
         "comments": 1,
         "multi": 23,
         "blank": 15
@@ -2130,23 +2775,23 @@
             "complexity": 3,
             "lineno": 16,
             "col_offset": 0,
-            "endline": 97,
+            "endline": 98,
             "type": "Class"
           },
           {
             "name": "create",
             "complexity": 3,
-            "lineno": 67,
+            "lineno": 68,
             "col_offset": 4,
-            "endline": 81,
+            "endline": 82,
             "type": "Function"
           },
           {
             "name": "update",
             "complexity": 1,
-            "lineno": 83,
+            "lineno": 84,
             "col_offset": 4,
-            "endline": 97,
+            "endline": 98,
             "type": "Function"
           }
         ],
@@ -2175,11 +2820,11 @@
         "time": 0.1320802083934297,
         "bugs": 0.0015849625007211565
       },
-      "maintainability_index": 69.91131606890293
+      "maintainability_index": 69.84607829031046
     },
     {
       "file": "apps/health/api/serializers/treatment.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 170,
         "sloc": 112,
@@ -2235,10 +2880,10 @@
     },
     {
       "file": "apps/health/api/serializers/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 67,
-        "sloc": 48,
+        "loc": 73,
+        "sloc": 54,
         "comments": 10,
         "multi": 4,
         "blank": 8
@@ -2274,79 +2919,111 @@
     },
     {
       "file": "apps/health/api/serializers/mortality.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 138,
-        "sloc": 105,
-        "comments": 2,
-        "multi": 16,
-        "blank": 15
+        "loc": 336,
+        "sloc": 280,
+        "comments": 11,
+        "multi": 17,
+        "blank": 30
       },
       "cyclomatic_complexity": {
         "functions": [
           {
-            "name": "MortalityReasonSerializer",
+            "name": "LiceTypeSerializer",
             "complexity": 1,
-            "lineno": 17,
+            "lineno": 19,
             "col_offset": 0,
-            "endline": 26,
+            "endline": 45,
             "type": "Class"
+          },
+          {
+            "name": "MortalityReasonSerializer",
+            "complexity": 4,
+            "lineno": 56,
+            "col_offset": 0,
+            "endline": 92,
+            "type": "Class"
+          },
+          {
+            "name": "get_parent_name",
+            "complexity": 2,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "get_children",
+            "complexity": 4,
+            "lineno": 82,
+            "col_offset": 4,
+            "endline": 92,
+            "type": "Function"
           },
           {
             "name": "MortalityRecordSerializer",
             "complexity": 3,
-            "lineno": 34,
+            "lineno": 99,
             "col_offset": 0,
-            "endline": 71,
+            "endline": 138,
             "type": "Class"
           },
           {
             "name": "get_container_name",
             "complexity": 2,
-            "lineno": 69,
+            "lineno": 136,
             "col_offset": 4,
-            "endline": 71,
+            "endline": 138,
             "type": "Function"
           },
           {
             "name": "LiceCountSerializer",
-            "complexity": 1,
-            "lineno": 82,
+            "complexity": 8,
+            "lineno": 149,
             "col_offset": 0,
-            "endline": 127,
+            "endline": 336,
             "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 7,
+            "lineno": 297,
+            "col_offset": 4,
+            "endline": 336,
+            "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 4,
-          "average_complexity": 1.75,
-          "max_complexity": 3,
+          "total_functions": 8,
+          "average_complexity": 3.875,
+          "max_complexity": 8,
           "complexity_distribution": {
-            "low": 4,
-            "medium": 0,
+            "low": 6,
+            "medium": 2,
             "high": 0,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 0,
-        "h2": 0,
-        "N1": 0,
-        "N2": 0,
-        "vocabulary": 0,
-        "length": 0,
-        "volume": 0,
-        "difficulty": 0,
-        "effort": 0,
-        "time": 0.0,
-        "bugs": 0.0
+        "h1": 5,
+        "h2": 19,
+        "N1": 14,
+        "N2": 26,
+        "vocabulary": 24,
+        "length": 40,
+        "volume": 183.39850002884629,
+        "difficulty": 3.4210526315789473,
+        "effort": 627.4159211513162,
+        "time": 34.85644006396201,
+        "bugs": 0.061132833342948764
       },
-      "maintainability_index": 100.0
+      "maintainability_index": 51.36500624475613
     },
     {
       "file": "apps/health/api/serializers/vaccination.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 36,
         "sloc": 21,
@@ -2394,173 +3071,213 @@
     },
     {
       "file": "apps/health/api/serializers/health_observation.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 465,
-        "sloc": 226,
-        "comments": 36,
-        "multi": 114,
-        "blank": 90
+        "loc": 536,
+        "sloc": 276,
+        "comments": 33,
+        "multi": 118,
+        "blank": 108
       },
       "cyclomatic_complexity": {
         "functions": [
           {
+            "name": "ParameterScoreDefinitionSerializer",
+            "complexity": 1,
+            "lineno": 26,
+            "col_offset": 0,
+            "endline": 27,
+            "type": "Class"
+          },
+          {
             "name": "FishParameterScoreSerializer",
             "complexity": 1,
-            "lineno": 25,
+            "lineno": 38,
             "col_offset": 0,
-            "endline": 40,
+            "endline": 53,
             "type": "Class"
+          },
+          {
+            "name": "FishParameterScoreInputSerializer",
+            "complexity": 5,
+            "lineno": 62,
+            "col_offset": 0,
+            "endline": 88,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 4,
+            "lineno": 76,
+            "col_offset": 4,
+            "endline": 88,
+            "type": "Function"
+          },
+          {
+            "name": "IndividualFishObservationInputSerializer",
+            "complexity": 4,
+            "lineno": 91,
+            "col_offset": 0,
+            "endline": 129,
+            "type": "Class"
+          },
+          {
+            "name": "validate",
+            "complexity": 3,
+            "lineno": 117,
+            "col_offset": 4,
+            "endline": 129,
+            "type": "Function"
           },
           {
             "name": "IndividualFishObservationSerializer",
             "complexity": 4,
-            "lineno": 49,
+            "lineno": 132,
             "col_offset": 0,
-            "endline": 181,
+            "endline": 275,
             "type": "Class"
           },
           {
             "name": "get_calculated_k_factor",
             "complexity": 1,
-            "lineno": 90,
+            "lineno": 179,
             "col_offset": 4,
-            "endline": 99,
+            "endline": 188,
             "type": "Function"
           },
           {
             "name": "validate",
-            "complexity": 5,
-            "lineno": 101,
+            "complexity": 7,
+            "lineno": 190,
             "col_offset": 4,
-            "endline": 127,
+            "endline": 221,
             "type": "Function"
           },
           {
             "name": "create",
             "complexity": 2,
-            "lineno": 130,
+            "lineno": 224,
             "col_offset": 4,
-            "endline": 149,
+            "endline": 243,
             "type": "Function"
           },
           {
             "name": "update",
             "complexity": 4,
-            "lineno": 152,
+            "lineno": 246,
             "col_offset": 4,
-            "endline": 181,
+            "endline": 275,
             "type": "Function"
           },
           {
             "name": "HealthSamplingEventSerializer",
-            "complexity": 5,
-            "lineno": 184,
+            "complexity": 4,
+            "lineno": 278,
             "col_offset": 0,
-            "endline": 427,
+            "endline": 514,
             "type": "Class"
           },
           {
             "name": "get_batch_number",
             "complexity": 3,
-            "lineno": 223,
+            "lineno": 329,
             "col_offset": 4,
-            "endline": 234,
+            "endline": 340,
             "type": "Function"
           },
           {
             "name": "get_container_name",
             "complexity": 3,
-            "lineno": 236,
+            "lineno": 342,
             "col_offset": 4,
-            "endline": 247,
+            "endline": 353,
             "type": "Function"
           },
           {
             "name": "get_sampled_by_username",
             "complexity": 2,
-            "lineno": 249,
+            "lineno": 355,
             "col_offset": 4,
-            "endline": 260,
+            "endline": 366,
             "type": "Function"
           },
           {
             "name": "validate_assignment",
             "complexity": 2,
-            "lineno": 262,
+            "lineno": 368,
             "col_offset": 4,
-            "endline": 277,
+            "endline": 383,
             "type": "Function"
           },
           {
             "name": "validate",
             "complexity": 3,
-            "lineno": 279,
+            "lineno": 385,
             "col_offset": 4,
-            "endline": 299,
+            "endline": 405,
             "type": "Function"
           },
           {
             "name": "create",
-            "complexity": 12,
-            "lineno": 302,
+            "complexity": 5,
+            "lineno": 408,
             "col_offset": 4,
-            "endline": 368,
+            "endline": 455,
             "type": "Function"
           },
           {
             "name": "update",
             "complexity": 5,
-            "lineno": 371,
+            "lineno": 458,
             "col_offset": 4,
-            "endline": 427,
+            "endline": 514,
             "type": "Function"
           },
           {
             "name": "HealthParameterSerializer",
             "complexity": 1,
-            "lineno": 430,
+            "lineno": 517,
             "col_offset": 0,
-            "endline": 455,
+            "endline": 526,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 15,
-          "average_complexity": 3.533333333333333,
-          "max_complexity": 12,
+          "total_functions": 20,
+          "average_complexity": 3.2,
+          "max_complexity": 7,
           "complexity_distribution": {
-            "low": 14,
-            "medium": 0,
-            "high": 1,
+            "low": 19,
+            "medium": 1,
+            "high": 0,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 7,
-        "h2": 35,
-        "N1": 21,
-        "N2": 38,
-        "vocabulary": 42,
-        "length": 59,
-        "volume": 318.14672794394687,
-        "difficulty": 3.8,
-        "effort": 1208.957566186998,
-        "time": 67.164309232611,
-        "bugs": 0.10604890931464896
+        "h1": 6,
+        "h2": 34,
+        "N1": 24,
+        "N2": 42,
+        "vocabulary": 40,
+        "length": 66,
+        "volume": 351.24725426256595,
+        "difficulty": 3.7058823529411766,
+        "effort": 1301.6810010906856,
+        "time": 72.31561117170476,
+        "bugs": 0.11708241808752198
       },
-      "maintainability_index": 50.55372311407702
+      "maintainability_index": 46.34234315260001
     },
     {
       "file": "apps/health/api/serializers/lab_sample.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 337,
-        "sloc": 192,
-        "comments": 19,
+        "loc": 348,
+        "sloc": 200,
+        "comments": 21,
         "multi": 73,
-        "blank": 53
+        "blank": 54
       },
       "cyclomatic_complexity": {
         "functions": [
@@ -2577,7 +3294,7 @@
             "complexity": 5,
             "lineno": 39,
             "col_offset": 0,
-            "endline": 337,
+            "endline": 348,
             "type": "Class"
           },
           {
@@ -2622,25 +3339,25 @@
           },
           {
             "name": "validate",
-            "complexity": 13,
+            "complexity": 15,
             "lineno": 226,
             "col_offset": 4,
-            "endline": 311,
+            "endline": 322,
             "type": "Function"
           },
           {
             "name": "create",
             "complexity": 3,
-            "lineno": 313,
+            "lineno": 324,
             "col_offset": 4,
-            "endline": 337,
+            "endline": 348,
             "type": "Function"
           }
         ],
         "summary": {
           "total_functions": 9,
-          "average_complexity": 3.7777777777777777,
-          "max_complexity": 13,
+          "average_complexity": 4.0,
+          "max_complexity": 15,
           "complexity_distribution": {
             "low": 8,
             "medium": 0,
@@ -2651,22 +3368,22 @@
       },
       "halstead": {
         "h1": 7,
-        "h2": 20,
-        "N1": 13,
-        "N2": 24,
-        "vocabulary": 27,
-        "length": 37,
-        "volume": 175.93083758004835,
-        "difficulty": 4.2,
-        "effort": 738.9095178362031,
-        "time": 41.05052876867795,
-        "bugs": 0.058643612526682785
+        "h2": 22,
+        "N1": 15,
+        "N2": 28,
+        "vocabulary": 29,
+        "length": 43,
+        "volume": 208.89318279048564,
+        "difficulty": 4.454545454545454,
+        "effort": 930.5241778848905,
+        "time": 51.69578766027169,
+        "bugs": 0.06963106093016189
       },
-      "maintainability_index": 53.58464430783101
+      "maintainability_index": 52.742502183180775
     },
     {
       "file": "apps/health/api/serializers/base.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 168,
         "sloc": 51,
@@ -2770,63 +3487,71 @@
     },
     {
       "file": "apps/health/api/serializers/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 56,
-        "sloc": 29,
+        "loc": 65,
+        "sloc": 34,
         "comments": 0,
         "multi": 5,
-        "blank": 17
+        "blank": 20
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "JournalEntryHistorySerializer",
             "complexity": 1,
-            "lineno": 19,
+            "lineno": 20,
             "col_offset": 0,
-            "endline": 20,
+            "endline": 21,
             "type": "Class"
           },
           {
             "name": "LiceCountHistorySerializer",
             "complexity": 1,
-            "lineno": 27,
+            "lineno": 28,
             "col_offset": 0,
-            "endline": 28,
+            "endline": 29,
+            "type": "Class"
+          },
+          {
+            "name": "LiceTypeHistorySerializer",
+            "complexity": 1,
+            "lineno": 36,
+            "col_offset": 0,
+            "endline": 37,
             "type": "Class"
           },
           {
             "name": "MortalityRecordHistorySerializer",
             "complexity": 1,
-            "lineno": 35,
+            "lineno": 44,
             "col_offset": 0,
-            "endline": 36,
+            "endline": 45,
             "type": "Class"
           },
           {
             "name": "TreatmentHistorySerializer",
             "complexity": 1,
-            "lineno": 43,
+            "lineno": 52,
             "col_offset": 0,
-            "endline": 44,
+            "endline": 53,
             "type": "Class"
           },
           {
             "name": "HealthLabSampleHistorySerializer",
             "complexity": 1,
-            "lineno": 51,
+            "lineno": 60,
             "col_offset": 0,
-            "endline": 52,
+            "endline": 61,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 5,
+          "total_functions": 6,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 5,
+            "low": 6,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -2850,14 +3575,14 @@
     }
   ],
   "summary": {
-    "total_files": 38,
-    "total_functions": 167,
-    "cc_average": 2.940119760479042,
-    "cc_max": 15,
-    "mi_average": 84.51804453651282,
-    "mi_min": 47.708713343859856,
-    "halstead_avg_volume": 59.53702667276877,
-    "halstead_avg_difficulty": 1.2096742178144977,
-    "halstead_avg_effort": 310.9528877272155
+    "total_files": 47,
+    "total_functions": 213,
+    "cc_average": 3.300469483568075,
+    "cc_max": 27,
+    "mi_average": 81.82475881409427,
+    "mi_min": 37.97276622551992,
+    "halstead_avg_volume": 100.35937071256775,
+    "halstead_avg_difficulty": 1.7651437488157653,
+    "halstead_avg_effort": 691.6171973927967
   }
 }

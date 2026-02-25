@@ -1,0 +1,27 @@
+{
+  "apply_stats": {
+    "hall_collapse_empty_sources_deleted": 843
+  },
+  "candidate_guid_station_names": [],
+  "candidate_move_count": 0,
+  "candidate_station_count": 0,
+  "executed": true,
+  "generated_at_utc": "2026-02-19T15:58:09",
+  "hall_collapse_candidate_count": 0,
+  "pre_stats": {
+    "already_area_or_carrier": 0,
+    "hall_collapse_candidate_containers": 0,
+    "hall_collapse_candidates": 0,
+    "hall_containers_scanned": 7152,
+    "hall_semicolon_empty_or_orphaned": 843,
+    "hall_semicolon_total": 843,
+    "inferred_sea_bucket": 0,
+    "station_geo_hall_containers_scanned": 7152,
+    "station_geo_with_resolved_votes": 7143,
+    "station_geo_without_external_map": 0,
+    "station_geo_without_grouped_org_row": 9,
+    "without_external_map": 0,
+    "without_grouped_org_row": 9
+  },
+  "station_geography_candidate_count": 0
+}

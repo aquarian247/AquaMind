@@ -4,13 +4,31 @@ from django.db import migrations, models
 from django.core.validators import MinValueValidator
 
 
+def _has_column(schema_editor, table_name, column_name):
+    with schema_editor.connection.cursor() as cursor:
+        description = schema_editor.connection.introspection.get_table_description(
+            cursor,
+            table_name,
+        )
+    return any(col.name == column_name for col in description)
+
+
 def convert_dates_to_day_numbers(apps, schema_editor):
     """Convert existing calendar-date readings to day-number sequence."""
     TemperatureProfile = apps.get_model('scenario', 'TemperatureProfile')
     TemperatureReading = apps.get_model('scenario', 'TemperatureReading')
+    table_name = TemperatureReading._meta.db_table
+    db_alias = schema_editor.connection.alias
 
-    for profile in TemperatureProfile.objects.all():
-        readings = profile.readings.order_by('reading_date')
+    # Branch-safe guard: some branches already removed reading_date before this
+    # migration is replayed on a clean database.
+    if not _has_column(schema_editor, table_name, "reading_date"):
+        return
+
+    for profile in TemperatureProfile.objects.using(db_alias).all():
+        readings = TemperatureReading.objects.using(db_alias).filter(
+            profile=profile
+        ).order_by('reading_date')
 
         if not readings.exists():
             continue

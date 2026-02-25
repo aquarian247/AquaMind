@@ -47,12 +47,21 @@ django.setup()
 assert_default_db_is_migration_db()
 
 from django.db import transaction  # noqa: E402
+from django.db.models import Count, Q  # noqa: E402
 
-from apps.batch.models import Batch, LifeCycleStage, Species, BatchCreationWorkflow, CreationAction  # noqa: E402
+from apps.batch.models import (  # noqa: E402
+    Batch,
+    BatchTransferWorkflow,
+    LifeCycleStage,
+    Species,
+    BatchCreationWorkflow,
+    CreationAction,
+)
 from apps.batch.models.assignment import BatchContainerAssignment  # noqa: E402
 from apps.broodstock.models import EggSupplier  # noqa: E402
 from apps.infrastructure.models import (  # noqa: E402
     Area,
+    AreaGroup,
     Container,
     ContainerType,
     FreshwaterStation,
@@ -73,6 +82,15 @@ from scripts.migration.tools.migration_profiles import (  # noqa: E402
     STAGE_SELECTION_FRONTIER,
     STAGE_SELECTION_LATEST_MEMBER,
     get_migration_profile,
+)
+from scripts.migration.tools.population_assignment_mapping import (  # noqa: E402
+    ASSIGNMENT_SCOPED_SOURCE_MODEL,
+    LEGACY_ASSIGNMENT_SOURCE_MODEL,
+    build_component_population_identifier,
+    extract_population_id,
+    get_assignment_external_map,
+    get_component_assignment_maps,
+    upsert_assignment_external_maps,
 )
 
 
@@ -143,11 +161,30 @@ class DataSource:
             in_clause = ",".join(f"'{cid}'" for cid in container_ids)
             return self.extractor._run_sqlcmd(
                 query=(
-                    "SELECT c.ContainerID, c.ContainerName, c.OrgUnitID, c.OfficialID "
+                    "SELECT "
+                    "c.ContainerID, "
+                    "c.ContainerName, "
+                    "c.OrgUnitID, "
+                    "c.OfficialID, "
+                    "CONVERT(varchar(32), cp.OverriddenVolumeM3) AS OverriddenVolumeM3 "
                     "FROM dbo.Containers c "
+                    "OUTER APPLY ("
+                    "  SELECT TOP 1 h.PhysicsID "
+                    "  FROM dbo.ContainerPhysicsHistory h "
+                    "  WHERE h.ContainerID = c.ContainerID "
+                    "  ORDER BY "
+                    "    CASE WHEN h.EndTime IS NULL THEN 0 ELSE 1 END, "
+                    "    h.EndTime DESC, "
+                    "    h.StartTime DESC"
+                    ") ph "
+                    "OUTER APPLY ("
+                    "  SELECT MAX(CASE WHEN p.ParameterID = 6 THEN p.ParameterValue END) AS OverriddenVolumeM3 "
+                    "  FROM dbo.ContainerPhysics p "
+                    "  WHERE p.PhysicsID = ph.PhysicsID"
+                    ") cp "
                     f"WHERE c.ContainerID IN ({in_clause})"
                 ),
-                headers=["ContainerID", "ContainerName", "OrgUnitID", "OfficialID"],
+                headers=["ContainerID", "ContainerName", "OrgUnitID", "OfficialID", "OverriddenVolumeM3"],
             )
     
     def get_container_grouping(self, container_ids: list[str]) -> list[dict]:
@@ -197,6 +234,93 @@ class DataSource:
             except Exception:
                 count = 0.0
             results[pop_id] = results.get(pop_id, 0.0) + count
+        return results
+
+    def get_input_supplier_ids(self, population_ids: list[str]) -> dict[str, set[str]]:
+        """Get SupplierID set per population from Ext_Inputs_v2."""
+        if not population_ids:
+            return {}
+
+        if self.use_csv:
+            return self.loader.get_input_suppliers_by_population(set(population_ids))
+
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        rows = self.extractor._run_sqlcmd(
+            query=(
+                "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, "
+                "CONVERT(varchar(36), SupplierID) AS SupplierID "
+                "FROM dbo.Ext_Inputs_v2 "
+                f"WHERE PopulationID IN ({in_clause})"
+            ),
+            headers=["PopulationID", "SupplierID"],
+        )
+
+        results: dict[str, set[str]] = {}
+        for row in rows:
+            pop_id = (row.get("PopulationID") or "").strip()
+            supplier_id = (row.get("SupplierID") or "").strip()
+            if not pop_id or not supplier_id:
+                continue
+            results.setdefault(pop_id, set()).add(supplier_id)
+        return results
+
+    def get_input_rows(self, population_ids: list[str]) -> dict[str, list[dict]]:
+        """Get Ext_Inputs_v2 rows keyed by PopulationID."""
+        if not population_ids:
+            return {}
+
+        if self.use_csv:
+            return self.loader.get_input_rows_by_population(set(population_ids))
+
+        in_clause = ",".join(f"'{pid}'" for pid in population_ids)
+        rows: list[dict] = []
+        try:
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, "
+                    "CONVERT(varchar(19), StartTime, 120) AS StartTime, "
+                    "ISNULL(CONVERT(varchar(32), InputCount), '0') AS InputCount, "
+                    "CONVERT(varchar(36), SupplierID) AS SupplierID, "
+                    "CONVERT(varchar(36), DeliveryID) AS DeliveryID "
+                    "FROM dbo.Ext_Inputs_v2 "
+                    f"WHERE PopulationID IN ({in_clause})"
+                ),
+                headers=["PopulationID", "StartTime", "InputCount", "SupplierID", "DeliveryID"],
+            )
+        except Exception:
+            try:
+                rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, "
+                        "CONVERT(varchar(19), StartTime, 120) AS StartTime, "
+                        "ISNULL(CONVERT(varchar(32), InputCount), '0') AS InputCount, "
+                        "CONVERT(varchar(36), SupplierID) AS SupplierID, "
+                        "'' AS DeliveryID "
+                        "FROM dbo.Ext_Inputs_v2 "
+                        f"WHERE PopulationID IN ({in_clause})"
+                    ),
+                    headers=["PopulationID", "StartTime", "InputCount", "SupplierID", "DeliveryID"],
+                )
+            except Exception:
+                rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID, "
+                        "'' AS StartTime, "
+                        "ISNULL(CONVERT(varchar(32), InputCount), '0') AS InputCount, "
+                        "CONVERT(varchar(36), SupplierID) AS SupplierID, "
+                        "'' AS DeliveryID "
+                        "FROM dbo.Ext_Inputs_v2 "
+                        f"WHERE PopulationID IN ({in_clause})"
+                    ),
+                    headers=["PopulationID", "StartTime", "InputCount", "SupplierID", "DeliveryID"],
+                )
+
+        results: dict[str, list[dict]] = {}
+        for row in rows:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if not pop_id:
+                continue
+            results.setdefault(pop_id, []).append(row)
         return results
 
     def get_subtransfers(self, population_ids: set[str]) -> list[dict]:
@@ -455,7 +579,11 @@ class DataSource:
                     "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
                     "FROM dbo.PublicStatusValues "
                     f"WHERE PopulationID = '{population_id}' AND StatusTime <= '{ts}' "
-                    "ORDER BY StatusTime DESC"
+                    "ORDER BY "
+                    "StatusTime DESC, "
+                    "CASE WHEN ISNULL(CurrentCount, 0) > 0 OR ISNULL(CurrentBiomassKg, 0) > 0 THEN 1 ELSE 0 END DESC, "
+                    "CurrentCount DESC, "
+                    "CurrentBiomassKg DESC"
                 ),
                 headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
             )
@@ -466,11 +594,50 @@ class DataSource:
                         "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
                         "FROM dbo.PublicStatusValues "
                         f"WHERE PopulationID = '{population_id}' AND StatusTime >= '{ts}' "
-                        "ORDER BY StatusTime ASC"
+                    "ORDER BY "
+                    "StatusTime ASC, "
+                    "CASE WHEN ISNULL(CurrentCount, 0) > 0 OR ISNULL(CurrentBiomassKg, 0) > 0 THEN 1 ELSE 0 END DESC, "
+                    "CurrentCount DESC, "
+                    "CurrentBiomassKg DESC"
                     ),
                     headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
                 )
             return rows[0] if rows else None
+
+    def get_status_snapshot_exact_time(self, population_id: str, at_time: datetime) -> dict | None:
+        """Get status snapshot exactly at the requested time (if present)."""
+        ts = at_time.strftime("%Y-%m-%d %H:%M:%S")
+        if self.use_csv:
+            if HAS_PANDAS:
+                df = self.loader._load_csv_pandas("status_values")
+                exact_df = df[(df["PopulationID"] == population_id) & (df["StatusTime"] == ts)]
+                if exact_df.empty:
+                    return None
+                return self.loader._pick_best_status_row_df(exact_df, time_ascending=False)
+
+            best_row = None
+            for row in self.loader._stream_csv("status_values"):
+                if row.get("PopulationID") != population_id:
+                    continue
+                if (row.get("StatusTime") or "") != ts:
+                    continue
+                if best_row is None or self.loader._prefer_status_row(row, best_row):
+                    best_row = row
+            return best_row
+
+        rows = self.extractor._run_sqlcmd(
+            query=(
+                "SELECT TOP 1 StatusTime, CurrentCount, CurrentBiomassKg "
+                "FROM dbo.PublicStatusValues "
+                f"WHERE PopulationID = '{population_id}' AND StatusTime = '{ts}' "
+                "ORDER BY "
+                "CASE WHEN ISNULL(CurrentCount, 0) > 0 OR ISNULL(CurrentBiomassKg, 0) > 0 THEN 1 ELSE 0 END DESC, "
+                "CurrentCount DESC, "
+                "CurrentBiomassKg DESC"
+            ),
+            headers=["StatusTime", "CurrentCount", "CurrentBiomassKg"],
+        )
+        return rows[0] if rows else None
 
     def _build_container_latest_nonzero_holder_index_csv(self) -> dict[str, tuple[str, datetime]]:
         """Build container -> latest non-zero holder index for CSV mode."""
@@ -592,9 +759,14 @@ REPORT_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "popula
 
 
 SEA_STAGE_MARKERS = ("ONGROW", "GROWER", "GRILSE")
+SITE_CODE_RE = re.compile(r"\b([A-Za-z]+[0-9]{1,3})\b")
 FAROE_SITEGROUPS = {"WEST", "NORTH", "SOUTH"}
 SCOTLAND_SITES_FRESHWATER_ARCHIVE = {
     "BRS1 LANGASS",
+    "BUCKIEBURN SMOLT UNIT",
+    "DUNBLANE LOCH",
+    "HO HATCHERY",
+    "HSU",
     "FW11 BARVAS",
     "FW12 AMHUINNSUIDHE",
     "FW14 HARRIS LOCHS",
@@ -624,12 +796,14 @@ FAROE_SITES_LAND = {
     "S21 VIÐAREIÐI",
     "S24 STROND",
 }
-FAROE_SITES_ROGNKELSI = {"H01 SVÍNOY"}
+FAROE_SITES_DROPPED_H = {
+    "H01 SVÍNOY",
+    "H125 GLYVRAR",
+}
 FAROE_SITES_LIVFISKUR = {
     "L01 VIÐ ÁIR",
     "L02 SKOPUN",
 }
-FAROE_SITES_OTHER = {"H125 GLYVRAR"}
 
 def stage_bucket(stage_name: str) -> str | None:
     if not stage_name:
@@ -640,6 +814,35 @@ def stage_bucket(stage_name: str) -> str | None:
     if "SMOLT" in upper or "PARR" in upper or "FRY" in upper or "ALEVIN" in upper or "EGG" in upper:
         return "freshwater"
     return None
+
+
+def parse_site_code(site_name: str | None) -> str:
+    label = normalize_label(site_name)
+    if not label:
+        return ""
+    match = SITE_CODE_RE.search(label)
+    return match.group(1).upper() if match else ""
+
+
+def infer_geography_from_site_code(site_name: str | None) -> tuple[str, str]:
+    code = parse_site_code(site_name)
+    if not code:
+        return "", ""
+    match = re.match(r"^([A-Z]+)(\d{1,3})$", code)
+    if not match:
+        return "", ""
+    prefix, digits = match.groups()
+    if prefix == "A":
+        return "Faroe Islands", "SITECODE_A"
+    if prefix in {"L", "H"}:
+        return "Faroe Islands", f"SITECODE_{prefix}"
+    if prefix == "S":
+        if len(digits) <= 2:
+            return "Faroe Islands", "SITECODE_S_FAROE"
+        return "Scotland", "SITECODE_S_SCOTLAND"
+    if prefix in {"N", "FW", "BRS"}:
+        return "Scotland", f"SITECODE_{prefix}"
+    return "", ""
 
 
 def normalize_label(value: str | None) -> str:
@@ -677,13 +880,83 @@ def resolve_site_grouping(site: str | None, site_group: str | None) -> tuple[str
         return "Scotland", "SCOTLAND_BROODSTOCK"
     if site_key in FAROE_SITES_LAND:
         return "Faroe Islands", "FAROE_LAND"
-    if site_key in FAROE_SITES_ROGNKELSI:
-        return "Faroe Islands", "FAROE_ROGNKELSI"
+    if site_key in FAROE_SITES_DROPPED_H:
+        return "Faroe Islands", "FAROE_DROPPED_H"
     if site_key in FAROE_SITES_LIVFISKUR:
         return "Faroe Islands", "FAROE_LIVFISKUR"
-    if site_key in FAROE_SITES_OTHER:
-        return "Faroe Islands", "FAROE_OTHER"
+    geo_name, reason = infer_geography_from_site_code(site)
+    if geo_name:
+        return geo_name, reason
     return "", ""
+
+
+def bucket_from_prod_stage(prod_stage: str | None) -> str | None:
+    upper = normalize_key(prod_stage)
+    if not upper:
+        return None
+    if "MARINE" in upper or "SEA" in upper:
+        return "sea"
+    if any(token in upper for token in ("HATCH", "FRESH", "SMOLT", "PARR", "FRY", "ALEVIN", "EGG", "BROOD")):
+        return "freshwater"
+    return None
+
+
+def infer_bucket_from_grouping(site: str | None, prod_stage: str | None) -> str | None:
+    """Infer infra bucket from grouped-organisation signals.
+
+    Priority:
+    1) explicit production stage,
+    2) curated site lists,
+    3) strict site-code guard (`A*` is always marine area).
+    """
+    if is_dropped_h_site(site):
+        return None
+
+    explicit = bucket_from_prod_stage(prod_stage)
+    if explicit:
+        return explicit
+
+    site_key = normalize_key(site)
+    if (
+        site_key in FAROE_SITES_LAND
+        or site_key in FAROE_SITES_LIVFISKUR
+        or site_key in SCOTLAND_SITES_FRESHWATER_ARCHIVE
+        or site_key in SCOTLAND_SITES_FRESHWATER
+        or site_key in SCOTLAND_SITES_BROODSTOCK
+    ):
+        return "freshwater"
+
+    site_code = parse_site_code(site)
+    if site_code.startswith("A") or site_code.startswith("N"):
+        return "sea"
+    if site_code.startswith("S"):
+        match = re.match(r"^S([0-9]{1,3})$", site_code)
+        if match:
+            return "freshwater" if len(match.group(1)) <= 2 else "sea"
+    if site_code.startswith("L"):
+        return "freshwater"
+    if site_code.startswith("FW") or site_code.startswith("BRS"):
+        return "freshwater"
+    return None
+
+
+def is_dropped_h_site(site_name: str | None) -> bool:
+    site_key = normalize_key(site_name)
+    if site_key in FAROE_SITES_DROPPED_H:
+        return True
+    site_code = parse_site_code(site_name)
+    return site_code.startswith("H")
+
+
+def infer_station_type(site_name: str | None) -> str:
+    site_code = parse_site_code(site_name)
+    if site_code.startswith("L") or site_code.startswith("BRS"):
+        return "BROODSTOCK"
+    return "FRESHWATER"
+
+
+def normalize_area_group(site_group: str | None) -> str:
+    return normalize_label(site_group)
 
 
 def hall_label_from_group(group_name: str | None) -> str:
@@ -838,6 +1111,21 @@ def parse_decimal(value: str | None) -> Decimal:
         return Decimal(str(value))
     except Exception:
         return Decimal("0")
+
+
+def resolve_container_volume_m3(container_row: dict | None) -> Decimal:
+    if not container_row:
+        return Decimal("0.00")
+    raw_value = container_row.get("OverriddenVolumeM3")
+    if raw_value in (None, ""):
+        return Decimal("0.00")
+    try:
+        volume = Decimal(str(raw_value)).quantize(Decimal("0.01"))
+    except Exception:
+        return Decimal("0.00")
+    if volume <= 0:
+        return Decimal("0.00")
+    return volume
 
 
 def clamp_decimal(value: Decimal, low: Decimal, high: Decimal) -> Decimal:
@@ -1067,7 +1355,17 @@ def identify_external_mixing_populations(
     return mixed
 
 
-def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
+def get_external_map(
+    source_model: str,
+    source_identifier: str,
+    *,
+    component_key: str | None = None,
+) -> ExternalIdMap | None:
+    if source_model == "Populations":
+        return get_assignment_external_map(
+            str(source_identifier),
+            component_key=component_key,
+        )
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
     ).first()
@@ -1164,19 +1462,16 @@ def load_members_from_existing_component_map(
     Uses existing ExternalIdMap population mappings for this component key and
     reconstructs ComponentMember rows from extracted Populations data (or SQL).
     """
-    mapping_rows = list(
-        ExternalIdMap.objects.filter(
-            source_system="FishTalk",
-            source_model="Populations",
-            target_app_label="batch",
-            target_model="batchcontainerassignment",
-            metadata__component_key=component_key,
-        )
-    )
+    mapping_rows = get_component_assignment_maps(component_key)
     if not mapping_rows:
         return []
 
-    population_ids = [row.source_identifier for row in mapping_rows if row.source_identifier]
+    population_ids = [
+        extract_population_id(row.source_model, row.source_identifier)
+        for row in mapping_rows
+        if row.source_identifier
+    ]
+    population_ids = [pid for pid in population_ids if pid]
     if not population_ids:
         return []
 
@@ -1218,7 +1513,7 @@ def load_members_from_existing_component_map(
 
     members: list[ComponentMember] = []
     for mapping in mapping_rows:
-        pop_id = (mapping.source_identifier or "").strip()
+        pop_id = extract_population_id(mapping.source_model, mapping.source_identifier)
         if not pop_id:
             continue
         metadata = mapping.metadata or {}
@@ -1264,6 +1559,173 @@ def load_members_from_existing_component_map(
 
     members.sort(key=lambda m: m.start_time)
     return members
+
+
+def prune_stale_component_assignment_state(
+    *,
+    batch: Batch,
+    component_key: str,
+    members: list[ComponentMember],
+) -> dict[str, int]:
+    """Prune stale assignment state for deterministic component reruns.
+
+    Reruns can narrow member selection as stitching improves. Any assignment
+    rows previously mapped to this component but no longer present in the
+    current member set must be removed to avoid population double counting and
+    impossible lifecycle chronology.
+    """
+    normalized_member_population_ids = {
+        str(member.population_id or "").strip()
+        for member in members
+        if str(member.population_id or "").strip()
+    }
+
+    mapping_rows = get_component_assignment_maps(component_key)
+    if not mapping_rows:
+        return {
+            "stale_population_ids": 0,
+            "stale_assignments_deleted": 0,
+            "protected_dependents_deleted": 0,
+            "orphan_transfer_workflows_deleted": 0,
+            "orphan_creation_workflows_deleted": 0,
+            "external_maps_deleted": 0,
+        }
+
+    stale_population_ids: set[str] = set()
+    mapped_assignment_ids: set[int] = set()
+    for mapping in mapping_rows:
+        pop_id = extract_population_id(mapping.source_model, mapping.source_identifier)
+        if pop_id and pop_id in normalized_member_population_ids:
+            continue
+        if pop_id:
+            stale_population_ids.add(pop_id)
+        if mapping.target_object_id:
+            mapped_assignment_ids.add(int(mapping.target_object_id))
+
+    stale_assignment_ids = set(
+        BatchContainerAssignment.objects.filter(
+            id__in=mapped_assignment_ids,
+            batch=batch,
+        ).values_list("id", flat=True)
+    )
+
+    if not stale_population_ids and not stale_assignment_ids:
+        return {
+            "stale_population_ids": 0,
+            "stale_assignments_deleted": 0,
+            "protected_dependents_deleted": 0,
+            "orphan_transfer_workflows_deleted": 0,
+            "orphan_creation_workflows_deleted": 0,
+            "external_maps_deleted": 0,
+        }
+
+    protected_dependents_deleted = 0
+    external_map_cleanup_targets: defaultdict[tuple[str, str], set[int]] = defaultdict(set)
+
+    if stale_assignment_ids:
+        stale_assignment_ids_list = list(stale_assignment_ids)
+        for relation in BatchContainerAssignment._meta.related_objects:
+            rel_field = relation.field
+            on_delete = getattr(rel_field.remote_field, "on_delete", None)
+            if getattr(on_delete, "__name__", "") != "PROTECT":
+                continue
+
+            rel_model = relation.related_model
+            related_ids = list(
+                rel_model.objects.filter(
+                    **{f"{rel_field.name}_id__in": stale_assignment_ids_list}
+                ).values_list("id", flat=True)
+            )
+            if not related_ids:
+                continue
+
+            rel_model.objects.filter(id__in=related_ids).delete()
+            protected_dependents_deleted += len(related_ids)
+            external_map_cleanup_targets[
+                (rel_model._meta.app_label, rel_model._meta.model_name)
+            ].update(related_ids)
+
+    stale_assignment_ids_list = list(stale_assignment_ids)
+    if stale_assignment_ids_list:
+        BatchContainerAssignment.objects.filter(
+            batch=batch,
+            id__in=stale_assignment_ids_list,
+        ).delete()
+        external_map_cleanup_targets[
+            (BatchContainerAssignment._meta.app_label, BatchContainerAssignment._meta.model_name)
+        ].update(stale_assignment_ids_list)
+
+    orphan_transfer_workflow_ids = list(
+        BatchTransferWorkflow.objects.filter(batch=batch)
+        .annotate(action_count=Count("actions"))
+        .filter(action_count=0)
+        .values_list("id", flat=True)
+    )
+    if orphan_transfer_workflow_ids:
+        BatchTransferWorkflow.objects.filter(id__in=orphan_transfer_workflow_ids).delete()
+        external_map_cleanup_targets[
+            (BatchTransferWorkflow._meta.app_label, BatchTransferWorkflow._meta.model_name)
+        ].update(orphan_transfer_workflow_ids)
+
+    orphan_creation_workflow_ids = list(
+        BatchCreationWorkflow.objects.filter(batch=batch)
+        .annotate(action_count=Count("actions"))
+        .filter(action_count=0)
+        .values_list("id", flat=True)
+    )
+    if orphan_creation_workflow_ids:
+        BatchCreationWorkflow.objects.filter(id__in=orphan_creation_workflow_ids).delete()
+        external_map_cleanup_targets[
+            (BatchCreationWorkflow._meta.app_label, BatchCreationWorkflow._meta.model_name)
+        ].update(orphan_creation_workflow_ids)
+
+    external_maps_deleted = 0
+    for (target_app_label, target_model), object_ids in external_map_cleanup_targets.items():
+        if not object_ids:
+            continue
+        deleted, _ = ExternalIdMap.objects.filter(
+            target_app_label=target_app_label,
+            target_model=target_model,
+            target_object_id__in=list(object_ids),
+        ).delete()
+        external_maps_deleted += int(deleted)
+
+    if stale_population_ids:
+        scoped_identifiers = [
+            build_component_population_identifier(component_key, pop_id)
+            for pop_id in stale_population_ids
+        ]
+        deleted, _ = ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model=ASSIGNMENT_SCOPED_SOURCE_MODEL,
+            source_identifier__in=scoped_identifiers,
+            target_app_label="batch",
+            target_model="batchcontainerassignment",
+        ).delete()
+        external_maps_deleted += int(deleted)
+
+    if stale_population_ids or stale_assignment_ids_list:
+        legacy_assignment_qs = ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model=LEGACY_ASSIGNMENT_SOURCE_MODEL,
+            target_app_label="batch",
+            target_model="batchcontainerassignment",
+        )
+        legacy_assignment_qs = legacy_assignment_qs.filter(
+            (Q(metadata__component_key=component_key) & Q(source_identifier__in=list(stale_population_ids)))
+            | Q(target_object_id__in=stale_assignment_ids_list)
+        )
+        deleted, _ = legacy_assignment_qs.delete()
+        external_maps_deleted += int(deleted)
+
+    return {
+        "stale_population_ids": len(stale_population_ids),
+        "stale_assignments_deleted": len(stale_assignment_ids_list),
+        "protected_dependents_deleted": protected_dependents_deleted,
+        "orphan_transfer_workflows_deleted": len(orphan_transfer_workflow_ids),
+        "orphan_creation_workflows_deleted": len(orphan_creation_workflow_ids),
+        "external_maps_deleted": external_maps_deleted,
+    }
 
 
 def load_members_from_chain(chain_dir: Path, *, chain_id: str) -> tuple[list[ComponentMember], str]:
@@ -1525,6 +1987,14 @@ Stitching approaches:
     legacy_group.add_argument("--component-id", type=int, help="Component id from components.csv")
     legacy_group.add_argument("--component-key", help="Stable component_key from components.csv")
     legacy_group.add_argument("--report-dir", default=str(REPORT_DIR_DEFAULT), help="Directory containing population_members.csv")
+    legacy_group.add_argument(
+        "--prefer-existing-component-map",
+        action="store_true",
+        help=(
+            "Opt in to replacing report members with existing component-mapped "
+            "assignment members when the existing map is larger."
+        ),
+    )
     
     # Common options
     parser.add_argument("--geography", default="Faroe Islands", help="Target geography name (auto-detected for chain-based)")
@@ -1716,18 +2186,38 @@ def main() -> int:
             csv_dir=args.use_csv,
             sql_profile=args.sql_profile,
         )
-        if fallback_members and len(fallback_members) > len(members):
+        if not members and fallback_members:
+            print(
+                "Using existing component-mapped members fallback because "
+                f"report has no rows for {component_key}."
+            )
+            members = fallback_members
+        elif (
+            args.prefer_existing_component_map
+            and fallback_members
+            and len(fallback_members) > len(members)
+        ):
             print(
                 "Using existing component-mapped members fallback for "
                 f"{component_key}: report={len(members)} rows, fallback={len(fallback_members)} rows"
             )
             members = fallback_members
+        elif fallback_members and len(fallback_members) > len(members):
+            print(
+                "Ignoring larger existing component-mapped fallback for "
+                f"{component_key} to preserve deterministic report membership "
+                f"(report={len(members)} rows, fallback={len(fallback_members)} rows). "
+                "Use --prefer-existing-component-map to opt in."
+            )
 
         if not members:
             raise SystemExit("No members found for the selected component")
 
     representative = next((m.population_name for m in members if "TRANSPORTPOP" not in m.population_name.upper()), members[0].population_name)
-    batch_start = min(m.start_time for m in members).date()
+    component_start_time = min(m.start_time for m in members)
+    batch_start = component_start_time.date()
+    creation_window_end_date = batch_start + timedelta(days=args.creation_window_days)
+    creation_window_seed_stages = {"Egg&Alevin", "Fry", "Parr", "Smolt"}
 
     # Initialize data source (CSV or SQL)
     data_source = DataSource(csv_dir=args.use_csv, sql_profile=args.sql_profile)
@@ -1754,6 +2244,7 @@ def main() -> int:
         geo_name, bucket = resolve_site_grouping(site, site_group)
         container_grouping[container_id] = {
             "site": site,
+            "site_code": parse_site_code(site),
             "site_group": site_group,
             "company": company,
             "prod_stage": prod_stage,
@@ -1827,15 +2318,75 @@ def main() -> int:
                 f"({observed}/{total} token-mapped rows)"
             )
 
+    # S08 R-Høll contains both Parr and Smolt segments for some cohorts.
+    # Deterministic rule: first placement into a given R-Høll container is Parr;
+    # subsequent in-hall redistributions in that container are Smolt.
+    S08_R_HOLL_HALL_KEYS = {"R-HØLL", "HALL R-"}
+    # Avoid selecting micro bridge rows (seconds-long handoff fragments) as the
+    # "first placement" for dual-stage classification.
+    S08_R_HOLL_INITIAL_MIN_DURATION_SECONDS = 6 * 60 * 60
+    s08_r_holl_initial_population_ids: set[str] = set()
+    s08_r_holl_initial_by_container: dict[str, str] = {}
+    s08_r_holl_initial_rank_by_container: dict[str, tuple[datetime, float, str]] = {}
+    s08_r_holl_material_by_container: dict[str, str] = {}
+    s08_r_holl_material_rank_by_container: dict[str, tuple[datetime, float, str]] = {}
+    for member in members:
+        if not member.population_id or not member.container_id:
+            continue
+        group_meta = container_grouping.get(member.container_id, {})
+        site_key = normalize_key(group_meta.get("site"))
+        hall_key = normalize_key(group_meta.get("container_group"))
+        if site_key != "S08 GJÓGV" or hall_key not in S08_R_HOLL_HALL_KEYS:
+            continue
+        duration_seconds = (
+            float("inf")
+            if member.end_time is None
+            else max((member.end_time - member.start_time).total_seconds(), 0.0)
+        )
+        # Rank by earliest start; if tied, prefer longest-lived member.
+        rank = (member.start_time, -duration_seconds, member.population_id)
+        current_rank = s08_r_holl_initial_rank_by_container.get(member.container_id)
+        if current_rank is None or rank < current_rank:
+            s08_r_holl_initial_rank_by_container[member.container_id] = rank
+            s08_r_holl_initial_by_container[member.container_id] = member.population_id
+        is_material_row = (
+            duration_seconds == float("inf")
+            or duration_seconds >= S08_R_HOLL_INITIAL_MIN_DURATION_SECONDS
+        )
+        if is_material_row:
+            current_material_rank = s08_r_holl_material_rank_by_container.get(member.container_id)
+            if current_material_rank is None or rank < current_material_rank:
+                s08_r_holl_material_rank_by_container[member.container_id] = rank
+                s08_r_holl_material_by_container[member.container_id] = member.population_id
+    s08_r_holl_initial_population_by_container = {
+        container_id: s08_r_holl_material_by_container.get(container_id, pop_id)
+        for container_id, pop_id in s08_r_holl_initial_by_container.items()
+    }
+    s08_r_holl_initial_population_ids = set(s08_r_holl_initial_population_by_container.values())
+    if s08_r_holl_initial_population_ids:
+        print(
+            "Applied S08 R-Høll dual-stage override "
+            f"(Parr-first populations: {len(s08_r_holl_initial_population_ids)}, "
+            f"material-min-duration-h={S08_R_HOLL_INITIAL_MIN_DURATION_SECONDS // 3600})"
+        )
+
     def resolve_stage_name(member: ComponentMember) -> str | None:
         group_meta = container_grouping.get(member.container_id, {})
         site_key = normalize_key(group_meta.get("site"))
+        hall_key = normalize_key(group_meta.get("container_group"))
         token_stage = fishtalk_stage_to_aquamind(member.last_stage or member.first_stage)
-        # FW22 cohorts show hall-stage drift over time; trust explicit member
-        # stage tokens first when present, then fall back to static hall maps.
-        if site_key == "FW22 APPLECROSS" and token_stage:
-            return token_stage
         hall_stage = stage_from_hall(group_meta.get("site"), group_meta.get("container_group"))
+        if site_key == "S08 GJÓGV" and hall_key in S08_R_HOLL_HALL_KEYS:
+            if member.population_id in s08_r_holl_initial_population_ids:
+                return "Parr"
+            return "Smolt"
+        # S08 hall-stage mappings are explicitly qualified and should drive stage
+        # resolution when present (Kleking/Startfóðring/T-Høll).
+        if site_key == "S08 GJÓGV" and hall_stage:
+            return hall_stage
+        # Default policy elsewhere keeps per-population stage tokens as primary.
+        if token_stage:
+            return token_stage
         if hall_stage:
             return hall_stage
         hint_stage = hall_stage_hints.get(
@@ -1860,8 +2411,84 @@ def main() -> int:
     population_ids = [m.population_id for m in members if m.population_id]
     member_by_population_id = {m.population_id: m for m in members if m.population_id}
     stage_by_pop = {m.population_id: resolve_stage_name(m) for m in members if m.population_id}
+    input_rows_by_population = data_source.get_input_rows(population_ids)
+    input_rows_by_population_start: dict[tuple[str, datetime], list[dict]] = defaultdict(list)
+    for population_id, rows in input_rows_by_population.items():
+        for row in rows:
+            start_time = parse_dt((row.get("StartTime") or "").strip())
+            if not start_time:
+                continue
+            input_rows_by_population_start[(population_id, start_time)].append(row)
+
+    delayed_status_input_max_lag = timedelta(hours=24)
+    delayed_status_input_min_cluster_size = 8
+
+    def get_member_input_rows_at_start(member: ComponentMember) -> list[dict]:
+        return input_rows_by_population_start.get((member.population_id, member.start_time), [])
+
+    def input_row_has_source_link(row: dict) -> bool:
+        delivery_id = (row.get("DeliveryID") or "").strip()
+        source_container_id = (row.get("SourceContainerID") or "").strip()
+        return bool(delivery_id or source_container_id)
+
+    input_suppliers_by_population = data_source.get_input_supplier_ids(population_ids)
+    component_start_supplier_ids: set[str] = set()
+    for member in members:
+        if member.start_time != component_start_time:
+            continue
+        component_start_supplier_ids.update(
+            input_suppliers_by_population.get(member.population_id, set())
+        )
+    if component_start_supplier_ids:
+        print(
+            "Resolved component-start input supplier IDs: "
+            f"{len(component_start_supplier_ids)}"
+        )
+    delayed_input_start_cluster_sizes: Counter[datetime] = Counter()
+    for member in members:
+        if not member.population_id or member.end_time is None:
+            continue
+        if member.start_time <= component_start_time:
+            continue
+        if not (batch_start <= member.start_time.date() <= creation_window_end_date):
+            continue
+        lifecycle_name = stage_by_pop.get(member.population_id) or resolve_stage_name(member)
+        if lifecycle_name not in creation_window_seed_stages:
+            continue
+        member_input_rows_at_start = get_member_input_rows_at_start(member)
+        if not member_input_rows_at_start:
+            continue
+        try:
+            member_input_count_at_start = sum(
+                float(row.get("InputCount") or 0) for row in member_input_rows_at_start
+            )
+        except Exception:
+            member_input_count_at_start = 0.0
+        if member_input_count_at_start <= 0:
+            continue
+        if any(input_row_has_source_link(row) for row in member_input_rows_at_start):
+            continue
+        member_input_supplier_ids = input_suppliers_by_population.get(member.population_id, set())
+        if (
+            not component_start_supplier_ids
+            or not member_input_supplier_ids
+            or member_input_supplier_ids.isdisjoint(component_start_supplier_ids)
+        ):
+            continue
+        delayed_input_start_cluster_sizes[member.start_time] += 1
+    delayed_input_large_cluster_count = sum(
+        1
+        for size in delayed_input_start_cluster_sizes.values()
+        if size >= delayed_status_input_min_cluster_size
+    )
+    if delayed_input_large_cluster_count:
+        print(
+            "Resolved delayed-input same-supplier start clusters "
+            f"(size>={delayed_status_input_min_cluster_size}): {delayed_input_large_cluster_count}"
+        )
     latest_status_time_by_pop: dict[str, datetime] = {}
     latest_status_nonzero_by_pop: dict[str, bool] = {}
+    latest_status_count_by_pop: dict[str, int] = {}
     component_status_time: datetime | None = None
 
     global_status_time = data_source.get_global_latest_status_time()
@@ -1884,6 +2511,12 @@ def main() -> int:
             latest_status_nonzero_by_pop[population_id] = (
                 data_source._has_nonzero_status(snapshot) if snapshot else False
             )
+            try:
+                latest_status_count_by_pop[population_id] = (
+                    int(round(float(snapshot.get("CurrentCount") or 0))) if snapshot else 0
+                )
+            except (TypeError, ValueError):
+                latest_status_count_by_pop[population_id] = 0
 
     component_subtransfers = data_source.get_subtransfers(set(population_ids))
     conserved_counts, superseded_same_stage = build_conserved_population_counts(members, data_source, stage_by_pop)
@@ -1892,11 +2525,17 @@ def main() -> int:
         component_subtransfers,
     )
     subtransfer_touched_population_ids: set[str] = set()
+    subtransfer_touch_times_by_population: dict[str, list[datetime]] = defaultdict(list)
     for row in component_subtransfers:
+        operation_time = parse_dt((row.get("OperationTime") or "").strip())
         for key in ("SourcePopBefore", "SourcePopAfter", "DestPopBefore", "DestPopAfter"):
             pop_id = (row.get(key) or "").strip()
             if pop_id:
                 subtransfer_touched_population_ids.add(pop_id)
+                if operation_time:
+                    subtransfer_touch_times_by_population[pop_id].append(operation_time)
+    for touch_times in subtransfer_touch_times_by_population.values():
+        touch_times.sort()
     removal_counts_by_population = data_source.get_removal_counts_by_population(set(population_ids))
     if conserved_counts:
         nonzero_counts = sum(1 for count in conserved_counts.values() if count > 0)
@@ -1978,19 +2617,32 @@ def main() -> int:
         has_active_member = legacy_open_member
 
     active_population_by_container: dict[str, str] = {}
-    container_latest: dict[str, tuple[datetime, str]] = {}
+    # Tie-break container holders by:
+    # 1) latest status timestamp
+    # 2) open membership (blank source end_time)
+    # 3) latest source count
+    # 4) latest membership start timestamp
+    container_latest: dict[str, tuple[datetime, bool, int, datetime, str]] = {}
     for member in members:
         if not member.container_id:
             continue
         if latest_status_time_by_pop and not latest_status_nonzero_by_pop.get(member.population_id, False):
             continue
         candidate_time = latest_status_time_by_pop.get(member.population_id) or member.end_time or member.start_time
+        candidate_status_count = latest_status_count_by_pop.get(member.population_id, 0)
+        candidate = (
+            candidate_time,
+            member.end_time is None,
+            candidate_status_count,
+            member.start_time,
+            member.population_id,
+        )
         current = container_latest.get(member.container_id)
-        if not current or candidate_time > current[0]:
-            container_latest[member.container_id] = (candidate_time, member.population_id)
+        if not current or candidate > current:
+            container_latest[member.container_id] = candidate
 
     skipped_due_outside_holder = 0
-    for container_id, (candidate_time, population_id) in container_latest.items():
+    for container_id, (candidate_time, _open_member, _status_count, _start_time, population_id) in container_latest.items():
         if enforce_latest_holder_consistency:
             latest_holder = data_source.get_latest_nonzero_status_holder_for_container(container_id)
             # If the source container's latest non-zero holder is a different
@@ -2107,10 +2759,19 @@ def main() -> int:
             continue
         containers_by_org.setdefault(org_id, []).append(container_id)
 
-    # Container classification: sea if any member population in that container has a sea stage.
+    # Container classification:
+    # 1) member stage-derived buckets,
+    # 2) grouped-organisation prod_stage/site fallback,
+    # 3) no implicit freshwater default (avoid A* marine areas as stations).
     container_bucket: dict[str, str] = {}
     for member in members:
         bucket = stage_bucket(member.last_stage or member.first_stage or "")
+        if not bucket:
+            group_meta = container_grouping.get(member.container_id, {})
+            bucket = infer_bucket_from_grouping(
+                group_meta.get("site"),
+                group_meta.get("prod_stage"),
+            )
         if not bucket:
             continue
         current = container_bucket.get(member.container_id)
@@ -2120,6 +2781,18 @@ def main() -> int:
             container_bucket[member.container_id] = "sea"
         else:
             container_bucket.setdefault(member.container_id, "freshwater")
+
+    # Backfill bucket classification for members with sparse stage tokens.
+    for container_id in container_ids:
+        if container_id in container_bucket:
+            continue
+        group_meta = container_grouping.get(container_id, {})
+        inferred = infer_bucket_from_grouping(
+            group_meta.get("site"),
+            group_meta.get("prod_stage"),
+        )
+        if inferred:
+            container_bucket[container_id] = inferred
 
     if args.dry_run:
         print(f"[dry-run] Would migrate component_key={component_key} into batch_number={batch_number}")
@@ -2163,6 +2836,17 @@ def main() -> int:
             user=history_user,
             reason=history_reason,
         )
+        rack_type, _ = get_or_create_with_history(
+            ContainerType,
+            lookup={"name": "FishTalk Imported Rack"},
+            defaults={
+                "category": "OTHER",
+                "max_volume_m3": Decimal("999999.99"),
+                "description": "Auto-created structural container for rack/stand hierarchy",
+            },
+            user=history_user,
+            reason=history_reason,
+        )
 
         # Lookup (or create) org-unit scoped holders
         # PREFER LOOKUP from pre-migrated infrastructure to avoid race conditions
@@ -2170,22 +2854,45 @@ def main() -> int:
         hall_by_org_group: dict[tuple[str, str], Hall] = {}
         fallback_hall_by_org: dict[str, Hall] = {}
         area_by_org: dict[str, Area] = {}
+        area_group_by_org: dict[str, AreaGroup | None] = {}
+        org_geo_by_id: dict[str, Geography] = {}
+        org_lat_by_id: dict[str, Decimal] = {}
+        org_lon_by_id: dict[str, Decimal] = {}
+        org_site_name_by_id: dict[str, str] = {}
+        rack_by_hall_stand: dict[tuple[int, str], Container] = {}
 
         # Determine which org units have sea containers vs freshwater
         org_has_sea: dict[str, bool] = {}
         org_has_freshwater: dict[str, bool] = {}
         for org_id in org_unit_ids:
             org_containers = containers_by_org.get(org_id, [])
-            org_has_sea[org_id] = any(
-                container_bucket.get(cid) == "sea" for cid in org_containers
-            )
+            org_has_sea[org_id] = any(container_bucket.get(cid) == "sea" for cid in org_containers)
             org_has_freshwater[org_id] = any(
-                container_bucket.get(cid, "freshwater") != "sea" for cid in org_containers
+                container_bucket.get(cid) == "freshwater" for cid in org_containers
             )
 
         for org_id in org_unit_ids:
             org = org_by_id.get(org_id) or {}
             org_name = (org.get("Name") or org_id)[:80]
+            org_site_candidates = [
+                normalize_label(container_grouping.get(cid, {}).get("site"))
+                for cid in containers_by_org.get(org_id, [])
+                if normalize_label(container_grouping.get(cid, {}).get("site"))
+            ]
+            if org_site_candidates:
+                org_site_name = Counter(org_site_candidates).most_common(1)[0][0]
+            else:
+                org_site_name = org_name
+            org_site_group_candidates = [
+                normalize_area_group(container_grouping.get(cid, {}).get("site_group"))
+                for cid in containers_by_org.get(org_id, [])
+                if normalize_area_group(container_grouping.get(cid, {}).get("site_group"))
+            ]
+            if org_site_group_candidates:
+                org_site_group = Counter(org_site_group_candidates).most_common(1)[0][0]
+            else:
+                org_site_group = ""
+            org_site_code = parse_site_code(org_site_name)
             lat = Decimal(str(org.get("Latitude") or 0)).quantize(Decimal("0.000001"))
             lon = Decimal(str(org.get("Longitude") or 0)).quantize(Decimal("0.000001"))
 
@@ -2199,52 +2906,100 @@ def main() -> int:
             else:
                 org_geo_name = detected_geography
             geography = get_geography(org_geo_name)
+            area_group = None
+            if org_site_group:
+                area_group, _ = get_or_create_with_history(
+                    AreaGroup,
+                    lookup={
+                        "name": org_site_group[:100],
+                        "geography": geography,
+                        "parent": None,
+                    },
+                    defaults={
+                        "code": normalize_key(org_site_group)[:32],
+                        "active": True,
+                    },
+                    user=history_user,
+                    reason=history_reason,
+                )
+            org_geo_by_id[org_id] = geography
+            area_group_by_org[org_id] = area_group
+            org_lat_by_id[org_id] = lat
+            org_lon_by_id[org_id] = lon
+            org_site_name_by_id[org_id] = org_site_name
 
             # LOOKUP FreshwaterStation from pre-migration, fallback to create
             # Use file locking to prevent race conditions with parallel workers
             import fcntl
             import time
             
-            if org_has_freshwater.get(org_id, True):
-                station_name = org_name[:100]
-                # Try to find pre-created station from ExternalIdMap
-                station_map = get_external_map("OrgUnit_FW", org_id)
-                if station_map:
-                    station = FreshwaterStation.objects.get(pk=station_map.target_object_id)
+            if org_has_freshwater.get(org_id, False):
+                if org_site_code.startswith("A"):
+                    # Hard guard: A* sites are marine areas, never freshwater stations.
+                    print(
+                        "Skipping freshwater station creation for marine site-code org "
+                        f"{org_id} ({org_site_name})."
+                    )
                 else:
-                    # First try simple lookup
-                    station = FreshwaterStation.objects.filter(name=station_name).first()
-                    if not station:
-                        # Use file lock to serialize creation
-                        lock_file = Path(f"/tmp/migration_station_{org_id}.lock")
-                        lock_file.touch()
-                        with open(lock_file) as f:
-                            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-                            try:
-                                # Re-check after acquiring lock
-                                station = FreshwaterStation.objects.filter(name=station_name).first()
-                                if not station:
-                                    station, _ = get_or_create_with_history(
-                                        FreshwaterStation,
-                                        lookup={"name": station_name},
-                                        defaults={
-                                            "station_type": "FRESHWATER",
-                                            "geography": geography,
-                                            "latitude": lat,
-                                            "longitude": lon,
-                                            "description": "Imported placeholder from FishTalk",
-                                            "active": True,
-                                        },
-                                        user=history_user,
-                                        reason=history_reason,
-                                    )
-                            finally:
-                                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-                station_by_org[org_id] = station
+                    station_name = org_site_name[:100]
+                # Try to find pre-created station from ExternalIdMap
+                    station_map = get_external_map("OrgUnit_FW", org_id)
+                    if station_map:
+                        station = FreshwaterStation.objects.get(pk=station_map.target_object_id)
+                    else:
+                        # First try simple lookup
+                        station = FreshwaterStation.objects.filter(
+                            name=station_name,
+                            geography=geography,
+                        ).first()
+                        if not station:
+                            # Use file lock to serialize creation
+                            lock_file = Path(f"/tmp/migration_station_{org_id}.lock")
+                            lock_file.touch()
+                            with open(lock_file) as f:
+                                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                                try:
+                                    # Re-check after acquiring lock
+                                    station = FreshwaterStation.objects.filter(
+                                        name=station_name,
+                                        geography=geography,
+                                    ).first()
+                                    if not station:
+                                        station_type = infer_station_type(station_name)
+                                        station, _ = get_or_create_with_history(
+                                            FreshwaterStation,
+                                            lookup={"name": station_name, "geography": geography},
+                                            defaults={
+                                                "station_type": station_type,
+                                                "latitude": lat,
+                                                "longitude": lon,
+                                                "description": "Imported placeholder from FishTalk",
+                                                "active": True,
+                                            },
+                                            user=history_user,
+                                            reason=history_reason,
+                                        )
+                                finally:
+                                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    ExternalIdMap.objects.update_or_create(
+                        source_system="FishTalk",
+                        source_model="OrgUnit_FW",
+                        source_identifier=str(org_id),
+                        defaults={
+                            "target_app_label": station._meta.app_label,
+                            "target_model": station._meta.model_name,
+                            "target_object_id": station.pk,
+                            "metadata": {
+                                "site": org_site_name,
+                                "geography": geography.name,
+                            },
+                        },
+                    )
+                    station_by_org[org_id] = station
 
             # LOOKUP Area from pre-migration, fallback to create
             if org_has_sea.get(org_id, False):
-                area_name = org_name[:100]
+                area_name = org_site_name[:100]
                 # Try to find pre-created area from ExternalIdMap
                 area_map = get_external_map("OrgUnit_Sea", org_id)
                 if area_map:
@@ -2269,6 +3024,7 @@ def main() -> int:
                                             "latitude": lat,
                                             "longitude": lon,
                                             "max_biomass": Decimal("0"),
+                                            "area_group": area_group_by_org.get(org_id),
                                             "active": True,
                                         },
                                         user=history_user,
@@ -2276,27 +3032,113 @@ def main() -> int:
                                     )
                             finally:
                                 fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                expected_area_group = area_group_by_org.get(org_id)
+                expected_area_group_id = expected_area_group.id if expected_area_group else None
+                if area.area_group_id != expected_area_group_id:
+                    area.area_group = expected_area_group
+                    save_with_history(area, user=history_user, reason=history_reason)
+                ExternalIdMap.objects.update_or_create(
+                    source_system="FishTalk",
+                    source_model="OrgUnit_Sea",
+                    source_identifier=str(org_id),
+                    defaults={
+                        "target_app_label": area._meta.app_label,
+                        "target_model": area._meta.model_name,
+                        "target_object_id": area.pk,
+                        "metadata": {
+                            "site": org_site_name,
+                            "geography": geography.name,
+                            "area_group": (
+                                area_group_by_org.get(org_id).name
+                                if area_group_by_org.get(org_id)
+                                else None
+                            ),
+                        },
+                    },
+                )
                 area_by_org[org_id] = area
 
         # Create containers
         aquamind_container_by_source: dict[str, Container] = {}
         for cid in container_ids:
+            src = containers_by_id.get(cid) or {}
+            overridden_volume_m3 = resolve_container_volume_m3(src)
             mapped = get_external_map("Containers", cid)
             if mapped:
-                aquamind_container_by_source[cid] = Container.objects.get(pk=mapped.target_object_id)
+                container = Container.objects.get(pk=mapped.target_object_id)
+                if overridden_volume_m3 > 0 and container.volume_m3 != overridden_volume_m3:
+                    container.volume_m3 = overridden_volume_m3
+                    save_with_history(container, user=history_user, reason=history_reason)
+                aquamind_container_by_source[cid] = container
                 continue
 
-            src = containers_by_id.get(cid) or {}
             org_id = src.get("OrgUnitID") or org_unit_ids[0]
-            bucket = container_bucket.get(cid, "freshwater")
+            geography = org_geo_by_id.get(org_id) or get_geography(detected_geography)
+            lat = org_lat_by_id.get(org_id, Decimal("0.000000"))
+            lon = org_lon_by_id.get(org_id, Decimal("0.000000"))
+            bucket = container_bucket.get(cid)
+            group_meta = container_grouping.get(cid, {})
+            if not bucket:
+                bucket = infer_bucket_from_grouping(
+                    group_meta.get("site"),
+                    group_meta.get("prod_stage"),
+                )
+            if not bucket:
+                print(
+                    "Skipping container with unresolved environment bucket: "
+                    f"{cid} (site={group_meta.get('site') or '-'}, "
+                    f"prod_stage={group_meta.get('prod_stage') or '-'})"
+                )
+                continue
             if bucket == "sea":
                 container_type = pen_type
-                area = area_by_org[org_id]
+                area = area_by_org.get(org_id)
+                if area is None:
+                    area_name = normalize_label(group_meta.get("site")) or org_site_name_by_id.get(org_id) or (
+                        org_by_id.get(org_id, {}).get("Name") or org_id
+                    )
+                    area, _ = get_or_create_with_history(
+                        Area,
+                        lookup={"name": area_name[:100], "geography": geography},
+                        defaults={
+                            "latitude": lat,
+                            "longitude": lon,
+                            "max_biomass": Decimal("0"),
+                            "area_group": area_group_by_org.get(org_id),
+                            "active": True,
+                        },
+                        user=history_user,
+                        reason=history_reason,
+                    )
+                    expected_area_group = area_group_by_org.get(org_id)
+                    expected_area_group_id = expected_area_group.id if expected_area_group else None
+                    if area.area_group_id != expected_area_group_id:
+                        area.area_group = expected_area_group
+                        save_with_history(area, user=history_user, reason=history_reason)
+                    area_by_org[org_id] = area
+                    ExternalIdMap.objects.update_or_create(
+                        source_system="FishTalk",
+                        source_model="OrgUnit_Sea",
+                        source_identifier=str(org_id),
+                        defaults={
+                            "target_app_label": area._meta.app_label,
+                            "target_model": area._meta.model_name,
+                            "target_object_id": area.pk,
+                            "metadata": {
+                                "site": area_name,
+                                "geography": geography.name,
+                                "area_group": (
+                                    area_group_by_org.get(org_id).name
+                                    if area_group_by_org.get(org_id)
+                                    else None
+                                ),
+                            },
+                        },
+                    )
                 hall = None
             else:
                 container_type = tank_type
                 area = None
-                group_meta = container_grouping.get(cid, {})
                 group_label = hall_label_from_group(group_meta.get("container_group"))
                 if not group_label:
                     group_label = hall_label_from_official(src.get("OfficialID"))
@@ -2304,7 +3146,33 @@ def main() -> int:
                     hall_key = (org_id, group_label)
                     hall = hall_by_org_group.get(hall_key)
                     if hall is None:
-                        station = station_by_org[org_id]
+                        station = station_by_org.get(org_id)
+                        if station is None:
+                            station_name = normalize_label(group_meta.get("site")) or org_site_name_by_id.get(org_id) or (
+                                org_by_id.get(org_id, {}).get("Name") or org_id
+                            )
+                            station_site_code = parse_site_code(station_name)
+                            if station_site_code.startswith("A"):
+                                print(
+                                    "Skipping freshwater container under marine site-code: "
+                                    f"{cid} ({station_name})"
+                                )
+                                continue
+                            station_type = infer_station_type(station_name)
+                            station, _ = get_or_create_with_history(
+                                FreshwaterStation,
+                                lookup={"name": station_name[:100], "geography": geography},
+                                defaults={
+                                    "station_type": station_type,
+                                    "latitude": lat,
+                                    "longitude": lon,
+                                    "description": "Imported placeholder from FishTalk",
+                                    "active": True,
+                                },
+                                user=history_user,
+                                reason=history_reason,
+                            )
+                            station_by_org[org_id] = station
                         group_description = (
                             "Imported placeholder from FishTalk "
                             f"({group_meta.get('container_group') or group_label})"
@@ -2323,7 +3191,33 @@ def main() -> int:
                 else:
                     hall = fallback_hall_by_org.get(org_id)
                     if hall is None:
-                        station = station_by_org[org_id]
+                        station = station_by_org.get(org_id)
+                        if station is None:
+                            station_name = normalize_label(group_meta.get("site")) or org_site_name_by_id.get(org_id) or (
+                                org_by_id.get(org_id, {}).get("Name") or org_id
+                            )
+                            station_site_code = parse_site_code(station_name)
+                            if station_site_code.startswith("A"):
+                                print(
+                                    "Skipping fallback-hall creation under marine site-code: "
+                                    f"{cid} ({station_name})"
+                                )
+                                continue
+                            station_type = infer_station_type(station_name)
+                            station, _ = get_or_create_with_history(
+                                FreshwaterStation,
+                                lookup={"name": station_name[:100], "geography": geography},
+                                defaults={
+                                    "station_type": station_type,
+                                    "latitude": lat,
+                                    "longitude": lon,
+                                    "description": "Imported placeholder from FishTalk",
+                                    "active": True,
+                                },
+                                user=history_user,
+                                reason=history_reason,
+                            )
+                            station_by_org[org_id] = station
                         org_name = (org_by_id.get(org_id, {}).get("Name") or org_id)[:80]
                         hall, _ = get_or_create_with_history(
                             Hall,
@@ -2340,13 +3234,47 @@ def main() -> int:
                         )
                         fallback_hall_by_org[org_id] = hall
 
+            parent_container = None
+            hierarchy_role = "HOLDING"
+            stand_name = normalize_label(group_meta.get("stand_name"))
+            stand_id = normalize_label(group_meta.get("stand_id"))
+            if hall is not None and stand_name:
+                stand_key = stand_id or stand_name
+                rack_key = (int(hall.id), stand_key)
+                parent_container = rack_by_hall_stand.get(rack_key)
+                if parent_container is None:
+                    parent_container, _ = get_or_create_with_history(
+                        Container,
+                        lookup={
+                            "name": stand_name[:100],
+                            "hall": hall,
+                            "hierarchy_role": "STRUCTURAL",
+                        },
+                        defaults={
+                            "container_type": rack_type,
+                            "area": None,
+                            "carrier": None,
+                            "parent_container": None,
+                            "volume_m3": Decimal("0.01"),
+                            "max_biomass_kg": Decimal("0.00"),
+                            "feed_recommendations_enabled": False,
+                            "active": True,
+                        },
+                        user=history_user,
+                        reason=history_reason,
+                    )
+                    rack_by_hall_stand[rack_key] = parent_container
+
             container_name = normalize_label(src.get("ContainerName") or cid) or cid
             container = Container(
                 name=container_name[:100],
                 container_type=container_type,
                 hall=hall,
                 area=area,
-                volume_m3=Decimal("0.00"),
+                carrier=None,
+                parent_container=parent_container,
+                hierarchy_role=hierarchy_role,
+                volume_m3=overridden_volume_m3,
                 max_biomass_kg=Decimal("0.00"),
                 feed_recommendations_enabled=True,
                 active=True,
@@ -2364,6 +3292,7 @@ def main() -> int:
                         "container_name": src.get("ContainerName"),
                         "org_unit_id": src.get("OrgUnitID"),
                         "official_id": src.get("OfficialID"),
+                        "overridden_volume_m3": str(overridden_volume_m3),
                         "site": container_grouping.get(cid, {}).get("site"),
                         "site_group": container_grouping.get(cid, {}).get("site_group"),
                         "company": container_grouping.get(cid, {}).get("company"),
@@ -2373,6 +3302,8 @@ def main() -> int:
                         "stand_name": container_grouping.get(cid, {}).get("stand_name"),
                         "stand_id": container_grouping.get(cid, {}).get("stand_id"),
                         "grouping_bucket": container_grouping.get(cid, {}).get("grouping_bucket"),
+                        "parent_container_id": parent_container.id if parent_container else None,
+                        "hierarchy_role": hierarchy_role,
                     },
                 },
             )
@@ -2415,14 +3346,39 @@ def main() -> int:
                 },
             )
 
+        stale_prune_stats = prune_stale_component_assignment_state(
+            batch=batch,
+            component_key=component_key,
+            members=members,
+        )
+        if stale_prune_stats["stale_assignments_deleted"]:
+            print(
+                "Pruned stale component-mapped assignment state before rebuild: "
+                f"stale_pops={stale_prune_stats['stale_population_ids']}, "
+                f"stale_assignments={stale_prune_stats['stale_assignments_deleted']}, "
+                f"protected_dependents={stale_prune_stats['protected_dependents_deleted']}, "
+                f"external_maps={stale_prune_stats['external_maps_deleted']}"
+            )
+
         assignment_by_population_id: dict[str, BatchContainerAssignment] = {}
         lifecycle_fallback_population_ids: list[str] = []
 
         # Create assignments (1 per FishTalk PopulationID)
         skipped_orphan_zero_assignments = 0
         for member in members:
-            assignment_map = get_external_map("Populations", member.population_id)
+            assignment_map = get_external_map(
+                "Populations",
+                member.population_id,
+                component_key=component_key,
+            )
             container = aquamind_container_by_source[member.container_id]
+            member_group_meta = container_grouping.get(member.container_id, {})
+            member_site_key = normalize_key(member_group_meta.get("site"))
+            member_hall_key = normalize_key(member_group_meta.get("container_group"))
+            member_is_s08_r_holl = (
+                member_site_key == "S08 GJÓGV"
+                and member_hall_key in S08_R_HOLL_HALL_KEYS
+            )
 
             lifecycle_name = resolve_stage_name(member)
             if not lifecycle_name:
@@ -2438,6 +3394,35 @@ def main() -> int:
                 )
 
             latest_status_time = latest_status_time_by_pop.get(member.population_id)
+            is_component_seed = bool(component_key and member.population_id == component_key)
+            is_component_initial_window_member = member.start_time == component_start_time
+            member_input_supplier_ids = input_suppliers_by_population.get(
+                member.population_id, set()
+            )
+            is_creation_window_seed_stage_member = (
+                member.end_time is not None
+                and lifecycle_name in creation_window_seed_stages
+                and batch_start <= member.start_time.date() <= creation_window_end_date
+            )
+            supplier_mismatch_vs_component_start = (
+                member.start_time > component_start_time
+                and bool(component_start_supplier_ids)
+                and bool(member_input_supplier_ids)
+                and member_input_supplier_ids.isdisjoint(component_start_supplier_ids)
+            )
+            member_input_rows_at_start = get_member_input_rows_at_start(member)
+            try:
+                member_input_count_at_start = sum(
+                    float(row.get("InputCount") or 0) for row in member_input_rows_at_start
+                )
+            except Exception:
+                member_input_count_at_start = 0.0
+            member_input_has_source_link = any(
+                input_row_has_source_link(row) for row in member_input_rows_at_start
+            )
+            delayed_input_start_cluster_size = delayed_input_start_cluster_sizes.get(
+                member.start_time, 0
+            )
             
             # For active assignments (no end_time), use latest status for fish count/biomass
             # For completed assignments, use status near start time
@@ -2447,6 +3432,40 @@ def main() -> int:
             else:
                 # Completed - get status near start
                 status_snapshot = data_source.get_status_snapshot(member.population_id, member.start_time)
+            status_snapshot_time = (
+                parse_dt((status_snapshot.get("StatusTime") or "").strip())
+                if status_snapshot
+                else None
+            )
+            exact_start_snapshot = (
+                data_source.get_status_snapshot_exact_time(member.population_id, member.start_time)
+                if member.end_time is not None
+                else None
+            )
+
+            exact_start_status_snapshot = exact_start_snapshot is not None
+            exact_start_status_count: int | None = None
+            if exact_start_snapshot:
+                try:
+                    exact_start_status_count = int(
+                        round(float(exact_start_snapshot.get("CurrentCount") or 0))
+                    )
+                except Exception:
+                    exact_start_status_count = 0
+            exact_start_seed_init_zero_authoritative = False
+            exact_start_creation_supplier_mismatch_zero_authoritative = False
+            exact_start_delayed_input_nonzero_authoritative = False
+            exact_start_seed_init_zero_candidate = (
+                exact_start_status_snapshot
+                and exact_start_status_count == 0
+                and (is_component_seed or is_component_initial_window_member)
+            )
+            exact_start_creation_supplier_mismatch_zero_candidate = (
+                exact_start_status_snapshot
+                and exact_start_status_count == 0
+                and is_creation_window_seed_stage_member
+                and supplier_mismatch_vs_component_start
+            )
 
             conserved_count = conserved_counts.get(member.population_id) if conserved_counts else None
             count = int(conserved_count) if conserved_count is not None else 0
@@ -2464,7 +3483,14 @@ def main() -> int:
                 elif count == 0 and status_count > 0:
                     # Conservation chain produced zero; prefer evidence-based status snapshot.
                     count = status_count
-                elif count == 0 and known_removals > 0:
+                elif (
+                    count == 0
+                    and known_removals > 0
+                    and not (
+                        exact_start_seed_init_zero_candidate
+                        or exact_start_creation_supplier_mismatch_zero_candidate
+                    )
+                ):
                     # If source actions already removed fish from this population, the
                     # baseline cannot be zero without violating conservation-of-events.
                     count = known_removals
@@ -2492,10 +3518,70 @@ def main() -> int:
                     status_biomass = Decimal("0.00")
                 biomass = status_biomass
                 if status_count and status_count > 0 and status_biomass > 0:
+                    # Keep higher internal precision so biomass reconstruction
+                    # does not drift before model-field rounding is applied.
                     status_avg_weight_g = (
                         (status_biomass * Decimal("1000")) / Decimal(status_count)
-                    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            if count == 0 and known_removals > 0:
+                    ).quantize(Decimal("0.00001"), rounding=ROUND_HALF_UP)
+                near_start_subtransfer_touch = any(
+                    member.start_time <= touch_time <= member.start_time + delayed_status_input_max_lag
+                    for touch_time in subtransfer_touch_times_by_population.get(
+                        member.population_id, []
+                    )
+                )
+                exact_start_delayed_input_nonzero_candidate = (
+                    exact_start_status_snapshot
+                    and exact_start_status_count == 0
+                    and is_creation_window_seed_stage_member
+                    and member.start_time > component_start_time
+                    and delayed_input_start_cluster_size >= delayed_status_input_min_cluster_size
+                    and member_input_count_at_start > 0
+                    and not member_input_has_source_link
+                    and bool(component_start_supplier_ids)
+                    and bool(member_input_supplier_ids)
+                    and not member_input_supplier_ids.isdisjoint(component_start_supplier_ids)
+                    and status_count is not None
+                    and status_count > 0
+                    and status_snapshot_time is not None
+                    and status_snapshot_time > member.start_time
+                    and status_snapshot_time <= member.start_time + delayed_status_input_max_lag
+                    and not near_start_subtransfer_touch
+                )
+                if exact_start_status_snapshot and exact_start_status_count and exact_start_status_count > 0:
+                    # Exact status at population start is strongest lane-level
+                    # evidence for transfer-created destination counts.
+                    count = exact_start_status_count
+                elif exact_start_seed_init_zero_candidate:
+                    # Seed + initial-window rows should honor exact-start zero
+                    # snapshots and not be re-inflated by downstream removal floors.
+                    count = 0
+                    biomass = Decimal("0.00")
+                    exact_start_seed_init_zero_authoritative = True
+                elif exact_start_creation_supplier_mismatch_zero_candidate:
+                    # Multi-day creation windows are supported, but disjoint
+                    # supplier IDs from component-start anchors indicate a
+                    # stitched foreign start cluster for this component.
+                    count = 0
+                    biomass = Decimal("0.00")
+                    exact_start_creation_supplier_mismatch_zero_authoritative = True
+                elif exact_start_delayed_input_nonzero_candidate:
+                    # Legitimate multi-anchor seed inputs can have exact-start zero
+                    # snapshots before the first same-day status update lands.
+                    count = max(count, int(round(member_input_count_at_start)), status_count or 0)
+                    exact_start_delayed_input_nonzero_authoritative = True
+            if member.end_time is None and status_count is not None:
+                # Open source populations should use latest measured status counts
+                # as authoritative assignment population.
+                if status_count > 0:
+                    count = status_count
+                elif known_removals > 0:
+                    count = max(count, known_removals)
+            if (
+                count == 0
+                and known_removals > 0
+                and not exact_start_seed_init_zero_authoritative
+                and not exact_start_creation_supplier_mismatch_zero_authoritative
+            ):
                 # Status snapshots are sparse in some components; if source
                 # removals exist for this population, baseline cannot remain 0.
                 count = known_removals
@@ -2551,6 +3637,44 @@ def main() -> int:
                 # For blank-token same-container rows in externally mixed chains,
                 # prefer lane-level status-at-start evidence.
                 count = status_count
+            if (
+                member_is_s08_r_holl
+                and member.population_id in s08_r_holl_initial_population_ids
+                and status_count is not None
+                and status_count > 0
+            ):
+                # S08 R-Høll initial rows should reflect observed holder counts
+                # after transfer fan-in, not partial conserved chain fragments.
+                count = max(count, status_count)
+            initial_pop_id = s08_r_holl_initial_population_by_container.get(member.container_id)
+            initial_member = member_by_population_id.get(initial_pop_id) if initial_pop_id else None
+            is_pre_initial_bridge_fragment = (
+                member_is_s08_r_holl
+                and initial_member is not None
+                and member.population_id != initial_pop_id
+                and member.start_time.date() == initial_member.start_time.date()
+                and member.start_time <= initial_member.start_time
+                and duration is not None
+                and duration.total_seconds() < S08_R_HOLL_INITIAL_MIN_DURATION_SECONDS
+            )
+            if is_pre_initial_bridge_fragment:
+                # These are serial fan-in fragments immediately before the chosen
+                # initial holder; keep history row but suppress fish duplication.
+                count = 0
+                biomass = Decimal("0.00")
+            if (
+                exact_start_seed_init_zero_authoritative
+                or exact_start_creation_supplier_mismatch_zero_authoritative
+            ):
+                # Keep exact-start authoritative zero guards after downstream
+                # heuristics (supersede/bridge/mixing) to avoid re-inflating
+                # closed holders in historical rows.
+                count = 0
+                biomass = Decimal("0.00")
+            if exact_start_delayed_input_nonzero_authoritative and count <= 0:
+                # Preserve legitimate delayed-status input starts after
+                # downstream heuristics that can otherwise flatten history rows.
+                count = max(int(round(member_input_count_at_start)), status_count or 0, known_removals)
             count = max(count, 0)
             if count == 0:
                 biomass = Decimal("0.00")
@@ -2568,7 +3692,7 @@ def main() -> int:
                     # Derive avg weight from biomass as a fallback when status avg is unavailable.
                     effective_avg_weight_g = (
                         (biomass * Decimal("1000")) / Decimal(count)
-                    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    ).quantize(Decimal("0.00001"), rounding=ROUND_HALF_UP)
                 else:
                     biomass = Decimal("0.00")
                     effective_avg_weight_g = None
@@ -2585,7 +3709,15 @@ def main() -> int:
 
             active_population_id = active_population_by_container.get(member.container_id)
             if assignment_active and lifecycle_stage_name and stage and stage.name != lifecycle_stage_name:
-                assignment_active = False
+                # Keep recent non-zero holders active even when stage tokens lag
+                # behind frontier-derived lifecycle stage.
+                stage_mismatch_is_recent = False
+                if latest_status_time and component_status_time:
+                    stage_mismatch_is_recent = latest_status_time >= (
+                        component_status_time - timedelta(hours=lifecycle_frontier_window_hours)
+                    )
+                if not stage_mismatch_is_recent:
+                    assignment_active = False
 
             if assignment_active and member.container_id not in active_population_by_container:
                 assignment_active = False
@@ -2640,20 +3772,22 @@ def main() -> int:
                 assignment = BatchContainerAssignment(**defaults)
                 save_with_history(assignment, user=history_user, reason=history_reason)
 
-            ExternalIdMap.objects.update_or_create(
-                source_system="FishTalk",
-                source_model="Populations",
-                source_identifier=str(member.population_id),
-                defaults={
-                    "target_app_label": assignment._meta.app_label,
-                    "target_model": assignment._meta.model_name,
-                    "target_object_id": assignment.pk,
-                    "metadata": {
-                        "component_key": component_key,
-                        "container_id": member.container_id,
-                        "baseline_population_count": count,
-                    },
-                },
+            map_metadata = {
+                "component_key": component_key,
+                "container_id": member.container_id,
+                "baseline_population_count": count,
+                "component_population_identifier": build_component_population_identifier(
+                    component_key,
+                    member.population_id,
+                ),
+            }
+            upsert_assignment_external_maps(
+                component_key=component_key,
+                population_id=member.population_id,
+                target_app_label=assignment._meta.app_label,
+                target_model=assignment._meta.model_name,
+                target_object_id=assignment.pk,
+                metadata=map_metadata,
             )
 
             assignment_by_population_id[member.population_id] = assignment

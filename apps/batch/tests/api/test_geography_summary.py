@@ -518,6 +518,29 @@ class GeographySummaryTestCase(BaseAPITestCase):
         self.assertIsNone(data['growth_metrics']['avg_growth_rate_g_per_day'])
         # But should still have biomass from assignments
         self.assertGreater(data['growth_metrics']['total_biomass_kg'], 0)
+
+    def test_geography_summary_ignores_non_positive_growth_samples(self):
+        """
+        Test that non-positive growth sample weights do not crash SGR aggregation.
+
+        This guards against placeholder samples (e.g., avg_weight_g=0.00) that may
+        exist after interrupted generation runs.
+        """
+        GrowthSample.objects.create(
+            assignment=self.assignment1,
+            sample_date=date.today() - timedelta(days=5),
+            sample_size=30,
+            avg_weight_g=Decimal('0.00'),
+            avg_length_cm=Decimal('1.00'),
+        )
+
+        url = self.get_api_url('batch', 'batches/geography-summary')
+        response = self.client.get(url, {'geography': self.geography1.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data['total_batches'], 2)
+        self.assertIsNotNone(data['growth_metrics']['avg_sgr'])
     
     def test_geography_summary_mortality_by_cause_distribution(self):
         """Test that mortality by cause is correctly distributed."""
@@ -559,4 +582,3 @@ class GeographySummaryTestCase(BaseAPITestCase):
         
         # Average of 1.15 and 1.20 should be around 1.17-1.18
         self.assertAlmostEqual(feed_metrics['avg_fcr'], 1.17, places=1)
-

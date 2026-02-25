@@ -36,6 +36,7 @@ class AreaFilter(FilterSet):
         fields = {
             'name': ['exact', 'icontains'],
             'geography': ['exact', 'in'],
+            'area_group': ['exact', 'in'],
             'active': ['exact']
         }
 
@@ -71,8 +72,8 @@ class AreaViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     serializer_class = AreaSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = AreaFilter
-    search_fields = ['name', 'geography__name']
-    ordering_fields = ['name', 'geography__name', 'created_at']
+    search_fields = ['name', 'geography__name', 'area_group__name']
+    ordering_fields = ['name', 'geography__name', 'area_group__name', 'created_at']
     ordering = ['name']
 
     def list(self, request, *args, **kwargs):

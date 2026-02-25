@@ -1,10 +1,10 @@
 {
   "app": "infrastructure",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "files": [
     {
       "file": "apps/infrastructure/serializers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -43,7 +43,7 @@
     },
     {
       "file": "apps/infrastructure/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -82,7 +82,7 @@
     },
     {
       "file": "apps/infrastructure/apps.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 7,
         "sloc": 5,
@@ -130,13 +130,13 @@
     },
     {
       "file": "apps/infrastructure/admin.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 216,
-        "sloc": 163,
+        "loc": 262,
+        "sloc": 205,
         "comments": 7,
         "multi": 0,
-        "blank": 40
+        "blank": 44
       },
       "cyclomatic_complexity": {
         "functions": [
@@ -175,186 +175,202 @@
           {
             "name": "GeographyAdmin",
             "complexity": 1,
-            "lineno": 51,
+            "lineno": 53,
             "col_offset": 0,
-            "endline": 55,
+            "endline": 57,
+            "type": "Class"
+          },
+          {
+            "name": "AreaGroupAdmin",
+            "complexity": 1,
+            "lineno": 61,
+            "col_offset": 0,
+            "endline": 64,
             "type": "Class"
           },
           {
             "name": "AreaAdminForm",
             "complexity": 1,
-            "lineno": 58,
+            "lineno": 67,
             "col_offset": 0,
-            "endline": 59,
+            "endline": 68,
             "type": "Class"
           },
           {
             "name": "AreaAdmin",
             "complexity": 2,
-            "lineno": 75,
+            "lineno": 84,
             "col_offset": 0,
-            "endline": 99,
+            "endline": 116,
             "type": "Class"
           },
           {
             "name": "latitude_display",
             "complexity": 1,
-            "lineno": 79,
+            "lineno": 96,
             "col_offset": 4,
-            "endline": 80,
+            "endline": 97,
             "type": "Function"
           },
           {
             "name": "longitude_display",
             "complexity": 1,
-            "lineno": 83,
+            "lineno": 100,
             "col_offset": 4,
-            "endline": 84,
+            "endline": 101,
             "type": "Function"
           },
           {
             "name": "max_biomass_display",
             "complexity": 1,
-            "lineno": 87,
+            "lineno": 104,
             "col_offset": 4,
-            "endline": 88,
+            "endline": 105,
             "type": "Function"
           },
           {
             "name": "FreshwaterStationAdminForm",
             "complexity": 1,
-            "lineno": 108,
+            "lineno": 125,
             "col_offset": 0,
-            "endline": 109,
+            "endline": 126,
             "type": "Class"
           },
           {
             "name": "FreshwaterStationAdmin",
             "complexity": 2,
-            "lineno": 125,
-            "col_offset": 0,
-            "endline": 145,
-            "type": "Class"
-          },
-          {
-            "name": "latitude_display",
-            "complexity": 1,
-            "lineno": 129,
-            "col_offset": 4,
-            "endline": 130,
-            "type": "Function"
-          },
-          {
-            "name": "longitude_display",
-            "complexity": 1,
-            "lineno": 133,
-            "col_offset": 4,
-            "endline": 134,
-            "type": "Function"
-          },
-          {
-            "name": "HallAdmin",
-            "complexity": 2,
-            "lineno": 155,
+            "lineno": 142,
             "col_offset": 0,
             "endline": 162,
             "type": "Class"
           },
           {
+            "name": "latitude_display",
+            "complexity": 1,
+            "lineno": 146,
+            "col_offset": 4,
+            "endline": 147,
+            "type": "Function"
+          },
+          {
+            "name": "longitude_display",
+            "complexity": 1,
+            "lineno": 150,
+            "col_offset": 4,
+            "endline": 151,
+            "type": "Function"
+          },
+          {
+            "name": "HallAdmin",
+            "complexity": 2,
+            "lineno": 172,
+            "col_offset": 0,
+            "endline": 179,
+            "type": "Class"
+          },
+          {
             "name": "area_sqm_display",
             "complexity": 1,
-            "lineno": 158,
+            "lineno": 175,
             "col_offset": 4,
-            "endline": 159,
+            "endline": 176,
             "type": "Function"
           },
           {
             "name": "ContainerTypeAdmin",
             "complexity": 2,
-            "lineno": 166,
+            "lineno": 183,
             "col_offset": 0,
-            "endline": 173,
+            "endline": 190,
             "type": "Class"
           },
           {
             "name": "max_volume_m3_display",
             "complexity": 1,
-            "lineno": 169,
+            "lineno": 186,
             "col_offset": 4,
-            "endline": 170,
+            "endline": 187,
             "type": "Function"
           },
           {
             "name": "ContainerAdmin",
-            "complexity": 3,
-            "lineno": 177,
+            "complexity": 4,
+            "lineno": 194,
             "col_offset": 0,
-            "endline": 192,
+            "endline": 225,
             "type": "Class"
           },
           {
             "name": "volume_m3_display",
             "complexity": 2,
-            "lineno": 180,
+            "lineno": 207,
             "col_offset": 4,
-            "endline": 181,
+            "endline": 208,
             "type": "Function"
           },
           {
             "name": "max_biomass_kg_display",
             "complexity": 2,
-            "lineno": 184,
+            "lineno": 211,
             "col_offset": 4,
-            "endline": 185,
+            "endline": 212,
             "type": "Function"
           },
           {
             "name": "get_location",
-            "complexity": 2,
-            "lineno": 190,
+            "complexity": 4,
+            "lineno": 217,
             "col_offset": 4,
-            "endline": 191,
+            "endline": 224,
             "type": "Function"
           },
           {
             "name": "SensorAdmin",
             "complexity": 1,
-            "lineno": 196,
+            "lineno": 229,
             "col_offset": 0,
-            "endline": 201,
+            "endline": 234,
             "type": "Class"
           },
           {
             "name": "FeedContainerAdmin",
             "complexity": 3,
-            "lineno": 205,
+            "lineno": 238,
             "col_offset": 0,
-            "endline": 216,
+            "endline": 249,
             "type": "Class"
           },
           {
             "name": "capacity_kg_display",
             "complexity": 1,
-            "lineno": 208,
+            "lineno": 241,
             "col_offset": 4,
-            "endline": 209,
+            "endline": 242,
             "type": "Function"
           },
           {
             "name": "get_location",
             "complexity": 2,
-            "lineno": 214,
+            "lineno": 247,
             "col_offset": 4,
-            "endline": 215,
+            "endline": 248,
             "type": "Function"
+          },
+          {
+            "name": "TransportCarrierAdmin",
+            "complexity": 1,
+            "lineno": 253,
+            "col_offset": 0,
+            "endline": 262,
+            "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 26,
-          "average_complexity": 1.6153846153846154,
-          "max_complexity": 3,
+          "total_functions": 28,
+          "average_complexity": 1.6785714285714286,
+          "max_complexity": 4,
           "complexity_distribution": {
-            "low": 26,
+            "low": 28,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -374,11 +390,11 @@
         "time": 1.0566416671474377,
         "bugs": 0.012679700005769252
       },
-      "maintainability_index": 52.317283638797356
+      "maintainability_index": 49.683358220680624
     },
     {
       "file": "apps/infrastructure/utils.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 150,
         "sloc": 75,
@@ -474,7 +490,7 @@
     },
     {
       "file": "apps/infrastructure/urls.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -513,7 +529,7 @@
     },
     {
       "file": "apps/infrastructure/views.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -552,7 +568,7 @@
     },
     {
       "file": "apps/infrastructure/validation.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 92,
         "sloc": 41,
@@ -615,8 +631,144 @@
       "maintainability_index": 58.73839065145845
     },
     {
+      "file": "apps/infrastructure/management/commands/seed_transport_demo_data.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 475,
+        "sloc": 420,
+        "comments": 0,
+        "multi": 9,
+        "blank": 46
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "CarrierSeedConfig",
+            "complexity": 1,
+            "lineno": 31,
+            "col_offset": 0,
+            "endline": 35,
+            "type": "Class"
+          },
+          {
+            "name": "Command",
+            "complexity": 7,
+            "lineno": 59,
+            "col_offset": 0,
+            "endline": 475,
+            "type": "Class"
+          },
+          {
+            "name": "add_arguments",
+            "complexity": 1,
+            "lineno": 65,
+            "col_offset": 4,
+            "endline": 110,
+            "type": "Function"
+          },
+          {
+            "name": "handle",
+            "complexity": 15,
+            "lineno": 113,
+            "col_offset": 4,
+            "endline": 212,
+            "type": "Function"
+          },
+          {
+            "name": "_resolve_geography",
+            "complexity": 4,
+            "lineno": 214,
+            "col_offset": 4,
+            "endline": 224,
+            "type": "Function"
+          },
+          {
+            "name": "_resolve_tank_type",
+            "complexity": 4,
+            "lineno": 226,
+            "col_offset": 4,
+            "endline": 242,
+            "type": "Function"
+          },
+          {
+            "name": "_resolve_parameters",
+            "complexity": 6,
+            "lineno": 245,
+            "col_offset": 4,
+            "endline": 256,
+            "type": "Function"
+          },
+          {
+            "name": "_seed_carriers_and_tanks",
+            "complexity": 17,
+            "lineno": 258,
+            "col_offset": 4,
+            "endline": 358,
+            "type": "Function"
+          },
+          {
+            "name": "_seed_tag_links",
+            "complexity": 11,
+            "lineno": 360,
+            "col_offset": 4,
+            "endline": 414,
+            "type": "Function"
+          },
+          {
+            "name": "_seed_baseline_readings",
+            "complexity": 4,
+            "lineno": 416,
+            "col_offset": 4,
+            "endline": 462,
+            "type": "Function"
+          },
+          {
+            "name": "_default_value_for_parameter",
+            "complexity": 4,
+            "lineno": 464,
+            "col_offset": 4,
+            "endline": 471,
+            "type": "Function"
+          },
+          {
+            "name": "_slugify",
+            "complexity": 2,
+            "lineno": 473,
+            "col_offset": 4,
+            "endline": 475,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 12,
+          "average_complexity": 6.333333333333333,
+          "max_complexity": 17,
+          "complexity_distribution": {
+            "low": 7,
+            "medium": 2,
+            "high": 3,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 15,
+        "h2": 83,
+        "N1": 58,
+        "N2": 106,
+        "vocabulary": 98,
+        "length": 164,
+        "volume": 1084.8124144348942,
+        "difficulty": 9.578313253012048,
+        "effort": 10390.673126213745,
+        "time": 577.2596181229859,
+        "bugs": 0.3616041381449647
+      },
+      "maintainability_index": 17.947059016195915
+    },
+    {
       "file": "apps/infrastructure/management/commands/generate_audit_trail_data.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 354,
         "sloc": 262,
@@ -728,7 +880,7 @@
     },
     {
       "file": "apps/infrastructure/management/commands/validate_openapi.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 338,
         "sloc": 246,
@@ -856,7 +1008,7 @@
     },
     {
       "file": "apps/infrastructure/models/container_type.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 37,
         "sloc": 20,
@@ -912,7 +1064,7 @@
     },
     {
       "file": "apps/infrastructure/models/sensor.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 44,
         "sloc": 27,
@@ -967,8 +1119,64 @@
       "maintainability_index": 100.0
     },
     {
+      "file": "apps/infrastructure/models/transport_carrier.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 43,
+        "sloc": 27,
+        "comments": 0,
+        "multi": 5,
+        "blank": 10
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TransportCarrier",
+            "complexity": 2,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 43,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 1,
+            "lineno": 42,
+            "col_offset": 4,
+            "endline": 43,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 1.5,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
       "file": "apps/infrastructure/models/geography.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 29,
         "sloc": 13,
@@ -1023,8 +1231,64 @@
       "maintainability_index": 100.0
     },
     {
+      "file": "apps/infrastructure/models/area_group.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 52,
+        "sloc": 34,
+        "comments": 0,
+        "multi": 8,
+        "blank": 10
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "AreaGroup",
+            "complexity": 3,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 51,
+            "type": "Class"
+          },
+          {
+            "name": "__str__",
+            "complexity": 2,
+            "lineno": 48,
+            "col_offset": 4,
+            "endline": 51,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 2,
+          "average_complexity": 2.5,
+          "max_complexity": 3,
+          "complexity_distribution": {
+            "low": 2,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
       "file": "apps/infrastructure/models/hall.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 36,
         "sloc": 20,
@@ -1080,10 +1344,10 @@
     },
     {
       "file": "apps/infrastructure/models/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 25,
-        "sloc": 18,
+        "loc": 29,
+        "sloc": 22,
         "comments": 0,
         "multi": 4,
         "blank": 3
@@ -1119,79 +1383,79 @@
     },
     {
       "file": "apps/infrastructure/models/container.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 95,
-        "sloc": 61,
-        "comments": 4,
+        "loc": 171,
+        "sloc": 132,
+        "comments": 6,
         "multi": 15,
-        "blank": 15
+        "blank": 19
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "Container",
-            "complexity": 5,
-            "lineno": 17,
+            "complexity": 8,
+            "lineno": 18,
             "col_offset": 0,
-            "endline": 95,
+            "endline": 171,
             "type": "Class"
           },
           {
             "name": "clean",
-            "complexity": 8,
-            "lineno": 66,
+            "complexity": 15,
+            "lineno": 104,
             "col_offset": 4,
-            "endline": 86,
+            "endline": 155,
             "type": "Function"
           },
           {
             "name": "save",
             "complexity": 1,
-            "lineno": 89,
+            "lineno": 158,
             "col_offset": 4,
-            "endline": 91,
+            "endline": 160,
             "type": "Function"
           },
           {
             "name": "__str__",
-            "complexity": 2,
-            "lineno": 93,
+            "complexity": 4,
+            "lineno": 162,
             "col_offset": 4,
-            "endline": 95,
+            "endline": 171,
             "type": "Function"
           }
         ],
         "summary": {
           "total_functions": 4,
-          "average_complexity": 4.0,
-          "max_complexity": 8,
+          "average_complexity": 7.0,
+          "max_complexity": 15,
           "complexity_distribution": {
-            "low": 3,
+            "low": 2,
             "medium": 1,
-            "high": 0,
+            "high": 1,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 4,
-        "h2": 9,
-        "N1": 7,
-        "N2": 12,
-        "vocabulary": 13,
-        "length": 19,
-        "volume": 70.30835464468075,
-        "difficulty": 2.6666666666666665,
-        "effort": 187.48894571914866,
-        "time": 10.416052539952704,
-        "bugs": 0.02343611821489358
+        "h1": 7,
+        "h2": 18,
+        "N1": 10,
+        "N2": 20,
+        "vocabulary": 25,
+        "length": 30,
+        "volume": 139.31568569324173,
+        "difficulty": 3.888888888888889,
+        "effort": 541.7832221403845,
+        "time": 30.099067896688027,
+        "bugs": 0.04643856189774724
       },
-      "maintainability_index": 65.78879185295725
+      "maintainability_index": 54.83033228794828
     },
     {
       "file": "apps/infrastructure/models/station.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 50,
         "sloc": 33,
@@ -1247,7 +1511,7 @@
     },
     {
       "file": "apps/infrastructure/models/feed_container.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 74,
         "sloc": 43,
@@ -1319,10 +1583,10 @@
     },
     {
       "file": "apps/infrastructure/models/area.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 49,
-        "sloc": 33,
+        "loc": 56,
+        "sloc": 40,
         "comments": 0,
         "multi": 8,
         "blank": 8
@@ -1334,15 +1598,15 @@
             "complexity": 2,
             "lineno": 16,
             "col_offset": 0,
-            "endline": 49,
+            "endline": 56,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 48,
+            "lineno": 55,
             "col_offset": 4,
-            "endline": 49,
+            "endline": 56,
             "type": "Function"
           }
         ],
@@ -1375,7 +1639,7 @@
     },
     {
       "file": "apps/infrastructure/api/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -1414,10 +1678,10 @@
     },
     {
       "file": "apps/infrastructure/api/routers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 67,
-        "sloc": 50,
+        "loc": 71,
+        "sloc": 54,
         "comments": 6,
         "multi": 4,
         "blank": 7
@@ -1449,91 +1713,99 @@
         "time": 0.1320802083934297,
         "bugs": 0.0015849625007211565
       },
-      "maintainability_index": 83.86114424029174
+      "maintainability_index": 82.5282536320501
     },
     {
       "file": "apps/infrastructure/api/filters/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 83,
-        "sloc": 44,
+        "loc": 92,
+        "sloc": 49,
         "comments": 0,
         "multi": 5,
-        "blank": 26
+        "blank": 29
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "GeographyHistoryFilter",
             "complexity": 1,
-            "lineno": 22,
+            "lineno": 23,
             "col_offset": 0,
-            "endline": 23,
+            "endline": 24,
             "type": "Class"
           },
           {
             "name": "AreaHistoryFilter",
             "complexity": 1,
-            "lineno": 30,
+            "lineno": 31,
             "col_offset": 0,
-            "endline": 31,
+            "endline": 32,
             "type": "Class"
           },
           {
             "name": "FreshwaterStationHistoryFilter",
             "complexity": 1,
-            "lineno": 38,
+            "lineno": 39,
             "col_offset": 0,
-            "endline": 39,
+            "endline": 40,
             "type": "Class"
           },
           {
             "name": "HallHistoryFilter",
             "complexity": 1,
-            "lineno": 46,
+            "lineno": 47,
             "col_offset": 0,
-            "endline": 47,
+            "endline": 48,
             "type": "Class"
           },
           {
             "name": "ContainerTypeHistoryFilter",
             "complexity": 1,
-            "lineno": 54,
+            "lineno": 55,
             "col_offset": 0,
-            "endline": 55,
+            "endline": 56,
             "type": "Class"
           },
           {
             "name": "ContainerHistoryFilter",
             "complexity": 1,
-            "lineno": 62,
+            "lineno": 63,
             "col_offset": 0,
-            "endline": 63,
+            "endline": 64,
+            "type": "Class"
+          },
+          {
+            "name": "TransportCarrierHistoryFilter",
+            "complexity": 1,
+            "lineno": 71,
+            "col_offset": 0,
+            "endline": 72,
             "type": "Class"
           },
           {
             "name": "SensorHistoryFilter",
             "complexity": 1,
-            "lineno": 70,
+            "lineno": 79,
             "col_offset": 0,
-            "endline": 71,
+            "endline": 80,
             "type": "Class"
           },
           {
             "name": "FeedContainerHistoryFilter",
             "complexity": 1,
-            "lineno": 78,
+            "lineno": 87,
             "col_offset": 0,
-            "endline": 79,
+            "endline": 88,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 8,
+          "total_functions": 9,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 8,
+            "low": 9,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -1557,34 +1829,26 @@
     },
     {
       "file": "apps/infrastructure/api/viewsets/container_type.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 59,
-        "sloc": 24,
+        "loc": 62,
+        "sloc": 25,
         "comments": 0,
-        "multi": 20,
-        "blank": 15
+        "multi": 21,
+        "blank": 16
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "ContainerTypeViewSet",
             "complexity": 2,
-            "lineno": 13,
+            "lineno": 15,
             "col_offset": 0,
-            "endline": 59,
+            "endline": 62,
             "type": "Class"
           },
           {
             "name": "list",
-            "complexity": 1,
-            "lineno": 43,
-            "col_offset": 4,
-            "endline": 44,
-            "type": "Function"
-          },
-          {
-            "name": "create",
             "complexity": 1,
             "lineno": 46,
             "col_offset": 4,
@@ -1592,7 +1856,7 @@
             "type": "Function"
           },
           {
-            "name": "retrieve",
+            "name": "create",
             "complexity": 1,
             "lineno": 49,
             "col_offset": 4,
@@ -1600,7 +1864,7 @@
             "type": "Function"
           },
           {
-            "name": "update",
+            "name": "retrieve",
             "complexity": 1,
             "lineno": 52,
             "col_offset": 4,
@@ -1608,7 +1872,7 @@
             "type": "Function"
           },
           {
-            "name": "partial_update",
+            "name": "update",
             "complexity": 1,
             "lineno": 55,
             "col_offset": 4,
@@ -1616,11 +1880,19 @@
             "type": "Function"
           },
           {
-            "name": "destroy",
+            "name": "partial_update",
             "complexity": 1,
             "lineno": 58,
             "col_offset": 4,
             "endline": 59,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 61,
+            "col_offset": 4,
+            "endline": 62,
             "type": "Function"
           }
         ],
@@ -1653,42 +1925,34 @@
     },
     {
       "file": "apps/infrastructure/api/viewsets/sensor.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 80,
-        "sloc": 34,
+        "loc": 83,
+        "sloc": 35,
         "comments": 0,
-        "multi": 27,
-        "blank": 18
+        "multi": 28,
+        "blank": 19
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "SensorFilter",
             "complexity": 1,
-            "lineno": 15,
+            "lineno": 17,
             "col_offset": 0,
-            "endline": 16,
+            "endline": 18,
             "type": "Class"
           },
           {
             "name": "SensorViewSet",
             "complexity": 2,
-            "lineno": 27,
+            "lineno": 29,
             "col_offset": 0,
-            "endline": 80,
+            "endline": 83,
             "type": "Class"
           },
           {
             "name": "list",
-            "complexity": 1,
-            "lineno": 64,
-            "col_offset": 4,
-            "endline": 65,
-            "type": "Function"
-          },
-          {
-            "name": "create",
             "complexity": 1,
             "lineno": 67,
             "col_offset": 4,
@@ -1696,7 +1960,7 @@
             "type": "Function"
           },
           {
-            "name": "retrieve",
+            "name": "create",
             "complexity": 1,
             "lineno": 70,
             "col_offset": 4,
@@ -1704,7 +1968,7 @@
             "type": "Function"
           },
           {
-            "name": "update",
+            "name": "retrieve",
             "complexity": 1,
             "lineno": 73,
             "col_offset": 4,
@@ -1712,7 +1976,7 @@
             "type": "Function"
           },
           {
-            "name": "partial_update",
+            "name": "update",
             "complexity": 1,
             "lineno": 76,
             "col_offset": 4,
@@ -1720,11 +1984,19 @@
             "type": "Function"
           },
           {
-            "name": "destroy",
+            "name": "partial_update",
             "complexity": 1,
             "lineno": 79,
             "col_offset": 4,
             "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 82,
+            "col_offset": 4,
+            "endline": 83,
             "type": "Function"
           }
         ],
@@ -1756,35 +2028,75 @@
       "maintainability_index": 100.0
     },
     {
-      "file": "apps/infrastructure/api/viewsets/geography.py",
-      "timestamp": "2025-10-03",
+      "file": "apps/infrastructure/api/viewsets/transport_carrier.py",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 148,
-        "sloc": 87,
+        "loc": 25,
+        "sloc": 15,
+        "comments": 0,
+        "multi": 3,
+        "blank": 6
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TransportCarrierViewSet",
+            "complexity": 1,
+            "lineno": 16,
+            "col_offset": 0,
+            "endline": 25,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/infrastructure/api/viewsets/geography.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 151,
+        "sloc": 88,
         "comments": 9,
-        "multi": 25,
-        "blank": 27
+        "multi": 26,
+        "blank": 28
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "GeographyViewSet",
             "complexity": 2,
-            "lineno": 29,
+            "lineno": 31,
             "col_offset": 0,
-            "endline": 147,
+            "endline": 150,
             "type": "Class"
           },
           {
             "name": "list",
-            "complexity": 1,
-            "lineno": 62,
-            "col_offset": 4,
-            "endline": 63,
-            "type": "Function"
-          },
-          {
-            "name": "create",
             "complexity": 1,
             "lineno": 65,
             "col_offset": 4,
@@ -1792,7 +2104,7 @@
             "type": "Function"
           },
           {
-            "name": "retrieve",
+            "name": "create",
             "complexity": 1,
             "lineno": 68,
             "col_offset": 4,
@@ -1800,7 +2112,7 @@
             "type": "Function"
           },
           {
-            "name": "update",
+            "name": "retrieve",
             "complexity": 1,
             "lineno": 71,
             "col_offset": 4,
@@ -1808,7 +2120,7 @@
             "type": "Function"
           },
           {
-            "name": "partial_update",
+            "name": "update",
             "complexity": 1,
             "lineno": 74,
             "col_offset": 4,
@@ -1816,7 +2128,7 @@
             "type": "Function"
           },
           {
-            "name": "destroy",
+            "name": "partial_update",
             "complexity": 1,
             "lineno": 77,
             "col_offset": 4,
@@ -1824,11 +2136,19 @@
             "type": "Function"
           },
           {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 80,
+            "col_offset": 4,
+            "endline": 81,
+            "type": "Function"
+          },
+          {
             "name": "summary",
             "complexity": 3,
-            "lineno": 89,
+            "lineno": 92,
             "col_offset": 4,
-            "endline": 147,
+            "endline": 150,
             "type": "Function"
           }
         ],
@@ -1857,46 +2177,38 @@
         "time": 4.908657414995318,
         "bugs": 0.02734823416925963
       },
-      "maintainability_index": 64.54025575040623
+      "maintainability_index": 64.29625473940598
     },
     {
       "file": "apps/infrastructure/api/viewsets/hall.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 199,
-        "sloc": 115,
-        "comments": 14,
-        "multi": 36,
-        "blank": 33
+        "loc": 209,
+        "sloc": 121,
+        "comments": 15,
+        "multi": 37,
+        "blank": 35
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "HallFilter",
             "complexity": 1,
-            "lineno": 30,
+            "lineno": 32,
             "col_offset": 0,
-            "endline": 31,
+            "endline": 33,
             "type": "Class"
           },
           {
             "name": "HallViewSet",
-            "complexity": 2,
-            "lineno": 42,
+            "complexity": 3,
+            "lineno": 44,
             "col_offset": 0,
-            "endline": 199,
+            "endline": 209,
             "type": "Class"
           },
           {
             "name": "list",
-            "complexity": 1,
-            "lineno": 79,
-            "col_offset": 4,
-            "endline": 80,
-            "type": "Function"
-          },
-          {
-            "name": "create",
             "complexity": 1,
             "lineno": 82,
             "col_offset": 4,
@@ -1904,7 +2216,7 @@
             "type": "Function"
           },
           {
-            "name": "retrieve",
+            "name": "create",
             "complexity": 1,
             "lineno": 85,
             "col_offset": 4,
@@ -1912,7 +2224,7 @@
             "type": "Function"
           },
           {
-            "name": "update",
+            "name": "retrieve",
             "complexity": 1,
             "lineno": 88,
             "col_offset": 4,
@@ -1920,7 +2232,7 @@
             "type": "Function"
           },
           {
-            "name": "partial_update",
+            "name": "update",
             "complexity": 1,
             "lineno": 91,
             "col_offset": 4,
@@ -1928,7 +2240,7 @@
             "type": "Function"
           },
           {
-            "name": "destroy",
+            "name": "partial_update",
             "complexity": 1,
             "lineno": 94,
             "col_offset": 4,
@@ -1936,18 +2248,26 @@
             "type": "Function"
           },
           {
-            "name": "summary",
-            "complexity": 6,
-            "lineno": 132,
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 97,
             "col_offset": 4,
-            "endline": 199,
+            "endline": 98,
+            "type": "Function"
+          },
+          {
+            "name": "summary",
+            "complexity": 8,
+            "lineno": 135,
+            "col_offset": 4,
+            "endline": 209,
             "type": "Function"
           }
         ],
         "summary": {
           "total_functions": 9,
-          "average_complexity": 1.6666666666666667,
-          "max_complexity": 6,
+          "average_complexity": 2.0,
+          "max_complexity": 8,
           "complexity_distribution": {
             "low": 8,
             "medium": 1,
@@ -1957,26 +2277,26 @@
         }
       },
       "halstead": {
-        "h1": 4,
-        "h2": 9,
-        "N1": 6,
-        "N2": 12,
-        "vocabulary": 13,
-        "length": 18,
-        "volume": 66.60791492653966,
-        "difficulty": 2.6666666666666665,
-        "effort": 177.62110647077242,
-        "time": 9.867839248376246,
-        "bugs": 0.022202638308846556
+        "h1": 5,
+        "h2": 16,
+        "N1": 10,
+        "N2": 20,
+        "vocabulary": 21,
+        "length": 30,
+        "volume": 131.76952268336282,
+        "difficulty": 3.125,
+        "effort": 411.77975838550884,
+        "time": 22.87665324363938,
+        "bugs": 0.04392317422778761
       },
-      "maintainability_index": 64.4453225090387
+      "maintainability_index": 61.85358640639351
     },
     {
       "file": "apps/infrastructure/api/viewsets/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 25,
-        "sloc": 18,
+        "loc": 27,
+        "sloc": 20,
         "comments": 0,
         "multi": 4,
         "blank": 3
@@ -2012,78 +2332,78 @@
     },
     {
       "file": "apps/infrastructure/api/viewsets/container.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 89,
-        "sloc": 41,
+        "loc": 97,
+        "sloc": 43,
         "comments": 1,
-        "multi": 28,
-        "blank": 18
+        "multi": 33,
+        "blank": 19
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "ContainerFilter",
             "complexity": 1,
-            "lineno": 19,
+            "lineno": 20,
             "col_offset": 0,
-            "endline": 20,
+            "endline": 21,
             "type": "Class"
           },
           {
             "name": "ContainerViewSet",
             "complexity": 2,
-            "lineno": 32,
+            "lineno": 35,
             "col_offset": 0,
-            "endline": 89,
+            "endline": 97,
             "type": "Class"
           },
           {
             "name": "list",
             "complexity": 1,
-            "lineno": 73,
+            "lineno": 81,
             "col_offset": 4,
-            "endline": 74,
+            "endline": 82,
             "type": "Function"
           },
           {
             "name": "create",
             "complexity": 1,
-            "lineno": 76,
+            "lineno": 84,
             "col_offset": 4,
-            "endline": 77,
+            "endline": 85,
             "type": "Function"
           },
           {
             "name": "retrieve",
             "complexity": 1,
-            "lineno": 79,
+            "lineno": 87,
             "col_offset": 4,
-            "endline": 80,
+            "endline": 88,
             "type": "Function"
           },
           {
             "name": "update",
             "complexity": 1,
-            "lineno": 82,
+            "lineno": 90,
             "col_offset": 4,
-            "endline": 83,
+            "endline": 91,
             "type": "Function"
           },
           {
             "name": "partial_update",
             "complexity": 1,
-            "lineno": 85,
+            "lineno": 93,
             "col_offset": 4,
-            "endline": 86,
+            "endline": 94,
             "type": "Function"
           },
           {
             "name": "destroy",
             "complexity": 1,
-            "lineno": 88,
+            "lineno": 96,
             "col_offset": 4,
-            "endline": 89,
+            "endline": 97,
             "type": "Function"
           }
         ],
@@ -2116,7 +2436,7 @@
     },
     {
       "file": "apps/infrastructure/api/viewsets/overview.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 108,
         "sloc": 70,
@@ -2172,246 +2492,30 @@
     },
     {
       "file": "apps/infrastructure/api/viewsets/station.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 148,
-        "sloc": 76,
+        "loc": 151,
+        "sloc": 77,
         "comments": 6,
-        "multi": 36,
-        "blank": 29
+        "multi": 37,
+        "blank": 30
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "FreshwaterStationFilter",
             "complexity": 1,
-            "lineno": 24,
+            "lineno": 26,
             "col_offset": 0,
-            "endline": 25,
+            "endline": 27,
             "type": "Class"
           },
           {
             "name": "FreshwaterStationViewSet",
             "complexity": 2,
-            "lineno": 37,
+            "lineno": 39,
             "col_offset": 0,
-            "endline": 148,
-            "type": "Class"
-          },
-          {
-            "name": "list",
-            "complexity": 1,
-            "lineno": 73,
-            "col_offset": 4,
-            "endline": 74,
-            "type": "Function"
-          },
-          {
-            "name": "create",
-            "complexity": 1,
-            "lineno": 76,
-            "col_offset": 4,
-            "endline": 77,
-            "type": "Function"
-          },
-          {
-            "name": "retrieve",
-            "complexity": 1,
-            "lineno": 79,
-            "col_offset": 4,
-            "endline": 80,
-            "type": "Function"
-          },
-          {
-            "name": "update",
-            "complexity": 1,
-            "lineno": 82,
-            "col_offset": 4,
-            "endline": 83,
-            "type": "Function"
-          },
-          {
-            "name": "partial_update",
-            "complexity": 1,
-            "lineno": 85,
-            "col_offset": 4,
-            "endline": 86,
-            "type": "Function"
-          },
-          {
-            "name": "summary",
-            "complexity": 4,
-            "lineno": 98,
-            "col_offset": 4,
-            "endline": 145,
-            "type": "Function"
-          },
-          {
-            "name": "destroy",
-            "complexity": 1,
-            "lineno": 147,
-            "col_offset": 4,
-            "endline": 148,
-            "type": "Function"
-          }
-        ],
-        "summary": {
-          "total_functions": 9,
-          "average_complexity": 1.4444444444444444,
-          "max_complexity": 4,
-          "complexity_distribution": {
-            "low": 9,
-            "medium": 0,
-            "high": 0,
-            "very_high": 0
-          }
-        }
-      },
-      "halstead": {
-        "h1": 3,
-        "h2": 5,
-        "N1": 4,
-        "N2": 8,
-        "vocabulary": 8,
-        "length": 12,
-        "volume": 36.0,
-        "difficulty": 2.4,
-        "effort": 86.39999999999999,
-        "time": 4.8,
-        "bugs": 0.012
-      },
-      "maintainability_index": 65.071869409712
-    },
-    {
-      "file": "apps/infrastructure/api/viewsets/feed_container.py",
-      "timestamp": "2025-10-03",
-      "raw": {
-        "loc": 82,
-        "sloc": 35,
-        "comments": 0,
-        "multi": 28,
-        "blank": 18
-      },
-      "cyclomatic_complexity": {
-        "functions": [
-          {
-            "name": "FeedContainerFilter",
-            "complexity": 1,
-            "lineno": 15,
-            "col_offset": 0,
-            "endline": 16,
-            "type": "Class"
-          },
-          {
-            "name": "FeedContainerViewSet",
-            "complexity": 2,
-            "lineno": 28,
-            "col_offset": 0,
-            "endline": 82,
-            "type": "Class"
-          },
-          {
-            "name": "list",
-            "complexity": 1,
-            "lineno": 66,
-            "col_offset": 4,
-            "endline": 67,
-            "type": "Function"
-          },
-          {
-            "name": "create",
-            "complexity": 1,
-            "lineno": 69,
-            "col_offset": 4,
-            "endline": 70,
-            "type": "Function"
-          },
-          {
-            "name": "retrieve",
-            "complexity": 1,
-            "lineno": 72,
-            "col_offset": 4,
-            "endline": 73,
-            "type": "Function"
-          },
-          {
-            "name": "update",
-            "complexity": 1,
-            "lineno": 75,
-            "col_offset": 4,
-            "endline": 76,
-            "type": "Function"
-          },
-          {
-            "name": "partial_update",
-            "complexity": 1,
-            "lineno": 78,
-            "col_offset": 4,
-            "endline": 79,
-            "type": "Function"
-          },
-          {
-            "name": "destroy",
-            "complexity": 1,
-            "lineno": 81,
-            "col_offset": 4,
-            "endline": 82,
-            "type": "Function"
-          }
-        ],
-        "summary": {
-          "total_functions": 8,
-          "average_complexity": 1.125,
-          "max_complexity": 2,
-          "complexity_distribution": {
-            "low": 8,
-            "medium": 0,
-            "high": 0,
-            "very_high": 0
-          }
-        }
-      },
-      "halstead": {
-        "h1": 0,
-        "h2": 0,
-        "N1": 0,
-        "N2": 0,
-        "vocabulary": 0,
-        "length": 0,
-        "volume": 0,
-        "difficulty": 0,
-        "effort": 0,
-        "time": 0.0,
-        "bugs": 0.0
-      },
-      "maintainability_index": 100.0
-    },
-    {
-      "file": "apps/infrastructure/api/viewsets/area.py",
-      "timestamp": "2025-10-03",
-      "raw": {
-        "loc": 200,
-        "sloc": 119,
-        "comments": 13,
-        "multi": 35,
-        "blank": 32
-      },
-      "cyclomatic_complexity": {
-        "functions": [
-          {
-            "name": "AreaFilter",
-            "complexity": 1,
-            "lineno": 29,
-            "col_offset": 0,
-            "endline": 30,
-            "type": "Class"
-          },
-          {
-            "name": "AreaViewSet",
-            "complexity": 3,
-            "lineno": 41,
-            "col_offset": 0,
-            "endline": 199,
+            "endline": 151,
             "type": "Class"
           },
           {
@@ -2455,7 +2559,215 @@
             "type": "Function"
           },
           {
+            "name": "summary",
+            "complexity": 4,
+            "lineno": 101,
+            "col_offset": 4,
+            "endline": 148,
+            "type": "Function"
+          },
+          {
             "name": "destroy",
+            "complexity": 1,
+            "lineno": 150,
+            "col_offset": 4,
+            "endline": 151,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 9,
+          "average_complexity": 1.4444444444444444,
+          "max_complexity": 4,
+          "complexity_distribution": {
+            "low": 9,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 3,
+        "h2": 5,
+        "N1": 4,
+        "N2": 8,
+        "vocabulary": 8,
+        "length": 12,
+        "volume": 36.0,
+        "difficulty": 2.4,
+        "effort": 86.39999999999999,
+        "time": 4.8,
+        "bugs": 0.012
+      },
+      "maintainability_index": 64.81989619573417
+    },
+    {
+      "file": "apps/infrastructure/api/viewsets/feed_container.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 85,
+        "sloc": 36,
+        "comments": 0,
+        "multi": 29,
+        "blank": 19
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "FeedContainerFilter",
+            "complexity": 1,
+            "lineno": 17,
+            "col_offset": 0,
+            "endline": 18,
+            "type": "Class"
+          },
+          {
+            "name": "FeedContainerViewSet",
+            "complexity": 2,
+            "lineno": 30,
+            "col_offset": 0,
+            "endline": 85,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 69,
+            "col_offset": 4,
+            "endline": 70,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 72,
+            "col_offset": 4,
+            "endline": 73,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 75,
+            "col_offset": 4,
+            "endline": 76,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 78,
+            "col_offset": 4,
+            "endline": 79,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
+            "complexity": 1,
+            "lineno": 81,
+            "col_offset": 4,
+            "endline": 82,
+            "type": "Function"
+          },
+          {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 84,
+            "col_offset": 4,
+            "endline": 85,
+            "type": "Function"
+          }
+        ],
+        "summary": {
+          "total_functions": 8,
+          "average_complexity": 1.125,
+          "max_complexity": 2,
+          "complexity_distribution": {
+            "low": 8,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
+      "file": "apps/infrastructure/api/viewsets/area.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 203,
+        "sloc": 121,
+        "comments": 13,
+        "multi": 35,
+        "blank": 33
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "AreaFilter",
+            "complexity": 1,
+            "lineno": 31,
+            "col_offset": 0,
+            "endline": 32,
+            "type": "Class"
+          },
+          {
+            "name": "AreaViewSet",
+            "complexity": 3,
+            "lineno": 44,
+            "col_offset": 0,
+            "endline": 202,
+            "type": "Class"
+          },
+          {
+            "name": "list",
+            "complexity": 1,
+            "lineno": 79,
+            "col_offset": 4,
+            "endline": 80,
+            "type": "Function"
+          },
+          {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 82,
+            "col_offset": 4,
+            "endline": 83,
+            "type": "Function"
+          },
+          {
+            "name": "retrieve",
+            "complexity": 1,
+            "lineno": 85,
+            "col_offset": 4,
+            "endline": 86,
+            "type": "Function"
+          },
+          {
+            "name": "update",
+            "complexity": 1,
+            "lineno": 88,
+            "col_offset": 4,
+            "endline": 89,
+            "type": "Function"
+          },
+          {
+            "name": "partial_update",
             "complexity": 1,
             "lineno": 91,
             "col_offset": 4,
@@ -2463,11 +2775,19 @@
             "type": "Function"
           },
           {
+            "name": "destroy",
+            "complexity": 1,
+            "lineno": 94,
+            "col_offset": 4,
+            "endline": 95,
+            "type": "Function"
+          },
+          {
             "name": "summary",
             "complexity": 7,
-            "lineno": 129,
+            "lineno": 132,
             "col_offset": 4,
-            "endline": 199,
+            "endline": 202,
             "type": "Function"
           }
         ],
@@ -2496,91 +2816,99 @@
         "time": 21.651533661335083,
         "bugs": 0.03752932501298081
       },
-      "maintainability_index": 62.135931626334255
+      "maintainability_index": 61.87060604377847
     },
     {
       "file": "apps/infrastructure/api/viewsets/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 95,
-        "sloc": 64,
+        "loc": 105,
+        "sloc": 71,
         "comments": 0,
         "multi": 5,
-        "blank": 18
+        "blank": 20
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "GeographyHistoryViewSet",
             "complexity": 1,
-            "lineno": 42,
+            "lineno": 45,
             "col_offset": 0,
-            "endline": 46,
+            "endline": 49,
             "type": "Class"
           },
           {
             "name": "AreaHistoryViewSet",
             "complexity": 1,
-            "lineno": 49,
+            "lineno": 52,
             "col_offset": 0,
-            "endline": 53,
+            "endline": 56,
             "type": "Class"
           },
           {
             "name": "FreshwaterStationHistoryViewSet",
             "complexity": 1,
-            "lineno": 56,
+            "lineno": 59,
             "col_offset": 0,
-            "endline": 60,
+            "endline": 63,
             "type": "Class"
           },
           {
             "name": "HallHistoryViewSet",
             "complexity": 1,
-            "lineno": 63,
+            "lineno": 66,
             "col_offset": 0,
-            "endline": 67,
+            "endline": 70,
             "type": "Class"
           },
           {
             "name": "ContainerTypeHistoryViewSet",
             "complexity": 1,
-            "lineno": 70,
+            "lineno": 73,
             "col_offset": 0,
-            "endline": 74,
+            "endline": 77,
             "type": "Class"
           },
           {
             "name": "ContainerHistoryViewSet",
             "complexity": 1,
-            "lineno": 77,
+            "lineno": 80,
             "col_offset": 0,
-            "endline": 81,
+            "endline": 84,
+            "type": "Class"
+          },
+          {
+            "name": "TransportCarrierHistoryViewSet",
+            "complexity": 1,
+            "lineno": 87,
+            "col_offset": 0,
+            "endline": 91,
             "type": "Class"
           },
           {
             "name": "SensorHistoryViewSet",
             "complexity": 1,
-            "lineno": 84,
+            "lineno": 94,
             "col_offset": 0,
-            "endline": 88,
+            "endline": 98,
             "type": "Class"
           },
           {
             "name": "FeedContainerHistoryViewSet",
             "complexity": 1,
-            "lineno": 91,
+            "lineno": 101,
             "col_offset": 0,
-            "endline": 95,
+            "endline": 105,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 8,
+          "total_functions": 9,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 8,
+            "low": 9,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -2604,7 +2932,7 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/container_type.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 51,
         "sloc": 39,
@@ -2652,7 +2980,7 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/sensor.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 77,
         "sloc": 65,
@@ -2699,8 +3027,56 @@
       "maintainability_index": 100.0
     },
     {
+      "file": "apps/infrastructure/api/serializers/transport_carrier.py",
+      "timestamp": "2026-02-20",
+      "raw": {
+        "loc": 43,
+        "sloc": 33,
+        "comments": 0,
+        "multi": 3,
+        "blank": 6
+      },
+      "cyclomatic_complexity": {
+        "functions": [
+          {
+            "name": "TransportCarrierSerializer",
+            "complexity": 1,
+            "lineno": 14,
+            "col_offset": 0,
+            "endline": 24,
+            "type": "Class"
+          }
+        ],
+        "summary": {
+          "total_functions": 1,
+          "average_complexity": 1.0,
+          "max_complexity": 1,
+          "complexity_distribution": {
+            "low": 1,
+            "medium": 0,
+            "high": 0,
+            "very_high": 0
+          }
+        }
+      },
+      "halstead": {
+        "h1": 0,
+        "h2": 0,
+        "N1": 0,
+        "N2": 0,
+        "vocabulary": 0,
+        "length": 0,
+        "volume": 0,
+        "difficulty": 0,
+        "effort": 0,
+        "time": 0.0,
+        "bugs": 0.0
+      },
+      "maintainability_index": 100.0
+    },
+    {
       "file": "apps/infrastructure/api/serializers/geography.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 62,
         "sloc": 46,
@@ -2756,10 +3132,10 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/hall.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 88,
-        "sloc": 67,
+        "loc": 98,
+        "sloc": 77,
         "comments": 1,
         "multi": 9,
         "blank": 11
@@ -2771,15 +3147,15 @@
             "complexity": 1,
             "lineno": 16,
             "col_offset": 0,
-            "endline": 39,
+            "endline": 49,
             "type": "Class"
           },
           {
             "name": "HallSerializer",
             "complexity": 1,
-            "lineno": 46,
+            "lineno": 56,
             "col_offset": 0,
-            "endline": 78,
+            "endline": 88,
             "type": "Class"
           }
         ],
@@ -2812,10 +3188,10 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 25,
-        "sloc": 18,
+        "loc": 27,
+        "sloc": 20,
         "comments": 0,
         "multi": 4,
         "blank": 3
@@ -2851,10 +3227,10 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/container.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 135,
-        "sloc": 97,
+        "loc": 174,
+        "sloc": 136,
         "comments": 13,
         "multi": 14,
         "blank": 16
@@ -2864,17 +3240,17 @@
           {
             "name": "ContainerSerializer",
             "complexity": 9,
-            "lineno": 25,
+            "lineno": 26,
             "col_offset": 0,
-            "endline": 135,
+            "endline": 174,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 8,
-            "lineno": 99,
+            "lineno": 138,
             "col_offset": 4,
-            "endline": 135,
+            "endline": 174,
             "type": "Function"
           }
         ],
@@ -2903,11 +3279,11 @@
         "time": 7.044277780982917,
         "bugs": 0.016906266674359
       },
-      "maintainability_index": 72.01601887294096
+      "maintainability_index": 67.85144363244562
     },
     {
       "file": "apps/infrastructure/api/serializers/station.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 112,
         "sloc": 91,
@@ -2963,7 +3339,7 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/feed_container.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 86,
         "sloc": 71,
@@ -3011,10 +3387,10 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/area.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 96,
-        "sloc": 62,
+        "loc": 109,
+        "sloc": 75,
         "comments": 20,
         "multi": 4,
         "blank": 11
@@ -3024,17 +3400,17 @@
           {
             "name": "AreaSerializer",
             "complexity": 2,
-            "lineno": 21,
+            "lineno": 22,
             "col_offset": 0,
-            "endline": 96,
+            "endline": 109,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 1,
-            "lineno": 75,
+            "lineno": 88,
             "col_offset": 4,
-            "endline": 96,
+            "endline": 109,
             "type": "Function"
           }
         ],
@@ -3067,12 +3443,12 @@
     },
     {
       "file": "apps/infrastructure/api/serializers/base.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 128,
-        "sloc": 62,
+        "loc": 130,
+        "sloc": 65,
         "comments": 3,
-        "multi": 20,
+        "multi": 19,
         "blank": 35
       },
       "cyclomatic_complexity": {
@@ -3135,139 +3511,147 @@
           },
           {
             "name": "ExclusiveLocationModelSerializer",
-            "complexity": 6,
+            "complexity": 7,
             "lineno": 71,
             "col_offset": 0,
-            "endline": 128,
+            "endline": 130,
             "type": "Class"
           },
           {
             "name": "_get_model_name",
             "complexity": 1,
-            "lineno": 81,
+            "lineno": 80,
             "col_offset": 4,
-            "endline": 87,
+            "endline": 86,
             "type": "Function"
           },
           {
             "name": "validate",
-            "complexity": 8,
-            "lineno": 89,
+            "complexity": 11,
+            "lineno": 88,
             "col_offset": 4,
-            "endline": 128,
+            "endline": 130,
             "type": "Function"
           }
         ],
         "summary": {
           "total_functions": 10,
-          "average_complexity": 3.9,
-          "max_complexity": 8,
+          "average_complexity": 4.3,
+          "max_complexity": 11,
           "complexity_distribution": {
             "low": 8,
-            "medium": 2,
-            "high": 0,
+            "medium": 1,
+            "high": 1,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 8,
-        "h2": 22,
+        "h1": 9,
+        "h2": 26,
         "N1": 19,
-        "N2": 32,
-        "vocabulary": 30,
-        "length": 51,
-        "volume": 250.25142037603445,
-        "difficulty": 5.818181818181818,
-        "effort": 1456.0082640060186,
-        "time": 80.88934800033437,
-        "bugs": 0.08341714012534482
+        "N2": 34,
+        "vocabulary": 35,
+        "length": 53,
+        "volume": 271.8519998980832,
+        "difficulty": 5.884615384615385,
+        "effort": 1599.7444609387205,
+        "time": 88.87469227437336,
+        "bugs": 0.09061733329936106
       },
-      "maintainability_index": 54.01899581105938
+      "maintainability_index": 52.070159993767255
     },
     {
       "file": "apps/infrastructure/api/serializers/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 83,
-        "sloc": 44,
+        "loc": 92,
+        "sloc": 49,
         "comments": 0,
         "multi": 5,
-        "blank": 26
+        "blank": 29
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "GeographyHistorySerializer",
             "complexity": 1,
-            "lineno": 22,
+            "lineno": 23,
             "col_offset": 0,
-            "endline": 23,
+            "endline": 24,
             "type": "Class"
           },
           {
             "name": "AreaHistorySerializer",
             "complexity": 1,
-            "lineno": 30,
+            "lineno": 31,
             "col_offset": 0,
-            "endline": 31,
+            "endline": 32,
             "type": "Class"
           },
           {
             "name": "FreshwaterStationHistorySerializer",
             "complexity": 1,
-            "lineno": 38,
+            "lineno": 39,
             "col_offset": 0,
-            "endline": 39,
+            "endline": 40,
             "type": "Class"
           },
           {
             "name": "HallHistorySerializer",
             "complexity": 1,
-            "lineno": 46,
+            "lineno": 47,
             "col_offset": 0,
-            "endline": 47,
+            "endline": 48,
             "type": "Class"
           },
           {
             "name": "ContainerTypeHistorySerializer",
             "complexity": 1,
-            "lineno": 54,
+            "lineno": 55,
             "col_offset": 0,
-            "endline": 55,
+            "endline": 56,
             "type": "Class"
           },
           {
             "name": "ContainerHistorySerializer",
             "complexity": 1,
-            "lineno": 62,
+            "lineno": 63,
             "col_offset": 0,
-            "endline": 63,
+            "endline": 64,
+            "type": "Class"
+          },
+          {
+            "name": "TransportCarrierHistorySerializer",
+            "complexity": 1,
+            "lineno": 71,
+            "col_offset": 0,
+            "endline": 72,
             "type": "Class"
           },
           {
             "name": "SensorHistorySerializer",
             "complexity": 1,
-            "lineno": 70,
+            "lineno": 79,
             "col_offset": 0,
-            "endline": 71,
+            "endline": 80,
             "type": "Class"
           },
           {
             "name": "FeedContainerHistorySerializer",
             "complexity": 1,
-            "lineno": 78,
+            "lineno": 87,
             "col_offset": 0,
-            "endline": 79,
+            "endline": 88,
             "type": "Class"
           }
         ],
         "summary": {
-          "total_functions": 8,
+          "total_functions": 9,
           "average_complexity": 1.0,
           "max_complexity": 1,
           "complexity_distribution": {
-            "low": 8,
+            "low": 9,
             "medium": 0,
             "high": 0,
             "very_high": 0
@@ -3291,14 +3675,14 @@
     }
   ],
   "summary": {
-    "total_files": 44,
-    "total_functions": 192,
-    "cc_average": 2.1875,
+    "total_files": 49,
+    "total_functions": 215,
+    "cc_average": 2.4790697674418603,
     "cc_max": 18,
-    "mi_average": 85.41646612073814,
-    "mi_min": 38.83002491337459,
-    "halstead_avg_volume": 44.86275413104924,
-    "halstead_avg_difficulty": 0.9706055308328037,
-    "halstead_avg_effort": 225.5874488588762
+    "mi_average": 84.73224175039468,
+    "mi_min": 17.947059016195915,
+    "halstead_avg_volume": 65.60292070466316,
+    "halstead_avg_difficulty": 1.1026927700335618,
+    "halstead_avg_effort": 429.56551023006074
   }
 }

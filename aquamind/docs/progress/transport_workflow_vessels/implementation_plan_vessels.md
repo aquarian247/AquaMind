@@ -150,3 +150,82 @@ def snapshot_vessel_tank_readings(action: TransferAction, moment: str):  # "ente
 | Historian tags not mapped | Admin dashboard “Vessel Tank Mapping” page (reuse historian_tag_link) |
 
 ---
+
+**Addendum to Vessel Transport Integration Plan**  
+**Dynamic Station-to-Sea Transport with Trucks & Vessels**  
+**Date:** February 18, 2026  
+**Applies to:** Previous plan (`feature/vessel-transport-integration`)
+
+### Purpose of This Addendum
+Some Freshwater-to-Sea transports use **trucks** as an intermediate carrier (station tanks → truck tanks → vessel tanks → sea rings). Trucks have full AVEVA sensor coverage (same as vessels). The exact truck, sequence, and tank-to-tank mapping is **unknown at planning time** and is decided on-the-spot by ship/crew during execution.  
+
+**Scope limitation (critical):**  
+- Only **station-to-sea** workflows (LIFECYCLE_TRANSITION where source is Freshwater and destination is Farming/sea) get the new dynamic mode.  
+- All **internal in-station** transfers, sea-ring redistributions, and harvest-prep workflows remain exactly as they are today (pre-defined actions at planning time).  
+- Existing vessel-only flows (direct station → vessel) continue to work unchanged.
+
+### 1. New Data Model (High-Level)
+Reuse **infrastructure_container** for **all** carrier tanks (truck tanks + vessel tanks) – no new “tank” model needed.
+
+Add one new model in `infrastructure` app:
+
+```python
+class TransportCarrier(models.Model):
+    name = models.CharField(max_length=100, unique=True)          # "Truck-Alpha", "Martin"
+    carrier_type = models.CharField(max_length=20, choices=[('TRUCK', 'Truck'), ('VESSEL', 'Vessel')])
+    geography = models.ForeignKey(Geography, on_delete=models.PROTECT)
+    capacity_m3 = models.DecimalField(...)
+    active = models.BooleanField(default=True)
+    # Optional: license_plate, imo_number, captain_contact, etc.
+```
+
+- Add `carrier = models.ForeignKey(TransportCarrier, null=True, blank=True)` to `infrastructure_container`.
+- Existing vessel tanks get `carrier=Vessel("Martin")`; new truck tanks get `carrier=Truck("Truck-Alpha")`.
+
+### 2. Workflow Changes (Only for Station-to-Sea)
+- Keep `BatchTransferWorkflow` model unchanged.
+- Add a boolean flag `is_dynamic_execution = models.BooleanField(default=False)` (auto-set True for station-to-sea workflows).
+- When `is_dynamic_execution=True`:
+  - Planning UI creates a **high-level skeleton** workflow (no pre-defined TransferActions).
+  - Example planning description: “Transfer Batch SCO-2024-001 (75k smolt) from Station S24 to Area A47 via sea transport – estimated 2 trucks + 1 vessel”.
+  - No source/dest tank pairings required at planning time.
+- At **execution time** (mobile UI for SHIP_CREW):
+  - Crew sees a **live action builder**.
+  - They add/execute actions on-the-fly: “Pump 18,000 fish from Station Tank H2 → Truck-Alpha Tank T3”, then later “Truck-Alpha Tank T3 → Vessel Martin Tank V05”, etc.
+  - Each action still creates a real `TransferAction` + `BatchContainerAssignment` + historian snapshot (enter/exit readings) exactly as before.
+  - Progress bar shows % completed based on planned biomass vs. executed biomass.
+
+### 3. Historian & Compliance Snapshots
+- Same mechanism as original plan: on every `TransferAction.execute()`, automatically snapshot AVEVA tags for **source container** and **destination container** at that exact timestamp.
+- This gives authorities perfect enter/exit readings for every handoff (station→truck, truck→vessel, vessel→ring).
+- Readings are linked to the specific `BatchContainerAssignment`, so traceability is complete even when fish move through multiple carriers.
+
+### 4. Frontend UX (High-Level)
+- **Planning page** (Production Planner / Transfer Workflows):
+  - New workflow type option “Station-to-Sea (Dynamic)”.
+  - Simple form: batch, source station (high-level), destination area, estimated trucks/vessels.
+- **Execution mobile UI** (SHIP_CREW only):
+  - “Live Transport Dashboard” for the workflow.
+  - Button “Add New Handoff” → quick selector: From (station/truck/vessel tank), To (truck/vessel/ring tank), fish count.
+  - After each handoff: auto-show “Env readings captured at 13:45:22” card.
+  - Real-time progress: biomass moved / total planned.
+- RBAC: Only users with `role=SHIP_CREW` (or `OPR + subsidiary=LG`) see the dynamic builder and can execute/add actions. Everyone else sees read-only view.
+
+### 5. Backward Compatibility & Migration
+- All existing workflows remain untouched.
+- New `is_dynamic_execution` flag defaults to False → zero impact on current data.
+- One-time data migration (if desired) to mark existing station-to-sea workflows as dynamic.
+
+### 6. Cursor Implementation Instructions
+Copy the **entire original plan** + **this addendum** into Cursor and say:
+
+> “Implement the full Vessel Transport Integration Plan including this Addendum.  
+> Follow the Reading List from the original plan.  
+> Keep station-to-sea workflows dynamic (actions created at execution time by SHIP_CREW).  
+> Reuse infrastructure_container for truck tanks and vessel tanks.  
+> Historian snapshots on every handoff.  
+> Only station-to-sea is dynamic – all other workflows stay pre-defined.  
+> Use contract-first, generated ApiService, existing RBAC patterns, and high-level planning for dynamic flows.  
+> Start with backend models/migrations, then frontend UI, then signals/historian integration.”
+
+This addendum keeps the plan concise while giving the Cursor agents exactly the flexibility and context they need. Let me know if you want any section expanded before you paste it!

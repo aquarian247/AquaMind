@@ -79,6 +79,21 @@ class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
         self.assertEqual(response.data['results'][0]['container']['id'], self.container.id)
         self.assertEqual(response.data['results'][0]['container']['name'], self.container.name)
 
+    def test_list_assignments_includes_departure_date(self):
+        """List responses include departure_date for departed assignments."""
+        self.assignment.departure_date = date(2025, 1, 5)
+        self.assignment.is_active = False
+        self.assignment.save(update_fields=["departure_date", "is_active"])
+
+        url = self.get_api_url('batch', 'container-assignments')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        row = response.data['results'][0]
+        self.assertIn('departure_date', row)
+        self.assertEqual(row['departure_date'], "2025-01-05")
+        self.assertEqual(row['is_active'], False)
+
     def test_create_assignment(self):
         """Test creating a container assignment."""
         # Create a new batch to avoid population count validation issues

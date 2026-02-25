@@ -87,6 +87,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
             'lifecycle_stage',
             'lifecycle_stage_id',
             'assignment_date',
+            'departure_date',
             'population_count',
             'avg_weight_g',
             'biomass_kg',
@@ -110,6 +111,7 @@ class BatchContainerAssignmentSerializer(BatchBaseSerializer):
         extra_kwargs = {
             'lifecycle_stage_id': {'required': False},
             'assignment_date': {'required': False},
+            'departure_date': {'required': False},
             'population_count': {'required': False},
             'avg_weight_g': {'required': False},
             'is_active': {'required': False},

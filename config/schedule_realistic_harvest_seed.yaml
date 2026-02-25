@@ -1,0 +1,243 @@
+metadata:
+  generated_date: '2026-02-20'
+  total_batches: 2
+  batches_per_geography: 5
+  target_saturation: 0.85
+  stagger_days: 120
+  reference_pack_dir: /Users/aquarian247/Projects/AquaMind/scripts/data_generation/reference_pack/snapshots/2026-02-19_1430Z
+  source_schedule: config/schedule_realistic_harvest_seed_source.yaml
+  filtered_at: '2026-02-20'
+  note: Harvest seed subset (duration>=900) with deduped batch ids
+batches:
+- batch_id: Vetur 2023
+  start_date: '2023-01-17'
+  eggs: 3000000
+  duration: 900
+  effective_duration: 900
+  harvest_target_kg: 6.203210656923469
+  geography: Faroe Islands
+  station: S03 Norðtoftir
+  sea_batch_number_target: Vetur 2023
+  freshwater:
+    egg_alevin:
+      hall: Kleking
+      station: S03 Norðtoftir
+      containers:
+      - Kleking 01
+      - Kleking 02
+      - Kleking 03
+      - Kleking 04
+      - Kleking 05
+      - Kleking 06
+      - Kleking 07
+      - Kleking 08
+      - Kleking 09
+      - Kleking 10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: Startfóðring
+      station: S08 Gjógv
+      containers:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - a1
+      - a2
+      - a3
+      - a4
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: MULTI(A, BA)
+      station: S21 Viðareiði
+      containers:
+      - A01
+      - A02
+      - A03
+      - A04
+      - A05
+      - A06
+      - B07
+      - B08
+      - B09
+      - B10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: MULTI(C, C gamla, CD)
+      station: S21 Viðareiði
+      containers:
+      - C09
+      - C10
+      - C11
+      - C12
+      - C01
+      - C02
+      - C03
+      - C04
+      - C05
+      - C06
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: MULTI(E, F)
+      station: S21 Viðareiði
+      containers:
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+      - E6
+      - E7
+      - E8
+      - F1
+      - F2
+      start_day: 360
+      end_day: 450
+  sea:
+    area: A03 Svínáir
+    rings:
+    - '01'
+    - '02'
+    - '03'
+    - '04'
+    - '05'
+    - '06'
+    - '07'
+    - 08
+    - 09
+    - '10'
+    - '11'
+    - '12'
+    - '13'
+    - '14'
+    - '15'
+    - '16'
+    - '17'
+    - '18'
+    - '21'
+    - '22'
+    rings_count: 20
+    start_day: 450
+    end_day: 900
+    note: Full area
+- batch_id: Vetur 2023 (2)
+  start_date: '2023-05-17'
+  eggs: 3000000
+  duration: 900
+  effective_duration: 900
+  harvest_target_kg: 6.294673138741274
+  geography: Scotland
+  station: FW22 Applecross
+  sea_batch_number_target: Vetur 2023 (2)
+  freshwater:
+    egg_alevin:
+      hall: A1
+      station: FW22 Applecross
+      containers:
+      - H001
+      - H002
+      - H003
+      - H004
+      - H005
+      - H006
+      - H007
+      - H008
+      - H009
+      - H010
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: MULTI(B1, B2)
+      station: FW22 Applecross
+      containers:
+      - F01
+      - F02
+      - F03
+      - F04
+      - F05
+      - F06
+      - F07
+      - F08
+      - F2_11
+      - F2_12
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: MULTI(C1, C2)
+      station: FW22 Applecross
+      containers:
+      - P01
+      - P02
+      - P03
+      - P04
+      - P05
+      - P06
+      - P07
+      - P08
+      - P2_01
+      - P2_02
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: MULTI(D1, D2)
+      station: FW22 Applecross
+      containers:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - S07
+      - S2_A1
+      - S2_A2
+      - S2_B3
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: MULTI(E1, E2)
+      station: FW22 Applecross
+      containers:
+      - LS1_A1
+      - LS1_A2
+      - LS1_B3
+      - LS1_B4
+      - LS2_A1
+      - LS2_A2
+      - LS2_B3
+      - LS2_B4
+      start_day: 360
+      end_day: 450
+  sea:
+    area: N111 Eughlam
+    rings:
+    - EU01
+    - EU02
+    - EU03
+    - EU04
+    - EU05
+    - EU06
+    - EU07
+    - EU08
+    - EU09
+    - EU10
+    - EU11
+    - EU12
+    - EU13
+    - EU14
+    - EU15
+    - EU16
+    - EU18
+    - EU19
+    - EU20
+    - EU21
+    rings_count: 20
+    start_day: 450
+    end_day: 900
+    note: Full area

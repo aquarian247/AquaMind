@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 5.0  
-**Date:** 2026-02-17  
-**Status:** Updated - inter-station FW transfer policy + semantic transition gating refinement + FW->Sea temporal candidate policy  
+**Version:** 5.3  
+**Date:** 2026-02-24  
+**Status:** Updated - exact-start duplicate-timestamp tie-break + exact-start transfer count authority + S08 R-Høll material-first dual-stage refinement + assignment biomass precision guardrail  
 
 ## 1. Overview
 
@@ -16,12 +16,22 @@ This document provides detailed field-level mapping specifications for migrating
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
 
-**Key Revision Notes (v5.0 - 2026-02-17):** 
+**Key Revision Notes (v5.3 - 2026-02-24):**
+- **Exact-start duplicate-timestamp tie-break (completed populations):** when multiple `PublicStatusValues` rows share the same (`PopulationID`, `StatusTime`) at `member.start_time`, authoritative count resolution is deterministic: prefer non-zero over zero, then highest `CurrentCount`, then highest `CurrentBiomassKg`.
+- **Cross-mode snapshot parity guard:** the same duplicate-timestamp tie-break is applied in both CSV and SQL snapshot selection paths so replay behavior does not depend on source row order.
+
+**Key Revision Notes (v5.2 - 2026-02-23):**
+- **Completed-population transfer count authority:** when an exact status snapshot exists at `member.start_time` and is non-zero, assignment `population_count` is set from that snapshot (prevents lane-level drift where conservation-only splits produced synthetic `20,000/10,000` style rows).
+- **Open-population count authority (confirmed):** open populations (`member.end_time IS NULL`) continue to use latest measured status counts as authoritative.
+- **Biomass precision guardrail:** status-implied average weight is retained at higher internal precision before model rounding, preventing biomass under-rounding regressions (for example `7.10 -> 6.99`) when counts are corrected.
+- **S08 R-Høll dual-stage refinement:** first **material** holder in an `R-Høll` container (duration >= 6h, or open) is treated as `Parr`; subsequent in-hall rows resolve `Smolt`. Pre-initial micro bridge fragments are retained as history rows but forced to zero count to avoid duplication.
+
+**Key Revision Notes (v5.1 - 2026-02-20):** 
 - **Input-Based Stitching:** Use `Ext_Inputs_v2` (InputName + InputNumber + YearClass) as the biological batch key. Project tuples are administrative and can mix year-classes.
 - **Feeding Schema Corrected:** `dbo.Feeding` is ActionID‑based and has no PopulationID/ContainerID columns; join via `Action` and `Operations`.
 - **Health Journal Corrected:** Use `UserSample` + `Action` join path (one JournalEntry per ActionID), not `HealthLog`.
 - **Environmental Sources Updated:** Use `Ext_DailySensorReadings_v2` + `Ext_SensorReadings_v2` (with `is_manual` distinction).
-- **Assignments:** Populate counts/biomass from `PublicStatusValues` snapshots (prefer non‑zero after start).
+- **Assignments (v5.1 behavior, superseded in v5.2):** Populate counts/biomass from `PublicStatusValues` snapshots (prefer non‑zero after start).
 - **Weight Samples:** `Ext_WeightSamples_v2` and `PublicWeightSamples` are duplicates in this backup. Use **Ext only** and treat `AvgWeight` as **grams** (no kg heuristic).
 - **Infrastructure Naming:** Do not prepend `FT` or append `FW`/`Sea`. Strip those tokens if present in source labels.
 - **Harvest Mapping:** Use `HarvestResult` (ActionID‑keyed) for harvest events and lots; `Harvest` table is not used.
@@ -32,6 +42,7 @@ This document provides detailed field-level mapping specifications for migrating
 - **Inter-station FW transfer policy (2026-02-17):** FW->FW transfer across stations is normal for some cohorts; station preflight mismatch is now documented as a policy signal (strict by default, `--allow-station-mismatch` for transfer-confirmed cohorts), not automatic invalid-data contamination.
 - **Semantic gate refinement (2026-02-17):** bridge-aware positive deltas without mixed-batch evidence are downgraded to `incomplete_linkage` when consolidation shape (`many linked sources -> fewer linked destinations`) indicates likely missing lineage context.
 - **FW->Sea temporal candidate policy (2026-02-17):** when canonical FW->Sea edges are absent in current extract, generate review-only candidates from FW terminal depletion date `X` to sea entry date `[X, X+2 days]` within the same geography and `S* -> A*` boundary.
+- **FW hard-data closure calibration (2026-02-20):** active-holder tie-break now ranks by latest status timestamp, open membership, latest status count, and latest membership start timestamp; open populations (`end_time IS NULL`) use latest measured status counts; stage-mismatch deactivation keeps recent non-zero holders active when they fall inside the lifecycle frontier window.
 
 ## 2. Infrastructure & Geography Mapping
 
@@ -46,8 +57,15 @@ This document provides detailed field-level mapping specifications for migrating
 1. `SiteGroup` in `{West, North, South}` ⇒ **Faroe Islands**
 2. `SiteGroup` present (any other value) ⇒ **Scotland**
 3. Site name membership in curated lists (FAROE_SITES_* / SCOTLAND_SITES_*) ⇒ **Faroe Islands** or **Scotland**
-4. `Locations.NationID`
-5. `Unknown`
+4. Site-code heuristic fallback:
+   - `A*`, `S` + 2 digits, `L*`, `H*` ⇒ **Faroe Islands**
+   - `S` + 3 digits, `N*`, `FW*`, `BRS*` ⇒ **Scotland**
+5. `Locations.NationID`
+6. `Unknown`
+
+**Hierarchy handling rule (updated):**
+- FishTalk area groups (for example Faroe `North/South/West`) are persisted as `infrastructure_areagroup` and linked from `infrastructure_area.area_group_id`.
+- For now, migration creates top-level `AreaGroup` nodes (`parent=NULL`) from `SiteGroup`; deeper Scotland trees can be added by iterative parent linkage in follow-up runs.
 
 **Operational guard (updated 2026-02-17):**
 - `pilot_migrate_input_batch.py` runs station preflight from three sources (`InputProjects`, `Ext_Inputs_v2`, member-derived grouped-organisation sites).
@@ -65,12 +83,14 @@ This document provides detailed field-level mapping specifications for migrating
 | OrganisationUnit.OrgUnitID | ExternalIdMap (OrganisationUnitStation) | uuid | Store for idempotency | `source_identifier = OrgUnitID` |
 | Ext_GroupedOrganisation_v2.Site / OrganisationUnit.Name | infrastructure_freshwaterstation.name | varchar(100) | Prefer `Site`, fallback to `OrgUnit.Name` | Trim to 100 chars |
 | OrganisationUnit.LocationID → Locations.Latitude/Longitude | infrastructure_freshwaterstation.latitude / longitude | numeric(9,6) | Direct | Default `0` if missing |
-| Derived | infrastructure_freshwaterstation.station_type | varchar(20) | `FRESHWATER` | | 
+| Derived | infrastructure_freshwaterstation.station_type | varchar(20) | `BROODSTOCK` for `L*`/`BRS*`, otherwise `FRESHWATER` | |
 | Geography (from 2.1) | infrastructure_freshwaterstation.geography_id | bigint | FK lookup | |
 
 **Current migration behavior note:**
 - Station names are still validated before replay, but mismatch is interpreted as cohort-shape evidence (single-site vs mixed-site), not automatic contamination.
 - Use strict station mode for station-pure cohorts; use controlled mismatch override for cohorts with confirmed FW->FW transfer behavior.
+- Guardrail: `A*` and other marine-inferred sites are never created as `FreshwaterStation`.
+- Idempotent station lookup must be scoped by `(name, geography)` to avoid cross-geography collisions.
 
 ### 2.3 Hall Mapping (FishTalk: Ext_GroupedOrganisation_v2 + Containers)
 
@@ -83,6 +103,11 @@ This document provides detailed field-level mapping specifications for migrating
 | Ext_GroupedOrganisation_v2.ContainerGroupID | ExternalIdMap (OrganisationUnitHall) | uuid | Store `OrgUnitID:ContainerGroupID` | Ensures per-station uniqueness |
 | OrganisationUnit.OrgUnitID | infrastructure_hall.freshwater_station_id | bigint | FK lookup | Hall belongs to station |
 
+**Nested physical hierarchy (important):**
+- FishTalk may contain `Hall -> Skáp (rack) -> Incubation Tray`.
+- AquaMind now supports container hierarchy via `infrastructure_container.parent_container_id` + `hierarchy_role`.
+- Migration maps `StandName/StandID` (for example `Skáp 1..5`) to structural rack containers (`hierarchy_role=STRUCTURAL`) and links tray/holding containers as children.
+
 **Lifecycle note:**
 - Hall mapping supports infrastructure placement and lifecycle resolution, but lifecycle truth is stage/hall logic in section 3.3 (not `ProdStage` alone).
 
@@ -91,6 +116,7 @@ This document provides detailed field-level mapping specifications for migrating
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |----------------|----------------|-----------|----------------|-------|
 | OrganisationUnit.Name / Ext_GroupedOrganisation_v2.Site | infrastructure_area.name | varchar(100) | Prefer `Site`, fallback to `OrgUnit.Name` | Trim to 100 chars |
+| Ext_GroupedOrganisation_v2.SiteGroup | infrastructure_areagroup.name / infrastructure_area.area_group_id | varchar(100) | Normalize group label; create/reuse top-level area group per geography | Supports Faroe `North/South/West` and similar hierarchies |
 | OrganisationUnit.LocationID → Locations.Latitude/Longitude | infrastructure_area.latitude / longitude | numeric(9,6) | Direct | Default `0` if missing |
 | Derived | infrastructure_area.max_biomass | numeric | Default `0` | |
 | Geography (from 2.1) | infrastructure_area.geography_id | bigint | FK lookup | |
@@ -111,10 +137,13 @@ This document provides detailed field-level mapping specifications for migrating
 | Ext_GroupedOrganisation_v2.ProdStage | classification | - | `MARINE`/`SEA` ⇒ sea | Otherwise freshwater |
 | Ext_GroupedOrganisation_v2.ContainerGroup / Containers.OfficialID | infrastructure_container.hall_id | bigint | Assign hall for freshwater | Uses hall mapping above |
 | Derived | infrastructure_container.area_id | bigint | Assign area for sea | Uses sea area mapping |
+| Ext_GroupedOrganisation_v2.StandName / StandID | infrastructure_container.parent_container_id | bigint | Create/reuse structural rack container and link child container | Rack created with `hierarchy_role=STRUCTURAL` |
+| Derived | infrastructure_container.hierarchy_role | varchar(20) | `HOLDING` for fish-holding containers; `STRUCTURAL` for synthetic rack nodes | Structural nodes are non-assignable for fish populations |
 
 **Notes**
-- Infrastructure phase uses `ProdStage` + hall label presence to classify sea vs freshwater; pilot component migration uses population stages (sea if any member stage is sea).
-- Container ExternalIdMap metadata stores `site`, `site_group`, `company`, `prod_stage`, `container_group`, `container_group_id`, `stand_name`, `stand_id`.
+- Infrastructure classification is `ProdStage` first, then curated site/site-code semantics; there is no implicit freshwater fallback from hall-label presence.
+- Pilot component migration still allows member-stage evidence (sea if any member stage is sea), but unresolved rows are skipped with telemetry.
+- Container ExternalIdMap metadata stores `site`, `site_group`, `company`, `prod_stage`, `container_group`, `container_group_id`, `stand_name`, `stand_id`, and hierarchy metadata (`parent_container_id`, `hierarchy_role`) where available.
 - Names are **presentation only**; `ContainerID` remains the stable identity.
 - Missing grouped-organisation rows are expected in current extracts; migration falls back to `Containers.OfficialID` hall label or creates station-scoped placeholder halls.
 
@@ -640,7 +669,7 @@ FishTalk status rows are treated as **state snapshots**, not as identity or even
 
 Current mapping into `aquamind/docs/database/data_model.md` entities is:
 - `status_values.csv` / `PublicStatusValues` -> `batch_batch.status` + `batch_batch.actual_end_date` (batch activity classification).
-- `status_values.csv` / `PublicStatusValues` -> `batch_batchcontainerassignment.population_count` (fallback only), `batch_batchcontainerassignment.biomass_kg`, `batch_batchcontainerassignment.avg_weight_g`, `batch_batchcontainerassignment.is_active`, `batch_batchcontainerassignment.departure_date`.
+- `status_values.csv` / `PublicStatusValues` -> `batch_batchcontainerassignment.population_count` (status-authority overlays), `batch_batchcontainerassignment.biomass_kg`, `batch_batchcontainerassignment.avg_weight_g`, `batch_batchcontainerassignment.is_active`, `batch_batchcontainerassignment.departure_date`.
 - Snapshot-implied weight/biomass context -> event replay calculations (for example mortality/culling/escape biomass estimation when source biomass is absent).
 
 This keeps AquaMind runtime FishTalk-agnostic: operational truth remains in normalized AquaMind entities (`batch_batchcontainerassignment`, `batch_batchtransferworkflow`, `batch_transferaction`, `batch_mortalityevent`, `inventory_feedingevent`, `batch_growthsample`, `health_*`), while snapshots are migration-time evidence inputs.
@@ -652,7 +681,7 @@ Assignments are created **per PopulationID** from the component stitching output
 **Source files used by `pilot_migrate_component.py` (CSV mode):**
 - `population_members.csv` (generated by `pilot_migrate_input_batch.py` or legacy stitching): `population_id`, `container_id`, `start_time`, `end_time`, `first_stage`, `last_stage`
 - `containers.csv` (container FK resolution)
-- `status_values.csv` (biomass snapshots; count fallback only)
+- `status_values.csv` (biomass snapshots + status-authority count overlays)
 - `ext_inputs.csv` (InputCount seed for conservation-based counts)
 - `sub_transfers.csv` (ShareCountFwd propagation for conservation-based counts)
 
@@ -664,9 +693,9 @@ Assignments are created **per PopulationID** from the component stitching output
 | `container_id` | `batch_batchcontainerassignment.container_id` | bigint | FK lookup | Required. |
 | `start_time` | `batch_batchcontainerassignment.assignment_date` | date | `start_time.date()` | Required; rows without start_time are skipped upstream. |
 | `first_stage` / `last_stage` + hall/site context | `batch_batchcontainerassignment.lifecycle_stage_id` | bigint | Stage resolution order: hall mapping -> component-local unanimous hall fallback -> token mapping (`fishtalk_stage_to_aquamind`). FW22-specific rule: prefer explicit member stage token over static hall mapping when token exists. Last-resort sparse-metadata fallback uses batch lifecycle stage with telemetry. | Requires `LifeCycleStage` master rows. |
-| SubTransfers propagation (see below) | `batch_batchcontainerassignment.population_count` | int | Seed with `Ext_Inputs_v2.InputCount`, propagate via `SubTransfers.ShareCountFwd`; fallback to status snapshot if no conserved count, **or if conserved count resolves to 0 while snapshot is non‑zero**. Same-stage superseded populations are classified before suppression: short-lived bridge rows are zeroed, while long-lived superseded rows and external-mixing blank-token rows prefer status-at-start when available. Optional profile guard suppresses orphan zero assignments lacking stage tokens, SubTransfers touch, and count/removal evidence. | Conservation-based with status-priority overlays for bridge/external-mixing parity. |
+| SubTransfers propagation (see below) | `batch_batchcontainerassignment.population_count` | int | Seed with `Ext_Inputs_v2.InputCount`, propagate via `SubTransfers.ShareCountFwd`, then apply status-authority overlays: completed populations use exact start-time status tie-break resolution (same timestamp: non-zero first, then max count/biomass), and if that resolved snapshot is non-zero, use it as authoritative count; open populations use latest measured status count; otherwise fallback overlays apply (zero-conserved + non-zero status, external-mixing uplift, known-removals floor, same-stage bridge suppression/classification). Optional profile guard suppresses orphan zero assignments lacking stage tokens, SubTransfers touch, and count/removal evidence. | Conservation-based with status-priority overlays for lane-level parity. |
 | Status snapshot (see below) | `batch_batchcontainerassignment.biomass_kg` | numeric | Start from `CurrentBiomassKg`; if status average weight is available, recompute biomass against the chosen assignment count (`count * status_avg_weight / 1000`) | Keeps count/biomass consistency when count source differs from status count. |
-| Derived | `batch_batchcontainerassignment.avg_weight_g` | numeric | Prefer status-implied average weight (`CurrentBiomassKg / CurrentCount * 1000`); fallback to `biomass_kg / population_count * 1000`; null when count is 0 | Added to avoid null-weight assignment rows with inconsistent biomass. |
+| Derived | `batch_batchcontainerassignment.avg_weight_g` | numeric | Prefer status-implied average weight (`CurrentBiomassKg / CurrentCount * 1000`) at higher internal precision before model rounding; fallback to `biomass_kg / population_count * 1000`; null when count is 0 | Avoids biomass drift when count authority shifts from conserved to status-derived values. |
 | Derived | `batch_batchcontainerassignment.is_active` | boolean | See rules below | Ensures only one active assignment per container. |
 | Derived | `batch_batchcontainerassignment.departure_date` | date | See rules below | Nullable. |
 | Derived | `batch_batchcontainerassignment.notes` | text | `FishTalk PopulationID={population_id}` | Debug trace. |
@@ -680,23 +709,32 @@ Assignments are created **per PopulationID** from the component stitching output
 - If `member.end_time` is **None** and a latest status time exists → snapshot **at latest status time**.
 - Otherwise → snapshot **near member.start_time**.
 - In CSV mode, if the nearest snapshot has **zero count and biomass**, the loader attempts the **first non‑zero snapshot after** the target time. In SQL mode, the loader uses the nearest snapshot (no non‑zero filtering).
-- **Usage:** snapshots provide status-derived average weight and biomass context; they provide `population_count` when conservation count is missing/zero, for outside-component transfer-mixing rows where status count materially exceeds conserved count, and for bridge-calibration overlays (long superseded companions + blank-token external-mixing segments).
+- When multiple snapshots exist at the **same timestamp**, selection is deterministic in both CSV and SQL paths: prefer non-zero over zero, then higher `CurrentCount`, then higher `CurrentBiomassKg`.
+- **Usage:** snapshots provide status-derived average weight and biomass context. For `population_count`, completed populations with an exact non-zero snapshot at `member.start_time` use that snapshot as authoritative; open populations use latest status counts; additional status overlays still apply for zero-conserved rows, outside-component transfer-mixing rows, and bridge-calibration overlays (long superseded companions + blank-token external-mixing segments).
 
 **Conservation-based count flow (code‑verified, 2026‑02‑02):**
 1. **Seed** populations with `Ext_Inputs_v2.InputCount` when present.
 2. **Propagate** via `SubTransfers.ShareCountFwd` (`SourcePopBefore → SourcePopAfter` and `DestPopBefore → DestPopAfter`).
-3. **Fallback** to status snapshot count when:
-   - no conserved count exists, or
-   - conserved count is **0** but snapshot is non-zero, or
-   - the population has SubTransfers edges to outside-component populations and `status_count >= conserved_count * external_mixing_status_multiplier` (default multiplier `10.0`), or
-   - known removals for that population (`mortality + culling + escapes`) exceed conserved count and status count is higher (prevents impossible baseline < removals).
+3. **Status-authority overlays:**
+   - completed populations with exact start-time status resolved by duplicate-timestamp tie-break; if resolved snapshot is non-zero -> set `count = status_count`,
+   - open populations (`member.end_time IS NULL`) with latest status evidence -> set `count = latest_status_count`,
+   - otherwise fallback to status snapshot count when:
+     - no conserved count exists, or
+     - conserved count is **0** but snapshot is non-zero, or
+     - the population has SubTransfers edges to outside-component populations and `status_count >= conserved_count * external_mixing_status_multiplier` (default multiplier `10.0`), or
+     - known removals for that population (`mortality + culling + escapes`) exceed conserved count and status count is higher (prevents impossible baseline < removals).
 4. **Same‑stage suppression/classification:** if a SubTransfer moves fish **within the same lifecycle stage** (source and dest stages match), classify superseded rows as:
    - **short bridge (<= `same_stage_supersede_max_hours`) without operational evidence:** zero assignment count to avoid double-counting bridge segments.
    - **long superseded companion** or **operationally material superseded row:** prefer status-at-start count (with known-removals floor) when available.
    - **external-mixing blank-token row (non-superseded):** prefer status-at-start to preserve lane-level parity.
-5. **Count/biomass consistency:** when status average weight is available, assignment biomass is recomputed from the final chosen count to prevent impossible implied weights.
+5. **Count/biomass consistency:** when status average weight is available, assignment biomass is recomputed from the final chosen count to prevent impossible implied weights (status average weight is kept at higher internal precision before field rounding).
 
 **Diagnostics:** see `analysis_reports/2026-02-02/conservation_counts_diagnostics_2026-02-02.md`.
+
+**Regression policy guard (assignment counts):**
+- For non-zero **completed** assignment rows, expected count authority is exact status count at `member.start_time` after duplicate-timestamp tie-break resolution.
+- For non-zero **open** assignment rows, expected count authority is latest status count.
+- Component-root seed rows can legitimately diverge from status-count checks when the source population starts before first non-zero status snapshot materializes.
 
 **Active assignment rules (code‑verified):**
 1. If the batch itself is not active → all assignments are inactive.
@@ -705,8 +743,8 @@ Assignments are created **per PopulationID** from the component stitching output
    - `latest_status_time >= (global_max_status_time - assignment_active_window_days)`.
 3. Else → active if `member.end_time` is None.
 4. Additional guards:
-   - If assignment lifecycle stage ≠ batch lifecycle stage → force inactive.
-   - Only the **latest non-zero** population per container can be active.
+   - If assignment lifecycle stage ≠ batch lifecycle stage → force inactive **unless** the holder has recent non-zero evidence inside the lifecycle frontier recency window (`latest_status_time >= component_status_time - lifecycle_frontier_window_hours`).
+   - Only the **latest non-zero** population per container can be active; holder tie-break order is: latest status timestamp → open membership (`end_time IS NULL`) → latest status count → latest membership start timestamp.
    - Latest-holder consistency gate (profile default) removes container active-candidates when a later outside-component non-zero holder exists in source status snapshots.
    - Assignment must belong to computed `active_population_by_container`; otherwise force inactive.
    - Assignments with `population_count <= 0` are forced inactive.
@@ -753,6 +791,7 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
 **Hall‑based override (code‑verified, qualified):**
 - When a hall mapping exists, it **overrides** the token mapping. Hall labels are taken from `Ext_GroupedOrganisation_v2.ContainerGroup` (these are the same labels shown in the FishTalk GUI; “Høll” = “Hall”).
 - **FW22 exception (2026-02-16):** for `FW22 Applecross`, explicit member stage tokens are preferred when present (hall map still applies when tokens are blank).
+- **S08 exception (2026-02-23):** hall mappings are enforced before token-stage fallback for mapped halls (`Kleking`, `Startfóðring`, `T‑Høll`); `R-Høll` uses a deterministic dual-stage rule where the first **material** holder in a container (>= 6h lifespan, or open member) resolves to `Parr` and subsequent in-hall redistributions resolve to `Smolt`. Pre-initial micro bridge fragments are retained as zero-count bridge rows for auditability.
 - `Ext_GroupedOrganisation_v2.ProdStage` is treated as **context only** (not lifecycle truth). In the 2026-02-10 station-focused Benchmark replay, populations spanning `Parr/Smolt/Post‑Smolt` lifecycle assignments still classify as `ProdStage=Hatchery` in grouped-organisation output; lifecycle mapping therefore remains stage/hall-driven.
 - If explicit hall mapping is missing, migration can apply a **component-local hall fallback** only when token-mapped rows for the same `(site, container_group)` unanimously resolve to one lifecycle stage.
 - **S24 Strond (qualified 2026‑01‑30):**
@@ -766,9 +805,10 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
   - 11 Høll A, 11 Høll B → Smolt
   - 18 Høll A, 18 Høll B → Post‑Smolt
   - 800 Høll, 900 Høll → Parr
-- **S08 Gjógv (qualified mapping, 2026‑02‑02):**
+- **S08 Gjógv (qualified mapping, updated 2026‑02‑23):**
   - Kleking → Egg&Alevin
   - Startfóðring → Fry
+  - R-Høll → Parr and Smolt. First material holder in a container: Parr. Subsequent in-hall redistributions: Smolt. Micro pre-initial bridge fragments remain zero-count.
   - T‑Høll → Post‑Smolt
 - **S16 Glyvradalur (qualified mapping, 2026‑02‑02; updated 2026‑02‑03):**
   - A Høll → Egg&Alevin
@@ -790,7 +830,12 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
   - C1, C2 → Parr
   - D1, D2 → Smolt
   - E1, E2 → Post‑Smolt
-
+- **FW13 Geocrab (qualified mapping, Scotland, 2026‑02‑02):**
+  - Hatchery → Egg&Alevin
+  - Fry → Fry
+  - Parr → Parr
+  - Smolt → Smolt
+  - Grading Tank → Post-Smolt. This is a special case. the Grading Tank is not a hall, but a standalone tank, not inside a hall.   
 **Scotland hall inventory (FishTalk GUI export, 2026‑02‑02; stage not explicitly provided):**
 - **FW13 Geocrab:** GradingTank, Hatchery, Parr, Smolt
 - **FW21 Couldoran:** A Row, B Row, C Row, D Row, E Row, F Row, Hatchery, RAS
@@ -799,7 +844,7 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
 Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, “Smolt”), but **no explicit stage column** was provided in the report. These are **inventory only** until a rule is approved.
 
 **Known gaps / not yet mapped (explicitly left unmapped to avoid guesswork):**
-- **S08 Gjógv:** R‑Høll (listed as Parr/Smolt in source), Úti (no explicit static hall mapping; may resolve through component-local unanimous token fallback when stage tokens are present in that replay).
+- **S08 Gjógv:** Úti (no explicit static hall mapping; currently token/component-local fallback driven).
 - **S16 Glyvradalur:** Gamalt, Uppstilling broytt ‑ A Høll (no stage provided).
 - **S21 Viðareiði:** C gamla, CD, Gamalt (no stage provided).
 - **S04 Húsar:** 801–812 (not present in `ContainerGroup` in current extract; only Gamalt appears).
@@ -818,9 +863,9 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 **Progress note (2026‑02‑11, targeted fix check):**
 - `BF mars 2025|2|2025` (`S08 Gjógv`) previously failed at stage resolution (`R‑Høll` unmapped + missing stage token rows). After adding component-local unanimous hall fallback in `pilot_migrate_component.py`, migration completed and semantic gates passed in station-guarded replay (`analysis_reports/2026-02-11/semantic_validation_bf_mars_2025_2026-02-11_fixcheck.md`).
 
-**Domain note (qualitative, not encoded in migration):**
+**Domain note (qualitative):**
 - Broodstock is a separate breeding division supplying eggs (e.g., Bakkafrost inputs; see 3.0.0.1). Treating Broodstock as a **pre‑Egg&Alevin** stage would require an explicit mapping change plus a controlled re‑run.
-- Some stations use a deeper physical hierarchy for egg/alevin handling (Hall → Skáp → Incubation Tray). AquaMind does not currently model this hierarchy; representing it would require a schema/workflow extension.
+- Some stations use a deeper physical hierarchy for egg/alevin handling (Hall → Skáp → Incubation Tray). AquaMind now supports this with container hierarchy (`parent_container_id`, `hierarchy_role`) and migration can map `StandName/StandID` to structural rack nodes.
 
 **Guidance (qualified):**
 - Migration is strict by default (explicit hall mapping, unanimous hall fallback, token mapping), but now includes a constrained sparse-metadata fallback to batch lifecycle stage with telemetry to prevent full-cohort aborts on a few unresolved rows.

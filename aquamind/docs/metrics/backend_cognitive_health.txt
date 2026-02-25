@@ -1,0 +1,11 @@
+# Cognitive Complexity Report for health
+# Generated: 2026-02-20
+# Files analyzed: 47
+# Total violations: 3
+# Status: pass
+# Message: Cognitive complexity within acceptable limits
+
+## Violations:
+apps/health/api/serializers/lab_sample.py:226:5: C90C901 'HealthLabSampleSerializer.validate' is too complex (12)
+apps/health/management/commands/populate_parameter_scores.py:83:5: C90C901 'Command.handle' is too complex (13)
+apps/health/models/mortality.py:101:5: C90C901 'MortalityRecord.save' is too complex (22)

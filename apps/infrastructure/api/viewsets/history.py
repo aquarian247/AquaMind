@@ -9,31 +9,37 @@ from aquamind.utils.history_utils import HistoryViewSet
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from apps.infrastructure.models import (
     Geography,
+    AreaGroup,
     Area,
     FreshwaterStation,
     Hall,
     ContainerType,
     Container,
+    TransportCarrier,
     Sensor,
     FeedContainer
 )
 from ..serializers.history import (
     GeographyHistorySerializer,
+    AreaGroupHistorySerializer,
     AreaHistorySerializer,
     FreshwaterStationHistorySerializer,
     HallHistorySerializer,
     ContainerTypeHistorySerializer,
     ContainerHistorySerializer,
+    TransportCarrierHistorySerializer,
     SensorHistorySerializer,
     FeedContainerHistorySerializer
 )
 from ..filters.history import (
     GeographyHistoryFilter,
+    AreaGroupHistoryFilter,
     AreaHistoryFilter,
     FreshwaterStationHistoryFilter,
     HallHistoryFilter,
     ContainerTypeHistoryFilter,
     ContainerHistoryFilter,
+    TransportCarrierHistoryFilter,
     SensorHistoryFilter,
     FeedContainerHistoryFilter
 )
@@ -44,6 +50,13 @@ class GeographyHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
     queryset = Geography.history.all()
     serializer_class = GeographyHistorySerializer
     filterset_class = GeographyHistoryFilter
+
+
+class AreaGroupHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
+    """ViewSet for AreaGroup historical records."""
+    queryset = AreaGroup.history.all()
+    serializer_class = AreaGroupHistorySerializer
+    filterset_class = AreaGroupHistoryFilter
 
 
 class AreaHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
@@ -79,6 +92,13 @@ class ContainerHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
     queryset = Container.history.all()
     serializer_class = ContainerHistorySerializer
     filterset_class = ContainerHistoryFilter
+
+
+class TransportCarrierHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):
+    """ViewSet for TransportCarrier historical records."""
+    queryset = TransportCarrier.history.all()
+    serializer_class = TransportCarrierHistorySerializer
+    filterset_class = TransportCarrierHistoryFilter
 
 
 class SensorHistoryViewSet(HistoryViewSet, ReadOnlyModelViewSet):

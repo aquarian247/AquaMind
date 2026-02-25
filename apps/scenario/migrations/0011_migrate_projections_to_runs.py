@@ -3,6 +3,15 @@
 from django.db import migrations
 
 
+def _has_column(schema_editor, table_name, column_name):
+    with schema_editor.connection.cursor() as cursor:
+        description = schema_editor.connection.introspection.get_table_description(
+            cursor,
+            table_name,
+        )
+    return any(col.name == column_name for col in description)
+
+
 def migrate_projections_to_runs(apps, schema_editor):
     """
     Create ProjectionRun for each Scenario with projections and link existing projections.
@@ -10,14 +19,20 @@ def migrate_projections_to_runs(apps, schema_editor):
     Scenario = apps.get_model('scenario', 'Scenario')
     ProjectionRun = apps.get_model('scenario', 'ProjectionRun')
     ScenarioProjection = apps.get_model('scenario', 'ScenarioProjection')
+    db_alias = schema_editor.connection.alias
+    projection_table = ScenarioProjection._meta.db_table
+
+    # Branch-safe guard: skip data rewrite when legacy scenario link is absent.
+    if not _has_column(schema_editor, projection_table, "scenario_id"):
+        return
     
     # For each scenario that has projections
-    for scenario in Scenario.objects.all():
-        projections = ScenarioProjection.objects.filter(scenario=scenario)
+    for scenario in Scenario.objects.using(db_alias).all():
+        projections = ScenarioProjection.objects.using(db_alias).filter(scenario=scenario)
         
         if projections.exists():
             # Create a ProjectionRun for this scenario
-            projection_run = ProjectionRun.objects.create(
+            projection_run = ProjectionRun.objects.using(db_alias).create(
                 scenario=scenario,
                 run_number=1,  # First run
                 label="Initial Run",
@@ -36,7 +51,7 @@ def migrate_projections_to_runs(apps, schema_editor):
             # Link all projections to this run
             projections.update(projection_run=projection_run)
     
-    print(f"Created {ProjectionRun.objects.count()} projection runs")
+    print(f"Created {ProjectionRun.objects.using(db_alias).count()} projection runs")
 
 
 def reverse_migration(apps, schema_editor):
@@ -45,12 +60,13 @@ def reverse_migration(apps, schema_editor):
     """
     ProjectionRun = apps.get_model('scenario', 'ProjectionRun')
     ScenarioProjection = apps.get_model('scenario', 'ScenarioProjection')
+    db_alias = schema_editor.connection.alias
     
     # Clear projection_run references
-    ScenarioProjection.objects.all().update(projection_run=None)
+    ScenarioProjection.objects.using(db_alias).all().update(projection_run=None)
     
     # Delete all projection runs
-    ProjectionRun.objects.all().delete()
+    ProjectionRun.objects.using(db_alias).all().delete()
 
 
 class Migration(migrations.Migration):

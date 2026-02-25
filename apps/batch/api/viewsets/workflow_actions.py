@@ -6,6 +6,8 @@ transfer actions within workflows.
 """
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
@@ -13,10 +15,12 @@ from drf_spectacular.utils import extend_schema
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
 from apps.batch.models import TransferAction
+from apps.batch.access import can_execute_transport_actions
 from apps.batch.api.serializers import (
     TransferActionListSerializer,
     TransferActionDetailSerializer,
     TransferActionExecuteSerializer,
+    TransferActionSnapshotSerializer,
     TransferActionSkipSerializer,
     TransferActionRollbackSerializer,
 )
@@ -95,11 +99,24 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
             return TransferActionListSerializer
         elif self.action == 'execute':
             return TransferActionExecuteSerializer
+        elif self.action == 'snapshot':
+            return TransferActionSnapshotSerializer
         elif self.action == 'skip':
             return TransferActionSkipSerializer
         elif self.action == 'rollback':
             return TransferActionRollbackSerializer
         return TransferActionDetailSerializer
+
+    def perform_create(self, serializer):
+        """Restrict dynamic transport action creation to ship crew roles."""
+        workflow = serializer.validated_data.get("workflow")
+        if workflow and workflow.is_dynamic_execution:
+            if not can_execute_transport_actions(self.request.user):
+                raise PermissionDenied(
+                    "Only SHIP_CREW or Logistics Operators can add handoffs "
+                    "to dynamic transport workflows."
+                )
+        serializer.save()
 
     @extend_schema(
         summary="Execute transfer action",
@@ -142,6 +159,11 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         """
         action_obj = self.get_object()
 
+        if action_obj.requires_ship_crew_execution() and not can_execute_transport_actions(request.user):
+            raise PermissionDenied(
+                "Only SHIP_CREW or Logistics Operators can execute this transport action."
+            )
+
         # Validate request data
         serializer = self.get_serializer(
             data=request.data,
@@ -156,6 +178,63 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                 **serializer.validated_data
             )
             return Response(result)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @extend_schema(
+        summary="Capture transport snapshot readings",
+        description=(
+            "Capture mapped AVEVA historian readings for this transfer action "
+            "at a specific moment (start, in_transit, finish)."
+        ),
+        request=TransferActionSnapshotSerializer,
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'action_id': {'type': 'integer'},
+                    'moment': {'type': 'string'},
+                    'created_count': {'type': 'integer'},
+                    'skipped_count': {'type': 'integer'},
+                    'missing_value_count': {'type': 'integer'},
+                },
+            },
+            400: {'description': 'Invalid action state or payload'},
+            403: {'description': 'Forbidden'},
+        },
+    )
+    @action(detail=True, methods=['post'])
+    def snapshot(self, request, pk=None):
+        """Capture historian snapshot readings for an in-progress transport handoff."""
+        action_obj = self.get_object()
+
+        if action_obj.requires_ship_crew_execution() and not can_execute_transport_actions(request.user):
+            raise PermissionDenied(
+                "Only SHIP_CREW or Logistics Operators can capture transport snapshots."
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            from django.utils import timezone
+            from apps.environmental.services.historian_snapshot import (
+                snapshot_transfer_action_readings,
+            )
+
+            result = snapshot_transfer_action_readings(
+                action_id=action_obj.id,
+                reading_time=timezone.now(),
+                executed_by_id=request.user.id,
+                moment=serializer.validated_data['moment'],
+            )
+            return Response({
+                'action_id': action_obj.id,
+                **result,
+            })
         except Exception as e:
             return Response(
                 {'error': str(e)},
@@ -271,3 +350,4 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+    permission_classes = [IsAuthenticated]

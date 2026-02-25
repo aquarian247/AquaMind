@@ -1,0 +1,15 @@
+# Cognitive Complexity Report for infrastructure
+# Generated: 2026-02-20
+# Files analyzed: 49
+# Total violations: 7
+# Status: warning
+# Message: Warning: 7 violations exceed warning threshold of 5
+
+## Violations:
+apps/infrastructure/management/commands/seed_transport_demo_data.py:113:5: C90C901 'Command.handle' is too complex (11)
+apps/infrastructure/management/commands/seed_transport_demo_data.py:258:5: C90C901 'Command._seed_carriers_and_tanks' is too complex (15)
+apps/infrastructure/management/commands/validate_openapi.py:138:5: C90C901 'Command.validate_response_codes' is too complex (14)
+apps/infrastructure/models/container.py:104:5: C90C901 'Container.clean' is too complex (11)
+apps/infrastructure/tests/test_openapi_spec.py:68:5: C90C901 'OpenAPISpecTestCase.test_all_endpoints_have_proper_response_documentation' is too complex (12)
+apps/infrastructure/tests/test_openapi_spec.py:134:5: C90C901 'OpenAPISpecTestCase.check_integer_bounds_in_schema' is too complex (12)
+apps/infrastructure/tests/test_openapi_spec.py:228:5: C90C901 'OpenAPISpecTestCase.test_all_viewsets_included' is too complex (13)

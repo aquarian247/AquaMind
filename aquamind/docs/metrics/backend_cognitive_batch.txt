@@ -1,0 +1,27 @@
+# Cognitive Complexity Report for batch
+# Generated: 2026-02-20
+# Files analyzed: 79
+# Total violations: 19
+# Status: critical
+# Message: Critical: 19 violations exceed critical threshold of 15
+
+## Violations:
+apps/batch/api/serializers/growth.py:152:5: C90C901 'GrowthSampleSerializer.validate' is too complex (20)
+apps/batch/api/serializers/mortality.py:60:5: C90C901 'MortalityEventSerializer.validate' is too complex (14)
+apps/batch/api/serializers/validation.py:129:1: C90C901 'validate_sample_size_against_population' is too complex (13)
+apps/batch/api/viewsets/assignments.py:247:5: C90C901 'BatchContainerAssignmentViewSet.lifecycle_progression' is too complex (14)
+apps/batch/api/viewsets/batch.py:223:5: C90C901 'BatchViewSet.insights_timeseries' is too complex (13)
+apps/batch/api/viewsets/batch.py:575:5: C90C901 'BatchViewSet._aggregate_environmental' is too complex (12)
+apps/batch/api/viewsets/container_availability.py:166:5: C90C901 'ContainerAvailabilityViewSet._enrich_container' is too complex (22)
+apps/batch/api/viewsets/forecast_viewset.py:297:5: C90C901 'ForecastViewSet.harvest' is too complex (22)
+apps/batch/api/viewsets/forecast_viewset.py:531:5: C90C901 'ForecastViewSet.sea_transfer' is too complex (24)
+apps/batch/api/viewsets/forecast_viewset.py:780:5: C90C901 'ForecastViewSet.tiered_harvest' is too complex (18)
+apps/batch/api/viewsets/mixins.py:573:5: C90C901 'GeographyAggregationMixin.geography_summary' is too complex (13)
+apps/batch/management/commands/backfill_batch_completion_status.py:39:5: C90C901 'Command.handle' is too complex (16)
+apps/batch/management/commands/recompute_recent_daily_states.py:70:5: C90C901 'Command.handle' is too complex (14)
+apps/batch/models/workflow_action.py:270:5: C90C901 'TransferAction.execute' is too complex (19)
+apps/batch/services/growth_assimilation.py:116:5: C90C901 'GrowthAssimilationEngine.recompute_range' is too complex (12)
+apps/batch/services/growth_assimilation.py:405:5: C90C901 'GrowthAssimilationEngine._get_initial_state' is too complex (16)
+apps/batch/services/growth_assimilation_optimized.py:82:5: C90C901 'OptimizedGrowthAssimilationEngine.recompute_range' is too complex (12)
+apps/batch/services/growth_assimilation_optimized.py:409:5: C90C901 'OptimizedGrowthAssimilationEngine._get_initial_weight' is too complex (11)
+apps/batch/services/live_projection_engine.py:511:5: C90C901 'LiveProjectionEngine._update_forecast_summary' is too complex (12)

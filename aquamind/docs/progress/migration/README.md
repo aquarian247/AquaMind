@@ -4,11 +4,11 @@ This folder is the canonical home for migration documentation.
 
 ## Low-context bootstrap (default for new agents)
 Read only these 2 docs first:
-1. handoffs/HANDOFF_2026-02-13_S21_ASSIGNMENT_HISTORY_CALIBRATION.md
+1. handoffs/HANDOFF_2026-02-24_FW_EXACT_START_TIEBREAK_WAVE_AND_POSTWAVE_BOARD.md
 2. DATA_MAPPING_DOCUMENT.md
 
 Read a 3rd doc only when the task explicitly concerns FWSEA linkage or SQL tracing:
-- handoffs/HANDOFF_2026-02-11_FWSEA_LINKAGE_INVESTIGATION.md
+- handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md
 
 Avoid preloading `analysis_reports/*` at startup; open only the report directly tied to the discrepancy being debugged.
 
@@ -20,6 +20,11 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
 5. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
 ## Latest handoff
+- handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md - deterministic FWSEA sales-link scoring module + FT B-class notes + A37 station resolution
+- handoffs/HANDOFF_2026-02-24_FW_EXACT_START_TIEBREAK_WAVE_AND_POSTWAVE_BOARD.md - exact-start duplicate-timestamp tie-break wave + full FW post-wave board
+- handoffs/HANDOFF_2026-02-23_FW_EXPECTED_NONZERO_REPLAY_WAVE_AND_POSTWAVE_SCOPE_BOARD.md - FW class-A replay clearance + full-scope post-wave residual board
+- handoffs/HANDOFF_2026-02-23_S16_S21_S24_POLICY_WAVE_AND_MAPPING_LOCK.md - S16/S21/S24 controlled policy wave + mapping lock update
+- handoffs/HANDOFF_2026-02-20_FW_FALSE_CLOSURE_WAVE_REPLAY.md - FW false-closure wave replay (42->5), hard-data calibration, residual taxonomy
 - handoffs/HANDOFF_2026-02-13_S21_ASSIGNMENT_HISTORY_CALIBRATION.md - current assignment parity calibration baseline (S21)
 - handoffs/HANDOFF_2026-02-11_FWSEA_LINKAGE_INVESTIGATION.md - FWSEA linkage investigation track
 - handoffs/HANDOFF_2026-02-06.md - full-action batch migration baseline

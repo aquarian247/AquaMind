@@ -1,0 +1,37 @@
+{
+  "generated_at_utc": "2026-02-18 14:45:25.268140",
+  "pilot_migration_run": {
+    "batch_key": "V\u00e1r 2023|1|2023",
+    "component_key": "9B864694-C848-4627-BD4C-97516E71A4F7",
+    "extract_horizon_date": "2026-01-22",
+    "include_fw_batch": "Stofnfiskur feb 2023|1|2023",
+    "migration_profile": "fw_default",
+    "report_dir": "scripts/migration/output/input_batch_migration/V\u00e1r_2023_1_2023",
+    "status": "PASS",
+    "tool": "scripts/migration/tools/pilot_migrate_input_batch.py"
+  },
+  "selected_pair": {
+    "classification_counts": {
+      "sparse_evidence": 5,
+      "true_candidate": 2
+    },
+    "delta_days_max": 1.225,
+    "delta_days_min": 0.033,
+    "fw_component": "Stofnfiskur feb 2023|1|2023",
+    "provisional_candidate_rows": 7,
+    "sample_fw_population_id": "BB25D2EC-371D-4BC4-A560-85B01F17F513",
+    "sample_sea_population_id": "DAC62BC6-5059-419A-9E09-8D023C57EE7B",
+    "sea_component": "V\u00e1r 2023|1|2023"
+  },
+  "semantic_validation": {
+    "batch_id": 552,
+    "batch_number": "V\u00e1r 2023",
+    "marine_linkage_evidence": true,
+    "regression_gates_passed": true,
+    "status": "PASS",
+    "transition_count": 1,
+    "transition_entry_window_reason_counts": {
+      "incomplete_linkage": 1
+    }
+  }
+}

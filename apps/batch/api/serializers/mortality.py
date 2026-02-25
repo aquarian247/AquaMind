@@ -45,10 +45,12 @@ class MortalityEventSerializer(NestedModelMixin, DecimalFieldsMixin, serializers
 
     def get_container_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get basic container information."""
-        return self.get_nested_info(obj, 'container', {
-            'id': 'id',
-            'name': 'name'
-        })
+        if obj.assignment and obj.assignment.container:
+            return {
+                'id': obj.assignment.container.id,
+                'name': obj.assignment.container.name,
+            }
+        return None
 
     def get_reason_info(self, obj) -> Optional[Dict[str, Any]]:
         """Get mortality reason information."""

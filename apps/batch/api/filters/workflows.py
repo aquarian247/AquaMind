@@ -80,6 +80,7 @@ class BatchTransferWorkflowFilter(rest_filters.FilterSet):
             'workflow_type',
             'status',
             'is_intercompany',
+            'is_dynamic_execution',
             'source_lifecycle_stage',
             'dest_lifecycle_stage',
             'initiated_by',

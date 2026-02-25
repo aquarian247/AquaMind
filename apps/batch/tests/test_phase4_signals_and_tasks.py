@@ -213,6 +213,13 @@ class SignalHandlerTestCase(TestCase):
     
     def setUp(self):
         """Set up test data."""
+        # Respect CI/test policy that may disable Celery signal enqueueing.
+        from apps.batch.signals import _should_skip_celery_signals
+        if _should_skip_celery_signals():
+            self.skipTest(
+                "Celery signal enqueueing is disabled (SKIP_CELERY_SIGNALS)."
+            )
+
         # Create user for scenario
         self.user = User.objects.create_user(username='testuser2', password='testpass')
         
@@ -439,6 +446,13 @@ class IntegrationTestCase(TestCase):
     
     def setUp(self):
         """Set up test data."""
+        # Respect CI/test policy that may disable Celery signal enqueueing.
+        from apps.batch.signals import _should_skip_celery_signals
+        if _should_skip_celery_signals():
+            self.skipTest(
+                "Celery signal enqueueing is disabled (SKIP_CELERY_SIGNALS)."
+            )
+
         # Create user for scenario
         self.user = User.objects.create_user(username='testuser4', password='testpass')
         

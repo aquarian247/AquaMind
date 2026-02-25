@@ -51,6 +51,11 @@ from scripts.migration.tools.pilot_migrate_component import (
     build_conserved_population_counts,
 )
 from scripts.migration.tools.extract_freshness_guard import DEFAULT_BACKUP_HORIZON_DATE
+from scripts.migration.tools.population_assignment_mapping import (
+    build_population_lookup_from_maps,
+    extract_population_id,
+    get_component_assignment_maps,
+)
 
 
 REPORT_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "population_stitching"
@@ -886,7 +891,7 @@ def build_active_container_occupancy_evidence(
             continue
         metadata = mapping.metadata or {}
         source_container_id = (metadata.get("container_id") or "").strip()
-        source_population_id = (mapping.source_identifier or "").strip()
+        source_population_id = extract_population_id(mapping.source_model, mapping.source_identifier)
         if not source_container_id or not source_population_id:
             continue
         active_rows.append(
@@ -1011,6 +1016,7 @@ def build_active_container_occupancy_evidence(
 def build_stage_sanity(
     *,
     batch: Batch,
+    component_key: str,
     members: list[ComponentMember],
     population_ids: list[str],
     csv_dir: str,
@@ -1070,15 +1076,14 @@ def build_stage_sanity(
             "is_active",
         )
     )
-    assignment_maps = ExternalIdMap.objects.filter(
-        source_system="FishTalk",
-        source_model="Populations",
-        target_app_label="batch",
-        target_model="batchcontainerassignment",
-        target_object_id__in=[a.id for a in assignments],
-    )
+    assignment_ids = {assignment.id for assignment in assignments}
+    assignment_maps = [
+        mapping
+        for mapping in get_component_assignment_maps(component_key)
+        if mapping.target_object_id in assignment_ids
+    ]
     assignment_map_by_id = {row.target_object_id: row for row in assignment_maps}
-    pop_by_assignment_id = {row.target_object_id: row.source_identifier for row in assignment_maps}
+    pop_by_assignment_id = build_population_lookup_from_maps(assignment_maps)
     assignment_by_pop: dict[str, BatchContainerAssignment] = {}
     stage_by_pop: dict[str, str | None] = {}
     for assignment in assignments:
@@ -1880,6 +1885,7 @@ def main() -> int:
 
     stage_sanity = build_stage_sanity(
         batch=batch,
+        component_key=component_key,
         members=members,
         population_ids=population_ids,
         csv_dir=args.use_csv,

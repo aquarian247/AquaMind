@@ -1,0 +1,131 @@
+metadata:
+  generated_date: '2026-02-19'
+  total_batches: 1
+  batches_per_geography: 1
+  target_saturation: 0.85
+  stagger_days: 0
+  reference_pack_dir: /workspaces/AquaMind/scripts/data_generation/reference_pack/runtime/2026-02-19_fwsea30m
+  worker_partitions:
+    worker_1:
+      batch_indices:
+      - 0
+      batch_range: '1'
+      count: 1
+batches:
+- batch_id: Bakkafrost S-21 jan 25 (Retro2)
+  start_date: '2010-01-01'
+  eggs: 3000000
+  duration: 500
+  effective_duration: 900
+  harvest_target_kg: 6.4184695451963485
+  geography: Faroe Islands
+  station: "S03 Nor\xF0toftir"
+  sea_batch_number_target: Vetur 2025-26 (Retro2)
+  freshwater:
+    egg_alevin:
+      hall: Kleking
+      station: "S03 Nor\xF0toftir"
+      containers:
+      - Kleking 01
+      - Kleking 02
+      - Kleking 03
+      - Kleking 04
+      - Kleking 05
+      - Kleking 06
+      - Kleking 07
+      - Kleking 08
+      - Kleking 09
+      - Kleking 10
+      start_day: 0
+      end_day: 90
+    fry:
+      hall: "Startf\xF3\xF0ring"
+      station: "S08 Gj\xF3gv"
+      containers:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - a1
+      - a2
+      - a3
+      - a4
+      start_day: 90
+      end_day: 180
+    parr:
+      hall: MULTI(A, BA)
+      station: "S21 Vi\xF0arei\xF0i"
+      containers:
+      - A01
+      - A02
+      - A03
+      - A04
+      - A05
+      - A06
+      - B07
+      - B08
+      - B09
+      - B10
+      start_day: 180
+      end_day: 270
+    smolt:
+      hall: MULTI(C, C gamla, CD)
+      station: "S21 Vi\xF0arei\xF0i"
+      containers:
+      - C09
+      - C10
+      - C11
+      - C12
+      - C01
+      - C02
+      - C03
+      - C04
+      - C05
+      - C06
+      start_day: 270
+      end_day: 360
+    post_smolt:
+      hall: MULTI(E, F)
+      station: "S21 Vi\xF0arei\xF0i"
+      containers:
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+      - E6
+      - E7
+      - E8
+      - F1
+      - F2
+      start_day: 360
+      end_day: 450
+  sea:
+    area: "A03 Sv\xEDn\xE1ir"
+    rings:
+    - '01'
+    - '02'
+    - '03'
+    - '04'
+    - '05'
+    - '06'
+    - '07'
+    - 08
+    - 09
+    - '10'
+    - '11'
+    - '12'
+    - '13'
+    - '14'
+    - '15'
+    - '16'
+    - '17'
+    - '18'
+    - '21'
+    - '22'
+    rings_count: 20
+    start_day: 450
+    end_day: 900
+    note: Full area

@@ -150,10 +150,33 @@ TABLE_CONFIGS = {
                 CONVERT(varchar(36), c.OrgUnitID) AS OrgUnitID,
                 CONVERT(varchar(50), c.OfficialID) AS OfficialID,
                 CONVERT(varchar(50), c.ContainerType) AS ContainerType,
-                CONVERT(varchar(36), c.GroupID) AS GroupID
+                CONVERT(varchar(36), c.GroupID) AS GroupID,
+                CONVERT(varchar(32), cp.OverriddenVolumeM3) AS OverriddenVolumeM3
             FROM dbo.Containers c
+            OUTER APPLY (
+                SELECT TOP 1 h.PhysicsID
+                FROM dbo.ContainerPhysicsHistory h
+                WHERE h.ContainerID = c.ContainerID
+                ORDER BY
+                    CASE WHEN h.EndTime IS NULL THEN 0 ELSE 1 END,
+                    h.EndTime DESC,
+                    h.StartTime DESC
+            ) ph
+            OUTER APPLY (
+                SELECT MAX(CASE WHEN p.ParameterID = 6 THEN p.ParameterValue END) AS OverriddenVolumeM3
+                FROM dbo.ContainerPhysics p
+                WHERE p.PhysicsID = ph.PhysicsID
+            ) cp
         """,
-        "headers": ["ContainerID", "ContainerName", "OrgUnitID", "OfficialID", "ContainerType", "GroupID"],
+        "headers": [
+            "ContainerID",
+            "ContainerName",
+            "OrgUnitID",
+            "OfficialID",
+            "ContainerType",
+            "GroupID",
+            "OverriddenVolumeM3",
+        ],
         "estimated_rows": 17000,
         "chunk_size": 0,
     },

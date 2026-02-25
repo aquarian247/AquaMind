@@ -71,6 +71,18 @@ class ContainerAPITest(APITestCase):
             max_volume_m3=Decimal('100.00'),
             description='Test container type description'
         )
+        self.rack_type = ContainerType.objects.create(
+            name='Rack Type',
+            category='OTHER',
+            max_volume_m3=Decimal('50.00'),
+            description='Rack container type'
+        )
+        self.tray_type = ContainerType.objects.create(
+            name='Tray Type',
+            category='TRAY',
+            max_volume_m3=Decimal('5.00'),
+            description='Tray container type'
+        )
         
         # Create a container in a hall
         self.hall_container_data = {
@@ -109,6 +121,27 @@ class ContainerAPITest(APITestCase):
             max_biomass_kg=self.area_container_data['max_biomass_kg'],
             active=self.area_container_data['active']
         )
+
+        # Create a structural rack + tray hierarchy in hall context
+        self.rack_container = Container.objects.create(
+            name='Rack A',
+            container_type=self.rack_type,
+            hall=self.hall,
+            hierarchy_role='STRUCTURAL',
+            volume_m3=Decimal('20.00'),
+            max_biomass_kg=Decimal('0.00'),
+            active=True,
+        )
+        self.tray_container = Container.objects.create(
+            name='Tray A1',
+            container_type=self.tray_type,
+            hall=self.hall,
+            parent_container=self.rack_container,
+            hierarchy_role='HOLDING',
+            volume_m3=Decimal('2.00'),
+            max_biomass_kg=Decimal('50.00'),
+            active=True,
+        )
         
         # Set up URLs for API endpoints
         # The router no longer uses the "infrastructure" namespace, so drop the prefix
@@ -137,7 +170,7 @@ class ContainerAPITest(APITestCase):
         self.assertEqual(response.data['name'], new_container_data['name'])
         self.assertEqual(response.data['hall'], new_container_data['hall'])
         self.assertIsNone(response.data['area'])
-        self.assertEqual(Container.objects.count(), 3)
+        self.assertEqual(Container.objects.count(), 5)
         
         # Verify the data was saved correctly
         container = Container.objects.get(id=response.data['id'])
@@ -159,7 +192,7 @@ class ContainerAPITest(APITestCase):
         self.assertEqual(response.data['name'], new_container_data['name'])
         self.assertEqual(response.data['area'], new_container_data['area'])
         self.assertIsNone(response.data['hall'])
-        self.assertEqual(Container.objects.count(), 3)
+        self.assertEqual(Container.objects.count(), 5)
         
         # Verify the data was saved correctly
         container = Container.objects.get(id=response.data['id'])
@@ -316,6 +349,29 @@ class ContainerAPITest(APITestCase):
         for item in items:
             self.assertEqual(item['area'], self.area.id)
             self.assertIsNone(item['hall'])
+
+    def test_filter_by_parent_container(self):
+        """Test filtering child containers by parent_container."""
+        response = self.client.get(
+            f"{self.list_url}?parent_container={self.rack_container.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertTrue(all(item['parent_container'] == self.rack_container.id for item in items))
+
+    def test_filter_root_containers(self):
+        """Test filtering root containers via parent_container__isnull."""
+        response = self.client.get(f"{self.list_url}?parent_container__isnull=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertTrue(all(item['parent_container'] is None for item in items))
+
+    def test_filter_by_hierarchy_role(self):
+        """Test filtering by hierarchy role."""
+        response = self.client.get(f"{self.list_url}?hierarchy_role=STRUCTURAL")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = get_response_items(response)
+        self.assertTrue(all(item['hierarchy_role'] == 'STRUCTURAL' for item in items))
 
 
 class ContainerHistoryReasonTest(APITestCase):

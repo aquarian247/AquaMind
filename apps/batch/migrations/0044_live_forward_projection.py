@@ -187,6 +187,8 @@ class Migration(migrations.Migration):
     Add LiveForwardProjection (hypertable) and ContainerForecastSummary models.
     """
 
+    atomic = False
+
     dependencies = [
         ('batch', '0043_add_planned_activity_to_daily_state'),
         ('infrastructure',

@@ -10,7 +10,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--role',
             type=str,
-            choices=['ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN', 'VIEW'],
+            choices=['ADMIN', 'MGR', 'OPR', 'SHIP_CREW', 'VET', 'QA', 'FIN', 'VIEW'],
             default='ADMIN',
             help='Role to assign to users (default: ADMIN)',
         )
@@ -40,6 +40,7 @@ class Command(BaseCommand):
             'ADMIN': Role.ADMIN,
             'MGR': Role.MANAGER,
             'OPR': Role.OPERATOR,
+            'SHIP_CREW': Role.SHIP_CREW,
             'VET': Role.VETERINARIAN,
             'QA': Role.QA,
             'FIN': Role.FINANCE,
@@ -101,7 +102,6 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"Successfully updated {updated_count} user profile(s)")
         )
-
 
 
 

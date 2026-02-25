@@ -108,6 +108,13 @@ check_*.py
 scripts/migration/data/
 scripts/migration/output/
 
+# Migration analysis report data artifacts (keep markdown summaries tracked)
+aquamind/docs/progress/migration/analysis_reports/**/*.csv
+aquamind/docs/progress/migration/analysis_reports/**/*.json
+aquamind/docs/progress/migration/analysis_reports/**/*.xlsx
+aquamind/docs/progress/migration/analysis_reports/**/*.parquet
+aquamind/docs/progress/migration/analysis_reports/**/*.feather
+
 # Keep these files even if they match patterns above
 !.gitkeep
 !**/__init__.py  # Keep all __init__.py files as they're essential for Python packages

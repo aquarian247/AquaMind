@@ -18,6 +18,8 @@ django.setup()
 from apps.infrastructure.models import Geography, Container, Hall
 from apps.batch.models import Batch
 
+HOLDING_ROLE = "HOLDING"
+
 
 class BatchOrchestrator:
     """
@@ -47,13 +49,15 @@ class BatchOrchestrator:
             # Count freshwater containers
             fw_containers = Container.objects.filter(
                 hall__freshwater_station__geography=geo,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).count()
             
             # Count sea containers
             sea_containers = Container.objects.filter(
                 area__geography=geo,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).count()
             
             total = fw_containers + sea_containers
@@ -370,6 +374,79 @@ class BatchOrchestrator:
         return 0
 
 
+def run_reference_pack_orchestration(args):
+    """
+    Reference-pack mode delegates to schedule generator + executor scripts.
+
+    This keeps realism logic centralized in generate_batch_schedule.py.
+    """
+    schedule_output = Path(args.schedule_output)
+    schedule_output.parent.mkdir(parents=True, exist_ok=True)
+
+    schedule_cmd = [
+        sys.executable,
+        "scripts/data_generation/generate_batch_schedule.py",
+        "--stagger",
+        str(args.stagger),
+        "--saturation",
+        str(args.saturation),
+        "--output",
+        str(schedule_output),
+        "--reference-pack",
+        args.reference_pack,
+    ]
+    if args.batches is not None:
+        schedule_cmd.extend(["--batches", str(args.batches)])
+    if not args.execute:
+        schedule_cmd.append("--dry-run")
+
+    print("\n" + "=" * 80)
+    print("REFERENCE-PACK ORCHESTRATION MODE")
+    print("=" * 80)
+    print("Step 1/2: Generating schedule via generate_batch_schedule.py")
+    print("  " + " ".join(schedule_cmd))
+
+    schedule_result = subprocess.run(schedule_cmd, cwd=str(project_root))
+    if schedule_result.returncode != 0:
+        return schedule_result.returncode
+
+    if not args.execute:
+        print("\nDry-run complete (schedule generation only).")
+        print("To execute:")
+        print(
+            "  "
+            + " ".join(
+                [
+                    sys.executable,
+                    "scripts/data_generation/execute_batch_schedule.py",
+                    str(schedule_output),
+                    "--workers",
+                    "1",
+                    "--use-partitions",
+                    "--reference-pack",
+                    args.reference_pack,
+                ]
+            )
+        )
+        return 0
+
+    execute_cmd = [
+        sys.executable,
+        "scripts/data_generation/execute_batch_schedule.py",
+        str(schedule_output),
+        "--workers",
+        "1",
+        "--use-partitions",
+        "--reference-pack",
+        args.reference_pack,
+    ]
+
+    print("\nStep 2/2: Executing schedule via execute_batch_schedule.py")
+    print("  " + " ".join(execute_cmd))
+    execute_result = subprocess.run(execute_cmd, cwd=str(project_root))
+    return execute_result.returncode
+
+
 def main():
     import argparse
     
@@ -403,8 +480,26 @@ def main():
         default=5,
         help='Days between batch starts (default: 5 for 87%% saturation)'
     )
+    parser.add_argument(
+        '--reference-pack',
+        type=str,
+        default=None,
+        help=(
+            'Optional realistic reference pack path. When provided, this wrapper '
+            'delegates scheduling/execution to the schedule scripts.'
+        ),
+    )
+    parser.add_argument(
+        '--schedule-output',
+        type=str,
+        default='config/batch_generation_schedule_orchestrator_sequential.yaml',
+        help='Schedule output path for reference-pack orchestration mode',
+    )
     
     args = parser.parse_args()
+
+    if args.reference_pack:
+        return run_reference_pack_orchestration(args)
     
     # Parse start date if provided
     start_date = None

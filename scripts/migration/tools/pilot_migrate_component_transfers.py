@@ -18,6 +18,8 @@ Important:
   - This is a *best-effort* backfill: FishTalk transfers can represent splits/merges;
     AquaMind TransferAction requires absolute transferred_count and biomass.
     We estimate using the source population snapshot near the operation time.
+  - Assignment-derived synthetic stage-transition workflows/actions are disabled by
+    default. Enable explicitly only for legacy diagnostics.
 
 Writes only to aquamind_db_migr_dev.
 """
@@ -61,6 +63,7 @@ from apps.batch.models.assignment import BatchContainerAssignment
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 from scripts.migration.tools.etl_loader import ETLDataLoader
+from scripts.migration.tools.population_assignment_mapping import get_assignment_external_map
 
 
 User = get_user_model()
@@ -108,7 +111,17 @@ def to_decimal(value: object, *, places: str) -> Decimal | None:
         return None
 
 
-def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
+def get_external_map(
+    source_model: str,
+    source_identifier: str,
+    *,
+    component_key: str | None = None,
+) -> ExternalIdMap | None:
+    if source_model == "Populations":
+        return get_assignment_external_map(
+            str(source_identifier),
+            component_key=component_key,
+        )
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
     ).first()
@@ -441,14 +454,27 @@ Transfer data sources:
         action="store_true",
         help="Use SubTransfers table instead of PublicTransfers (recommended for 2020+ batches)",
     )
-    parser.add_argument(
+    synthetic_group = parser.add_mutually_exclusive_group()
+    synthetic_group.add_argument(
         "--skip-synthetic-stage-transitions",
+        dest="skip_synthetic_stage_transitions",
         action="store_true",
         help=(
-            "Do not synthesize assignment-derived PopulationStageTransition workflows/actions. "
-            "This keeps only transfer-edge-backed workflows/actions."
+            "Default behavior. Do not synthesize assignment-derived "
+            "PopulationStageTransition workflows/actions; keep only transfer-edge-backed "
+            "workflows/actions."
         ),
     )
+    synthetic_group.add_argument(
+        "--include-synthetic-stage-transitions",
+        dest="skip_synthetic_stage_transitions",
+        action="store_false",
+        help=(
+            "Legacy override. Synthesize assignment-derived PopulationStageTransition "
+            "workflows/actions."
+        ),
+    )
+    parser.set_defaults(skip_synthetic_stage_transitions=True)
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument(
@@ -462,6 +488,16 @@ Transfer data sources:
 
 def main() -> int:
     args = build_parser().parse_args()
+    if args.skip_synthetic_stage_transitions:
+        print(
+            "Synthetic stage-transition workflows/actions disabled "
+            "(default migration guardrail)."
+        )
+    else:
+        print(
+            "WARNING: synthetic stage-transition workflows/actions enabled "
+            "via --include-synthetic-stage-transitions."
+        )
     
     # Determine which stitching approach to use
     use_chain_stitching = args.chain_id is not None
@@ -658,7 +694,7 @@ def main() -> int:
 
     assignment_by_pop: dict[str, BatchContainerAssignment] = {}
     for pid in population_ids:
-        mapped = get_external_map("Populations", pid)
+        mapped = get_external_map("Populations", pid, component_key=component_key)
         if mapped:
             assignment_by_pop[pid] = BatchContainerAssignment.objects.get(pk=mapped.target_object_id)
 

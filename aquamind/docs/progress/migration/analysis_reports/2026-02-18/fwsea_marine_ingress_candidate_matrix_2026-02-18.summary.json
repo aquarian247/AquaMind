@@ -1,0 +1,85 @@
+{
+  "boundary_true_row_count": 3958,
+  "canonical_row_count": 212399,
+  "classification_counts": {
+    "reverse_flow_fw_only": 211978,
+    "sparse_evidence": 1820,
+    "true_candidate": 2138,
+    "unclassified_nonzero_candidate": 421
+  },
+  "csv_dir": "scripts/migration/data/extract",
+  "evidence_type_counts": {
+    "canonical": 212399,
+    "provisional_temporal_geography": 3958
+  },
+  "excluded_flow_counts": {
+    "excluded_non_fw_source": 98967,
+    "fw_to_fw": 211978,
+    "l_to_s": 0,
+    "marine_to_marine": 0
+  },
+  "generated_at_utc": "2026-02-18 15:39:23.737678",
+  "input_batches_csv": "/Users/aquarian247/Projects/AquaMind/scripts/migration/output/input_stitching/input_batches.csv",
+  "marine_linkage_age_tier": {
+    "backup_cutoff_date": "2026-01-22",
+    "fw_age_gate_months": 30,
+    "fw_age_gate_window_start_date": "2023-07-22",
+    "linked_fw_in_scope_component_count": 7,
+    "linked_fw_out_of_scope_component_count": 0,
+    "linked_fw_unknown_scope_component_count": 0,
+    "recommended_action_counts": {
+      "eligible_for_marine_wave": 4,
+      "hold_for_linkage_confirmation": 30
+    },
+    "sea_out_of_age_gate_count": 5,
+    "sea_total_with_stage_signal": 39,
+    "sea_under_age_gate_count": 34,
+    "tier_counts": {
+      "linked_fw_in_scope": 4,
+      "unlinked_sea": 30
+    }
+  },
+  "pilot_candidate_count": 2138,
+  "pilot_recommendation": {
+    "boundary_check_s_to_a": "true",
+    "canonical_ext_transfer_rows": 0,
+    "canonical_transferred_biomass_kg_sum": "",
+    "canonical_transferred_count_sum": "",
+    "classification": "true_candidate",
+    "delta_days": "0.000",
+    "dest_site_code": "A57",
+    "dest_stage_class": "marine",
+    "evidence_type": "provisional_temporal_geography",
+    "fw_component": "Fiskaaling des09|0|2010",
+    "fw_container_id": "FDBBE184-54E9-48B8-875A-9659DF11719B",
+    "fw_hall": "Startf\u00f3\u00f0ringsh\u00f8ll",
+    "fw_population_id": "036168E8-1A59-4B53-9A55-5386A09083BB",
+    "fw_site": "S16 Glyvradalur",
+    "fw_terminal_evidence": "{\"mortality_last_time\": \"2010-05-18 10:02:00\", \"segment_end_time\": \"2010-05-19 10:02:00\", \"transfer_out_last_time\": \"2010-05-19 10:02:00\"}",
+    "fw_terminal_primary_signal": "segment_end_time|transfer_out_last_time",
+    "fw_terminal_signal_count": 3,
+    "geography": "Faroe Islands",
+    "lineage_operation_time_max": "",
+    "lineage_operation_time_min": "",
+    "lineage_subtransfer_rows": 0,
+    "same_geography": "true",
+    "sea_area": "A57 Fuglafj\u00f8r\u00f0ur",
+    "sea_component": "S-04 FA Mai10|3|2010",
+    "sea_container_id": "0F522088-8DCA-4401-85C7-8EC278A49E48",
+    "sea_fill_evidence": "{\"segment_start_time\": \"2010-05-19 10:02:00\", \"status_first_nonzero_time\": \"2010-05-20 00:00:00\"}",
+    "sea_fill_primary_signal": "segment_start_time",
+    "sea_fill_signal_count": 2,
+    "sea_population_id": "4922DCF8-C402-46A8-8D78-ECDD2E08C94B",
+    "sea_ring": "",
+    "source_site_code": "S16",
+    "source_stage_class": "fw",
+    "temporal_window_days": 2,
+    "temporal_window_justification": "",
+    "x_fw_terminal_depletion": "2010-05-19 10:02:00",
+    "y_sea_fill_start": "2010-05-19 10:02:00"
+  },
+  "provisional_row_count": 3958,
+  "provisional_window_days": 2,
+  "row_count": 216357,
+  "window_extension_justification": ""
+}

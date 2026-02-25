@@ -69,10 +69,9 @@ class LocationModelSerializer(serializers.ModelSerializer):
 
 
 class ExclusiveLocationModelSerializer(serializers.ModelSerializer):
-    """Base serializer for models that can be in either a hall or an area.
+    """Base serializer for models that can be in hall/area/(optionally carrier).
 
-    This serializer provides validation for models like Container and
-    FeedContainer.
+    This serializer provides validation for models like Container and FeedContainer.
     """
 
     class Meta:
@@ -87,7 +86,7 @@ class ExclusiveLocationModelSerializer(serializers.ModelSerializer):
         return self.Meta.model._meta.verbose_name.title()
 
     def validate(self, data):
-        """Validate that the model is linked to either a hall or an area.
+        """Validate that the model is linked to one location context.
 
         Args:
             data: The serializer data
@@ -96,10 +95,12 @@ class ExclusiveLocationModelSerializer(serializers.ModelSerializer):
             dict: The validated data
 
         Raises:
-            ValidationError: If model is linked to both or neither location
+            ValidationError: If model is linked to none or multiple locations
         """
         hall = data.get('hall')
         area = data.get('area')
+        has_carrier_field = 'carrier' in self.fields
+        carrier = data.get('carrier') if has_carrier_field else None
 
         # Check if we're doing a partial update
         if self.partial:
@@ -108,20 +109,21 @@ class ExclusiveLocationModelSerializer(serializers.ModelSerializer):
                 hall = getattr(self.instance, 'hall', None)
             if 'area' not in data:
                 area = getattr(self.instance, 'area', None)
+            if has_carrier_field and 'carrier' not in data:
+                carrier = getattr(self.instance, 'carrier', None)
 
-        if hall and area:
+        locations = [hall, area]
+        labels = ['hall', 'area']
+        if has_carrier_field:
+            locations.append(carrier)
+            labels.append('carrier')
+
+        provided = [label for label, value in zip(labels, locations) if value]
+        if len(provided) != 1:
             raise serializers.ValidationError({
                 "non_field_errors": [
-                    f"{self._get_model_name()} cannot be linked to "
-                    f"both a hall and a sea area"
-                ]
-            })
-
-        if not hall and not area:
-            raise serializers.ValidationError({
-                "non_field_errors": [
-                    f"{self._get_model_name()} must be linked to "
-                    f"either a hall or a sea area"
+                    f"{self._get_model_name()} must be linked to exactly one of "
+                    f"{', '.join(labels)}"
                 ]
             })
 

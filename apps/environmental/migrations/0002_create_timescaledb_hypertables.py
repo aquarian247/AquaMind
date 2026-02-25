@@ -94,6 +94,8 @@ class Migration(migrations.Migration):
     Modified to use conditional helpers that check if TimescaleDB is available.
     """
 
+    atomic = False
+
     dependencies = [
         ('environmental', '0001_initial'),
     ]

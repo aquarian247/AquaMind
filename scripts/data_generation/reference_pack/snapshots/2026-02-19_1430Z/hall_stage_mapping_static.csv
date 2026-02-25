@@ -1,0 +1,49 @@
+site_name,hall_label,lifecycle_stage,mapping_type
+FW22 Applecross,A1,Egg&Alevin,static_tooling_map
+FW22 Applecross,A2,Egg&Alevin,static_tooling_map
+FW22 Applecross,B1,Fry,static_tooling_map
+FW22 Applecross,B2,Fry,static_tooling_map
+FW22 Applecross,C1,Parr,static_tooling_map
+FW22 Applecross,C2,Parr,static_tooling_map
+FW22 Applecross,D1,Smolt,static_tooling_map
+FW22 Applecross,D2,Smolt,static_tooling_map
+FW22 Applecross,E1,Post-Smolt,static_tooling_map
+FW22 Applecross,E2,Post-Smolt,static_tooling_map
+S03 Norðtoftir,11 HØLL A,Smolt,static_tooling_map
+S03 Norðtoftir,11 HØLL B,Smolt,static_tooling_map
+S03 Norðtoftir,18 HØLL A,Post-Smolt,static_tooling_map
+S03 Norðtoftir,18 HØLL B,Post-Smolt,static_tooling_map
+S03 Norðtoftir,5 M HØLL,Fry,static_tooling_map
+S03 Norðtoftir,800 HØLL,Parr,static_tooling_map
+S03 Norðtoftir,900 HØLL,Parr,static_tooling_map
+S03 Norðtoftir,KLEKING,Egg&Alevin,static_tooling_map
+S08 Gjógv,KLEKING,Egg&Alevin,static_tooling_map
+S08 Gjógv,STARTFÓÐRING,Fry,static_tooling_map
+S08 Gjógv,T-HØLL,Post-Smolt,static_tooling_map
+S16 Glyvradalur,A HØLL,Egg&Alevin,static_tooling_map
+S16 Glyvradalur,B HØLL,Fry,static_tooling_map
+S16 Glyvradalur,C HØLL,Parr,static_tooling_map
+S16 Glyvradalur,D HØLL,Smolt,static_tooling_map
+S16 Glyvradalur,E1 HØLL,Post-Smolt,static_tooling_map
+S16 Glyvradalur,E2 HØLL,Post-Smolt,static_tooling_map
+S16 Glyvradalur,KLEKIHØLL,Egg&Alevin,static_tooling_map
+S16 Glyvradalur,STARTFÓÐRINGSHØLL,Fry,static_tooling_map
+S21 Viðareiði,5M,Fry,static_tooling_map
+S21 Viðareiði,A,Parr,static_tooling_map
+S21 Viðareiði,BA,Parr,static_tooling_map
+S21 Viðareiði,BB,Parr,static_tooling_map
+S21 Viðareiði,C,Smolt,static_tooling_map
+S21 Viðareiði,D,Smolt,static_tooling_map
+S21 Viðareiði,E,Post-Smolt,static_tooling_map
+S21 Viðareiði,F,Post-Smolt,static_tooling_map
+S21 Viðareiði,ROGN,Egg&Alevin,static_tooling_map
+S24 Strond,A HØLL,Egg&Alevin,static_tooling_map
+S24 Strond,B HØLL,Fry,static_tooling_map
+S24 Strond,C HØLL,Parr,static_tooling_map
+S24 Strond,D HØLL,Parr,static_tooling_map
+S24 Strond,E HØLL,Smolt,static_tooling_map
+S24 Strond,F HØLL,Smolt,static_tooling_map
+S24 Strond,G HØLL,Post-Smolt,static_tooling_map
+S24 Strond,H HØLL,Post-Smolt,static_tooling_map
+S24 Strond,I HØLL,Post-Smolt,static_tooling_map
+S24 Strond,J HØLL,Post-Smolt,static_tooling_map

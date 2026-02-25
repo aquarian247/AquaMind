@@ -25,8 +25,13 @@ class ContainerFilter(FilterSet):
         fields = {
             'name': ['exact'],
             'container_type': ['exact'],
+            'container_type__category': ['exact'],
             'hall': ['exact', 'in'],
             'area': ['exact', 'in'],
+            'carrier': ['exact', 'in'],
+            'carrier__carrier_type': ['exact'],
+            'parent_container': ['exact', 'in', 'isnull'],
+            'hierarchy_role': ['exact'],
             'active': ['exact']
         }
 
@@ -43,10 +48,18 @@ class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     **Filtering:**
     - `name`: Filter by the exact name of the container.
     - `container_type`: Filter by the ID of the ContainerType.
+    - `container_type__category`: Filter by container type category (TANK/PEN/TRAY/OTHER).
     - `hall`: Filter by the ID of the parent Hall.
     - `hall__in`: Filter by multiple Hall IDs (comma-separated).
     - `area`: Filter by the ID of the parent Area.
     - `area__in`: Filter by multiple Area IDs (comma-separated).
+    - `carrier`: Filter by linked transport carrier ID.
+    - `carrier__in`: Filter by multiple transport carrier IDs.
+    - `carrier__carrier_type`: Filter by carrier type (TRUCK/VESSEL).
+    - `parent_container`: Filter by parent container ID.
+    - `parent_container__in`: Filter by multiple parent container IDs.
+    - `parent_container__isnull`: Filter top-level containers (`true`) vs children (`false`).
+    - `hierarchy_role`: Filter by hierarchy role (HOLDING/STRUCTURAL).
     - `active`: Filter by active status (boolean).
 
     **Searching:**
@@ -54,10 +67,13 @@ class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     - `container_type__name`: Search by the name of the ContainerType.
     - `hall__name`: Search by the name of the parent Hall.
     - `area__name`: Search by the name of the parent Area.
+    - `carrier__name`: Search by the name of the linked transport carrier.
+    - `parent_container__name`: Search by parent container name.
 
     **Ordering:**
     - `name` (default)
     - `container_type__name`
+    - `parent_container__name`
     - `created_at`
     """
     # Explicitly override authentication to prevent SessionAuthentication fallback
@@ -68,8 +84,8 @@ class ContainerViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
     serializer_class = ContainerSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ContainerFilter
-    search_fields = ['name', 'container_type__name', 'hall__name', 'area__name']
-    ordering_fields = ['name', 'container_type__name', 'created_at']
+    search_fields = ['name', 'container_type__name', 'hall__name', 'area__name', 'carrier__name', 'parent_container__name']
+    ordering_fields = ['name', 'container_type__name', 'carrier__name', 'parent_container__name', 'created_at']
     ordering = ['name']
 
     def list(self, request, *args, **kwargs):

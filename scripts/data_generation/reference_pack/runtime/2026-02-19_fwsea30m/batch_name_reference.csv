@@ -1,0 +1,52 @@
+batch_id,batch_number,status,lifecycle_stage,start_date,actual_end_date,geography_hint,total_assignments,active_assignments,active_population,source_component_key,notes
+,Benchmark Gen. Desembur 2025,REFERENCE,,2025-12-10,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur S21 okt 25,REFERENCE,,2025-10-29,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost S-21 okt 25,REFERENCE,,2025-10-28,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Okt 25,REFERENCE,,2025-10-01,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen Septembur 2025,REFERENCE,,2025-09-10,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur August 25,REFERENCE,,2025-08-27,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,StofnFiskur S-21 juli25,REFERENCE,,2025-07-23,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Juni 2025,REFERENCE,,2025-06-12,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur mai 2025,REFERENCE,,2025-05-28,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,StofnFiskur S-21 apr 25,REFERENCE,,2025-04-09,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Mars 2025,REFERENCE,,2025-03-12,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost feb 2025,REFERENCE,,2025-02-25,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur feb 2025,REFERENCE,,2025-02-19,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost S-21 jan 25,REFERENCE,,2025-01-06,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Desembur 2024,REFERENCE,,2024-12-18,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Des 24,REFERENCE,,2024-12-11,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Nov 2024,REFERENCE,,2024-11-20,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,StofnFiskur okt. 2024,REFERENCE,,2024-10-02,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Septembur 2024,REFERENCE,,2024-09-18,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost S-21 sep24,REFERENCE,,2024-09-16,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur sept 24,REFERENCE,,2024-09-04,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Aug 2024,REFERENCE,,2024-08-08,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Juni 2024,REFERENCE,,2024-06-13,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur S-21 juni24,REFERENCE,,2024-06-12,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost Okt 2023,REFERENCE,,2023-10-27,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Juni 24,REFERENCE,,2024-06-05,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur mai 2024,REFERENCE,,2024-05-15,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost mai 24,REFERENCE,,2024-05-10,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Benchmark Gen. Mars 2024,REFERENCE,,2024-03-13,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,StofnFiskur mars 2024,REFERENCE,,2024-03-12,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Mars 24,REFERENCE,,2024-03-06,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur S-21 feb24,REFERENCE,,2024-02-21,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Bakkafrost feb 2024,REFERENCE,,2024-02-07,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Des 23,REFERENCE,,2023-12-08,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur desembur 2023,REFERENCE,,2023-12-06,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur S-21 nov23,REFERENCE,,2023-11-08,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Septembur 2023,REFERENCE,,2023-09-08,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Stofnfiskur Aug 23,REFERENCE,,2023-08-23,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vetur 2025-26,REFERENCE,,2025-12-17,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Heyst 2025,REFERENCE,,2025-08-28,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vár 2025,REFERENCE,,2025-03-27,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Summar 2025,REFERENCE,,2025-06-17,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vetur 2025,REFERENCE,,2025-02-11,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vetur 2024/2025,REFERENCE,,2024-12-16,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vetur 2024,REFERENCE,,2024-12-07,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Heyst 2024,REFERENCE,,2024-09-06,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Summar 2024,REFERENCE,,2024-06-24,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Heyst 2023,REFERENCE,,2024-07-23,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vár 2024,REFERENCE,,2024-02-19,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Vetur 2023,REFERENCE,,2023-12-14,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation
+,Summar 2023,REFERENCE,,2023-08-21,,,,,,FT_INPUT_30M,Derived 30m FT naming pool for realistic test data generation

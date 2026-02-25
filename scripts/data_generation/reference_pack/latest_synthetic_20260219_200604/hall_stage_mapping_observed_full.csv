@@ -1,0 +1,45 @@
+geography,station_name,hall_name,lifecycle_stage,assignment_rows,population_total,is_dominant_stage
+Faroe Islands,FI-FW-01,FI-FW-01-Hall-A,Egg&Alevin,220,65847740,True
+Faroe Islands,FI-FW-01,FI-FW-01-Hall-B,Fry,210,59771979,True
+Faroe Islands,FI-FW-01,FI-FW-01-Hall-C,Parr,200,55190069,True
+Faroe Islands,FI-FW-01,FI-FW-01-Hall-D,Smolt,190,51537660,True
+Faroe Islands,FI-FW-01,FI-FW-01-Hall-E,Post-Smolt,180,48470691,True
+Faroe Islands,FI-FW-02,FI-FW-02-Hall-A,Egg&Alevin,200,59144853,True
+Faroe Islands,FI-FW-02,FI-FW-02-Hall-B,Fry,200,56850581,True
+Faroe Islands,FI-FW-02,FI-FW-02-Hall-C,Parr,190,52260206,True
+Faroe Islands,FI-FW-02,FI-FW-02-Hall-D,Smolt,180,48566484,True
+Faroe Islands,FI-FW-02,FI-FW-02-Hall-E,Post-Smolt,170,45445580,True
+Faroe Islands,FI-FW-03,FI-FW-03-Hall-A,Egg&Alevin,190,55906457,True
+Faroe Islands,FI-FW-03,FI-FW-03-Hall-B,Fry,180,50910235,True
+Faroe Islands,FI-FW-03,FI-FW-03-Hall-C,Parr,170,47049774,True
+Faroe Islands,FI-FW-03,FI-FW-03-Hall-D,Smolt,160,43357342,True
+Faroe Islands,FI-FW-03,FI-FW-03-Hall-E,Post-Smolt,150,40210144,True
+Faroe Islands,FI-FW-04,FI-FW-04-Hall-A,Egg&Alevin,50,14343746,True
+Faroe Islands,FI-FW-04,FI-FW-04-Hall-B,Fry,40,11123839,True
+Faroe Islands,FI-FW-04,FI-FW-04-Hall-C,Parr,30,8237218,True
+Faroe Islands,FI-FW-04,FI-FW-04-Hall-D,Smolt,20,5148653,True
+Faroe Islands,FI-FW-04,FI-FW-04-Hall-E,Post-Smolt,10,2174546,True
+Faroe Islands,FI-FW-05,FI-FW-05-Hall-A,Egg&Alevin,10,3061005,True
+Faroe Islands,FI-FW-06,FI-FW-06-Hall-A,Egg&Alevin,10,3160572,True
+Scotland,S-FW-01,S-FW-01-Hall-A,Egg&Alevin,220,65858470,True
+Scotland,S-FW-01,S-FW-01-Hall-B,Fry,210,60202002,True
+Scotland,S-FW-01,S-FW-01-Hall-C,Parr,200,56072296,True
+Scotland,S-FW-01,S-FW-01-Hall-D,Smolt,190,52200299,True
+Scotland,S-FW-01,S-FW-01-Hall-E,Post-Smolt,180,48931900,True
+Scotland,S-FW-02,S-FW-02-Hall-A,Egg&Alevin,200,58806869,True
+Scotland,S-FW-02,S-FW-02-Hall-B,Fry,200,56492949,True
+Scotland,S-FW-02,S-FW-02-Hall-C,Parr,190,52371955,True
+Scotland,S-FW-02,S-FW-02-Hall-D,Smolt,180,48473639,True
+Scotland,S-FW-02,S-FW-02-Hall-E,Post-Smolt,170,45154074,True
+Scotland,S-FW-03,S-FW-03-Hall-A,Egg&Alevin,190,56412237,True
+Scotland,S-FW-03,S-FW-03-Hall-B,Fry,180,50819127,True
+Scotland,S-FW-03,S-FW-03-Hall-C,Parr,170,46752118,True
+Scotland,S-FW-03,S-FW-03-Hall-D,Smolt,160,43500209,True
+Scotland,S-FW-03,S-FW-03-Hall-E,Post-Smolt,150,40156122,True
+Scotland,S-FW-04,S-FW-04-Hall-A,Egg&Alevin,50,15466463,True
+Scotland,S-FW-04,S-FW-04-Hall-B,Fry,40,11317439,True
+Scotland,S-FW-04,S-FW-04-Hall-C,Parr,30,8208803,True
+Scotland,S-FW-04,S-FW-04-Hall-D,Smolt,20,5560645,True
+Scotland,S-FW-04,S-FW-04-Hall-E,Post-Smolt,10,2622697,True
+Scotland,S-FW-05,S-FW-05-Hall-A,Egg&Alevin,10,3286584,True
+Scotland,S-FW-06,S-FW-06-Hall-A,Egg&Alevin,10,2686532,True

@@ -35,6 +35,7 @@ from apps.batch.models import BatchContainerAssignment, TransferAction, BatchTra
 from django.db.models import Q
 
 User = get_user_model()
+HOLDING_ROLE = "HOLDING"
 
 PROGRESS_DIR = Path(project_root) / 'aquamind' / 'docs' / 'progress' / 'test_data'
 PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
@@ -77,6 +78,12 @@ class EventEngine:
             print(f"✓ DETERMINISTIC: Using harvest target {self.deterministic_harvest_target}kg from schedule")
         else:
             self.deterministic_harvest_target = None
+
+        sea_batch_target_env = (os.environ.get('SEA_BATCH_NUMBER_TARGET') or '').strip()
+        self.sea_batch_number_target = sea_batch_target_env or None
+        self.sea_rename_applied = False
+        if self.sea_batch_number_target:
+            print(f"✓ DETERMINISTIC: Sea rename target set to '{self.sea_batch_number_target}'")
         
     def init(self):
         print(f"\n{'='*80}")
@@ -388,7 +395,8 @@ class EventEngine:
         if hall:
             available = Container.objects.select_for_update(skip_locked=True).filter(
                 hall=hall,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).exclude(
                 id__in=occupied_ids
             ).order_by('name')[:count * 2]  # Get extra to account for simultaneous claims
@@ -396,7 +404,8 @@ class EventEngine:
             # For sea stage: search across ALL sea areas in this geography
             available = Container.objects.select_for_update(skip_locked=True).filter(
                 area__geography=geography,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).exclude(
                 id__in=occupied_ids
             ).order_by('area__name', 'name')[:count * 2]  # Get extra to account for simultaneous claims
@@ -475,12 +484,14 @@ class EventEngine:
             notes=f'Automated batch creation: {batch_name}'
         )
         
-        # Find Hall-A (handle both "FI-FW-01-Hall-A" and "Hall A" naming)
-        hall_a = Hall.objects.filter(
-            freshwater_station=self.station
-        ).filter(
-            models.Q(name__contains="-Hall-A") | models.Q(name__contains="Hall A")
-        ).first()
+        # Find Hall-A in synthetic mode; schedule mode can use arbitrary hall names.
+        hall_a = None
+        if not self.use_schedule:
+            hall_a = Hall.objects.filter(
+                freshwater_station=self.station
+            ).filter(
+                models.Q(name__contains="-Hall-A") | models.Q(name__contains="Hall A")
+            ).first()
         
         # Use database transaction with row-level locking to prevent race conditions
         from django.db import transaction
@@ -489,25 +500,57 @@ class EventEngine:
             if self.use_schedule:
                 # Use pre-allocated containers from schedule
                 hall_name = self.container_schedule['egg_alevin']['hall']
-                container_names = self.container_schedule['egg_alevin']['containers']
-                containers = list(Container.objects.filter(name__in=container_names))
+                container_ids = self.container_schedule['egg_alevin'].get('container_ids') or []
+                container_names = self.container_schedule['egg_alevin'].get('containers', [])
+                if container_ids:
+                    by_id = {
+                        c.id: c
+                        for c in Container.objects.filter(
+                            id__in=container_ids,
+                            hierarchy_role=HOLDING_ROLE,
+                        )
+                    }
+                    containers = [by_id[cid] for cid in container_ids if cid in by_id]
+                    expected_count = len(container_ids)
+                else:
+                    containers = list(
+                        Container.objects.filter(
+                            name__in=container_names,
+                            hierarchy_role=HOLDING_ROLE,
+                        )
+                    )
+                    expected_count = len(container_names)
+                if len(containers) < expected_count:
+                    raise Exception(
+                        f"Schedule specifies {expected_count} Egg&Alevin containers, "
+                        f"but only {len(containers)} HOLDING containers were found."
+                    )
+                target_label = hall_name
             else:
                 containers = self.find_available_containers(hall=hall_a, count=10)
+                target_label = hall_a.name if hall_a else f"station {self.station.name}"
             
             if not containers:
-                raise Exception(f"Insufficient available containers in {hall_a.name}. Need 10, infrastructure may be saturated.")
+                raise Exception(
+                    f"Insufficient available containers in {target_label}. "
+                    "Need 10, infrastructure may be saturated."
+                )
             
-            eggs_per = self.initial_eggs // 10
+            container_count = len(containers)
+            eggs_per = self.initial_eggs // container_count
+            egg_remainder = self.initial_eggs % container_count
             
             self.assignments = []
             action_number = 1
             
-            for cont in containers:
+            for idx, cont in enumerate(containers):
+                container_eggs = eggs_per + (1 if idx < egg_remainder else 0)
                 # Create assignment
                 assignment = BatchContainerAssignment.objects.create(
                     batch=self.batch, container=cont, lifecycle_stage=self.stages[0],
-                    assignment_date=self.start_date, population_count=eggs_per,
-                    avg_weight_g=Decimal('0.1'), biomass_kg=Decimal(str(eggs_per * 0.1 / 1000)),
+                    assignment_date=self.start_date, population_count=container_eggs,
+                    avg_weight_g=Decimal('0.1'),
+                    biomass_kg=Decimal(str(container_eggs * 0.1 / 1000)),
                     is_active=True
                 )
                 self.assignments.append(assignment)
@@ -517,8 +560,8 @@ class EventEngine:
                     workflow=creation_workflow,
                     action_number=action_number,
                     dest_assignment=assignment,
-                    egg_count_planned=eggs_per,
-                    egg_count_actual=eggs_per,
+                    egg_count_planned=container_eggs,
+                    egg_count_actual=container_eggs,
                     mortality_on_arrival=0,  # Healthy delivery
                     status='COMPLETED',  # Auto-executed
                     expected_delivery_date=self.start_date,
@@ -545,12 +588,62 @@ class EventEngine:
         
         print(f"✓ Creation Workflow: {workflow_number} ({len(self.assignments)} actions)")
         print(f"✓ Batch: {self.batch.batch_number} (supplier: {supplier.name})")
-        print(f"✓ {len(self.assignments)} assignments ({eggs_per:,} eggs each)\n")
+        print(f"✓ {len(self.assignments)} assignments ({self.initial_eggs:,} eggs total)\n")
         if self.event_feed and hasattr(self.event_feed, 'on_batch_created'):
             self.event_feed.on_batch_created(self.batch, self.assignments)
         
         # Create scenario immediately after batch creation (for growth analysis)
         self._create_initial_scenario()
+
+    @staticmethod
+    def _truncate_batch_number(base_name, suffix="", max_length=50):
+        """Keep batch number within field limits while preserving suffixes."""
+        base_name = (base_name or "").strip()
+        suffix = suffix or ""
+        if len(base_name) + len(suffix) <= max_length:
+            return f"{base_name}{suffix}"
+        keep = max(1, max_length - len(suffix))
+        return f"{base_name[:keep].rstrip()}{suffix}"
+
+    def _rename_batch_for_sea_transition(self):
+        """Rename batch number at FW->Sea transition when a target is provided."""
+        if self.sea_rename_applied or not self.sea_batch_number_target:
+            return
+        if not self.batch:
+            return
+
+        current_name = (self.batch.batch_number or "").strip()
+        requested_name = (self.sea_batch_number_target or "").strip()
+        if not requested_name:
+            return
+        if requested_name == current_name:
+            self.sea_rename_applied = True
+            return
+
+        max_length = Batch._meta.get_field('batch_number').max_length or 50
+        base_name = self._truncate_batch_number(requested_name, max_length=max_length)
+        attempt = 1
+        candidate = base_name
+        while Batch.objects.exclude(id=self.batch.id).filter(batch_number=candidate).exists():
+            attempt += 1
+            suffix = f" ({attempt})"
+            candidate = self._truncate_batch_number(base_name, suffix=suffix, max_length=max_length)
+
+        old_name = self.batch.batch_number
+        note = (
+            f"Sea rename at FW->Sea transition on {self.current_date.isoformat()}: "
+            f"{old_name} -> {candidate}"
+        )
+        existing_notes = (self.batch.notes or "").strip()
+        updated_notes = f"{existing_notes}\n{note}" if existing_notes else note
+
+        self.batch.batch_number = candidate
+        self.batch.notes = updated_notes
+        self.batch.save(update_fields=['batch_number', 'notes'])
+
+        self.sea_rename_applied = True
+        self.assigned_batch_number = candidate
+        print(f"  → Renamed batch for sea stage: {old_name} -> {candidate}")
         
     def process_day(self):
         self.assignments = list(BatchContainerAssignment.objects.filter(batch=self.batch, is_active=True))
@@ -956,58 +1049,96 @@ class EventEngine:
                 new_hall_letter = hall_letters[next_stage.order - 1] if next_stage.order <= 6 else None
                 
                 if new_hall_letter:
-                    # Freshwater stage - find appropriate hall (handle both naming formats)
-                    new_hall = Hall.objects.filter(
-                        freshwater_station=self.station
-                    ).filter(
-                        models.Q(name__contains=f"-Hall-{new_hall_letter}") | 
-                        models.Q(name__contains=f"Hall {new_hall_letter}")
-                    ).first()
-                    
-                    if new_hall:
-                        # Use transaction for atomic container allocation
-                        from django.db import transaction
-                        with transaction.atomic():
-                            if self.use_schedule:
-                                # Use next stage from schedule
-                                # Key format in schedule is lowercase with underscores: egg_alevin, fry, etc.
-                                schedule_key = next_stage.name.lower().replace('&', '_').replace('-', '_')
+                    # Freshwater stage transition.
+                    from django.db import transaction
+                    with transaction.atomic():
+                        if self.use_schedule:
+                            # Use stage allocation from schedule. This supports
+                            # realistic hall names and does not require Hall A-E
+                            # naming conventions.
+                            schedule_key = next_stage.name.lower().replace('&', '_').replace('-', '_')
+                            next_stage_config = self.container_schedule.get(schedule_key)
+                            if not next_stage_config and 'post' in schedule_key:
+                                schedule_key = 'post_smolt'
                                 next_stage_config = self.container_schedule.get(schedule_key)
-                                if not next_stage_config:
-                                     # Try explicit lookup for mismatch keys
-                                     if 'post' in schedule_key: schedule_key = 'post_smolt'
-                                     next_stage_config = self.container_schedule.get(schedule_key)
-                                
-                                if not next_stage_config:
-                                    raise Exception(f"Schedule missing configuration for stage {next_stage.name} (key: {schedule_key})")
-                                    
-                                container_names = next_stage_config['containers']
-                                new_containers = list(Container.objects.filter(name__in=container_names))
-                            else:
-                                new_containers = self.find_available_containers(hall=new_hall, count=10)
-                            
-                            if not new_containers:
-                                raise Exception(f"Insufficient available containers in {new_hall.name} for stage transition to {next_stage.name}")
-                            
-                            # Create new assignments in new hall
-                            fish_per_container = old_assignments[0].population_count
-                            avg_weight = old_assignments[0].avg_weight_g
-                            
-                            self.assignments = []
-                            for cont in new_containers:
-                                new_assignment = BatchContainerAssignment.objects.create(
-                                    batch=self.batch,
-                                    container=cont,
-                                    lifecycle_stage=next_stage,
-                                    assignment_date=self.current_date,
-                                    population_count=fish_per_container,  # Pre-populate for event engine
-                                    avg_weight_g=avg_weight,
-                                    biomass_kg=Decimal(str(fish_per_container * float(avg_weight) / 1000)),
-                                    is_active=True
+                            if not next_stage_config:
+                                raise Exception(
+                                    f"Schedule missing configuration for stage {next_stage.name} "
+                                    f"(key: {schedule_key})"
                                 )
-                                self.assignments.append(new_assignment)
+                            target_hall_name = next_stage_config.get('hall') or f"schedule:{schedule_key}"
+                            container_ids = next_stage_config.get('container_ids') or []
+                            container_names = next_stage_config.get('containers', [])
+                            if container_ids:
+                                by_id = {
+                                    c.id: c
+                                    for c in Container.objects.filter(
+                                        id__in=container_ids,
+                                        hierarchy_role=HOLDING_ROLE,
+                                    )
+                                }
+                                new_containers = [by_id[cid] for cid in container_ids if cid in by_id]
+                                expected_count = len(container_ids)
+                            else:
+                                new_containers = list(
+                                    Container.objects.filter(
+                                        name__in=container_names,
+                                        hierarchy_role=HOLDING_ROLE,
+                                    )
+                                )
+                                expected_count = len(container_names)
+                            if len(new_containers) < expected_count:
+                                raise Exception(
+                                    f"Schedule specifies {expected_count} containers for "
+                                    f"{next_stage.name}, but only {len(new_containers)} HOLDING "
+                                    "containers were found."
+                                )
+                        else:
+                            # Synthetic fallback path (legacy Hall A-E naming).
+                            new_hall = Hall.objects.filter(
+                                freshwater_station=self.station
+                            ).filter(
+                                models.Q(name__contains=f"-Hall-{new_hall_letter}") |
+                                models.Q(name__contains=f"Hall {new_hall_letter}")
+                            ).first()
+                            if not new_hall:
+                                raise Exception(
+                                    f"No hall found for stage transition to {next_stage.name} "
+                                    f"with hall letter {new_hall_letter} in station {self.station.name}"
+                                )
+                            target_hall_name = new_hall.name
+                            new_containers = self.find_available_containers(hall=new_hall, count=10)
+
+                        if not new_containers:
+                            raise Exception(
+                                f"Insufficient available containers in {target_hall_name} "
+                                f"for stage transition to {next_stage.name}"
+                            )
                         
-                        print(f"  → Moved to {new_hall.name} ({len(self.assignments)} containers)")
+                        # Create new assignments in destination hall.
+                        total_fish = sum(a.population_count for a in old_assignments)
+                        fish_per_container = total_fish // len(new_containers)
+                        fish_remainder = total_fish % len(new_containers)
+                        avg_weight = old_assignments[0].avg_weight_g
+                        
+                        self.assignments = []
+                        for idx, cont in enumerate(new_containers):
+                            container_fish = fish_per_container + (
+                                1 if idx < fish_remainder else 0
+                            )
+                            new_assignment = BatchContainerAssignment.objects.create(
+                                batch=self.batch,
+                                container=cont,
+                                lifecycle_stage=next_stage,
+                                assignment_date=self.current_date,
+                                population_count=container_fish,  # Pre-populate for event engine
+                                avg_weight_g=avg_weight,
+                                biomass_kg=Decimal(str(container_fish * float(avg_weight) / 1000)),
+                                is_active=True
+                            )
+                            self.assignments.append(new_assignment)
+                    
+                    print(f"  → Moved to {target_hall_name} ({len(self.assignments)} containers)")
                 else:
                     # Adult stage - move to sea cages
                     from django.db import transaction
@@ -1019,12 +1150,30 @@ class EventEngine:
                         # Check if using pre-allocated schedule (deterministic mode)
                         if self.use_schedule and self.sea_schedule:
                             # Use pre-allocated sea containers from schedule
-                            container_names = self.sea_schedule['rings']
-                            sea_containers = list(Container.objects.filter(name__in=container_names))
-                            
-                            if len(sea_containers) < len(container_names):
+                            ring_ids = self.sea_schedule.get('ring_ids') or []
+                            container_names = self.sea_schedule.get('rings', [])
+                            if ring_ids:
+                                by_id = {
+                                    c.id: c
+                                    for c in Container.objects.filter(
+                                        id__in=ring_ids,
+                                        hierarchy_role=HOLDING_ROLE,
+                                    )
+                                }
+                                sea_containers = [by_id[cid] for cid in ring_ids if cid in by_id]
+                                expected_count = len(ring_ids)
+                            else:
+                                sea_containers = list(
+                                    Container.objects.filter(
+                                        name__in=container_names,
+                                        hierarchy_role=HOLDING_ROLE,
+                                    )
+                                )
+                                expected_count = len(container_names)
+
+                            if len(sea_containers) < expected_count:
                                 raise Exception(
-                                    f"Schedule specifies {len(container_names)} sea rings, but only {len(sea_containers)} found in database"
+                                    f"Schedule specifies {expected_count} sea rings, but only {len(sea_containers)} found in database"
                                 )
                             
                             print(f"  → Using scheduled sea allocation: {len(sea_containers)} rings in {self.sea_schedule.get('area', 'unknown')}")
@@ -1061,7 +1210,8 @@ class EventEngine:
                             all_available_containers = list(
                                 Container.objects.select_for_update(skip_locked=True).filter(
                                     area=target_area,
-                                    active=True
+                                    active=True,
+                                    hierarchy_role=HOLDING_ROLE,
                                 ).exclude(
                                     id__in=occupied_ids
                                 )
@@ -1110,6 +1260,10 @@ class EventEngine:
                     # Get area name from first container
                     area_name = self.assignments[0].container.area.name if self.assignments and self.assignments[0].container.area else "Unknown"
                     print(f"  → Moved to {area_name} ({len(self.assignments)} sea containers)")
+
+                # Apply deterministic FW->Sea rename before recording transition workflow.
+                if next_stage.order == 6:
+                    self._rename_batch_for_sea_transition()
                 
                 # Create transfer workflow to document this transition (auditable action)
                 self._create_transfer_workflow(old_assignments, self.assignments, next_stage)

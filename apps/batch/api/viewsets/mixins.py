@@ -105,7 +105,12 @@ class BatchAnalyticsMixin:
                 sample_data['daily_growth_g'] = float(daily_growth)
 
                 # Calculate SGR (Specific Growth Rate)
-                if prev_sample.avg_weight_g > 0:
+                if (
+                    prev_sample.avg_weight_g
+                    and sample.avg_weight_g
+                    and prev_sample.avg_weight_g > 0
+                    and sample.avg_weight_g > 0
+                ):
                     sgr = (math.log(float(sample.avg_weight_g)) -
                            math.log(float(prev_sample.avg_weight_g))) / days_diff * 100
                     sample_data['sgr'] = round(sgr, 2)
@@ -632,7 +637,8 @@ class GeographyAggregationMixin:
         )
         batch_assignments = BatchContainerAssignment.objects.filter(
             geo_filter,
-            is_active=True
+            is_active=True,
+            container__hierarchy_role="HOLDING",
         ).select_related('batch', 'container')
 
         # Apply date filters if provided
@@ -730,30 +736,43 @@ class GeographyAggregationMixin:
 
         # Calculate metrics for each batch
         for batch_id, samples in batch_samples.items():
-            if len(samples) >= 2:
-                # Sort by date
-                samples = sorted(samples, key=lambda s: s.sample_date)
-                first_sample = samples[0]
-                last_sample = samples[-1]
+            if len(samples) < 2:
+                continue
 
-                days_diff = (
-                    last_sample.sample_date - first_sample.sample_date
-                ).days
-                if days_diff > 0 and first_sample.avg_weight_g > 0:
-                    # Calculate SGR
-                    sgr = (
-                        math.log(float(last_sample.avg_weight_g)) -
-                        math.log(float(first_sample.avg_weight_g))
-                    ) / days_diff * 100
-                    sgr_values.append(sgr)
+            # Sort by date and ignore placeholder/invalid non-positive weights.
+            positive_samples = sorted(
+                [
+                    sample
+                    for sample in samples
+                    if sample.avg_weight_g and sample.avg_weight_g > 0
+                ],
+                key=lambda s: s.sample_date,
+            )
+            if len(positive_samples) < 2:
+                continue
 
-                    # Calculate growth rate
-                    weight_gain = (
-                        last_sample.avg_weight_g -
-                        first_sample.avg_weight_g
-                    )
-                    growth_rate = weight_gain / days_diff
-                    growth_rates.append(float(growth_rate))
+            first_sample = positive_samples[0]
+            last_sample = positive_samples[-1]
+            days_diff = (
+                last_sample.sample_date - first_sample.sample_date
+            ).days
+            if days_diff <= 0:
+                continue
+
+            # Calculate SGR
+            sgr = (
+                math.log(float(last_sample.avg_weight_g)) -
+                math.log(float(first_sample.avg_weight_g))
+            ) / days_diff * 100
+            sgr_values.append(sgr)
+
+            # Calculate growth rate
+            weight_gain = (
+                last_sample.avg_weight_g -
+                first_sample.avg_weight_g
+            )
+            growth_rate = weight_gain / days_diff
+            growth_rates.append(float(growth_rate))
 
         # Return aggregated growth metrics
         return {

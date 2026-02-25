@@ -1,0 +1,23 @@
+{
+  "active_containers": 2110,
+  "batch_limit": 400,
+  "container_location_context_counts": {
+    "area": 840,
+    "carrier": 170,
+    "hall": 1100
+  },
+  "counts": {
+    "areas": 42,
+    "batch_reference_rows": 136,
+    "containers": 2110,
+    "freshwater_stations": 22,
+    "geographies": 2,
+    "hall_stage_mapping_observed_dominant_rows": 44,
+    "hall_stage_mapping_observed_full_rows": 44,
+    "hall_stage_mapping_static_rows": 48,
+    "halls": 110
+  },
+  "generated_at_utc": "2026-02-19T15:18:29",
+  "inactive_containers": 0,
+  "output_dir": "/Users/aquarian247/Projects/AquaMind/scripts/data_generation/reference_pack/_tmp_validate_2026-02-19"
+}

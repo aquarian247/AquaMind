@@ -5,7 +5,9 @@ This model represents individual container-to-container transfer actions within 
 Each action represents ONE physical movement of fish and tracks its execution details.
 """
 from decimal import Decimal
+import logging
 from django.db import models, transaction
+from django.db.models import Max
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -14,6 +16,10 @@ from simple_history.models import HistoricalRecords
 from apps.batch.models.workflow import BatchTransferWorkflow
 from apps.batch.models.assignment import BatchContainerAssignment
 from django.contrib.auth.models import User
+from apps.batch.access import can_execute_transport_actions
+
+
+logger = logging.getLogger(__name__)
 
 
 class TransferAction(models.Model):
@@ -247,6 +253,19 @@ class TransferAction(models.Model):
                 f"Cannot transfer {self.transferred_count} fish from container "
                 f"with only {self.source_assignment.population_count} fish"
             )
+
+    def has_transport_carrier_handoff(self):
+        """True when either source or destination is linked to a transport carrier."""
+        source_container = self.source_assignment.container if self.source_assignment else None
+        dest_container = self.dest_assignment.container if self.dest_assignment else None
+        return bool(
+            (source_container and source_container.carrier_id)
+            or (dest_container and dest_container.carrier_id)
+        )
+
+    def requires_ship_crew_execution(self):
+        """RBAC gate for vessel/dynamic transport actions."""
+        return self.workflow.is_dynamic_execution or self.has_transport_carrier_handoff()
     
     def execute(self, executed_by, mortality_count=0, **execution_details):
         """
@@ -275,6 +294,13 @@ class TransferAction(models.Model):
             raise ValidationError(
                 f"Cannot execute actions on workflow in {self.workflow.status} status"
             )
+
+        if self.requires_ship_crew_execution() and not can_execute_transport_actions(executed_by):
+            raise ValidationError(
+                "Only SHIP_CREW or Logistics Operators can execute this transport action."
+            )
+
+        execution_time = timezone.now()
         
         # Map API field name to internal param when provided
         if 'mortality_during_transfer' in execution_details:
@@ -330,7 +356,7 @@ class TransferAction(models.Model):
             
             # Update this action with execution details
             self.status = 'COMPLETED'
-            self.actual_execution_date = timezone.now().date()
+            self.actual_execution_date = execution_time.date()
             self.executed_by = executed_by
             self.mortality_during_transfer = mortality_count
             
@@ -365,6 +391,30 @@ class TransferAction(models.Model):
             self.workflow.update_progress()
             self.workflow.check_completion()
             self.workflow.recalculate_totals()
+
+            action_id = self.id
+            executed_by_id = executed_by.id if executed_by else None
+
+            def _snapshot_after_commit():
+                try:
+                    from apps.environmental.services.historian_snapshot import (
+                        snapshot_transfer_action_readings,
+                    )
+
+                    snapshot_transfer_action_readings(
+                        action_id=action_id,
+                        reading_time=execution_time,
+                        executed_by_id=executed_by_id,
+                        moment="finish",
+                    )
+                except Exception as exc:  # pragma: no cover - operational logging
+                    logger.warning(
+                        "Failed environmental snapshot for TransferAction %s: %s",
+                        action_id,
+                        exc,
+                    )
+
+            transaction.on_commit(_snapshot_after_commit)
             
             return {
                 'action_id': self.id,
@@ -420,6 +470,19 @@ class TransferAction(models.Model):
     def save(self, *args, **kwargs):
         """Override save to update workflow totals when action is created"""
         is_new = self.pk is None
+
+        if is_new:
+            current_max = self.workflow.actions.aggregate(
+                max_number=Max('action_number')
+            )['max_number'] or 0
+
+            if not self.action_number:
+                self.action_number = current_max + 1
+            elif (
+                self.workflow.is_dynamic_execution
+                and self.workflow.actions.filter(action_number=self.action_number).exists()
+            ):
+                self.action_number = current_max + 1
         
         super().save(*args, **kwargs)
         

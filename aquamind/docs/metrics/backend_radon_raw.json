@@ -1,70 +1,70 @@
 {
   "project": "aquamind-backend",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "metric_type": "raw",
   "apps": [
     {
       "app": "batch",
-      "total_loc": 4856,
-      "total_sloc": 3016,
-      "total_comments": 241,
-      "total_files": 50
+      "total_loc": 17518,
+      "total_sloc": 11815,
+      "total_comments": 1035,
+      "total_files": 79
     },
     {
       "app": "broodstock",
-      "total_loc": 2743,
-      "total_sloc": 1836,
-      "total_comments": 88,
+      "total_loc": 2832,
+      "total_sloc": 1899,
+      "total_comments": 95,
       "total_files": 16
     },
     {
       "app": "environmental",
-      "total_loc": 1546,
-      "total_sloc": 1082,
-      "total_comments": 55,
+      "total_loc": 1632,
+      "total_sloc": 1166,
+      "total_comments": 49,
       "total_files": 11
     },
     {
       "app": "health",
-      "total_loc": 4175,
-      "total_sloc": 2477,
-      "total_comments": 240,
-      "total_files": 38
+      "total_loc": 6267,
+      "total_sloc": 3946,
+      "total_comments": 337,
+      "total_files": 47
     },
     {
       "app": "infrastructure",
-      "total_loc": 3923,
-      "total_sloc": 2499,
-      "total_comments": 171,
-      "total_files": 44
+      "total_loc": 4830,
+      "total_sloc": 3257,
+      "total_comments": 174,
+      "total_files": 49
     },
     {
       "app": "inventory",
-      "total_loc": 4534,
-      "total_sloc": 2776,
-      "total_comments": 248,
-      "total_files": 44
+      "total_loc": 5979,
+      "total_sloc": 3893,
+      "total_comments": 312,
+      "total_files": 45
     },
     {
       "app": "operational",
-      "total_loc": 1250,
-      "total_sloc": 913,
-      "total_comments": 75,
+      "total_loc": 1256,
+      "total_sloc": 910,
+      "total_comments": 78,
       "total_files": 15
     },
     {
       "app": "scenario",
-      "total_loc": 5889,
-      "total_sloc": 3853,
-      "total_comments": 290,
-      "total_files": 32
+      "total_loc": 6967,
+      "total_sloc": 4639,
+      "total_comments": 384,
+      "total_files": 31
     },
     {
       "app": "users",
-      "total_loc": 994,
-      "total_sloc": 502,
-      "total_comments": 50,
-      "total_files": 18
+      "total_loc": 1277,
+      "total_sloc": 731,
+      "total_comments": 63,
+      "total_files": 19
     }
   ]
 }

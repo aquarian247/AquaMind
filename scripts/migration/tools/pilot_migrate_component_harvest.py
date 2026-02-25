@@ -47,6 +47,7 @@ from apps.harvest.models import HarvestEvent, HarvestLot, ProductGrade
 from apps.migration_support.models import ExternalIdMap
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
 from scripts.migration.tools.etl_loader import ETLDataLoader
+from scripts.migration.tools.population_assignment_mapping import get_assignment_external_map
 
 User = get_user_model()
 
@@ -92,7 +93,17 @@ def to_decimal(value: object, *, places: str) -> Decimal | None:
         return None
 
 
-def get_external_map(source_model: str, source_identifier: str) -> ExternalIdMap | None:
+def get_external_map(
+    source_model: str,
+    source_identifier: str,
+    *,
+    component_key: str | None = None,
+) -> ExternalIdMap | None:
+    if source_model == "Populations":
+        return get_assignment_external_map(
+            str(source_identifier),
+            component_key=component_key,
+        )
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
     ).first()
@@ -289,7 +300,7 @@ def main() -> int:
 
     assignment_by_pop: dict[str, BatchContainerAssignment] = {}
     for pid in population_ids:
-        mapped = get_external_map("Populations", pid)
+        mapped = get_external_map("Populations", pid, component_key=component_key)
         if mapped:
             assignment_by_pop[pid] = BatchContainerAssignment.objects.get(pk=mapped.target_object_id)
 

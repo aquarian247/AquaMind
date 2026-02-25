@@ -1,52 +1,52 @@
 {
   "project": "aquamind-backend",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "metric_type": "maintainability_index",
   "apps": [
     {
       "app": "batch",
-      "mi_average": 83.95435288893317,
-      "mi_min": 32.257951687405196
+      "mi_average": 71.27287283509429,
+      "mi_min": 11.466745307470484
     },
     {
       "app": "broodstock",
-      "mi_average": 78.79177247028021,
-      "mi_min": 38.39546306476147
+      "mi_average": 78.72213468314042,
+      "mi_min": 37.59940198660741
     },
     {
       "app": "environmental",
-      "mi_average": 79.85768721490066,
-      "mi_min": 37.58273616576123
+      "mi_average": 77.93593332117173,
+      "mi_min": 37.84446717042045
     },
     {
       "app": "health",
-      "mi_average": 84.51804453651282,
-      "mi_min": 47.708713343859856
+      "mi_average": 81.82475881409427,
+      "mi_min": 37.97276622551992
     },
     {
       "app": "infrastructure",
-      "mi_average": 85.41646612073814,
-      "mi_min": 38.83002491337459
+      "mi_average": 84.73224175039468,
+      "mi_min": 17.947059016195915
     },
     {
       "app": "inventory",
-      "mi_average": 83.9373008646782,
-      "mi_min": 25.894449323248004
+      "mi_average": 80.78799935032987,
+      "mi_min": 24.60443052736848
     },
     {
       "app": "operational",
-      "mi_average": 92.22879117686892,
-      "mi_min": 29.227814248282343
+      "mi_average": 92.26468448669932,
+      "mi_min": 29.766213895738385
     },
     {
       "app": "scenario",
-      "mi_average": 72.71013537118453,
-      "mi_min": 28.77446185951286
+      "mi_average": 68.76100304973534,
+      "mi_min": 27.961178183912924
     },
     {
       "app": "users",
-      "mi_average": 89.18266370985015,
-      "mi_min": 50.704571677653355
+      "mi_average": 86.26338531513854,
+      "mi_min": 48.185712233352874
     }
   ]
 }

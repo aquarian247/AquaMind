@@ -1,0 +1,9 @@
+geography,station_name,hall_name,lifecycle_stage,assignment_rows,population_total,is_dominant_stage
+Faroe Islands,S03 Norðtoftir,Kleking,Egg&Alevin,12,1761814,True
+Faroe Islands,S08 Gjógv,Kleking,Parr,1,400520,True
+Faroe Islands,S16 Glyvradalur,Hall A,Fry,5,1800784,True
+Faroe Islands,S16 Glyvradalur,Hall C,Fry,2,227058,True
+Faroe Islands,S16 Glyvradalur,Klekihøll,Fry,4,1399996,True
+Faroe Islands,S21 Viðareiði,Rogn,Egg&Alevin,7,1500408,True
+Faroe Islands,S24 Strond,Hall A,Egg&Alevin,39,3504525,True
+Faroe Islands,S24 Strond,Hall A,Fry,39,3500000,False

@@ -25,6 +25,9 @@ class TGCCalculator:
     Supports both forward calculation (weight from TGC) and reverse
     calculation (TGC from weight change).
     """
+    # Values below this threshold are treated as already-normalized
+    # cube-root coefficients (for example 0.00275).
+    _NORMALIZED_TGC_THRESHOLD = 0.01
     
     def __init__(self, tgc_model: TGCModel):
         """
@@ -38,6 +41,22 @@ class TGCCalculator:
         self.exponent_n = float(tgc_model.exponent_n)
         self.exponent_m = float(tgc_model.exponent_m)
         self.temperature_profile = tgc_model.profile
+
+    def _to_formula_coefficient(self, tgc_value: float) -> float:
+        """
+        Convert stored TGC value into the coefficient used in cube-root growth.
+
+        Supports both:
+        - Per-1000 values (for example 2.75), converted via /1000
+        - Already-normalized coefficients (for example 0.00275), used as-is
+        """
+        if tgc_value <= 0:
+            return 0.0
+
+        if tgc_value < self._NORMALIZED_TGC_THRESHOLD:
+            return tgc_value
+
+        return tgc_value / 1000.0
     
     def calculate_weight_gain(
         self,
@@ -59,9 +78,9 @@ class TGCCalculator:
         if initial_weight <= 0 or temperature <= 0 or days <= 0:
             return initial_weight
         
-        # Standard TGC formula rearranged to solve for W2
-        # W2^(1/3) = W1^(1/3) + (TGC × T × D / 1000)
-        # W2 = (W1^(1/3) + (TGC × T × D / 1000))^3
+        # Standard TGC formula rearranged to solve for W2:
+        # W2^(1/3) = W1^(1/3) + coeff × T × D
+        # W2 = (W1^(1/3) + coeff × T × D)^3
         
         # Apply temperature exponent if not 1.0
         temp_factor = temperature if self.exponent_n == 1.0 else math.pow(temperature, self.exponent_n)
@@ -70,7 +89,8 @@ class TGCCalculator:
         weight_exp = 1.0 / 3.0 if self.exponent_m == 0 else self.exponent_m
         
         initial_weight_root = math.pow(initial_weight, weight_exp)
-        growth_factor = (self.tgc_value * temp_factor * days) / 1000.0
+        tgc_coeff = self._to_formula_coefficient(self.tgc_value)
+        growth_factor = tgc_coeff * temp_factor * days
         
         final_weight_root = initial_weight_root + growth_factor
         final_weight = math.pow(final_weight_root, 1.0 / weight_exp)
@@ -111,13 +131,13 @@ class TGCCalculator:
                 # No override found, use base model values
                 pass
         
-        # Standard TGC cube-root formula
-        # Convert TGC from "per 1000 degree-days" to actual coefficient
-        tgc = tgc_value / 1000.0
+        # Standard TGC cube-root formula:
+        # W_f^(1/3) = W_i^(1/3) + coeff × T × days
+        tgc_coeff = self._to_formula_coefficient(tgc_value)
         
         # Calculate growth using cube-root method
         cube_root = current_weight ** (1/3)
-        cube_root += tgc * temperature * 1  # 1 day
+        cube_root += tgc_coeff * temperature * 1  # 1 day
         new_weight = cube_root ** 3
         
         # Apply stage-specific weight caps to prevent unrealistic growth
@@ -243,8 +263,8 @@ class TGCCalculator:
         if initial_weight >= target_weight or average_temperature <= 0:
             return 0
         
-        # Rearrange TGC formula to solve for days
-        # D = (W2^(1/3) - W1^(1/3)) / (TGC × T) × 1000
+        # Rearrange cube-root formula to solve for days:
+        # D = (W2^(1/3) - W1^(1/3)) / (coeff × T)
         weight_exp = 1.0 / 3.0 if self.exponent_m == 0 else self.exponent_m
         
         w1_root = math.pow(initial_weight, weight_exp)
@@ -252,7 +272,11 @@ class TGCCalculator:
         
         temp_factor = average_temperature if self.exponent_n == 1.0 else math.pow(average_temperature, self.exponent_n)
         
-        days = ((w2_root - w1_root) * 1000) / (self.tgc_value * temp_factor)
+        tgc_coeff = self._to_formula_coefficient(self.tgc_value)
+        if tgc_coeff <= 0:
+            return 0
+
+        days = (w2_root - w1_root) / (tgc_coeff * temp_factor)
         
         return max(1, int(math.ceil(days)))
     

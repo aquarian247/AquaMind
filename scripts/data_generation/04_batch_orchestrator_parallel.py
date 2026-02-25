@@ -42,6 +42,8 @@ django.setup()
 from apps.infrastructure.models import Geography, Container, FreshwaterStation
 from apps.batch.models import Batch
 
+HOLDING_ROLE = "HOLDING"
+
 
 def generate_batch_worker(batch_config):
     """
@@ -257,13 +259,15 @@ class ParallelBatchOrchestrator:
             # Count freshwater containers
             fw_containers = Container.objects.filter(
                 hall__freshwater_station__geography=geo,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).count()
             
             # Count sea containers
             sea_containers = Container.objects.filter(
                 area__geography=geo,
-                active=True
+                active=True,
+                hierarchy_role=HOLDING_ROLE,
             ).count()
             
             total = fw_containers + sea_containers
@@ -742,6 +746,79 @@ class ParallelBatchOrchestrator:
         return 0 if success else 1
 
 
+def run_reference_pack_orchestration(args):
+    """
+    Reference-pack mode delegates scheduling/execution to schedule scripts.
+
+    This reuses the compatibility layer in generate_batch_schedule.py and avoids
+    duplicating realism logic inside this legacy wrapper.
+    """
+    schedule_output = Path(args.schedule_output)
+    schedule_output.parent.mkdir(parents=True, exist_ok=True)
+
+    schedule_cmd = [
+        sys.executable,
+        "scripts/data_generation/generate_batch_schedule.py",
+        "--batches",
+        str(args.batches),
+        "--stagger",
+        str(args.stagger),
+        "--output",
+        str(schedule_output),
+        "--reference-pack",
+        args.reference_pack,
+    ]
+
+    if not args.execute:
+        schedule_cmd.append("--dry-run")
+
+    print("\n" + "=" * 80)
+    print("REFERENCE-PACK ORCHESTRATION MODE")
+    print("=" * 80)
+    print("Step 1/2: Generating schedule via generate_batch_schedule.py")
+    print("  " + " ".join(schedule_cmd))
+
+    schedule_result = subprocess.run(schedule_cmd, cwd=str(project_root))
+    if schedule_result.returncode != 0:
+        return schedule_result.returncode
+
+    if not args.execute:
+        print("\nDry-run complete (schedule generation only).")
+        print("To execute:")
+        print(
+            "  "
+            + " ".join(
+                [
+                    sys.executable,
+                    "scripts/data_generation/execute_batch_schedule.py",
+                    str(schedule_output),
+                    "--workers",
+                    str(args.workers),
+                    "--use-partitions",
+                    "--reference-pack",
+                    args.reference_pack,
+                ]
+            )
+        )
+        return 0
+
+    execute_cmd = [
+        sys.executable,
+        "scripts/data_generation/execute_batch_schedule.py",
+        str(schedule_output),
+        "--workers",
+        str(args.workers),
+        "--use-partitions",
+        "--reference-pack",
+        args.reference_pack,
+    ]
+
+    print("\nStep 2/2: Executing generated schedule via execute_batch_schedule.py")
+    print("  " + " ".join(execute_cmd))
+    execute_result = subprocess.run(execute_cmd, cwd=str(project_root))
+    return execute_result.returncode
+
+
 def main():
     import argparse
     
@@ -770,6 +847,27 @@ def main():
         action='store_true',
         help='Enable verbose logging for worker progress'
     )
+    parser.add_argument(
+        '--reference-pack',
+        type=str,
+        default=None,
+        help=(
+            'Optional realistic reference pack path. When provided, this wrapper '
+            'delegates to generate_batch_schedule.py/execute_batch_schedule.py.'
+        ),
+    )
+    parser.add_argument(
+        '--schedule-output',
+        type=str,
+        default='config/batch_generation_schedule_orchestrator.yaml',
+        help='Schedule output path for reference-pack orchestration mode',
+    )
+    parser.add_argument(
+        '--stagger',
+        type=int,
+        default=11,
+        help='Stagger days for reference-pack orchestration mode (default: 11)',
+    )
     
     args = parser.parse_args()
     
@@ -779,6 +877,9 @@ def main():
         print(f"⚠️  Warning: Requested {args.workers} workers but only {cpu_count} CPUs available.")
         print(f"   Limiting to {cpu_count - 2} workers (leaving 2 for system/DB)")
         args.workers = cpu_count - 2
+
+    if args.reference_pack:
+        return run_reference_pack_orchestration(args)
     
     orchestrator = ParallelBatchOrchestrator(verbose=args.verbose)
     

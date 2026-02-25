@@ -45,6 +45,7 @@ class BatchTransferWorkflowViewSet(
       etc.)
     - `status`: Workflow status
     - `is_intercompany`: Whether crosses subsidiary boundaries
+    - `is_dynamic_execution`: Whether actions are created during execution
     - `planned_start_date`: Filter by planned start date
 
     **Searching:**
@@ -77,6 +78,7 @@ class BatchTransferWorkflowViewSet(
         'workflow_type',
         'status',
         'is_intercompany',
+        'is_dynamic_execution',
     ]
     search_fields = [
         'workflow_number',

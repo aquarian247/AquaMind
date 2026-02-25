@@ -25,6 +25,8 @@
 - migration_counts_report.py - count verification
 - migration_verification_report.py - reconciliation report
 - fwsea_deterministic_linkage_report.py - deterministic FW->Sea operation-level evidence report (InternalDelivery + ActionMetaData(184/220) + PopulationLink/SubTransfers diagnostics)
+- fwsea_sales_linkage_scoring_extract.py - deterministic FW->Sea sales-action scoring extract (customer/ring/trip + exact-time status sales count/biomass)
+- fwsea_sales_directional_parity_extract.py - directional FW->Sea parity extract (container-out vs paired ring/input-in count deltas from InternalDelivery operation pairs)
 - fwsea_endpoint_pairing_gate.py - endpoint uniqueness/stability acceptance gate for FWSEA policy-readiness (tooling-only)
 - fwsea_endpoint_gate_matrix.py - run endpoint gate across cohort semantic summaries and publish pass/fail matrix
 - fwsea_trace_target_pack.py - build deterministic SQL trace target packs from matrix blocker classifications (operation IDs + signatures)

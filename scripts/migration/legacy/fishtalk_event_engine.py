@@ -41,9 +41,17 @@ class FishTalkEventEngine:
     to migrate real FishTalk data chronologically.
     """
 
-    def __init__(self, fishtalk_config, batch_id=None):
+    def __init__(
+        self,
+        fishtalk_config,
+        batch_id=None,
+        include_synthetic_transfer_workflows: bool = False,
+    ):
         self.fishtalk_config = fishtalk_config
         self.batch_id = batch_id  # FishTalk PopulationID to migrate
+        self.include_synthetic_transfer_workflows = (
+            include_synthetic_transfer_workflows
+        )
         self.fishtalk_conn = None
         self.stats = {'days': 0, 'env': 0, 'feed': 0, 'mort': 0, 'growth': 0, 'purchases': 0, 'lice': 0, 'scenarios': 0, 'finance_facts': 0}
 
@@ -254,8 +262,11 @@ class FishTalkEventEngine:
         self._replay_growth_samples(batch)
         self._replay_health_events(batch)
 
-        # Create transfer workflows for stage transitions
-        self._create_transfer_workflows(batch)
+        # Legacy migration guardrail: synthetic transfer workflows are optional.
+        if self.include_synthetic_transfer_workflows:
+            self._create_transfer_workflows(batch)
+        else:
+            print("  ⏭️  Skipping synthetic transfer workflow creation (default)")
 
         print(f"✅ Completed migration of batch {pop_name}")
 
@@ -806,6 +817,14 @@ def main():
                        help='Specific FishTalk PopulationID to migrate')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show what would be migrated without doing it')
+    parser.add_argument(
+        '--include-synthetic-transfer-workflows',
+        action='store_true',
+        help=(
+            'Legacy override: synthesize transfer workflows from assignment '
+            'timelines.'
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -819,7 +838,11 @@ def main():
         return 1
 
     # Create migration engine
-    engine = FishTalkEventEngine(config['fishtalk'], args.batch_id)
+    engine = FishTalkEventEngine(
+        config['fishtalk'],
+        args.batch_id,
+        include_synthetic_transfer_workflows=args.include_synthetic_transfer_workflows,
+    )
 
     # Run migration
     success = engine.run_migration()

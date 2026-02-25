@@ -1,13 +1,13 @@
 {
   "app": "broodstock",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "files": [
     {
       "file": "apps/broodstock/models.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 509,
-        "sloc": 368,
+        "loc": 514,
+        "sloc": 373,
         "comments": 6,
         "multi": 55,
         "blank": 77
@@ -19,191 +19,191 @@
             "complexity": 3,
             "lineno": 20,
             "col_offset": 0,
-            "endline": 80,
+            "endline": 81,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 72,
+            "lineno": 73,
             "col_offset": 4,
-            "endline": 73,
+            "endline": 74,
             "type": "Function"
           },
           {
             "name": "is_overdue",
             "complexity": 2,
-            "lineno": 76,
+            "lineno": 77,
             "col_offset": 4,
-            "endline": 80,
+            "endline": 81,
             "type": "Function"
           },
           {
             "name": "BroodstockFish",
             "complexity": 2,
-            "lineno": 83,
+            "lineno": 84,
             "col_offset": 0,
-            "endline": 126,
+            "endline": 127,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 125,
+            "lineno": 126,
             "col_offset": 4,
-            "endline": 126,
+            "endline": 127,
             "type": "Function"
           },
           {
             "name": "FishMovement",
             "complexity": 3,
-            "lineno": 129,
+            "lineno": 130,
             "col_offset": 0,
-            "endline": 186,
+            "endline": 187,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 178,
+            "lineno": 179,
             "col_offset": 4,
-            "endline": 179,
+            "endline": 180,
             "type": "Function"
           },
           {
             "name": "save",
             "complexity": 2,
-            "lineno": 181,
+            "lineno": 182,
             "col_offset": 4,
-            "endline": 186,
+            "endline": 187,
             "type": "Function"
           },
           {
             "name": "BreedingPlan",
             "complexity": 2,
-            "lineno": 189,
+            "lineno": 190,
             "col_offset": 0,
-            "endline": 240,
+            "endline": 242,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 233,
+            "lineno": 235,
             "col_offset": 4,
-            "endline": 234,
+            "endline": 236,
             "type": "Function"
           },
           {
             "name": "is_active",
             "complexity": 1,
-            "lineno": 237,
+            "lineno": 239,
             "col_offset": 4,
-            "endline": 240,
+            "endline": 242,
             "type": "Function"
           },
           {
             "name": "BreedingTraitPriority",
             "complexity": 2,
-            "lineno": 243,
+            "lineno": 245,
             "col_offset": 0,
-            "endline": 282,
+            "endline": 285,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 281,
+            "lineno": 284,
             "col_offset": 4,
-            "endline": 282,
+            "endline": 285,
             "type": "Function"
           },
           {
             "name": "BreedingPair",
             "complexity": 2,
-            "lineno": 285,
+            "lineno": 288,
             "col_offset": 0,
-            "endline": 330,
+            "endline": 333,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 329,
+            "lineno": 332,
             "col_offset": 4,
-            "endline": 330,
+            "endline": 333,
             "type": "Function"
           },
           {
             "name": "EggProduction",
             "complexity": 4,
-            "lineno": 333,
+            "lineno": 336,
             "col_offset": 0,
-            "endline": 400,
+            "endline": 403,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 391,
+            "lineno": 394,
             "col_offset": 4,
-            "endline": 392,
+            "endline": 395,
             "type": "Function"
           },
           {
             "name": "clean",
             "complexity": 5,
-            "lineno": 394,
+            "lineno": 397,
             "col_offset": 4,
-            "endline": 400,
+            "endline": 403,
             "type": "Function"
           },
           {
             "name": "EggSupplier",
             "complexity": 2,
-            "lineno": 403,
+            "lineno": 406,
             "col_offset": 0,
-            "endline": 432,
+            "endline": 436,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 431,
+            "lineno": 435,
             "col_offset": 4,
-            "endline": 432,
+            "endline": 436,
             "type": "Function"
           },
           {
             "name": "ExternalEggBatch",
             "complexity": 2,
-            "lineno": 435,
+            "lineno": 439,
             "col_offset": 0,
-            "endline": 471,
+            "endline": 476,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 470,
+            "lineno": 475,
             "col_offset": 4,
-            "endline": 471,
+            "endline": 476,
             "type": "Function"
           },
           {
             "name": "BatchParentage",
             "complexity": 2,
-            "lineno": 474,
+            "lineno": 479,
             "col_offset": 0,
-            "endline": 509,
+            "endline": 514,
             "type": "Class"
           },
           {
             "name": "__str__",
             "complexity": 1,
-            "lineno": 508,
+            "lineno": 513,
             "col_offset": 4,
-            "endline": 509,
+            "endline": 514,
             "type": "Function"
           }
         ],
@@ -232,17 +232,17 @@
         "time": 16.038173082470433,
         "bugs": 0.0333594000115385
       },
-      "maintainability_index": 41.10671533945679
+      "maintainability_index": 40.810403472648304
     },
     {
       "file": "apps/broodstock/serializers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 320,
-        "sloc": 227,
+        "loc": 326,
+        "sloc": 228,
         "comments": 7,
-        "multi": 5,
-        "blank": 61
+        "multi": 10,
+        "blank": 62
       },
       "cyclomatic_complexity": {
         "functions": [
@@ -267,7 +267,7 @@
             "complexity": 4,
             "lineno": 46,
             "col_offset": 0,
-            "endline": 76,
+            "endline": 82,
             "type": "Class"
           },
           {
@@ -275,135 +275,135 @@
             "complexity": 2,
             "lineno": 62,
             "col_offset": 4,
-            "endline": 68,
+            "endline": 74,
             "type": "Function"
           },
           {
             "name": "validate_traits",
             "complexity": 3,
-            "lineno": 70,
+            "lineno": 76,
             "col_offset": 4,
-            "endline": 76,
+            "endline": 82,
             "type": "Function"
           },
           {
             "name": "FishMovementSerializer",
             "complexity": 6,
-            "lineno": 79,
+            "lineno": 85,
             "col_offset": 0,
-            "endline": 119,
+            "endline": 125,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 5,
-            "lineno": 99,
+            "lineno": 105,
             "col_offset": 4,
-            "endline": 119,
+            "endline": 125,
             "type": "Function"
           },
           {
             "name": "BreedingTraitPrioritySerializer",
             "complexity": 1,
-            "lineno": 122,
+            "lineno": 128,
             "col_offset": 0,
-            "endline": 126,
+            "endline": 132,
             "type": "Class"
           },
           {
             "name": "BreedingPlanSerializer",
             "complexity": 5,
-            "lineno": 138,
+            "lineno": 144,
             "col_offset": 0,
-            "endline": 164,
+            "endline": 170,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 4,
-            "lineno": 157,
+            "lineno": 163,
             "col_offset": 4,
-            "endline": 164,
+            "endline": 170,
             "type": "Function"
           },
           {
             "name": "BreedingPairSerializer",
             "complexity": 5,
-            "lineno": 167,
+            "lineno": 173,
             "col_offset": 0,
-            "endline": 204,
+            "endline": 210,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 4,
-            "lineno": 190,
+            "lineno": 196,
             "col_offset": 4,
-            "endline": 204,
+            "endline": 210,
             "type": "Function"
           },
           {
             "name": "EggSupplierSerializer",
             "complexity": 1,
-            "lineno": 207,
+            "lineno": 213,
             "col_offset": 0,
-            "endline": 211,
+            "endline": 217,
             "type": "Class"
           },
           {
             "name": "ExternalEggBatchSerializer",
             "complexity": 1,
-            "lineno": 223,
+            "lineno": 229,
             "col_offset": 0,
-            "endline": 228,
+            "endline": 234,
             "type": "Class"
           },
           {
             "name": "EggProductionSerializer",
             "complexity": 4,
-            "lineno": 241,
+            "lineno": 247,
             "col_offset": 0,
-            "endline": 277,
+            "endline": 283,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 5,
-            "lineno": 260,
-            "col_offset": 4,
-            "endline": 271,
-            "type": "Function"
-          },
-          {
-            "name": "create",
-            "complexity": 1,
-            "lineno": 273,
+            "lineno": 266,
             "col_offset": 4,
             "endline": 277,
             "type": "Function"
           },
           {
+            "name": "create",
+            "complexity": 1,
+            "lineno": 279,
+            "col_offset": 4,
+            "endline": 283,
+            "type": "Function"
+          },
+          {
             "name": "BatchParentageSerializer",
             "complexity": 3,
-            "lineno": 280,
+            "lineno": 286,
             "col_offset": 0,
-            "endline": 309,
+            "endline": 315,
             "type": "Class"
           },
           {
             "name": "validate",
             "complexity": 2,
-            "lineno": 302,
+            "lineno": 308,
             "col_offset": 4,
-            "endline": 309,
+            "endline": 315,
             "type": "Function"
           },
           {
             "name": "EggProductionDetailSerializer",
             "complexity": 1,
-            "lineno": 312,
+            "lineno": 318,
             "col_offset": 0,
-            "endline": 316,
+            "endline": 322,
             "type": "Class"
           }
         ],
@@ -432,11 +432,11 @@
         "time": 66.7263864500114,
         "bugs": 0.10008957967501711
       },
-      "maintainability_index": 41.23222371445152
+      "maintainability_index": 41.21039206517772
     },
     {
       "file": "apps/broodstock/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 0,
         "sloc": 0,
@@ -475,7 +475,7 @@
     },
     {
       "file": "apps/broodstock/apps.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 18,
         "sloc": 7,
@@ -531,7 +531,7 @@
     },
     {
       "file": "apps/broodstock/admin.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 300,
         "sloc": 226,
@@ -715,7 +715,7 @@
     },
     {
       "file": "apps/broodstock/urls.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 12,
         "sloc": 6,
@@ -754,86 +754,78 @@
     },
     {
       "file": "apps/broodstock/views.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
-        "loc": 428,
-        "sloc": 317,
-        "comments": 5,
-        "multi": 5,
-        "blank": 70
+        "loc": 506,
+        "sloc": 374,
+        "comments": 12,
+        "multi": 20,
+        "blank": 74
       },
       "cyclomatic_complexity": {
         "functions": [
           {
             "name": "MaintenanceTaskViewSet",
-            "complexity": 2,
-            "lineno": 31,
+            "complexity": 3,
+            "lineno": 33,
             "col_offset": 0,
-            "endline": 69,
+            "endline": 68,
             "type": "Class"
-          },
-          {
-            "name": "perform_create",
-            "complexity": 1,
-            "lineno": 43,
-            "col_offset": 4,
-            "endline": 45,
-            "type": "Function"
           },
           {
             "name": "overdue",
             "complexity": 1,
-            "lineno": 48,
+            "lineno": 47,
             "col_offset": 4,
-            "endline": 55,
+            "endline": 54,
             "type": "Function"
           },
           {
             "name": "complete",
             "complexity": 2,
-            "lineno": 58,
+            "lineno": 57,
             "col_offset": 4,
-            "endline": 69,
+            "endline": 68,
             "type": "Function"
           },
           {
             "name": "BroodstockFishViewSet",
             "complexity": 2,
-            "lineno": 72,
+            "lineno": 71,
             "col_offset": 0,
-            "endline": 118,
+            "endline": 117,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 84,
+            "lineno": 83,
             "col_offset": 4,
-            "endline": 86,
+            "endline": 85,
             "type": "Function"
           },
           {
             "name": "healthy",
             "complexity": 1,
-            "lineno": 89,
+            "lineno": 88,
             "col_offset": 4,
-            "endline": 93,
+            "endline": 92,
             "type": "Function"
           },
           {
             "name": "by_container",
             "complexity": 2,
-            "lineno": 108,
+            "lineno": 107,
             "col_offset": 4,
-            "endline": 118,
+            "endline": 117,
             "type": "Function"
           },
           {
             "name": "FishMovementViewSet",
             "complexity": 3,
-            "lineno": 121,
+            "lineno": 120,
             "col_offset": 0,
-            "endline": 172,
+            "endline": 168,
             "type": "Class"
           },
           {
@@ -845,204 +837,188 @@
             "type": "Function"
           },
           {
-            "name": "perform_create",
-            "complexity": 1,
-            "lineno": 139,
-            "col_offset": 4,
-            "endline": 141,
-            "type": "Function"
-          },
-          {
             "name": "bulk_transfer",
             "complexity": 3,
-            "lineno": 144,
+            "lineno": 140,
             "col_offset": 4,
-            "endline": 172,
+            "endline": 168,
             "type": "Function"
           },
           {
             "name": "BreedingPlanViewSet",
             "complexity": 2,
-            "lineno": 175,
+            "lineno": 171,
             "col_offset": 0,
-            "endline": 204,
+            "endline": 197,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 187,
+            "lineno": 184,
             "col_offset": 4,
-            "endline": 189,
-            "type": "Function"
-          },
-          {
-            "name": "perform_create",
-            "complexity": 1,
-            "lineno": 191,
-            "col_offset": 4,
-            "endline": 193,
+            "endline": 186,
             "type": "Function"
           },
           {
             "name": "active",
             "complexity": 1,
-            "lineno": 196,
+            "lineno": 189,
             "col_offset": 4,
-            "endline": 204,
+            "endline": 197,
             "type": "Function"
           },
           {
             "name": "BreedingTraitPriorityViewSet",
             "complexity": 1,
-            "lineno": 207,
+            "lineno": 200,
             "col_offset": 0,
-            "endline": 216,
+            "endline": 209,
             "type": "Class"
           },
           {
             "name": "BreedingPairViewSet",
             "complexity": 3,
-            "lineno": 219,
+            "lineno": 212,
             "col_offset": 0,
-            "endline": 252,
+            "endline": 245,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 231,
+            "lineno": 224,
             "col_offset": 4,
-            "endline": 234,
+            "endline": 227,
             "type": "Function"
           },
           {
             "name": "record_progeny",
             "complexity": 2,
-            "lineno": 238,
+            "lineno": 231,
             "col_offset": 4,
-            "endline": 252,
+            "endline": 245,
             "type": "Function"
           },
           {
             "name": "EggSupplierViewSet",
             "complexity": 1,
-            "lineno": 255,
+            "lineno": 248,
             "col_offset": 0,
-            "endline": 264,
+            "endline": 257,
             "type": "Class"
           },
           {
             "name": "EggProductionViewSet",
-            "complexity": 3,
-            "lineno": 267,
+            "complexity": 6,
+            "lineno": 260,
             "col_offset": 0,
-            "endline": 365,
+            "endline": 443,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 279,
+            "lineno": 272,
             "col_offset": 4,
-            "endline": 283,
+            "endline": 276,
             "type": "Function"
           },
           {
             "name": "get_serializer_class",
             "complexity": 2,
-            "lineno": 285,
+            "lineno": 278,
             "col_offset": 4,
-            "endline": 289,
+            "endline": 282,
             "type": "Function"
           },
           {
             "name": "produce_internal",
-            "complexity": 2,
-            "lineno": 292,
+            "complexity": 8,
+            "lineno": 285,
             "col_offset": 4,
-            "endline": 319,
+            "endline": 362,
             "type": "Function"
           },
           {
             "name": "acquire_external",
-            "complexity": 2,
-            "lineno": 322,
+            "complexity": 8,
+            "lineno": 365,
             "col_offset": 4,
-            "endline": 365,
+            "endline": 443,
             "type": "Function"
           },
           {
             "name": "ExternalEggBatchViewSet",
             "complexity": 2,
-            "lineno": 368,
+            "lineno": 446,
             "col_offset": 0,
-            "endline": 383,
+            "endline": 461,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 380,
+            "lineno": 458,
             "col_offset": 4,
-            "endline": 383,
+            "endline": 461,
             "type": "Function"
           },
           {
             "name": "BatchParentageViewSet",
             "complexity": 3,
-            "lineno": 387,
+            "lineno": 465,
             "col_offset": 0,
-            "endline": 428,
+            "endline": 506,
             "type": "Class"
           },
           {
             "name": "get_queryset",
             "complexity": 1,
-            "lineno": 398,
+            "lineno": 476,
             "col_offset": 4,
-            "endline": 401,
+            "endline": 479,
             "type": "Function"
           },
           {
             "name": "lineage",
             "complexity": 2,
-            "lineno": 417,
+            "lineno": 495,
             "col_offset": 4,
-            "endline": 428,
+            "endline": 506,
             "type": "Function"
           }
         ],
         "summary": {
-          "total_functions": 31,
-          "average_complexity": 1.6774193548387097,
-          "max_complexity": 3,
+          "total_functions": 28,
+          "average_complexity": 2.3214285714285716,
+          "max_complexity": 8,
           "complexity_distribution": {
-            "low": 31,
-            "medium": 0,
+            "low": 25,
+            "medium": 3,
             "high": 0,
             "very_high": 0
           }
         }
       },
       "halstead": {
-        "h1": 2,
-        "h2": 8,
-        "N1": 7,
-        "N2": 8,
-        "vocabulary": 10,
-        "length": 15,
-        "volume": 49.82892142331044,
-        "difficulty": 1.0,
-        "effort": 49.82892142331044,
-        "time": 2.7682734124061357,
-        "bugs": 0.016609640474436815
+        "h1": 3,
+        "h2": 12,
+        "N1": 9,
+        "N2": 12,
+        "vocabulary": 15,
+        "length": 21,
+        "volume": 82.0447025077789,
+        "difficulty": 1.5,
+        "effort": 123.06705376166835,
+        "time": 6.837058542314908,
+        "bugs": 0.02734823416925963
       },
-      "maintainability_index": 38.39546306476147
+      "maintainability_index": 37.59940198660741
     },
     {
       "file": "apps/broodstock/api/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 1,
         "sloc": 0,
@@ -1081,7 +1057,7 @@
     },
     {
       "file": "apps/broodstock/api/routers.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 52,
         "sloc": 37,
@@ -1120,7 +1096,7 @@
     },
     {
       "file": "apps/broodstock/api/filters/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -1200,7 +1176,7 @@
     },
     {
       "file": "apps/broodstock/api/viewsets/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 11,
         "sloc": 2,
@@ -1239,7 +1215,7 @@
     },
     {
       "file": "apps/broodstock/api/viewsets/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 65,
         "sloc": 43,
@@ -1319,7 +1295,7 @@
     },
     {
       "file": "apps/broodstock/api/serializers/history.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 56,
         "sloc": 29,
@@ -1399,7 +1375,7 @@
     },
     {
       "file": "apps/broodstock/services/broodstock_service.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 445,
         "sloc": 253,
@@ -1503,7 +1479,7 @@
     },
     {
       "file": "apps/broodstock/services/__init__.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 10,
         "sloc": 3,
@@ -1542,7 +1518,7 @@
     },
     {
       "file": "apps/broodstock/services/egg_management_service.py",
-      "timestamp": "2025-10-03",
+      "timestamp": "2026-02-20",
       "raw": {
         "loc": 460,
         "sloc": 289,
@@ -1647,13 +1623,13 @@
   ],
   "summary": {
     "total_files": 16,
-    "total_functions": 126,
-    "cc_average": 2.4047619047619047,
+    "total_functions": 123,
+    "cc_average": 2.569105691056911,
     "cc_max": 11,
-    "mi_average": 78.79177247028021,
-    "mi_min": 38.39546306476147,
-    "halstead_avg_volume": 98.73485475792896,
-    "halstead_avg_difficulty": 1.5215530814215024,
-    "halstead_avg_effort": 587.8951168117102
+    "mi_average": 78.72213468314042,
+    "mi_min": 37.59940198660741,
+    "halstead_avg_volume": 100.74834107570823,
+    "halstead_avg_difficulty": 1.5528030814215024,
+    "halstead_avg_effort": 592.4725000828576
   }
 }

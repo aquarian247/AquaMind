@@ -380,6 +380,7 @@ class CandidateBatch:
     batch_key: str
     population_ids: list[str]
     stage_set: set[str]
+    geography_set: set[str]
     earliest_start: datetime | None
     latest_end: datetime | None
     gap_days: int | None
@@ -778,6 +779,14 @@ def main() -> int:
         default=[],
         help="Explicit FW batch key(s) to include (repeatable)",
     )
+    parser.add_argument(
+        "--augment-explicit-fw-selection",
+        action="store_true",
+        help=(
+            "When using --include-fw-batch, still allow automatic FW/pre-smolt "
+            "augmentation. Default keeps explicit-only selection."
+        ),
+    )
     parser.add_argument("--skip-population-links", action="store_true", help="Ignore PopulationLink if available")
     parser.add_argument(
         "--heuristic-fw-sea",
@@ -835,11 +844,38 @@ def main() -> int:
         print(f"[heuristic] added sea populations: {len(heuristic_sea_ids)}")
         print(f"[heuristic] added FW populations: {len(heuristic_fw_ids)}")
 
+    sea_geographies: set[str] = set()
+    for pop_id in sea_population_ids:
+        meta = pop_meta.get(pop_id)
+        if not meta:
+            continue
+        container = containers_by_id.get(meta.container_id, {})
+        org_unit = org_units_by_id.get(container.get("OrgUnitID", ""), {})
+        grouping = grouping_by_container.get(meta.container_id, {})
+        site = grouping.get("Site") or org_unit.get("Name", "")
+        site_group = grouping.get("SiteGroup") or ""
+        sea_geographies.add(determine_geography(site, site_group))
+    if not sea_geographies:
+        sea_geographies.add("Unknown")
+
     sea_start_times = [pop_meta.get(pid, PopulationMeta(pid, "", None, None)).start_time for pid in sea_population_ids]
     sea_start_times = [t for t in sea_start_times if t]
     sea_start = min(sea_start_times) if sea_start_times else None
 
-    # Detect original yearclass + supplier codes from population names
+    explicit_fw_batch_list = list(dict.fromkeys(args.include_fw_batch or []))
+    explicit_fw_batches = set(explicit_fw_batch_list)
+    missing_explicit_inputs = sorted(
+        key for key in explicit_fw_batches if key not in inputs_by_batch
+    )
+    if missing_explicit_inputs:
+        raise SystemExit(
+            "Explicit FW batch key(s) not found in input_batches source: "
+            + ", ".join(missing_explicit_inputs)
+        )
+
+    # Detect supplier codes from population names for ranking tie-breaks.
+    # Keep yearclass deterministic from the requested sea batch key to avoid
+    # accidental drift from free-text population naming tokens.
     yearclass_counts = Counter()
     supplier_codes = Counter()
     for pid in sea_population_ids:
@@ -851,7 +887,8 @@ def main() -> int:
         if code:
             supplier_codes[code] += 1
 
-    source_year_class = yearclass_counts.most_common(1)[0][0] if yearclass_counts else year_class
+    detected_year_class = yearclass_counts.most_common(1)[0][0] if yearclass_counts else ""
+    source_year_class = year_class
     supplier_code_set = {code for code, _ in supplier_codes.most_common(2)}
 
     # Build link graph if available
@@ -860,7 +897,7 @@ def main() -> int:
         link_graph = build_population_links(csv_dir)
 
     linked_population_ids: set[str] = set()
-    if link_graph:
+    if link_graph and (not explicit_fw_batches or args.augment_explicit_fw_selection):
         queue = list(sea_population_ids)
         seen = set(queue)
         while queue:
@@ -880,10 +917,11 @@ def main() -> int:
         batch_input_name, _, batch_year_class = parse_batch_key(batch_key)
         if batch_key == sea_key:
             continue
-        if batch_year_class != source_year_class:
+        if batch_key not in explicit_fw_batches and batch_year_class != source_year_class:
             continue
 
         stage_set = set()
+        geography_set = set()
         starts = []
         ends = []
         total_input = 0.0
@@ -896,6 +934,13 @@ def main() -> int:
                 starts.append(meta.start_time)
             if meta and meta.end_time:
                 ends.append(meta.end_time)
+            if meta:
+                container = containers_by_id.get(meta.container_id, {})
+                org_unit = org_units_by_id.get(container.get("OrgUnitID", ""), {})
+                grouping = grouping_by_container.get(meta.container_id, {})
+                site = grouping.get("Site") or org_unit.get("Name", "")
+                site_group = grouping.get("SiteGroup") or ""
+                geography_set.add(determine_geography(site, site_group))
             input_record = input_by_pop.get(pop_id)
             if input_record:
                 total_input += input_record.input_count
@@ -904,11 +949,19 @@ def main() -> int:
         latest = max(ends) if ends else (max(starts) if starts else None)
         gap_days = (sea_start - latest).days if sea_start and latest else None
         linked_count = sum(1 for pid in pop_ids if pid in linked_population_ids)
+        if (
+            batch_key not in explicit_fw_batches
+            and geography_set
+            and sea_geographies
+            and not geography_set.intersection(sea_geographies)
+        ):
+            continue
         candidate_batches.append(
             CandidateBatch(
                 batch_key=batch_key,
                 population_ids=pop_ids,
                 stage_set=stage_set,
+                geography_set=geography_set,
                 earliest_start=earliest,
                 latest_end=latest,
                 gap_days=gap_days,
@@ -919,7 +972,6 @@ def main() -> int:
         )
 
     # Selection logic
-    explicit_fw_batches = set(args.include_fw_batch or [])
 
     def gap_score(gap: int | None) -> int:
         if gap is None:
@@ -961,7 +1013,16 @@ def main() -> int:
 
     selected_smolt: list[CandidateBatch] = []
     if explicit_fw_batches:
-        selected_smolt = [c for c in candidate_batches if c.batch_key in explicit_fw_batches]
+        candidates_by_key = {candidate.batch_key: candidate for candidate in candidate_batches}
+        missing_explicit_candidates = [
+            key for key in explicit_fw_batch_list if key not in candidates_by_key
+        ]
+        if missing_explicit_candidates:
+            raise SystemExit(
+                "Explicit FW batch key(s) filtered out before selection: "
+                + ", ".join(missing_explicit_candidates)
+            )
+        selected_smolt = [candidates_by_key[key] for key in explicit_fw_batch_list]
     elif linked_candidates:
         selected_smolt = linked_candidates[: args.max_fw_batches]
     else:
@@ -986,28 +1047,31 @@ def main() -> int:
     for candidate in selected_smolt:
         selected_stage_set.update(candidate.stage_set)
 
-    pre_smolt_candidates: list[tuple[CandidateBatch, int | None, int]] = []
-    for candidate in candidate_batches:
-        if candidate.has_sea:
-            continue
-        if not candidate.stage_set.intersection({"Egg&Alevin", "Fry", "Parr"}):
-            continue
-        if smolt_start and candidate.latest_end:
-            gap_to_smolt = (smolt_start - candidate.latest_end).days
-            if gap_to_smolt > args.max_pre_smolt_gap_days:
+    selected_pre_smolt: list[CandidateBatch] = []
+    allow_auto_augmentation = (not explicit_fw_batches) or args.augment_explicit_fw_selection
+    if allow_auto_augmentation:
+        pre_smolt_candidates: list[tuple[CandidateBatch, int | None, int]] = []
+        for candidate in candidate_batches:
+            if candidate.has_sea:
                 continue
-            if gap_to_smolt < -args.max_pre_smolt_overlap_days:
+            if not candidate.stage_set.intersection({"Egg&Alevin", "Fry", "Parr"}):
                 continue
-        else:
-            gap_to_smolt = None
-        new_stage_count = len(candidate.stage_set - selected_stage_set)
-        pre_smolt_candidates.append((candidate, gap_to_smolt, new_stage_count))
+            if smolt_start and candidate.latest_end:
+                gap_to_smolt = (smolt_start - candidate.latest_end).days
+                if gap_to_smolt > args.max_pre_smolt_gap_days:
+                    continue
+                if gap_to_smolt < -args.max_pre_smolt_overlap_days:
+                    continue
+            else:
+                gap_to_smolt = None
+            new_stage_count = len(candidate.stage_set - selected_stage_set)
+            pre_smolt_candidates.append((candidate, gap_to_smolt, new_stage_count))
 
-    pre_smolt_candidates.sort(key=lambda item: pre_smolt_rank(item[0], item[1], item[2]))
-    selected_pre_smolt = [
-        candidate for candidate, _, _ in pre_smolt_candidates
-        if candidate not in selected_smolt
-    ][: args.max_pre_smolt_batches]
+        pre_smolt_candidates.sort(key=lambda item: pre_smolt_rank(item[0], item[1], item[2]))
+        selected_pre_smolt = [
+            candidate for candidate, _, _ in pre_smolt_candidates
+            if candidate not in selected_smolt
+        ][: args.max_pre_smolt_batches]
 
     selected_batches = selected_smolt + selected_pre_smolt
 
@@ -1135,7 +1199,12 @@ def main() -> int:
     print("\nFull lifecycle stitching report")
     print(f"Sea batch: {sea_key}")
     print(f"Sea populations: {len(sea_population_ids)}")
-    print(f"Source yearclass (from names): {source_year_class}")
+    if detected_year_class and detected_year_class != source_year_class:
+        print(
+            f"[warning] population-name yearclass hint '{detected_year_class}' "
+            f"ignored; using sea batch yearclass '{source_year_class}'"
+        )
+    print(f"Source yearclass (effective): {source_year_class}")
     if supplier_code_set:
         print(f"Supplier codes detected: {', '.join(sorted(supplier_code_set))}")
     print(f"Linked populations (PopulationLink): {len(linked_population_ids)}")

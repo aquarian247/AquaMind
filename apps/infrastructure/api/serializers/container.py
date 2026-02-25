@@ -13,6 +13,7 @@ from apps.infrastructure.models.container import Container
 from apps.infrastructure.models.container_type import ContainerType
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.area import Area
+from apps.infrastructure.models.transport_carrier import TransportCarrier
 from apps.infrastructure.api.serializers.base import (
     TimestampedModelSerializer,
     NamedModelSerializer,
@@ -42,7 +43,7 @@ class ContainerSerializer(TimestampedModelSerializer, NamedModelSerializer, Excl
         queryset=Hall.objects.all(),
         allow_null=True,
         required=False, # Made not required as it's one of hall/area
-        help_text="ID of the hall this container is located in (if applicable). Mutually exclusive with 'area'."
+        help_text="ID of the hall this container is located in (if applicable). Mutually exclusive with 'area' and 'carrier'."
     )
     hall_name = serializers.StringRelatedField(
         source='hall',
@@ -54,13 +55,48 @@ class ContainerSerializer(TimestampedModelSerializer, NamedModelSerializer, Excl
         queryset=Area.objects.all(),
         allow_null=True,
         required=False, # Made not required as it's one of hall/area
-        help_text="ID of the sea area this container is located in (if applicable). Mutually exclusive with 'hall'."
+        help_text="ID of the sea area this container is located in (if applicable). Mutually exclusive with 'hall' and 'carrier'."
     )
     area_name = serializers.StringRelatedField(
         source='area',
         read_only=True,
         allow_null=True,
         help_text="Name of the sea area this container is located in."
+    )
+    carrier = serializers.PrimaryKeyRelatedField(
+        queryset=TransportCarrier.objects.all(),
+        allow_null=True,
+        required=False,
+        help_text="Optional transport carrier this tank belongs to (truck or vessel).",
+    )
+    carrier_name = serializers.StringRelatedField(
+        source="carrier",
+        read_only=True,
+        allow_null=True,
+        help_text="Name of the linked transport carrier.",
+    )
+    carrier_type = serializers.CharField(
+        source="carrier.carrier_type",
+        read_only=True,
+        allow_null=True,
+        help_text="Carrier type (TRUCK or VESSEL).",
+    )
+    parent_container = serializers.PrimaryKeyRelatedField(
+        queryset=Container.objects.all(),
+        allow_null=True,
+        required=False,
+        help_text="Optional structural parent container (for example a rack).",
+    )
+    parent_container_name = serializers.StringRelatedField(
+        source="parent_container",
+        read_only=True,
+        allow_null=True,
+        help_text="Name of the parent container, when linked.",
+    )
+    hierarchy_role = serializers.ChoiceField(
+        choices=Container.HIERARCHY_ROLES,
+        default="HOLDING",
+        help_text="Container role in hierarchy: HOLDING fish or STRUCTURAL support.",
     )
     volume_m3 = serializers.DecimalField(
         max_digits=10,
@@ -88,12 +124,15 @@ class ContainerSerializer(TimestampedModelSerializer, NamedModelSerializer, Excl
         fields = [
             'id', 'name', 'container_type', 'container_type_name',
             'hall', 'hall_name', 'area', 'area_name',
+            'carrier', 'carrier_name', 'carrier_type',
+            'parent_container', 'parent_container_name', 'hierarchy_role',
             'volume_m3', 'max_biomass_kg', 'feed_recommendations_enabled', 'active',
             'created_at', 'updated_at'
         ]
         read_only_fields = (
             'id', 'created_at', 'updated_at',
-            'container_type_name', 'hall_name', 'area_name'
+            'container_type_name', 'hall_name', 'area_name',
+            'carrier_name', 'carrier_type', 'parent_container_name',
         )
 
     def validate(self, data):

@@ -5,11 +5,20 @@ from __future__ import annotations
 from collections import Counter
 from decimal import Decimal, InvalidOperation
 import logging
+import re
 from typing import Dict
 
 from django.db import transaction
 
-from apps.infrastructure.models import Area, Container, ContainerType, FreshwaterStation, Geography, Hall
+from apps.infrastructure.models import (
+    Area,
+    AreaGroup,
+    Container,
+    ContainerType,
+    FreshwaterStation,
+    Geography,
+    Hall,
+)
 
 from scripts.migration.loaders.base import BaseLoader
 
@@ -17,10 +26,16 @@ LOGGER = logging.getLogger("migration.infrastructure")
 
 FAROE_SITEGROUPS = {"WEST", "NORTH", "SOUTH"}
 SCOTLAND_SITES_FRESHWATER_ARCHIVE = {
+    "BRS1 LANGASS",
     "FW06 LOCH AILORT",
     "FW07 LOCHAILORT",
     "FW10 SALEN",
     "FW11 SALEN",
+    "FW11 BARVAS",
+    "FW12 AMHUINNSUIDHE",
+    "FW14 HARRIS LOCHS",
+    "FW22 RUSSEL BURN",
+    "FW23 LOCH DAMPH SOUTH",
     "FW12 LOCH AILORT",
     "KYLEAKIN",
     "LOCH HOURN",
@@ -30,6 +45,12 @@ SCOTLAND_SITES_FRESHWATER_ARCHIVE = {
     "LOCH ARKAIG",
     "LOCH LEVEN",
     "LOCH TORMASAD",
+    "LOCH GEIREAN",
+    "DUNBLANE LOCH",
+    "BUCKIEBURN SMOLT UNIT",
+    "HO HATCHERY",
+    "HSU",
+    "LANGASS OLD TO SUMMER 15",
     "TULLICH",
 }
 SCOTLAND_SITES_FRESHWATER = {
@@ -51,12 +72,27 @@ FAROE_SITES_LAND = {
     "S21 VIÐAREIÐI",
     "S24 STROND",
 }
-FAROE_SITES_ROGNKELSI = {"H01 SVÍNOY"}
+FAROE_SITES_DROPPED_H = {
+    "H01 SVÍNOY",
+    "H125 GLYVRAR",
+}
 FAROE_SITES_LIVFISKUR = {
     "L01 VIÐ ÁIR",
     "L02 SKOPUN",
 }
-FAROE_SITES_OTHER = {"H125 GLYVRAR"}
+SITE_CODE_RE = re.compile(r"\b([A-Za-z]+[0-9]{1,3})\b")
+GUID_RE = re.compile(
+    r"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-"
+    r"[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
+)
+NATION_ID_TO_GEOGRAPHY = {
+    "826": "Scotland",
+    "SCOTLAND": "Scotland",
+    "FAROE ISLANDS": "Faroe Islands",
+    "FAROE": "Faroe Islands",
+    "FO": "Faroe Islands",
+    "FØROYAR": "Faroe Islands",
+}
 
 
 def normalize_label(value: str | None) -> str:
@@ -79,6 +115,18 @@ def normalize_key(value: str | None) -> str:
     return normalize_label(value).upper()
 
 
+def resolve_nation_geography(nation_id: str | None) -> str:
+    """Resolve FishTalk NationID-like values into canonical geography names."""
+    key = normalize_key(nation_id)
+    if not key:
+        return ""
+    return NATION_ID_TO_GEOGRAPHY.get(key, "")
+
+
+def is_guid_like_label(value: str | None) -> bool:
+    return bool(value and GUID_RE.match(value.strip()))
+
+
 def resolve_site_grouping(site: str | None, site_group: str | None) -> tuple[str, str]:
     site_group_key = normalize_key(site_group)
     site_key = normalize_key(site)
@@ -94,12 +142,13 @@ def resolve_site_grouping(site: str | None, site_group: str | None) -> tuple[str
         return "Scotland", "SCOTLAND_BROODSTOCK"
     if site_key in FAROE_SITES_LAND:
         return "Faroe Islands", "FAROE_LAND"
-    if site_key in FAROE_SITES_ROGNKELSI:
-        return "Faroe Islands", "FAROE_ROGNKELSI"
+    if site_key in FAROE_SITES_DROPPED_H:
+        return "Faroe Islands", "FAROE_DROPPED_H"
     if site_key in FAROE_SITES_LIVFISKUR:
         return "Faroe Islands", "FAROE_LIVFISKUR"
-    if site_key in FAROE_SITES_OTHER:
-        return "Faroe Islands", "FAROE_OTHER"
+    geo_name, reason = infer_geography_from_site_code(site)
+    if geo_name:
+        return geo_name, reason
     return "", ""
 
 
@@ -112,6 +161,86 @@ def bucket_from_prod_stage(prod_stage: str | None) -> str | None:
     if any(token in upper for token in ("HATCH", "FRESH", "SMOLT", "PARR", "FRY", "ALEVIN", "EGG", "BROOD")):
         return "freshwater"
     return None
+
+
+def parse_site_code(site_name: str | None) -> str:
+    label = normalize_label(site_name)
+    if not label:
+        return ""
+    match = SITE_CODE_RE.search(label)
+    return match.group(1).upper() if match else ""
+
+
+def is_dropped_h_site(site_name: str | None) -> bool:
+    site_key = normalize_key(site_name)
+    if site_key in FAROE_SITES_DROPPED_H:
+        return True
+    site_code = parse_site_code(site_name)
+    return site_code.startswith("H")
+
+
+def infer_geography_from_site_code(site_name: str | None) -> tuple[str, str]:
+    code = parse_site_code(site_name)
+    if not code:
+        return "", ""
+    match = re.match(r"^([A-Z]+)(\d{1,3})$", code)
+    if not match:
+        return "", ""
+    prefix, digits = match.groups()
+    if prefix == "A":
+        return "Faroe Islands", "SITECODE_A"
+    if prefix in {"L", "H"}:
+        return "Faroe Islands", f"SITECODE_{prefix}"
+    if prefix == "S":
+        if len(digits) <= 2:
+            return "Faroe Islands", "SITECODE_S_FAROE"
+        return "Scotland", "SITECODE_S_SCOTLAND"
+    if prefix in {"N", "FW", "BRS"}:
+        return "Scotland", f"SITECODE_{prefix}"
+    return "", ""
+
+
+def infer_bucket_from_grouping(site: str | None, prod_stage: str | None) -> str | None:
+    if is_dropped_h_site(site):
+        return None
+
+    explicit = bucket_from_prod_stage(prod_stage)
+    if explicit:
+        return explicit
+
+    site_key = normalize_key(site)
+    if (
+        site_key in FAROE_SITES_LAND
+        or site_key in FAROE_SITES_LIVFISKUR
+        or site_key in SCOTLAND_SITES_FRESHWATER_ARCHIVE
+        or site_key in SCOTLAND_SITES_FRESHWATER
+        or site_key in SCOTLAND_SITES_BROODSTOCK
+    ):
+        return "freshwater"
+
+    site_code = parse_site_code(site)
+    if site_code.startswith("A") or site_code.startswith("N"):
+        return "sea"
+    if site_code.startswith("S"):
+        match = re.match(r"^S([0-9]{1,3})$", site_code)
+        if match:
+            return "freshwater" if len(match.group(1)) <= 2 else "sea"
+    if site_code.startswith("L"):
+        return "freshwater"
+    if site_code.startswith("FW") or site_code.startswith("BRS"):
+        return "freshwater"
+    return None
+
+
+def infer_station_type(site_name: str | None) -> str:
+    site_code = parse_site_code(site_name)
+    if site_code.startswith("L") or site_code.startswith("BRS"):
+        return "BROODSTOCK"
+    return "FRESHWATER"
+
+
+def normalize_area_group(site_group: str | None) -> str:
+    return normalize_label(site_group)
 
 
 def hall_label_from_group(group_name: str | None) -> str:
@@ -138,26 +267,38 @@ class InfrastructureLoader(BaseLoader):
     @transaction.atomic
     def load_geographies(self, rows):
         stats = {"created": 0, "updated": 0, "skipped": 0}
+        source_ids_by_geo: dict[str, set[str]] = {}
         for row in rows:
+            nation_id = (row.get("NationID") or "").strip()
+            geography_name = resolve_nation_geography(nation_id)
+            if not geography_name:
+                stats["skipped"] += 1
+                continue
+            source_ids_by_geo.setdefault(geography_name, set())
+            if nation_id:
+                source_ids_by_geo[geography_name].add(nation_id)
+
+        for canonical in ("Faroe Islands", "Scotland"):
+            source_ids_by_geo.setdefault(canonical, set())
+
+        for geography_name, source_ids in sorted(source_ids_by_geo.items()):
             if self.dry_run:
                 stats["skipped"] += 1
                 continue
-
-            name = (row.get("NationID") or "Unknown").strip()
             defaults = {"description": "Imported from FishTalk"}
             geography, created = Geography.objects.get_or_create(
-                name=name[:100], defaults=defaults
+                name=geography_name[:100],
+                defaults=defaults,
             )
-
             if created:
                 stats["created"] += 1
             elif self._update_fields(geography, defaults):
                 stats["updated"] += 1
 
-            if row.get("NationID"):
+            for source_id in sorted(source_ids):
                 self.record_external_id(
-                    source_model="Locations",
-                    source_identifier=row["NationID"],
+                    source_model="LocationsNation",
+                    source_identifier=source_id,
                     instance=geography,
                     metadata={"kind": "geography", "name": geography.name},
                 )
@@ -171,13 +312,26 @@ class InfrastructureLoader(BaseLoader):
                 stats["skipped"] += 1
                 continue
 
-            geography = Geography.objects.filter(name=row.get("NationID") or "Unknown").first()
+            geography_name = resolve_nation_geography(row.get("NationID"))
+            if not geography_name:
+                stats["skipped"] += 1
+                continue
+            geography = Geography.objects.filter(name=geography_name).first()
             if geography is None:
                 geography, _ = Geography.objects.get_or_create(
-                    name="Unknown", defaults={"description": "Imported placeholder"}
+                    name=geography_name,
+                    defaults={"description": "Imported placeholder"},
                 )
 
-            area_name = (row.get("Name") or row.get("LocationID") or "Unnamed")[:100]
+            area_name = normalize_label(row.get("Name"))
+            if (
+                not area_name
+                or is_guid_like_label(area_name)
+                or area_name.upper() == "UNDEFINED"
+            ):
+                stats["skipped"] += 1
+                continue
+            area_name = area_name[:100]
             defaults = {
                 "latitude": self._to_decimal(row.get("Latitude"), 0),
                 "longitude": self._to_decimal(row.get("Longitude"), 0),
@@ -192,7 +346,11 @@ class InfrastructureLoader(BaseLoader):
                     defaults=defaults,
                 )
             except Exception as exc:  # pragma: no cover - defensive logging
-                LOGGER.warning("Skipping location %s due to %s", row.get("LocationID"), exc)
+                LOGGER.warning(
+                    "Skipping location %s due to %s",
+                    row.get("LocationID"),
+                    exc,
+                )
                 continue
 
             if created:
@@ -216,9 +374,11 @@ class InfrastructureLoader(BaseLoader):
     @transaction.atomic
     def load_sites_and_containers(self, site_rows, container_rows):
         stats = {
+            "area_groups": {"created": 0, "updated": 0, "skipped": 0},
             "stations": {"created": 0, "updated": 0, "skipped": 0},
             "areas": {"created": 0, "updated": 0, "skipped": 0},
             "halls": {"created": 0, "updated": 0, "skipped": 0},
+            "racks": {"created": 0, "updated": 0, "skipped": 0},
             "containers": {"created": 0, "updated": 0, "skipped": 0},
         }
         if not container_rows:
@@ -238,6 +398,7 @@ class InfrastructureLoader(BaseLoader):
             containers_by_org.setdefault(org_id, []).append(row)
 
         if self.dry_run:
+            stats["area_groups"]["skipped"] = len(containers_by_org)
             stats["stations"]["skipped"] = len(containers_by_org)
             stats["areas"]["skipped"] = len(containers_by_org)
             stats["halls"]["skipped"] = len({
@@ -270,10 +431,20 @@ class InfrastructureLoader(BaseLoader):
                 "description": "Auto-created for FishTalk migration",
             },
         )
+        rack_type, _ = ContainerType.objects.get_or_create(
+            name="FishTalk Imported Rack",
+            defaults={
+                "category": "OTHER",
+                "max_volume_m3": Decimal("999999.99"),
+                "description": "Auto-created structural container for rack/stand hierarchy",
+            },
+        )
 
         station_by_org: dict[str, FreshwaterStation] = {}
         area_by_org: dict[str, Area] = {}
+        area_group_by_org: dict[str, AreaGroup] = {}
         hall_by_group: dict[tuple[str, str], Hall] = {}
+        rack_by_hall_stand: dict[tuple[int, str], Container] = {}
 
         for org_id, org_rows in containers_by_org.items():
             site_row = site_by_id.get(org_id, {})
@@ -296,7 +467,17 @@ class InfrastructureLoader(BaseLoader):
 
             geo_name, _ = resolve_site_grouping(site_name, site_group)
             if not geo_name:
-                geo_name = normalize_label(site_row.get("NationID")) or "Unknown"
+                geo_name = resolve_nation_geography(site_row.get("NationID"))
+            if not geo_name:
+                LOGGER.warning(
+                    "[infra] skipping org with unresolved geography: "
+                    "org_id=%s site=%s site_group=%s",
+                    org_id,
+                    site_name,
+                    site_group,
+                )
+                stats["containers"]["skipped"] += len(org_rows)
+                continue
             geography, geo_created = Geography.objects.get_or_create(
                 name=geo_name[:100],
                 defaults={"description": "Imported placeholder from FishTalk"},
@@ -306,14 +487,43 @@ class InfrastructureLoader(BaseLoader):
 
             lat = self._to_decimal(site_row.get("Latitude"), 0)
             lon = self._to_decimal(site_row.get("Longitude"), 0)
+            area_group_name = normalize_area_group(site_group)
+            area_group = None
+            if area_group_name:
+                area_group_defaults = {
+                    "code": normalize_key(area_group_name)[:32],
+                    "active": True,
+                }
+                area_group, created = AreaGroup.objects.get_or_create(
+                    name=area_group_name[:100],
+                    geography=geography,
+                    parent=None,
+                    defaults=area_group_defaults,
+                )
+                if created:
+                    stats["area_groups"]["created"] += 1
+                elif self._update_fields(area_group, area_group_defaults):
+                    stats["area_groups"]["updated"] += 1
+            area_group_by_org[org_id] = area_group
 
             for row in org_rows:
                 hall_label = hall_label_from_group(row.get("ContainerGroup"))
                 if not hall_label:
                     hall_label = hall_label_from_official(row.get("OfficialID"))
-                bucket = bucket_from_prod_stage(row.get("ProdStage"))
+                bucket = infer_bucket_from_grouping(
+                    row.get("Site"),
+                    row.get("ProdStage"),
+                )
                 if not bucket:
-                    bucket = "freshwater" if hall_label else "sea"
+                    LOGGER.warning(
+                        "[infra] skipping container with unresolved bucket: container_id=%s org_id=%s site=%s prod_stage=%s",
+                        row.get("ContainerID"),
+                        org_id,
+                        row.get("Site"),
+                        row.get("ProdStage"),
+                    )
+                    stats["containers"]["skipped"] += 1
+                    continue
 
                 if bucket == "sea":
                     area = area_by_org.get(org_id)
@@ -322,6 +532,7 @@ class InfrastructureLoader(BaseLoader):
                             "latitude": lat,
                             "longitude": lon,
                             "max_biomass": Decimal("0"),
+                            "area_group": area_group_by_org.get(org_id),
                             "active": True,
                         }
                         area, created = Area.objects.get_or_create(
@@ -345,8 +556,9 @@ class InfrastructureLoader(BaseLoader):
                 else:
                     station = station_by_org.get(org_id)
                     if station is None:
+                        station_type = infer_station_type(site_name)
                         defaults = {
-                            "station_type": "FRESHWATER",
+                            "station_type": station_type,
                             "geography": geography,
                             "latitude": lat,
                             "longitude": lon,
@@ -355,6 +567,7 @@ class InfrastructureLoader(BaseLoader):
                         }
                         station, created = FreshwaterStation.objects.get_or_create(
                             name=site_name[:100],
+                            geography=geography,
                             defaults=defaults,
                         )
                         if created:
@@ -408,12 +621,53 @@ class InfrastructureLoader(BaseLoader):
                     stats["containers"]["skipped"] += 1
                     continue
                 container_name = normalize_label(row.get("ContainerName")) or container_id
+                parent_container = None
+                hierarchy_role = "HOLDING"
+                stand_name = normalize_label(row.get("StandName"))
+                stand_id = normalize_label(row.get("StandID"))
+                if hall is not None and stand_name:
+                    stand_key = stand_id or stand_name
+                    rack_key = (int(hall.id), stand_key)
+                    parent_container = rack_by_hall_stand.get(rack_key)
+                    if parent_container is None:
+                        rack_defaults = {
+                            "container_type": rack_type,
+                            "hall": hall,
+                            "area": None,
+                            "carrier": None,
+                            "parent_container": None,
+                            "hierarchy_role": "STRUCTURAL",
+                            "volume_m3": Decimal("0.01"),
+                            "max_biomass_kg": Decimal("0.00"),
+                            "feed_recommendations_enabled": False,
+                            "active": True,
+                        }
+                        parent_container, created = Container.objects.get_or_create(
+                            name=stand_name[:100],
+                            hall=hall,
+                            hierarchy_role="STRUCTURAL",
+                            defaults=rack_defaults,
+                        )
+                        if created:
+                            stats["racks"]["created"] += 1
+                        elif self._update_fields(parent_container, rack_defaults):
+                            stats["racks"]["updated"] += 1
+                        rack_by_hall_stand[rack_key] = parent_container
+
+                overridden_volume = self._to_decimal(row.get("OverriddenVolumeM3"), 0).quantize(
+                    Decimal("0.01")
+                )
+                if overridden_volume <= 0:
+                    overridden_volume = Decimal("0.00")
                 container_defaults = {
                     "name": container_name[:100],
                     "container_type": container_type,
                     "hall": hall,
                     "area": area,
-                    "volume_m3": Decimal("0.00"),
+                    "carrier": None,
+                    "parent_container": parent_container,
+                    "hierarchy_role": hierarchy_role,
+                    "volume_m3": overridden_volume,
                     "max_biomass_kg": Decimal("0.00"),
                     "feed_recommendations_enabled": True,
                     "active": True,
@@ -423,6 +677,8 @@ class InfrastructureLoader(BaseLoader):
                     name=container_defaults["name"],
                     hall=hall,
                     area=area,
+                    parent_container=parent_container,
+                    hierarchy_role=hierarchy_role,
                     defaults=container_defaults,
                 )
                 if created:
@@ -437,6 +693,7 @@ class InfrastructureLoader(BaseLoader):
                     metadata={
                         "container_name": row.get("ContainerName"),
                         "official_id": row.get("OfficialID"),
+                        "overridden_volume_m3": str(overridden_volume),
                         "org_unit_id": org_id,
                         "site": row.get("Site"),
                         "site_group": row.get("SiteGroup"),
@@ -444,6 +701,10 @@ class InfrastructureLoader(BaseLoader):
                         "prod_stage": row.get("ProdStage"),
                         "container_group": row.get("ContainerGroup"),
                         "container_group_id": row.get("ContainerGroupID"),
+                        "stand_name": stand_name,
+                        "stand_id": stand_id,
+                        "parent_container_id": parent_container.id if parent_container else None,
+                        "hierarchy_role": hierarchy_role,
                         "bucket": bucket,
                     },
                 )

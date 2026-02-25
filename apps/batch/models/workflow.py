@@ -145,6 +145,13 @@ class BatchTransferWorkflow(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="Completion percentage (0-100)"
     )
+    is_dynamic_execution = models.BooleanField(
+        default=False,
+        help_text=(
+            "When true, actions are created during execution time by ship crew "
+            "instead of pre-defined during planning."
+        ),
+    )
     
     # Finance Integration
     is_intercompany = models.BooleanField(
@@ -215,10 +222,18 @@ class BatchTransferWorkflow(models.Model):
     
     def __str__(self):
         return f"{self.workflow_number} - {self.batch.batch_number} ({self.get_status_display()})"
+
+    def save(self, *args, **kwargs):
+        """Auto-enable dynamic mode for station-to-sea lifecycle transitions."""
+        if self._state.adding and not self.is_dynamic_execution:
+            self.is_dynamic_execution = self.infer_dynamic_execution()
+        super().save(*args, **kwargs)
     
     def can_add_actions(self):
-        """Can only add actions in DRAFT or PLANNED status"""
-        return self.status in ['DRAFT', 'PLANNED']
+        """Allow adding actions while executing only for dynamic workflows."""
+        if self.status in ['DRAFT', 'PLANNED']:
+            return True
+        return self.is_dynamic_execution and self.status == 'IN_PROGRESS'
     
     def can_execute_actions(self):
         """Can only execute in PLANNED or IN_PROGRESS status"""
@@ -227,6 +242,48 @@ class BatchTransferWorkflow(models.Model):
     def can_cancel(self):
         """Can cancel if not already completed or cancelled"""
         return self.status not in ['COMPLETED', 'CANCELLED']
+
+    @property
+    def is_vessel_transfer(self):
+        """True if any action source/destination involves vessel carrier tanks."""
+        actions = self.actions.select_related(
+            'source_assignment__container__carrier',
+            'dest_assignment__container__carrier',
+        )
+        for action in actions:
+            source_carrier = (
+                action.source_assignment.container.carrier
+                if action.source_assignment and action.source_assignment.container
+                else None
+            )
+            dest_carrier = (
+                action.dest_assignment.container.carrier
+                if action.dest_assignment and action.dest_assignment.container
+                else None
+            )
+            if (source_carrier and source_carrier.carrier_type == 'VESSEL') or (
+                dest_carrier and dest_carrier.carrier_type == 'VESSEL'
+            ):
+                return True
+        return False
+
+    def infer_dynamic_execution(self):
+        """
+        Heuristic default for station-to-sea planning when not explicitly set.
+
+        Dynamic mode is enabled for common station-to-sea lifecycle transitions.
+        """
+        if self.workflow_type != 'LIFECYCLE_TRANSITION':
+            return False
+        if not self.source_lifecycle_stage or not self.dest_lifecycle_stage:
+            return False
+
+        source_name = (self.source_lifecycle_stage.name or '').strip().lower()
+        dest_name = (self.dest_lifecycle_stage.name or '').strip().lower()
+
+        station_like_sources = {'fry', 'parr', 'smolt', 'post-smolt'}
+        sea_like_destinations = {'post-smolt', 'adult'}
+        return source_name in station_like_sources and dest_name in sea_like_destinations
     
     def mark_in_progress(self):
         """
@@ -298,7 +355,7 @@ class BatchTransferWorkflow(models.Model):
             from django.core.exceptions import ValidationError
             raise ValidationError("Can only plan workflows in DRAFT status")
         
-        if self.total_actions_planned == 0:
+        if self.total_actions_planned == 0 and not self.is_dynamic_execution:
             from django.core.exceptions import ValidationError
             raise ValidationError("Cannot plan workflow with zero actions")
         

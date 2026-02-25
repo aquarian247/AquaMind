@@ -47,19 +47,19 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 #### 3.1.1 Infrastructure Management (`infrastructure` app)
 - **Purpose**: To manage and monitor physical assets and locations critical to aquaculture operations.
 - **Functionality**:
-  - The system shall manage geographies (`infrastructure_geography`), areas (`infrastructure_area`), freshwater stations (`infrastructure_freshwaterstation`), halls (`infrastructure_hall`), container types (`infrastructure_containertype`), containers (`infrastructure_container`), sensors (`infrastructure_sensor`), and feed containers (`infrastructure_feedcontainer`).
+  - The system shall manage geographies (`infrastructure_geography`), areas (`infrastructure_area`), freshwater stations (`infrastructure_freshwaterstation`), halls (`infrastructure_hall`), container types (`infrastructure_containertype`), containers (`infrastructure_container`), transport carriers (`infrastructure_transportcarrier`), sensors (`infrastructure_sensor`), and feed containers (`infrastructure_feedcontainer`).
   - Users shall be able to perform CRUD operations on infrastructure records via API endpoints and corresponding UI views.
   - The system shall display Areas alongside Freshwater Stations on the Infrastructure page, reflecting their relationship (`infrastructure_freshwaterstation.area_id`).
-  - The system shall track sensor status (`infrastructure_sensor.status`) and container capacity (`infrastructure_container.capacity_kg`, `capacity_m3`). Containers can be linked to either a Hall or an Area via nullable ForeignKeys (`hall_id`, `area_id`).
+  - The system shall track sensor status (`infrastructure_sensor.status`) and container capacity (`infrastructure_container.volume_m3`, `max_biomass_kg`). Containers can be linked to exactly one location context via nullable ForeignKeys (`hall_id`, `area_id`, `carrier_id`).
 - **Behavior**:
   - Infrastructure records shall be accessible based on user role and geography (`users_userprofile.geography_id`). Access control enforced via API permissions and querysets.
-  - The UI shall provide filtering by area, hall, or station.
+  - The UI shall provide filtering by area, hall, station, and transport carrier context.
   - Alerts shall notify users of sensor malfunctions (`infrastructure_sensor.status != 'Active'`) or capacity issues (derived from `batch_batchcontainerassignment` data).
 - **Justification**: Ensures efficient resource allocation and monitoring of physical assets across geographies.
 - **User Story**: As a Farm Operator, I want to view all containers (`infrastructure_container`) within a specific freshwater station (`infrastructure_freshwaterstation`) so that I can assign batches (`batch_batch`) to appropriate locations.
   - **Acceptance Criteria**:
     - The UI displays a list of `infrastructure_container` records linked to a selected `infrastructure_freshwaterstation`.
-    - Container details include `capacity_kg`, linked `infrastructure_sensor` status, and current occupancy (calculated biomass/population derived from associated `batch_batchcontainerassignment` records).
+    - Container details include `volume_m3`, `max_biomass_kg`, linked `infrastructure_sensor` status, and current occupancy (calculated biomass/population derived from associated `batch_batchcontainerassignment` records).
     - Users can filter containers by linked `infrastructure_area` or `infrastructure_hall`.
     - Alerts for sensor malfunctions are displayed prominently in the UI.
 
@@ -107,25 +107,32 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 - **Functionality**:
   - **Workflow Orchestration**:
     - The system shall manage transfer workflows via `batch_batchtransferworkflow`, tracking multi-step transfer operations that span days or weeks with state machine progression: DRAFT → PLANNED → IN_PROGRESS → COMPLETED/CANCELLED.
-    - Workflows shall support four primary transfer types: LIFECYCLE_TRANSITION (gradual stage transitions), CONTAINER_REDISTRIBUTION (rebalancing), EMERGENCY_CASCADE (urgent multi-stage moves), and HARVEST_PREP (pre-harvest movements).
+    - Workflows shall support three transfer types: LIFECYCLE_TRANSITION (gradual stage transitions), CONTAINER_REDISTRIBUTION (rebalancing), and EMERGENCY_CASCADE (urgent multi-stage moves).
+    - Workflows shall support dynamic execution mode via `is_dynamic_execution`, allowing high-level planning without pre-defined actions and live handoff creation during execution (used for station-to-sea operations).
     - The system shall automatically track workflow progress via `total_actions_planned`, `actions_completed`, and `completion_percentage` fields, auto-transitioning to COMPLETED when all actions finish.
   - **Action Execution Tracking**:
-    - The system shall track individual container-to-container movements via `batch_transferaction`, each linked to specific source and destination `batch_batchcontainerassignment` records.
+    - The system shall track individual container-to-container movements via `batch_transferaction`, each linked to a source `batch_batchcontainerassignment` and optionally a destination assignment for dynamic handoffs.
     - Actions shall progress through states: PENDING → IN_PROGRESS → COMPLETED/FAILED/SKIPPED with detailed execution metadata including mortality counts, transfer methods (NET/PUMP/GRAVITY/MANUAL), environmental conditions (water temperature, oxygen levels), and execution duration.
+    - Dynamic workflows shall allow adding actions while the workflow is IN_PROGRESS, enabling live station→truck→vessel→ring handoffs during transport.
     - The system shall support mobile-optimized execution for ship crew during sea transfers, capturing real-time operational data.
+    - Transport action execution and manual snapshot capture shall be restricted to authorized transport roles (`SHIP_CREW`, `ADMIN`, or `OPR` with `subsidiary=LG`).
+  - **Transport Carrier & Compliance Integration**:
+    - Transport assets shall be represented by `infrastructure_transportcarrier` (TRUCK/VESSEL) and linked tank containers via `infrastructure_container.carrier_id`.
+    - For transport actions, the system shall snapshot mapped historian readings for source and destination assignments at execution timestamp for assignment-level compliance traceability.
+    - Action APIs shall expose a `snapshot()` operation for additional in-transit capture moments (e.g., start, in_transit, finish).
   - **Finance Integration Support**:
-    - The system shall automatically detect intercompany transfers by comparing container locations (source vs destination company via `infrastructure_container` → `infrastructure_site` → `finance_dimcompany` relationships).
-    - Workflows shall link to `finance_intercompanytransaction` records when transfers cross subsidiary boundaries, enabling financial transaction tracking and manager approvals.
-    - The system shall calculate estimated transfer values based on transferred biomass and intercompany pricing policies (`finance_intercompanypolicy`).
+    - The system shall automatically detect intercompany transfers during planning by comparing source/destination container operating context (Freshwater hall vs Farming area) and persist `source_subsidiary` / `dest_subsidiary`.
+    - Workflows shall link to `finance_intercompanytransaction` records when transfers cross subsidiary boundaries, enabling financial transaction tracking.
+    - On workflow completion, intercompany workflows shall trigger finance transaction creation through finance services when no transaction is already linked.
   - **Advanced Filtering and Querying**:
-    - The system shall provide 32+ filter parameters for workflows including status, batch, workflow type, date ranges, lifecycle stages, intercompany status, and completion percentage ranges.
-    - API endpoints shall support custom actions: `plan()` (transition DRAFT → PLANNED), `cancel()` (workflow cancellation), `complete()` (manual completion), `detect_intercompany()` (finance detection), and `approve_finance()` (transaction approval).
-    - Action-level endpoints shall support: `execute()` (record execution with mortality/conditions), `skip()` (bypass action), `rollback()` (undo execution), and `retry()` (re-attempt failed action).
+    - The system shall provide filtering for workflows including status, batch, workflow type, date ranges, lifecycle stages, intercompany status, completion percentage ranges, and `is_dynamic_execution`.
+    - Workflow-level APIs shall support custom actions: `plan()` (transition DRAFT → PLANNED), `cancel()` (workflow cancellation), `complete()` (manual completion), and `detect_intercompany()` (finance detection).
+    - Action-level APIs shall support: `execute()` (record execution with mortality/conditions), `snapshot()` (capture compliance readings), `skip()` (bypass action), `rollback()` (mark failed), and `retry()` (re-attempt failed action).
 - **Behavior**:
-  - Planning a workflow (`plan()` action) shall validate all actions, ensure container availability, and transition status to PLANNED, making it ready for execution.
-  - Executing an action shall update source/destination assignment populations, record execution details in `batch_transferaction`, and automatically progress workflow status when all actions complete.
-  - Intercompany detection shall run automatically during workflow planning and create finance transactions in PENDING state awaiting manager approval.
-  - Workflow cancellation shall validate that no actions are IN_PROGRESS or COMPLETED before allowing cancellation, preserving data integrity.
+  - Planning a workflow (`plan()` action) shall require at least one action for standard workflows, while dynamic workflows can be planned with zero pre-defined actions.
+  - Executing an action shall update source/destination assignment populations, record execution details in `batch_transferaction`, trigger assignment-level historian snapshots, and automatically progress workflow status when all actions complete.
+  - Intercompany detection shall run automatically during planning and persist subsidiary context for downstream finance processing.
+  - Workflow cancellation shall be allowed until workflow reaches COMPLETED or CANCELLED terminal status.
 - **Justification**: Addresses critical operational gaps where instantaneous transfer models cannot represent real-world operations spanning days/weeks with complex multi-container coordination. The workflow system enables finance team to track inter-subsidiary asset movements and ensures ship crew can execute transfers with proper mobile workflows during long voyages. Supports regulatory compliance through comprehensive workflow audit trails via django-simple-history.
 - **User Story**: As a Freshwater Manager, I want to plan and track a gradual lifecycle transition from Fry to Parr spanning 2 weeks across 10 containers so that I can coordinate the multi-day operation and monitor completion progress.
   - **Acceptance Criteria**:
@@ -134,12 +141,12 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Workflow planning validates container availability and transitions status to PLANNED with visible progress tracking (e.g., "0/10 actions completed, 0%").
     - Ship crew can execute individual actions via mobile-optimized dialogs, recording mortality, transfer method, and environmental conditions.
     - Workflow automatically transitions to COMPLETED when all 10 actions finish, with complete audit trail via `batch_historicalbatchtransferworkflow` and `batch_historicaltransferaction`.
-- **User Story**: As a Farming Manager, I want to approve intercompany transfer transactions created by freshwater-to-sea transfers so that I can ensure proper financial accounting for smolt deliveries.
+- **User Story**: As a Logistics Ship Crew member, I want to execute dynamic station-to-sea handoffs from mobile and capture compliance snapshots so that each transport segment is fully traceable.
   - **Acceptance Criteria**:
-    - System automatically detects workflows crossing company boundaries (Freshwater → Farming subsidiaries) and creates linked `finance_intercompanytransaction` records.
-    - Workflow detail page displays finance summary showing estimated value based on transferred biomass and pricing policy (e.g., "€15,625 - 500kg @ €31.25/kg").
-    - Farming Manager sees pending approval dashboard with transaction details and can approve/reject with one click.
-    - Approved transactions transition to POSTED status and sync to financial systems, with complete audit trail.
+    - Dynamic station-to-sea workflows can be planned and started without pre-defining all handoffs.
+    - Authorized transport roles (`SHIP_CREW`/Logistics operator) can add and execute handoffs while the workflow is IN_PROGRESS.
+    - Each executed handoff captures source/destination compliance readings linked to the underlying container assignments.
+    - Other roles can view workflow progress and action history but cannot execute restricted transport actions.
 
 #### 3.1.3 Feed and Inventory Management (`inventory` app)
 - **Purpose**: To comprehensively manage feed resources, optimize feeding practices, ensure accurate cost tracking, and support data-driven feeding decisions for optimal batch growth and operational efficiency.
@@ -428,6 +435,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Admin** (`ADMIN`): Full system access across all geographies and subsidiaries
   - **Manager** (`MGR`): High-level operational access within assigned geography
   - **Operator** (`OPR`): Day-to-day operational access, restricted by location assignments
+  - **Ship Crew** (`SHIP_CREW`): Transport execution access for dynamic/cross-carrier handoffs
   - **Veterinarian** (`VET`): Full health data access and treatment authorization
   - **QA** (`QA`): Health data access with read-only treatment permissions
   - **Finance** (`FIN`): Financial data access with intercompany transaction management
@@ -461,6 +469,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Object Validation**: Create/update operations validate against user's authorized scope
   - **Health Data Restriction**: VET/QA/Admin required for health endpoints; VET/Admin only for treatments
   - **Operational Data Restriction**: OPERATOR/MANAGER/Admin required for batch and inventory operations
+  - **Transport Execution Restriction**: Dynamic/carrier transfer action execution restricted to `SHIP_CREW`, `ADMIN`, or `OPR` with Logistics subsidiary (`LG`)
 
 - **Implementation Architecture**:
   ```python

@@ -3,17 +3,33 @@
 from django.db import migrations
 
 
+def _has_column(schema_editor, table_name, column_name):
+    with schema_editor.connection.cursor() as cursor:
+        description = schema_editor.connection.introspection.get_table_description(
+            cursor,
+            table_name,
+        )
+    return any(col.name == column_name for col in description)
+
+
 def migrate_pinned_scenario_to_run(apps, schema_editor):
     """
     For each Batch with pinned_scenario, set pinned_projection_run to that scenario's latest run.
     """
     Batch = apps.get_model('batch', 'Batch')
     ProjectionRun = apps.get_model('scenario', 'ProjectionRun')
+    db_alias = schema_editor.connection.alias
+    batch_table = Batch._meta.db_table
+
+    if not _has_column(schema_editor, batch_table, "pinned_scenario_id"):
+        return
     
     migrated_count = 0
-    for batch in Batch.objects.filter(pinned_scenario__isnull=False):
+    for batch in Batch.objects.using(db_alias).filter(pinned_scenario__isnull=False):
         # Get the latest (should be only) projection run for this scenario
-        latest_run = ProjectionRun.objects.filter(scenario=batch.pinned_scenario).order_by('-run_number').first()
+        latest_run = ProjectionRun.objects.using(db_alias).filter(
+            scenario=batch.pinned_scenario
+        ).order_by('-run_number').first()
         
         if latest_run:
             batch.pinned_projection_run = latest_run
@@ -28,7 +44,9 @@ def reverse_migration(apps, schema_editor):
     Reverse by clearing pinned_projection_run (keeping pinned_scenario intact).
     """
     Batch = apps.get_model('batch', 'Batch')
-    Batch.objects.all().update(pinned_projection_run=None)
+    Batch.objects.using(schema_editor.connection.alias).all().update(
+        pinned_projection_run=None
+    )
 
 
 class Migration(migrations.Migration):

@@ -1,90 +1,90 @@
 {
   "project": "aquamind-backend",
-  "timestamp": "2025-10-03",
+  "timestamp": "2026-02-20",
   "metric_type": "cyclomatic_complexity",
   "apps": [
     {
       "app": "batch",
       "summary": {
-        "total_files": 50,
-        "total_functions": 220,
-        "cc_average": 2.8863636363636362,
-        "cc_max": 17,
-        "mi_average": 83.95435288893317,
-        "mi_min": 32.257951687405196,
-        "halstead_avg_volume": 84.18081868478191,
-        "halstead_avg_difficulty": 1.3521206293952452,
-        "halstead_avg_effort": 467.2112210066422
+        "total_files": 79,
+        "total_functions": 467,
+        "cc_average": 4.426124197002141,
+        "cc_max": 43,
+        "mi_average": 71.27287283509429,
+        "mi_min": 11.466745307470484,
+        "halstead_avg_volume": 245.63024169379415,
+        "halstead_avg_difficulty": 2.7937360600482863,
+        "halstead_avg_effort": 2150.6435575454243
       }
     },
     {
       "app": "broodstock",
       "summary": {
         "total_files": 16,
-        "total_functions": 126,
-        "cc_average": 2.4047619047619047,
+        "total_functions": 123,
+        "cc_average": 2.569105691056911,
         "cc_max": 11,
-        "mi_average": 78.79177247028021,
-        "mi_min": 38.39546306476147,
-        "halstead_avg_volume": 98.73485475792896,
-        "halstead_avg_difficulty": 1.5215530814215024,
-        "halstead_avg_effort": 587.8951168117102
+        "mi_average": 78.72213468314042,
+        "mi_min": 37.59940198660741,
+        "halstead_avg_volume": 100.74834107570823,
+        "halstead_avg_difficulty": 1.5528030814215024,
+        "halstead_avg_effort": 592.4725000828576
       }
     },
     {
       "app": "environmental",
       "summary": {
         "total_files": 11,
-        "total_functions": 73,
-        "cc_average": 3.1506849315068495,
+        "total_functions": 71,
+        "cc_average": 3.380281690140845,
         "cc_max": 14,
-        "mi_average": 79.85768721490066,
-        "mi_min": 37.58273616576123,
-        "halstead_avg_volume": 119.79807493740381,
-        "halstead_avg_difficulty": 0.8015961439690252,
-        "halstead_avg_effort": 463.80085812277025
+        "mi_average": 77.93593332117173,
+        "mi_min": 37.84446717042045,
+        "halstead_avg_volume": 158.88265787999146,
+        "halstead_avg_difficulty": 1.211153253526135,
+        "halstead_avg_effort": 678.7804904395459
       }
     },
     {
       "app": "health",
       "summary": {
-        "total_files": 38,
-        "total_functions": 167,
-        "cc_average": 2.940119760479042,
-        "cc_max": 15,
-        "mi_average": 84.51804453651282,
-        "mi_min": 47.708713343859856,
-        "halstead_avg_volume": 59.53702667276877,
-        "halstead_avg_difficulty": 1.2096742178144977,
-        "halstead_avg_effort": 310.9528877272155
+        "total_files": 47,
+        "total_functions": 213,
+        "cc_average": 3.300469483568075,
+        "cc_max": 27,
+        "mi_average": 81.82475881409427,
+        "mi_min": 37.97276622551992,
+        "halstead_avg_volume": 100.35937071256775,
+        "halstead_avg_difficulty": 1.7651437488157653,
+        "halstead_avg_effort": 691.6171973927967
       }
     },
     {
       "app": "infrastructure",
       "summary": {
-        "total_files": 44,
-        "total_functions": 192,
-        "cc_average": 2.1875,
+        "total_files": 49,
+        "total_functions": 215,
+        "cc_average": 2.4790697674418603,
         "cc_max": 18,
-        "mi_average": 85.41646612073814,
-        "mi_min": 38.83002491337459,
-        "halstead_avg_volume": 44.86275413104924,
-        "halstead_avg_difficulty": 0.9706055308328037,
-        "halstead_avg_effort": 225.5874488588762
+        "mi_average": 84.73224175039468,
+        "mi_min": 17.947059016195915,
+        "halstead_avg_volume": 65.60292070466316,
+        "halstead_avg_difficulty": 1.1026927700335618,
+        "halstead_avg_effort": 429.56551023006074
       }
     },
     {
       "app": "inventory",
       "summary": {
-        "total_files": 44,
-        "total_functions": 157,
-        "cc_average": 3.070063694267516,
-        "cc_max": 17,
-        "mi_average": 83.9373008646782,
-        "mi_min": 25.894449323248004,
-        "halstead_avg_volume": 89.22313335094455,
-        "halstead_avg_difficulty": 1.2670996476371466,
-        "halstead_avg_effort": 646.1936639362494
+        "total_files": 45,
+        "total_functions": 163,
+        "cc_average": 3.6625766871165646,
+        "cc_max": 23,
+        "mi_average": 80.78799935032987,
+        "mi_min": 24.60443052736848,
+        "halstead_avg_volume": 120.72045736003518,
+        "halstead_avg_difficulty": 1.4901310986060108,
+        "halstead_avg_effort": 841.7056180381845
       }
     },
     {
@@ -94,8 +94,8 @@
         "total_functions": 29,
         "cc_average": 4.620689655172414,
         "cc_max": 17,
-        "mi_average": 92.22879117686892,
-        "mi_min": 29.227814248282343,
+        "mi_average": 92.26468448669932,
+        "mi_min": 29.766213895738385,
         "halstead_avg_volume": 119.63496373982971,
         "halstead_avg_difficulty": 0.8517906336088154,
         "halstead_avg_effort": 1256.8109564964636
@@ -104,29 +104,29 @@
     {
       "app": "scenario",
       "summary": {
-        "total_files": 32,
-        "total_functions": 276,
-        "cc_average": 2.967391304347826,
-        "cc_max": 15,
-        "mi_average": 72.71013537118453,
-        "mi_min": 28.77446185951286,
-        "halstead_avg_volume": 277.9119440650243,
-        "halstead_avg_difficulty": 2.979305499042738,
-        "halstead_avg_effort": 2459.4379253065167
+        "total_files": 31,
+        "total_functions": 300,
+        "cc_average": 3.2666666666666666,
+        "cc_max": 24,
+        "mi_average": 68.76100304973534,
+        "mi_min": 27.961178183912924,
+        "halstead_avg_volume": 341.5626218980413,
+        "halstead_avg_difficulty": 3.508877102083452,
+        "halstead_avg_effort": 2994.9279963046124
       }
     },
     {
       "app": "users",
       "summary": {
-        "total_files": 18,
-        "total_functions": 47,
-        "cc_average": 2.5106382978723403,
-        "cc_max": 12,
-        "mi_average": 89.18266370985015,
-        "mi_min": 50.704571677653355,
-        "halstead_avg_volume": 19.486056012661567,
-        "halstead_avg_difficulty": 0.4543803418803419,
-        "halstead_avg_effort": 39.997311052646914
+        "total_files": 19,
+        "total_functions": 51,
+        "cc_average": 2.9607843137254903,
+        "cc_max": 15,
+        "mi_average": 86.26338531513854,
+        "mi_min": 48.185712233352874,
+        "halstead_avg_volume": 26.837175316319428,
+        "halstead_avg_difficulty": 0.6133603238866396,
+        "halstead_avg_effort": 54.03523147265605
       }
     }
   ]
