@@ -4,8 +4,10 @@ TransferAction model for the batch app.
 This model represents individual container-to-container transfer actions within a workflow.
 Each action represents ONE physical movement of fish and tracks its execution details.
 """
-from decimal import Decimal
 import logging
+from decimal import Decimal
+from uuid import uuid4
+
 from django.db import models, transaction
 from django.db.models import Max
 from django.core.validators import MinValueValidator
@@ -266,6 +268,189 @@ class TransferAction(models.Model):
     def requires_ship_crew_execution(self):
         """RBAC gate for vessel/dynamic transport actions."""
         return self.workflow.is_dynamic_execution or self.has_transport_carrier_handoff()
+
+    @staticmethod
+    def _build_mixed_batch_number():
+        """Generate a short unique mixed batch identifier."""
+        return (
+            f"MIX-{timezone.now():%y%m%d%H%M%S}-"
+            f"{uuid4().hex[:4].upper()}"
+        )
+
+    def _create_mixed_batch(self, lifecycle_stage, transfer_date):
+        """Create a container-scoped mixed batch record."""
+        from apps.batch.models.batch import Batch
+
+        batch_number = self._build_mixed_batch_number()
+        while Batch.objects.filter(batch_number=batch_number).exists():
+            batch_number = self._build_mixed_batch_number()
+
+        return Batch.objects.create(
+            batch_number=batch_number,
+            species=self.workflow.batch.species,
+            lifecycle_stage=lifecycle_stage,
+            status='ACTIVE',
+            batch_type='MIXED',
+            start_date=transfer_date,
+            notes=(
+                f"Auto-generated from transfer action {self.id} "
+                f"in workflow {self.workflow.workflow_number}"
+            ),
+        )
+
+    @staticmethod
+    def _deactivate_assignment(assignment, departure_date):
+        """Close an assignment after its fish are moved into a mixed assignment."""
+        assignment.population_count = 0
+        assignment.is_active = False
+        if not assignment.departure_date:
+            assignment.departure_date = departure_date
+        assignment.save()
+
+    def _execute_mixed_destination(self, source, execution_time):
+        """
+        Create a container-scoped mixed assignment and mix event.
+
+        Mixing is local to the destination container. All currently active
+        assignments in the destination container are merged with the incoming
+        transferred fish into a new mixed batch assignment.
+        """
+        from apps.batch.models.batch import Batch
+        from apps.batch.models.composition import BatchComposition
+        from apps.batch.models.mix_event import BatchMixEvent, BatchMixEventComponent
+
+        transfer_date = execution_time.date()
+        dest_container = self.dest_assignment.container
+        lifecycle_stage = (
+            self.workflow.dest_lifecycle_stage
+            or self.dest_assignment.lifecycle_stage
+            or source.lifecycle_stage
+        )
+
+        existing_assignments = list(
+            BatchContainerAssignment.objects.select_for_update().filter(
+                container=dest_container,
+                is_active=True,
+            ).exclude(pk=source.pk)
+        )
+
+        contributions = []
+        total_population = 0
+        total_biomass = Decimal("0")
+
+        for assignment in existing_assignments:
+            if assignment.population_count <= 0:
+                continue
+
+            component_biomass = assignment.biomass_kg or Decimal("0")
+            contributions.append(
+                {
+                    "source_assignment": assignment,
+                    "source_batch": assignment.batch,
+                    "population_count": assignment.population_count,
+                    "biomass_kg": component_biomass,
+                    "is_transferred_in": False,
+                }
+            )
+            total_population += assignment.population_count
+            total_biomass += component_biomass
+
+        transferred_biomass = self.transferred_biomass_kg or Decimal("0")
+        contributions.append(
+            {
+                "source_assignment": source,
+                "source_batch": source.batch,
+                "population_count": self.transferred_count,
+                "biomass_kg": transferred_biomass,
+                "is_transferred_in": True,
+            }
+        )
+        total_population += self.transferred_count
+        total_biomass += transferred_biomass
+
+        if total_population <= 0:
+            raise ValidationError(
+                "Mixed transfer produced zero population for destination container."
+            )
+
+        if total_biomass > 0:
+            avg_weight_g = (total_biomass * Decimal("1000")) / Decimal(total_population)
+        else:
+            avg_weight_g = source.avg_weight_g or Decimal("0")
+
+        mixed_batch = self._create_mixed_batch(
+            lifecycle_stage=lifecycle_stage,
+            transfer_date=transfer_date,
+        )
+        mixed_assignment = BatchContainerAssignment.objects.create(
+            batch=mixed_batch,
+            container=dest_container,
+            lifecycle_stage=lifecycle_stage,
+            population_count=total_population,
+            avg_weight_g=avg_weight_g,
+            assignment_date=transfer_date,
+            is_active=True,
+            notes=(
+                f"Created by transfer action {self.id} "
+                f"from workflow {self.workflow.workflow_number}"
+            ),
+        )
+
+        for assignment in existing_assignments:
+            self._deactivate_assignment(assignment, transfer_date)
+
+        mix_event = BatchMixEvent.objects.create(
+            mixed_batch=mixed_batch,
+            container=dest_container,
+            workflow_action=self,
+            mixed_at=execution_time,
+            notes=(
+                f"Container-scoped mixing triggered by action {self.action_number} "
+                f"in workflow {self.workflow.workflow_number}"
+            ),
+        )
+
+        source_batch_aggregates = {}
+        for contribution in contributions:
+            pop = contribution["population_count"]
+            biomass = contribution["biomass_kg"] or Decimal("0")
+            percentage = (Decimal(pop) / Decimal(total_population)) * Decimal("100")
+
+            BatchMixEventComponent.objects.create(
+                mix_event=mix_event,
+                source_assignment=contribution["source_assignment"],
+                source_batch=contribution["source_batch"],
+                population_count=pop,
+                biomass_kg=biomass,
+                percentage=round(percentage, 2),
+                is_transferred_in=contribution["is_transferred_in"],
+            )
+
+            batch_id = contribution["source_batch"].id
+            aggregate = source_batch_aggregates.setdefault(
+                batch_id,
+                {
+                    "source_batch": contribution["source_batch"],
+                    "population_count": 0,
+                    "biomass_kg": Decimal("0"),
+                },
+            )
+            aggregate["population_count"] += pop
+            aggregate["biomass_kg"] += biomass
+
+        for aggregate in source_batch_aggregates.values():
+            percentage = (
+                Decimal(aggregate["population_count"]) / Decimal(total_population)
+            ) * Decimal("100")
+            BatchComposition.objects.create(
+                mixed_batch=mixed_batch,
+                source_batch=aggregate["source_batch"],
+                percentage=round(percentage, 2),
+                population_count=aggregate["population_count"],
+                biomass_kg=aggregate["biomass_kg"],
+            )
+
+        return mixed_assignment
     
     def execute(self, executed_by, mortality_count=0, **execution_details):
         """
@@ -339,20 +524,26 @@ class TransferAction(models.Model):
                         "Destination container has another active batch. "
                         "Enable mixed batch to proceed."
                     )
-
-                dest = self.dest_assignment
-                if not dest.is_active:
-                    dest.is_active = True
-                    dest.assignment_date = timezone.now().date()
-                if self.workflow.dest_lifecycle_stage and dest.lifecycle_stage_id != self.workflow.dest_lifecycle_stage_id:
-                    dest.lifecycle_stage = self.workflow.dest_lifecycle_stage
-                if (not dest.avg_weight_g or dest.avg_weight_g == 0) and source.avg_weight_g:
-                    dest.avg_weight_g = source.avg_weight_g
-                dest.population_count += self.transferred_count
-                # Update biomass
-                if dest.avg_weight_g and self.transferred_count > 0:
-                    dest.biomass_kg = (dest.population_count * dest.avg_weight_g) / 1000
-                dest.save()
+                if other_active.exists() and self.allow_mixed:
+                    dest = self._execute_mixed_destination(
+                        source=source,
+                        execution_time=execution_time,
+                    )
+                    self.dest_assignment = dest
+                else:
+                    dest = self.dest_assignment
+                    if not dest.is_active:
+                        dest.is_active = True
+                        dest.assignment_date = timezone.now().date()
+                    if self.workflow.dest_lifecycle_stage and dest.lifecycle_stage_id != self.workflow.dest_lifecycle_stage_id:
+                        dest.lifecycle_stage = self.workflow.dest_lifecycle_stage
+                    if (not dest.avg_weight_g or dest.avg_weight_g == 0) and source.avg_weight_g:
+                        dest.avg_weight_g = source.avg_weight_g
+                    dest.population_count += self.transferred_count
+                    # Update biomass
+                    if dest.avg_weight_g and self.transferred_count > 0:
+                        dest.biomass_kg = (dest.population_count * dest.avg_weight_g) / 1000
+                    dest.save()
             
             # Update this action with execution details
             self.status = 'COMPLETED'

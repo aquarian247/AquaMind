@@ -24,6 +24,7 @@ from apps.batch.models.workflow_creation_action import CreationAction
 from apps.batch.models.mortality import MortalityEvent
 from apps.batch.models.growth import GrowthSample
 from apps.batch.models.individual_growth_observation import IndividualGrowthObservation
+from apps.batch.models.mix_event import BatchMixEvent, BatchMixEventComponent
 from apps.batch.models.actual_daily_state import ActualDailyAssignmentState
 from apps.batch.models.live_projection import LiveForwardProjection, ContainerForecastSummary
 
@@ -40,6 +41,8 @@ __all__ = [
     'MortalityEvent',
     'GrowthSample',
     'IndividualGrowthObservation',
+    'BatchMixEvent',
+    'BatchMixEventComponent',
     'ActualDailyAssignmentState',
     'LiveForwardProjection',
     'ContainerForecastSummary',

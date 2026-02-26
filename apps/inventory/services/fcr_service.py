@@ -10,7 +10,13 @@ from django.db.models import Sum, Q, Avg
 from typing import Optional, Dict, List, Tuple
 from datetime import date
 
-from apps.batch.models import Batch, BatchComposition, GrowthSample, BatchContainerAssignment
+from apps.batch.models import (
+    Batch,
+    BatchComposition,
+    BatchMixEvent,
+    GrowthSample,
+    BatchContainerAssignment,
+)
 from apps.inventory.models import FeedingEvent, BatchFeedingSummary, ContainerFeedingSummary
 from apps.infrastructure.models import Geography
 
@@ -140,6 +146,39 @@ class FCRCalculationService:
 
         # Round to 3 decimal places for consistency
         return round(weighted_sum / total_weight, 3)
+
+    @classmethod
+    def _get_mix_percentages_for_container_at_date(
+        cls,
+        mixed_batch: Batch,
+        container_id: int,
+        as_of_date: date,
+    ) -> Dict[int, Decimal]:
+        """
+        Resolve source batch percentages using latest container-scoped mix event.
+
+        Falls back to global BatchComposition when no container-scoped event exists.
+        """
+        latest_mix_event = (
+            BatchMixEvent.objects.filter(
+                mixed_batch=mixed_batch,
+                container_id=container_id,
+                mixed_at__date__lte=as_of_date,
+            )
+            .prefetch_related("components")
+            .order_by("-mixed_at", "-id")
+            .first()
+        )
+        if latest_mix_event:
+            percentages: Dict[int, Decimal] = {}
+            for component in latest_mix_event.components.all():
+                percentages[component.source_batch_id] = (
+                    percentages.get(component.source_batch_id, Decimal("0"))
+                    + component.percentage
+                )
+            return percentages
+
+        return cls.get_mixed_batch_composition_percentages(mixed_batch)
 
     @staticmethod
     def _aggregate_feeding_event_data(
@@ -274,7 +313,9 @@ class FCRCalculationService:
         """
         # Get all feeding events for containers where this mixed batch is present
         container_assignments = batch.batch_assignments.filter(
-            is_active=True
+            assignment_date__lte=period_end
+        ).filter(
+            Q(departure_date__isnull=True) | Q(departure_date__gte=period_start)
         ).values_list('container_id', flat=True)
 
         feeding_events = FeedingEvent.objects.filter(
@@ -287,16 +328,16 @@ class FCRCalculationService:
 
         # For each feeding event, calculate this batch's share
         for event in feeding_events:
-            # Get the composition percentage for this batch in the container
-            composition = BatchComposition.objects.filter(
+            mix_percentages = cls._get_mix_percentages_for_container_at_date(
                 mixed_batch=batch,
-                source_batch=event.batch  # The original batch being fed
-            ).first()
-
-            if composition:
+                container_id=event.container_id,
+                as_of_date=event.feeding_date,
+            )
+            percentage = mix_percentages.get(event.batch_id)
+            if percentage is not None:
                 # Use pure helper function for prorated calculation
                 batch_share = cls._prorate_feed_by_composition(
-                    event.amount_kg, composition.percentage
+                    event.amount_kg, percentage
                 )
                 total_prorated_feed += batch_share
             elif event.batch == batch:
@@ -361,7 +402,9 @@ class FCRCalculationService:
         """Get feed cost for a mixed batch, prorated by composition."""
         # Get all feeding events for containers where this mixed batch is present
         container_assignments = batch.batch_assignments.filter(
-            is_active=True
+            assignment_date__lte=period_end
+        ).filter(
+            Q(departure_date__isnull=True) | Q(departure_date__gte=period_start)
         ).values_list('container_id', flat=True)
 
         feeding_events = FeedingEvent.objects.filter(
@@ -375,16 +418,16 @@ class FCRCalculationService:
 
         # For each feeding event, calculate this batch's share
         for event in feeding_events:
-            # Get the composition percentage for this batch in the container
-            composition = BatchComposition.objects.filter(
+            mix_percentages = cls._get_mix_percentages_for_container_at_date(
                 mixed_batch=batch,
-                source_batch=event.batch
-            ).first()
-
-            if composition:
+                container_id=event.container_id,
+                as_of_date=event.feeding_date,
+            )
+            percentage = mix_percentages.get(event.batch_id)
+            if percentage is not None:
                 # Use pure helper function for prorated calculation
                 batch_share = cls._prorate_feed_by_composition(
-                    event.feed_cost, composition.percentage
+                    event.feed_cost, percentage
                 )
                 total_prorated_cost += batch_share
             elif event.batch == batch:
@@ -548,9 +591,26 @@ class FCRCalculationService:
             # For non-mixed batches, return 100% for the batch itself
             return {batch.id: Decimal('100.0')}
 
-        compositions = BatchComposition.objects.filter(
-            mixed_batch=batch
-        )
+        if container_id is not None:
+            latest_mix_event = (
+                BatchMixEvent.objects.filter(
+                    mixed_batch=batch,
+                    container_id=container_id,
+                )
+                .prefetch_related("components")
+                .order_by("-mixed_at", "-id")
+                .first()
+            )
+            if latest_mix_event:
+                percentages: Dict[int, Decimal] = {}
+                for component in latest_mix_event.components.all():
+                    percentages[component.source_batch_id] = (
+                        percentages.get(component.source_batch_id, Decimal("0"))
+                        + component.percentage
+                    )
+                return percentages
+
+        compositions = BatchComposition.objects.filter(mixed_batch=batch)
 
         return {
             comp.source_batch.id: comp.percentage
@@ -880,16 +940,15 @@ class FCRCalculationService:
         total_prorated_feed = Decimal('0')
 
         for event in feed_events:
-            # Find composition for this batch in this container
-            composition = BatchComposition.objects.filter(
+            mix_percentages = cls._get_mix_percentages_for_container_at_date(
                 mixed_batch=container_assignment.batch,
-                source_batch=event.batch,
-                container=container_assignment.container
-            ).first()
-
-            if composition:
+                container_id=container_assignment.container_id,
+                as_of_date=event.feeding_date,
+            )
+            percentage = mix_percentages.get(event.batch_id)
+            if percentage is not None:
                 # Prorate feed by composition percentage
-                batch_share = event.amount_kg * (composition.percentage / 100)
+                batch_share = event.amount_kg * (percentage / 100)
                 total_prorated_feed += batch_share
             elif event.batch == container_assignment.batch:
                 # Direct feeding to this mixed batch
@@ -1047,7 +1106,7 @@ class FCRCalculationService:
             return None
         
         # Get current population from active assignments
-        current_population = batch.batchcontainerassignment_set.filter(
+        current_population = batch.batch_assignments.filter(
             is_active=True
         ).aggregate(
             total_pop=Sum('population_count')

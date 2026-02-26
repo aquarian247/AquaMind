@@ -12,6 +12,9 @@ from django.core.exceptions import ValidationError
 
 from apps.batch.models import (
     BatchTransferWorkflow,
+    BatchMixEvent,
+    BatchMixEventComponent,
+    BatchComposition,
     TransferAction,
 )
 from apps.batch.tests.models.test_utils import (
@@ -244,3 +247,76 @@ class TestBatchTransferWorkflow(TestCase):
         workflow.refresh_from_db()
         self.assertEqual(workflow.status, 'COMPLETED')
         self.assertIsNotNone(workflow.actual_completion_date)
+
+    def test_execute_with_allow_mixed_creates_container_scoped_mixed_batch(self):
+        """Mixing should create a new mixed batch only for the destination container."""
+        other_batch = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.parr_stage,
+            batch_number='TEST-OTHER-001',
+        )
+        other_assignment = create_test_batch_container_assignment(
+            batch=other_batch,
+            container=self.dest_container,
+            lifecycle_stage=self.parr_stage,
+            population_count=300,
+            avg_weight_g=Decimal('6.0'),
+        )
+
+        workflow = BatchTransferWorkflow.objects.create(
+            workflow_number='TRF-2024-007',
+            batch=self.batch,
+            workflow_type='LIFECYCLE_TRANSITION',
+            source_lifecycle_stage=self.fry_stage,
+            dest_lifecycle_stage=self.parr_stage,
+            planned_start_date=timezone.now().date(),
+            initiated_by=self.user,
+            status='PLANNED',
+        )
+        action = TransferAction.objects.create(
+            workflow=workflow,
+            action_number=1,
+            source_assignment=self.source_assignment,
+            dest_assignment=self.dest_assignment,
+            source_population_before=1000,
+            transferred_count=500,
+            transferred_biomass_kg=Decimal('2.5'),
+            allow_mixed=True,
+        )
+
+        action.execute(executed_by=self.user)
+        action.refresh_from_db()
+
+        self.assertEqual(action.status, 'COMPLETED')
+        self.assertIsNotNone(action.dest_assignment)
+        self.assertEqual(action.dest_assignment.batch.batch_type, 'MIXED')
+        self.assertEqual(
+            action.dest_assignment.population_count,
+            800,  # 500 transferred in + 300 existing other batch
+        )
+
+        self.source_assignment.refresh_from_db()
+        self.assertEqual(self.source_assignment.population_count, 500)
+
+        self.dest_assignment.refresh_from_db()
+        other_assignment.refresh_from_db()
+        self.assertFalse(self.dest_assignment.is_active)
+        self.assertFalse(other_assignment.is_active)
+
+        active_dest_assignments = list(
+            self.dest_container.container_assignments.filter(is_active=True)
+        )
+        self.assertEqual(len(active_dest_assignments), 1)
+        self.assertEqual(active_dest_assignments[0].id, action.dest_assignment_id)
+
+        mix_event = BatchMixEvent.objects.get(workflow_action=action)
+        self.assertEqual(mix_event.container_id, self.dest_container.id)
+        self.assertEqual(mix_event.mixed_batch_id, action.dest_assignment.batch_id)
+
+        components = BatchMixEventComponent.objects.filter(mix_event=mix_event)
+        self.assertEqual(components.count(), 2)
+        self.assertTrue(components.filter(source_batch=self.batch, is_transferred_in=True).exists())
+        self.assertTrue(components.filter(source_batch=other_batch, is_transferred_in=False).exists())
+
+        compositions = BatchComposition.objects.filter(mixed_batch=action.dest_assignment.batch)
+        self.assertEqual(compositions.count(), 2)

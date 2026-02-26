@@ -15,7 +15,15 @@ from apps.inventory.models import (
     Feed, FeedingEvent, BatchFeedingSummary
 )
 from apps.infrastructure.models import Container, ContainerType, Hall, Geography, FreshwaterStation
-from apps.batch.models import Batch, Species, LifeCycleStage, BatchComposition, BatchContainerAssignment
+from apps.batch.models import (
+    Batch,
+    Species,
+    LifeCycleStage,
+    BatchComposition,
+    BatchContainerAssignment,
+    BatchMixEvent,
+    BatchMixEventComponent,
+)
 from apps.inventory.services import FCRCalculationService
 from apps.inventory.services.fcr_service import FCRCalculationError
 
@@ -203,6 +211,67 @@ class FCRCalculationServiceTest(TestCase):
         # Should be proportional: (100 * 0.6) + (80 * 0.4) = 60 + 32 = 92
         expected_feed = Decimal("100.0") * Decimal("0.6") + Decimal("80.0") * Decimal("0.4")
         self.assertEqual(total_feed, expected_feed)
+
+    def test_get_batch_feed_consumption_prefers_container_mix_event_percentages(self):
+        """Container-scoped mix event percentages should override global composition."""
+        BatchMixEvent.objects.all().delete()
+        mix_event = BatchMixEvent.objects.create(
+            mixed_batch=self.mixed_batch,
+            container=self.container,
+            mixed_at=timezone.now() - timedelta(days=6),
+        )
+        mixed_assignment = self.mixed_batch.batch_assignments.filter(
+            container=self.container,
+            is_active=True
+        ).first()
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_event,
+            source_assignment=mixed_assignment,
+            source_batch=self.batch1,
+            population_count=800,
+            biomass_kg=Decimal("40.0"),
+            percentage=Decimal("80.0"),
+            is_transferred_in=True,
+        )
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_event,
+            source_assignment=mixed_assignment,
+            source_batch=self.batch2,
+            population_count=200,
+            biomass_kg=Decimal("10.0"),
+            percentage=Decimal("20.0"),
+            is_transferred_in=False,
+        )
+
+        FeedingEvent.objects.create(
+            batch=self.batch1,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=date.today() - timedelta(days=5),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("100.0"),
+            batch_biomass_kg=Decimal("600.0"),
+            feed_cost=Decimal("250.0")
+        )
+        FeedingEvent.objects.create(
+            batch=self.batch2,
+            container=self.container,
+            feed=self.feed,
+            feeding_date=date.today() - timedelta(days=5),
+            feeding_time=timezone.now().time(),
+            amount_kg=Decimal("50.0"),
+            batch_biomass_kg=Decimal("400.0"),
+            feed_cost=Decimal("125.0")
+        )
+
+        period_start = date.today() - timedelta(days=7)
+        period_end = date.today() - timedelta(days=1)
+        total_feed = FCRCalculationService.get_batch_feed_consumption(
+            self.mixed_batch, period_start, period_end
+        )
+
+        # Event-date mix percentages: (100 * 0.8) + (50 * 0.2) = 90
+        self.assertEqual(total_feed, Decimal("90.0"))
     
     def test_get_batch_feed_cost_single_batch(self):
         """Test getting feed cost for a single batch."""

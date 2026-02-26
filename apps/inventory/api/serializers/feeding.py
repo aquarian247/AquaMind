@@ -82,17 +82,49 @@ class FeedingEventSerializer(
         """
         data = super().validate(data)
 
-        # Auto-populate container from batch_assignment if not provided
-        if ('batch_assignment' in data and data['batch_assignment'] and
-                'container' not in data):
-            data['container'] = data['batch_assignment'].container
+        batch_assignment = data.get('batch_assignment')
+        batch = data.get('batch')
+        container = data.get('container')
+
+        # Auto-populate batch/container from assignment when provided
+        if batch_assignment:
+            data['container'] = batch_assignment.container
+            if not batch:
+                data['batch'] = batch_assignment.batch
+
+        # If assignment is omitted, try resolving it from batch+container
+        if not batch_assignment and batch and container:
+            matching_assignments = batch.batch_assignments.filter(
+                container=container,
+                is_active=True
+            ).order_by('-assignment_date')
+            resolved = matching_assignments.first()
+            if resolved:
+                data['batch_assignment'] = resolved
+                batch_assignment = resolved
+
+        # Prevent ambiguous feeding attribution in mixed containers
+        if not batch_assignment and container:
+            mixed_active_exists = container.container_assignments.filter(
+                is_active=True,
+                batch__batch_type='MIXED'
+            ).exists()
+            if mixed_active_exists:
+                raise serializers.ValidationError(
+                    {
+                        'batch_assignment': (
+                            "batch_assignment is required when feeding a container "
+                            "with active mixed populations."
+                        )
+                    }
+                )
 
         # Auto-populate batch biomass from latest assignment if not provided
         if 'batch_biomass_kg' not in data and 'batch' in data:
             batch = data['batch']
             # Get the most recent active assignment for this batch
-            latest_assignment = batch.container_assignments.filter(
-                departure_date__isnull=True
+            latest_assignment = batch.batch_assignments.filter(
+                is_active=True
             ).order_by('-assignment_date').first()
             
             if latest_assignment:
