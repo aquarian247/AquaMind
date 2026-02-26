@@ -24,7 +24,7 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 
 #### Tracked Models by App
 
-**Batch App (10 models)**
+**Batch App (12 models)**
 - **`batch_batch`**: Complete change history for batch lifecycle management
 - **`batch_batchcontainerassignment`**: Container assignment changes and biomass updates
 - **`batch_growthsample`**: Growth sampling and weight measurements
@@ -35,6 +35,8 @@ AquaMind implements comprehensive audit trails using django-simple-history to tr
 - **`batch_species`**: Species definition changes
 - **`batch_lifecyclestage`**: Lifecycle stage modifications
 - **`batch_batchcomposition`**: Batch composition tracking
+- **`batch_batchmixevent`**: Container-scoped physical mixing events
+- **`batch_batchmixeventcomponent`**: Source-assignment contributions per mix event
 
 **Broodstock App (10 models with HistoricalRecords(), 10 historical tables currently active)**
 - **`broodstock_batchparentage`**: Egg-to-batch lineage tracking ✓
@@ -331,7 +333,7 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `species_id`: bigint (FK to `batch_species`.`id`, on_delete=PROTECT, NOT NULL)
   - `lifecycle_stage_id`: bigint (FK to `batch_lifecyclestage`.`id`, on_delete=PROTECT, NOT NULL)
   - `status`: varchar (NOT NULL) # e.g., "ACTIVE", "INACTIVE", "PLANNED", "CLOSED"
-  - `batch_type`: varchar (NOT NULL) # e.g., "STANDARD", "EXPERIMENTAL"
+  - `batch_type`: varchar (NOT NULL) # e.g., "STANDARD", "EXPERIMENTAL", "MIXED"
   - `start_date`: date (NOT NULL)
   - `expected_end_date`: date (nullable)
   - `actual_end_date`: date (nullable)
@@ -363,6 +365,27 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `population_count`: integer (NOT NULL)
   - `biomass_kg`: numeric (NOT NULL)
   - `created_at`: timestamptz (NOT NULL)
+- **`batch_batchmixevent`** # Container-scoped physical mixing event
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `mixed_batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=CASCADE, related_name='mix_events', NOT NULL) # Mixed batch resulting from this event
+  - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='mix_events', NOT NULL) # Container where physical mixing occurred
+  - `workflow_action_id`: bigint (FK to `batch_transferaction`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='mix_events')
+  - `mixed_at`: timestamptz (NOT NULL, default=timezone.now)
+  - `notes`: text (blank=True)
+  - `created_at`: timestamptz (NOT NULL)
+  - `updated_at`: timestamptz (NOT NULL)
+  - Meta: `ordering = ['-mixed_at', '-id']`, indexes = [('mixed_batch_id', 'mixed_at'), ('container_id', 'mixed_at')]
+- **`batch_batchmixeventcomponent`** # Source contribution details for a mix event
+  - `id`: bigint (PK, auto-increment, NOT NULL)
+  - `mix_event_id`: bigint (FK to `batch_batchmixevent`.`id`, on_delete=CASCADE, related_name='components', NOT NULL)
+  - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, related_name='mix_event_components', NOT NULL)
+  - `source_batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, related_name='mix_event_contributions', NOT NULL)
+  - `population_count`: integer (NOT NULL)
+  - `biomass_kg`: decimal(10, 2) (NOT NULL)
+  - `percentage`: decimal(5, 2) (NOT NULL) # Share of total mixed population at event time
+  - `is_transferred_in`: boolean (NOT NULL, default=False) # Whether this component came from action's incoming transfer leg
+  - `created_at`: timestamptz (NOT NULL)
+  - Meta: `ordering = ['-population_count', '-id']`, indexes = [('mix_event_id', 'source_batch_id'), ('source_assignment_id')]
 - **`batch_batchtransferworkflow`** # Orchestrates multi-day, multi-container transfer operations (replaces legacy BatchTransfer)
   - `id`: bigint (PK, auto-increment, NOT NULL)
   - `workflow_number`: varchar(50) (Unique, NOT NULL) # e.g., "TRF-2024-001"
@@ -406,7 +429,7 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `transferred_count`: integer (NOT NULL) # Number of fish to transfer
   - `transferred_biomass_kg`: decimal(10, 2) (NOT NULL) # Biomass being transferred
   - `mortality_during_transfer`: integer (NOT NULL, default: 0) # Mortalities during execution
-  - `allow_mixed`: boolean (NOT NULL, default: False)
+  - `allow_mixed`: boolean (NOT NULL, default: False) # If True, execution may create a destination container-scoped mixed batch/event when destination already has another active batch
   - `planned_date`: date (nullable)
   - `transfer_method`: varchar(20) (nullable) # NET, PUMP, GRAVITY, MANUAL
   - `water_temp_c`: decimal(5, 2) (nullable) # Water temperature during transfer
@@ -490,6 +513,12 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - **`batch_historicaltransferaction`**
   - All fields from `batch_transferaction` plus history tracking fields
   - Same history fields as above
+- **`batch_historicalbatchmixevent`**
+  - All fields from `batch_batchmixevent` plus history tracking fields
+  - Same history fields as above
+- **`batch_historicalbatchmixeventcomponent`**
+  - All fields from `batch_batchmixeventcomponent` plus history tracking fields
+  - Same history fields as above
 - **`batch_historicalbatchcomposition`** (Note: Table creation pending - model has `history = HistoricalRecords()` but migration may not have run)
 
 #### Relationships (Inferred `on_delete` where script failed)
@@ -509,6 +538,12 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
 - `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, source_assignment FK)
 - `batch_batchcontainerassignment` ← `batch_transferaction` (PROTECT, dest_assignment FK, nullable)
 - `auth_user` ← `batch_transferaction` (PROTECT, executed_by FK, nullable)
+- `batch_batch` ← `batch_batchmixevent` (CASCADE, `mixed_batch_id`)
+- `infrastructure_container` ← `batch_batchmixevent` (PROTECT, `container_id`)
+- `batch_transferaction` ← `batch_batchmixevent` (SET_NULL, `workflow_action_id`)
+- `batch_batchmixevent` ← `batch_batchmixeventcomponent` (CASCADE, `mix_event_id`)
+- `batch_batchcontainerassignment` ← `batch_batchmixeventcomponent` (PROTECT, `source_assignment_id`)
+- `batch_batch` ← `batch_batchmixeventcomponent` (PROTECT, `source_batch_id`)
 - `batch_batch` ← `batch_mortalityevent` (PROTECT)
 - `batch_batchcontainerassignment` ← `batch_growthsample` (CASCADE)
 - `batch_growthsample` ← `batch_individualgrowthobservation` (CASCADE)
@@ -549,7 +584,7 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
   - `id`: bigint (PK, auto-increment)
   - `batch_id`: bigint (FK to `batch_batch`.`id`, on_delete=PROTECT, related_name='feeding_events')
   - `container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, related_name='feeding_events')
-  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known.")
+  - `batch_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=SET_NULL, nullable, blank=True, related_name='explicit_feeding_events', help_text="Explicit link to the assignment active at feeding time, if known. Required for unambiguous attribution when feeding containers with active mixed populations.")
   - `feed_id`: bigint (FK to `inventory_feed`.`id`, on_delete=PROTECT, related_name='applied_in_feedings')
   - `recorded_by_id`: integer (FK to `users_customuser`.`id`, on_delete=PROTECT, related_name='feeding_entries', nullable, blank=True, help_text="User who recorded or performed the feeding.")
   - `feeding_date`: date
@@ -613,6 +648,7 @@ All batch models with `history = HistoricalRecords()` create corresponding histo
   - `updated_at`: timestamptz (auto_now=True)
   - Meta: `ordering = ['batch', '-period_end']`, `verbose_name_plural = "Batch feeding summaries"`, `unique_together = ['batch', 'period_start', 'period_end']`
   - **Note**: Updated to support container-first FCR calculations with weighted averages and confidence levels.
+  - **Mixed Attribution Rule**: For mixed batches, feed/cost proration uses container-scoped mix percentages from latest `batch_batchmixevent` at feeding date for that container; falls back to `batch_batchcomposition` when no qualifying mix event exists.
 
 #### Relationships
 - `inventory_feed` ← `inventory_feedpurchase` (PROTECT, related_name='purchases')

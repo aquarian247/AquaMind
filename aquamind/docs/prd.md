@@ -70,6 +70,9 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - The system shall support assigning portions of batches to specific containers at specific lifecycle stages using the `batch_batchcontainerassignment` model. This model tracks `population_count`, `avg_weight_g`, and the `lifecycle_stage_id` for that specific assignment.
   - The system shall calculate derived metrics like `biomass_kg` (within `BatchContainerAssignment.save()` or serializers: `population_count * avg_weight_g / 1000`).
   - The system shall orchestrate multi-day batch transfers using `batch_batchtransferworkflow` and `batch_transferaction`, providing state management, progress tracking, and finance integration (see section 3.1.2.1).
+  - Mixed-batch semantics shall be **container-scoped**: two batches are considered physically mixed only where they are actually co-located and mixed in a specific destination container, not globally across all assignments.
+  - The system shall persist container-scoped mixing lineage using `batch_batchmixevent` and `batch_batchmixeventcomponent`, capturing where/when mixing happened and each source assignment's contributed population/biomass/percentage.
+  - When fish are mixed in a container, downstream assignments of that resulting mixed population shall continue as mixed lineage (fish are treated as indistinguishable after the mix event).
   - The system shall track growth via `batch_growthsample` records (linked to `batch_batchcontainerassignment`). Each growth sample can contain multiple individual fish observations via the `batch_individualgrowthobservation` model. Mortality is tracked via `batch_mortalityevent`.
   - The system shall support recording individual fish measurements (weight and length) within a growth sample using the `batch_individualgrowthobservation` model. Each observation shall be uniquely identified by `fish_identifier` within its parent growth sample.
   - The system shall automatically calculate aggregate metrics (`sample_size`, `avg_weight_g`, `avg_length_cm`, `std_deviation_weight`, `std_deviation_length`, `min_weight_g`, `max_weight_g`, and `condition_factor`) from individual fish observations when provided, using the `GrowthSample.calculate_aggregates()` method.
@@ -131,6 +134,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
 - **Behavior**:
   - Planning a workflow (`plan()` action) shall require at least one action for standard workflows, while dynamic workflows can be planned with zero pre-defined actions.
   - Executing an action shall update source/destination assignment populations, record execution details in `batch_transferaction`, trigger assignment-level historian snapshots, and automatically progress workflow status when all actions complete.
+  - If `allow_mixed=True` and destination contains other active batches at execution time, the action shall create a new mixed destination assignment/batch for that container mix event and record `batch_batchmixevent` + `batch_batchmixeventcomponent` lineage.
   - Intercompany detection shall run automatically during planning and persist subsidiary context for downstream finance processing.
   - Workflow cancellation shall be allowed until workflow reaches COMPLETED or CANCELLED terminal status.
 - **Justification**: Addresses critical operational gaps where instantaneous transfer models cannot represent real-world operations spanning days/weeks with complex multi-container coordination. The workflow system enables finance team to track inter-subsidiary asset movements and ensures ship crew can execute transfers with proper mobile workflows during long voyages. Supports regulatory compliance through comprehensive workflow audit trails via django-simple-history.
@@ -188,6 +192,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Feed Conversion Ratio (FCR) Calculation and Analysis**:
     - The system shall calculate Feed Conversion Ratios at the batch level via enhanced `inventory_batchfeedingsummary` records using the standardized `fcr` field with decimal(5,3) precision for accurate performance tracking.
     - FCR calculations shall support both standard batches (single batch in container) and mixed batches (multiple batches sharing containers), providing accurate performance metrics regardless of container configuration.
+    - For mixed batches, feed and cost attribution shall use container-scoped mix percentages at event time (latest `batch_batchmixevent` for the mixed batch + container as of feeding date), with `batch_batchcomposition` as fallback when no mix event exists.
     - The system shall generate feeding summaries automatically or on-demand, aggregating feeding events, calculating total consumption, biomass changes, and FCR for performance analysis.
     - FCR trends and comparisons shall be available across batches, time periods, and feed types, supporting feeding strategy optimization and performance benchmarking.
     - **Data Accuracy**: The system maintains data integrity by using a single, precise FCR field, eliminating duplicate field issues and ensuring consistent calculations across all feeding summaries.
@@ -215,6 +220,7 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - Feed cost calculations shall occur automatically during feeding event creation, eliminating manual cost entry and ensuring accuracy.
   - Low-stock alerts shall trigger based on configurable thresholds, considering both absolute quantities and consumption rates for proactive inventory management.
   - Feeding events shall be validated in real-time for batch compatibility, feed availability, and quantity constraints.
+  - Feeding events for containers with active mixed populations shall require unambiguous assignment attribution (explicit `batch_assignment` or deterministic resolution from `batch` + `container`).
   - FCR calculations shall update automatically when feeding events or batch weight measurements are recorded, providing current performance metrics.
   - Stock levels shall be updated immediately upon feed additions or consumption, maintaining real-time accuracy across all containers.
 
