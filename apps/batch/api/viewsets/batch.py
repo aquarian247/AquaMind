@@ -28,6 +28,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.batch.models import Batch, MortalityEvent
 from apps.batch.models.assignment import BatchContainerAssignment
 from apps.batch.models.workflow_action import TransferAction
+from apps.batch.services.mixed_lineage import MixedLineageService
 from apps.batch.api.serializers import BatchSerializer
 from apps.batch.api.filters.batch import BatchFilter
 from apps.environmental.models import EnvironmentalReading
@@ -387,6 +388,27 @@ class BatchViewSet(RBACFilterMixin, HistoryReasonMixin, BatchAnalyticsMixin, Geo
             'health_factors': health_factors,
             'rows': list(rows_by_date.values()),
         })
+
+    @action(detail=True, methods=['get'], url_path='mixed-lineage')
+    def mixed_lineage(self, request, pk=None):
+        """
+        Return recursive mixed lineage for this batch as graph + compounded root shares.
+
+        Query params:
+        - as_of_date (YYYY-MM-DD, optional; default: today)
+        """
+        batch = self.get_object()
+
+        as_of_date = self._parse_insights_date_param(
+            request.query_params.get('as_of_date'),
+            'as_of_date',
+        ) or timezone.now().date()
+
+        lineage_payload = MixedLineageService.build_lineage(
+            batch=batch,
+            as_of_date=as_of_date,
+        )
+        return Response(lineage_payload)
 
     def _parse_insights_date_param(self, raw_value, field_name):
         """Parse YYYY-MM-DD date query params for insights endpoint."""

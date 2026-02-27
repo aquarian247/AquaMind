@@ -7,10 +7,16 @@ from decimal import Decimal
 from datetime import date, timedelta
 import datetime # Import the full module for aliasing
 from unittest.mock import patch
+from django.utils import timezone
 
 OriginalDate = datetime.date  # Alias for the original datetime.date
 
-from apps.batch.models import Batch
+from apps.batch.models import (
+    Batch,
+    BatchComposition,
+    BatchMixEvent,
+    BatchMixEventComponent,
+)
 from apps.batch.tests.api.test_utils import (
     create_test_user,
     create_test_species,
@@ -212,14 +218,14 @@ class BatchViewSetTest(BaseAPITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data['results']), 1)
             self.assertEqual(response.data['results'][0]['batch_number'], 'BATCH001')
-            
+
             # Filter by status
             url = f"{self.get_api_url('batch', 'batches')}?status=ACTIVE"
             response = self.client.get(url)
-            
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data['results']), 2)  # Both batches are active
-            
+
             # Filter by date range
             # The batches were created with start_date = real_today - 30 days
             # So we need to filter for dates that include that range
@@ -239,11 +245,246 @@ class BatchViewSetTest(BaseAPITestCase):
             # Both test batches should be included as they were created ~30 days ago
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data['results']), 2)
-            
+
             # Filter by batch number
             url = f"{self.get_api_url('batch', 'batches')}?batch_number=BATCH001"
             response = self.client.get(url)
-            
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(len(response.data['results']), 1)
             self.assertEqual(response.data['results'][0]['batch_number'], 'BATCH001')
+
+    def test_mixed_lineage_standard_batch_returns_self_as_root(self):
+        """Standard batches should resolve to themselves with 100% root share."""
+        url = self.get_action_url(
+            'batch',
+            'batches',
+            pk=self.batch.id,
+            action='mixed-lineage',
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['batch']['id'], self.batch.id)
+        self.assertEqual(response.data['root_sources'], [
+            {
+                'batch_id': self.batch.id,
+                'batch_number': self.batch.batch_number,
+                'percentage': '100.00',
+            }
+        ])
+        self.assertEqual(response.data['max_depth'], 0)
+
+    def test_mixed_lineage_returns_compounded_root_shares(self):
+        """
+        Mixed lineage should recursively flatten compounded percentages.
+
+        Example:
+        - M1 = A(60%) + B(40%)
+        - M2 = M1(50%) + C(50%)
+        => roots for M2: A=30%, B=20%, C=50%
+        """
+        batch_a = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH-A",
+        )
+        batch_b = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH-B",
+        )
+        batch_c = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH-C",
+        )
+
+        mixed_1 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="MIX-1",
+        )
+        mixed_1.batch_type = 'MIXED'
+        mixed_1.save(update_fields=['batch_type'])
+
+        mixed_2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="MIX-2",
+        )
+        mixed_2.batch_type = 'MIXED'
+        mixed_2.save(update_fields=['batch_type'])
+
+        container_2 = create_test_container(name="Tank 2")
+        container_3 = create_test_container(name="Tank 3")
+        container_4 = create_test_container(name="Tank 4")
+        container_5 = create_test_container(name="Tank 5")
+
+        assignment_a = create_test_batch_container_assignment(
+            batch=batch_a,
+            container=container_2,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=600,
+            avg_weight_g=Decimal("10.0"),
+        )
+        assignment_b = create_test_batch_container_assignment(
+            batch=batch_b,
+            container=container_3,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=400,
+            avg_weight_g=Decimal("10.0"),
+        )
+        assignment_m1 = create_test_batch_container_assignment(
+            batch=mixed_1,
+            container=container_4,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=500,
+            avg_weight_g=Decimal("10.0"),
+        )
+        assignment_c = create_test_batch_container_assignment(
+            batch=batch_c,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=500,
+            avg_weight_g=Decimal("10.0"),
+        )
+        create_test_batch_container_assignment(
+            batch=mixed_2,
+            container=container_5,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1000,
+            avg_weight_g=Decimal("10.0"),
+        )
+
+        mix_1 = BatchMixEvent.objects.create(
+            mixed_batch=mixed_1,
+            container=container_4,
+            mixed_at=timezone.now() - timedelta(days=2),
+        )
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_1,
+            source_assignment=assignment_a,
+            source_batch=batch_a,
+            population_count=600,
+            biomass_kg=Decimal("6.0"),
+            percentage=Decimal("60.0"),
+            is_transferred_in=True,
+        )
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_1,
+            source_assignment=assignment_b,
+            source_batch=batch_b,
+            population_count=400,
+            biomass_kg=Decimal("4.0"),
+            percentage=Decimal("40.0"),
+            is_transferred_in=False,
+        )
+
+        mix_2 = BatchMixEvent.objects.create(
+            mixed_batch=mixed_2,
+            container=container_5,
+            mixed_at=timezone.now() - timedelta(days=1),
+        )
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_2,
+            source_assignment=assignment_m1,
+            source_batch=mixed_1,
+            population_count=500,
+            biomass_kg=Decimal("5.0"),
+            percentage=Decimal("50.0"),
+            is_transferred_in=True,
+        )
+        BatchMixEventComponent.objects.create(
+            mix_event=mix_2,
+            source_assignment=assignment_c,
+            source_batch=batch_c,
+            population_count=500,
+            biomass_kg=Decimal("5.0"),
+            percentage=Decimal("50.0"),
+            is_transferred_in=False,
+        )
+
+        url = self.get_action_url(
+            'batch',
+            'batches',
+            pk=mixed_2.id,
+            action='mixed-lineage',
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        root_shares = {
+            item['batch_number']: Decimal(item['percentage'])
+            for item in response.data['root_sources']
+        }
+        self.assertEqual(root_shares["BATCH-A"], Decimal("30.00"))
+        self.assertEqual(root_shares["BATCH-B"], Decimal("20.00"))
+        self.assertEqual(root_shares["BATCH-C"], Decimal("50.00"))
+
+        self.assertEqual(response.data['max_depth'], 2)
+        self.assertEqual(len(response.data['graph']['mix_nodes']), 2)
+        self.assertIn(
+            "Resolved from latest BatchMixEvent.",
+            response.data['boundaries']['resolution_notes'],
+        )
+
+    def test_mixed_lineage_falls_back_to_batch_composition(self):
+        """When no mix event exists, lineage should use BatchComposition fallback."""
+        source_1 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="SRC-1",
+        )
+        source_2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="SRC-2",
+        )
+        mixed = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="MIX-FALLBACK",
+        )
+        mixed.batch_type = 'MIXED'
+        mixed.save(update_fields=['batch_type'])
+        create_test_batch_container_assignment(
+            batch=mixed,
+            container=self.container,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=1000,
+            avg_weight_g=Decimal("10.0"),
+        )
+
+        BatchComposition.objects.create(
+            mixed_batch=mixed,
+            source_batch=source_1,
+            percentage=Decimal("70.0"),
+            population_count=700,
+            biomass_kg=Decimal("7.0"),
+        )
+        BatchComposition.objects.create(
+            mixed_batch=mixed,
+            source_batch=source_2,
+            percentage=Decimal("30.0"),
+            population_count=300,
+            biomass_kg=Decimal("3.0"),
+        )
+
+        url = self.get_action_url(
+            'batch',
+            'batches',
+            pk=mixed.id,
+            action='mixed-lineage',
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['root_sources'], [
+            {'batch_id': source_1.id, 'batch_number': 'SRC-1', 'percentage': '70.00'},
+            {'batch_id': source_2.id, 'batch_number': 'SRC-2', 'percentage': '30.00'},
+        ])
+        self.assertIn(
+            "Resolved from BatchComposition fallback (no qualifying BatchMixEvent).",
+            response.data['boundaries']['resolution_notes'],
+        )
