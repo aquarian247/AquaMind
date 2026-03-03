@@ -1,14 +1,17 @@
 {
   "batch": {
-    "batch_number": "Summar 2024",
-    "id": 356
+    "batch_number": "FT-81AC7D6F-13",
+    "id": 1308
   },
   "component_key": "81AC7D6F-3C81-4F36-9875-881C828F62E3",
   "fishgroup_classification": {
     "bridge_mixed_fishgroup_count": 0,
     "entry_window_bridge_fishgroups": [],
     "example_real_stage_entry_fishgroups": [
-      "241.0005"
+      "241.0005",
+      "241.0010",
+      "241.0017",
+      "241.0018"
     ],
     "example_temporary_bridge_fishgroups": [
       "241.0003",
@@ -22,7 +25,7 @@
       "241.0046",
       "241.0049"
     ],
-    "real_stage_entry_fishgroup_count": 1,
+    "real_stage_entry_fishgroup_count": 4,
     "temporary_bridge_fishgroup_count": 13,
     "temporary_bridge_population_count": 13
   },
@@ -57,11 +60,15 @@
     }
   },
   "known_loss_count": 1250914,
+  "metric_comparability": {
+    "mortality_biomass_gate_criterion": false,
+    "mortality_biomass_source_sparse": false
+  },
   "population_count": 106,
   "regression_gates": {
     "checks": [
       {
-        "details": "Positive stage transition deltas without mixed-batch composition rows: 0",
+        "details": "Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0)",
         "name": "no_positive_transition_delta_without_mixed_batch",
         "passed": true
       },
@@ -71,36 +78,110 @@
         "passed": true
       },
       {
-        "details": "Assignments with population_count <= 0 and not classified as temporary bridge: 61 (threshold: 2)",
+        "details": "Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2)",
         "name": "non_bridge_zero_assignments_within_threshold",
-        "passed": false
+        "passed": true
       }
     ],
     "max_non_bridge_zero_assignments": 2,
-    "non_bridge_zero_assignments": 61,
-    "passed": false,
+    "non_bridge_zero_assignments": 0,
+    "passed": true,
     "transition_alert_count": 0,
+    "transition_alert_excluded_incomplete_linkage_count": 0,
     "zero_count_transfer_actions": 0
   },
   "stage_sanity": {
+    "active_container_occupancy_evidence": {},
+    "external_destination_evidence": {
+      "descendant_summary": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "by_site_group": {},
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 0
+      },
+      "dest_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "direct_external_population_count": 0,
+      "direct_population_summary": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "by_site_group": {},
+        "marine_population_count": 0,
+        "marine_population_examples": [],
+        "population_count": 0
+      },
+      "marine_linkage_evidence": false,
+      "source_chain_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      },
+      "source_to_dest_external": {
+        "by_prod_stage": {},
+        "by_site": {},
+        "edge_count": 0
+      }
+    },
+    "lineage_fallback_max_depth": 14,
     "mixed_rows": 0,
+    "outflow_by_stage": {},
     "stage_entry_window_days": 2,
+    "stage_rows": [
+      {
+        "active_assignment_count": 0,
+        "active_population_total": 0,
+        "assignment_count": 106,
+        "entry_bridge_excluded_count": 0,
+        "entry_container_count": 4,
+        "entry_date": "2024-08-06",
+        "entry_population_ids": [
+          "2619BD88-A11D-4313-A4BA-A65B8560E494",
+          "541F538B-5D13-4ECA-80B6-63EFC2FBCF46",
+          "855DB81D-2A68-406F-AC74-5155FDF1716E",
+          "C45FFBC2-8279-49DF-A766-D3CB27EDEAD7"
+        ],
+        "entry_real_fishgroup_count": 4,
+        "entry_window_end": "2024-08-08",
+        "full_to_entry_ratio": 8.61,
+        "full_to_peak_ratio": 2.12,
+        "nonzero_assignment_count": 57,
+        "order": 6,
+        "peak_concurrent_date": "2025-01-10",
+        "peak_concurrent_population": 1435846,
+        "population_entry": 354287,
+        "population_total": 3049991,
+        "stage": "Adult"
+      }
+    ],
     "transition_basis_counts": {},
     "transition_bridge_aware_count": 0,
     "transition_count": 0,
     "transition_entry_window_count": 0,
     "transition_entry_window_reason_counts": {},
+    "transition_lineage_graph_count": 0,
     "transitions": [],
-    "zero_assignment_bridge_count": 13,
-    "zero_assignment_non_bridge_count": 61,
-    "zero_assignment_total_count": 74
+    "zero_assignment_bridge_count": 12,
+    "zero_assignment_depleted_known_loss_count": 0,
+    "zero_assignment_no_count_evidence_count": 0,
+    "zero_assignment_non_bridge_count": 0,
+    "zero_assignment_orphan_short_count": 0,
+    "zero_assignment_superseded_count": 37,
+    "zero_assignment_total_count": 49
   },
   "transfer_actions": {
-    "total_count": 46,
+    "total_count": 0,
     "zero_count": 0
   },
   "window": {
     "end": "2025-10-15T00:42:20",
+    "end_cap": "2026-01-22T23:59:59.999999",
+    "end_uncapped": "2025-10-15T00:42:20",
+    "end_was_capped": false,
     "start": "2024-08-06T16:31:08"
   }
 }

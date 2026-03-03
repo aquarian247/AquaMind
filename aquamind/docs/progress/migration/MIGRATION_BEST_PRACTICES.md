@@ -21,14 +21,26 @@ This document defines **non‑negotiable migration standards** to preserve data 
   - `pilot_migrate_component.py --expected-site "<site name>"`
 - Do not bypass station preflight errors unless intentionally testing mismatch behavior.
 
+### Scope/Chunk Replay Guardrail (2026-03-02)
+- For transfer-rich cohorts, scope/chunk runs must include:
+  - `--expand-subtransfer-descendants`
+  - `--transfer-edge-scope internal-only`
+- Treat those flags as non-optional when validating lifecycle-stage coverage. Seed-only stitched replay can silently collapse downstream stages.
+- Keep replay logs per chunk (`replay_scope_chunk*_*.txt`) so failures are traceable to a specific batch key and run window.
+
 ## Validation Standards
 - Run `scripts/migration/tools/migration_counts_report.py` after each run and confirm expected non‑zero core tables.
 - Run `scripts/migration/tools/migration_semantic_validation_report.py` for batch‑level reconciliation (counts + biomass).
   - Use `--stage-entry-window-days 2` for transition sanity checks.
+- Run `scripts/migration/tools/migration_pilot_regression_check.py` after scope-level reruns and require cohort result `PASS`.
 - Validate GUI in the migration preview stack before expanding scope.
 - Reconcile source vs target counts for any table with discrepancies.
   - Expect **mortality biomass** mismatch: FishTalk extracts provide `0` in many cases; AquaMind computes per‑event biomass from same‑day status snapshots.
 - Treat stage population increases as alert conditions unless mixed-batch composition exists.
+- For lifecycle progression charts, document basis semantics before interpreting totals:
+  - `stage_entry` (default) = first positive assignment per `(container, stage)`; good for entry footprint, not stock maxima.
+  - `full_history` = all assignment rows; useful for throughput diagnostics, not de-duplicated fish counts.
+  - `active_snapshot` = current active state only.
 
 ## CSV vs Raw Database (Early Development)
 - **CSV mode is recommended** for speed, repeatability, and controlled snapshots.

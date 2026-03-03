@@ -386,6 +386,220 @@ class DataSource:
                 ],
             )
 
+    def get_population_site_map(self, population_ids: set[str]) -> dict[str, str]:
+        """Resolve population -> grouped-organisation site when available."""
+        if not population_ids:
+            return {}
+
+        if self.use_csv:
+            pop_rows = self.loader.get_populations_by_ids(population_ids)
+            container_ids = {
+                (row.get("ContainerID") or "").strip() for row in pop_rows if row.get("ContainerID")
+            }
+            if not container_ids:
+                return {}
+            try:
+                grouped_rows = self.loader.get_grouped_organisation_by_container_ids(container_ids)
+            except FileNotFoundError:
+                return {}
+            site_by_container = {
+                (row.get("ContainerID") or "").strip(): (row.get("Site") or "").strip()
+                for row in grouped_rows
+            }
+            resolved: dict[str, str] = {}
+            for row in pop_rows:
+                pop_id = (row.get("PopulationID") or "").strip()
+                container_id = (row.get("ContainerID") or "").strip()
+                if not pop_id or not container_id:
+                    continue
+                site = site_by_container.get(container_id)
+                if site:
+                    resolved[pop_id] = site
+            return resolved
+
+        resolved: dict[str, str] = {}
+        for chunk in self._chunk_population_ids(population_ids):
+            if not chunk:
+                continue
+            in_clause = ",".join(f"'{pid}'" for pid in chunk)
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT "
+                    "CONVERT(varchar(36), p.PopulationID) AS PopulationID, "
+                    "go.Site AS Site "
+                    "FROM dbo.Populations p "
+                    "LEFT JOIN dbo.Ext_GroupedOrganisation_v2 go ON go.ContainerID = p.ContainerID "
+                    f"WHERE p.PopulationID IN ({in_clause})"
+                ),
+                headers=["PopulationID", "Site"],
+            )
+            for row in rows:
+                pop_id = (row.get("PopulationID") or "").strip()
+                site = (row.get("Site") or "").strip()
+                if pop_id and site:
+                    resolved[pop_id] = site
+        return resolved
+
+    def get_internal_delivery_links_for_input_populations(
+        self, population_ids: set[str]
+    ) -> dict[str, list[dict]]:
+        """Return InternalDelivery sales/input operation links keyed by input population."""
+        pop_set = {pid for pid in population_ids if pid}
+        if not pop_set:
+            return {}
+
+        results: dict[str, list[dict]] = defaultdict(list)
+
+        if self.use_csv:
+            try:
+                delivery_rows = self.loader._load_csv_dict("internal_delivery")
+                action_rows = self.loader._load_csv_dict("internal_delivery_actions")
+                operation_rows = self.loader._load_csv_dict("internal_delivery_operations")
+            except FileNotFoundError:
+                return {}
+
+            populations_by_operation: dict[str, set[str]] = defaultdict(set)
+            for row in action_rows:
+                op_id = (row.get("OperationID") or "").strip()
+                pop_id = (row.get("PopulationID") or "").strip()
+                if op_id and pop_id:
+                    populations_by_operation[op_id].add(pop_id)
+
+            start_by_operation = {
+                (row.get("OperationID") or "").strip(): (row.get("StartTime") or "").strip()
+                for row in operation_rows
+                if row.get("OperationID")
+            }
+
+            for row in delivery_rows:
+                sales_op = (row.get("SalesOperationID") or "").strip()
+                input_op = (row.get("InputOperationID") or "").strip()
+                if not sales_op or not input_op:
+                    continue
+                input_pops = populations_by_operation.get(input_op, set())
+                matched = input_pops & pop_set
+                if not matched:
+                    continue
+                link = {
+                    "SalesOperationID": sales_op,
+                    "InputOperationID": input_op,
+                    "InputSiteID": (row.get("InputSiteID") or "").strip(),
+                    "PlannedActivityID": (row.get("PlannedActivityID") or "").strip(),
+                    "SalesStartTime": start_by_operation.get(sales_op, ""),
+                    "InputStartTime": start_by_operation.get(input_op, ""),
+                    "sales_population_ids": set(populations_by_operation.get(sales_op, set())),
+                    "input_population_ids": set(input_pops),
+                }
+                for pop_id in matched:
+                    results[pop_id].append(link)
+            return dict(results)
+
+        try:
+            pair_rows: list[dict] = []
+            for chunk in self._chunk_population_ids(pop_set):
+                if not chunk:
+                    continue
+                in_clause = ",".join(f"'{pid}'" for pid in chunk)
+                pair_rows.extend(
+                    self.extractor._run_sqlcmd(
+                        query=(
+                            "SELECT "
+                            "CONVERT(varchar(36), id.SalesOperationID) AS SalesOperationID, "
+                            "CONVERT(varchar(36), id.InputOperationID) AS InputOperationID, "
+                            "CONVERT(varchar(36), id.InputSiteID) AS InputSiteID, "
+                            "CONVERT(varchar(36), id.PlannedActivityID) AS PlannedActivityID, "
+                            "CONVERT(varchar(19), so.StartTime, 120) AS SalesStartTime, "
+                            "CONVERT(varchar(19), io.StartTime, 120) AS InputStartTime, "
+                            "CONVERT(varchar(36), ia.PopulationID) AS InputPopulationID "
+                            "FROM dbo.InternalDelivery id "
+                            "JOIN dbo.Action ia ON ia.OperationID = id.InputOperationID "
+                            "LEFT JOIN dbo.Operations so ON so.OperationID = id.SalesOperationID "
+                            "LEFT JOIN dbo.Operations io ON io.OperationID = id.InputOperationID "
+                            f"WHERE ia.PopulationID IN ({in_clause})"
+                        ),
+                        headers=[
+                            "SalesOperationID",
+                            "InputOperationID",
+                            "InputSiteID",
+                            "PlannedActivityID",
+                            "SalesStartTime",
+                            "InputStartTime",
+                            "InputPopulationID",
+                        ],
+                    )
+                )
+            if not pair_rows:
+                return {}
+
+            pair_map: dict[
+                tuple[str, str, str, str, str, str],
+                set[str],
+            ] = defaultdict(set)
+            operation_ids: set[str] = set()
+            for row in pair_rows:
+                sales_op = (row.get("SalesOperationID") or "").strip()
+                input_op = (row.get("InputOperationID") or "").strip()
+                key = (
+                    sales_op,
+                    input_op,
+                    (row.get("InputSiteID") or "").strip(),
+                    (row.get("PlannedActivityID") or "").strip(),
+                    (row.get("SalesStartTime") or "").strip(),
+                    (row.get("InputStartTime") or "").strip(),
+                )
+                input_pop = (row.get("InputPopulationID") or "").strip()
+                if input_pop:
+                    pair_map[key].add(input_pop)
+                if sales_op:
+                    operation_ids.add(sales_op)
+                if input_op:
+                    operation_ids.add(input_op)
+
+            populations_by_operation: dict[str, set[str]] = defaultdict(set)
+            for op_chunk in self._chunk_population_ids(operation_ids, chunk_size=400):
+                in_clause = ",".join(f"'{op_id}'" for op_id in op_chunk)
+                action_rows = self.extractor._run_sqlcmd(
+                    query=(
+                        "SELECT "
+                        "CONVERT(varchar(36), OperationID) AS OperationID, "
+                        "CONVERT(varchar(36), PopulationID) AS PopulationID "
+                        "FROM dbo.Action "
+                        f"WHERE OperationID IN ({in_clause})"
+                    ),
+                    headers=["OperationID", "PopulationID"],
+                )
+                for action in action_rows:
+                    op_id = (action.get("OperationID") or "").strip()
+                    pop_id = (action.get("PopulationID") or "").strip()
+                    if op_id and pop_id:
+                        populations_by_operation[op_id].add(pop_id)
+
+            for (
+                sales_op,
+                input_op,
+                input_site_id,
+                planned_activity_id,
+                sales_start_time,
+                input_start_time,
+            ), input_pops in pair_map.items():
+                link = {
+                    "SalesOperationID": sales_op,
+                    "InputOperationID": input_op,
+                    "InputSiteID": input_site_id,
+                    "PlannedActivityID": planned_activity_id,
+                    "SalesStartTime": sales_start_time,
+                    "InputStartTime": input_start_time,
+                    "sales_population_ids": set(populations_by_operation.get(sales_op, set())),
+                    "input_population_ids": set(populations_by_operation.get(input_op, set())),
+                }
+                matched = input_pops & pop_set
+                for pop_id in matched:
+                    results[pop_id].append(link)
+        except Exception:
+            return {}
+
+        return dict(results)
+
     def get_removal_counts_by_population(self, population_ids: set[str]) -> dict[str, int]:
         """Return total known removals (mortality+culling+escapes) per population."""
         if not population_ids:
@@ -2422,6 +2636,8 @@ def main() -> int:
 
     delayed_status_input_max_lag = timedelta(hours=24)
     delayed_status_input_min_cluster_size = 8
+    delayed_status_input_egg_token_min_cluster_size = 4
+    delayed_status_input_no_internal_bucket2_min_cluster_size = 2
 
     def get_member_input_rows_at_start(member: ComponentMember) -> list[dict]:
         return input_rows_by_population_start.get((member.population_id, member.start_time), [])
@@ -2519,6 +2735,21 @@ def main() -> int:
                 latest_status_count_by_pop[population_id] = 0
 
     component_subtransfers = data_source.get_subtransfers(set(population_ids))
+    component_population_id_set = set(population_ids)
+    internal_delivery_links_by_input_population = (
+        data_source.get_internal_delivery_links_for_input_populations(component_population_id_set)
+    )
+    station_split_source_site_by_population: dict[str, str] = {}
+    if internal_delivery_links_by_input_population:
+        source_population_ids: set[str] = set()
+        for links in internal_delivery_links_by_input_population.values():
+            for link in links:
+                source_population_ids.update(link.get("sales_population_ids", set()))
+        source_population_ids -= component_population_id_set
+        if source_population_ids:
+            station_split_source_site_by_population = data_source.get_population_site_map(
+                source_population_ids
+            )
     conserved_counts, superseded_same_stage = build_conserved_population_counts(members, data_source, stage_by_pop)
     external_mixing_population_ids = identify_external_mixing_populations(
         set(population_ids),
@@ -3083,6 +3314,20 @@ def main() -> int:
                     group_meta.get("site"),
                     group_meta.get("prod_stage"),
                 )
+            site_name_for_bucket = (
+                normalize_label(group_meta.get("site"))
+                or org_site_name_by_id.get(org_id)
+                or (org_by_id.get(org_id, {}).get("Name") or "")
+            )
+            site_code_for_bucket = parse_site_code(site_name_for_bucket)
+            if bucket != "sea" and site_code_for_bucket.startswith("A"):
+                # Marine site codes must never route through freshwater hall/station
+                # container creation; reclassify to sea container semantics.
+                print(
+                    "Reclassifying container to sea bucket for marine site-code: "
+                    f"{cid} ({site_name_for_bucket})"
+                )
+                bucket = "sea"
             if not bucket:
                 print(
                     "Skipping container with unresolved environment bucket: "
@@ -3423,6 +3668,51 @@ def main() -> int:
             delayed_input_start_cluster_size = delayed_input_start_cluster_sizes.get(
                 member.start_time, 0
             )
+            member_has_egg_stage_token = (
+                "EGG" in (member.first_stage or "").upper()
+                or "EGG" in (member.last_stage or "").upper()
+            )
+            delayed_input_cluster_threshold = (
+                delayed_status_input_egg_token_min_cluster_size
+                if member_has_egg_stage_token
+                else delayed_status_input_min_cluster_size
+            )
+            member_site_key_for_station_split = normalize_key(
+                container_grouping.get(member.container_id, {}).get("site")
+            )
+            member_internal_delivery_links_at_start: list[dict] = []
+            if member.start_time > component_start_time:
+                for delivery_link in internal_delivery_links_by_input_population.get(
+                    member.population_id, []
+                ):
+                    input_start_time = parse_dt((delivery_link.get("InputStartTime") or "").strip())
+                    sales_start_time = parse_dt((delivery_link.get("SalesStartTime") or "").strip())
+                    if input_start_time == member.start_time and sales_start_time == member.start_time:
+                        member_internal_delivery_links_at_start.append(delivery_link)
+            has_any_internal_delivery_link_at_start = bool(member_internal_delivery_links_at_start)
+            has_station_split_internal_delivery_link = False
+            for delivery_link in member_internal_delivery_links_at_start:
+                source_population_ids = {
+                    pop_id
+                    for pop_id in delivery_link.get("sales_population_ids", set())
+                    if pop_id and pop_id not in component_population_id_set
+                }
+                if not source_population_ids:
+                    continue
+                source_site_keys = {
+                    normalize_key(station_split_source_site_by_population.get(pop_id))
+                    for pop_id in source_population_ids
+                    if station_split_source_site_by_population.get(pop_id)
+                }
+                if not source_site_keys:
+                    continue
+                if member_site_key_for_station_split and all(
+                    source_site_key == member_site_key_for_station_split
+                    for source_site_key in source_site_keys
+                ):
+                    continue
+                has_station_split_internal_delivery_link = True
+                break
             
             # For active assignments (no end_time), use latest status for fish count/biomass
             # For completed assignments, use status near start time
@@ -3455,6 +3745,8 @@ def main() -> int:
             exact_start_seed_init_zero_authoritative = False
             exact_start_creation_supplier_mismatch_zero_authoritative = False
             exact_start_delayed_input_nonzero_authoritative = False
+            exact_start_station_split_input_nonzero_authoritative = False
+            exact_start_delayed_input_bucket2_no_internal_authoritative = False
             exact_start_seed_init_zero_candidate = (
                 exact_start_status_snapshot
                 and exact_start_status_count == 0
@@ -3534,9 +3826,43 @@ def main() -> int:
                     and exact_start_status_count == 0
                     and is_creation_window_seed_stage_member
                     and member.start_time > component_start_time
-                    and delayed_input_start_cluster_size >= delayed_status_input_min_cluster_size
+                    and delayed_input_start_cluster_size >= delayed_input_cluster_threshold
                     and member_input_count_at_start > 0
                     and not member_input_has_source_link
+                    and bool(component_start_supplier_ids)
+                    and bool(member_input_supplier_ids)
+                    and not member_input_supplier_ids.isdisjoint(component_start_supplier_ids)
+                    and status_count is not None
+                    and status_count > 0
+                    and status_snapshot_time is not None
+                    and status_snapshot_time > member.start_time
+                    and status_snapshot_time <= member.start_time + delayed_status_input_max_lag
+                    and not near_start_subtransfer_touch
+                )
+                exact_start_station_split_input_nonzero_candidate = (
+                    exact_start_status_snapshot
+                    and exact_start_status_count == 0
+                    and has_station_split_internal_delivery_link
+                    and member_input_count_at_start > 0
+                    and not member_input_has_source_link
+                    and status_count is not None
+                    and status_count > 0
+                    and status_snapshot_time is not None
+                    and status_snapshot_time > member.start_time
+                    and status_snapshot_time <= member.start_time + delayed_status_input_max_lag
+                    and not near_start_subtransfer_touch
+                )
+                exact_start_delayed_input_bucket2_no_internal_candidate = (
+                    exact_start_status_snapshot
+                    and exact_start_status_count == 0
+                    and is_creation_window_seed_stage_member
+                    and member.start_time > component_start_time
+                    and delayed_input_start_cluster_size
+                    >= delayed_status_input_no_internal_bucket2_min_cluster_size
+                    and delayed_input_start_cluster_size < delayed_input_cluster_threshold
+                    and member_input_count_at_start > 0
+                    and not member_input_has_source_link
+                    and not has_any_internal_delivery_link_at_start
                     and bool(component_start_supplier_ids)
                     and bool(member_input_supplier_ids)
                     and not member_input_supplier_ids.isdisjoint(component_start_supplier_ids)
@@ -3552,11 +3878,18 @@ def main() -> int:
                     # evidence for transfer-created destination counts.
                     count = exact_start_status_count
                 elif exact_start_seed_init_zero_candidate:
-                    # Seed + initial-window rows should honor exact-start zero
-                    # snapshots and not be re-inflated by downstream removal floors.
-                    count = 0
-                    biomass = Decimal("0.00")
-                    exact_start_seed_init_zero_authoritative = True
+                    # Some cohorts record an exact-start placeholder zero before
+                    # first status refresh while Ext_Inputs carries authoritative
+                    # lane-start InputCount at the same timestamp.
+                    if member_input_count_at_start > 0:
+                        count = max(count, int(round(member_input_count_at_start)), status_count or 0)
+                        exact_start_delayed_input_nonzero_authoritative = True
+                    else:
+                        # Seed + initial-window rows should honor exact-start zero
+                        # snapshots and not be re-inflated by downstream removal floors.
+                        count = 0
+                        biomass = Decimal("0.00")
+                        exact_start_seed_init_zero_authoritative = True
                 elif exact_start_creation_supplier_mismatch_zero_candidate:
                     # Multi-day creation windows are supported, but disjoint
                     # supplier IDs from component-start anchors indicate a
@@ -3569,6 +3902,16 @@ def main() -> int:
                     # snapshots before the first same-day status update lands.
                     count = max(count, int(round(member_input_count_at_start)), status_count or 0)
                     exact_start_delayed_input_nonzero_authoritative = True
+                elif exact_start_station_split_input_nonzero_candidate:
+                    # Cross-station InternalDelivery inputs can surface as destination
+                    # input-lane starts with exact-start zero before first status lands.
+                    count = max(count, int(round(member_input_count_at_start)), status_count or 0)
+                    exact_start_station_split_input_nonzero_authoritative = True
+                elif exact_start_delayed_input_bucket2_no_internal_candidate:
+                    # Multi-day seed starts without InternalDelivery links can
+                    # still represent legitimate delayed input lane materialization.
+                    count = max(count, int(round(member_input_count_at_start)), status_count or 0)
+                    exact_start_delayed_input_bucket2_no_internal_authoritative = True
             if member.end_time is None and status_count is not None:
                 # Open source populations should use latest measured status counts
                 # as authoritative assignment population.
@@ -3674,6 +4017,14 @@ def main() -> int:
             if exact_start_delayed_input_nonzero_authoritative and count <= 0:
                 # Preserve legitimate delayed-status input starts after
                 # downstream heuristics that can otherwise flatten history rows.
+                count = max(int(round(member_input_count_at_start)), status_count or 0, known_removals)
+            if exact_start_station_split_input_nonzero_authoritative and count <= 0:
+                # Keep qualified station-split internal-delivery starts intact
+                # if downstream heuristics transiently flatten row counts.
+                count = max(int(round(member_input_count_at_start)), status_count or 0, known_removals)
+            if exact_start_delayed_input_bucket2_no_internal_authoritative and count <= 0:
+                # Preserve validated no-internal-link delayed-input starts
+                # after downstream heuristics that can flatten row counts.
                 count = max(int(round(member_input_count_at_start)), status_count or 0, known_removals)
             count = max(count, 0)
             if count == 0:

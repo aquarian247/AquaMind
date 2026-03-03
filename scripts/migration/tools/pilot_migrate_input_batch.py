@@ -28,7 +28,7 @@ import subprocess
 import sys
 import time
 import unicodedata
-from collections import Counter
+from collections import Counter, defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
@@ -231,8 +231,58 @@ def load_input_batch_info(batch_key: str) -> InputBatchInfo | None:
     return None
 
 
-def load_input_populations(batch_key: str) -> list[PopulationMember]:
-    """Load population members for a given input batch key."""
+def has_duplicate_input_name(input_name: str) -> bool:
+    """Return True when stitched input batches contain >1 valid row for this input_name."""
+    batches_file = INPUT_STITCHING_DIR / "input_batches.csv"
+    if not batches_file.exists():
+        return False
+    seen_keys: set[str] = set()
+    with batches_file.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get("input_name", "").strip() != input_name:
+                continue
+            if row.get("is_valid", "").strip().lower() != "true":
+                continue
+            key = row.get("batch_key", "").strip()
+            if not key:
+                continue
+            seen_keys.add(key)
+            if len(seen_keys) > 1:
+                return True
+    return False
+
+
+def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
+    if not stage_name:
+        return None
+    upper = stage_name.upper()
+    if any(token in upper for token in ("EGG", "ALEVIN", "SAC FRY", "GREEN EGG", "EYE-EGG")):
+        return "Egg&Alevin"
+    if "FRY" in upper:
+        return "Fry"
+    if "PARR" in upper:
+        return "Parr"
+    if "SMOLT" in upper and ("POST" in upper or "LARGE" in upper):
+        return "Post-Smolt"
+    if "SMOLT" in upper:
+        return "Smolt"
+    if any(token in upper for token in ("ONGROW", "GROWER", "GRILSE", "BROODSTOCK")):
+        return "Adult"
+    return None
+
+
+def load_input_populations(
+    batch_key: str,
+    *,
+    use_csv: str | None = None,
+    expand_subtransfer_descendants: bool = False,
+) -> list[PopulationMember]:
+    """Load population members for a given input batch key.
+
+    When requested, recursively expands members via SubTransfers descendants so
+    transfer/materialized holder populations are included in the component.
+    """
     members_file = INPUT_STITCHING_DIR / "input_population_members.csv"
     if not members_file.exists():
         raise FileNotFoundError(
@@ -240,7 +290,7 @@ def load_input_populations(batch_key: str) -> list[PopulationMember]:
             "Run input_based_stitching_report.py first."
         )
 
-    members = []
+    members: list[PopulationMember] = []
     with members_file.open("r", encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -260,7 +310,204 @@ def load_input_populations(batch_key: str) -> list[PopulationMember]:
                 )
             )
 
-    return members
+    if not expand_subtransfer_descendants:
+        return members
+    if not use_csv:
+        print(
+            "[WARN] --expand-subtransfer-descendants requested without --use-csv; "
+            "using stitched members only."
+        )
+        return members
+
+    csv_dir = Path(use_csv)
+    subtransfer_path = csv_dir / "sub_transfers.csv"
+    populations_path = csv_dir / "populations.csv"
+    containers_path = csv_dir / "containers.csv"
+    grouped_path = csv_dir / "grouped_organisation.csv"
+    org_units_path = csv_dir / "org_units.csv"
+    population_stages_path = csv_dir / "population_stages.csv"
+    production_stages_path = csv_dir / "production_stages.csv"
+    required_paths = [
+        subtransfer_path,
+        populations_path,
+        containers_path,
+        grouped_path,
+        org_units_path,
+        population_stages_path,
+        production_stages_path,
+    ]
+    missing = [str(path) for path in required_paths if not path.exists()]
+    if missing:
+        print(
+            "[WARN] Missing extract files for descendant expansion; "
+            "using stitched members only."
+        )
+        for path in missing:
+            print(f"       - {path}")
+        return members
+
+    seed_ids = {member.population_id for member in members if member.population_id}
+    if not seed_ids:
+        return members
+
+    edges_by_source: dict[str, set[str]] = defaultdict(set)
+    with subtransfer_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            source_before = (row.get("SourcePopBefore") or "").strip()
+            if not source_before:
+                continue
+            source_after = (row.get("SourcePopAfter") or "").strip()
+            dest_after = (row.get("DestPopAfter") or "").strip()
+            if source_after:
+                edges_by_source[source_before].add(source_after)
+            if dest_after:
+                edges_by_source[source_before].add(dest_after)
+
+    reachable: set[str] = set(seed_ids)
+    pending: deque[str] = deque(seed_ids)
+    while pending:
+        source_pop = pending.popleft()
+        for child in edges_by_source.get(source_pop, set()):
+            if child in reachable:
+                continue
+            reachable.add(child)
+            pending.append(child)
+
+    descendant_ids = sorted(reachable - seed_ids)
+    if not descendant_ids:
+        print("Expanded SubTransfers descendants: +0 populations (already fully covered).")
+        return members
+
+    populations_by_id: dict[str, dict[str, str]] = {}
+    with populations_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if pop_id:
+                populations_by_id[pop_id] = row
+
+    container_rows_by_id: dict[str, dict[str, str]] = {}
+    with containers_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            container_id = (row.get("ContainerID") or "").strip()
+            if container_id:
+                container_rows_by_id[container_id] = row
+
+    # Keep the richest grouped row per container id.
+    grouped_rows_by_container_id: dict[str, dict[str, str]] = {}
+    grouped_row_score: dict[str, int] = {}
+    with grouped_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            container_id = (row.get("ContainerID") or "").strip()
+            if not container_id:
+                continue
+            score = 0
+            if (row.get("Site") or "").strip():
+                score += 1
+            if (row.get("ContainerGroup") or "").strip():
+                score += 1
+            current_score = grouped_row_score.get(container_id, -1)
+            if score >= current_score:
+                grouped_rows_by_container_id[container_id] = row
+                grouped_row_score[container_id] = score
+
+    org_unit_name_by_id: dict[str, str] = {}
+    with org_units_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            org_unit_id = (row.get("OrgUnitID") or "").strip()
+            if not org_unit_id:
+                continue
+            org_unit_name_by_id[org_unit_id] = (row.get("Name") or "").strip()
+
+    stage_name_by_id: dict[str, str] = {}
+    with production_stages_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            stage_id = (row.get("StageID") or "").strip()
+            if not stage_id:
+                continue
+            stage_name_by_id[stage_id] = (row.get("StageName") or "").strip()
+
+    stage_events_by_population: dict[str, list[tuple[datetime, str]]] = defaultdict(list)
+    with population_stages_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            pop_id = (row.get("PopulationID") or "").strip()
+            if pop_id not in reachable:
+                continue
+            stage_time = parse_dt((row.get("StartTime") or "").strip())
+            if stage_time is None:
+                continue
+            stage_name = stage_name_by_id.get((row.get("StageID") or "").strip(), "").strip()
+            if not stage_name:
+                continue
+            stage_events_by_population[pop_id].append((stage_time, stage_name))
+    for events in stage_events_by_population.values():
+        events.sort(key=lambda event: event[0])
+
+    default_geography = next((member.geography for member in members if member.geography), "Unknown")
+
+    extra_members: list[PopulationMember] = []
+    for pop_id in descendant_ids:
+        pop_row = populations_by_id.get(pop_id)
+        if pop_row is None:
+            continue
+        container_id = (pop_row.get("ContainerID") or "").strip()
+        container_row = container_rows_by_id.get(container_id, {})
+        grouped_row = grouped_rows_by_container_id.get(container_id, {})
+        org_unit_id = (container_row.get("OrgUnitID") or "").strip()
+
+        stage_events = stage_events_by_population.get(pop_id, [])
+        fishtalk_tokens: list[str] = []
+        aquamind_tokens: list[str] = []
+        for _, stage_name in stage_events:
+            if stage_name not in fishtalk_tokens:
+                fishtalk_tokens.append(stage_name)
+            mapped_stage = fishtalk_stage_to_aquamind(stage_name)
+            if mapped_stage and mapped_stage not in aquamind_tokens:
+                aquamind_tokens.append(mapped_stage)
+
+        extra_members.append(
+            PopulationMember(
+                population_id=pop_id,
+                container_id=container_id,
+                container_name=(container_row.get("ContainerName") or "").strip(),
+                org_unit_name=(
+                    (grouped_row.get("Site") or "").strip()
+                    or org_unit_name_by_id.get(org_unit_id, "").strip()
+                ),
+                geography=default_geography,
+                start_time=parse_dt((pop_row.get("StartTime") or "").strip()),
+                end_time=parse_dt((pop_row.get("EndTime") or "").strip()),
+                fishtalk_stages=", ".join(fishtalk_tokens),
+                aquamind_stages=", ".join(aquamind_tokens),
+            )
+        )
+
+    base_members = [member for member in members if member.population_id]
+    base_ids = {member.population_id for member in base_members}
+    extra_sorted = [
+        member for member in extra_members if member.population_id and member.population_id not in base_ids
+    ]
+    extra_sorted.sort(
+        key=lambda member: (
+            member.start_time or datetime.min,
+            member.end_time or datetime.max,
+            member.population_id,
+        )
+    )
+    expanded_members = [*base_members, *extra_sorted]
+
+    print(
+        "Expanded SubTransfers descendants: "
+        f"+{len(expanded_members) - len(members)} populations "
+        f"({len(members)} -> {len(expanded_members)} members)"
+    )
+    return expanded_members
 
 
 def parse_batch_key(batch_key: str) -> tuple[str, str, str]:
@@ -558,6 +805,7 @@ def run_migration_script(
     external_mixing_status_multiplier: float | None = None,
     lifecycle_frontier_window_hours: int | None = None,
     skip_synthetic_stage_transitions: bool = False,
+    transfer_edge_scope: str = "source-in-scope",
     timeout_seconds: int = 600,
     extra_env: dict[str, str] | None = None,
     announce: bool = True,
@@ -612,6 +860,7 @@ def run_migration_script(
 
     if script_name == "pilot_migrate_component_transfers.py":
         cmd.append("--use-subtransfers")
+        cmd.extend(["--transfer-edge-scope", transfer_edge_scope])
         if skip_synthetic_stage_transitions:
             cmd.append("--skip-synthetic-stage-transitions")
         else:
@@ -785,6 +1034,238 @@ def list_available_batches() -> None:
     print(f"\nFor recommended batches, see: {INPUT_STITCHING_DIR / 'recommended_batches.csv'}")
 
 
+def _first_present_column(fieldnames: list[str], candidates: list[str]) -> str | None:
+    for candidate in candidates:
+        if candidate in fieldnames:
+            return candidate
+    return None
+
+
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in values:
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        ordered.append(value)
+    return ordered
+
+
+def resolve_scope_batch_keys(scope_file: Path) -> tuple[list[str], dict[str, int]]:
+    """Resolve batch keys from a scope CSV."""
+    if not scope_file.exists():
+        raise FileNotFoundError(f"Scope file does not exist: {scope_file}")
+
+    with scope_file.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        fieldnames = reader.fieldnames or []
+        if not fieldnames:
+            raise ValueError(f"Scope file has no header row: {scope_file}")
+
+        rows = list(reader)
+        stats = {
+            "scope_rows": len(rows),
+            "rows_with_batch_key": 0,
+            "rows_without_batch_key": 0,
+            "population_rows": 0,
+            "population_rows_unresolved": 0,
+        }
+
+        batch_col = _first_present_column(fieldnames, ["batch_key", "BatchKey", "batchKey"])
+        pop_col = _first_present_column(fieldnames, ["population_id", "PopulationID", "populationId"])
+
+        if batch_col:
+            batch_keys_raw: list[str] = []
+            for row in rows:
+                value = (row.get(batch_col) or "").strip()
+                if value:
+                    stats["rows_with_batch_key"] += 1
+                    batch_keys_raw.append(value)
+                else:
+                    stats["rows_without_batch_key"] += 1
+            batch_keys = _dedupe_preserve_order(batch_keys_raw)
+            if batch_keys:
+                return batch_keys, stats
+
+        if not pop_col:
+            raise ValueError(
+                "Scope file must include either batch_key or population id column "
+                "(population_id / PopulationID)."
+            )
+
+        population_ids = _dedupe_preserve_order([(row.get(pop_col) or "").strip() for row in rows])
+        stats["population_rows"] = len(population_ids)
+
+        members_file = INPUT_STITCHING_DIR / "input_population_members.csv"
+        if not members_file.exists():
+            raise FileNotFoundError(
+                "input_population_members.csv is required for population-id scope mapping. "
+                f"Missing: {members_file}"
+            )
+
+        with members_file.open("r", encoding="utf-8", newline="") as f:
+            member_reader = csv.DictReader(f)
+            member_fields = member_reader.fieldnames or []
+            member_pop_col = _first_present_column(
+                member_fields, ["population_id", "PopulationID", "populationId"]
+            )
+            member_batch_col = _first_present_column(
+                member_fields, ["batch_key", "BatchKey", "batchKey"]
+            )
+            if not member_pop_col or not member_batch_col:
+                raise ValueError(
+                    "input_population_members.csv is missing required columns "
+                    "population_id and/or batch_key."
+                )
+
+            pop_to_batch: dict[str, str] = {}
+            for row in member_reader:
+                pop_id = (row.get(member_pop_col) or "").strip()
+                batch_key = (row.get(member_batch_col) or "").strip()
+                if pop_id and batch_key and pop_id not in pop_to_batch:
+                    pop_to_batch[pop_id] = batch_key
+
+        resolved_keys: list[str] = []
+        for pop_id in population_ids:
+            batch_key = pop_to_batch.get(pop_id)
+            if batch_key:
+                resolved_keys.append(batch_key)
+            else:
+                stats["population_rows_unresolved"] += 1
+
+        return _dedupe_preserve_order(resolved_keys), stats
+
+
+def run_scope_batches(args: argparse.Namespace, *, scope_file: Path) -> int:
+    batch_keys, stats = resolve_scope_batch_keys(scope_file)
+    if not batch_keys:
+        print(f"[ERROR] No batch keys resolved from scope file: {scope_file}")
+        print(f"Scope stats: {stats}")
+        return 1
+
+    if args.batch_number:
+        print(
+            "[ERROR] --batch-number cannot be combined with --scope-file "
+            "(would force same batch number across many batches)."
+        )
+        return 1
+
+    print("\n" + "=" * 70)
+    print("SCOPE-BASED INPUT MIGRATION")
+    print("=" * 70)
+    print(f"Scope file: {scope_file}")
+    print(f"Resolved batch keys: {len(batch_keys)}")
+    print(f"Scope stats: {stats}")
+
+    script_path = Path(__file__).resolve()
+    failures: list[str] = []
+
+    # Parent performs freshness preflight once; child invocations skip it.
+    base_cmd = [
+        sys.executable,
+        str(script_path),
+        "--skip-extract-freshness-preflight",
+        "--migration-profile",
+        args.migration_profile,
+        "--parallel-workers",
+        str(args.parallel_workers),
+        "--parallel-blas-threads",
+        str(args.parallel_blas_threads),
+        "--script-timeout-seconds",
+        str(args.script_timeout_seconds),
+    ]
+
+    if args.use_csv:
+        base_cmd.extend(["--use-csv", args.use_csv])
+    if args.skip_environmental:
+        base_cmd.append("--skip-environmental")
+    if args.skip_feed_inventory:
+        base_cmd.append("--skip-feed-inventory")
+    if args.extract_fail_on_warnings:
+        base_cmd.append("--extract-fail-on-warnings")
+    if not args.extract_enforce_operation_stage_lag:
+        base_cmd.append("--extract-allow-operation-stage-lag")
+    if args.full_lifecycle:
+        base_cmd.append("--full-lifecycle")
+    if args.full_lifecycle_rebuild:
+        base_cmd.append("--full-lifecycle-rebuild")
+    if args.skip_population_links:
+        base_cmd.append("--skip-population-links")
+    if args.heuristic_fw_sea:
+        base_cmd.append("--heuristic-fw-sea")
+    if args.heuristic_include_smolt:
+        base_cmd.append("--heuristic-include-smolt")
+    if args.expected_site:
+        base_cmd.extend(["--expected-site", args.expected_site])
+    if args.allow_station_mismatch:
+        base_cmd.append("--allow-station-mismatch")
+    if args.include_synthetic_stage_transitions:
+        base_cmd.append("--include-synthetic-stage-transitions")
+    if args.transfer_edge_scope:
+        base_cmd.extend(["--transfer-edge-scope", args.transfer_edge_scope])
+    if args.expand_subtransfer_descendants:
+        base_cmd.append("--expand-subtransfer-descendants")
+    if args.external_mixing_status_multiplier is not None:
+        base_cmd.extend(
+            ["--external-mixing-status-multiplier", str(args.external_mixing_status_multiplier)]
+        )
+    if args.lifecycle_frontier_window_hours is not None:
+        base_cmd.extend(
+            ["--lifecycle-frontier-window-hours", str(args.lifecycle_frontier_window_hours)]
+        )
+    if args.dry_run:
+        base_cmd.append("--dry-run")
+    if args.full_lifecycle:
+        base_cmd.extend(["--max-fw-batches", str(args.max_fw_batches)])
+        base_cmd.extend(["--max-pre-smolt-batches", str(args.max_pre_smolt_batches)])
+        base_cmd.extend(["--heuristic-window-days", str(args.heuristic_window_days)])
+        base_cmd.extend(["--heuristic-min-score", str(args.heuristic_min_score)])
+        for fw_batch in args.include_fw_batch:
+            base_cmd.extend(["--include-fw-batch", fw_batch])
+
+    for idx, batch_key in enumerate(batch_keys, start=1):
+        cmd = [*base_cmd, "--batch-key", batch_key]
+        print(f"\n[{idx}/{len(batch_keys)}] RUN {batch_key}")
+        started = time.perf_counter()
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+        )
+        elapsed = time.perf_counter() - started
+
+        if result.returncode == 0:
+            print(f"[{idx}/{len(batch_keys)}] OK {elapsed:.1f}s")
+            continue
+
+        print(f"[{idx}/{len(batch_keys)}] ERROR {elapsed:.1f}s")
+        failures.append(batch_key)
+        if result.stdout:
+            stdout_tail = "\n".join(result.stdout.strip().splitlines()[-20:])
+            if stdout_tail:
+                print(stdout_tail)
+        if result.stderr:
+            stderr_tail = "\n".join(result.stderr.strip().splitlines()[-20:])
+            if stderr_tail:
+                print(stderr_tail)
+
+    print("\n" + "=" * 70)
+    print("SCOPE MIGRATION SUMMARY")
+    print("=" * 70)
+    print(f"Batches attempted: {len(batch_keys)}")
+    print(f"Failures: {len(failures)}")
+    if failures:
+        print("Failed batch keys:")
+        for batch_key in failures:
+            print(f"  - {batch_key}")
+        return 1
+
+    print("[SUCCESS] Scope migration completed!")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Migrate an input-based batch (Ext_Inputs_v2) from FishTalk to AquaMind"
@@ -792,6 +1273,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--batch-key",
         help="Input batch key in format 'InputName|InputNumber|YearClass' (e.g., 'Heyst 2018|1|2018')",
+    )
+    parser.add_argument(
+        "--scope-file",
+        type=str,
+        default=None,
+        help=(
+            "Optional CSV scope input. Supported columns: batch_key, or "
+            "population_id/PopulationID (mapped through input_population_members.csv)."
+        ),
     )
     parser.add_argument(
         "--batch-number",
@@ -954,6 +1444,24 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--transfer-edge-scope",
+        choices=["source-in-scope", "internal-only"],
+        default="source-in-scope",
+        help=(
+            "Pass-through for pilot_migrate_component_transfers.py. "
+            "'internal-only' is recommended with --expand-subtransfer-descendants "
+            "to preserve exact SourcePopBefore->DestPopAfter edges."
+        ),
+    )
+    parser.add_argument(
+        "--expand-subtransfer-descendants",
+        action="store_true",
+        help=(
+            "Expand stitched batch members recursively via SubTransfers descendants "
+            "when running in --use-csv mode."
+        ),
+    )
+    parser.add_argument(
         "--external-mixing-status-multiplier",
         type=float,
         help=(
@@ -1004,8 +1512,8 @@ def main() -> int:
         list_available_batches()
         return 0
 
-    if not args.batch_key:
-        print("Error: --batch-key is required")
+    if not args.batch_key and not args.scope_file:
+        print("Error: provide --batch-key or --scope-file")
         print("Use --list-batches to see available batches")
         return 1
 
@@ -1035,6 +1543,11 @@ def main() -> int:
                 "Aborting migration to avoid stale/cutoff-debug loops."
             )
             return 1
+
+    if args.scope_file and not args.batch_key:
+        return run_scope_batches(args, scope_file=Path(args.scope_file))
+    if args.scope_file and args.batch_key:
+        print("[INFO] --scope-file provided with --batch-key; running single batch mode.")
 
     batch_key = args.batch_key
 
@@ -1086,7 +1599,11 @@ def main() -> int:
                 return 1
         members = load_full_lifecycle_populations(batch_key, members_file)
     else:
-        members = load_input_populations(batch_key)
+        members = load_input_populations(
+            batch_key,
+            use_csv=args.use_csv,
+            expand_subtransfer_descendants=args.expand_subtransfer_descendants,
+        )
 
     if not members:
         print(f"[ERROR] No populations found for batch key: {batch_key}")
@@ -1155,6 +1672,12 @@ def main() -> int:
 
     print(f"\nComponent key for migration: {component_key}")
     batch_number_override = args.batch_number or batch_info.input_name
+    if (
+        not args.batch_number
+        and has_duplicate_input_name(batch_info.input_name)
+        and batch_info.input_number
+    ):
+        batch_number_override = f"{batch_info.input_name} [{batch_info.input_number}]"
     is_linked_full_lifecycle_run = bool(args.full_lifecycle and args.include_fw_batch)
     transfer_include_synthetic_stage_transitions = bool(args.include_synthetic_stage_transitions)
     if transfer_include_synthetic_stage_transitions:
@@ -1229,6 +1752,7 @@ def main() -> int:
             external_mixing_status_multiplier=args.external_mixing_status_multiplier,
             lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
             skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,
+            transfer_edge_scope=args.transfer_edge_scope,
             timeout_seconds=args.script_timeout_seconds,
             extra_env=parallel_env,
             announce=True,
@@ -1274,6 +1798,7 @@ def main() -> int:
                         external_mixing_status_multiplier=args.external_mixing_status_multiplier,
                         lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
                         skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,
+                        transfer_edge_scope=args.transfer_edge_scope,
                         timeout_seconds=args.script_timeout_seconds,
                         extra_env=parallel_env,
                         announce=False,

@@ -1,6 +1,6 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-02-06
+**Last updated:** 2026-03-02
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
@@ -31,6 +31,7 @@ This is the canonical runbook + status for the FishTalk → AquaMind migration. 
 - **Stage transitions are represented as transfer workflows** (`batch_batchtransferworkflow` + `batch_transferaction`), but **UI stage charts are derived from assignments**, not workflows.
 - **Assignments (`batch_batchcontainerassignment`) are created per PopulationID**; transfers create workflow actions, and **synthetic lifecycle transitions** are generated from assignment stages.
 - **UI stage order depends on assignment ordering**; backend now orders batch‑filtered assignments by `lifecycle_stage.order` (fix applied 2026‑02‑03).
+- **Lifecycle progression endpoint defaults to `basis=stage_entry`** (first positive assignment per `(container, stage)`). This is an entry-count view, not peak concurrent stock.
 - For FishTalk migration specifics (SubTransfers usage, synthetic transitions, and conservation-based counts), see `DATA_MAPPING_DOCUMENT.md` → sections **3.2** and **3.4**.
 - Product intent and schema grounding live in `docs/prd.md` (3.1.2 / 3.1.2.1) and `docs/database/data_model.md`.
 
@@ -76,25 +77,30 @@ Batch Key = InputName + InputNumber + YearClass
 
 ## 4) Current Migration Status
 
-**Latest migration run: 2026-02-06 (current migration DB)**
+**Latest migration run: 2026-03-02 (current migration DB, mapped FW scope replay)**
 
 **Note:** The migration DB was wiped via `clear_migration_db.py` before this run, so earlier runs are no longer present in `aquamind_db_migr_dev`.
 
-**Key changes since 2026‑02‑03:**
+**Key changes since 2026‑02‑03 (including 2026‑03‑02 stabilization):**
 - Added migration coverage for **culling, escapes, and harvest** (CSV-supported).
 - Added **semantic validation reports** to compare FishTalk vs AquaMind per batch.
 - Fixed **weight samples** (use `Ext_WeightSamples_v2` only; weights are **grams**).
 - Normalized **infra names** at bootstrap (strip `FT` prefix and trailing `FW`/`Sea`).
 - Added strict **station guardrails** to input-batch and component migration (`--expected-site`).
 - Added stage-entry based semantic transition checks (default 2-day entry window) to reduce in-stage redistribution inflation.
+- Hardened scope replay behavior: scope-mode child runs now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run`.
+- Replayed mapped FW scope in 4 chunks (`20/20` batches successful) using descendant expansion + `internal-only` transfer edges.
+- Scoped stage coverage outcome: `7/8` completed batches now show `>=4` stages; only `24Q1 LHS ex-LC` remains a 1-stage completed outlier.
 
 ### 4.1 Run Summary
 
-- **Input-based batches migrated (CSV mode):**
-  - `SF NOV 23` (FW)
-  - `Benchmark Gen. Juni 2024` (FW)
-  - `Summar 2024` (Sea)
-  - `Vár 2024` (Sea)
+- **Mapped FW scope replay (CSV mode, 2026-03-02):**
+  - Scope file: `scripts/migration/output/input_stitching/scope_fw78_fwonly_u30_mapped_faroe_fw22_fw13_batch_keys.csv`
+  - Chunked execution: `chunk1`..`chunk4` (`5` batches per chunk)
+  - Outcome: `20/20` batches succeeded with no chunk failures
+  - Replay flags used on every chunk:
+    - `--expand-subtransfer-descendants`
+    - `--transfer-edge-scope internal-only`
 - **Full action set replays** completed per batch: feeding, mortality, culling, escapes, treatments, lice, health journal, growth samples, harvest (sea), and environmental readings (see reports).
 - **FW→Sea linkage remains unavailable**; FW and Sea components are replayed separately and remain unlinked.
 
@@ -104,6 +110,7 @@ See:
 - `analysis_reports/2026-02-05/semantic_validation_*_2026-02-05.md`
 - `analysis_reports/2026-02-06/semantic_validation_sf_nov_23_2026-02-06.md`
 - `analysis_reports/2026-02-06/semantic_validation_stofnfiskur_s21_nov23_2026-02-06.md`
+- `analysis_reports/2026-02-06/semantic_validation_pilot_cohort_2026-03-02.md`
 
 These reports are now the **primary validation artifact** alongside counts.
 
@@ -338,10 +345,25 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   --batch-key "Vár 2024|1|2024" \
   --expected-site "S24 Strond" \
   --use-csv scripts/migration/data/extract/ \
+  --expand-subtransfer-descendants \
+  --transfer-edge-scope internal-only \
   --skip-environmental  # Optional: skip slow environmental migration
 ```
 
 This wrapper runs all migration scripts in sequence for a single input batch.
+
+For deterministic scope/chunk replay:
+
+```bash
+PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+  --scope-file scripts/migration/output/input_stitching/scope_fw78_fwonly_u30_mapped_faroe_fw22_fw13_chunk1.csv \
+  --use-csv scripts/migration/data/extract/ \
+  --migration-profile fw_default \
+  --skip-environmental \
+  --expand-subtransfer-descendants \
+  --transfer-edge-scope internal-only
+```
 
 ### 7.3.1 Legacy: project-based stitching (deprecated)
 

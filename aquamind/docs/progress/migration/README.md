@@ -4,11 +4,12 @@ This folder is the canonical home for migration documentation.
 
 ## Low-context bootstrap (default for new agents)
 Read only these 2 docs first:
-1. handoffs/HANDOFF_2026-02-24_FW_EXACT_START_TIEBREAK_WAVE_AND_POSTWAVE_BOARD.md
+1. handoffs/HANDOFF_2026-03-02_FW_MAPPED_SCOPE_REGRESSION_STABILIZATION_RESULTS.md
 2. DATA_MAPPING_DOCUMENT.md
 
-Read a 3rd doc only when the task explicitly concerns FWSEA linkage or SQL tracing:
-- handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md
+Read a 3rd doc only when task scope requires it:
+- Scope replay/runbook questions: `MIGRATION_CANONICAL.md`
+- FWSEA linkage/trace tasks: `handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md`
 
 Avoid preloading `analysis_reports/*` at startup; open only the report directly tied to the discrepancy being debugged.
 
@@ -20,6 +21,8 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
 5. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
 ## Latest handoff
+- handoffs/HANDOFF_2026-03-02_FW_MAPPED_SCOPE_REGRESSION_STABILIZATION_RESULTS.md - mapped scope regression stabilization results, MIX interpretation, non-MIX lifecycle deep-dive, ranked fix plan
+- handoffs/HANDOFF_2026-03-02_FW_MAPPED_SCOPE_REGRESSION_TRIAGE_AND_NEXT_AGENT_PROMPT.md - regression triage prompt and takeover objectives
 - handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md - deterministic FWSEA sales-link scoring module + FT B-class notes + A37 station resolution
 - handoffs/HANDOFF_2026-02-24_FW_EXACT_START_TIEBREAK_WAVE_AND_POSTWAVE_BOARD.md - exact-start duplicate-timestamp tie-break wave + full FW post-wave board
 - handoffs/HANDOFF_2026-02-23_FW_EXPECTED_NONZERO_REPLAY_WAVE_AND_POSTWAVE_SCOPE_BOARD.md - FW class-A replay clearance + full-scope post-wave residual board
@@ -52,7 +55,18 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
      python scripts/migration/tools/pilot_migrate_input_batch.py \\
      --batch-key \"<InputName>|<InputNumber>|<YearClass>\" \\
      --expected-site \"<Station Name>\" \\
-     --use-csv scripts/migration/data/extract/
+     --use-csv scripts/migration/data/extract/ \\
+     --expand-subtransfer-descendants \\
+     --transfer-edge-scope internal-only
+3b) Migrate a scope/chunk (transfer-rich cohorts)
+   - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \\
+     python scripts/migration/tools/pilot_migrate_input_batch.py \\
+     --scope-file scripts/migration/output/input_stitching/<scope_chunk>.csv \\
+     --use-csv scripts/migration/data/extract/ \\
+     --migration-profile fw_default \\
+     --skip-environmental \\
+     --expand-subtransfer-descendants \\
+     --transfer-edge-scope internal-only
 4) Full action replays (per component, CSV)
    - python scripts/migration/tools/pilot_migrate_component_transfers.py
    - python scripts/migration/tools/pilot_migrate_component_feeding.py
@@ -79,10 +93,14 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
    - python scripts/migration/tools/pilot_migrate_environmental_all.py \\
      --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite --workers 16
 
-## Current status snapshot (2026-02-06)
-- Full action migration validated for 4 batches (2 FW, 2 Sea) with semantic reports in:
+## Current status snapshot (2026-03-02)
+- Mapped FW scope replay rerun completed in 4 chunks (20/20 batches successful) using descendant expansion + `internal-only` transfer edges.
+- Stage coverage improved materially for completed FW cohorts; only one completed scoped outlier remains 1-stage (`24Q1 LHS ex-LC`).
+- Full action migration remains validated for pilot batches with semantic reports in:
   - `analysis_reports/2026-02-05/`
   - `analysis_reports/2026-02-06/` (rerun/follow-up reports for `SF NOV 23` and `Stofnfiskur S-21 nov23`)
+- Pilot cohort regression check currently passes:
+  - `analysis_reports/2026-02-06/semantic_validation_pilot_cohort_2026-03-02.md`
 - FW→Sea linkage is still unresolved; FW and Sea components are replayed separately.
 - Weight samples use `Ext_WeightSamples_v2` only and are treated as grams (re-run required to fix old data).
 - Infra names are normalized at bootstrap (strip `FT` prefix and trailing `FW`/`Sea`).

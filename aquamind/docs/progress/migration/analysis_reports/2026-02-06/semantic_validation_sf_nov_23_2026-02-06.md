@@ -1,31 +1,31 @@
 # Semantic Migration Validation Report
 
 - Component key: `FA8EA452-AFE1-490D-B236-0150415B6E6F`
-- Batch: `SF NOV 23` (id=354)
+- Batch: `FT-FA8EA452-H013` (id=1305)
 - Populations: 130
 - Window: 2023-11-16 15:11:07 → 2024-12-30 15:28:33
 
 | Metric | FishTalk | AquaMind | Diff (FT - AM) |
 | --- | ---: | ---: | ---: |
-| Feeding events | 1723 | 1723 | 0.00 |
-| Feeding kg | 171029.18 | 171029.18 | 0.00 |
-| Mortality events | 2837 | 2719 | 118.00 |
-| Mortality count | 572964 | 572964 | 0.00 |
-| Mortality biomass kg | 0.00 | 40402.66 | -40402.66 |
-| Culling events | 709 | 709 | 0.00 |
-| Culling count | 422531 | 422531 | 0.00 |
-| Culling biomass kg | 23168970.19 | 23168970.15 | 0.04 |
+| Feeding events | 1723 | 0 | 1723.00 |
+| Feeding kg | 171029.18 | 0.00 | 171029.18 |
+| Mortality events | 2837 | 0 | 2837.00 |
+| Mortality count | 572964 | 0 | 572964.00 |
+| Mortality biomass kg | 0.00 | 0.00 | 0.00 |
+| Culling events | 709 | 0 | 709.00 |
+| Culling count | 422531 | 0 | 422531.00 |
+| Culling biomass kg | 23168970.19 | 0.00 | 23168970.19 |
 | Escape events | 0 | 0 | 0.00 |
 | Escape count | 0 | 0 | 0.00 |
 | Escape biomass kg | 0.00 | 0.00 | 0.00 |
-| Treatments | 140 | 140 | 0.00 |
-| Growth samples | 159 | 159 | 0.00 |
+| Treatments | 140 | 0 | 140.00 |
+| Growth samples | 159 | 0 | 159.00 |
 | Health journal entries | 0 | 0 | 0.00 |
 | Lice samples | 0 | 0 | 0.00 |
 | Lice data rows | 0 | 0 | 0.00 |
 | Lice total count | 0 | 0 | 0.00 |
 | Fish sampled (lice) | 0 | 0 | 0.00 |
-| Environmental readings | n/a (sqlite) | 306128 | n/a |
+| Environmental readings | n/a (sqlite) | 0 | n/a |
 | Harvest rows | 0 | 0 | 0.00 |
 | Harvest events | n/a | 0 | n/a |
 | Harvest count | 0 | 0 | 0.00 |
@@ -38,30 +38,32 @@
 - Known removal count (mortality + culling + escapes + harvest): 995495
 - Stage-entry window used for transition sanity: 2 day(s)
 - Transition basis usage: 2/3 bridge-aware (66.7%), 1/3 entry-window (33.3%).
-- Assignment zero-count rows (population_count <= 0): 13 total, 12 bridge-classified, 1 non-bridge.
-- Transfer actions with transferred_count <= 0: 0 of 44.
-- Fishgroup classification: 32 temporary bridge fishgroups, 64 real stage-entry fishgroups, 32 temporary bridge populations.
+- Lineage fallback max depth: 14 hop(s).
+- Bridge-aware transitions using lineage-graph fallback: 1
+- Assignment zero-count rows (population_count <= 0): 9 total, 9 bridge-classified, 0 same-stage superseded-zero, 0 short-lived orphan-zero, 0 no-count-evidence-zero, 0 known-loss-depleted-zero, 0 non-bridge.
+- Transfer actions with transferred_count <= 0: 0 of 0.
+- Fishgroup classification: 32 temporary bridge fishgroups, 60 real stage-entry fishgroups, 32 temporary bridge populations.
 
-| Stage | Entry population | Full summed population | Entry date | Entry window end | Entry containers | Real entry fishgroups | Bridge fishgroups excluded | Non-zero assignments | Total assignments |
-| --- | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Egg&Alevin | 1676462 | 1710947 | 2023-11-16 | 2023-11-18 | 52 | 52 | 0 | 54 | 54 |
-| Fry | 506626 | 506626 | 2024-02-05 | 2024-02-07 | 8 | 8 | 0 | 8 | 8 |
-| Parr | 1123982 | 7451303 | 2024-05-07 | 2024-05-09 | 3 | 3 | 0 | 51 | 64 |
-| Post-Smolt | 173939 | 494032 | 2024-10-24 | 2024-10-26 | 1 | 1 | 1 | 4 | 4 |
+| Stage | Entry population | Active population | Peak concurrent population | Full summed population | Full/entry ratio | Full/peak ratio | Entry date | Entry window end | Entry containers | Real entry fishgroups | Bridge fishgroups excluded | Non-zero assignments | Total assignments |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Egg&Alevin | 1875345 | 0 | 2751022 | 2953341 | 1.57 | 1.07 | 2023-11-16 | 2023-11-18 | 52 | 52 | 0 | 59 | 59 |
+| Fry | 831393 | 0 | 1935529 | 2356200 | 2.83 | 1.22 | 2024-02-05 | 2024-02-07 | 4 | 4 | 0 | 8 | 11 |
+| Parr | 535418 | 0 | 2094534 | 7557134 | 14.11 | 3.61 | 2024-06-11 | 2024-06-13 | 3 | 3 | 9 | 50 | 56 |
+| Smolt | 363840 | 0 | 875551 | 970765 | 2.67 | 1.11 | 2024-10-24 | 2024-10-26 | 1 | 1 | 1 | 4 | 4 |
 
-- Transition deltas below use fishgroup bridge-aware linked source populations when available (counts prefer SubTransfer-conserved values, fallback to assignment counts); otherwise they fall back to stage entry-window populations.
+- Transition deltas below use bridge-aware linked source populations when available (counts prefer SubTransfer-conserved values, fallback to assignment counts); otherwise they fall back to stage entry-window populations.
 
 | Transition | From population | To population | Delta | Entry populations | Linked destinations | Bridge-aware eligible | Basis | Sanity check |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |
-| Egg&Alevin -> Fry | 1676462 | 506626 | -1169836 | 8 | 8 | yes | Entry window (no bridge path) | WARN: stage drop exceeds total known removals by 174341 |
-| Fry -> Parr | 391510 | 391510 | 0 | 3 | 3 | yes | Fishgroup bridge-aware (linked sources: 6) | OK |
-| Parr -> Post-Smolt | 271029 | 271029 | 0 | 1 | 1 | yes | Fishgroup bridge-aware (linked sources: 2) | OK |
+| Egg&Alevin -> Fry | 1875345 | 831393 | -1043952 | 4 | 4 | yes | Entry window (incomplete linkage) | WARN: stage drop exceeds total known removals by 48457 |
+| Fry -> Parr | 393864 | 289847 | -104017 | 3 | 3 | yes | Bridge-aware (linked sources: 2); lineage graph fallback used | OK |
+| Parr -> Smolt | 271029 | 271029 | 0 | 1 | 1 | yes | Bridge-aware (linked sources: 2) | OK |
 
 ### Fishgroup Classification Samples
 
 - Temporary bridge fishgroup examples: `235.0055`, `235.0064`, `235.0065`, `235.0067`, `235.0072`, `235.0073`, `235.0074`, `235.0075`, `235.0076`, `235.0077`
 - Real stage-entry fishgroup examples: `235.0001`, `235.0002`, `235.0003`, `235.0004`, `235.0005`, `235.0006`, `235.0007`, `235.0008`, `235.0009`, `235.0010`
-- Bridge fishgroups excluded from stage-entry windows: `235.0127`
+- Bridge fishgroups excluded from stage-entry windows: `235.0072`, `235.0073`, `235.0074`, `235.0075`, `235.0076`, `235.0077`, `235.0079`, `235.0080`, `235.0082`, `235.0127`
 
 ### Fishgroup Format Audit
 
@@ -79,11 +81,28 @@
 | --- | ---: |
 | Egg&Alevin | 1605410 |
 
+### Outside-Component Destination Evidence
+
+- This evidence is derived from SubTransfers graph links and grouped-organisation context; it indicates destinations outside the selected stitched population set.
+- Marine linkage evidence: NO
+- Direct external destination populations (any role): 54
+
+| SubTransfer role evidence | External edge count | Destination prod stages | Destination sites |
+| --- | ---: | --- | --- |
+| SourcePopBefore -> DestPopAfter | 46 | Hatchery:46 | FW22 Applecross:46 |
+| SourcePopBefore -> SourcePopAfter | 8 | Hatchery:8 | FW22 Applecross:8 |
+| DestPopBefore -> DestPopAfter | 0 | - | - |
+
+| Destination set | Populations | Marine populations | By prod stage | By site | By site group |
+| --- | ---: | ---: | --- | --- | --- |
+| Direct external populations | 54 | 0 | Hatchery:54 | FW22 Applecross:54 | Unknown:54 |
+| Reachable outside descendants | 65 | 0 | Hatchery:65 | FW22 Applecross:65 | Unknown:65 |
+
 ### Regression Gates
 
 | Gate | Result | Details |
 | --- | --- | --- |
-| `no_positive_transition_delta_without_mixed_batch` | PASS | Positive stage transition deltas without mixed-batch composition rows: 0 |
+| `no_positive_transition_delta_without_mixed_batch` | PASS | Positive stage transition deltas without mixed-batch composition rows: 0 (excluded incomplete-linkage fallback rows: 0) |
 | `no_zero_count_transfer_actions` | PASS | Transfer actions with transferred_count <= 0: 0 |
-| `non_bridge_zero_assignments_within_threshold` | PASS | Assignments with population_count <= 0 and not classified as temporary bridge: 1 (threshold: 2) |
+| `non_bridge_zero_assignments_within_threshold` | PASS | Assignments with population_count <= 0 after excluding temporary bridge, same-stage superseded-zero, short-lived orphan-zero, no-count-evidence-zero, and known-loss-depleted-zero rows: 0 (threshold: 2) |
 - Overall gate result: PASS (enforced)

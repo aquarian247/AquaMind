@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 5.3  
-**Date:** 2026-02-24  
-**Status:** Updated - exact-start duplicate-timestamp tie-break + exact-start transfer count authority + S08 R-Høll material-first dual-stage refinement + assignment biomass precision guardrail  
+**Version:** 5.6  
+**Date:** 2026-03-02  
+**Status:** Updated - scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + lifecycle progression basis interpretation guard + scope-file cohort replay orchestration + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + S08 R-Høll material-first dual-stage refinement + assignment biomass precision guardrail + FW inter-station station-split input-lane qualification  
 
 ## 1. Overview
 
@@ -15,6 +15,21 @@ This document provides detailed field-level mapping specifications for migrating
 - **Source:** FishTalk SQL Server (Docker container `sqlserver`, port `1433`, read-only login `fishtalk_reader`).
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
+
+**Key Revision Notes (v5.5 - 2026-02-28):**
+- **Scope-file replay mode (input-batch runner):** `pilot_migrate_input_batch.py` now supports `--scope-file` to run a deterministic ordered batch-key sweep from a CSV scope artifact. Scope rows can be `batch_key` rows directly, or population rows that are resolved back to `batch_key` via stitched `input_population_members.csv`.
+- **Transfer-inclusive scope expansion contract:** `build_transfer_inclusive_scope.py` keeps all original stitched members, then appends destination populations for `SubTransfers` edges whose source population is already in scope, preserving unresolved destinations in output for audit visibility.
+- **Mix-lineage backfill contract:** transfer-path replay is now explicitly followed by `pilot_backfill_transfer_mix_events.py`, which materializes `BatchMixEvent` / `BatchMixEventComponent` from completed transfer actions and sets `allow_mixed=True` on qualified action rows.
+
+**Key Revision Notes (v5.6 - 2026-03-02):**
+- **Scope-file child-flag forwarding hardening:** in `pilot_migrate_input_batch.py`, scope-mode child invocations now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run`. Missing forwarding previously allowed silent seed-only replays for transfer-rich cohorts.
+- **Transfer-rich replay contract:** when replaying stitched scopes/chunks, run with `--expand-subtransfer-descendants --transfer-edge-scope internal-only` to preserve operation-true lineage and avoid lifecycle-stage collapse.
+- **Lifecycle progression interpretation guard:** History lifecycle progression default (`basis=stage_entry`) is entry-count semantics (first positive assignment per `(container, stage)`), not concurrent stock. Use assignment timeline / peak-concurrent analysis for biological stock checks.
+
+**Key Revision Notes (v5.4 - 2026-02-25):**
+- **FW inter-station station-split lineage qualification:** a biological cohort can branch from one freshwater station to another and appear with different `InputName` labels across station branches; deterministic lineage proof must rely on operation linkage, not `InputName` equality.
+- **Qualified operation-link signature for station-split branches:** paired `InternalDelivery` operations (`SalesOperationID` type `7` + `InputOperationID` type `5`) at the same start timestamp, destination `Ext_Inputs_v2` row at that timestamp with `InputCount > 0`, and (when present) shared transport trip metadata (`ActionMetaData.ParameterID=184` `TripID`) across sales/input operations.
+- **Supplier-label caveat (qualified):** destination `Ext_Inputs_v2.SupplierID` can resolve to source-station contact (for example `S08 Gjógv`) while cohort-start supplier remains broodstock contact at `L01 Við Áir`; therefore supplier label alone is not identity proof for station-split branches.
 
 **Key Revision Notes (v5.3 - 2026-02-24):**
 - **Exact-start duplicate-timestamp tie-break (completed populations):** when multiple `PublicStatusValues` rows share the same (`PopulationID`, `StatusTime`) at `member.start_time`, authoritative count resolution is deterministic: prefer non-zero over zero, then highest `CurrentCount`, then highest `CurrentBiomassKg`.
@@ -264,6 +279,17 @@ Note: some fish groups retain the full `InputProjects.ProjectName` (e.g., “Ben
 - FW→Sea linkage candidates are expected at the `S* -> A*` boundary.
 - Concrete example (S21, operator-confirmed): on `2025-01-06`, broodstock branch `Lívfiskur -> L01 Við Áir` (`D*..F*` source containers) fans into `S21 Viðareiði -> Rogn -> R1..R7` for `Bakkafrost S-21 jan 25`; classify this as egg-origin/station-seed provenance, not FW→Sea linkage.
 - Concrete in-station transition example (S21, operator-confirmed): `Bakkafrost S-21 jan 25` Fry->Parr window (`~2025-07-07..09`) has deterministic lane topology `5M 1/2 -> A01,A03,A05,B10,B11`, `5M 3 -> A01,A05,B10`, `5M 4/5/6 -> A01,A03,B11`; treat this as same-station stage progression evidence (not cross-environment linkage).
+
+**FW->FW station-split lineage qualification (qualified, 2026-02-25):**
+- Some cohorts branch between freshwater stations and can surface as destination **Input** lanes with different `InputName` labels.
+- Canonical proof for this branch pattern is operation linkage, not naming:
+  1. paired `InternalDelivery` sales/input operations at the same start timestamp,
+  2. sales-side source populations in station `X`, input-side destination populations in station `Y` (`X != Y`),
+  3. destination `Ext_Inputs_v2` row at that timestamp with `InputCount > 0` (often `DeliveryID` blank),
+  4. shared `TripID` across sales/input operation metadata when `ParameterID=184` is populated.
+- Interpretation guard:
+  - destination rows with exact-start zero followed by first non-zero status within 24h should be treated as qualified station-split branch evidence when the operation-link signature above is present; do not classify solely from `InputName` mismatch.
+- Qualified examples (semantics only): `S08 Gjógv -> S16 Glyvradalur` (`BF (Fiskaaling) okt. 2023` branch into `Bakkafrost Okt 2023`) and `S08 Gjógv -> S04 Húsar` (`Fiskaaling sep 2022` branch rows).
 
 **Transition sanity semantics (validator, updated 2026-02-16):**
 - Bridge-aware transition deltas are downgraded to `incomplete_linkage` (advisory, not hard regression failure) when either condition holds:
@@ -878,30 +904,68 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 - PRD batch workflow section: `docs/prd.md` → 3.1.2 / 3.1.2.1
 - Data model tables: `docs/database/data_model.md` → `batch_batchtransferworkflow`, `batch_transferaction`, `batch_batchcontainerassignment`
 
-**Data Source Selection (code‑verified):**
+**Data Source Selection (code‑verified, updated 2026‑02‑27):**
 - **SubTransfers** when `--use-subtransfers` is supplied (CSV or SQL).
-  - CSV path uses `sub_transfers.csv` and converts `SourcePopBefore → DestPopAfter` with `OperationTime` as the operation timestamp.
+  - **Default scope (`source-in-scope`)**: include operations initiated by in-scope `SourcePopBefore`, then expand in-operation `SourcePopBefore -> SourcePopAfter` chains to effective root-source `SourcePop -> DestPop` edges.
+  - **Restricted scope (`internal-only`)**: keep only direct edges where both source and destination populations are component members.
 - **PublicTransfers** only when **not** using `--use-subtransfers` **and** running with SQL (no CSV path).
 - `transfer_edges.csv` / `transfer_operations.csv` are **not used** by `pilot_migrate_component_transfers.py`.
 
-**Pre‑conditions (code‑verified):**
-- Requires `ExternalIdMap` entries for `source_model = "Populations"` created by `pilot_migrate_component.py`.
-- Edges are filtered to those where **both** SourcePop and DestPop belong to the current component.
+**Pre‑conditions (code‑verified, updated 2026‑02‑27):**
+- Requires source assignment `ExternalIdMap` rows (`source_model = "Populations"`) created by `pilot_migrate_component.py`.
+- Destination assignment resolution order:
+  1. component-scoped destination assignment map (`SubTransferDestinationPopulationAssignment`),
+  2. generic population assignment map (`Populations`),
+  3. destination container bootstrap (create/map missing container + hall from `grouped_organisation.csv` / `containers.csv`).
+- `workflow_grouping=stage-bucket` relies on CSV hall/stage mapping; SQL mode falls back to `workflow_grouping=operation`.
 
-**Workflow typing logic (code‑verified):**
-- For each `OperationID`, determine source/dest lifecycle stage:
-  - Baseline from `BatchContainerAssignment.lifecycle_stage` (source/dest assignments).
-  - Optional override from `PopulationProductionStages` (via `population_stages.csv` → `stage_at` at operation time), mapped with the transfer script’s `fishtalk_stage_to_aquamind`.
-- If mapped source and dest stages differ → `workflow_type = LIFECYCLE_TRANSITION`.
-- Else → `workflow_type = CONTAINER_REDISTRIBUTION`.
-- **Fallback:** If no assignment stage exists, the script uses `LifeCycleStage.objects.first()` (requires master data).
+**Workflow grouping & typing logic (code‑verified, updated 2026‑02‑27):**
+- `workflow_grouping=stage-bucket` (default) groups edges by `(component, station_site, workflow_type, source_stage, dest_stage)` using deterministic `TransferStageWorkflowBucket` identifiers.
+- `workflow_grouping=operation` groups by `OperationID`.
+- `workflow_type`:
+  - `LIFECYCLE_TRANSITION` when resolved source and destination stages differ,
+  - `CONTAINER_REDISTRIBUTION` otherwise.
+- Stage resolution prefers hall/station mapping (stage-bucket mode), with assignment/token fallbacks where applicable.
 
-**TransferAction creation (code‑verified):**
-- One `TransferAction` per edge (`SourcePop → DestPop`) grouped by `OperationID`.
-- Counts/biomass are **estimated** from status snapshots at `OperationStartTime` using `ShareCountForward` / `ShareBiomassForward` (clamped to 0–1).
-- For multiple edges from the same source, the script **sequentially reduces** remaining count/biomass to avoid double‑counting.
+**TransferAction creation (code‑verified, updated 2026‑02‑27):**
+- One `TransferAction` per scoped edge (`SourcePop -> DestPop`) inside the selected workflow group.
+- For each `(OperationID, SourcePop)` group:
+  - load one source snapshot at operation time (`CurrentCount`, `CurrentBiomassKg`),
+  - allocate counts across all destination edges **from full source total** (not sequential remainder):
+    - ratio uses `ShareCountForward` (fallback `ShareBiomassForward`),
+    - ratios are normalized when sum exceeds `1.0`,
+    - target transfer total is `round(source_count * min(1.0, ratio_sum))`,
+    - largest-remainder rounding assigns per-edge integers that sum exactly to target total.
+  - allocate biomass from source average kg/fish based on allocated counts; apply final rounding delta to the largest edge to preserve total biomass consistency.
 - Edges that resolve to `transferred_count <= 0` are skipped (no zero-count action persisted).
-- Idempotency uses `ExternalIdMap` with `source_model = "PublicTransferEdge"` and `source_identifier = "{OperationID}:{SourcePop}:{DestPop}"` (used for both SubTransfers and PublicTransfers paths).
+- Idempotency uses `ExternalIdMap` with `source_model = "PublicTransferEdge"` and `source_identifier = "{OperationID}:{SourcePop}:{DestPop}"` (both SubTransfers and PublicTransfers paths).
+
+**Post-action reconciliation guards (code‑verified, updated 2026‑02‑27):**
+- Destination assignments touched by transfer edges are synchronized from completed action aggregates (`population_count`, `biomass_kg`, `assignment_date`, `is_active=True`, `departure_date=None`).
+- Departed source assignments can be stage-backfilled to workflow source stage when stage-bucket classification proves historical stage.
+- Departed source assignments with zero count are count-backfilled from completed action `source_population_before` maxima; biomass is inferred from transfer biomass or average weight when needed.
+
+**Transfer reconciliation invariants (recommended non-regression checks):**
+1. Per `(workflow, source_assignment)`: `sum(transferred_count)` equals action-side source authority (`max(source_population_before)` for that source assignment in the workflow).  
+   - Do **not** require equality to assignment `population_count` when removals (mortality/culling/escapes) occurred before transfer time.
+2. Per active destination assignment touched by workflows: assignment `population_count` equals `sum(transferred_count by dest_assignment)`.
+3. Per workflow: total transferred by sources equals total transferred by destinations.
+
+**Transfer mix-lineage backfill (code-verified, updated 2026-02-28):**
+- Script: `scripts/migration/tools/pilot_backfill_transfer_mix_events.py`
+- Input authority: completed `TransferAction` rows with destination assignments.
+- Qualification rule: destination container/date must contain cross-batch co-location (`dest_assignment.container`, transfer date, positive overlapping assignment count from a different batch).
+- Writes:
+  - `batch_batchmixevent` (`workflow_action`-anchored),
+  - `batch_batchmixeventcomponent` (population/biomass percentage split),
+  - `batch_batchcomposition` fallback for mixed batch.
+- Side effects:
+  - sets `TransferAction.allow_mixed=True` for qualified rows,
+  - rewires action destination assignment to mixed assignment (`MIX-FTA-{action_id}` batch) unless `--skip-assignment-rewrite` is used,
+  - deactivates contributing pre-mix assignments in destination container history.
+- Operation mode:
+  - order-independent and idempotent at action scope,
+  - supports `--dry-run` for qualification-only coverage checks.
 
 **Synthetic lifecycle transitions (code‑verified, updated 2026‑02‑09):**
 - Assignment-derived synthetic stage transitions are now **optional** and are skipped when `--skip-synthetic-stage-transitions` is used.
@@ -989,6 +1053,16 @@ FishTalk does not capture a formal “creation workflow.” For each stitched co
 - Inter-station FW->FW transfer can produce legitimate member-site divergence for a cohort.
 - Preflight mismatches fail by default unless explicitly overridden for transfer-confirmed cohorts.
 - `--expected-site "<site>"` remains the station anchor; pair with `--allow-station-mismatch` when replaying known mixed-site transfer cohorts.
+
+**Scope-file cohort replay mode (code-verified, updated 2026-02-28):**
+- `pilot_migrate_input_batch.py` accepts `--scope-file <csv>` as a batch-runner mode.
+- Scope resolution rules:
+  1. if scope rows include `batch_key`-compatible columns, those keys are used directly;
+  2. else if scope rows include population-id columns, population IDs are mapped to `batch_key` via stitched `input_population_members.csv`.
+- Resolution behavior is deterministic (dedupe + preserve input order) and emits scope stats (`scope_rows`, rows with/without `batch_key`, resolved/unresolved population rows).
+- If both `--batch-key` and `--scope-file` are supplied, single-batch mode remains authoritative (scope file is ignored with warning).
+- Scope child invocations now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run` so scope replay behavior matches single-batch replay behavior.
+- Recommended for transfer-rich cohorts: `--expand-subtransfer-descendants --transfer-edge-scope internal-only`.
 
 ## 4. Feed & Inventory Mapping
 
@@ -1518,9 +1592,9 @@ FishTalk does not have dedicated mortality model tables. Create default mortalit
 ---
 
 **Document Control**
-- Version: 4.9
+- Version: 5.5
 - Status: Revised
-- Last Updated: 2026-02-17
+- Last Updated: 2026-02-28
 - Next Review: [Pending]
 
 ## 15. External ID Mapping Tables

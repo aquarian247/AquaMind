@@ -53,3 +53,16 @@ Deprecated tools live under scripts/migration/legacy/tools/:
 - scripts/migration/analysis/analyze_yearclass_from_names.py
 - scripts/migration/analysis/validate_yearclass_approach.py
 - scripts/migration/analysis/input_full_lifecycle_stitching.py
+
+## Replay-safe invocation patterns (2026-03-02)
+
+Use these patterns to avoid lifecycle-coverage regressions on transfer-rich cohorts.
+
+- Single batch (input runner):
+  - `python scripts/migration/tools/pilot_migrate_input_batch.py --batch-key "<InputName>|<InputNumber>|<YearClass>" --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope internal-only`
+- Scope/chunk replay:
+  - `python scripts/migration/tools/pilot_migrate_input_batch.py --scope-file <scope.csv> --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope internal-only`
+
+Notes:
+- Scope mode now forwards descendant/edge-scope flags to child runs. Keep those flags explicit in runbooks and logs.
+- For scope runs, keep one output file per chunk (`replay_scope_chunk*_*.txt`) and run post-replay verification (`migration_counts_report.py`, `migration_verification_report.py`, `migration_pilot_regression_check.py`).
