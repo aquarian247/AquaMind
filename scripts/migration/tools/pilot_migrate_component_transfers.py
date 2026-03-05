@@ -435,6 +435,55 @@ def lookup_project_info(extractor: BaseExtractor, *, population_id: str) -> tupl
 CHAIN_DIR_DEFAULT = PROJECT_ROOT / "scripts" / "migration" / "output" / "chain_stitching"
 DEST_ASSIGNMENT_SOURCE_MODEL = "SubTransferDestinationPopulationAssignment"
 STAGE_BUCKET_WORKFLOW_SOURCE_MODEL = "TransferStageWorkflowBucket"
+MIGRATION_TRANSPORT_BYPASS_NOTE = (
+    "[migration_transport_bypass] FishTalk source data lacks deterministic "
+    "per-leg transport handoff metadata (truck/vessel/trip/compartment + "
+    "mandatory start snapshot chain). Migration persists historical transfer "
+    "edges as completed direct actions and forces workflows non-dynamic."
+)
+
+
+def append_note_once(existing: str | None, note: str) -> str:
+    current = (existing or "").strip()
+    if note in current:
+        return current
+    return f"{current}\n{note}".strip()
+
+
+def enforce_static_workflow_for_migration(
+    workflow: BatchTransferWorkflow,
+    *,
+    history_user,
+    history_reason: str,
+) -> bool:
+    """
+    Keep migrated historical workflows out of runtime dynamic handoff semantics.
+
+    Dynamic execution in AquaMind requires explicit start/complete handoff flow
+    and mandatory transfer-start snapshots. FishTalk transfer extracts do not
+    provide deterministic per-leg transport metadata for this path.
+    """
+    changed = False
+    if workflow.is_dynamic_execution:
+        workflow.is_dynamic_execution = False
+        changed = True
+    if workflow.dynamic_route_mode is not None:
+        workflow.dynamic_route_mode = None
+        changed = True
+    if workflow.dynamic_completed_by_id is not None:
+        workflow.dynamic_completed_by = None
+        changed = True
+    if workflow.dynamic_completed_at is not None:
+        workflow.dynamic_completed_at = None
+        changed = True
+    updated_notes = append_note_once(workflow.notes, MIGRATION_TRANSPORT_BYPASS_NOTE)
+    if updated_notes != (workflow.notes or "").strip():
+        workflow.notes = updated_notes
+        changed = True
+
+    if changed:
+        save_with_history(workflow, user=history_user, reason=history_reason)
+    return changed
 
 
 def parse_ratio(value: object) -> float:
@@ -797,6 +846,16 @@ Transfer data sources:
         ),
     )
     parser.set_defaults(skip_synthetic_stage_transitions=True)
+    parser.add_argument(
+        "--allow-dynamic-runtime-workflows",
+        action="store_true",
+        help=(
+            "Keep inferred dynamic workflow semantics for migrated transfers. "
+            "Default behavior forces migrated workflows to static mode to "
+            "bypass mandatory runtime handoff/snapshot requirements when "
+            "FishTalk transport metadata is incomplete."
+        ),
+    )
     parser.add_argument("--sql-profile", default="fishtalk_readonly", help="FishTalk SQL Server profile")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument(
@@ -823,6 +882,16 @@ def main() -> int:
         print(
             "WARNING: synthetic stage-transition workflows/actions enabled "
             "via --include-synthetic-stage-transitions."
+        )
+    if args.allow_dynamic_runtime_workflows:
+        print(
+            "Dynamic runtime workflow semantics: ENABLED "
+            "(no migration transport bypass guardrail)."
+        )
+    else:
+        print(
+            "Dynamic runtime workflow semantics: DISABLED by migration guardrail "
+            "(historical direct actions, non-dynamic workflows)."
         )
     
     # Determine which stitching approach to use
@@ -1103,6 +1172,7 @@ def main() -> int:
     synced_dest_assignments = 0
     synced_source_stage_assignments = 0
     synced_source_count_assignments = 0
+    forced_static_workflows = 0
     skipped_reasons: defaultdict[str, int] = defaultdict(int)
 
     with transaction.atomic():
@@ -1618,8 +1688,11 @@ def main() -> int:
                     "transferred_biomass_kg": est_biomass,
                     "allow_mixed": False,
                     "status": "COMPLETED",
+                    "created_via": "PLANNED",
+                    "leg_type": None,
                     "planned_date": op_date,
                     "actual_execution_date": op_date,
+                    "executed_at": op_time,
                     "transfer_method": None,
                     "notes": (
                         f"FishTalk OperationID={op_id}; share_count={edge['share_count']}; "
@@ -1675,6 +1748,13 @@ def main() -> int:
             workflow.status = "COMPLETED" if workflow.total_actions_planned else workflow.status
             workflow.completed_by = user if workflow.total_actions_planned else workflow.completed_by
             save_with_history(workflow, user=history_user, reason=history_reason)
+            if not args.allow_dynamic_runtime_workflows:
+                if enforce_static_workflow_for_migration(
+                    workflow,
+                    history_user=history_user,
+                    history_reason=history_reason,
+                ):
+                    forced_static_workflows += 1
             workflow.recalculate_totals()
 
         for assignment_id in sorted(dest_assignment_ids_for_sync):
@@ -1818,6 +1898,13 @@ def main() -> int:
                 notes=f"FishTalk stage transition {from_stage_name}→{to_stage_name}; component={component_key}",
             )
             save_with_history(workflow, user=history_user, reason=history_reason)
+            if not args.allow_dynamic_runtime_workflows:
+                if enforce_static_workflow_for_migration(
+                    workflow,
+                    history_user=history_user,
+                    history_reason=history_reason,
+                ):
+                    forced_static_workflows += 1
             ExternalIdMap.objects.update_or_create(
                 source_system="FishTalk",
                 source_model="PopulationStageTransition",
@@ -1865,8 +1952,11 @@ def main() -> int:
                     "transferred_biomass_kg": biomass,
                     "allow_mixed": False,
                     "status": "COMPLETED",
+                    "created_via": "PLANNED",
+                    "leg_type": None,
                     "planned_date": transition_time.date(),
                     "actual_execution_date": transition_time.date(),
+                    "executed_at": transition_time,
                     "transfer_method": None,
                     "notes": (
                         f"FishTalk stage transition {from_stage_name}→{to_stage_name}; "
@@ -1909,6 +1999,7 @@ def main() -> int:
         f"(workflows created={created_wf}, updated={updated_wf}; actions created={created_actions}, updated={updated_actions}, skipped={skipped}; "
         f"dest assignments created={created_dest_assignments}, reused={reused_dest_assignments}, synced={synced_dest_assignments}; "
         f"source stage backfilled={synced_source_stage_assignments}, source count backfilled={synced_source_count_assignments}; "
+        f"forced static workflows={forced_static_workflows}; "
         f"stage workflows created={created_stage_wf}, updated={updated_stage_wf}; "
         f"stage actions created={created_stage_actions}, updated={updated_stage_actions}, skipped={skipped_stage})"
     )

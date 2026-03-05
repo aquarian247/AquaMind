@@ -19,6 +19,7 @@ from apps.batch.models.workflow import BatchTransferWorkflow
 from apps.batch.models.assignment import BatchContainerAssignment
 from django.contrib.auth.models import User
 from apps.batch.access import can_execute_transport_actions
+from apps.infrastructure.models import Container
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,18 @@ class TransferAction(models.Model):
         ('GRAVITY', 'Gravity Transfer'),
         ('MANUAL', 'Manual Bucket Transfer'),
     ]
+
+    LEG_TYPE_CHOICES = [
+        ("STATION_TO_VESSEL", "Station to Vessel"),
+        ("STATION_TO_TRUCK", "Station to Truck"),
+        ("TRUCK_TO_VESSEL", "Truck to Vessel"),
+        ("VESSEL_TO_RING", "Vessel to Ring"),
+    ]
+
+    CREATED_VIA_CHOICES = [
+        ("PLANNED", "Planned"),
+        ("DYNAMIC_LIVE", "Dynamic Live"),
+    ]
     
     # Core Relationships
     workflow = models.ForeignKey(
@@ -74,6 +87,14 @@ class TransferAction(models.Model):
         blank=True,
         related_name='transfer_actions_as_dest',
         help_text="Destination batch-container assignment (created during execution)"
+    )
+    dest_container = models.ForeignKey(
+        Container,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="transfer_actions_as_dest_container",
+        help_text="Destination container for dynamic live handoffs.",
     )
     
     # Counts & Biomass
@@ -105,6 +126,19 @@ class TransferAction(models.Model):
         choices=STATUS_CHOICES,
         default='PENDING'
     )
+    leg_type = models.CharField(
+        max_length=32,
+        choices=LEG_TYPE_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Explicit transport leg type for dynamic handoffs.",
+    )
+    created_via = models.CharField(
+        max_length=20,
+        choices=CREATED_VIA_CHOICES,
+        default="PLANNED",
+        help_text="How this action was created (planned vs live dynamic start).",
+    )
     planned_date = models.DateField(
         null=True,
         blank=True,
@@ -114,6 +148,11 @@ class TransferAction(models.Model):
         null=True,
         blank=True,
         help_text="Actual execution date"
+    )
+    executed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="High-resolution execution timestamp for operational ordering.",
     )
     
     # Transfer Details
@@ -232,7 +271,12 @@ class TransferAction(models.Model):
     
     def __str__(self):
         source_container = self.source_assignment.container.name if self.source_assignment else "Unknown"
-        dest_container = self.dest_assignment.container.name if self.dest_assignment else "TBD"
+        if self.dest_assignment and self.dest_assignment.container:
+            dest_container = self.dest_assignment.container.name
+        elif self.dest_container:
+            dest_container = self.dest_container.name
+        else:
+            dest_container = "TBD"
         return f"Action #{self.action_number}: {source_container} → {dest_container} ({self.get_status_display()})"
     
     def clean(self):
@@ -240,7 +284,15 @@ class TransferAction(models.Model):
         super().clean()
         
         # Validate workflow can accept actions
-        if self.workflow and not self.workflow.can_add_actions():
+        if (
+            self.workflow
+            and not self.workflow.can_add_actions()
+            and not (
+                self.workflow.is_dynamic_execution
+                and self.status == "IN_PROGRESS"
+                and self.created_via == "DYNAMIC_LIVE"
+            )
+        ):
             raise ValidationError(
                 f"Cannot add actions to workflow in {self.workflow.status} status"
             )
@@ -256,10 +308,25 @@ class TransferAction(models.Model):
                 f"with only {self.source_assignment.population_count} fish"
             )
 
+        if not self.dest_assignment and not self.dest_container:
+            raise ValidationError(
+                "Destination assignment or destination container is required."
+            )
+
+        if self.dest_assignment and self.dest_container_id:
+            if self.dest_assignment.container_id != self.dest_container_id:
+                raise ValidationError(
+                    "Destination assignment and destination container must match."
+                )
+
     def has_transport_carrier_handoff(self):
         """True when either source or destination is linked to a transport carrier."""
         source_container = self.source_assignment.container if self.source_assignment else None
-        dest_container = self.dest_assignment.container if self.dest_assignment else None
+        dest_container = (
+            self.dest_assignment.container
+            if self.dest_assignment
+            else self.dest_container
+        )
         return bool(
             (source_container and source_container.carrier_id)
             or (dest_container and dest_container.carrier_id)
@@ -474,6 +541,12 @@ class TransferAction(models.Model):
                 f"Cannot execute action in {self.status} status. "
                 f"Action must be PENDING to execute."
             )
+
+        if self.workflow.is_dynamic_execution:
+            raise ValidationError(
+                "Dynamic transport handoffs must use start/complete flow. "
+                "Use /handoffs/start then /complete-handoff."
+            )
         
         if not self.workflow.can_execute_actions():
             raise ValidationError(
@@ -548,6 +621,7 @@ class TransferAction(models.Model):
             # Update this action with execution details
             self.status = 'COMPLETED'
             self.actual_execution_date = execution_time.date()
+            self.executed_at = execution_time
             self.executed_by = executed_by
             self.mortality_during_transfer = mortality_count
             
@@ -614,7 +688,245 @@ class TransferAction(models.Model):
                 'completion_percentage': float(self.workflow.completion_percentage),
                 'actions_remaining': self.workflow.total_actions_planned - self.workflow.actions_completed
             }
-    
+
+    def _resolve_destination_assignment(self, *, source, execution_date):
+        """Resolve or create destination assignment for dynamic completion."""
+        dest_container = self.dest_container or (
+            self.dest_assignment.container if self.dest_assignment else None
+        )
+        if not dest_container:
+            raise ValidationError("Destination container is required to complete handoff.")
+
+        if self.dest_assignment_id:
+            return BatchContainerAssignment.objects.select_for_update().get(
+                pk=self.dest_assignment_id
+            )
+
+        dest = (
+            BatchContainerAssignment.objects.select_for_update()
+            .filter(
+                batch=self.workflow.batch,
+                container=dest_container,
+                is_active=True,
+            )
+            .first()
+        )
+        if dest:
+            return dest
+
+        latest = (
+            BatchContainerAssignment.objects.select_for_update()
+            .filter(batch=self.workflow.batch, container=dest_container)
+            .order_by("-id")
+            .first()
+        )
+        lifecycle_stage = self.workflow.dest_lifecycle_stage or source.lifecycle_stage
+        if latest:
+            latest.lifecycle_stage = lifecycle_stage
+            latest.assignment_date = latest.assignment_date or execution_date
+            latest.is_active = True
+            latest.save(
+                update_fields=[
+                    "lifecycle_stage",
+                    "assignment_date",
+                    "is_active",
+                    "updated_at",
+                ]
+            )
+            return latest
+
+        return BatchContainerAssignment.objects.create(
+            batch=self.workflow.batch,
+            container=dest_container,
+            lifecycle_stage=lifecycle_stage,
+            population_count=0,
+            avg_weight_g=source.avg_weight_g or Decimal("0"),
+            assignment_date=execution_date,
+            is_active=True,
+            notes=(
+                f"Auto-created on dynamic handoff completion "
+                f"for action {self.id} ({self.workflow.workflow_number})"
+            ),
+        )
+
+    def complete_handoff(
+        self,
+        *,
+        executed_by,
+        transferred_count: int,
+        transferred_biomass_kg: Decimal,
+        mortality_count: int = 0,
+        **execution_details,
+    ):
+        """
+        Complete a previously started dynamic handoff.
+
+        This endpoint applies source/destination mutations and marks the action
+        as COMPLETED. It is valid only for IN_PROGRESS actions.
+        """
+        if self.status != "IN_PROGRESS":
+            raise ValidationError("Only IN_PROGRESS handoffs can be completed.")
+        if not self.workflow.is_dynamic_execution:
+            raise ValidationError("complete_handoff is only valid for dynamic workflows.")
+        if transferred_count <= 0:
+            raise ValidationError("Transferred count must be greater than zero.")
+        if transferred_biomass_kg is None or Decimal(transferred_biomass_kg) <= 0:
+            raise ValidationError("Transferred biomass must be greater than zero.")
+        if mortality_count < 0:
+            raise ValidationError("Mortality cannot be negative.")
+
+        if self.requires_ship_crew_execution() and not can_execute_transport_actions(executed_by):
+            raise ValidationError(
+                "Only SHIP_CREW or Logistics Operators can complete this transport action."
+            )
+
+        execution_time = timezone.now()
+        transferred_biomass_kg = Decimal(transferred_biomass_kg)
+        transferred_count = int(transferred_count)
+        mortality_count = int(mortality_count)
+
+        with transaction.atomic():
+            source = BatchContainerAssignment.objects.select_for_update().get(
+                pk=self.source_assignment_id
+            )
+            total_reduction = transferred_count + mortality_count
+            if total_reduction > source.population_count:
+                raise ValidationError(
+                    f"Cannot move {total_reduction} fish (including mortality) from "
+                    f"source with {source.population_count} fish."
+                )
+
+            source.population_count -= total_reduction
+            if source.population_count == 0:
+                source.is_active = False
+                source.departure_date = execution_time.date()
+            source.save()
+
+            dest = self._resolve_destination_assignment(
+                source=source,
+                execution_date=execution_time.date(),
+            )
+            self.dest_assignment = dest
+            if not self.dest_container_id:
+                self.dest_container_id = dest.container_id
+
+            other_active = BatchContainerAssignment.objects.select_for_update().filter(
+                container=dest.container,
+                is_active=True,
+            ).exclude(batch=self.workflow.batch)
+            if other_active.exists() and not self.allow_mixed:
+                raise ValidationError(
+                    "Destination container has another active batch. "
+                    "Enable mixed batch to proceed."
+                )
+            if other_active.exists() and self.allow_mixed:
+                mixed_dest = self._execute_mixed_destination(
+                    source=source,
+                    execution_time=execution_time,
+                )
+                self.dest_assignment = mixed_dest
+            else:
+                existing_population = dest.population_count
+                existing_biomass = dest.biomass_kg or Decimal("0")
+
+                if not dest.is_active:
+                    dest.is_active = True
+                    dest.assignment_date = execution_time.date()
+                if (
+                    self.workflow.dest_lifecycle_stage
+                    and dest.lifecycle_stage_id != self.workflow.dest_lifecycle_stage_id
+                ):
+                    dest.lifecycle_stage = self.workflow.dest_lifecycle_stage
+
+                dest.population_count = existing_population + transferred_count
+                total_biomass = existing_biomass + transferred_biomass_kg
+                if dest.population_count > 0:
+                    dest.avg_weight_g = (
+                        total_biomass * Decimal("1000")
+                    ) / Decimal(dest.population_count)
+                    dest.biomass_kg = total_biomass
+                else:
+                    dest.avg_weight_g = Decimal("0")
+                    dest.biomass_kg = Decimal("0")
+                dest.save()
+
+            self.status = "COMPLETED"
+            self.actual_execution_date = execution_time.date()
+            self.executed_at = execution_time
+            self.executed_by = executed_by
+            self.mortality_during_transfer = mortality_count
+            self.transferred_count = transferred_count
+            self.transferred_biomass_kg = transferred_biomass_kg
+
+            for key, value in execution_details.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+
+            self.save()
+
+            if mortality_count > 0:
+                from apps.batch.models.mortality import MortalityEvent
+                avg_weight_g = source.avg_weight_g or Decimal("0")
+                biomass_kg = (Decimal(mortality_count) * avg_weight_g) / Decimal("1000")
+                MortalityEvent.objects.create(
+                    batch=self.workflow.batch,
+                    assignment=source,
+                    event_date=self.actual_execution_date,
+                    count=mortality_count,
+                    biomass_kg=biomass_kg,
+                    cause="HANDLING",
+                    description=(
+                        f"Transfer mortality during {self.workflow.workflow_number} "
+                        f"action {self.action_number}"
+                    ),
+                )
+
+            if self.workflow.status == "PLANNED":
+                self.workflow.mark_in_progress()
+
+            self.workflow.actions_completed = self.workflow.actions.filter(
+                status="COMPLETED"
+            ).count()
+            self.workflow.update_progress()
+            self.workflow.check_completion()
+            self.workflow.recalculate_totals()
+
+            action_id = self.id
+            executed_by_id = executed_by.id if executed_by else None
+
+            def _snapshot_after_commit():
+                try:
+                    from django.conf import settings
+                    from apps.environmental.services.historian_snapshot import (
+                        snapshot_transfer_action_readings,
+                    )
+
+                    if getattr(settings, "TRANSFER_CAPTURE_FINISH_SNAPSHOT", True):
+                        snapshot_transfer_action_readings(
+                            action_id=action_id,
+                            reading_time=execution_time,
+                            executed_by_id=executed_by_id,
+                            moment="finish",
+                        )
+                except Exception as exc:  # pragma: no cover - operational logging
+                    logger.warning(
+                        "Failed finish snapshot for TransferAction %s: %s",
+                        action_id,
+                        exc,
+                    )
+
+            transaction.on_commit(_snapshot_after_commit)
+
+            return {
+                "action_id": self.id,
+                "action_status": self.status,
+                "workflow_status": self.workflow.status,
+                "completion_percentage": float(self.workflow.completion_percentage),
+                "actions_remaining": (
+                    self.workflow.total_actions_planned - self.workflow.actions_completed
+                ),
+            }
+
     def skip(self, reason, skipped_by):
         """Skip this action with a reason"""
         if self.status != 'PENDING':
@@ -661,6 +973,14 @@ class TransferAction(models.Model):
     def save(self, *args, **kwargs):
         """Override save to update workflow totals when action is created"""
         is_new = self.pk is None
+
+        if self.dest_assignment_id and not self.dest_container_id:
+            self.dest_container_id = self.dest_assignment.container_id
+        if self.workflow_id and self.workflow.is_dynamic_execution and self.created_via == "PLANNED":
+            # Preserve backward compatibility for historical rows while defaulting
+            # newly created dynamic handoffs to live mode unless explicitly set.
+            if is_new and self.status == "IN_PROGRESS":
+                self.created_via = "DYNAMIC_LIVE"
 
         if is_new:
             current_max = self.workflow.actions.aggregate(

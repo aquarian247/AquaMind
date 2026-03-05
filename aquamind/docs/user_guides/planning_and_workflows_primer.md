@@ -103,6 +103,17 @@ Phase 8/8.5 implementation (December 2025) closed the loop with bidirectional si
      └───────────────────────────────────────────┘ (NEEDS_ATTENTION tier → prompts PlannedActivity creation)
 ```
 
+### Transfer Workflow Integration (FW->Sea Dynamic)
+
+- Dynamic FW->Sea transfers keep planning lightweight:
+  - planner creates workflow intent (`is_dynamic_execution=true`) with route mode and optional estimates
+  - no speculative container-level actions are created in `DRAFT`/`PLANNED`
+- Runtime execution happens on the dedicated page `/transfer-workflows/:id/execute`:
+  - `Start Transfer` creates one `IN_PROGRESS` handoff and captures mandatory source+destination start snapshots
+  - `Complete Transfer` applies actual count/biomass/mortality and marks the handoff `COMPLETED`
+- Dynamic completion is explicit operator signoff (`complete-dynamic`) rather than auto-completion by action-count equality.
+- These execution records still feed assimilation anchors and finance detection/creation, preserving the planner -> execute -> actuals feedback loop.
+
 ### Forward Flow (Plan → Execute → Track)
 
 1. **Planner** generates activities via templates (e.g., WEIGHT_THRESHOLD at 100g → TRANSFER plan in "Aggressive Scenario").

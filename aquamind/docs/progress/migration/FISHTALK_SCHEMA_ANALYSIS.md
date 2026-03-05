@@ -419,8 +419,8 @@ Sample data showing this approach:
 | Approach | Problem | Result |
 |----------|---------|--------|
 | Project tuple | Administrative grouping | Multiple year-classes mixed |
-| SubTransfers chain | Only tracks within-environment moves | Missing FW→Sea link |
-| PublicTransfers | Broken since Jan 2023 | No recent data |
+| SubTransfers chain | Tracks lineage/movement and can include some FW→Sea edges | Rarely yields a unique active-cohort sea root on its own |
+| PublicTransfers | Historical explicit transfer evidence, sparse/broken for active cohorts | Weak recent authority without corroborating endpoint evidence |
 | **Ext_Inputs_v2** | Tracks egg deliveries | **True biological origin** |
 
 ---
@@ -510,13 +510,20 @@ This means:
 1. `Ext_Inputs_v2` tracks inputs **per stage**, not across the full lifecycle
 2. Stitching FW-to-sea requires transfer matching, not just InputName
 3. Sea batches (e.g., "Summar 2024") are valid biological groupings for sea-phase analytics
+4. In the 2023+ operational shape, sea cohorts often look like **new marine-side input/start actions** rather than a continued FW `InputName`
+5. Practical matching therefore starts from **sea input / first-fill / first non-zero** evidence and pairs backward to the nearest plausible FW depletion/sales endpoint in the same geography
+6. If no FW sales action is visible, a terminal FW zero followed quickly by a sea input/start is still a candidate signal, but weaker than paired sales+input evidence
+7. This is why FWSEA mapping is hard: the current extracts usually do **not** expose a deterministic foreign-key join from the source sales/internal-delivery row to the destination sea population/ring, so pairing is endpoint-based rather than key-based
 
 ### 8.7 AquaMind Batch Naming Strategy
 
-For migration to AquaMind:1. **Initial Name:** Use `InputName` from `Ext_Inputs_v2` (e.g., "Benchmark Gen. Juni 2024")
-2. **At Sea Transfer:** Can rename to display format (e.g., "BM Jun 24") using transfer workflow
-3. **History Preserved:** Original name stored in `django-simple-history` via `HistoricalBatch` table
-4. **External Reference:** Store original InputName in `ExternalIdMap.metadata` for traceability---
+For migration to AquaMind:
+1. **Initial Name:** Use `InputName` from `Ext_Inputs_v2` (e.g., "Benchmark Gen. Juni 2024")
+2. **At guarded FWSEA continuation:** preserve continuity by concatenating the existing FW batch name with the selected sea batch name when needed (for example `<FW batch> - <Sea batch>`)
+3. **History Preserved:** Original and continuation names are recorded in `django-simple-history`
+4. **External Reference:** Store source names/keys in `ExternalIdMap.metadata` for traceability
+
+---
 
 ## 9. Schema Sweep: Progression/Audit Tables (2026-02-04)
 

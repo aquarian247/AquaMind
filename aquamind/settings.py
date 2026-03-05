@@ -390,6 +390,23 @@ SEA_TRANSFER_CRITERIA = {
     'default': {'min_weight_g': 100, 'target_weight_g': 100}
 }
 
+# ------------------------------------------------------------------
+# Dynamic FW->Sea transfer execution policy
+# ------------------------------------------------------------------
+# Missing mapping policy for mandatory start snapshots:
+# - STRICT: block transfer start when required AVEVA mappings are missing
+# - OVERRIDE: allow privileged override with explicit compliance note
+TRANSFER_START_MISSING_MAPPING_POLICY = os.environ.get(
+    "TRANSFER_START_MISSING_MAPPING_POLICY",
+    "OVERRIDE" if DEBUG else "STRICT",
+).upper()
+
+# Capture finish snapshots on completion-side handoff mutation.
+TRANSFER_CAPTURE_FINISH_SNAPSHOT = os.environ.get(
+    "TRANSFER_CAPTURE_FINISH_SNAPSHOT",
+    "true",
+).lower() == "true"
+
 # Confidence thresholds for UI color coding in forecast displays
 # High (green): confidence >= 0.8
 # Medium (yellow): confidence >= 0.5
@@ -501,4 +518,3 @@ CELERY_BEAT_SCHEDULE = {
 # “database is being accessed by other users” error seen when running the
 # Django parallel test runner.
 TEST_RUNNER = 'aquamind.test_runner.CleanupTestRunner'
-

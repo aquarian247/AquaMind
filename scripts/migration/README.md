@@ -18,7 +18,21 @@
      python scripts/migration/tools/pilot_migrate_input_batch.py \
      --batch-key "<InputName>|<InputNumber>|<YearClass>" \
      --expected-site "<Station Name>" \
-     --use-csv scripts/migration/data/extract/
+     --use-csv scripts/migration/data/extract/ \
+     --expand-subtransfer-descendants \
+     --transfer-edge-scope internal-only
+4b) Guarded FW->Sea continuation (selected provisional candidates only)
+   - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
+     python scripts/migration/tools/pilot_migrate_input_batch.py \
+     --batch-key "<SeaInputName>|<InputNumber>|<YearClass>" \
+     --use-csv scripts/migration/data/extract/ \
+     --migration-profile fw_default \
+     --full-lifecycle \
+     --include-fw-batch "<FWInputName>|<InputNumber>|<YearClass>" \
+     --batch-number "<Existing FW batch number>" \
+     --sea-anchor-population-id "<SeaPopulationID>" \
+     --expand-subtransfer-descendants \
+     --transfer-edge-scope internal-only
 5) Full action replays (per component, CSV)
    - python scripts/migration/tools/pilot_migrate_component_transfers.py
    - python scripts/migration/tools/pilot_migrate_component_feeding.py
@@ -78,4 +92,5 @@ Environmental at scale (optional):
 - Use --use-csv for performance and repeatability.
 - Weight samples are in grams (FishTalk) and should not be treated as kg.
 - Use `--expected-site` for both `pilot_migrate_input_batch.py` and `pilot_migrate_component.py` when station identity must be strict.
+- Linked FW->Sea continuation now treats sea cohorts as new marine-side inputs and is **anchor-scoped by default**. Do not ingest a full sea component for provisional rows unless an explicit operator override has been approved.
 - Mortality/culling/escape replay synchronizes assignment population count to: `baseline_population_count - known removals` per population mapping.

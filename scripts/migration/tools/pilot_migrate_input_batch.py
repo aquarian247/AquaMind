@@ -57,6 +57,9 @@ import django
 django.setup()
 assert_default_db_is_migration_db()
 
+from apps.batch.models import Batch
+from apps.migration_support.models import ExternalIdMap
+
 
 INPUT_STITCHING_DIR = PROJECT_ROOT / "scripts" / "migration" / "output" / "input_stitching"
 BATCH_OUTPUT_DIR = PROJECT_ROOT / "scripts" / "migration" / "output" / "input_batch_migration"
@@ -133,6 +136,35 @@ def slugify(value: str) -> str:
     return cleaned or "batch"
 
 
+def compose_continuation_batch_name(
+    fw_batch_name: str,
+    sea_batch_name: str,
+    *,
+    max_length: int = 50,
+) -> str:
+    """Compose FW->Sea display name while preserving uniqueness constraints."""
+    fw = (fw_batch_name or "").strip()
+    sea = (sea_batch_name or "").strip()
+    if not fw:
+        return sea[:max_length]
+    if not sea:
+        return fw[:max_length]
+
+    suffix = f" - {sea}"
+    if fw.lower().endswith(suffix.lower()):
+        return fw[:max_length]
+
+    combined = f"{fw}{suffix}"
+    if len(combined) <= max_length:
+        return combined
+
+    # Preserve full sea segment and trim FW prefix if necessary.
+    if len(suffix) >= max_length:
+        return combined[:max_length]
+    trimmed_fw = fw[: max_length - len(suffix)].rstrip()
+    return f"{trimmed_fw}{suffix}"
+
+
 def parse_dt(value: str) -> datetime | None:
     if not value:
         return None
@@ -191,8 +223,13 @@ class ScriptRunResult:
     duration_seconds: float
 
 
-def load_input_batch_info(batch_key: str) -> InputBatchInfo | None:
+def load_input_batch_info(
+    batch_key: str,
+    *,
+    use_csv: str | None = None,
+) -> InputBatchInfo | None:
     """Load batch summary info for a given input batch key."""
+    _ = use_csv  # reserved for future fallback lookup paths
     batches_file = INPUT_STITCHING_DIR / "input_batches.csv"
     if not batches_file.exists():
         raise FileNotFoundError(
@@ -517,11 +554,54 @@ def parse_batch_key(batch_key: str) -> tuple[str, str, str]:
     return parts[0], parts[1], parts[2]
 
 
+def resolve_existing_component_key_for_batch_number(batch_number: str) -> str | None:
+    """Return existing PopulationComponent source key for a batch_number, if any.
+
+    This guards idempotent replays when stitching key-space changes but the target
+    batch number already exists in AquaMind.
+    """
+    if not batch_number:
+        return None
+    batch = Batch.objects.filter(batch_number=batch_number).first()
+    if batch is None:
+        # Continuation runs can rename batches to "<FW> - <Sea>" while callers may
+        # still reference the FW base name. Keep lookup backward-compatible.
+        prefixed_name = f"{batch_number} - "
+        batch = (
+            Batch.objects.filter(batch_number__startswith=prefixed_name)
+            .order_by("-updated_at", "-id")
+            .first()
+        )
+    if batch is None:
+        return None
+    row = ExternalIdMap.objects.filter(
+        source_system="FishTalk",
+        source_model="PopulationComponent",
+        target_app_label=batch._meta.app_label,
+        target_model=batch._meta.model_name,
+        target_object_id=batch.pk,
+    ).first()
+    if row is None:
+        return None
+    return (row.source_identifier or "").strip() or None
+
+
 def load_csv_rows(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle))
+
+
+def is_script_enabled(script_name: str, args: argparse.Namespace) -> bool:
+    """Determine whether a pipeline script should run for current CLI args."""
+    if args.only_environmental:
+        return script_name == "pilot_migrate_component_environmental.py"
+    if script_name == "pilot_migrate_component_environmental.py" and args.skip_environmental:
+        return False
+    if script_name == "pilot_migrate_component_feed_inventory.py" and args.skip_feed_inventory:
+        return False
+    return True
 
 
 def evaluate_station_preflight(
@@ -651,6 +731,189 @@ def load_full_lifecycle_populations(batch_key: str, members_file: Path) -> list[
     return members
 
 
+def normalize_population_ids(values: list[str]) -> list[str]:
+    """Normalize and dedupe population IDs while preserving order."""
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        population_id = (value or "").strip().upper()
+        if not population_id or population_id in seen:
+            continue
+        seen.add(population_id)
+        normalized.append(population_id)
+    return normalized
+
+
+def load_subtransfer_rows_for_population_ids(
+    population_ids: set[str],
+    *,
+    use_csv: str | None,
+) -> list[dict[str, str]]:
+    """Load SubTransfers rows that touch any of the provided population IDs."""
+    if not population_ids:
+        return []
+
+    normalized_population_ids = {pid.strip().upper() for pid in population_ids if pid}
+    if not normalized_population_ids:
+        return []
+
+    if use_csv:
+        csv_path = Path(use_csv) / "sub_transfers.csv"
+        if csv_path.exists():
+            rows: list[dict[str, str]] = []
+            with csv_path.open("r", encoding="utf-8", newline="") as handle:
+                reader = csv.DictReader(handle)
+                for row in reader:
+                    endpoints = [
+                        (row.get("SourcePopBefore") or "").strip().upper(),
+                        (row.get("SourcePopAfter") or "").strip().upper(),
+                        (row.get("DestPopBefore") or "").strip().upper(),
+                        (row.get("DestPopAfter") or "").strip().upper(),
+                    ]
+                    if any(endpoint in normalized_population_ids for endpoint in endpoints):
+                        rows.append(row)
+            return rows
+
+    from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+
+    in_clause = ",".join(f"'{pid}'" for pid in sorted(normalized_population_ids))
+    extractor = BaseExtractor(ExtractionContext(profile="fishtalk_readonly"))
+    return extractor._run_sqlcmd(
+        query=(
+            "SELECT "
+            "CONVERT(varchar(36), st.SourcePopBefore) AS SourcePopBefore, "
+            "CONVERT(varchar(36), st.SourcePopAfter) AS SourcePopAfter, "
+            "CONVERT(varchar(36), st.DestPopBefore) AS DestPopBefore, "
+            "CONVERT(varchar(36), st.DestPopAfter) AS DestPopAfter "
+            "FROM dbo.SubTransfers st "
+            f"WHERE st.SourcePopBefore IN ({in_clause}) "
+            f"OR st.SourcePopAfter IN ({in_clause}) "
+            f"OR st.DestPopBefore IN ({in_clause}) "
+            f"OR st.DestPopAfter IN ({in_clause})"
+        ),
+        headers=["SourcePopBefore", "SourcePopAfter", "DestPopBefore", "DestPopAfter"],
+    )
+
+
+def filter_full_lifecycle_members_by_anchor_lineage(
+    members: list[PopulationMember],
+    *,
+    use_csv: str | None,
+    anchor_population_ids: list[str],
+    blocked_population_ids: list[str],
+    include_ancestors: bool,
+    lineage_max_hops: int,
+) -> tuple[list[PopulationMember], dict[str, Any]]:
+    """Restrict full-lifecycle members to anchor-scoped lineage subset."""
+    normalized_anchor_ids = normalize_population_ids(anchor_population_ids)
+    normalized_blocked_ids = normalize_population_ids(blocked_population_ids)
+    if not normalized_anchor_ids:
+        raise ValueError("Anchor lineage filter requires at least one --sea-anchor-population-id.")
+    if normalized_blocked_ids and not normalized_anchor_ids:
+        raise ValueError("--sea-block-population-id requires --sea-anchor-population-id.")
+
+    members_by_population_id: dict[str, PopulationMember] = {}
+    for member in members:
+        pop_id = (member.population_id or "").strip().upper()
+        if not pop_id:
+            continue
+        if pop_id not in members_by_population_id:
+            members_by_population_id[pop_id] = member
+
+    candidate_population_ids = set(members_by_population_id.keys())
+    missing_anchor_ids = [pid for pid in normalized_anchor_ids if pid not in candidate_population_ids]
+    if missing_anchor_ids:
+        raise ValueError(
+            "Anchor population IDs not present in loaded full-lifecycle members: "
+            + ", ".join(missing_anchor_ids[:10])
+        )
+
+    subtransfer_rows = load_subtransfer_rows_for_population_ids(
+        candidate_population_ids,
+        use_csv=use_csv,
+    )
+
+    forward_edges: dict[str, set[str]] = defaultdict(set)
+    reverse_edges: dict[str, set[str]] = defaultdict(set)
+
+    def add_edge(src: str, dst: str) -> None:
+        src_id = (src or "").strip().upper()
+        dst_id = (dst or "").strip().upper()
+        if not src_id or not dst_id or src_id == dst_id:
+            return
+        if src_id not in candidate_population_ids or dst_id not in candidate_population_ids:
+            return
+        forward_edges[src_id].add(dst_id)
+        reverse_edges[dst_id].add(src_id)
+
+    for row in subtransfer_rows:
+        source_before = row.get("SourcePopBefore", "")
+        source_after = row.get("SourcePopAfter", "")
+        dest_before = row.get("DestPopBefore", "")
+        dest_after = row.get("DestPopAfter", "")
+
+        # Preserve directional lineage through SubTransfers.
+        add_edge(source_before, source_after)
+        add_edge(source_before, dest_after)
+        add_edge(dest_before, dest_after)
+
+    max_hops = max(1, int(lineage_max_hops or 1))
+
+    def traverse(seed_ids: set[str], adjacency: dict[str, set[str]]) -> set[str]:
+        seen: set[str] = set(seed_ids)
+        frontier: set[str] = set(seed_ids)
+        for _ in range(max_hops):
+            if not frontier:
+                break
+            next_frontier: set[str] = set()
+            for node in frontier:
+                next_frontier.update(adjacency.get(node, set()))
+            next_frontier -= seen
+            if not next_frontier:
+                break
+            seen.update(next_frontier)
+            frontier = next_frontier
+        return seen
+
+    seed_set = set(normalized_anchor_ids)
+    descendant_ids = traverse(seed_set, forward_edges)
+    if include_ancestors:
+        ancestor_ids = traverse(seed_set, reverse_edges)
+    else:
+        ancestor_ids = set(seed_set)
+
+    selected_population_ids = descendant_ids | ancestor_ids | seed_set
+    selected_population_ids &= candidate_population_ids
+
+    blocked_in_selected = sorted(set(normalized_blocked_ids).intersection(selected_population_ids))
+    if blocked_in_selected:
+        raise ValueError(
+            "Blocked population IDs would be included by anchor lineage scope: "
+            + ", ".join(blocked_in_selected[:10])
+        )
+
+    filtered_members = [
+        member
+        for member in members
+        if (member.population_id or "").strip().upper() in selected_population_ids
+    ]
+    if not filtered_members:
+        raise ValueError("Anchor lineage filter produced zero members; refusing to continue.")
+
+    filtered_members.sort(key=lambda member: member.start_time or datetime.min)
+    stats = {
+        "input_members": len(members),
+        "filtered_members": len(filtered_members),
+        "anchor_population_ids": normalized_anchor_ids,
+        "blocked_population_ids": normalized_blocked_ids,
+        "lineage_include_ancestors": include_ancestors,
+        "lineage_max_hops": max_hops,
+        "subtransfer_rows_considered": len(subtransfer_rows),
+        "selected_population_ids": len(selected_population_ids),
+    }
+    return filtered_members, stats
+
+
 def full_lifecycle_members_path(batch_key: str) -> Path:
     slug = slugify(batch_key)
     return INPUT_STITCHING_DIR / f"full_lifecycle_population_members_{slug}.csv"
@@ -676,7 +939,11 @@ def load_sea_population_ids(batch_key: str, *, use_csv: str | None) -> list[str]
                     and row.get("YearClass", "").strip() == year_class
                 ):
                     population_ids.append(row.get("PopulationID", ""))
-        return [pid for pid in population_ids if pid]
+        cleaned = sorted(
+            {(pid or "").strip() for pid in population_ids if (pid or "").strip()},
+            key=lambda value: value.upper(),
+        )
+        return cleaned
 
     # SQL fallback
     from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
@@ -686,11 +953,20 @@ def load_sea_population_ids(batch_key: str, *, use_csv: str | None) -> list[str]
         query=(
             "SELECT CONVERT(varchar(36), PopulationID) AS PopulationID "
             "FROM dbo.Ext_Inputs_v2 "
-            f"WHERE InputName = '{input_name}' AND InputNumber = {input_number} AND YearClass = '{year_class}'"
+            f"WHERE InputName = '{input_name}' AND InputNumber = {input_number} AND YearClass = '{year_class}' "
+            "ORDER BY PopulationID"
         ),
         headers=["PopulationID"],
     )
-    return [row.get("PopulationID", "") for row in rows if row.get("PopulationID")]
+    cleaned = sorted(
+        {
+            (row.get("PopulationID", "") or "").strip()
+            for row in rows
+            if (row.get("PopulationID", "") or "").strip()
+        },
+        key=lambda value: value.upper(),
+    )
+    return cleaned
 
 
 def generate_component_csv(
@@ -799,9 +1075,11 @@ def run_migration_script(
     report_dir: Path,
     *,
     use_csv: str | None = None,
+    use_sqlite: str | None = None,
     dry_run: bool = False,
     batch_number: str | None = None,
     migration_profile: str | None = None,
+    merge_existing_component_map: bool = False,
     external_mixing_status_multiplier: float | None = None,
     lifecycle_frontier_window_hours: int | None = None,
     skip_synthetic_stage_transitions: bool = False,
@@ -843,6 +1121,8 @@ def run_migration_script(
         cmd.extend(["--batch-number", batch_number])
     if script_name == "pilot_migrate_component.py" and migration_profile:
         cmd.extend(["--migration-profile", migration_profile])
+    if script_name == "pilot_migrate_component.py" and merge_existing_component_map:
+        cmd.append("--merge-existing-component-map")
     if script_name == "pilot_migrate_component.py" and external_mixing_status_multiplier is not None:
         cmd.extend(
             [
@@ -870,6 +1150,11 @@ def run_migration_script(
         cmd.extend(["--use-csv", use_csv])
     elif use_csv:
         print(f"  [INFO] {script_name} does not support --use-csv; using SQL")
+    if (
+        use_sqlite
+        and script_name == "pilot_migrate_component_environmental.py"
+    ):
+        cmd.extend(["--use-sqlite", use_sqlite])
 
     if dry_run:
         cmd.append("--dry-run")
@@ -1178,10 +1463,14 @@ def run_scope_batches(args: argparse.Namespace, *, scope_file: Path) -> int:
 
     if args.use_csv:
         base_cmd.extend(["--use-csv", args.use_csv])
+    if args.use_sqlite:
+        base_cmd.extend(["--use-sqlite", args.use_sqlite])
     if args.skip_environmental:
         base_cmd.append("--skip-environmental")
     if args.skip_feed_inventory:
         base_cmd.append("--skip-feed-inventory")
+    if args.only_environmental:
+        base_cmd.append("--only-environmental")
     if args.extract_fail_on_warnings:
         base_cmd.append("--extract-fail-on-warnings")
     if not args.extract_enforce_operation_stage_lag:
@@ -1221,8 +1510,19 @@ def run_scope_batches(args: argparse.Namespace, *, scope_file: Path) -> int:
         base_cmd.extend(["--max-pre-smolt-batches", str(args.max_pre_smolt_batches)])
         base_cmd.extend(["--heuristic-window-days", str(args.heuristic_window_days)])
         base_cmd.extend(["--heuristic-min-score", str(args.heuristic_min_score)])
+        if args.no_continuation_batch_name_concat:
+            base_cmd.append("--no-continuation-batch-name-concat")
         for fw_batch in args.include_fw_batch:
             base_cmd.extend(["--include-fw-batch", fw_batch])
+        for anchor_population_id in args.sea_anchor_population_id:
+            base_cmd.extend(["--sea-anchor-population-id", anchor_population_id])
+        for blocked_population_id in args.sea_block_population_id:
+            base_cmd.extend(["--sea-block-population-id", blocked_population_id])
+        base_cmd.extend(["--lineage-max-hops", str(args.lineage_max_hops)])
+        if args.lineage_descendants_only:
+            base_cmd.append("--lineage-descendants-only")
+        if args.allow_full_sea_component_for_continuation:
+            base_cmd.append("--allow-full-sea-component-for-continuation")
 
     for idx, batch_key in enumerate(batch_keys, start=1):
         cmd = [*base_cmd, "--batch-key", batch_key]
@@ -1317,10 +1617,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip feed inventory migration",
     )
     parser.add_argument(
+        "--only-environmental",
+        action="store_true",
+        help=(
+            "Run only pilot_migrate_component_environmental.py for each batch "
+            "(still builds component scope and performs station preflight)."
+        ),
+    )
+    parser.add_argument(
         "--use-csv",
         type=str,
         metavar="CSV_DIR",
         help="Use pre-extracted CSV files from this directory instead of live SQL",
+    )
+    parser.add_argument(
+        "--use-sqlite",
+        type=str,
+        metavar="SQLITE_PATH",
+        help=(
+            "Optional environmental SQLite index forwarded to "
+            "pilot_migrate_component_environmental.py. "
+            "Recommended for large-scope environmental replays."
+        ),
     )
     parser.add_argument(
         "--skip-extract-freshness-preflight",
@@ -1396,6 +1714,58 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help="Explicit FW batch key(s) to include when building full-lifecycle output",
+    )
+    parser.add_argument(
+        "--no-continuation-batch-name-concat",
+        action="store_true",
+        help=(
+            "Disable default FW->Sea display naming for linked continuation runs. "
+            "Default behavior renames to '<FW batch> - <Sea batch>' through normal "
+            "batch save paths so history/audit records are written."
+        ),
+    )
+    parser.add_argument(
+        "--sea-anchor-population-id",
+        action="append",
+        default=[],
+        help=(
+            "Anchor sea PopulationID(s) for linked FW->Sea continuation. "
+            "When set, full-lifecycle members are lineage-scoped to these anchors."
+        ),
+    )
+    parser.add_argument(
+        "--sea-block-population-id",
+        action="append",
+        default=[],
+        help=(
+            "PopulationID(s) that must NOT be included in selected continuation members. "
+            "Used with --sea-anchor-population-id to hard-block known conflicting candidates."
+        ),
+    )
+    parser.add_argument(
+        "--lineage-max-hops",
+        type=int,
+        default=24,
+        help=(
+            "Max SubTransfers graph hops when deriving anchor lineage subset "
+            "(default: 24)."
+        ),
+    )
+    parser.add_argument(
+        "--lineage-descendants-only",
+        action="store_true",
+        help=(
+            "When anchor lineage scope is enabled, include descendants only "
+            "(default includes ancestors and descendants)."
+        ),
+    )
+    parser.add_argument(
+        "--allow-full-sea-component-for-continuation",
+        action="store_true",
+        help=(
+            "Override safety guard and allow linked continuation runs to ingest "
+            "full sea-component membership without anchor scoping."
+        ),
     )
     parser.add_argument(
         "--max-fw-batches",
@@ -1526,6 +1896,12 @@ def main() -> int:
     if args.script_timeout_seconds < 30:
         print("Error: --script-timeout-seconds must be >= 30")
         return 1
+    if args.only_environmental and args.skip_environmental:
+        print("Error: --only-environmental cannot be combined with --skip-environmental")
+        return 1
+    if args.use_sqlite and not Path(args.use_sqlite).exists():
+        print(f"Error: --use-sqlite path does not exist: {args.use_sqlite}")
+        return 1
 
     if args.use_csv and not args.skip_extract_freshness_preflight:
         freshness = evaluate_extract_freshness(
@@ -1559,7 +1935,7 @@ def main() -> int:
     print()
 
     # Load batch info
-    batch_info = load_input_batch_info(batch_key)
+    batch_info = load_input_batch_info(batch_key, use_csv=args.use_csv)
     if not batch_info:
         print(f"[ERROR] Batch not found: {batch_key}")
         print("Use --list-batches to see available batches")
@@ -1609,7 +1985,55 @@ def main() -> int:
         print(f"[ERROR] No populations found for batch key: {batch_key}")
         return 1
 
-    print(f"  Found {len(members)} populations")
+    raw_member_count = len(members)
+    is_linked_full_lifecycle_continuation_run = bool(
+        args.full_lifecycle and args.include_fw_batch and args.batch_number
+    )
+    anchor_population_ids = normalize_population_ids(args.sea_anchor_population_id)
+    blocked_population_ids = normalize_population_ids(args.sea_block_population_id)
+
+    if (anchor_population_ids or blocked_population_ids) and not args.full_lifecycle:
+        print(
+            "[ERROR] --sea-anchor-population-id/--sea-block-population-id require --full-lifecycle mode."
+        )
+        return 1
+
+    if (
+        is_linked_full_lifecycle_continuation_run
+        and not args.allow_full_sea_component_for_continuation
+        and not anchor_population_ids
+    ):
+        print(
+            "[ERROR] Linked full-lifecycle continuation requires anchor lineage scope. "
+            "Provide at least one --sea-anchor-population-id or explicitly set "
+            "--allow-full-sea-component-for-continuation."
+        )
+        return 1
+
+    if anchor_population_ids or blocked_population_ids:
+        try:
+            members, lineage_scope_stats = filter_full_lifecycle_members_by_anchor_lineage(
+                members,
+                use_csv=args.use_csv,
+                anchor_population_ids=anchor_population_ids,
+                blocked_population_ids=blocked_population_ids,
+                include_ancestors=not args.lineage_descendants_only,
+                lineage_max_hops=args.lineage_max_hops,
+            )
+        except ValueError as exc:
+            print(f"[ERROR] Anchor lineage scope failed: {exc}")
+            return 1
+
+        print(
+            "  Applied anchor lineage scope: "
+            f"{lineage_scope_stats['filtered_members']}/{lineage_scope_stats['input_members']} populations "
+            f"(anchors={len(lineage_scope_stats['anchor_population_ids'])}, "
+            f"blocked={len(lineage_scope_stats['blocked_population_ids'])}, "
+            f"hops={lineage_scope_stats['lineage_max_hops']}, "
+            f"include_ancestors={lineage_scope_stats['lineage_include_ancestors']})"
+        )
+
+    print(f"  Found {len(members)} populations (raw={raw_member_count})")
 
     # Show stage coverage
     stages = set()
@@ -1654,12 +2078,78 @@ def main() -> int:
     output_dir = BATCH_OUTPUT_DIR / dir_name
     print(f"\nGenerating component CSV in: {output_dir}")
     # Ensure deterministic ordering
-    members = sorted(members, key=lambda m: m.start_time or datetime.min)
+    members = sorted(
+        members,
+        key=lambda m: (m.start_time or datetime.min, (m.population_id or "")),
+    )
+    batch_number_override = args.batch_number or batch_info.input_name
+    if (
+        not args.batch_number
+        and has_duplicate_input_name(batch_info.input_name)
+        and batch_info.input_number
+    ):
+        batch_number_override = f"{batch_info.input_name} [{batch_info.input_number}]"
+
     component_key_override = None
+    reuses_existing_component_map = False
     if args.full_lifecycle:
-        sea_population_ids = load_sea_population_ids(batch_key, use_csv=args.use_csv)
-        if sea_population_ids:
-            component_key_override = sea_population_ids[0]
+        # Continuation mode: if caller provided explicit FW linkage context and
+        # target batch number, keep writing into that existing FW batch
+        # component instead of creating a sea-keyed batch component.
+        if args.include_fw_batch and args.batch_number:
+            existing_component_key = resolve_existing_component_key_for_batch_number(
+                args.batch_number
+            )
+            if existing_component_key:
+                component_key_override = existing_component_key
+                reuses_existing_component_map = True
+                print(
+                    "[INFO] Linked full-lifecycle run reusing existing component key "
+                    f"{existing_component_key} for continuation batch_number "
+                    f"'{args.batch_number}'"
+                )
+        if component_key_override is None:
+            if anchor_population_ids:
+                component_key_override = sorted(anchor_population_ids, key=str.upper)[0]
+                print(
+                    "[INFO] Anchor-scoped continuation key: "
+                    f"{component_key_override}"
+                )
+            else:
+                sea_population_ids = load_sea_population_ids(batch_key, use_csv=args.use_csv)
+                if sea_population_ids:
+                    component_key_override = sea_population_ids[0]
+    if component_key_override is None:
+        batch_number_candidates = [batch_number_override, batch_info.input_name]
+        for target_batch_number in batch_number_candidates:
+            if not target_batch_number:
+                continue
+            existing_component_key = resolve_existing_component_key_for_batch_number(
+                target_batch_number
+            )
+            if not existing_component_key:
+                continue
+            component_key_override = existing_component_key
+            reuses_existing_component_map = True
+            print(
+                "[INFO] Reusing existing component key "
+                f"{existing_component_key} for batch_number '{target_batch_number}'"
+            )
+            break
+    is_linked_full_lifecycle_continuation_run = bool(
+        args.full_lifecycle and args.include_fw_batch and args.batch_number
+    )
+    if is_linked_full_lifecycle_continuation_run and not args.no_continuation_batch_name_concat:
+        target_batch_number = compose_continuation_batch_name(
+            args.batch_number,
+            batch_info.input_name,
+        )
+        if target_batch_number != batch_number_override:
+            print(
+                "[INFO] Continuation naming: "
+                f"'{batch_number_override}' -> '{target_batch_number}'"
+            )
+        batch_number_override = target_batch_number
     csv_path = generate_component_csv(
         batch_key,
         members,
@@ -1671,14 +2161,15 @@ def main() -> int:
     component_key = component_key_override or members[0].population_id
 
     print(f"\nComponent key for migration: {component_key}")
-    batch_number_override = args.batch_number or batch_info.input_name
-    if (
-        not args.batch_number
-        and has_duplicate_input_name(batch_info.input_name)
-        and batch_info.input_number
-    ):
-        batch_number_override = f"{batch_info.input_name} [{batch_info.input_number}]"
     is_linked_full_lifecycle_run = bool(args.full_lifecycle and args.include_fw_batch)
+    merge_existing_component_map = bool(
+        is_linked_full_lifecycle_run and reuses_existing_component_map
+    )
+    if is_linked_full_lifecycle_run and not merge_existing_component_map:
+        print(
+            "[INFO] Linked full-lifecycle run has no existing component map; "
+            "merge-existing-component-map is disabled for initial materialization."
+        )
     transfer_include_synthetic_stage_transitions = bool(args.include_synthetic_stage_transitions)
     if transfer_include_synthetic_stage_transitions:
         print("Transfer migration synthetic stage transitions: ENABLED (CLI override).")
@@ -1695,9 +2186,7 @@ def main() -> int:
         print("\n[DRY RUN] Would run the following scripts:")
         planned_scripts = []
         for script in PIPELINE_CORE_SCRIPT_ORDER + PIPELINE_PARALLEL_SCRIPT_ORDER + PIPELINE_TAIL_SCRIPT_ORDER:
-            if script == "pilot_migrate_component_environmental.py" and args.skip_environmental:
-                continue
-            if script == "pilot_migrate_component_feed_inventory.py" and args.skip_feed_inventory:
+            if not is_script_enabled(script, args):
                 continue
             planned_scripts.append(script)
         for script in planned_scripts:
@@ -1717,9 +2206,7 @@ def main() -> int:
     # Build enabled script list in deterministic order.
     enabled_scripts = []
     for script in PIPELINE_CORE_SCRIPT_ORDER + PIPELINE_PARALLEL_SCRIPT_ORDER + PIPELINE_TAIL_SCRIPT_ORDER:
-        if script == "pilot_migrate_component_environmental.py" and args.skip_environmental:
-            continue
-        if script == "pilot_migrate_component_feed_inventory.py" and args.skip_feed_inventory:
+        if not is_script_enabled(script, args):
             continue
         enabled_scripts.append(script)
 
@@ -1746,9 +2233,11 @@ def main() -> int:
             component_key,
             output_dir,
             use_csv=args.use_csv,
+            use_sqlite=args.use_sqlite,
             dry_run=args.dry_run,
             batch_number=batch_number_override,
             migration_profile=args.migration_profile,
+            merge_existing_component_map=merge_existing_component_map,
             external_mixing_status_multiplier=args.external_mixing_status_multiplier,
             lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
             skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,
@@ -1792,9 +2281,11 @@ def main() -> int:
                         component_key,
                         output_dir,
                         use_csv=args.use_csv,
+                        use_sqlite=args.use_sqlite,
                         dry_run=args.dry_run,
                         batch_number=batch_number_override,
                         migration_profile=args.migration_profile,
+                        merge_existing_component_map=merge_existing_component_map,
                         external_mixing_status_multiplier=args.external_mixing_status_multiplier,
                         lifecycle_frontier_window_hours=args.lifecycle_frontier_window_hours,
                         skip_synthetic_stage_transitions=not transfer_include_synthetic_stage_transitions,

@@ -1,7 +1,7 @@
 # Transfer Workflow & Finance Integration - User Guide
 
-**Version**: 1.0  
-**Last Updated**: October 20, 2024  
+**Version**: 1.1  
+**Last Updated**: March 4, 2026  
 **Audience**: Freshwater Managers, Ship Crew, Farming Managers, Finance Team
 
 ---
@@ -25,7 +25,7 @@ The Transfer Workflow system manages multi-step batch transfers that can span da
 
 ✅ **Multi-day Operations** - Plan and execute transfers over days or weeks  
 ✅ **Progress Tracking** - Real-time visibility into completion status  
-✅ **Mobile Execution** - Ship crew can execute actions from tablets/phones  
+✅ **Page-Based Execution** - Ship crew runs dynamic FW->Sea from a dedicated execution page  
 ✅ **Finance Automation** - Auto-creates intercompany transactions  
 ✅ **Approval Workflow** - Manager approval before accounting export  
 ✅ **Multi-Currency** - Supports DKK, GBP, NOK, ISK, EUR
@@ -100,35 +100,28 @@ These transfers **do NOT** create financial transactions:
 
 ---
 
-### Workflow 2: Execute Transfer Action (Ship Crew - Mobile)
+### Workflow 2: Execute Dynamic FW->Sea Transfer (Ship Crew - Mobile)
 
-**Scenario**: Execute transfer from Post-Smolt tank to sea ring during voyage
+**Scenario**: Execute live station->truck->vessel->ring handoffs during voyage
 
 **Steps**:
 
-1. **Open** AquaMind app on tablet/phone
-2. **Navigate** to Transfer Workflows
-3. **Find** workflow TRF-2024-042 (or from push notification)
-4. **View** pending actions list
-5. **Click** "Execute" on Action #5
-6. **Dialog opens** with transfer details:
-   - From: Tank PS-05 (500 fish, 25 kg)
-   - To: Ring A-19 (currently empty)
-7. **Fill in** execution details:
-   - Mortality: 8 fish
-   - Transfer method: NET
-   - Water temp: 12.5°C
-   - O₂ level: 9.2 mg/L
-   - Duration: 45 minutes
-   - Notes: "Good conditions, fish adapting well"
-8. **Click** "Execute Transfer"
-9. **System**:
-   - Reduces source tank: 500 → 492 fish (8 mortality)
-   - Increases dest ring: 0 → 492 fish
-   - Marks action: COMPLETED
-   - Updates workflow: Progress 5/10 (50%)
-   - If last action: Auto-completes workflow
-10. **Result**: Action completed, progress updated
+1. **Open** AquaMind app on tablet/phone.
+2. **Navigate** to the dynamic workflow execution page: `/transfer-workflows/{id}/execute`.
+3. In **Start Transfer**, choose leg type and live source/destination.
+4. Enter planned transfer quantity and method, then click **Start Transfer**.
+5. **System start behavior**:
+   - Creates one `TransferAction` in `IN_PROGRESS`.
+   - Captures mandatory start compliance snapshot for source + destination.
+   - Required parameters: O2, Temperature, CO2 (when mapped).
+   - Applies missing-mapping policy (strict block or privileged override with explicit note).
+6. In **Complete Transfer**, enter actual count, biomass, mortality, and notes.
+7. Click **Complete Transfer**.
+8. **System completion behavior**:
+   - Applies source/destination assignment mutations.
+   - Marks action `COMPLETED` and updates workflow progress/totals.
+   - Keeps workflow `IN_PROGRESS` until operator explicitly uses **Complete Workflow**.
+9. **Result**: Handoff completed with compliance traceability and finance-ready workflow totals.
 
 ---
 
@@ -168,37 +161,38 @@ sequenceDiagram
     participant User as Ship Crew
     participant UI as Frontend
     participant API as Django API
+    participant ACT as TransferAction
     participant WF as BatchTransferWorkflow
     participant FS as TransferFinanceService
     participant TX as IntercompanyTransaction
 
-    User->>UI: Execute last action
-    UI->>API: POST /api/batch/transfer-actions/{id}/execute/
-    API->>WF: action.execute()
-    WF->>WF: Update populations
-    WF->>WF: Mark action COMPLETED
-    WF->>WF: actions_completed += 1
-    WF->>WF: check_completion()
-    
-    alt All actions complete
-        WF->>WF: status = COMPLETED
-        WF->>WF: is_intercompany?
-        
-        alt Is intercompany
-            WF->>FS: create_transaction()
-            FS->>FS: get_companies_from_actions()
-            FS->>FS: lookup_pricing_policy()
-            FS->>FS: calculate: biomass × price_per_kg
-            FS->>TX: Create(state=PENDING)
-            TX-->>FS: transaction
-            FS-->>WF: transaction
-            WF->>WF: finance_transaction = tx
-        end
+    User->>UI: Start Transfer
+    UI->>API: POST /api/v1/batch/transfer-workflows/{id}/handoffs/start/
+    API->>ACT: Create IN_PROGRESS action
+    API->>API: Capture mandatory start snapshot (source+dest)
+    API-->>UI: Action + snapshot summary
+
+    User->>UI: Complete Transfer
+    UI->>API: POST /api/v1/batch/transfer-actions/{id}/complete-handoff/
+    API->>ACT: Apply actual count/biomass/mortality
+    API->>WF: Update progress/totals
+    API-->>UI: Handoff completed
+
+    User->>UI: Complete Workflow
+    UI->>API: POST /api/v1/batch/transfer-workflows/{id}/complete-dynamic/
+    API->>WF: Validate no IN_PROGRESS + mark COMPLETED
+    WF->>WF: is_intercompany?
+
+    alt Is intercompany
+        WF->>FS: create_transaction()
+        FS->>FS: calculate biomass × price policy
+        FS->>TX: Create(state=PENDING)
+        TX-->>FS: transaction
+        FS-->>WF: finance_transaction = tx
     end
-    
-    WF-->>API: Result
+
     API-->>UI: 200 OK
-    UI->>User: ✅ Transfer complete! Transaction created.
+    UI->>User: Transfer workflow completed and finance state updated.
 ```
 
 ---
@@ -258,10 +252,30 @@ POST /api/v1/batch/transfer-workflows/
 # Plan workflow (DRAFT → PLANNED)
 POST /api/v1/batch/transfer-workflows/{id}/plan/
 
+# Dynamic execution context
+GET /api/v1/batch/transfer-workflows/{id}/execution-context/
+
+# Dynamic start handoff (creates IN_PROGRESS + mandatory start snapshot)
+POST /api/v1/batch/transfer-workflows/{id}/handoffs/start/
+{
+  "leg_type": "STATION_TO_TRUCK",
+  "source_assignment_id": 2536,
+  "dest_container_id": 4412,
+  "planned_transferred_count": 10000,
+  "planned_transferred_biomass_kg": "500.00",
+  "transfer_method": "PUMP"
+}
+
 # Cancel workflow
 POST /api/v1/batch/transfer-workflows/{id}/cancel/
 {
   "cancellation_reason": "Weather conditions unsafe"
+}
+
+# Explicit completion for dynamic workflow
+POST /api/v1/batch/transfer-workflows/{id}/complete-dynamic/
+{
+  "completion_note": "Operation finished and reconciled."
 }
 ```
 
@@ -276,21 +290,28 @@ GET /api/v1/batch/transfer-actions/
 # Get action detail
 GET /api/v1/batch/transfer-actions/{id}/
 
-# Execute action
+# Non-dynamic execute action (legacy/standard workflows)
 POST /api/v1/batch/transfer-actions/{id}/execute/
-{
-  "mortality_during_transfer": 8,
-  "transfer_method": "NET",
-  "water_temp_c": "12.5",
-  "oxygen_level": "9.2",
-  "execution_duration_minutes": 45,
-  "notes": "Good conditions"
-}
 
 # Skip action
 POST /api/v1/batch/transfer-actions/{id}/skip/
 {
   "reason": "Weather delay, rescheduling"
+}
+
+# Dynamic complete handoff (IN_PROGRESS -> COMPLETED)
+POST /api/v1/batch/transfer-actions/{id}/complete-handoff/
+{
+  "transferred_count": 9800,
+  "transferred_biomass_kg": "490.00",
+  "mortality_during_transfer": 40,
+  "notes": "Final tally from crew counters"
+}
+
+# Optional in-transit compliance snapshot
+POST /api/v1/batch/transfer-actions/{id}/snapshot/
+{
+  "moment": "in_transit"
 }
 ```
 
@@ -323,7 +344,8 @@ Response:
 
 ```
 /transfer-workflows              - Workflow list (filterable)
-/transfer-workflows/{id}         - Workflow detail & execution
+/transfer-workflows/{id}         - Workflow detail
+/transfer-workflows/{id}/execute - Dynamic execution page (Start/Complete handoffs)
 /finance/approvals               - Pending transaction approvals
 ```
 
@@ -361,10 +383,10 @@ Configured in Django Admin: **Finance → Intercompany Policies**
 DRAFT (Planning)
   ↓ plan_workflow()
 PLANNED (Ready to Execute)
-  ↓ execute first action
+  ↓ start first handoff/action
 IN_PROGRESS (Partially Executed)
-  ↓ execute last action
-COMPLETED (All Actions Done)
+  ↓ complete_dynamic() for dynamic workflows
+COMPLETED (Operator Signoff Done)
 ```
 
 **Alternative Paths**:
@@ -373,10 +395,10 @@ COMPLETED (All Actions Done)
 ### Action States
 
 ```
-PENDING (Not Started)
-  ↓ execute()
+PENDING (Standard Workflow Action)
+  ↓ execute() [standard workflows]
 IN_PROGRESS (Executing)
-  ↓ success
+  ↓ complete-handoff() [dynamic workflows]
 COMPLETED (Done)
 ```
 
@@ -426,26 +448,23 @@ EXPORTED (Sent to ERP)
 
 **Day 1 (Oct 20) - 14:00**
 - Ship arrives at first sea ring location
-- Crew opens workflow on tablet
-- Executes Action #1: PS-01 → Ring-A15
-  - Mortality: 5 fish
-  - Method: NET
-  - Temp: 12.5°C, O₂: 9.2 mg/L
-  - Duration: 45 minutes
-  - Notes: "Smooth transfer, fish active"
-- Result: Status → IN_PROGRESS (10% complete)
+- Crew opens `/transfer-workflows/{id}/execute` on tablet
+- Starts handoff (station -> truck) with mandatory start snapshot
+- Completes handoff with actual mortality/method/notes
+- Result: workflow remains `IN_PROGRESS` with updated totals/progress
 
 **Day 3 (Oct 22) - 09:30**
-- Execute Action #2: PS-02 → Ring-A16
-- Result: Progress 2/10 (20%)
+- Start + complete next handoff from execution page
+- Result: dynamic progress updates from actual transferred totals
 
 **Days 4-13**
-- Execute actions #3-#9 gradually
-- Progress: 30%, 40%, 50%, 60%, 70%, 80%, 90%
+- Start/complete additional handoffs as live route conditions dictate
+- No speculative pending handoffs are required in advance
 
 **Day 14 (Nov 3) - 11:15**
-- Execute Action #10 (last one): PS-10 → Ring-A24
-- Result: **Workflow AUTO-COMPLETES** ✅
+- Complete final handoff
+- Operator selects **Complete Workflow** (explicit dynamic completion)
+- Result: workflow transitions to `COMPLETED` ✅
 - System creates IntercompanyTransaction:
   - tx_id: 456
   - Amount: 42,000 NOK (actual biomass transferred)
@@ -547,39 +566,27 @@ EXPORTED (Sent to ERP)
 
 ---
 
-### Execute Action Dialog (Mobile)
+### Dynamic Execution Page (Mobile)
 
 ```
-┌──────────────────────────────────────────┐
-│  Execute Transfer Action #6              │
-│  Workflow: TRF-2024-042                  │
-├──────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────────┐ │
-│  │ FROM         │  │ TO               │ │
-│  │ Tank PS-06   │  │ Ring A-20        │ │
-│  │ 500 fish     │  │ Empty            │ │
-│  │ 25.00 kg     │  │ Cap: 1,000 fish  │ │
-│  └──────────────┘  └──────────────────┘ │
-│           ⬇️                             │
-│  Transferring 500 fish (25.00 kg)        │
-├──────────────────────────────────────────┤
-│  Mortality During Transfer:              │
-│  [8] fish                                │
-│                                          │
-│  Transfer Method:                        │
-│  [NET ▼]                                 │
-│                                          │
-│  Water Temp (°C)  │  O₂ Level (mg/L)   │
-│  [12.5]          │  [9.2]             │
-│                                          │
-│  Duration (minutes):                     │
-│  [45]                                    │
-│                                          │
-│  Notes (Optional):                       │
-│  [Conditions good, minimal stress...]    │
-├──────────────────────────────────────────┤
-│  [Cancel]    [Execute Transfer] ✅       │
-└──────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│  TRF-2024-042 Execution [IN_PROGRESS]                 │
+├────────────────────────────────────────────────────────┤
+│  Start Transfer                                        │
+│  Leg: [Station -> Truck]                              │
+│  Source: [Station Tank S1]                            │
+│  Destination: [Truck-1 Tank]                          │
+│  Planned Count: [10000] Biomass: [500.00]             │
+│  [Start Transfer]                                      │
+│  Start Snapshot Compliance: captured (O2/Temp/CO2)    │
+├────────────────────────────────────────────────────────┤
+│  Complete Transfer                                     │
+│  In-Progress Action: [#12 Station -> Truck]           │
+│  Actual Count: [9800] Biomass: [490.00] Mortality:[40]│
+│  [Complete Transfer]                                   │
+├────────────────────────────────────────────────────────┤
+│  Recent Handoffs + Progress + Complete Workflow        │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -602,10 +609,11 @@ EXPORTED (Sent to ERP)
 **Symptom**: Execute button disabled or error
 
 **Solutions**:
+- ✅ For dynamic FW->Sea, use execution page (`/transfer-workflows/{id}/execute`) instead of action dialog
 - ✅ Workflow must be in PLANNED or IN_PROGRESS status
-- ✅ Action must be in PENDING status
-- ✅ Check source container has sufficient fish
-- ✅ Verify mortality + transferred count ≤ source population
+- ✅ Start requires valid source/destination and mandatory start snapshot compliance
+- ✅ If mapping is missing, provide privileged override note only when policy allows it
+- ✅ Completion requires action in IN_PROGRESS and actual totals within source availability
 
 ---
 
@@ -768,10 +776,17 @@ If automatic creation fails:
 
 ## Change Log
 
+### Version 1.1 (March 4, 2026)
+- ✅ Dynamic FW->Sea execution page (`/transfer-workflows/{id}/execute`)
+- ✅ Two-step runtime handoff flow (`Start Transfer` -> `Complete Transfer`)
+- ✅ Mandatory start compliance snapshots (O2/Temperature/CO2 policy path)
+- ✅ Explicit dynamic workflow completion (`complete-dynamic`)
+- ✅ Deprecated runtime modal path removed for dynamic operations
+
 ### Version 1.0 (October 20, 2024)
 - ✅ Initial release
 - ✅ Workflow management UI
-- ✅ Action execution dialog
+- ✅ Standard action execution dialog
 - ✅ Finance integration
 - ✅ Multi-currency support
 - ✅ Approval workflow
@@ -783,13 +798,13 @@ If automatic creation fails:
 ### Ship Crew (Mobile)
 
 ```
-Execute Transfer:
+Execute Dynamic Transfer:
 1. Open workflow on tablet
-2. Find next PENDING action
-3. Click [Execute]
-4. Fill mortality, temp, O₂
-5. Submit
-6. Confirm success ✅
+2. Open execution page
+3. Start Transfer (mandatory start snapshot gate)
+4. Complete Transfer with actuals
+5. Repeat handoffs as needed
+6. Complete Workflow when done ✅
 ```
 
 ### Freshwater Manager (Desktop)
@@ -817,4 +832,3 @@ Approve Transaction:
 ---
 
 **End of Guide** - For questions, contact your system administrator or refer to technical documentation.
-

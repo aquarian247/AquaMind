@@ -309,6 +309,14 @@ All infrastructure models implement django-simple-history for comprehensive chan
 - `infrastructure_container` ← `broodstock_fishmovement` (PROTECT, to_container, related_name='fish_movements_to')
 - `infrastructure_freshwaterstation` ← `broodstock_eggproduction` (SET_NULL, related_name='egg_productions')
 
+#### FW->Sea Dynamic Execution Notes
+- Transport execution classifies containers by location context:
+  - `hall_id` -> station
+  - `carrier_id` + `carrier_type=TRUCK` -> truck
+  - `carrier_id` + `carrier_type=VESSEL` -> vessel
+  - `area_id` -> ring
+- This classification drives route-leg validation and execution-context source/destination pools.
+
 ### 4.2 Batch Management (`batch` app)
 **Purpose**: Tracks fish batches through their lifecycle.
 
@@ -407,12 +415,17 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `actions_completed`: integer (NOT NULL, default: 0) # Number of completed actions
   - `completion_percentage`: decimal(5, 2) (NOT NULL, default: 0.00) # Auto-calculated progress
   - `is_dynamic_execution`: boolean (NOT NULL, default: False) # Dynamic station-to-sea mode (actions can be created during execution)
+  - `dynamic_route_mode`: varchar(32) (nullable, choices: `DIRECT_STATION_TO_VESSEL`, `VIA_TRUCK_TO_VESSEL`) # Required for dynamic FW->Sea planning
+  - `estimated_total_count`: integer (nullable) # Optional dynamic planning estimate for execution progress
+  - `estimated_total_biomass_kg`: decimal(12, 2) (nullable) # Optional dynamic planning estimate for execution progress
   - `is_intercompany`: boolean (NOT NULL, default: False) # Crosses subsidiary boundaries
   - `source_subsidiary`: varchar(20) (nullable)
   - `dest_subsidiary`: varchar(20) (nullable)
   - `finance_transaction_id`: bigint (FK to `finance_intercompanytransaction`.`id`, on_delete=PROTECT, nullable) # Linked transaction
   - `initiated_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, NOT NULL) # User who created workflow
   - `completed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, nullable)
+  - `dynamic_completed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, nullable) # Explicit dynamic completion operator
+  - `dynamic_completed_at`: timestamptz (nullable) # Explicit dynamic completion timestamp
   - `notes`: text (NOT NULL, default: '')
   - `cancellation_reason`: text (NOT NULL, default: '')
   - `created_at`: timestamptz (NOT NULL)
@@ -425,6 +438,9 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `status`: varchar(20) (NOT NULL, default: 'PENDING') # PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED
   - `source_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, NOT NULL) # Source container assignment
   - `dest_assignment_id`: bigint (FK to `batch_batchcontainerassignment`.`id`, on_delete=PROTECT, nullable) # Destination container assignment (optional in dynamic handoffs)
+  - `dest_container_id`: bigint (FK to `infrastructure_container`.`id`, on_delete=PROTECT, nullable) # Destination container selected at dynamic handoff start
+  - `leg_type`: varchar(32) (nullable, choices: `STATION_TO_VESSEL`, `STATION_TO_TRUCK`, `TRUCK_TO_VESSEL`, `VESSEL_TO_RING`) # Explicit dynamic transport leg
+  - `created_via`: varchar(20) (NOT NULL, default: `PLANNED`, choices: `PLANNED`, `DYNAMIC_LIVE`) # Distinguishes intent-planned vs runtime-created handoffs
   - `source_population_before`: integer (NOT NULL) # Population in source before action
   - `transferred_count`: integer (NOT NULL) # Number of fish to transfer
   - `transferred_biomass_kg`: decimal(10, 2) (NOT NULL) # Biomass being transferred
@@ -442,6 +458,7 @@ All infrastructure models implement django-simple-history for comprehensive chan
   - `selection_method`: varchar(16) (NOT NULL, default: 'AVERAGE') # AVERAGE, LARGEST, SMALLEST
   - `execution_duration_minutes`: integer (nullable) # How long the transfer took
   - `actual_execution_date`: date (nullable) # When action was executed
+  - `executed_at`: timestamptz (nullable) # High-resolution execution timestamp for dynamic runtime ordering
   - `executed_by_id`: bigint (FK to `auth_user`.`id`, on_delete=PROTECT, nullable) # User who executed action
   - `notes`: text (NOT NULL, default: '')
   - `created_at`: timestamptz (NOT NULL)
@@ -1719,6 +1736,14 @@ The Harvest Management app's data model supports comprehensive tracking of harve
 2. **Mapping exercise** – Export the subset of analog measurement tags to a local CSV (not tracked in the repo) and populate `historian_tag_link` with the matching AquaMind sensor/container/parameter.
 3. **Telemetry ingestion** – Block-file parsers (and future realtime feeds) consult `historian_tag_link`, then write directly into `environmental_environmentalreading` (TimescaleDB hypertable) so AquaMind remains the authoritative store for environmental analytics while AVEVA continues to operate in production.
 
+#### Transfer Compliance Snapshot Contract
+- Dynamic transfer start (`handoffs/start`) requires source + destination mappings for `oxygen`, `temperature`, and `co2`.
+- Policy is configuration-driven:
+  - `TRANSFER_START_MISSING_MAPPING_POLICY=STRICT` -> block start when required mapping is missing.
+  - `TRANSFER_START_MISSING_MAPPING_POLICY=OVERRIDE` -> allow privileged override with mandatory compliance note.
+- Snapshot records are persisted in `environmental_environmentalreading` with transfer snapshot markers in `notes` for auditability.
+- Completion-side snapshot capture remains supported and is controlled by `TRANSFER_CAPTURE_FINISH_SNAPSHOT`.
+
 ### 4.12 Operational Planning (`planning` app)
 
 **Purpose**: Provides scenario-aware operational activity planning and scheduling across batch lifecycles, enabling proactive management, timeline visibility, and variance tracking for all operational events.
@@ -1744,6 +1769,13 @@ The Harvest Management app's data model supports comprehensive tracking of harve
   - Indexes: `(scenario_id, due_date)`, `(batch_id, status)`, `(activity_type, status)`
   - **Properties**: `is_overdue` (computed: returns True if status=PENDING and due_date < today)
   - **Methods**: `mark_completed(user)`, `spawn_transfer_workflow(workflow_type, source_stage, dest_stage)`
+
+#### Transfer Planning Integration (Dynamic FW->Sea)
+- Dynamic FW->Sea planning remains workflow-intent based:
+  - planner creates a transfer workflow with route mode + estimates
+  - no speculative container-level transfer actions are created in `DRAFT`/`PLANNED`
+- Runtime handoff actions are created only via execution APIs (`handoffs/start` -> `complete-handoff`) from the dedicated execution page.
+- Dynamic workflow completion is explicit operator signoff (`complete-dynamic`), not auto-computed from planned action count.
 
 - **`planning_activitytemplate`** (Template Definitions)
   - `id`: bigint (PK, auto-increment)

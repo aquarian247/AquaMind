@@ -275,8 +275,10 @@ def migrate_feed_stores(extractor, dry_run: bool = False) -> dict:
         return {"total": len(real_stores), "to_migrate": len(to_migrate)}
     
     created = 0
+    updated = 0
     skipped = 0
     no_location = 0
+    barge_promoted = 0
     errors = []
     
     # Get a default location if needed
@@ -324,10 +326,38 @@ def migrate_feed_stores(extractor, dry_run: bool = False) -> dict:
                     else:
                         skipped += 1
                         continue
+
+                # Sea-linked feed stores should be represented as barges
+                # unless an explicit non-barge type was inferred from name.
+                if area and not hall and container_type == "SILO":
+                    container_type = "BARGE"
+                    barge_promoted += 1
                 
                 existing_container = FeedContainer.objects.filter(name=f"FT-{name}").first()
                 if existing_container:
                     feed_container = existing_container
+                    target_hall = hall if hall else None
+                    target_area = area if not hall else None
+                    target_capacity = capacity if capacity > 0 else Decimal("10000")
+                    changed = False
+                    if feed_container.container_type != container_type:
+                        feed_container.container_type = container_type
+                        changed = True
+                    if feed_container.hall_id != (target_hall.id if target_hall else None):
+                        feed_container.hall = target_hall
+                        changed = True
+                    if feed_container.area_id != (target_area.id if target_area else None):
+                        feed_container.area = target_area
+                        changed = True
+                    if feed_container.capacity_kg != target_capacity:
+                        feed_container.capacity_kg = target_capacity
+                        changed = True
+                    if bool(feed_container.active) != bool(is_active):
+                        feed_container.active = is_active
+                        changed = True
+                    if changed:
+                        feed_container.save()
+                        updated += 1
                 else:
                     feed_container = FeedContainer.objects.create(
                         name=f"FT-{name}",
@@ -355,12 +385,22 @@ def migrate_feed_stores(extractor, dry_run: bool = False) -> dict:
             except Exception as e:
                 errors.append({"store_id": store_id, "name": name, "error": str(e)})
     
-    print(f"\n  Results: {created} created, {skipped} skipped, {no_location} used default location")
+    print(
+        f"\n  Results: {created} created, {updated} updated, {skipped} skipped, "
+        f"{no_location} used default location, {barge_promoted} sea stores promoted to BARGE"
+    )
     if errors[:3]:
         for e in errors[:3]:
             print(f"    Error: {e}")
     
-    return {"created": created, "skipped": skipped, "no_location": no_location, "errors": len(errors)}
+    return {
+        "created": created,
+        "updated": updated,
+        "skipped": skipped,
+        "no_location": no_location,
+        "barge_promoted": barge_promoted,
+        "errors": len(errors),
+    }
 
 
 def migrate_feed_deliveries(extractor, supplier_lookup: dict, dry_run: bool = False, limit: int = None) -> dict:

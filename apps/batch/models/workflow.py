@@ -30,6 +30,11 @@ class BatchTransferWorkflow(models.Model):
         ('CONTAINER_REDISTRIBUTION', 'Container Redistribution'),
         ('EMERGENCY_CASCADE', 'Emergency Cascading Transfer'),
     ]
+
+    DYNAMIC_ROUTE_MODE_CHOICES = [
+        ("DIRECT_STATION_TO_VESSEL", "Direct Station to Vessel"),
+        ("VIA_TRUCK_TO_VESSEL", "Via Truck to Vessel"),
+    ]
     
     # Status Choices (State Machine)
     STATUS_CHOICES = [
@@ -152,6 +157,28 @@ class BatchTransferWorkflow(models.Model):
             "instead of pre-defined during planning."
         ),
     )
+    dynamic_route_mode = models.CharField(
+        max_length=32,
+        choices=DYNAMIC_ROUTE_MODE_CHOICES,
+        null=True,
+        blank=True,
+        help_text=(
+            "Dynamic route pattern for station-to-sea workflows. "
+            "Required when is_dynamic_execution is true."
+        ),
+    )
+    estimated_total_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Optional operator estimate of total count to move.",
+    )
+    estimated_total_biomass_kg = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Optional operator estimate of total biomass to move.",
+    )
     
     # Finance Integration
     is_intercompany = models.BooleanField(
@@ -194,6 +221,19 @@ class BatchTransferWorkflow(models.Model):
         related_name='completed_transfer_workflows',
         help_text="User who completed this workflow"
     )
+    dynamic_completed_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="dynamically_completed_transfer_workflows",
+        help_text="User who explicitly completed a dynamic workflow.",
+    )
+    dynamic_completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of explicit dynamic workflow completion.",
+    )
     notes = models.TextField(
         blank=True,
         help_text="General notes about the workflow"
@@ -231,9 +271,9 @@ class BatchTransferWorkflow(models.Model):
     
     def can_add_actions(self):
         """Allow adding actions while executing only for dynamic workflows."""
-        if self.status in ['DRAFT', 'PLANNED']:
-            return True
-        return self.is_dynamic_execution and self.status == 'IN_PROGRESS'
+        if self.is_dynamic_execution:
+            return self.status == "IN_PROGRESS"
+        return self.status in ["DRAFT", "PLANNED"]
     
     def can_execute_actions(self):
         """Can only execute in PLANNED or IN_PROGRESS status"""
@@ -284,6 +324,14 @@ class BatchTransferWorkflow(models.Model):
         station_like_sources = {'fry', 'parr', 'smolt', 'post-smolt'}
         sea_like_destinations = {'post-smolt', 'adult'}
         return source_name in station_like_sources and dest_name in sea_like_destinations
+
+    def get_allowed_leg_types(self):
+        """Allowed handoff leg types for the configured dynamic route mode."""
+        if self.dynamic_route_mode == "DIRECT_STATION_TO_VESSEL":
+            return ["STATION_TO_VESSEL", "VESSEL_TO_RING"]
+        if self.dynamic_route_mode == "VIA_TRUCK_TO_VESSEL":
+            return ["STATION_TO_TRUCK", "TRUCK_TO_VESSEL", "VESSEL_TO_RING"]
+        return []
     
     def mark_in_progress(self):
         """
@@ -300,6 +348,8 @@ class BatchTransferWorkflow(models.Model):
         Auto-called after each action completes.
         Transitions to COMPLETED when all actions are done.
         """
+        if self.is_dynamic_execution:
+            return
         if self.status == 'IN_PROGRESS':
             if self.actions_completed >= self.total_actions_planned:
                 self.status = 'COMPLETED'
@@ -316,9 +366,27 @@ class BatchTransferWorkflow(models.Model):
     
     def update_progress(self):
         """Recalculate completion percentage from actions"""
+        if self.is_dynamic_execution:
+            self.recalculate_totals()
+            if self.estimated_total_count and self.estimated_total_count > 0:
+                ratio = Decimal(self.total_transferred_count) / Decimal(self.estimated_total_count)
+                self.completion_percentage = min(Decimal("100.00"), ratio * Decimal("100"))
+            elif self.estimated_total_biomass_kg and self.estimated_total_biomass_kg > 0:
+                ratio = Decimal(self.total_biomass_kg) / Decimal(self.estimated_total_biomass_kg)
+                self.completion_percentage = min(Decimal("100.00"), ratio * Decimal("100"))
+            else:
+                self.completion_percentage = Decimal("0.00")
+
+            self.save(update_fields=[
+                "actions_completed",
+                "completion_percentage",
+                "updated_at",
+            ])
+            return
+
         if self.total_actions_planned > 0:
             self.completion_percentage = (
-                Decimal(self.actions_completed) / 
+                Decimal(self.actions_completed) /
                 Decimal(self.total_actions_planned) * 100
             )
             self.save(update_fields=[
@@ -358,12 +426,85 @@ class BatchTransferWorkflow(models.Model):
         if self.total_actions_planned == 0 and not self.is_dynamic_execution:
             from django.core.exceptions import ValidationError
             raise ValidationError("Cannot plan workflow with zero actions")
+
+        if self.is_dynamic_execution:
+            if self.actions.exists():
+                from django.core.exceptions import ValidationError
+                raise ValidationError(
+                    "Dynamic workflow planning is intent-only. "
+                    "Remove pre-planned actions before planning."
+                )
+            if not self.dynamic_route_mode:
+                from django.core.exceptions import ValidationError
+                raise ValidationError(
+                    "Dynamic route mode is required for dynamic workflows."
+                )
         
         # Detect if this is an intercompany transfer
         self.detect_intercompany()
         
         self.status = 'PLANNED'
         self.save(update_fields=['status', 'updated_at'])
+
+    def complete_dynamic(self, *, completed_by, completion_note: str = ""):
+        """
+        Explicit completion for dynamic workflows.
+
+        Dynamic workflows never auto-complete by action count. Completion
+        requires an operator action after all active handoffs are finalized.
+        """
+        from django.core.exceptions import ValidationError
+
+        if not self.is_dynamic_execution:
+            raise ValidationError("Use standard completion flow for non-dynamic workflows.")
+        if self.status in ["COMPLETED", "CANCELLED"]:
+            raise ValidationError(f"Workflow is already {self.status}.")
+
+        in_progress_count = self.actions.filter(status="IN_PROGRESS").count()
+        if in_progress_count > 0:
+            raise ValidationError(
+                "Cannot complete workflow while handoffs are still IN_PROGRESS."
+            )
+
+        completed_actions = self.actions.filter(status="COMPLETED")
+        if not completed_actions.exists():
+            raise ValidationError(
+                "Dynamic workflow must contain at least one completed handoff."
+            )
+
+        self.actions_completed = completed_actions.count()
+        self.recalculate_totals()
+        self.update_progress()
+
+        self.status = "COMPLETED"
+        self.actual_completion_date = timezone.now().date()
+        self.completed_by = completed_by
+        self.dynamic_completed_by = completed_by
+        self.dynamic_completed_at = timezone.now()
+        if completion_note:
+            prefix = "[dynamic_completion_note]"
+            note_line = f"{prefix} {completion_note.strip()}"
+            self.notes = f"{self.notes}\n{note_line}".strip()
+
+        self.save(
+            update_fields=[
+                "status",
+                "actual_completion_date",
+                "completed_by",
+                "dynamic_completed_by",
+                "dynamic_completed_at",
+                "actions_completed",
+                "completion_percentage",
+                "notes",
+                "updated_at",
+            ]
+        )
+
+        if self.planned_activity and self.planned_activity.status != "COMPLETED":
+            self.planned_activity.mark_completed(user=completed_by)
+
+        if self.is_intercompany and not self.finance_transaction:
+            self._create_intercompany_transaction()
     
     def cancel_workflow(self, reason, cancelled_by):
         """Cancel the workflow with a reason"""

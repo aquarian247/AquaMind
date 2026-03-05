@@ -60,6 +60,9 @@ class BatchTransferWorkflowListSerializer(
             'completion_percentage',
             'is_intercompany',
             'is_dynamic_execution',
+            'dynamic_route_mode',
+            'estimated_total_count',
+            'estimated_total_biomass_kg',
             'is_vessel_transfer',
             'initiated_by',
             'initiated_by_username',
@@ -172,6 +175,37 @@ class BatchTransferWorkflowDetailSerializer(
                     "Destination lifecycle stage required for "
                     "lifecycle transitions"
                 )
+
+        is_dynamic_execution = data.get(
+            "is_dynamic_execution",
+            getattr(self.instance, "is_dynamic_execution", False),
+        )
+        dynamic_route_mode = data.get(
+            "dynamic_route_mode",
+            getattr(self.instance, "dynamic_route_mode", None),
+        )
+        if is_dynamic_execution and dynamic_route_mode not in {
+            "DIRECT_STATION_TO_VESSEL",
+            "VIA_TRUCK_TO_VESSEL",
+        }:
+            errors["dynamic_route_mode"] = (
+                "Dynamic workflow route must be DIRECT_STATION_TO_VESSEL or "
+                "VIA_TRUCK_TO_VESSEL."
+            )
+
+        estimated_total_count = data.get(
+            "estimated_total_count",
+            getattr(self.instance, "estimated_total_count", None),
+        )
+        if estimated_total_count is not None and estimated_total_count < 0:
+            errors["estimated_total_count"] = "Estimated total count cannot be negative."
+
+        estimated_total_biomass_kg = data.get(
+            "estimated_total_biomass_kg",
+            getattr(self.instance, "estimated_total_biomass_kg", None),
+        )
+        if estimated_total_biomass_kg is not None and estimated_total_biomass_kg < 0:
+            errors["estimated_total_biomass_kg"] = "Estimated biomass cannot be negative."
 
         if errors:
             raise serializers.ValidationError(errors)

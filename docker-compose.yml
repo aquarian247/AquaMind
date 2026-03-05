@@ -23,6 +23,7 @@ services:
       - DJANGO_SECRET_KEY=dev-secret-key-for-local-development-only-replace-in-production
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
       - CORS_ALLOWED_ORIGINS=http://frontend:80,http://localhost:3000,http://127.0.0.1:3000
+      - TRANSFER_START_MISSING_MAPPING_POLICY=OVERRIDE
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     networks:
@@ -88,6 +89,7 @@ services:
       - DJANGO_SETTINGS_MODULE=aquamind.settings
       - DJANGO_DEBUG=true
       - DJANGO_SECRET_KEY=dev-secret-key-for-local-development-only-replace-in-production
+      - TRANSFER_START_MISSING_MAPPING_POLICY=OVERRIDE
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - PYTHONUNBUFFERED=1

@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 5.6  
-**Date:** 2026-03-02  
-**Status:** Updated - scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + lifecycle progression basis interpretation guard + scope-file cohort replay orchestration + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + S08 R-Høll material-first dual-stage refinement + assignment biomass precision guardrail + FW inter-station station-split input-lane qualification  
+**Version:** 5.9  
+**Date:** 2026-03-05  
+**Status:** Updated - sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
 
 ## 1. Overview
 
@@ -15,6 +15,20 @@ This document provides detailed field-level mapping specifications for migrating
 - **Source:** FishTalk SQL Server (Docker container `sqlserver`, port `1433`, read-only login `fishtalk_reader`).
 - **Target:** `aquamind_db_migr_dev` (Django alias `migr_dev`). Keep `aquamind_db` untouched for day-to-day development—the two databases have diverged (159 vs 154 tables).
 - **Schema Provenance:** Run `scripts/migration/tools/dump_schema.py` whenever the FishTalk schema changes (`--label fishtalk`) and whenever the AVEVA Historian schema is refreshed (`--label aveva --profile aveva_readonly --database RuntimeDB --container aveva-sql`). Snapshot outputs (`*_schema_snapshot.json`) live under `docs/database/migration/schema_snapshots/`. CSV/TXT exports are generated on demand and are not tracked in the repo.
+
+**Key Revision Notes (v5.9 - 2026-03-05):**
+- **Sea-side input initiation model (FWSEA):** for current backup behavior, especially early-2023+, marine cohorts should be treated as **new sea-side inputs** rather than assuming continuous FW `InputName` identity across the geography boundary.
+- **FWSEA endpoint-pairing rule:** when matching FW to sea, pair **FW terminal depletion/sales** at `S*` with **sea input / first-fill / first non-zero** signals at `A*` in the same geography and near-term time window. Input-side sea evidence is the primary destination-side signal because sea batches are separate FishTalk batches.
+- **FW terminal depletion fallback:** absence of a visible FW sales action does **not** block candidate generation. A sudden FW tank/population drop to zero followed by a proximate sea input/start remains a valid but weaker candidate class.
+- **Guarded provisional continuation contract:** linked full-lifecycle continuation must use explicit anchor-scoped sea populations by default (`--sea-anchor-population-id`, optional `--sea-block-population-id`). Full sea-component ingestion is unsafe for provisional rows and now opt-in only via explicit override.
+
+**Key Revision Notes (v5.8 - 2026-03-03):**
+- **OrgUnit fallback anchoring (lineage feed stores):** when `FeedStore` cannot be anchored through `FeedStore*Assignment` containers or consumption-container mappings, fallback anchoring is allowed via `FeedStore.OrgUnitID` to FW station/hall (`OrgUnit_FW`) for scoped freshwater replay. This fallback is auditable (`resolution_method=orgunit`) and must still respect deterministic idempotent mapping through `ExternalIdMap`.
+- **Unresolved classification contract:** lineage feed runs must report unresolved stores split into `primary` vs `upstream_only` impact classes, and provide per-class skipped-line counts.
+
+**Key Revision Notes (v5.7 - 2026-03-03):**
+- **Scope-60 residual feed/inventory extraction contract:** for hall-stage mapped freshwater scope (<30m, including trusted `FW13 Geocrab` mapping), feed/inventory extraction must start from scoped cohort seeds and expand population lineage through `SubTransfers` (`SourcePopBefore -> SourcePopAfter`, `SourcePopBefore -> DestPopAfter`) before selecting feed data.
+- **Feed lineage authority contract:** do not scope purchases/stock solely through `FeedStoreUnitAssignment` on fish containers. Authoritative feed scoping is `Feeding` consumption (`Action.PopulationID`) + `FeedBatch` lineage expansion via upstream `FeedTransfer`; then hydrate dependent entities (`FeedReceptionBatches`, `FeedReceptions`, `FeedStore`, `FeedStoreUnitAssignment`, `FeedTypes`, suppliers) from the included feed-batch set.
 
 **Key Revision Notes (v5.5 - 2026-02-28):**
 - **Scope-file replay mode (input-batch runner):** `pilot_migrate_input_batch.py` now supports `--scope-file` to run a deterministic ordered batch-key sweep from a CSV scope artifact. Scope rows can be `batch_key` rows directly, or population rows that are resolved back to `batch_key` via stitched `input_population_members.csv`.
@@ -270,6 +284,9 @@ Note: some fish groups retain the full `InputProjects.ProjectName` (e.g., “Ben
 1. A **new PopulationID** is created when fish transfer between environments (FW → Sea).
 2. **InputName continuity is not guaranteed** in `Ext_Inputs_v2`; sea populations often lack `InputName` rows even when FW identity is known.
 3. `Ext_Transfers_v2` can contain **explicit FW → MarineSite edges**; when present, it is the canonical, non‑inferred linkage.
+4. In the current backup shape, especially from early 2023 onward, sea cohorts frequently appear as **new marine-side input/start events** rather than as a continuous FW batch identity carried into sea geography.
+5. Operational implication: FWSEA matching should start from the **destination-side sea input/start signal** and pair it back to the closest plausible **FW depletion/sales** endpoint, not from `InputName` continuity.
+6. If no FW sales action is visible, a sudden FW terminal zero followed by a same-geography sea input/first non-zero ring fill remains a valid but lower-confidence candidate.
 
 **Operational code semantics (domain-confirmed, 2026-02-12):**
 - `L*` site codes denote **Lívfiskur (broodstock)** stations (for example `L01 Við Áir`).
@@ -368,8 +385,16 @@ Note: some fish groups retain the full `InputProjects.ProjectName` (e.g., “Ben
 - **Transport tables (CSV, 2026‑02‑04):** `TransportCarrier` now extracted; **Tangi 3** exists (`TransportCarrierID = E3E6DA23‑7A3C‑4E82‑8AA5‑49827D33CE4A`), but there is **no** join path from `InternalDelivery`/`Operations` to this carrier in the current schema/extract.
 - **CSV + schema scan (2026‑02‑04):** The only transport‑related columns in extracted CSVs are `Ext_Inputs_v2.Transporter` (all empty), `Ext_Transporters_v2.TransporterID`, `TransportCarrier.TransportMethodID`, and `TransportMethods.TransportMethodID`. Schema transport IDs appear primarily in **Feed/Harvest** tables (`FeedReceptions`, `FeedTransfer`, `HarvestPrognosis*`, `HarvestReports`, `PlanHarvestTrain`, `RHPSingleHarvest`), with **no** linkage to `InternalDelivery`/`Operations` in the current extract.
 - **Conclusion (no inference):** The current CSV extract provides a **site‑level internal delivery record** (S03 → A11) but **does not** provide a deterministic link to the destination population or carrier/trip/compartment metadata. This **cannot** be used as canonical FW→Sea linkage yet.
+- **Migration runtime-compat workaround (2026‑03‑05):** Because transport leg metadata is non-deterministic/missing, transfer migration persists historical FishTalk edges as **completed direct actions** and forces migrated workflows to **non-dynamic** mode (`is_dynamic_execution=false`, `dynamic_route_mode=NULL`, action `created_via=PLANNED`, `leg_type=NULL`, `executed_at` from operation time). This intentionally side-steps dynamic runtime `handoffs/start` compliance requirements that depend on mandatory start snapshots per physical leg.
+- **Sea creation workflow policy guard (2026‑03‑05):** Component migration now skips synthetic `BatchCreationWorkflow` creation for **sea-only** components by default so sea populations are treated as continuation of FW lineage, not egg-origin creates. Business-approved harvested exceptions can opt in explicitly via `--allow-sea-only-creation-workflow`.
+- **Continuation rerun safety guard (2026‑03‑05):** Component reruns now block destructive membership shrink by default (safety abort when report membership is smaller than existing mapped membership) and support explicit merge mode (`--merge-existing-component-map`) for linked FW->Sea continuation runs.
+- **Sea feed-store bridge (2026‑03‑05):** Feed-store master data was materialized for sea scope and area-linked feed containers were promoted to `BARGE` to ensure sea feed events/purchases are anchored to explicit sea infrastructure assets.
+- **MIX placeholder semantics (2026‑03‑05):** `MIX-FTA-*` rows are expected **container-scoped mixed-population placeholders** (not canonical evolving lineage batches), consistent with PRD `3.1.2` and data model `4.2` (`batch_batchmixevent` + `batch_batchmixeventcomponent`). Migration guards now treat these as expected unresolved lineage artifacts in map coverage checks (non-MIX operational assignments must remain fully mapped).
+- **Provisional FWSEA continuation caution (2026‑03‑05):** For rows without canonical transfer linkage (`no_canonical_transfer_edge_in_row`), applying **full sea-component membership** to one FW batch can still absorb populations that appear in deferred conflicting candidates for the same sea component. Unique-sea row selection alone is insufficient in this case; continuation apply should use anchor/lineage-scoped sea population subsets or remain manual-review only.
+- **Provisional continuation hard guard (2026‑03‑05):** `pilot_migrate_input_batch.py` now blocks linked full-lifecycle continuation runs without explicit anchor scope by default. Operators must provide `--sea-anchor-population-id` (optional `--sea-block-population-id`, lineage tuning via `--lineage-max-hops` / `--lineage-descendants-only`) or explicitly override with `--allow-full-sea-component-for-continuation`.
+- **Continuation batch naming (2026‑03‑05):** Linked FW->Sea continuation runs now default to batch naming `<FW batch> - <Sea batch>` (example: `Bakkafrost Jan 2024 - Vár 2025`). Renames are applied through normal model save paths (`save_with_history`) so batch history/audit trail records the name-change event.
 
-**Implication:** `Ext_Transfers_v2` / `PublicTransfers` + `Populations` + `Grouped_Organisation` provide the **only proven FW→Sea linkage** in current extracts (when present). `Ext_Inputs_v2` remains the **only** deterministic batch identity, but it does **not** appear directly on FW→Sea endpoints; identity must be **back‑traced via SubTransfers** when a unique root exists. Do **not** infer FW→Sea linkage purely from naming; it must be proven via transfer/sales tables.
+**Implication:** `Ext_Transfers_v2` / `PublicTransfers` + `Populations` + `Grouped_Organisation` provide the **only proven FW→Sea linkage** in current extracts (when present). `Ext_Inputs_v2` remains the **only** deterministic batch identity, but sea endpoints often surface as **new input/start rows** with no direct FW identity carry-through. In practice, active-cohort FWSEA matching is an **endpoint-pairing** problem: FW depletion/sales vs sea input/first-fill, then anchor-scoped lineage. Do **not** infer FW→Sea linkage purely from naming.
 
 **Active‑batch constraint (current backup):**
 - `InputProjects.Active` exists in the extract (948 active, 1227 inactive as of 2026‑01‑22).
@@ -1070,8 +1095,10 @@ FishTalk does not capture a formal “creation workflow.” For each stitched co
 
 - **Purchases:** FishTalk does not have a `FeedPurchase` table. Use `FeedReceptions` (header) and
   `FeedReceptionBatches` (line items) as the canonical purchase source.
-- **Feed stock:** Use `FeedStore` + `FeedStoreUnitAssignment` to map feed stores to containers and
-  `FeedBatch` + `FeedReceptionBatches` to identify the feed lots in stock.
+- **Consumption authority:** Use `Feeding` joined through `Action` (+ `Operations` timestamp) as the authoritative evidence for what feed was consumed by scoped cohort populations.
+- **Feed-batch lineage:** Use `FeedTransfer` to expand upstream source feed batches (destination -> source recursion) so transfer-derived stock is included.
+- **Stock/infrastructure hydration:** Use `FeedBatch` -> `FeedStore` -> `FeedStoreUnitAssignment` after feed-batch lineage is resolved; treat container assignment links as infrastructure placement evidence, not as the sole feed-scope authority.
+- **Flattened support views:** `Ext_FeedDelivery_v2`, `Ext_FeedStore_v2`, `Ext_FeedStoreAssignment_v2`, `Ext_FeedTypes_v2`, and `Ext_FeedSuppliers_v2` are valid convenience sources once lineage scope is fixed.
 
 ### 4.1 Feed Type Mapping (FishTalk: FeedType)
 
@@ -1103,7 +1130,6 @@ FishTalk `dbo.Feeding` is **ActionID-based** (no PopulationID or ContainerID col
 | Feeding.ImportedFrom or HWFeeding | method | varchar(20) | AUTO vs MANUAL | Normalize |
 | Operations.Comment | notes | text | Include ActionID + PopulationID | Traceability |
 
-### 4.3 FCR Calculation Mapping
 ### 4.4 Feed Purchase Mapping (FishTalk: FeedReceptions + FeedReceptionBatches)
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
@@ -1120,9 +1146,14 @@ FishTalk `dbo.Feeding` is **ActionID-based** (no PopulationID or ContainerID col
 | FeedBatch.FeedTypeID / FeedTypes.Name | inventory_feedpurchase.feed_id | bigint | FK lookup/create | Use FeedTypes.Name in feed name |
 
 **Extraction rules**
-- Join chain: `FeedStoreUnitAssignment → FeedStore → FeedBatch → FeedReceptionBatches → FeedReceptions`.
-- Limit to feed stores assigned to the component’s containers (assignment date range overlap with component window).
-- By default, `ReceptionTime` must fall inside the component window; use `--include-all-receptions` to bypass the time filter when validating historical purchases.
+- For broad residual-data scope replay, use lineage-first extraction:
+  1. Start from scoped cohort populations.
+  2. Expand descendant populations via `SubTransfers` edges (`SourcePopBefore -> SourcePopAfter`, `SourcePopBefore -> DestPopAfter`) up to migration cutoff.
+  3. Pull `Feeding` for expanded populations (`Action.PopulationID`).
+  4. Build included `FeedBatch` set from feeding rows, then recursively add upstream `SourceFeedBatchID` via `FeedTransfer` where destination is already in scope.
+  5. Pull purchases from `FeedReceptionBatches` + `FeedReceptions` for included feed batches.
+  6. Pull infra/dependencies from included feed batches (`FeedStore`, `FeedStoreUnitAssignment`, feed types, suppliers, optional `Ext_*` mirrors).
+- Component-window container assignment filtering is still useful for narrow QA checks, but it is not sufficient as the only purchase/stock scope rule for transfer-rich cohorts.
 
 ### 4.5 Feed Container Stock Mapping (FishTalk: FeedStore + FeedStoreUnitAssignment + FeedBatch)
 
@@ -1137,8 +1168,25 @@ FishTalk `dbo.Feeding` is **ActionID-based** (no PopulationID or ContainerID col
 | FeedReceptionBatches → FeedPurchase | inventory_feedcontainerstock.feed_purchase_id | FK | From 4.4 | |
 
 Notes:
-- Feed store assignments are **not present** for many FishTalk containers; expect partial coverage.
-- `FeedTransfer` can be used later to update stock movements between stores.
+- Feed-store-to-container assignment coverage is sparse relative to feed consumption lineage; do not use assignment presence as a hard precondition for including feed purchases.
+- `FeedTransfer` is a core stock-lineage source for scoped replay, not an optional post-step. Some consumed feed batches are transfer-derived and may not have direct reception lines.
+- For scoped residual extraction, keep only feed/infrastructure rows connected to included cohort lineage (expanded populations + derived feed-batch lineage) to avoid orphan import noise.
+
+### 4.6 Scoped Residual Feed/Infra Extraction Contract (Scope-60)
+
+Use this contract when extracting feed + dependent infrastructure for the hall-stage mapped freshwater `<30m` scope (all 60 batch keys):
+
+1. Resolve scope batch keys from hall-stage mapped stations (`S24`, `S03`, `S08`, `S16`, `S21`, `FW22`, `FW13`) with trusted `FW13 Geocrab` hall-stage mapping.
+2. Seed populations from those batch keys, then expand lineage through `SubTransfers` (`SourcePopBefore -> SourcePopAfter` and `SourcePopBefore -> DestPopAfter`) up to migration cutoff.
+3. Extract `Feeding` rows for expanded populations and derive the consumed `FeedBatch` set.
+4. Expand feed-batch lineage upstream through `FeedTransfer` destination->source recursion.
+5. Hydrate dependent entities from included feed batches only:
+   - `FeedReceptionBatches` + `FeedReceptions` (+ optional `Ext_FeedDelivery_v2`)
+   - `FeedStore` + `FeedStoreUnitAssignment` (+ optional `Ext_FeedStoreAssignment_v2`)
+   - `FeedTypes` / `Ext_FeedTypes_v2` + supplier lookup (`Ext_FeedSuppliers_v2`)
+6. Exclusion rule: do not include rows disconnected from the scoped population lineage and derived feed-batch lineage.
+
+### 4.7 FCR Calculation Mapping
 
 | FishTalk Source | AquaMind Target | Data Type | Transformation | Notes |
 |-----------------|-----------------|-----------|----------------|--------|
@@ -1207,7 +1255,7 @@ We create **one JournalEntry per ActionID**.
 
 ## 6. Environmental Data Mapping
 
-> **Master Data Gaps:** Sensor parameter codes in FishTalk must be mapped to `environmental_environmentalparameter` (e.g., DO, Temp, Sal). Add missing parameters plus unit metadata before replaying readings.
+> **Canonical sensor mapping contract (2026-03-05 corrective):** `SensorID` must be mapped to `environmental_environmentalparameter` using FishTalk sensor catalogs (`Ext_Sensors_v2` → `Ext_SensorTypes_v2` → `Ext_MeasuringUnits_v2`, with fallback to `Sensors`/`SensorTypes`/`MeasuringUnits`). Do **not** bucket unknown sensors into Temp/O2 heuristically when metadata exists.
 >
 > **Temporary Source Strategy:** AVEVA historian access is currently pending, so sensor object metadata and early readings will be extracted from FishTalk. Treat FishTalk sensor names as canonical for now—they must remain aligned with the eventual AVEVA sensor catalog. When AVEVA access becomes available, reconcile the two sources and record any divergences in `migration_support.ExternalIdMap` so the loaders can pivot to AVEVA without duplicating historical FishTalk records.
 
@@ -1221,19 +1269,35 @@ We create **one JournalEntry per ActionID**.
 | Reading | environmental_environmentalreading.value | numeric | Direct | |
 | ContainerID | environmental_environmentalreading.container_id | bigint | FK lookup | Via container mapping |
 | Derived | environmental_environmentalreading.is_manual | boolean | Daily = True, Time‑series = False | Critical for TGC |
+| Ext_Sensors_v2.SensorTypeID | migration_support.externalidmap (`source_model=SensorParameter`) | uuid→bigint | Join to sensor type/unit catalogs; map to canonical environmental parameter; persist mapping metadata | Preferred path |
+| Ext_SensorTypes_v2.SensorTypeName + Ext_MeasuringUnits_v2.MeasuringUnitText | environmental_environmentalparameter (`name`, `unit`) | varchar | Deterministic type+unit rules (e.g., OxygenSaturation→Oxygen Saturation `%`, Temperature→`°C`) | Avoid metric-unit mixing |
+| Derived (`container_id`,`reading_date`) | environmental_environmentalreading.batch / batch_container_assignment | bigint | Resolve assignment window by effective `BatchContainerAssignment` at reading date | Prevent cross-batch container bleed |
 
 ### 6.2 Environmental Parameters
 
 | FishTalk Parameter | AquaMind Parameter | Unit | Range Validation |
 |--------------------|-------------------|------|------------------|
 | Temperature | Temperature | °C | -5 to 40 |
-| Oxygen | Dissolved Oxygen | mg/L | 0 to 20 |
+| OxygenSaturation | Oxygen Saturation | % | 0 to 200 |
+| Dissolved Oxygen | Dissolved Oxygen | mg/L | 0 to 20 |
 | Salinity | Salinity | ppt | 0 to 40 |
 | pH | pH | - | 0 to 14 |
+| CO2 | CO2 | mg/L | 0 to 100 |
+| Nitrite (NO2-N) | Nitrite | mg/L (or source unit) | 0 to 20 |
+| Nitrate (NO3-N) | Nitrate | mg/L (or source unit) | 0 to 200 |
+| TAN / Ammonia | Ammonia | mg/L or µg/L | 0 to 50 mg/L equivalent |
+| Alkalinity | Alkalinity | mg/L (or source unit) | 0 to 500 |
+| Unknown SensorTypeName | Parameter named from sensor type | Source unit | No coercion to Temp/O2 |
 
-**Current extract-backed coverage (2026‑02‑06):**
-- Replayed parameters are currently limited to: `Temp`, `O2`, `pH`, `Salinity`.
-- CO2 and additional parameters require sensor metadata extraction (sensor → parameter mapping tables).
+**Coverage policy (updated):**
+- Coverage is **sensor-driven by station/time window**, not hard-coded by site size or stage.
+- Smaller FW stations/halls can legitimately have fewer parameter streams.
+- Replay logic must stay deterministic and idempotent via `ExternalIdMap` (`source_model=SensorParameter`) and must preserve source units where applicable.
+
+**Oxygen normalization guardrails (2026-03-05):**
+- If FishTalk metadata says oxygen `mg/L` but the observed sensor max in-scope is `> 30`, treat that stream as **Oxygen Saturation (%)** (legacy unit-label mismatch guard).
+- For `Oxygen Saturation` values in `(200, 2000]`, normalize by `/10` before persistence (e.g., `1003.1 -> 100.31%`), preserving deterministic replay behavior.
+- These guards are **value-profile based**, not station-name based, so sparse/small stations remain supported without hard-coded site logic.
 
 ### 6.3 Historian Tag Catalog Bridge
 

@@ -34,6 +34,8 @@ from apps.batch.api.serializers.workflow_action import (
     TransferActionDetailSerializer,
     TransferActionExecuteSerializer,
     TransferActionSnapshotSerializer,
+    TransferHandoffStartSerializer,
+    TransferHandoffCompleteSerializer,
     TransferActionSkipSerializer,
     TransferActionRollbackSerializer,
 )
@@ -76,6 +78,8 @@ __all__ = [
     'TransferActionDetailSerializer',
     'TransferActionExecuteSerializer',
     'TransferActionSnapshotSerializer',
+    'TransferHandoffStartSerializer',
+    'TransferHandoffCompleteSerializer',
     'TransferActionSkipSerializer',
     'TransferActionRollbackSerializer',
     'MortalityEventSerializer',

@@ -8,7 +8,8 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.utils import extend_schema
 
 from aquamind.utils.history_mixins import HistoryReasonMixin
 
@@ -17,8 +18,22 @@ from apps.batch.api.serializers import (
     BatchTransferWorkflowListSerializer,
     BatchTransferWorkflowDetailSerializer,
     BatchTransferWorkflowCreateSerializer,
+    TransferActionDetailSerializer,
+    TransferHandoffStartSerializer,
 )
 from apps.batch.api.filters.workflows import BatchTransferWorkflowFilter
+from apps.batch.services.dynamic_execution import (
+    build_execution_context,
+    start_dynamic_handoff,
+)
+
+
+def _validation_error_payload(exc: DjangoValidationError):
+    if hasattr(exc, "message_dict"):
+        return exc.message_dict
+    if hasattr(exc, "messages"):
+        return {"error": exc.messages}
+    return {"error": str(exc)}
 
 
 class BatchTransferWorkflowViewSet(
@@ -79,6 +94,7 @@ class BatchTransferWorkflowViewSet(
         'status',
         'is_intercompany',
         'is_dynamic_execution',
+        'dynamic_route_mode',
     ]
     search_fields = [
         'workflow_number',
@@ -196,7 +212,15 @@ class BatchTransferWorkflowViewSet(
             "Manually marks workflow as completed. "
             "Use only if all actions are done manually."
         ),
-        request=None,
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "completion_note": {"type": "string"},
+                },
+                "required": [],
+            }
+        },
         responses={
             200: BatchTransferWorkflowDetailSerializer,
             400: {'description': 'Invalid state'},
@@ -212,23 +236,139 @@ class BatchTransferWorkflowViewSet(
         """
         workflow = self.get_object()
 
-        if workflow.status == 'COMPLETED':
-            return Response(
-                {'error': 'Workflow already completed'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         try:
-            workflow.status = 'COMPLETED'
-            workflow.completed_by = request.user
-            workflow.save()
+            completion_note = (request.data.get("completion_note") or "").strip()
+            if workflow.is_dynamic_execution:
+                workflow.complete_dynamic(
+                    completed_by=request.user,
+                    completion_note=completion_note,
+                )
+            else:
+                if workflow.status == 'COMPLETED':
+                    return Response(
+                        {'error': 'Workflow already completed'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                workflow.status = 'COMPLETED'
+                workflow.completed_by = request.user
+                workflow.save()
             serializer = self.get_serializer(workflow)
             return Response(serializer.data)
+        except DjangoValidationError as exc:
+            return Response(
+                _validation_error_payload(exc),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @extend_schema(
+        summary="Complete dynamic workflow explicitly",
+        description=(
+            "Explicit completion endpoint for dynamic transfer workflows. "
+            "Blocks completion while handoffs remain IN_PROGRESS and requires "
+            "at least one completed handoff."
+        ),
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "completion_note": {"type": "string"},
+                },
+                "required": [],
+            }
+        },
+        responses={
+            200: BatchTransferWorkflowDetailSerializer,
+            400: {"description": "Validation error"},
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="complete-dynamic")
+    def complete_dynamic(self, request, pk=None):
+        workflow = self.get_object()
+        try:
+            completion_note = (request.data.get("completion_note") or "").strip()
+            workflow.complete_dynamic(
+                completed_by=request.user,
+                completion_note=completion_note,
+            )
+            serializer = self.get_serializer(workflow)
+            return Response(serializer.data)
+        except DjangoValidationError as exc:
+            return Response(
+                _validation_error_payload(exc),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        summary="Dynamic handoff start",
+        description=(
+            "Start a dynamic handoff in a dedicated two-step flow. Creates "
+            "an IN_PROGRESS TransferAction and captures mandatory start "
+            "compliance snapshots."
+        ),
+        request=TransferHandoffStartSerializer,
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "action": {"type": "object"},
+                    "snapshot_summary": {"type": "object"},
+                },
+            },
+            400: {"description": "Validation error"},
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="handoffs/start")
+    def handoffs_start(self, request, pk=None):
+        workflow = self.get_object()
+        serializer = TransferHandoffStartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            result = start_dynamic_handoff(
+                workflow=workflow,
+                started_by=request.user,
+                **serializer.validated_data,
+            )
+            return Response(
+                {
+                    "action": TransferActionDetailSerializer(result["action"]).data,
+                    "snapshot_summary": result["snapshot_summary"],
+                }
+            )
+        except DjangoValidationError as exc:
+            return Response(
+                _validation_error_payload(exc),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        summary="Dynamic execution context",
+        description=(
+            "Returns live sources, destination candidates, allowed legs, "
+            "in-progress handoffs and progress details for the execution page."
+        ),
+        request=None,
+        responses={
+            200: {"type": "object"},
+            400: {"description": "Validation error"},
+        },
+    )
+    @action(detail=True, methods=["get"], url_path="execution-context")
+    def execution_context(self, request, pk=None):
+        workflow = self.get_object()
+        try:
+            return Response(build_execution_context(workflow))
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         summary="Detect intercompany transfer",

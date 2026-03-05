@@ -21,6 +21,12 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
 5. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
 ## Latest handoff
+- handoffs/HANDOFF_2026-03-05_FW_ENVIRONMENTAL_STABILIZATION_AND_FWSEA_READY_CHECK.md - FW environmental stabilization, zero remaining scoped parameter mismatches, FWSEA readiness split
+- handoffs/HANDOFF_2026-03-04_SCOPE60_CORE_ENV_EXECUTION.md - scope-60 core/health/environmental residual execution completion
+- handoffs/HANDOFF_2026-03-04_SCOPE60_VERIFICATION_INVENTORY_FEED.md - scope-60 verification and inventory/feed readout
+- handoffs/HANDOFF_2026-03-03_SCOPE60_FEED_INFRA_LINEAGE_EXECUTION.md - scope-60 lineage-first feed/infra execution
+- handoffs/HANDOFF_2026-03-03_SCOPE21_FEED_INFRA_RECOVERY.md - scope-21 feed/infra recovery and unresolved-class interpretation
+- handoffs/HANDOFF_2026-03-03_S21_MICRO_DISCREPANCY_AUDIT_1120_1125_1126.md - S21 micro discrepancy audit; expected artifacts vs defects
 - handoffs/HANDOFF_2026-03-02_FW_MAPPED_SCOPE_REGRESSION_STABILIZATION_RESULTS.md - mapped scope regression stabilization results, MIX interpretation, non-MIX lifecycle deep-dive, ranked fix plan
 - handoffs/HANDOFF_2026-03-02_FW_MAPPED_SCOPE_REGRESSION_TRIAGE_AND_NEXT_AGENT_PROMPT.md - regression triage prompt and takeover objectives
 - handoffs/HANDOFF_2026-02-24_FWSEA_DETERMINISTIC_SALES_LINKAGE_SCORING_AND_B_CLASS_FT_NOTES.md - deterministic FWSEA sales-link scoring module + FT B-class notes + A37 station resolution
@@ -45,6 +51,9 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
 - analysis_reports/ - linkage scans, backtraces, targeted scans
 - handoffs/ - session handoffs and next-agent briefs
 
+## Latest evidence package
+- `scripts/migration/output/fwsea_readonly_candidate_package_20260305_103924/` - latest FWSEA evidence package (candidate report, summary JSON, guarded continuation artifacts, next-queue state)
+
 ## Command map (current pipeline)
 1) Bulk extract FishTalk -> CSV
    - python scripts/migration/tools/bulk_extract_fishtalk.py --output scripts/migration/data/extract/
@@ -67,6 +76,18 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
      --skip-environmental \\
      --expand-subtransfer-descendants \\
      --transfer-edge-scope internal-only
+3c) Guarded FW->Sea continuation (selected provisional candidates only)
+   - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \\
+     python scripts/migration/tools/pilot_migrate_input_batch.py \\
+     --batch-key "<SeaInputName>|<InputNumber>|<YearClass>" \\
+     --use-csv scripts/migration/data/extract/ \\
+     --migration-profile fw_default \\
+     --full-lifecycle \\
+     --include-fw-batch "<FWInputName>|<InputNumber>|<YearClass>" \\
+     --batch-number "<Existing FW batch number>" \\
+     --sea-anchor-population-id "<SeaPopulationID>" \\
+     --transfer-edge-scope internal-only
+   - Linked continuation is now blocked by default unless anchor scope is provided. Use full sea-component ingestion only with explicit operator override.
 4) Full action replays (per component, CSV)
    - python scripts/migration/tools/pilot_migrate_component_transfers.py
    - python scripts/migration/tools/pilot_migrate_component_feeding.py
@@ -93,19 +114,30 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
    - python scripts/migration/tools/pilot_migrate_environmental_all.py \\
      --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite --workers 16
 
-## Current status snapshot (2026-03-02)
-- Mapped FW scope replay rerun completed in 4 chunks (20/20 batches successful) using descendant expansion + `internal-only` transfer edges.
-- Stage coverage improved materially for completed FW cohorts; only one completed scoped outlier remains 1-stage (`24Q1 LHS ex-LC`).
-- Full action migration remains validated for pilot batches with semantic reports in:
-  - `analysis_reports/2026-02-05/`
-  - `analysis_reports/2026-02-06/` (rerun/follow-up reports for `SF NOV 23` and `Stofnfiskur S-21 nov23`)
-- Pilot cohort regression check currently passes:
-  - `analysis_reports/2026-02-06/semantic_validation_pilot_cohort_2026-03-02.md`
-- FW→Sea linkage is still unresolved; FW and Sea components are replayed separately.
-- Weight samples use `Ext_WeightSamples_v2` only and are treated as grams (re-run required to fix old data).
-- Infra names are normalized at bootstrap (strip `FT` prefix and trailing `FW`/`Sea`).
-- Input-batch and component migration now support strict station guards (`--expected-site`) to prevent station drift.
-- Semantic stage sanity now reports stage-entry deltas (default 2-day window) to reduce in-stage redistribution double-counting.
+## Current status snapshot (2026-03-05)
+- FW stabilization is materially complete:
+  - mapped FW replay is stable with descendant expansion + `internal-only` transfer edges,
+  - scope-60 feed/infra lineage is complete,
+  - scope-60 core/health/environmental residuals are complete,
+  - scoped FW environmental mapping now has `0` remaining parameter mismatches.
+- Stage/lifecycle integrity is materially improved:
+  - completed scoped FW cohorts are mostly realistic after replay,
+  - S21 micro discrepancies were classified as expected representation artifacts, not conservation defects,
+  - lifecycle progression reporting still needs interpretation care (`basis=stage_entry` is entry semantics, not peak concurrent stock).
+- Feed/inventory is no longer "feeding-only":
+  - lineage-scoped feed purchase/stock import is active,
+  - scope-60 verification shows 1:1 purchase->stock cardinality and zero duplicate source identifiers for feed scope models.
+- FW->Sea status is no longer simply "unresolved":
+  - direct canonical FW->Sea population linkage for active cohorts remains sparse,
+  - latest work treats sea cohorts as new marine-side inputs and matches them by endpoint evidence (FW terminal depletion/sales vs sea input/first-fill),
+  - guarded anchor-scoped continuation is now the active experimental path; full sea-component continuation is blocked by default.
+- Broad FW->Sea rollout is still blocked on:
+  - lifecycle-plausibility policy for provisional links,
+  - reconciliation of early experiment-state drift,
+  - manual/shared-anchor/ring-text queue closure.
+- Weight samples use `Ext_WeightSamples_v2` only and are treated as grams.
+- Infra names remain normalized at bootstrap (strip `FT` prefix and trailing `FW`/`Sea`).
+- Input-batch and component migration support strict station guards (`--expected-site`) to prevent station drift.
 
 ## Archive (historical only)
 See archive/README.md. This includes handovers, session prompts, old plans, status reports, and pilot notes.

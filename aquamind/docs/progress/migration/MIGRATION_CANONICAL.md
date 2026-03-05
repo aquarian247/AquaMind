@@ -1,6 +1,6 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-03-02
+**Last updated:** 2026-03-05
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
@@ -72,16 +72,17 @@ Batch Key = InputName + InputNumber + YearClass
   - **Sea**: `MarineSite`
 - Build batch components per `InputProjectID`, but **split by environment** to avoid mixing FW and sea populations.
 - Movement lineage is replayed **within** each environment using `SubTransfers`; cross‑environment links are deferred and should be flagged as **link_pending** metadata for later manual resolution.
+- 2026‑03‑05 refinement: for selected provisional FWSEA candidates, guarded continuation into an existing FW batch is allowed only with **anchor-scoped** sea populations. Full sea-component continuation is blocked by default because it can absorb competing candidate populations.
 
 ---
 
 ## 4) Current Migration Status
 
-**Latest migration run: 2026-03-02 (current migration DB, mapped FW scope replay)**
+**Latest evidence-backed state: 2026-03-05 (FW stabilized + guarded FWSEA candidate/continuation package)**
 
-**Note:** The migration DB was wiped via `clear_migration_db.py` before this run, so earlier runs are no longer present in `aquamind_db_migr_dev`.
+**Note:** The migration DB was wiped via `clear_migration_db.py` before the 2026-03-02 FW replay baseline. March 3-5 work then layered scope-60 residual domains, environmental realignment, sea infrastructure materialization, and guarded FWSEA continuation artifacts onto that same `migr_dev` database.
 
-**Key changes since 2026‑02‑03 (including 2026‑03‑02 stabilization):**
+**Key changes since 2026‑03‑02:**
 - Added migration coverage for **culling, escapes, and harvest** (CSV-supported).
 - Added **semantic validation reports** to compare FishTalk vs AquaMind per batch.
 - Fixed **weight samples** (use `Ext_WeightSamples_v2` only; weights are **grams**).
@@ -91,6 +92,16 @@ Batch Key = InputName + InputNumber + YearClass
 - Hardened scope replay behavior: scope-mode child runs now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run`.
 - Replayed mapped FW scope in 4 chunks (`20/20` batches successful) using descendant expansion + `internal-only` transfer edges.
 - Scoped stage coverage outcome: `7/8` completed batches now show `>=4` stages; only `24Q1 LHS ex-LC` remains a 1-stage completed outlier.
+- Completed lineage-first feed/infra recovery for FW scope-60, including OrgUnit fallback anchoring and idempotence confirmation.
+- Completed scope-60 core/health/environmental residual execution.
+- Stabilized scoped FW environmental mapping with metadata-first sensor mapping, oxygen guardrails, and `0` remaining scoped parameter mismatches.
+- Materialized sea infrastructure prerequisites for FWSEA candidate application (areas/rings/sea-linked feed assets).
+- Added guarded provisional FWSEA continuation:
+  - linked full-lifecycle continuation now requires explicit sea anchor scope by default,
+  - destructive membership shrink is blocked by default,
+  - historical FishTalk transfers are forced into static compatibility mode,
+  - sea-only synthetic creation workflows are skipped by default.
+- Controlled FWSEA expansion has been executed for the currently eligible `true_candidate` tranche; broad rollout is still blocked pending lifecycle-plausibility policy and experiment-state reconciliation.
 
 ### 4.1 Run Summary
 
@@ -101,8 +112,15 @@ Batch Key = InputName + InputNumber + YearClass
   - Replay flags used on every chunk:
     - `--expand-subtransfer-descendants`
     - `--transfer-edge-scope internal-only`
-- **Full action set replays** completed per batch: feeding, mortality, culling, escapes, treatments, lice, health journal, growth samples, harvest (sea), and environmental readings (see reports).
-- **FW→Sea linkage remains unavailable**; FW and Sea components are replayed separately and remain unlinked.
+- **Scope-60 residual completion (2026-03-03 -> 2026-03-05):**
+  - feed/infra lineage completed with `stores_unresolved=0`,
+  - core/health residuals completed for all 60 keys,
+  - environmental residuals completed for all 60 keys,
+  - scoped environmental remap finished with `remaining_parameter_mismatches=0`.
+- **FW→Sea candidate package (2026-03-05):**
+  - age-gated linked scope currently yields `1070` Tier-B candidate rows and `0` Tier-A rows,
+  - sea cohorts are now treated operationally as **new marine-side inputs**, so matching is an endpoint-pairing problem (FW terminal depletion/sales vs sea input/first-fill) rather than a continuous batch identity join,
+  - guarded anchor-scoped continuation is the active experimental path; broad production rollout remains gated.
 
 ### 4.2 Validation (semantic reports)
 
@@ -120,7 +138,7 @@ These reports are now the **primary validation artifact** alongside counts.
 |--------|-----------------|-------|
 | Batch Management | batch, assignments, transfers, mortality, growth samples | Mortality events include culling + escapes |
 | Infrastructure | containers, halls, FW stations, sea areas | Sensors not imported |
-| Inventory | feeding events | Feed inventory optional |
+| Inventory | feeding events, feed purchases, feed stock | Feed lineage import active for scoped replay |
 | Health | mortalityreason, treatment, lice samples, journal | Health master data + samples/treatments |
 | Environmental | environmental readings | Limited to 4 params (Temp, O2, pH, Salinity) |
 | Harvest | harvest_event, harvest_lot, harvest_waste, product_grade | Sea batches only |
@@ -129,7 +147,6 @@ These reports are now the **primary validation artifact** alongside counts.
 Semantic transition sanity uses **entry populations** (within a configurable early-stage window) and reports full summed stage populations as secondary diagnostics.
 
 ### 4.4 Expected Empty (Current Run)
-- Feed inventory tables (`inventory_feedpurchase`, `inventory_feedcontainerstock`) unless explicitly re-run.
 - Sensor metadata tables (`infrastructure_sensor`, sensor types) unless extracted.
 - Scenario/planning tables (by policy).
 
@@ -233,6 +250,13 @@ This distinction allows AquaMind to:
 1. Prefer time-series data for accurate TGC/thermal unit calculations
 2. Fall back to daily aggregates where time-series is missing
 3. Maintain data provenance for audit trails
+
+**Sensor mapping contract (must use):**
+- Resolve `SensorID` via FishTalk catalogs (`Ext_Sensors_v2` + `Ext_SensorTypes_v2` + `Ext_MeasuringUnits_v2`, fallback to `Sensors`/`SensorTypes`/`MeasuringUnits`).
+- Persist `SensorID -> EnvironmentalParameter` in `ExternalIdMap` (`source_model=SensorParameter`) with mapping metadata.
+- Never force unknown sensor streams into Temperature/O2 buckets when metadata is available.
+- Parameter coverage is station/time-window dependent; missing O2 for later dates can be valid when that stream is not present in source for active assignments.
+- Oxygen guardrails: promote oxygen `mg/L` streams to `Oxygen Saturation (%)` when observed maxima are biologically implausible for mg/L (`>30`), and normalize saturation values in `(200, 2000]` by `/10`.
 
 ### 5.4 Performance Comparison
 
@@ -365,7 +389,53 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   --transfer-edge-scope internal-only
 ```
 
-### 7.3.1 Legacy: project-based stitching (deprecated)
+### 7.3.1 FW Scope Replay Checklist (ordered, future-session safe)
+
+Use this checklist for hall-stage mapped FW scope replays (including corrective replays):
+
+- [ ] **Schema preflight (migr_dev):**
+  ```bash
+  python manage.py showmigrations batch --database migr_dev | rg "0050"
+  ```
+- [ ] **Extract freshness preflight (do not skip by default):**
+  ```bash
+  python scripts/migration/tools/extract_freshness_guard.py \
+    --csv-dir scripts/migration/data/extract \
+    --horizon-date 2026-01-22
+  ```
+- [ ] **Build/refresh environmental SQLite index (recommended for scope runs):**
+  ```bash
+  python scripts/migration/tools/build_environmental_sqlite.py \
+    --input-dir scripts/migration/data/extract \
+    --output-path scripts/migration/data/extract/environmental_readings.sqlite \
+    --replace
+  ```
+- [ ] **Run core/health/feed-infra first (environmental deferred):**
+  ```bash
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+    --scope-file <scope_batch_keys.csv> \
+    --use-csv scripts/migration/data/extract \
+    --skip-environmental \
+    --expand-subtransfer-descendants \
+    --transfer-edge-scope internal-only \
+    --allow-station-mismatch
+  ```
+- [ ] **Run environmental-only replay with sensor-catalog mapping fix:**
+  ```bash
+  python scripts/migration/tools/pilot_migrate_input_batch.py \
+    --scope-file <scope_batch_keys.csv> \
+    --use-csv scripts/migration/data/extract \
+    --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite \
+    --only-environmental \
+    --expand-subtransfer-descendants \
+    --transfer-edge-scope internal-only \
+    --allow-station-mismatch \
+    --script-timeout-seconds 1800
+  ```
+- [ ] **Execution safety:** do **not** run overlapping FW scope chunks in parallel for environmental writes; row ownership updates can lock each other. Use one deterministic scope replay process.
+- [ ] **Verify by batch/window (not only totals):** check parameter ranges and continuity in the Insights window; confirm that O2/temperature values match expected units and that sparse stations are treated as sparse data, not failures.
+
+### 7.3.2 Legacy: project-based stitching (deprecated)
 
 ```bash
 python scripts/migration/legacy/tools/project_based_stitching_report.py --min-stages 4 --print-top 20  # deprecated

@@ -6,10 +6,11 @@ transfer actions within workflows.
 """
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema
 
 from aquamind.utils.history_mixins import HistoryReasonMixin
@@ -21,10 +22,19 @@ from apps.batch.api.serializers import (
     TransferActionDetailSerializer,
     TransferActionExecuteSerializer,
     TransferActionSnapshotSerializer,
+    TransferHandoffCompleteSerializer,
     TransferActionSkipSerializer,
     TransferActionRollbackSerializer,
 )
 from apps.batch.api.filters.workflow_actions import TransferActionFilter
+
+
+def _validation_error_payload(exc: DjangoValidationError):
+    if hasattr(exc, "message_dict"):
+        return exc.message_dict
+    if hasattr(exc, "messages"):
+        return {"error": exc.messages}
+    return {"error": str(exc)}
 
 
 class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
@@ -101,6 +111,8 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
             return TransferActionExecuteSerializer
         elif self.action == 'snapshot':
             return TransferActionSnapshotSerializer
+        elif self.action == "complete_handoff":
+            return TransferHandoffCompleteSerializer
         elif self.action == 'skip':
             return TransferActionSkipSerializer
         elif self.action == 'rollback':
@@ -108,14 +120,18 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         return TransferActionDetailSerializer
 
     def perform_create(self, serializer):
-        """Restrict dynamic transport action creation to ship crew roles."""
+        """Block deprecated dynamic creation path; allow standard planned creation."""
         workflow = serializer.validated_data.get("workflow")
         if workflow and workflow.is_dynamic_execution:
-            if not can_execute_transport_actions(self.request.user):
-                raise PermissionDenied(
-                    "Only SHIP_CREW or Logistics Operators can add handoffs "
-                    "to dynamic transport workflows."
-                )
+            raise ValidationError(
+                {
+                    "workflow": (
+                        "Dynamic workflow action creation is deprecated. "
+                        "Use /transfer-workflows/{id}/handoffs/start/ and "
+                        "/transfer-actions/{id}/complete-handoff/."
+                    )
+                }
+            )
         serializer.save()
 
     @extend_schema(
@@ -163,6 +179,15 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
             raise PermissionDenied(
                 "Only SHIP_CREW or Logistics Operators can execute this transport action."
             )
+        if action_obj.workflow.is_dynamic_execution:
+            raise ValidationError(
+                {
+                    "detail": (
+                        "Dynamic execute-handoff path is deprecated. "
+                        "Use start/complete handoff endpoints."
+                    )
+                }
+            )
 
         # Validate request data
         serializer = self.get_serializer(
@@ -183,6 +208,47 @@ class TransferActionViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    @extend_schema(
+        summary="Complete transfer handoff",
+        description=(
+            "Completes an IN_PROGRESS dynamic handoff by applying actual "
+            "counts/biomass/mortality and marking action COMPLETED."
+        ),
+        request=TransferHandoffCompleteSerializer,
+        responses={
+            200: {"type": "object"},
+            400: {"description": "Validation error"},
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="complete-handoff")
+    def complete_handoff(self, request, pk=None):
+        action_obj = self.get_object()
+
+        if action_obj.requires_ship_crew_execution() and not can_execute_transport_actions(request.user):
+            raise PermissionDenied(
+                "Only SHIP_CREW or Logistics Operators can complete this transport action."
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            payload = serializer.validated_data.copy()
+            mortality = payload.pop("mortality_during_transfer", 0)
+            result = action_obj.complete_handoff(
+                executed_by=request.user,
+                mortality_count=mortality,
+                **payload,
+            )
+            return Response(result)
+        except DjangoValidationError as exc:
+            return Response(
+                _validation_error_payload(exc),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         summary="Capture transport snapshot readings",

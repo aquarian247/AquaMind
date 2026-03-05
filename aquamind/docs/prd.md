@@ -111,17 +111,21 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Workflow Orchestration**:
     - The system shall manage transfer workflows via `batch_batchtransferworkflow`, tracking multi-step transfer operations that span days or weeks with state machine progression: DRAFT → PLANNED → IN_PROGRESS → COMPLETED/CANCELLED.
     - Workflows shall support three transfer types: LIFECYCLE_TRANSITION (gradual stage transitions), CONTAINER_REDISTRIBUTION (rebalancing), and EMERGENCY_CASCADE (urgent multi-stage moves).
-    - Workflows shall support dynamic execution mode via `is_dynamic_execution`, allowing high-level planning without pre-defined actions and live handoff creation during execution (used for station-to-sea operations).
-    - The system shall automatically track workflow progress via `total_actions_planned`, `actions_completed`, and `completion_percentage` fields, auto-transitioning to COMPLETED when all actions finish.
+    - Workflows shall support dynamic execution mode via `is_dynamic_execution`, allowing intent-only planning without pre-defined container-level actions and live handoff creation during execution (used for FW->Sea operations).
+    - Dynamic workflows shall require `dynamic_route_mode` at planning time with allowed values `DIRECT_STATION_TO_VESSEL` or `VIA_TRUCK_TO_VESSEL`.
+    - The system shall track workflow progress via `total_actions_planned`, `actions_completed`, and `completion_percentage`; dynamic workflows do not auto-transition to COMPLETED by action count and require explicit operator completion.
   - **Action Execution Tracking**:
     - The system shall track individual container-to-container movements via `batch_transferaction`, each linked to a source `batch_batchcontainerassignment` and optionally a destination assignment for dynamic handoffs.
     - Actions shall progress through states: PENDING → IN_PROGRESS → COMPLETED/FAILED/SKIPPED with detailed execution metadata including mortality counts, transfer methods (NET/PUMP/GRAVITY/MANUAL), environmental conditions (water temperature, oxygen levels), and execution duration.
-    - Dynamic workflows shall allow adding actions while the workflow is IN_PROGRESS, enabling live station→truck→vessel→ring handoffs during transport.
+    - Dynamic handoff execution shall use a dedicated execution page (`/transfer-workflows/:id/execute`) with two-step runtime flow: `Start Transfer` (`IN_PROGRESS`) then `Complete Transfer` (`COMPLETED`).
+    - Dynamic start/complete endpoints shall replace runtime modal execution for FW->Sea flows.
     - The system shall support mobile-optimized execution for ship crew during sea transfers, capturing real-time operational data.
     - Transport action execution and manual snapshot capture shall be restricted to authorized transport roles (`SHIP_CREW`, `ADMIN`, or `OPR` with `subsidiary=LG`).
   - **Transport Carrier & Compliance Integration**:
     - Transport assets shall be represented by `infrastructure_transportcarrier` (TRUCK/VESSEL) and linked tank containers via `infrastructure_container.carrier_id`.
-    - For transport actions, the system shall snapshot mapped historian readings for source and destination assignments at execution timestamp for assignment-level compliance traceability.
+    - For transport actions, the system shall capture mandatory start-of-transfer snapshots for source and destination contexts, including O2, temperature, and CO2 when mapped.
+    - Missing AVEVA mapping at start shall follow policy: strict block or privileged override with explicit compliance note.
+    - For completion and optional in-transit events, the system shall snapshot mapped historian readings for assignment-level compliance traceability.
     - Action APIs shall expose a `snapshot()` operation for additional in-transit capture moments (e.g., start, in_transit, finish).
   - **Finance Integration Support**:
     - The system shall automatically detect intercompany transfers during planning by comparing source/destination container operating context (Freshwater hall vs Farming area) and persist `source_subsidiary` / `dest_subsidiary`.
@@ -130,10 +134,13 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
   - **Advanced Filtering and Querying**:
     - The system shall provide filtering for workflows including status, batch, workflow type, date ranges, lifecycle stages, intercompany status, completion percentage ranges, and `is_dynamic_execution`.
     - Workflow-level APIs shall support custom actions: `plan()` (transition DRAFT → PLANNED), `cancel()` (workflow cancellation), `complete()` (manual completion), and `detect_intercompany()` (finance detection).
-    - Action-level APIs shall support: `execute()` (record execution with mortality/conditions), `snapshot()` (capture compliance readings), `skip()` (bypass action), `rollback()` (mark failed), and `retry()` (re-attempt failed action).
+    - Action-level APIs shall support: `execute()` for non-dynamic actions, `snapshot()` (capture compliance readings), `complete-handoff()` for dynamic completion, `skip()` (bypass action), `rollback()` (mark failed), and `retry()` (re-attempt failed action).
+    - Dynamic workflow APIs shall support: `handoffs/start`, `execution-context`, and `complete-dynamic` in addition to common workflow operations.
 - **Behavior**:
-  - Planning a workflow (`plan()` action) shall require at least one action for standard workflows, while dynamic workflows can be planned with zero pre-defined actions.
-  - Executing an action shall update source/destination assignment populations, record execution details in `batch_transferaction`, trigger assignment-level historian snapshots, and automatically progress workflow status when all actions complete.
+  - Planning a workflow (`plan()` action) shall require at least one action for standard workflows, while dynamic FW->Sea workflows are intent-only and can be planned with zero pre-defined actions.
+  - Starting a dynamic handoff shall create an `IN_PROGRESS` action and capture mandatory source+destination start snapshots before transfer proceeds.
+  - Completing a dynamic handoff shall apply actual counts/biomass/mortality, update assignments, and mark the action `COMPLETED`.
+  - Executing a non-dynamic action shall update source/destination assignment populations, record execution details in `batch_transferaction`, trigger assignment-level historian snapshots, and automatically progress workflow status when all actions complete.
   - If `allow_mixed=True` and destination contains other active batches at execution time, the action shall create a new mixed destination assignment/batch for that container mix event and record `batch_batchmixevent` + `batch_batchmixeventcomponent` lineage.
   - Intercompany detection shall run automatically during planning and persist subsidiary context for downstream finance processing.
   - Workflow cancellation shall be allowed until workflow reaches COMPLETED or CANCELLED terminal status.
@@ -147,9 +154,10 @@ The development of AquaMind shall follow a phased approach as outlined in `imple
     - Workflow automatically transitions to COMPLETED when all 10 actions finish, with complete audit trail via `batch_historicalbatchtransferworkflow` and `batch_historicaltransferaction`.
 - **User Story**: As a Logistics Ship Crew member, I want to execute dynamic station-to-sea handoffs from mobile and capture compliance snapshots so that each transport segment is fully traceable.
   - **Acceptance Criteria**:
-    - Dynamic station-to-sea workflows can be planned and started without pre-defining all handoffs.
-    - Authorized transport roles (`SHIP_CREW`/Logistics operator) can add and execute handoffs while the workflow is IN_PROGRESS.
-    - Each executed handoff captures source/destination compliance readings linked to the underlying container assignments.
+    - Dynamic station-to-sea workflows can be planned without pre-defining container-level handoffs and require route mode selection (`DIRECT_STATION_TO_VESSEL` or `VIA_TRUCK_TO_VESSEL`).
+    - Authorized transport roles (`SHIP_CREW`/Logistics operator) can start and complete handoffs from the execution page while the workflow is IN_PROGRESS.
+    - Each started handoff captures mandatory source/destination compliance readings (O2, temperature, CO2 when mapped) with strict/override policy controls.
+    - Dynamic workflows are explicitly completed by operator action and are not auto-completed by action-count equality.
     - Other roles can view workflow progress and action history but cannot execute restricted transport actions.
 
 #### 3.1.3 Feed and Inventory Management (`inventory` app)

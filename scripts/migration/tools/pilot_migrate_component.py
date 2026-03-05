@@ -1619,6 +1619,53 @@ def build_creation_workflow_number(batch_number: str, component_key: str) -> str
     return f"CRT-{trimmed}"[:50]
 
 
+def remove_component_creation_workflow(component_key: str) -> dict[str, int]:
+    """Remove synthetic creation workflow/maps for a component key."""
+    workflow_map = get_external_map("PopulationComponentCreationWorkflow", component_key)
+    workflow_ids: set[int] = set()
+    action_ids: set[int] = set()
+    if workflow_map:
+        workflow_ids.add(int(workflow_map.target_object_id))
+
+    if workflow_ids:
+        action_ids.update(
+            CreationAction.objects.filter(workflow_id__in=workflow_ids).values_list("id", flat=True)
+        )
+        CreationAction.objects.filter(id__in=list(action_ids)).delete()
+        BatchCreationWorkflow.objects.filter(id__in=list(workflow_ids)).delete()
+
+    maps_deleted = 0
+    deleted, _ = ExternalIdMap.objects.filter(
+        source_system="FishTalk",
+        source_model="PopulationComponentCreationWorkflow",
+        source_identifier=str(component_key),
+    ).delete()
+    maps_deleted += int(deleted)
+
+    if action_ids:
+        action_map_qs = ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model="PopulationCreationAction",
+            target_app_label="batch",
+            target_model="creationaction",
+            target_object_id__in=list(action_ids),
+        )
+    else:
+        action_map_qs = ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model="PopulationCreationAction",
+            metadata__component_key=component_key,
+        )
+    deleted, _ = action_map_qs.delete()
+    maps_deleted += int(deleted)
+
+    return {
+        "workflows_deleted": len(workflow_ids),
+        "actions_deleted": len(action_ids),
+        "external_maps_deleted": maps_deleted,
+    }
+
+
 @dataclass(frozen=True)
 class ComponentMember:
     population_id: str
@@ -2209,6 +2256,22 @@ Stitching approaches:
             "assignment members when the existing map is larger."
         ),
     )
+    legacy_group.add_argument(
+        "--merge-existing-component-map",
+        action="store_true",
+        help=(
+            "Union report members with existing component-mapped assignment members "
+            "to avoid destructive rerun pruning while still applying new members."
+        ),
+    )
+    legacy_group.add_argument(
+        "--allow-component-membership-shrink",
+        action="store_true",
+        help=(
+            "Allow rerun pruning when existing component-mapped membership is larger "
+            "than report membership. Default is safety abort."
+        ),
+    )
     
     # Common options
     parser.add_argument("--geography", default="Faroe Islands", help="Target geography name (auto-detected for chain-based)")
@@ -2246,6 +2309,15 @@ Stitching approaches:
         type=int,
         default=60,
         help="Days from batch start to include in creation workflow (default: 60)",
+    )
+    parser.add_argument(
+        "--allow-sea-only-creation-workflow",
+        action="store_true",
+        help=(
+            "Allow synthetic batch-creation workflow for sea-only components. "
+            "Default behavior skips creation workflows for sea-only components "
+            "to keep sea population migration as continuation of FW lineage."
+        ),
     )
     parser.add_argument(
         "--lifecycle-frontier-window-hours",
@@ -2406,6 +2478,24 @@ def main() -> int:
                 f"report has no rows for {component_key}."
             )
             members = fallback_members
+        elif args.merge_existing_component_map and fallback_members:
+            merged_members = {
+                str(member.population_id).strip(): member
+                for member in fallback_members
+                if str(member.population_id or "").strip()
+            }
+            report_member_count = len(members)
+            for member in members:
+                member_key = str(member.population_id or "").strip()
+                if not member_key:
+                    continue
+                merged_members[member_key] = member
+            members = sorted(merged_members.values(), key=lambda m: m.start_time)
+            print(
+                "Merged report members with existing component-mapped fallback for "
+                f"{component_key}: report={report_member_count} rows, "
+                f"fallback={len(fallback_members)} rows, merged={len(members)} rows."
+            )
         elif (
             args.prefer_existing_component_map
             and fallback_members
@@ -2417,11 +2507,20 @@ def main() -> int:
             )
             members = fallback_members
         elif fallback_members and len(fallback_members) > len(members):
+            if not args.allow_component_membership_shrink:
+                raise SystemExit(
+                    "[ERROR] Destructive component membership shrink blocked for "
+                    f"{component_key}: report={len(members)} rows, "
+                    f"fallback={len(fallback_members)} rows. "
+                    "Use --merge-existing-component-map (recommended), "
+                    "--prefer-existing-component-map, or "
+                    "--allow-component-membership-shrink."
+                )
             print(
-                "Ignoring larger existing component-mapped fallback for "
-                f"{component_key} to preserve deterministic report membership "
-                f"(report={len(members)} rows, fallback={len(fallback_members)} rows). "
-                "Use --prefer-existing-component-map to opt in."
+                "Proceeding with component membership shrink for "
+                f"{component_key} (report={len(members)} rows, "
+                f"fallback={len(fallback_members)} rows) because "
+                "--allow-component-membership-shrink is set."
             )
 
         if not members:
@@ -2490,16 +2589,25 @@ def main() -> int:
 
     name_station_code = extract_station_code(args.batch_number or representative)
     if name_station_code:
-        station_matches = [
-            site for site in member_sites
-            if name_station_code in normalize_key(site).replace(" ", "")
+        marine_area_sites = [
+            site for site in member_sites if parse_site_code(site).startswith("A")
         ]
-        if not station_matches:
-            raise SystemExit(
-                "Station-code guard failed: batch name suggests "
-                f"{name_station_code} but component sites are {member_sites}. "
-                "Use --expected-site to override if this is intentional."
+        if member_sites and len(marine_area_sites) == len(member_sites):
+            print(
+                "[INFO] Station-code guard bypassed for marine-area component sites: "
+                f"{member_sites}"
             )
+        else:
+            station_matches = [
+                site for site in member_sites
+                if name_station_code in normalize_key(site).replace(" ", "")
+            ]
+            if not station_matches:
+                raise SystemExit(
+                    "Station-code guard failed: batch name suggests "
+                    f"{name_station_code} but component sites are {member_sites}. "
+                    "Use --expected-site to override if this is intentional."
+                )
 
     # Deterministic fallback for unmapped halls: if every token-mapped member in a
     # site/hall tuple resolves to the same lifecycle stage, reuse that stage.
@@ -3558,6 +3666,7 @@ def main() -> int:
         batch_map = get_external_map("PopulationComponent", component_key)
         if batch_map:
             batch = Batch.objects.get(pk=batch_map.target_object_id)
+            previous_batch_number = batch.batch_number
             if not args.batch_number:
                 batch_number = batch.batch_number
             batch.batch_number = batch_number
@@ -3568,6 +3677,11 @@ def main() -> int:
             batch.actual_end_date = batch_actual_end_date
             batch.notes = f"FishTalk stitched component {component_key}; representative='{representative}'"
             save_with_history(batch, user=history_user, reason=history_reason)
+            if previous_batch_number != batch.batch_number:
+                print(
+                    "Batch rename persisted via history-aware save: "
+                    f"'{previous_batch_number}' -> '{batch.batch_number}'"
+                )
         else:
             batch = Batch(
                 batch_number=batch_number,
@@ -4192,6 +4306,34 @@ def main() -> int:
             for member in initial_members
             if assignment_by_population_id.get(member.population_id)
         ]
+
+        if creation_assignments:
+            fw_creation_assignments = [
+                (member, assignment)
+                for member, assignment in creation_assignments
+                if assignment.container_id and assignment.container and assignment.container.hall_id
+            ]
+            sea_only_creation_assignments = [
+                (member, assignment)
+                for member, assignment in creation_assignments
+                if assignment.container_id and assignment.container and assignment.container.area_id
+            ]
+            if fw_creation_assignments:
+                creation_assignments = fw_creation_assignments
+            elif sea_only_creation_assignments and not args.allow_sea_only_creation_workflow:
+                cleanup_result = remove_component_creation_workflow(component_key)
+                print(
+                    "Skipping synthetic creation workflow for sea-only component "
+                    f"{component_key}; cleanup(workflows={cleanup_result['workflows_deleted']}, "
+                    f"actions={cleanup_result['actions_deleted']}, maps={cleanup_result['external_maps_deleted']})."
+                )
+                creation_assignments = []
+            elif sea_only_creation_assignments and args.allow_sea_only_creation_workflow:
+                print(
+                    "WARNING: --allow-sea-only-creation-workflow enabled for "
+                    f"component {component_key}. This should be used only for "
+                    "explicitly approved harvested/exception cohorts."
+                )
 
         if creation_assignments:
             workflow_number = build_creation_workflow_number(batch.batch_number, component_key)
