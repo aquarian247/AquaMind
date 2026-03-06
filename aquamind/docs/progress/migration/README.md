@@ -21,6 +21,7 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
 5. MIGRATION_TIMELINE_SUMMARY_2026-01-28.md - consolidated timeline
 
 ## Latest handoff
+- handoffs/HANDOFF_2026-03-05_FWSEA_CONTINUATION_CLOSEOUT_CHUNKD_E.md - FWSEA continuation closeout covering chunk D reconciliation, low-confidence chunk E widening, and remaining ambiguous queue state
 - handoffs/HANDOFF_2026-03-05_FW_ENVIRONMENTAL_STABILIZATION_AND_FWSEA_READY_CHECK.md - FW environmental stabilization, zero remaining scoped parameter mismatches, FWSEA readiness split
 - handoffs/HANDOFF_2026-03-04_SCOPE60_CORE_ENV_EXECUTION.md - scope-60 core/health/environmental residual execution completion
 - handoffs/HANDOFF_2026-03-04_SCOPE60_VERIFICATION_INVENTORY_FEED.md - scope-60 verification and inventory/feed readout
