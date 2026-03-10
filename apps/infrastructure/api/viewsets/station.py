@@ -20,6 +20,7 @@ from apps.infrastructure.models.station import FreshwaterStation
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
+from apps.batch.models.batch import Batch
 from apps.infrastructure.api.serializers.station import FreshwaterStationSerializer, FreshwaterStationSummarySerializer
 
 
@@ -135,7 +136,20 @@ class FreshwaterStationViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         # Calculate average weight with division-by-zero protection
         avg_weight_kg = active_biomass_kg / population_count if population_count > 0 else 0
 
-        # Serialize and return the response
+        active_batch_ids = (
+            BatchContainerAssignment.objects.filter(
+                container__hall__freshwater_station=station,
+                is_active=True,
+            )
+            .values_list("batch_id", flat=True)
+            .distinct()
+        )
+        active_batches = list(
+            Batch.objects.filter(id__in=active_batch_ids)
+            .values("id", "batch_number", "status")
+            .order_by("batch_number")
+        )
+
         serializer = FreshwaterStationSummarySerializer(data={
             'hall_count': hall_count,
             'container_count': container_count,
@@ -145,7 +159,9 @@ class FreshwaterStationViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         })
         serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.validated_data)
+        response_data = serializer.validated_data
+        response_data['active_batches'] = active_batches
+        return Response(response_data)
 
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)

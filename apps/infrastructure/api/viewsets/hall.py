@@ -26,6 +26,7 @@ from aquamind.utils.history_mixins import HistoryReasonMixin
 from apps.infrastructure.models.hall import Hall
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
+from apps.batch.models.batch import Batch
 from apps.infrastructure.api.serializers.hall import HallSerializer, HallSummarySerializer
 
 
@@ -195,7 +196,20 @@ class HallViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         # Calculate utilization percentage (biomass-based)
         utilization_percent = float(active_biomass_kg) / float(total_capacity_kg) * 100 if total_capacity_kg > 0 else 0
 
-        # Serialize and return the response
+        active_batch_ids = (
+            BatchContainerAssignment.objects.filter(
+                container__hall=hall,
+                is_active=True,
+            )
+            .values_list("batch_id", flat=True)
+            .distinct()
+        )
+        active_batches = list(
+            Batch.objects.filter(id__in=active_batch_ids)
+            .values("id", "batch_number", "status")
+            .order_by("batch_number")
+        )
+
         serializer = HallSummarySerializer(data={
             'container_count': container_count,
             'active_biomass_kg': active_biomass_kg,
@@ -206,4 +220,6 @@ class HallViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         })
         serializer.is_valid(raise_exception=True)
 
-        return Response(serializer.validated_data)
+        response_data = serializer.validated_data
+        response_data['active_batches'] = active_batches
+        return Response(response_data)
