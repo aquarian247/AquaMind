@@ -25,6 +25,7 @@ from aquamind.utils.history_mixins import HistoryReasonMixin
 from apps.infrastructure.models.area import Area
 from apps.infrastructure.models.container import Container
 from apps.batch.models.assignment import BatchContainerAssignment
+from apps.batch.models.batch import Batch
 from apps.infrastructure.api.serializers.area import AreaSerializer
 
 
@@ -120,8 +121,20 @@ class AreaViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
                         "active_biomass_kg": {"type": "number", "description": "Total active biomass in kilograms"},
                         "population_count": {"type": "integer", "description": "Total population count"},
                         "avg_weight_kg": {"type": "number", "description": "Average weight in kilograms per fish"},
+                        "active_batches": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"type": "integer"},
+                                    "batch_number": {"type": "string"},
+                                    "status": {"type": "string"},
+                                },
+                            },
+                            "description": "Active batches with assignments in this area",
+                        },
                     },
-                    "required": ["container_count", "ring_count", "active_biomass_kg", "population_count", "avg_weight_kg"],
+                    "required": ["container_count", "ring_count", "active_biomass_kg", "population_count", "avg_weight_kg", "active_batches"],
                 },
                 description="Area KPI metrics",
             )
@@ -194,10 +207,26 @@ class AreaViewSet(HistoryReasonMixin, viewsets.ModelViewSet):
         # Calculate average weight with division by zero protection
         avg_weight_kg = active_biomass_kg / population_count if population_count > 0 else 0
 
+        # Get distinct active batches in this area
+        active_batch_ids = (
+            BatchContainerAssignment.objects.filter(
+                container__area=area,
+                is_active=True,
+            )
+            .values_list("batch_id", flat=True)
+            .distinct()
+        )
+        active_batches = list(
+            Batch.objects.filter(id__in=active_batch_ids)
+            .values("id", "batch_number", "status")
+            .order_by("batch_number")
+        )
+
         return Response({
             'container_count': container_count,
             'ring_count': ring_count,
             'active_biomass_kg': active_biomass_kg,
             'population_count': population_count,
             'avg_weight_kg': round(avg_weight_kg, 3),
+            'active_batches': active_batches,
         })
