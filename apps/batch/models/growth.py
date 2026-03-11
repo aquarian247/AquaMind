@@ -104,6 +104,13 @@ class GrowthSample(models.Model):
         Automatically calculates the condition_factor using the calculate_condition_factor
         method if it hasn't been explicitly provided and avg_weight_g and avg_length_cm are available.
         """
+        from apps.finance_core.services.locking import LockGuardService
+
+        LockGuardService.assert_assignment_editable(
+            self.assignment,
+            target_date=self.sample_date,
+        )
+
         if self.condition_factor is None:
             calculated_k = self.calculate_condition_factor()
             if calculated_k is not None:

@@ -23,6 +23,7 @@ from apps.planning.api.routers import router as planning_router
 from apps.operational.api.routers import router as operational_router
 from apps.harvest.api.routers import router as harvest_router
 from apps.finance.api.routers import router as finance_router
+from apps.finance_core.api.routers import router as finance_core_router
 # from apps.core.api.routers import router as core_router  # Temporarily disabled for testing
 # Import the users URLs
 
@@ -58,5 +59,6 @@ urlpatterns = [
     path('operational/', include(operational_router.urls)),
     path('operational/', include(harvest_router.urls)),
     path('finance/', include(finance_router.urls)),
+    path('finance-core/', include(finance_core_router.urls)),
     path('users/', include('apps.users.urls')),
 ]

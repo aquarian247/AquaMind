@@ -106,6 +106,12 @@ class BatchContainerAssignment(models.Model):
 
         Calculates biomass_kg if population_count and avg_weight_g are provided.
         """
+        from django.utils import timezone
+        from apps.finance_core.services.locking import LockGuardService
+
+        target_date = self.assignment_date if not self.pk else timezone.now().date()
+        LockGuardService.assert_container_editable(self.container, target_date=target_date)
+
         if self.container_id and self.container.hierarchy_role == "STRUCTURAL":
             raise ValidationError(
                 "Cannot assign fish population directly to STRUCTURAL containers."

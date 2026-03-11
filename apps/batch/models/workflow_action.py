@@ -559,6 +559,7 @@ class TransferAction(models.Model):
             )
 
         execution_time = timezone.now()
+        from apps.finance_core.services.locking import LockGuardService
         
         # Map API field name to internal param when provided
         if 'mortality_during_transfer' in execution_details:
@@ -569,6 +570,15 @@ class TransferAction(models.Model):
             source = BatchContainerAssignment.objects.select_for_update().get(
                 pk=self.source_assignment_id
             )
+            LockGuardService.assert_assignment_editable(
+                source,
+                target_date=execution_time.date(),
+            )
+            if self.dest_assignment_id:
+                LockGuardService.assert_container_editable(
+                    self.dest_assignment.container,
+                    target_date=execution_time.date(),
+                )
             
             # Validate population
             total_reduction = self.transferred_count + mortality_count
@@ -784,11 +794,21 @@ class TransferAction(models.Model):
         transferred_biomass_kg = Decimal(transferred_biomass_kg)
         transferred_count = int(transferred_count)
         mortality_count = int(mortality_count)
+        from apps.finance_core.services.locking import LockGuardService
 
         with transaction.atomic():
             source = BatchContainerAssignment.objects.select_for_update().get(
                 pk=self.source_assignment_id
             )
+            LockGuardService.assert_assignment_editable(
+                source,
+                target_date=execution_time.date(),
+            )
+            if self.dest_container_id:
+                LockGuardService.assert_container_editable(
+                    self.dest_container,
+                    target_date=execution_time.date(),
+                )
             total_reduction = transferred_count + mortality_count
             if total_reduction > source.population_count:
                 raise ValidationError(

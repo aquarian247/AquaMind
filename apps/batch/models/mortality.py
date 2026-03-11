@@ -59,6 +59,17 @@ class MortalityEvent(models.Model):
                 raise ValidationError({
                     'assignment': f'Assignment must belong to batch {self.batch.batch_number}'
                 })
+
+    def save(self, *args, **kwargs):
+        from apps.finance_core.services.locking import LockGuardService
+
+        if self.assignment:
+            LockGuardService.assert_assignment_editable(
+                self.assignment,
+                target_date=self.event_date,
+            )
+        self.full_clean()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         if self.assignment:

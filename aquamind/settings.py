@@ -68,6 +68,7 @@ LOCAL_APPS = [
     'apps.operational',
     'apps.harvest',
     'apps.finance',
+    'apps.finance_core',
     'apps.migration_support',
     'apps.historian',
 ]
