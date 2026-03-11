@@ -218,7 +218,6 @@ class BatchTransferWorkflowViewSet(
                 "properties": {
                     "completion_note": {"type": "string"},
                 },
-                "required": [],
             }
         },
         responses={
@@ -278,7 +277,6 @@ class BatchTransferWorkflowViewSet(
                 "properties": {
                     "completion_note": {"type": "string"},
                 },
-                "required": [],
             }
         },
         responses={

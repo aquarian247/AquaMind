@@ -268,7 +268,8 @@ class AreaSummaryTestCase(APITestCase):
 
     def test_area_summary_nonexistent_area(self):
         """Test area summary for non-existent area."""
-        nonexistent_url = reverse('area-summary', kwargs={'pk': 999})
+        nonexistent_pk = Area.objects.order_by('-pk').values_list('pk', flat=True).first() or 0
+        nonexistent_url = reverse('area-summary', kwargs={'pk': nonexistent_pk + 999})
         response = self.client.get(nonexistent_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

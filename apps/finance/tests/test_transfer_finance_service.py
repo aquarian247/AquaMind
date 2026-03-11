@@ -200,6 +200,8 @@ class TransferFinanceServiceTest(TestCase):
             is_intercompany=True,
             total_actions_planned=1,
         )
+        cls.workflow.is_dynamic_execution = False
+        cls.workflow.save(update_fields=['is_dynamic_execution', 'updated_at'])
         
         # Create assignments with correct field name
         cls.source_assignment = BatchContainerAssignment.objects.create(
