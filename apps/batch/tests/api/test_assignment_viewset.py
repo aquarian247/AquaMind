@@ -14,6 +14,8 @@ from apps.batch.tests.api.test_utils import (
     create_test_species,
     create_test_lifecycle_stage,
     create_test_batch,
+    create_test_freshwater_station,
+    create_test_hall,
     create_test_container,
     create_test_batch_container_assignment
 )
@@ -251,6 +253,82 @@ class BatchContainerAssignmentViewSetTest(BaseAPITestCase):
         self.assertEqual(len(response.data['results']), 2)
         self.assertEqual(response.data['results'][0]['is_active'], True)
         self.assertEqual(response.data['results'][1]['is_active'], True)
+
+    def test_filter_assignments_by_station(self):
+        """Test filtering container assignments by freshwater station."""
+        station1 = self.container.hall.freshwater_station
+        station2 = create_test_freshwater_station(name="Other Station")
+        hall2 = create_test_hall(station=station2, name="Other Hall")
+        container2 = create_test_container(hall=hall2, name="Tank 2")
+        batch2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH002",
+        )
+        create_test_batch_container_assignment(
+            batch=batch2,
+            container=container2,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=500,
+            avg_weight_g=Decimal("20.0"),
+        )
+
+        url = self.get_api_url('batch', 'container-assignments') + f'?station={station1.id}'
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['container']['id'], self.container.id)
+
+    def test_list_assignments_uses_stable_default_ordering(self):
+        """List ordering should use id as a deterministic tie-breaker."""
+        target_date = date(2025, 1, 1)
+        self.assignment.assignment_date = target_date
+        self.assignment.save(update_fields=["assignment_date"])
+
+        batch2 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH002",
+        )
+        batch3 = create_test_batch(
+            species=self.species,
+            lifecycle_stage=self.lifecycle_stage,
+            batch_number="BATCH003",
+        )
+        container2 = create_test_container(name="Tank 2")
+        container3 = create_test_container(name="Tank 3")
+        assignment2 = create_test_batch_container_assignment(
+            batch=batch2,
+            container=container2,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=500,
+            avg_weight_g=Decimal("20.0"),
+        )
+        assignment3 = create_test_batch_container_assignment(
+            batch=batch3,
+            container=container3,
+            lifecycle_stage=self.lifecycle_stage,
+            population_count=750,
+            avg_weight_g=Decimal("12.0"),
+        )
+        BatchContainerAssignment.objects.filter(id__in=[assignment2.id, assignment3.id]).update(
+            assignment_date=target_date
+        )
+
+        url = self.get_api_url('batch', 'container-assignments')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids_for_target_date = [
+            row["id"]
+            for row in response.data["results"]
+            if row["assignment_date"] == target_date.isoformat()
+        ]
+        self.assertEqual(
+            ids_for_target_date[:3],
+            sorted([self.assignment.id, assignment2.id, assignment3.id], reverse=True),
+        )
 
     def test_summary_endpoint_active_assignments(self):
         """Test the summary endpoint with active assignments (default)."""

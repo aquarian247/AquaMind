@@ -92,7 +92,7 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
         'population_count',
         'biomass_kg'
     ]
-    ordering = ['-assignment_date']
+    ordering = ['-assignment_date', '-id']
     LIFECYCLE_BASIS_FULL_HISTORY = "full_history"
     LIFECYCLE_BASIS_STAGE_ENTRY = "stage_entry"
     LIFECYCLE_BASIS_ACTIVE_SNAPSHOT = "active_snapshot"
@@ -104,6 +104,8 @@ class BatchContainerAssignmentViewSet(RBACFilterMixin, HistoryReasonMixin, Locat
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
+        if self.request:
+            queryset = self.apply_location_filters(queryset, self.request)
         ordering_param = None
         if self.request:
             ordering_param = self.request.query_params.get("ordering")

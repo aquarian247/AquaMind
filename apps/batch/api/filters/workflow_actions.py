@@ -5,7 +5,10 @@ These filters provide advanced filtering for transfer action endpoints.
 """
 import django_filters as filters
 from django_filters import rest_framework as rest_filters
+from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 from apps.batch.models import TransferAction
+from apps.infrastructure.models import FreshwaterStation
 
 
 class TransferActionFilter(rest_filters.FilterSet):
@@ -86,6 +89,7 @@ class TransferActionFilter(rest_filters.FilterSet):
         field_name='dest_assignment__container',
         lookup_expr='exact'
     )
+    station = filters.NumberFilter(method='filter_station')
 
     class Meta:
         model = TransferAction
@@ -110,4 +114,20 @@ class TransferActionFilter(rest_filters.FilterSet):
             'biomass_max',
             'source_container',
             'dest_container',
+            'station',
         ]
+
+    def filter_station(self, queryset, name, value):
+        try:
+            station_id = int(value)
+        except (TypeError, ValueError):
+            raise ValidationError({'station': 'Invalid freshwater station ID'})
+
+        if not FreshwaterStation.objects.filter(id=station_id).exists():
+            raise ValidationError({'station': 'Freshwater station not found'})
+
+        return queryset.filter(
+            Q(source_assignment__container__hall__freshwater_station_id=station_id)
+            | Q(dest_assignment__container__hall__freshwater_station_id=station_id)
+            | Q(dest_container__hall__freshwater_station_id=station_id)
+        )
