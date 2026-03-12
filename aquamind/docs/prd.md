@@ -789,8 +789,72 @@ Broodstock management underpins salmon farming success, directly impacting egg q
     - Trend analysis shows harvest performance over time.
     - Data can be exported for detailed financial analysis.
 
-#### 3.1.10 Finance Management
-- **Purpose**: To provide comprehensive financial reporting, intercompany transaction management, and ERP integration for aquaculture operations, enabling accurate revenue recognition, cost tracking, and compliance reporting across subsidiaries and geographies.
+#### 3.1.10 Finance Core Planning and Month-End Close (`finance_core` app)
+- **Purpose**: To provide a dedicated finance-close subsystem for planning, monthly cost allocation, valuation, and period governance, while integrating directly with biology and existing dimensional finance data.
+- **Functionality**:
+  - **Finance Core Master Data and Structures**:
+    - The system shall maintain finance-core account hierarchy via `finance_core_accountgroup` and `finance_core_account`, including cost-group mappings used for NAV import reconciliation.
+    - The system shall maintain hierarchical cost projects via `finance_core_costcenter` with explicit site/company linkage and project typing (`SITE`, `PROJECT`, `DEPARTMENT`, `OTHER`).
+    - The system shall link biological batches to project cost centers through `finance_core_costcenterbatchlink` with one canonical finance-core link per batch.
+
+  - **Automatic Biology-to-Finance Project Linking**:
+    - The system shall auto-create site/project cost centers and batch links when new `batch_batchcontainerassignment` records are created.
+    - The system shall use opening-of-month biology (`batch_actualdailyassignmentstate` when available, fallback to active `batch_batchcontainerassignment`) as the valuation and allocation source snapshot.
+    - The system shall surface missing project links as hard blockers in pre-close readiness checks.
+
+  - **Budgeting and Planning Operations**:
+    - The system shall maintain annual budgets in `finance_core_budget` with versioning and status controls.
+    - The system shall maintain monthly account/cost-center entries in `finance_core_budgetentry` with uniqueness by budget/account/cost-center/month.
+    - The system shall support budget copy and bulk budget-entry import/update operations.
+
+  - **NAV Cost Import (Replace-Period Semantics)**:
+    - The system shall ingest NAV cost files into `finance_core_costimportbatch` and `finance_core_costimportline`.
+    - Imports shall validate `CostGroup` and `OperatingUnit` mappings and reject unknown values.
+    - Imports shall apply replace-period behavior for affected site-period rows and maintain source checksum metadata for traceability.
+
+  - **Allocation Rule Engine and Preview Runs**:
+    - The system shall support configurable allocation rules in `finance_core_allocationrule` with effective date ranges and JSON rule definitions.
+    - The allocation engine shall resolve most-specific rules (cost-center override before account-group default), then allocate imported cost lines over project biology shares.
+    - Allocation preview output shall be persisted as immutable `finance_core_valuationrun` records with `PREVIEW` status and full snapshots (`biology_snapshot`, `allocation_snapshot`, `rule_snapshot`).
+
+  - **Valuation, NAV Posting Preview, and Reporting**:
+    - The system shall finalize month-close runs as approved `finance_core_valuationrun` records with version increments per company/site/period.
+    - Finalized runs shall calculate opening value, allocated value, direct budget costs, optional mortality impairment, closing value, WAC/kg, and delta by cost center and site.
+    - Finalized runs shall generate balanced two-line NAV posting previews (inventory account `8313`/`8310` against `2211`) stored in `nav_posting`.
+    - The system shall provide reporting endpoints for movement summaries, pre-close readiness, ring valuation, and NAV export preview (JSON/CSV).
+
+  - **Hard Period Locking Across Finance and Biology**:
+    - The system shall enforce period locks via `finance_core_periodlock` by company/site/year/month with versioned reopen support.
+    - Locked periods shall block finance-core writes (imports, allocations, valuation runs, budget edits) and biology mutations in `batch` models used by close workflows (assignment updates, growth samples, mortality events, transfer-action execution).
+    - Reopen operations shall require reason capture and elevated permissions.
+
+  - **Auditability and Async Processing**:
+    - The system shall track all finance-core domain entities with django-simple-history historical tables.
+    - Long-running allocation and valuation workflows shall be executable asynchronously via Celery tasks.
+
+- **Behavior**:
+  - Pre-close readiness shall be computed from latest import state, biology completeness, project-link completeness, latest preview/approved runs, and lock state.
+  - Allocation previews shall be re-runnable and versioned without mutating historical snapshots.
+  - Approved valuation runs shall carry immutable snapshots and NAV preview payloads for reproducible downstream exports.
+  - Period locks shall act as cross-domain governance controls, preventing post-close biological or financial drift.
+
+- **Justification**: Monthly close is a mission-critical workflow requiring deterministic calculations, reproducible snapshots, and governance controls across both finance and biology domains. A dedicated finance-core subsystem isolates close logic from operational finance reporting while preserving integration with existing dimensions and ERP export pipelines.
+
+- **User Story**: As a Finance Controller, I want to run month-end allocation and valuation from imported NAV costs and opening biology so that I can produce a reconciled closing value and NAV-ready delta posting.
+  - **Acceptance Criteria**:
+    - The UI/API supports import → allocate preview → approved valuation-run sequence for a selected site/period.
+    - Approved runs persist immutable biology/allocation/rule/totals/nav snapshots with explicit versioning.
+    - NAV preview output is balanced and exportable in JSON/CSV formats.
+    - Re-running valuation creates a new version without mutating historical runs.
+
+- **User Story**: As a Finance Manager, I want period locks to block post-close data changes so that month-close outputs remain auditable and stable.
+  - **Acceptance Criteria**:
+    - Locking a period prevents finance-core imports/valuation updates and biology edits affecting locked periods.
+    - Unlock actions require admin-level authorization and mandatory reason entry.
+    - Reopened periods increment lock version and preserve lock/unlock attribution in history tables.
+
+#### 3.1.10.1 Financial Reporting, Intercompany Transactions, and ERP Integration (`finance` app)
+- **Purpose**: To provide operational financial reporting, intercompany transaction management, and ERP integration for multi-entity aquaculture operations.
 - **Functionality**:
   - **Company and Site Dimension Management**:
     - The system shall maintain dimensional data for companies (`finance_dimcompany`) and sites (`finance_dimsite`) derived from operational geographies and subsidiaries.
@@ -829,7 +893,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
   - BI views shall provide real-time access to aggregated financial data without impacting operational performance.
   - Financial policies shall be configurable with proper validation and audit logging.
 
-- **Justification**: Finance management is critical for multi-entity aquaculture operations, enabling accurate revenue recognition, intercompany accounting, and regulatory compliance. The system provides the necessary financial infrastructure to support commercial operations across geographies and subsidiaries.
+- **Justification**: Operational finance reporting and intercompany flows remain essential for revenue recognition, ERP posting, and compliance in multi-subsidiary operations.
 
 - **User Story**: As a Finance Manager, I want to configure intercompany pricing policies so that transactions between subsidiaries are properly valued and accounted for.
   - **Acceptance Criteria**:
@@ -862,6 +926,7 @@ Broodstock management underpins salmon farming success, directly impacting egg q
     - **Batch**: `BatchTransferWorkflow`, `TransferAction`, `BatchContainerAssignment`, `GrowthSample`, `MortalityEvent`  
     - **Inventory**: `FeedingEvent`  
     - **Health**: `JournalEntry`, `HealthLabSample`, `MortalityRecord`, `LiceCount`, `Treatment`  
+    - **Finance Core**: `AccountGroup`, `Account`, `CostCenter`, `CostCenterBatchLink`, `Budget`, `BudgetEntry`, `CostImportBatch`, `CostImportLine`, `AllocationRule`, `PeriodLock`, `ValuationRun`  
     - **Infrastructure**: `Geography`, `Area`, `FreshwaterStation`, `Hall`, `ContainerType`, `Sensor`, `FeedContainer`  
     - **Users**: `UserProfile`; additionally register Django `auth.User` for history  
   - Historical rows shall capture `history_type` (+ / ~ / –), `history_date`, `history_user`, and `history_change_reason`.  

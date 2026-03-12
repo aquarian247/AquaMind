@@ -1029,7 +1029,8 @@ All health models with `history = HistoricalRecords()` create corresponding hist
 - `infrastructure_area` ← `environmental_photoperioddata` (`area_id`, CASCADE)
 - `batch_batchtransferworkflow` ← `environmental_stagetransitionenvironmental` (`batch_transfer_workflow_id`, CASCADE)
 
-### 4.6 Finance Management (`finance` app)
+### 4.6 Finance Domain (`finance` + `finance_core` apps)
+#### 4.6.1 Operational Finance and ERP Integration (`finance` app)
 **Purpose**: To track financial transactions, harvest events, and intercompany policies for regulatory compliance and operational reporting.
 
 #### Tables
@@ -1185,6 +1186,235 @@ All health models with `history = HistoricalRecords()` create corresponding hist
 - `auth_user` ← `finance_historicalintercompanytransaction` (SET_NULL, history_user_id)
 - `auth_user` ← `finance_historicalnavexportbatch` (SET_NULL, history_user_id)
 - `auth_user` ← `finance_historicalnavexportline` (SET_NULL, history_user_id)
+
+#### 4.6.2 Finance Core Planning and Month-End Close (`finance_core` app)
+**Purpose**: To provide dedicated planning, allocation, valuation, and lock-governance tables for monthly finance close workflows, integrated with biology (`batch`) and dimensional finance (`finance`) entities.
+
+#### Tables
+- **`finance_core_accountgroup`**
+  - `group_id`: bigint (PK, auto-increment)
+  - `code`: varchar(32) (unique)
+  - `name`: varchar(150)
+  - `account_type`: varchar(20) (choices: `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`)
+  - `parent_id`: bigint (FK to `finance_core_accountgroup`, on_delete=PROTECT, nullable)
+  - `cost_group`: varchar(64) (nullable, unique when non-null)
+  - `description`: text
+  - `display_order`: integer (unsigned)
+  - `is_active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_account`**
+  - `account_id`: bigint (PK, auto-increment)
+  - `code`: varchar(32) (unique)
+  - `name`: varchar(150)
+  - `account_type`: varchar(20) (choices: `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`)
+  - `group_id`: bigint (FK to `finance_core_accountgroup`, on_delete=PROTECT, nullable)
+  - `description`: text
+  - `is_active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_costcenter`**
+  - `cost_center_id`: bigint (PK, auto-increment)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `site_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT, nullable)
+  - `parent_id`: bigint (FK to `finance_core_costcenter`, on_delete=PROTECT, nullable)
+  - `code`: varchar(64)
+  - `name`: varchar(150)
+  - `cost_center_type`: varchar(20) (choices: `SITE`, `PROJECT`, `DEPARTMENT`, `OTHER`)
+  - `description`: text
+  - `is_active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_costcenterbatchlink`**
+  - `link_id`: bigint (PK, auto-increment)
+  - `cost_center_id`: bigint (FK to `finance_core_costcenter`, on_delete=CASCADE)
+  - `batch_id`: bigint (OneToOne FK to `batch_batch`, on_delete=CASCADE, unique)
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `linked_at`: timestamptz
+
+- **`finance_core_budget`**
+  - `budget_id`: bigint (PK, auto-increment)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `name`: varchar(150)
+  - `fiscal_year`: integer (unsigned)
+  - `status`: varchar(20) (choices: `DRAFT`, `ACTIVE`, `ARCHIVED`)
+  - `version`: integer (unsigned)
+  - `notes`: text
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_budgetentry`**
+  - `entry_id`: bigint (PK, auto-increment)
+  - `budget_id`: bigint (FK to `finance_core_budget`, on_delete=CASCADE)
+  - `account_id`: bigint (FK to `finance_core_account`, on_delete=PROTECT)
+  - `cost_center_id`: bigint (FK to `finance_core_costcenter`, on_delete=PROTECT)
+  - `month`: smallint (unsigned)
+  - `amount`: numeric(14,2)
+  - `allocated_from_id`: bigint (self-FK to `finance_core_budgetentry`, on_delete=SET_NULL, nullable)
+  - `notes`: text
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_costimportbatch`**
+  - `import_batch_id`: bigint (PK, auto-increment)
+  - `year`: integer (unsigned)
+  - `month`: smallint (unsigned)
+  - `source_filename`: varchar(255)
+  - `checksum`: varchar(64)
+  - `imported_row_count`: integer (unsigned)
+  - `total_amount`: numeric(16,2)
+  - `uploaded_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `created_at`: timestamptz
+
+- **`finance_core_costimportline`**
+  - `line_id`: bigint (PK, auto-increment)
+  - `import_batch_id`: bigint (FK to `finance_core_costimportbatch`, on_delete=CASCADE)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `operating_unit_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT)
+  - `account_group_id`: bigint (FK to `finance_core_accountgroup`, on_delete=PROTECT)
+  - `year`: integer (unsigned)
+  - `month`: smallint (unsigned)
+  - `cost_group_code`: varchar(64)
+  - `operating_unit_name`: varchar(150)
+  - `amount`: numeric(16,2)
+  - `raw_payload`: jsonb
+  - `created_at`: timestamptz
+
+- **`finance_core_allocationrule`**
+  - `rule_id`: bigint (PK, auto-increment)
+  - `name`: varchar(150)
+  - `account_group_id`: bigint (FK to `finance_core_accountgroup`, on_delete=PROTECT, nullable)
+  - `cost_center_id`: bigint (FK to `finance_core_costcenter`, on_delete=PROTECT, nullable)
+  - `effective_from`: date
+  - `effective_to`: date (nullable)
+  - `rule_definition`: jsonb
+  - `is_active`: boolean
+  - `created_at`: timestamptz
+  - `updated_at`: timestamptz
+
+- **`finance_core_periodlock`**
+  - `period_lock_id`: bigint (PK, auto-increment)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `operating_unit_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT)
+  - `year`: integer (unsigned)
+  - `month`: smallint (unsigned)
+  - `is_locked`: boolean
+  - `version`: integer (unsigned)
+  - `lock_reason`: text
+  - `locked_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `locked_at`: timestamptz
+  - `reopened_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `reopened_at`: timestamptz (nullable)
+  - `reopen_reason`: text
+  - `updated_at`: timestamptz
+
+- **`finance_core_valuationrun`**
+  - `run_id`: bigint (PK, auto-increment; optional Timescale migration can convert to composite PK with `run_timestamp`)
+  - `run_timestamp`: timestamptz (indexed)
+  - `company_id`: bigint (FK to `finance_dimcompany`, on_delete=PROTECT)
+  - `operating_unit_id`: bigint (FK to `finance_dimsite`, on_delete=PROTECT)
+  - `budget_id`: bigint (FK to `finance_core_budget`, on_delete=SET_NULL, nullable)
+  - `import_batch_id`: bigint (FK to `finance_core_costimportbatch`, on_delete=SET_NULL, nullable)
+  - `year`: integer (unsigned)
+  - `month`: smallint (unsigned)
+  - `version`: integer (unsigned)
+  - `status`: varchar(20) (choices: `PREVIEW`, `APPROVED`, `EXPORTED`, `FAILED`)
+  - `created_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `approved_by_id`: integer (FK to `auth_user`, on_delete=SET_NULL, nullable)
+  - `completed_at`: timestamptz (nullable)
+  - `notes`: text
+  - `biology_snapshot`: jsonb
+  - `allocation_snapshot`: jsonb
+  - `rule_snapshot`: jsonb
+  - `mortality_snapshot`: jsonb
+  - `totals_snapshot`: jsonb
+  - `nav_posting`: jsonb
+  - `updated_at`: timestamptz
+
+#### Unique Constraints and Key Indexes
+- `finance_core_accountgroup_cost_group_uniq` (conditional unique on `cost_group` when non-null)
+- `finance_core_costcenter_company_code_uniq` (unique on `company_id`, `code`)
+- `finance_core_budget_company_year_name_version_uniq` (unique on `company_id`, `fiscal_year`, `name`, `version`)
+- `finance_core_budgetentry_budget_account_costcenter_month_uniq` (unique on `budget_id`, `account_id`, `cost_center_id`, `month`)
+- `finance_core_periodlock_company_operating_unit_year_month_uniq` (unique on `company_id`, `operating_unit_id`, `year`, `month`)
+- `finance_core_costimportline` indexes:
+  - `fc_imp_yr_mo_ou_idx` on (`year`, `month`, `operating_unit_id`)
+  - `fc_imp_yr_mo_grp_idx` on (`year`, `month`, `account_group_id`)
+- `finance_core_valuationrun` indexes:
+  - `fc_val_co_per_idx` on (`company_id`, `year`, `month`)
+  - `fc_val_ou_per_idx` on (`operating_unit_id`, `year`, `month`)
+  - `fc_val_per_ver_idx` on (`company_id`, `operating_unit_id`, `year`, `month`, `version`)
+
+#### Historical Tables (Audit Trail)
+All finance-core domain models are tracked with django-simple-history.
+
+**Tracked Models (11 total):**
+- `finance_core_account` → `finance_core_historicalaccount`
+- `finance_core_accountgroup` → `finance_core_historicalaccountgroup`
+- `finance_core_allocationrule` → `finance_core_historicalallocationrule`
+- `finance_core_budget` → `finance_core_historicalbudget`
+- `finance_core_budgetentry` → `finance_core_historicalbudgetentry`
+- `finance_core_costcenter` → `finance_core_historicalcostcenter`
+- `finance_core_costcenterbatchlink` → `finance_core_historicalcostcenterbatchlink`
+- `finance_core_costimportbatch` → `finance_core_historicalcostimportbatch`
+- `finance_core_costimportline` → `finance_core_historicalcostimportline`
+- `finance_core_periodlock` → `finance_core_historicalperiodlock`
+- `finance_core_valuationrun` → `finance_core_historicalvaluationrun`
+
+**Historical Table Structure** (all finance-core historical tables):
+- `history_id`: integer (PK, auto-increment)
+- `history_date`: timestamptz (timestamp of change)
+- `history_change_reason`: varchar (optional reason, nullable)
+- `history_type`: varchar (+, ~, - for create/update/delete)
+- `history_user_id`: integer (FK to `auth_user`, nullable)
+- *Plus all fields from the original model*
+
+#### Relationships
+**Finance Core to Finance Dimensions:**
+- `finance_dimcompany` ← `finance_core_costcenter` (`company_id`, PROTECT)
+- `finance_dimsite` ← `finance_core_costcenter` (`site_id`, PROTECT)
+- `finance_dimcompany` ← `finance_core_budget` (`company_id`, PROTECT)
+- `finance_dimcompany` ← `finance_core_costimportline` (`company_id`, PROTECT)
+- `finance_dimsite` ← `finance_core_costimportline` (`operating_unit_id`, PROTECT)
+- `finance_dimcompany` ← `finance_core_periodlock` (`company_id`, PROTECT)
+- `finance_dimsite` ← `finance_core_periodlock` (`operating_unit_id`, PROTECT)
+- `finance_dimcompany` ← `finance_core_valuationrun` (`company_id`, PROTECT)
+- `finance_dimsite` ← `finance_core_valuationrun` (`operating_unit_id`, PROTECT)
+
+**Finance Core Internal Relationships:**
+- `finance_core_accountgroup` ← `finance_core_account` (`group_id`, PROTECT)
+- `finance_core_accountgroup` ← `finance_core_costimportline` (`account_group_id`, PROTECT)
+- `finance_core_accountgroup` ← `finance_core_allocationrule` (`account_group_id`, PROTECT)
+- `finance_core_costcenter` ← `finance_core_costcenter` (`parent_id`, PROTECT)
+- `finance_core_costcenter` ← `finance_core_costcenterbatchlink` (`cost_center_id`, CASCADE)
+- `finance_core_costcenter` ← `finance_core_budgetentry` (`cost_center_id`, PROTECT)
+- `finance_core_costcenter` ← `finance_core_allocationrule` (`cost_center_id`, PROTECT)
+- `finance_core_budget` ← `finance_core_budgetentry` (`budget_id`, CASCADE)
+- `finance_core_account` ← `finance_core_budgetentry` (`account_id`, PROTECT)
+- `finance_core_budgetentry` ← `finance_core_budgetentry` (`allocated_from_id`, SET_NULL)
+- `finance_core_costimportbatch` ← `finance_core_costimportline` (`import_batch_id`, CASCADE)
+- `finance_core_budget` ← `finance_core_valuationrun` (`budget_id`, SET_NULL)
+- `finance_core_costimportbatch` ← `finance_core_valuationrun` (`import_batch_id`, SET_NULL)
+
+**Finance Core to Biology:**
+- `batch_batch` ← `finance_core_costcenterbatchlink` (`batch_id`, CASCADE, OneToOne)
+
+**Finance Core Attribution and Audit Relationships:**
+- `auth_user` ← `finance_core_budget` (`created_by_id`, SET_NULL)
+- `auth_user` ← `finance_core_costcenterbatchlink` (`created_by_id`, SET_NULL)
+- `auth_user` ← `finance_core_costimportbatch` (`uploaded_by_id`, SET_NULL)
+- `auth_user` ← `finance_core_periodlock` (`locked_by_id`, `reopened_by_id`, SET_NULL)
+- `auth_user` ← `finance_core_valuationrun` (`created_by_id`, `approved_by_id`, SET_NULL)
+- `auth_user` ← all `finance_core_historical*` tables (`history_user_id`, SET_NULL)
+
+#### TimescaleDB Notes
+- `finance_core_valuationrun` is created as a standard PostgreSQL table by default.
+- When TimescaleDB is available, migration `finance_core.0002_valuationrun_timescale` can convert it to a hypertable partitioned by `run_timestamp`, with compression policy enabled.
+- The functional close workflow does not require TimescaleDB; Timescale provides optional scale/performance enhancements.
 
 ### 4.7 User Management (`auth` and `users` apps)
 **Purpose**: Manages user accounts and access control.
