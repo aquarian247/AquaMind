@@ -669,12 +669,58 @@ class DataSource:
 
         return dict(totals)
 
+    def get_culling_counts_by_population(self, population_ids: set[str]) -> dict[str, int]:
+        """Return total FishTalk culling count per population."""
+        if not population_ids:
+            return {}
+
+        totals: defaultdict[str, int] = defaultdict(int)
+
+        def add_rows(rows: list[dict], count_field: str) -> None:
+            for row in rows:
+                pop_id = (row.get("PopulationID") or "").strip()
+                if not pop_id or pop_id not in population_ids:
+                    continue
+                raw = row.get(count_field)
+                try:
+                    value = int(round(float(raw or 0)))
+                except Exception:
+                    value = 0
+                if value > 0:
+                    totals[pop_id] += value
+
+        if self.use_csv:
+            add_rows(self.loader.get_culling_actions_for_populations(population_ids), "CullingCount")
+            return dict(totals)
+
+        for chunk in self._chunk_population_ids(population_ids):
+            in_clause = ",".join(f"'{pid}'" for pid in chunk)
+            rows = self.extractor._run_sqlcmd(
+                query=(
+                    "SELECT CONVERT(varchar(36), a.PopulationID) AS PopulationID, "
+                    "SUM(ISNULL(c.CullingCount, 0)) AS TotalCount "
+                    "FROM dbo.Culling c "
+                    "JOIN dbo.Action a ON a.ActionID = c.ActionID "
+                    f"WHERE a.PopulationID IN ({in_clause}) "
+                    "GROUP BY a.PopulationID"
+                ),
+                headers=["PopulationID", "TotalCount"],
+            )
+            add_rows(rows, "TotalCount")
+
+        return dict(totals)
+
     @staticmethod
     def _chunk_population_ids(population_ids: set[str], chunk_size: int = 500) -> list[list[str]]:
         ordered = sorted(pid for pid in population_ids if pid)
         return [ordered[i : i + chunk_size] for i in range(0, len(ordered), chunk_size)]
 
-    def get_operational_activity_population_ids(self, population_ids: set[str]) -> set[str]:
+    def get_operational_activity_population_ids(
+        self,
+        population_ids: set[str],
+        *,
+        include_culling: bool = True,
+    ) -> set[str]:
         """Return populations that have non-transfer operational events."""
         pop_set = {pid for pid in population_ids if pid}
         if not pop_set:
@@ -692,13 +738,14 @@ class DataSource:
             csv_collectors = [
                 self.loader.get_feeding_actions_for_populations,
                 self.loader.get_mortality_actions_for_populations,
-                self.loader.get_culling_actions_for_populations,
                 self.loader.get_escape_actions_for_populations,
                 self.loader.get_treatments_for_populations,
                 self.loader.get_harvest_results_for_populations,
                 self.loader.get_weight_samples_for_populations,
                 self.loader.get_user_sample_sessions,
             ]
+            if include_culling:
+                csv_collectors.insert(2, self.loader.get_culling_actions_for_populations)
             for collector in csv_collectors:
                 try:
                     collect(collector(pop_set))
@@ -748,7 +795,8 @@ class DataSource:
 
         collect_sql_action("dbo.Feeding", "f")
         collect_sql_action("dbo.Mortality", "m")
-        collect_sql_action("dbo.Culling", "c")
+        if include_culling:
+            collect_sql_action("dbo.Culling", "c")
         collect_sql_action("dbo.Escapes", "e")
         collect_sql_action("dbo.Treatment", "t")
         collect_sql_action("dbo.HarvestResult", "h")
@@ -1258,6 +1306,15 @@ S21_HALL_STAGE_MAP = {
     "ROGN": "Egg&Alevin",
 }
 
+HALL_STAGE_PRIORITY_SITES = {
+    "S24 STROND",
+    "S03 NORÐTOFTIR",
+    "S08 GJÓGV",
+    "S16 GLYVRADALUR",
+    "S21 VIÐAREIÐI",
+    "FW22 APPLECROSS",
+}
+
 SITE_STAGE_FALLBACK_MAP = {
     # S04 cohorts can arrive without hall metadata in grouped organisation.
     # Token evidence across S04 hatchery members is overwhelmingly Fry, so we
@@ -1574,11 +1631,13 @@ def get_external_map(
     source_identifier: str,
     *,
     component_key: str | None = None,
+    allow_legacy_fallback: bool = True,
 ) -> ExternalIdMap | None:
     if source_model == "Populations":
         return get_assignment_external_map(
             str(source_identifier),
             component_key=component_key,
+            allow_legacy_fallback=allow_legacy_fallback,
         )
     return ExternalIdMap.objects.filter(
         source_system="FishTalk", source_model=source_model, source_identifier=str(source_identifier)
@@ -1989,6 +2048,105 @@ def prune_stale_component_assignment_state(
     }
 
 
+def delete_component_assignment_state_by_ids(
+    *,
+    batch: Batch,
+    assignment_ids: set[int] | list[int],
+) -> dict[str, int]:
+    """Delete assignment rows and protected dependents for targeted reroute cases."""
+    assignment_id_list = sorted({int(assignment_id) for assignment_id in assignment_ids if assignment_id})
+    if not assignment_id_list:
+        return {
+            "assignments_deleted": 0,
+            "protected_dependents_deleted": 0,
+            "orphan_transfer_workflows_deleted": 0,
+            "orphan_creation_workflows_deleted": 0,
+            "external_maps_deleted": 0,
+        }
+
+    protected_dependents_deleted = 0
+    external_map_cleanup_targets: defaultdict[tuple[str, str], set[int]] = defaultdict(set)
+
+    for relation in BatchContainerAssignment._meta.related_objects:
+        rel_field = relation.field
+        on_delete = getattr(rel_field.remote_field, "on_delete", None)
+        if getattr(on_delete, "__name__", "") != "PROTECT":
+            continue
+
+        rel_model = relation.related_model
+        related_ids = list(
+            rel_model.objects.filter(
+                **{f"{rel_field.name}_id__in": assignment_id_list}
+            ).values_list("id", flat=True)
+        )
+        if not related_ids:
+            continue
+
+        rel_model.objects.filter(id__in=related_ids).delete()
+        protected_dependents_deleted += len(related_ids)
+        external_map_cleanup_targets[
+            (rel_model._meta.app_label, rel_model._meta.model_name)
+        ].update(related_ids)
+
+    deleted_assignments = list(
+        BatchContainerAssignment.objects.filter(
+            batch=batch,
+            id__in=assignment_id_list,
+        ).values_list("id", flat=True)
+    )
+    if deleted_assignments:
+        BatchContainerAssignment.objects.filter(
+            batch=batch,
+            id__in=deleted_assignments,
+        ).delete()
+        external_map_cleanup_targets[
+            (BatchContainerAssignment._meta.app_label, BatchContainerAssignment._meta.model_name)
+        ].update(deleted_assignments)
+
+    orphan_transfer_workflow_ids = list(
+        BatchTransferWorkflow.objects.filter(batch=batch)
+        .annotate(action_count=Count("actions"))
+        .filter(action_count=0)
+        .values_list("id", flat=True)
+    )
+    if orphan_transfer_workflow_ids:
+        BatchTransferWorkflow.objects.filter(id__in=orphan_transfer_workflow_ids).delete()
+        external_map_cleanup_targets[
+            (BatchTransferWorkflow._meta.app_label, BatchTransferWorkflow._meta.model_name)
+        ].update(orphan_transfer_workflow_ids)
+
+    orphan_creation_workflow_ids = list(
+        BatchCreationWorkflow.objects.filter(batch=batch)
+        .annotate(action_count=Count("actions"))
+        .filter(action_count=0)
+        .values_list("id", flat=True)
+    )
+    if orphan_creation_workflow_ids:
+        BatchCreationWorkflow.objects.filter(id__in=orphan_creation_workflow_ids).delete()
+        external_map_cleanup_targets[
+            (BatchCreationWorkflow._meta.app_label, BatchCreationWorkflow._meta.model_name)
+        ].update(orphan_creation_workflow_ids)
+
+    external_maps_deleted = 0
+    for (target_app_label, target_model), object_ids in external_map_cleanup_targets.items():
+        if not object_ids:
+            continue
+        deleted, _ = ExternalIdMap.objects.filter(
+            target_app_label=target_app_label,
+            target_model=target_model,
+            target_object_id__in=list(object_ids),
+        ).delete()
+        external_maps_deleted += int(deleted)
+
+    return {
+        "assignments_deleted": len(deleted_assignments),
+        "protected_dependents_deleted": protected_dependents_deleted,
+        "orphan_transfer_workflows_deleted": len(orphan_transfer_workflow_ids),
+        "orphan_creation_workflows_deleted": len(orphan_creation_workflow_ids),
+        "external_maps_deleted": external_maps_deleted,
+    }
+
+
 def load_members_from_chain(chain_dir: Path, *, chain_id: str) -> tuple[list[ComponentMember], str]:
     """Load members from SubTransfers-based chain stitching output.
     
@@ -2317,6 +2475,16 @@ Stitching approaches:
             "Allow synthetic batch-creation workflow for sea-only components. "
             "Default behavior skips creation workflows for sea-only components "
             "to keep sea population migration as continuation of FW lineage."
+        ),
+    )
+    parser.add_argument(
+        "--scoped-assignment-maps-only",
+        action="store_true",
+        help=(
+            "Resolve FishTalk population assignments only via component-scoped "
+            "external maps and never through legacy global Populations maps. "
+            "Use this for targeted/manual continuation cases that overlap "
+            "population IDs already present in other migrated batches."
         ),
     )
     parser.add_argument(
@@ -2702,11 +2870,10 @@ def main() -> int:
             if member.population_id in s08_r_holl_initial_population_ids:
                 return "Parr"
             return "Smolt"
-        # S08 hall-stage mappings are explicitly qualified and should drive stage
-        # resolution when present (Kleking/Startfóðring/T-Høll).
-        if site_key == "S08 GJÓGV" and hall_stage:
+        # Qualified hall-stage mappings are authoritative for these sites and
+        # should override per-population stage tokens when present.
+        if hall_stage and site_key in HALL_STAGE_PRIORITY_SITES:
             return hall_stage
-        # Default policy elsewhere keeps per-population stage tokens as primary.
         if token_stage:
             return token_stage
         if hall_stage:
@@ -2876,6 +3043,7 @@ def main() -> int:
     for touch_times in subtransfer_touch_times_by_population.values():
         touch_times.sort()
     removal_counts_by_population = data_source.get_removal_counts_by_population(set(population_ids))
+    culling_counts_by_population = data_source.get_culling_counts_by_population(set(population_ids))
     if conserved_counts:
         nonzero_counts = sum(1 for count in conserved_counts.values() if count > 0)
         print(
@@ -2894,10 +3062,19 @@ def main() -> int:
     superseded_with_operational_activity = data_source.get_operational_activity_population_ids(
         superseded_same_stage
     )
+    superseded_with_non_culling_operational_activity = data_source.get_operational_activity_population_ids(
+        superseded_same_stage,
+        include_culling=False,
+    )
     if superseded_with_operational_activity:
         print(
             "Same-stage superseded populations with operational activity: "
             f"{len(superseded_with_operational_activity)}"
+        )
+    if superseded_with_non_culling_operational_activity:
+        print(
+            "Same-stage superseded populations with non-culling operational activity: "
+            f"{len(superseded_with_non_culling_operational_activity)}"
         )
 
     same_day_bridge_keys: set[tuple[str, str, date]] = set()
@@ -2914,6 +3091,73 @@ def main() -> int:
             continue
         same_day_bridge_keys.add((member.container_id, stage_name, member.start_time.date()))
         same_day_bridge_keys.add((member.container_id, stage_name, member.end_time.date()))
+
+    subtransfer_roles_by_population: dict[str, set[str]] = defaultdict(set)
+    for row in component_subtransfers:
+        for key in ("SourcePopBefore", "SourcePopAfter", "DestPopBefore", "DestPopAfter"):
+            pop_id = (row.get(key) or "").strip()
+            if pop_id and pop_id in member_by_population_id:
+                subtransfer_roles_by_population[pop_id].add(key)
+
+    members_by_container: dict[str, list[ComponentMember]] = defaultdict(list)
+    for member in members:
+        if member.container_id:
+            members_by_container[member.container_id].append(member)
+
+    def has_explicit_stage_tokens(member: ComponentMember) -> bool:
+        return bool((member.first_stage or "").strip() or (member.last_stage or "").strip())
+
+    def resolve_same_container_stage_predecessor(member: ComponentMember) -> ComponentMember | None:
+        lifecycle_name = stage_by_pop.get(member.population_id) or resolve_stage_name(member)
+        if not lifecycle_name:
+            return None
+        candidates: list[ComponentMember] = []
+        for candidate in members_by_container.get(member.container_id, []):
+            if candidate.population_id == member.population_id:
+                continue
+            if candidate.start_time > member.start_time:
+                continue
+            if candidate.end_time != member.start_time:
+                continue
+            candidate_stage = stage_by_pop.get(candidate.population_id) or resolve_stage_name(candidate)
+            if candidate_stage != lifecycle_name:
+                continue
+            candidates.append(candidate)
+        if not candidates:
+            return None
+        return max(
+            candidates,
+            key=lambda candidate: (
+                has_explicit_stage_tokens(candidate),
+                (
+                    (candidate.end_time - candidate.start_time).total_seconds()
+                    if candidate.end_time
+                    else float("inf")
+                ),
+                candidate.start_time,
+                candidate.population_id,
+            ),
+        )
+
+    culling_tail_fold_target_by_population: dict[str, str] = {}
+    for member in members:
+        pop_id = member.population_id
+        if culling_counts_by_population.get(pop_id, 0) <= 0:
+            continue
+        if pop_id in superseded_with_non_culling_operational_activity:
+            continue
+        role_set = subtransfer_roles_by_population.get(pop_id, set())
+        if role_set != {"SourcePopAfter"}:
+            continue
+        predecessor = resolve_same_container_stage_predecessor(member)
+        if predecessor is None:
+            continue
+        culling_tail_fold_target_by_population[pop_id] = predecessor.population_id
+    if culling_tail_fold_target_by_population:
+        print(
+            "Culling-only same-container residual tails eligible for fold-back: "
+            f"{len(culling_tail_fold_target_by_population)}"
+        )
 
     def is_long_companion_same_day_bridge(
         member: ComponentMember,
@@ -3724,11 +3968,13 @@ def main() -> int:
 
         # Create assignments (1 per FishTalk PopulationID)
         skipped_orphan_zero_assignments = 0
+        folded_culling_tail_assignments = 0
         for member in members:
             assignment_map = get_external_map(
                 "Populations",
                 member.population_id,
                 component_key=component_key,
+                allow_legacy_fallback=not args.scoped_assignment_maps_only,
             )
             container = aquamind_container_by_source[member.container_id]
             member_group_meta = container_grouping.get(member.container_id, {})
@@ -4202,6 +4448,61 @@ def main() -> int:
             else:
                 assignment_departure = None
 
+            fold_target_population_id = culling_tail_fold_target_by_population.get(member.population_id)
+            culling_count = int(culling_counts_by_population.get(member.population_id, 0) or 0)
+            should_fold_culling_tail = (
+                bool(fold_target_population_id)
+                and known_removals == culling_count
+                and culling_count > 0
+                and count == culling_count
+                and member.population_id not in superseded_with_non_culling_operational_activity
+            )
+            if should_fold_culling_tail:
+                folded_assignment = assignment_by_population_id.get(fold_target_population_id)
+                if folded_assignment is not None:
+                    folded_assignment_changed = False
+                    if assignment_departure and (
+                        folded_assignment.departure_date is None
+                        or folded_assignment.departure_date < assignment_departure
+                    ):
+                        folded_assignment.departure_date = assignment_departure
+                        folded_assignment_changed = True
+                    if folded_assignment.is_active:
+                        folded_assignment.is_active = False
+                        folded_assignment_changed = True
+                    if folded_assignment_changed:
+                        save_with_history(folded_assignment, user=history_user, reason=history_reason)
+
+                    if assignment_map and assignment_map.target_object_id != folded_assignment.pk:
+                        delete_component_assignment_state_by_ids(
+                            batch=batch,
+                            assignment_ids={int(assignment_map.target_object_id)},
+                        )
+
+                    map_metadata = {
+                        "component_key": component_key,
+                        "container_id": member.container_id,
+                        "baseline_population_count": count,
+                        "component_population_identifier": build_component_population_identifier(
+                            component_key,
+                            member.population_id,
+                        ),
+                        "folded_culling_tail": True,
+                        "folded_into_population_id": fold_target_population_id,
+                    }
+                    upsert_assignment_external_maps(
+                        component_key=component_key,
+                        population_id=member.population_id,
+                        target_app_label=folded_assignment._meta.app_label,
+                        target_model=folded_assignment._meta.model_name,
+                        target_object_id=folded_assignment.pk,
+                        metadata=map_metadata,
+                        update_legacy_map=not args.scoped_assignment_maps_only,
+                    )
+                    assignment_by_population_id[member.population_id] = folded_assignment
+                    folded_culling_tail_assignments += 1
+                    continue
+
             suppress_orphan_zero_assignment = (
                 not assignment_active
                 and count <= 0
@@ -4253,6 +4554,7 @@ def main() -> int:
                 target_model=assignment._meta.model_name,
                 target_object_id=assignment.pk,
                 metadata=map_metadata,
+                update_legacy_map=not args.scoped_assignment_maps_only,
             )
 
             assignment_by_population_id[member.population_id] = assignment
@@ -4262,6 +4564,11 @@ def main() -> int:
                 "Suppressed orphan zero-count assignment rows "
                 f"(blank stage tokens + no subtransfer edge + no count evidence): "
                 f"{skipped_orphan_zero_assignments}"
+            )
+        if folded_culling_tail_assignments:
+            print(
+                "Folded culling-only same-container residual tails into predecessor assignments: "
+                f"{folded_culling_tail_assignments}"
             )
 
         initial_stage_name = lifecycle_stage.name if lifecycle_stage else lifecycle_stage_name
@@ -4457,6 +4764,16 @@ def main() -> int:
                 else:
                     creation_action = CreationAction(**action_payload)
                     save_with_history(creation_action, user=history_user, reason=history_reason)
+
+                # Preserve creation-stage assignment counts when the assignment
+                # build path flattened them to zero despite authoritative input
+                # counts on the completed creation action.
+                if egg_count > 0 and int(assignment.population_count or 0) <= 0:
+                    assignment.population_count = egg_count
+                    assignment.avg_weight_g = None
+                    assignment.biomass_kg = Decimal("0.00")
+                    save_with_history(assignment, user=history_user, reason=history_reason)
+
                 ExternalIdMap.objects.update_or_create(
                     source_system="FishTalk",
                     source_model="PopulationCreationAction",

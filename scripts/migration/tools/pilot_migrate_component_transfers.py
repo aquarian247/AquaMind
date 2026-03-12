@@ -582,7 +582,23 @@ def expand_subtransfer_rows_for_source_scope(
     raw_rows: list[dict],
     source_population_ids: set[str],
 ) -> list[dict]:
-    """Expand SubTransfers chains to effective root-source edges per operation."""
+    """Expand SubTransfers chains to effective root-source edges per operation.
+
+    FishTalk often models an in-scope split as:
+      root SourcePopBefore -> SourcePopAfter (remnant)
+      SourcePopAfter -> DestPopAfter (second/internal leg)
+
+    We need root-source conservation edges for migration. If we keep only raw
+    SourcePopBefore->DestPopAfter rows, the follow-on leg can stay tied to a
+    zero-duration successor population and later allocate zero fish.
+
+    FishTalk can continue an in-operation chain through either:
+    - SourcePopAfter (residual branch), or
+    - DestPopAfter (moved branch promoted to the next SourcePopBefore).
+
+    The safe behavior is: expand to root-source terminal edges first, then
+    optionally filter the expanded edges by destination scope.
+    """
     rows_by_operation: dict[str, list[tuple[int, dict]]] = defaultdict(list)
     for idx, row in enumerate(raw_rows):
         op_id = (row.get("OperationID") or "").strip()
@@ -603,13 +619,22 @@ def expand_subtransfer_rows_for_source_scope(
             ),
         )
 
-        row_by_source: dict[str, dict] = {}
+        rows_by_source: dict[str, list[dict]] = defaultdict(list)
+        source_before_in_op: set[str] = set()
+        produced_nodes_in_op: set[str] = set()
         op_time_fallback = ""
         for _, row in ordered_rows:
             src_before = (row.get("SourcePopBefore") or row.get("SourcePop") or "").strip()
             if not src_before:
                 continue
-            row_by_source[src_before] = row
+            rows_by_source[src_before].append(row)
+            source_before_in_op.add(src_before)
+            next_source = (row.get("SourcePopAfter") or "").strip()
+            if next_source:
+                produced_nodes_in_op.add(next_source)
+            dest_after = (row.get("DestPopAfter") or row.get("DestPop") or "").strip()
+            if dest_after:
+                produced_nodes_in_op.add(dest_after)
             if not op_time_fallback:
                 op_time_fallback = (
                     row.get("OperationTime")
@@ -617,20 +642,25 @@ def expand_subtransfer_rows_for_source_scope(
                     or ""
                 ).strip()
 
-        for root_source in sorted(source_population_ids):
-            if root_source not in row_by_source:
-                continue
+        root_sources = sorted(
+            src
+            for src in source_population_ids
+            if src in source_before_in_op and src not in produced_nodes_in_op
+        )
+        if not root_sources:
+            root_sources = sorted(
+                src for src in source_population_ids if src in source_before_in_op
+            )
 
-            current_source = root_source
-            remaining_count_share = 1.0
-            remaining_biomass_share = 1.0
-            visited_sources: set[str] = set()
+        for root_source in root_sources:
+            current_count_shares: dict[str, float] = {root_source: 1.0}
+            current_biomass_shares: dict[str, float] = {root_source: 1.0}
 
-            while current_source and current_source not in visited_sources:
-                visited_sources.add(current_source)
-                row = row_by_source.get(current_source)
-                if row is None:
-                    break
+            def apply_transfer_row(row: dict) -> None:
+                src_before = (row.get("SourcePopBefore") or row.get("SourcePop") or "").strip()
+                src_after = (row.get("SourcePopAfter") or "").strip()
+                dst_before = (row.get("DestPopBefore") or "").strip()
+                dst_after = (row.get("DestPopAfter") or row.get("DestPop") or "").strip()
 
                 share_count_step = parse_ratio(
                     row.get("ShareCountFwd") or row.get("ShareCountForward")
@@ -643,30 +673,95 @@ def expand_subtransfer_rows_for_source_scope(
                 if share_biomass_step <= 0 and share_count_step > 0:
                     share_biomass_step = share_count_step
 
-                dest_pop = (row.get("DestPopAfter") or row.get("DestPop") or "").strip()
-                op_time = (
-                    (row.get("OperationTime") or row.get("OperationStartTime") or "").strip()
-                    or op_time_fallback
-                )
-                step_share_count = remaining_count_share * share_count_step
-                step_share_biomass = remaining_biomass_share * share_biomass_step
+                moved_count_share = None
+                moved_biomass_share = None
 
-                if dest_pop and (step_share_count > 0 or step_share_biomass > 0):
-                    key = (op_id, op_time, root_source, dest_pop)
-                    aggregates[key]["share_count"] += step_share_count
-                    aggregates[key]["share_biomass"] += step_share_biomass
+                if src_before in current_count_shares:
+                    src_count_share = current_count_shares.get(src_before, 0.0)
+                    moved_count_share = src_count_share * share_count_step
+                    remaining_count_share = max(0.0, src_count_share - moved_count_share)
+                    if src_after:
+                        current_count_shares[src_after] = remaining_count_share
+                    current_count_shares.pop(src_before, None)
 
-                next_source = (row.get("SourcePopAfter") or "").strip()
-                if not next_source:
+                if src_before in current_biomass_shares:
+                    src_biomass_share = current_biomass_shares.get(src_before, 0.0)
+                    moved_biomass_share = src_biomass_share * share_biomass_step
+                    remaining_biomass_share = max(0.0, src_biomass_share - moved_biomass_share)
+                    if src_after:
+                        current_biomass_shares[src_after] = remaining_biomass_share
+                    current_biomass_shares.pop(src_before, None)
+
+                dest_before_count_share = None
+                if dst_before in current_count_shares:
+                    dest_before_count_share = current_count_shares.pop(dst_before)
+
+                dest_before_biomass_share = None
+                if dst_before in current_biomass_shares:
+                    dest_before_biomass_share = current_biomass_shares.pop(dst_before)
+
+                if dst_after:
+                    dest_count_share = 0.0
+                    if dest_before_count_share is not None:
+                        dest_count_share += dest_before_count_share
+                    if moved_count_share is not None:
+                        dest_count_share += moved_count_share
+                    current_count_shares[dst_after] = dest_count_share
+
+                    dest_biomass_share = 0.0
+                    if dest_before_biomass_share is not None:
+                        dest_biomass_share += dest_before_biomass_share
+                    if moved_biomass_share is not None:
+                        dest_biomass_share += moved_biomass_share
+                    current_biomass_shares[dst_after] = dest_biomass_share
+
+            pending = [row for _, row in ordered_rows]
+            while pending:
+                produced_candidates = {
+                    (value or "").strip()
+                    for row in pending
+                    for value in (
+                        row.get("SourcePopAfter"),
+                        row.get("DestPopAfter"),
+                        row.get("DestPop"),
+                    )
+                    if (value or "").strip()
+                }
+                progressed = False
+                next_pending: list[dict] = []
+                for row in pending:
+                    src_before = (row.get("SourcePopBefore") or row.get("SourcePop") or "").strip()
+                    dst_before = (row.get("DestPopBefore") or "").strip()
+                    unresolved_dependency = any(
+                        dep
+                        and dep not in current_count_shares
+                        and dep not in current_biomass_shares
+                        and dep in produced_candidates
+                        for dep in (src_before, dst_before)
+                    )
+                    if unresolved_dependency:
+                        next_pending.append(row)
+                        continue
+                    apply_transfer_row(row)
+                    progressed = True
+
+                if not next_pending:
                     break
-
-                remaining_count_share = max(0.0, remaining_count_share * (1.0 - share_count_step))
-                remaining_biomass_share = max(
-                    0.0, remaining_biomass_share * (1.0 - share_biomass_step)
-                )
-                if remaining_count_share <= 0 and remaining_biomass_share <= 0:
+                if not progressed:
+                    for row in next_pending:
+                        apply_transfer_row(row)
                     break
-                current_source = next_source
+                pending = next_pending
+
+            for dest_pop, share_count in current_count_shares.items():
+                share_biomass = current_biomass_shares.get(dest_pop, 0.0)
+                if dest_pop == root_source:
+                    continue
+                if share_count <= 0 and share_biomass <= 0:
+                    continue
+                key = (op_id, op_time_fallback, root_source, dest_pop)
+                aggregates[key]["share_count"] += share_count
+                aggregates[key]["share_biomass"] += share_biomass
 
     expanded_rows: list[dict] = []
     for (op_id, op_time, source_pop, dest_pop), shares in sorted(aggregates.items()):
@@ -809,10 +904,11 @@ Transfer data sources:
         choices=["source-in-scope", "internal-only"],
         default="source-in-scope",
         help=(
-            "Transfer edge inclusion policy. "
-            "'source-in-scope' keeps SubTransfers where source population belongs to the component "
+            "Transfer edge inclusion policy after root-source SubTransfers expansion. "
+            "'source-in-scope' keeps expanded edges whose root source belongs to the component "
             "(destination may be external). "
-            "'internal-only' keeps only edges where both source and destination are component members."
+            "'internal-only' keeps the same expanded root-source edges but filters destinations "
+            "to component members only."
         ),
     )
     parser.add_argument(
@@ -966,27 +1062,13 @@ def main() -> int:
             # Load from CSV
             csv_dir = Path(args.use_csv)
             raw_transfers = load_subtransfers_from_csv(csv_dir, pop_id_set)
+            expanded_transfers = expand_subtransfer_rows_for_source_scope(raw_transfers, pop_id_set)
             if args.transfer_edge_scope == "source-in-scope":
-                transfer_rows = expand_subtransfer_rows_for_source_scope(raw_transfers, pop_id_set)
+                transfer_rows = expanded_transfers
             else:
-                transfer_rows = []
-                for row in raw_transfers:
-                    src = (row.get("SourcePopBefore") or "").strip()
-                    dst = (row.get("DestPopAfter") or "").strip()
-                    if not src or not dst:
-                        continue
-                    if src not in pop_id_set or dst not in pop_id_set:
-                        continue
-                    transfer_rows.append(
-                        {
-                            "OperationID": row.get("OperationID", ""),
-                            "OperationStartTime": row.get("OperationTime", ""),
-                            "SourcePop": src,
-                            "DestPop": dst,
-                            "ShareCountForward": row.get("ShareCountFwd", ""),
-                            "ShareBiomassForward": row.get("ShareBiomFwd", ""),
-                        }
-                    )
+                transfer_rows = [
+                    row for row in expanded_transfers if (row.get("DestPop") or "").strip() in pop_id_set
+                ]
             print(
                 f"Loaded {len(raw_transfers)} SubTransfers rows from CSV; "
                 f"expanded to {len(transfer_rows)} scoped edges"
@@ -1026,27 +1108,13 @@ def main() -> int:
                     "ShareBiomFwd",
                 ],
             )
+            expanded_transfers = expand_subtransfer_rows_for_source_scope(raw_transfers, pop_id_set)
             if args.transfer_edge_scope == "source-in-scope":
-                transfer_rows = expand_subtransfer_rows_for_source_scope(raw_transfers, pop_id_set)
+                transfer_rows = expanded_transfers
             else:
-                transfer_rows = []
-                for row in raw_transfers:
-                    src = (row.get("SourcePopBefore") or "").strip()
-                    dst = (row.get("DestPopAfter") or "").strip()
-                    if not src or not dst:
-                        continue
-                    if src not in pop_id_set or dst not in pop_id_set:
-                        continue
-                    transfer_rows.append(
-                        {
-                            "OperationID": row.get("OperationID", ""),
-                            "OperationStartTime": row.get("OperationTime", ""),
-                            "SourcePop": src,
-                            "DestPop": dst,
-                            "ShareCountForward": row.get("ShareCountFwd", ""),
-                            "ShareBiomassForward": row.get("ShareBiomFwd", ""),
-                        }
-                    )
+                transfer_rows = [
+                    row for row in expanded_transfers if (row.get("DestPop") or "").strip() in pop_id_set
+                ]
             print(
                 f"Loaded {len(raw_transfers)} SubTransfers rows from SQL; "
                 f"expanded to {len(transfer_rows)} scoped edges"
@@ -1173,6 +1241,8 @@ def main() -> int:
     synced_source_stage_assignments = 0
     synced_source_count_assignments = 0
     forced_static_workflows = 0
+    pruned_transfer_workflows = 0
+    pruned_transfer_actions = 0
     skipped_reasons: defaultdict[str, int] = defaultdict(int)
 
     with transaction.atomic():
@@ -1193,6 +1263,50 @@ def main() -> int:
                 source_model__in=["PopulationStageTransition", "PopulationStageTransitionAction"],
                 source_identifier__startswith=stage_prefix,
             ).delete()
+
+        batch_workflow_ids = set(
+            BatchTransferWorkflow.objects.filter(batch=batch).values_list("id", flat=True)
+        )
+        transfer_workflow_source_models = {
+            STAGE_BUCKET_WORKFLOW_SOURCE_MODEL,
+            "TransferOperation",
+        }
+        existing_transfer_wf_maps = list(
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model__in=transfer_workflow_source_models,
+                target_model="batchtransferworkflow",
+                target_object_id__in=batch_workflow_ids,
+            )
+        )
+        existing_transfer_wf_ids = sorted(
+            {
+                int(mapped.target_object_id)
+                for mapped in existing_transfer_wf_maps
+                if mapped.target_object_id
+            }
+        )
+        if existing_transfer_wf_ids:
+            existing_transfer_action_ids = list(
+                TransferAction.objects.filter(workflow_id__in=existing_transfer_wf_ids)
+                .values_list("id", flat=True)
+            )
+            if existing_transfer_action_ids:
+                ExternalIdMap.objects.filter(
+                    source_system="FishTalk",
+                    source_model="PublicTransferEdge",
+                    target_model="transferaction",
+                    target_object_id__in=existing_transfer_action_ids,
+                ).delete()
+                pruned_transfer_actions = len(existing_transfer_action_ids)
+            ExternalIdMap.objects.filter(
+                source_system="FishTalk",
+                source_model__in=transfer_workflow_source_models,
+                target_model="batchtransferworkflow",
+                target_object_id__in=existing_transfer_wf_ids,
+            ).delete()
+            BatchTransferWorkflow.objects.filter(pk__in=existing_transfer_wf_ids).delete()
+            pruned_transfer_workflows = len(existing_transfer_wf_ids)
 
         container_external_map_by_source: dict[str, ExternalIdMap | None] = {}
         container_by_source: dict[str, object] = {}
@@ -1996,7 +2110,8 @@ def main() -> int:
 
     print(
         f"Migrated transfers for component_key={component_key} into batch={batch.batch_number} "
-        f"(workflows created={created_wf}, updated={updated_wf}; actions created={created_actions}, updated={updated_actions}, skipped={skipped}; "
+        f"(workflows created={created_wf}, updated={updated_wf}, pruned={pruned_transfer_workflows}; "
+        f"actions created={created_actions}, updated={updated_actions}, pruned={pruned_transfer_actions}, skipped={skipped}; "
         f"dest assignments created={created_dest_assignments}, reused={reused_dest_assignments}, synced={synced_dest_assignments}; "
         f"source stage backfilled={synced_source_stage_assignments}, source count backfilled={synced_source_count_assignments}; "
         f"forced static workflows={forced_static_workflows}; "

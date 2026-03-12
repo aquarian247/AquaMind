@@ -1819,8 +1819,10 @@ def build_parser() -> argparse.ArgumentParser:
         default="source-in-scope",
         help=(
             "Pass-through for pilot_migrate_component_transfers.py. "
-            "'internal-only' is recommended with --expand-subtransfer-descendants "
-            "to preserve exact SourcePopBefore->DestPopAfter edges."
+            "SubTransfers are expanded to root-source conservation edges first. "
+            "Use 'source-in-scope' as the safest FW default; use 'internal-only' "
+            "only when you intentionally want to drop expanded destinations "
+            "outside the migrated component."
         ),
     )
     parser.add_argument(

@@ -90,11 +90,12 @@ Batch Key = InputName + InputNumber + YearClass
 - Added strict **station guardrails** to input-batch and component migration (`--expected-site`).
 - Added stage-entry based semantic transition checks (default 2-day entry window) to reduce in-stage redistribution inflation.
 - Hardened scope replay behavior: scope-mode child runs now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run`.
-- Replayed mapped FW scope in 4 chunks (`20/20` batches successful) using descendant expansion + `internal-only` transfer edges.
+- Replayed mapped FW scope in 4 chunks (`20/20` batches successful) using descendant expansion + root-source SubTransfers expansion before scope filtering.
 - Scoped stage coverage outcome: `7/8` completed batches now show `>=4` stages; only `24Q1 LHS ex-LC` remains a 1-stage completed outlier.
 - Completed lineage-first feed/infra recovery for FW scope-60, including OrgUnit fallback anchoring and idempotence confirmation.
 - Completed scope-60 core/health/environmental residual execution.
 - Stabilized scoped FW environmental mapping with metadata-first sensor mapping, oxygen guardrails, and `0` remaining scoped parameter mismatches.
+- Added fold-back handling for FW culling-only same-container residual tails: when a short-lived `SourcePopAfter` row exists only to be fully culled, AquaMind keeps the culling on the predecessor assignment instead of preserving a misleading extra assignment fragment.
 - Materialized sea infrastructure prerequisites for FWSEA candidate application (areas/rings/sea-linked feed assets).
 - Added guarded provisional FWSEA continuation:
   - linked full-lifecycle continuation now requires explicit sea anchor scope by default,
@@ -111,7 +112,9 @@ Batch Key = InputName + InputNumber + YearClass
   - Outcome: `20/20` batches succeeded with no chunk failures
   - Replay flags used on every chunk:
     - `--expand-subtransfer-descendants`
-    - `--transfer-edge-scope internal-only`
+    - `--transfer-edge-scope source-in-scope`
+  - Important transfer note:
+    - chained `SourcePopBefore -> SourcePopAfter -> DestPopAfter` splits must be expanded to root-source conservation edges before any `internal-only` filtering; older `internal-only` runs can miss sibling split legs on transfer-rich FW cohorts.
 - **Scope-60 residual completion (2026-03-03 -> 2026-03-05):**
   - feed/infra lineage completed with `stores_unresolved=0`,
   - core/health residuals completed for all 60 keys,
@@ -370,7 +373,7 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   --expected-site "S24 Strond" \
   --use-csv scripts/migration/data/extract/ \
   --expand-subtransfer-descendants \
-  --transfer-edge-scope internal-only \
+  --transfer-edge-scope source-in-scope \
   --skip-environmental  # Optional: skip slow environmental migration
 ```
 
@@ -386,7 +389,7 @@ PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \
   --migration-profile fw_default \
   --skip-environmental \
   --expand-subtransfer-descendants \
-  --transfer-edge-scope internal-only
+  --transfer-edge-scope source-in-scope
 ```
 
 ### 7.3.1 FW Scope Replay Checklist (ordered, future-session safe)
@@ -417,7 +420,7 @@ Use this checklist for hall-stage mapped FW scope replays (including corrective 
     --use-csv scripts/migration/data/extract \
     --skip-environmental \
     --expand-subtransfer-descendants \
-    --transfer-edge-scope internal-only \
+    --transfer-edge-scope source-in-scope \
     --allow-station-mismatch
   ```
 - [ ] **Run environmental-only replay with sensor-catalog mapping fix:**
@@ -428,7 +431,7 @@ Use this checklist for hall-stage mapped FW scope replays (including corrective 
     --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite \
     --only-environmental \
     --expand-subtransfer-descendants \
-    --transfer-edge-scope internal-only \
+    --transfer-edge-scope source-in-scope \
     --allow-station-mismatch \
     --script-timeout-seconds 1800
   ```

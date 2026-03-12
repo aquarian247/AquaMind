@@ -530,7 +530,13 @@ def main() -> int:
 
         if args.sync_assignment_counts:
             removal_totals_by_pop = collect_removal_totals_by_population(batch)
+            adjusted_assignment_ids: set[int] = set()
             for pop_id, assignment in assignment_by_pop.items():
+                pop_map = population_map_by_pop.get(pop_id)
+                if pop_map and (pop_map.metadata or {}).get("folded_culling_tail"):
+                    continue
+                if assignment.id in adjusted_assignment_ids:
+                    continue
                 baseline_count = baseline_count_by_pop.get(pop_id, int(assignment.population_count or 0))
                 removed = max(removal_totals_by_pop.get(pop_id, 0), 0)
                 resolved_count = max(baseline_count - removed, 0)
@@ -543,6 +549,7 @@ def main() -> int:
                     reason=f"FishTalk culling sync {component_key[:8]}",
                 )
                 adjusted_assignments += 1
+                adjusted_assignment_ids.add(assignment.id)
 
     print(
         f"Migrated culling for component_key={component_key} into batch={batch.batch_number} "

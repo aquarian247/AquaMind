@@ -59,13 +59,16 @@ Deprecated tools live under scripts/migration/legacy/tools/:
 Use these patterns to avoid lifecycle-coverage regressions on transfer-rich cohorts.
 
 - Single batch (input runner):
-  - `python scripts/migration/tools/pilot_migrate_input_batch.py --batch-key "<InputName>|<InputNumber>|<YearClass>" --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope internal-only`
+  - `python scripts/migration/tools/pilot_migrate_input_batch.py --batch-key "<InputName>|<InputNumber>|<YearClass>" --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope source-in-scope`
 - Scope/chunk replay:
-  - `python scripts/migration/tools/pilot_migrate_input_batch.py --scope-file <scope.csv> --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope internal-only`
+  - `python scripts/migration/tools/pilot_migrate_input_batch.py --scope-file <scope.csv> --use-csv scripts/migration/data/extract --migration-profile fw_default --skip-environmental --expand-subtransfer-descendants --transfer-edge-scope source-in-scope`
 - Guarded FW->Sea continuation (selected provisional rows only):
-  - `python scripts/migration/tools/pilot_migrate_input_batch.py --batch-key "<SeaInputName>|<InputNumber>|<YearClass>" --use-csv scripts/migration/data/extract --migration-profile fw_default --full-lifecycle --include-fw-batch "<FWInputName>|<InputNumber>|<YearClass>" --batch-number "<Existing FW batch number>" --sea-anchor-population-id "<SeaPopulationID>" --expand-subtransfer-descendants --transfer-edge-scope internal-only`
+  - `python scripts/migration/tools/pilot_migrate_input_batch.py --batch-key "<SeaInputName>|<InputNumber>|<YearClass>" --use-csv scripts/migration/data/extract --migration-profile fw_default --full-lifecycle --include-fw-batch "<FWInputName>|<InputNumber>|<YearClass>" --batch-number "<Existing FW batch number>" --sea-anchor-population-id "<SeaPopulationID>" --expand-subtransfer-descendants --transfer-edge-scope source-in-scope`
 
 Notes:
 - Scope mode now forwards descendant/edge-scope flags to child runs. Keep those flags explicit in runbooks and logs.
+- SubTransfers edge handling is root-source first. The transfer migrator expands `SourcePopBefore -> SourcePopAfter -> DestPopAfter` chains into root-source conservation edges before any scope filter is applied. This is required to preserve split legs like `806 -> 903/904`.
+- Same-container same-stage residual tails that exist only to be fully culled are now folded back into the predecessor assignment during component migration. Keep culling on the predecessor assignment; do not preserve a separate AquaMind assignment row just because FishTalk emitted a short-lived `SourcePopAfter` tail.
 - Linked FW->Sea continuation now blocks full sea-component ingestion by default. Provide `--sea-anchor-population-id` and optional `--sea-block-population-id`; use `--allow-full-sea-component-for-continuation` only for explicitly approved non-provisional cases.
 - For scope runs, keep one output file per chunk (`replay_scope_chunk*_*.txt`) and run post-replay verification (`migration_counts_report.py`, `migration_verification_report.py`, `migration_pilot_regression_check.py`).
+- To classify remaining FW cleanup work, use `python scripts/migration/tools/build_fw_hardening_queue.py --output-json <path> --output-md <path>`. This computes the transfer-rerun queue from the current patched SubTransfers logic instead of relying on handoff prose.

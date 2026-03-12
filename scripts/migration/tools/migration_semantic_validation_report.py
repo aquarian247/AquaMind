@@ -171,7 +171,12 @@ def resolve_component_key(report_dir: Path, *, component_id: int | None, compone
     raise ValueError("Unable to resolve component_key from report")
 
 
-def load_population_metadata(csv_dir: str, population_ids: set[str]) -> dict[str, PopulationMeta]:
+def load_population_metadata(
+    csv_dir: str,
+    population_ids: set[str],
+    *,
+    fallback_members: dict[str, ComponentMember] | None = None,
+) -> dict[str, PopulationMeta]:
     if not population_ids:
         return {}
     path = Path(csv_dir) / "ext_populations.csv"
@@ -191,6 +196,19 @@ def load_population_metadata(csv_dir: str, population_ids: set[str]) -> dict[str
                 start_time=parse_dt(row.get("StartTime") or ""),
                 end_time=parse_dt(row.get("EndTime") or ""),
                 container_id=(row.get("ContainerID") or "").strip() or None,
+            )
+    if fallback_members:
+        for pop_id in population_ids:
+            if pop_id in metadata:
+                continue
+            member = fallback_members.get(pop_id)
+            if not member:
+                continue
+            metadata[pop_id] = PopulationMeta(
+                fishgroup=None,
+                start_time=member.start_time,
+                end_time=member.end_time,
+                container_id=None,
             )
     return metadata
 
@@ -394,6 +412,7 @@ def collect_lineage_graph_sources(
     stage_by_pop: dict[str, str | None],
     incoming_by_dest_after: dict[str, list[dict]],
     incoming_by_source_after: dict[str, list[dict]],
+    temporary_bridge_populations: set[str] | None = None,
     max_depth: int = LINEAGE_FALLBACK_MAX_DEPTH,
 ) -> set[str]:
     """Backtrace predecessors through explicit SubTransfer roles.
@@ -435,6 +454,9 @@ def collect_lineage_graph_sources(
             seen_nodes.add(predecessor)
 
             if stage_by_pop.get(predecessor) == prev_stage:
+                if temporary_bridge_populations and predecessor in temporary_bridge_populations:
+                    queue.append((predecessor, depth + 1))
+                    continue
                 source_populations.add(predecessor)
                 continue
 
@@ -448,6 +470,7 @@ def classify_temporary_bridge_populations(
     population_ids: set[str],
     population_meta: dict[str, PopulationMeta],
     incoming_by_dest_after: dict[str, list[dict]],
+    incoming_by_source_after: dict[str, list[dict]],
     outgoing_by_pop: dict[str, list[dict]],
 ) -> set[str]:
     temporary_bridge_populations: set[str] = set()
@@ -461,7 +484,8 @@ def classify_temporary_bridge_populations(
         if lifetime_hours < 0 or lifetime_hours > BRIDGE_MAX_DURATION_HOURS:
             continue
 
-        inbound_rows = incoming_by_dest_after.get(pop_id, [])
+        inbound_rows = list(incoming_by_dest_after.get(pop_id, []))
+        inbound_rows.extend(incoming_by_source_after.get(pop_id, []))
         outbound_rows = outgoing_by_pop.get(pop_id, [])
         if not inbound_rows or not outbound_rows:
             continue
@@ -505,7 +529,23 @@ def collect_transition_source_populations(
     for row in incoming_by_dest_after.get(dest_population_id, []):
         src_before = (row.get("SourcePopBefore") or "").strip()
         if src_before and stage_by_pop.get(src_before) == prev_stage:
-            source_populations.add(src_before)
+            if src_before in temporary_bridge_populations:
+                bridge_used = True
+                nested_sources, nested_bridge_used, nested_lineage_used = collect_transition_source_populations(
+                    dest_population_id=src_before,
+                    prev_stage=prev_stage,
+                    stage_by_pop=stage_by_pop,
+                    incoming_by_dest_after=incoming_by_dest_after,
+                    incoming_by_source_after=incoming_by_source_after,
+                    temporary_bridge_populations=temporary_bridge_populations,
+                    lineage_fallback_max_depth=lineage_fallback_max_depth,
+                    seen_destinations=seen_destinations,
+                )
+                source_populations.update(nested_sources)
+                bridge_used = bridge_used or nested_bridge_used
+                lineage_graph_used = lineage_graph_used or nested_lineage_used
+            else:
+                source_populations.add(src_before)
 
         # Some real stage-entry populations are created through a short-lived
         # intermediate DestPopBefore bridge population.
@@ -533,6 +573,7 @@ def collect_transition_source_populations(
             stage_by_pop=stage_by_pop,
             incoming_by_dest_after=incoming_by_dest_after,
             incoming_by_source_after=incoming_by_source_after,
+            temporary_bridge_populations=temporary_bridge_populations,
             max_depth=max(to_int(lineage_fallback_max_depth), 0),
         )
         if lineage_sources:
@@ -1099,11 +1140,16 @@ def build_stage_sanity(
     population_id_set = set(population_ids)
     sub_transfers = component_data_source.get_subtransfers(population_id_set)
     incoming_by_dest_after, incoming_by_source_after, outgoing_by_pop = build_subtransfer_indexes(sub_transfers)
-    population_meta = load_population_metadata(csv_dir, population_id_set)
+    population_meta = load_population_metadata(
+        csv_dir,
+        population_id_set,
+        fallback_members=member_by_pop,
+    )
     temporary_bridge_populations = classify_temporary_bridge_populations(
         population_ids=population_id_set,
         population_meta=population_meta,
         incoming_by_dest_after=incoming_by_dest_after,
+        incoming_by_source_after=incoming_by_source_after,
         outgoing_by_pop=outgoing_by_pop,
     )
     fishgroup_to_populations: defaultdict[str, set[str]] = defaultdict(set)

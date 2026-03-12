@@ -3,8 +3,8 @@
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
 **Version:** 5.9  
-**Date:** 2026-03-05  
-**Status:** Updated - sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
+**Date:** 2026-03-11  
+**Status:** Updated - sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + transfer rerun prune-and-rebuild contract + semantic bridge lineage fallback hardening + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
 
 ## 1. Overview
 
@@ -22,6 +22,14 @@ This document provides detailed field-level mapping specifications for migrating
 - **FW terminal depletion fallback:** absence of a visible FW sales action does **not** block candidate generation. A sudden FW tank/population drop to zero followed by a proximate sea input/start remains a valid but weaker candidate class.
 - **Guarded provisional continuation contract:** linked full-lifecycle continuation must use explicit anchor-scoped sea populations by default (`--sea-anchor-population-id`, optional `--sea-block-population-id`). Full sea-component ingestion is unsafe for provisional rows and now opt-in only via explicit override.
 
+**Key Revision Notes (v5.9 - 2026-03-09):**
+- **Transfer-rich replay contract corrected:** for stitched FW scopes/chunks, the replay-safe default is `--expand-subtransfer-descendants --transfer-edge-scope source-in-scope`. The transfer migrator must expand `SourcePopBefore -> SourcePopAfter -> DestPopAfter` chains into root-source conservation edges before any scope filter is applied. Older `internal-only` guidance can drop sibling split legs on transfer-rich cohorts.
+- **Culling-tail fold-back contract:** same-container same-stage residual `SourcePopAfter` rows that exist only to be fully culled should not survive as standalone AquaMind assignments. Fold them back into the predecessor assignment and attach the culling `MortalityEvent` there.
+
+**Key Revision Notes (v5.9 - 2026-03-11):**
+- **Transfer rerun prune-and-rebuild contract:** transfer-only reruns must prune existing FishTalk-mapped transfer workflows/actions for the target batch before rebuilding current scoped edges. Otherwise stale internal relay actions can survive alongside corrected `source-in-scope` edges and distort semantic validation.
+- **Bridge lineage fallback hardening:** semantic validation may seed missing temporary-bridge timing metadata from stitched `population_members.csv` when `ext_populations.csv` omits a relay population. Temporary bridge detection must consider inbound `SourcePopAfter` relays as well as `DestPopAfter`, and predecessor-graph fallback must continue through previous-stage temporary bridge nodes instead of treating them as authoritative count sources.
+
 **Key Revision Notes (v5.8 - 2026-03-03):**
 - **OrgUnit fallback anchoring (lineage feed stores):** when `FeedStore` cannot be anchored through `FeedStore*Assignment` containers or consumption-container mappings, fallback anchoring is allowed via `FeedStore.OrgUnitID` to FW station/hall (`OrgUnit_FW`) for scoped freshwater replay. This fallback is auditable (`resolution_method=orgunit`) and must still respect deterministic idempotent mapping through `ExternalIdMap`.
 - **Unresolved classification contract:** lineage feed runs must report unresolved stores split into `primary` vs `upstream_only` impact classes, and provide per-class skipped-line counts.
@@ -37,7 +45,7 @@ This document provides detailed field-level mapping specifications for migrating
 
 **Key Revision Notes (v5.6 - 2026-03-02):**
 - **Scope-file child-flag forwarding hardening:** in `pilot_migrate_input_batch.py`, scope-mode child invocations now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run`. Missing forwarding previously allowed silent seed-only replays for transfer-rich cohorts.
-- **Transfer-rich replay contract:** when replaying stitched scopes/chunks, run with `--expand-subtransfer-descendants --transfer-edge-scope internal-only` to preserve operation-true lineage and avoid lifecycle-stage collapse.
+- **Transfer-rich replay contract:** when replaying stitched scopes/chunks, run with `--expand-subtransfer-descendants --transfer-edge-scope source-in-scope` and preserve root-source split-leg expansion before any destination filtering.
 - **Lifecycle progression interpretation guard:** History lifecycle progression default (`basis=stage_entry`) is entry-count semantics (first positive assignment per `(container, stage)`), not concurrent stock. Use assignment timeline / peak-concurrent analysis for biological stock checks.
 
 **Key Revision Notes (v5.4 - 2026-02-25):**
@@ -778,6 +786,7 @@ Assignments are created **per PopulationID** from the component stitching output
    - **short bridge (<= `same_stage_supersede_max_hours`) without operational evidence:** zero assignment count to avoid double-counting bridge segments.
    - **long superseded companion** or **operationally material superseded row:** prefer status-at-start count (with known-removals floor) when available.
    - **external-mixing blank-token row (non-superseded):** prefer status-at-start to preserve lane-level parity.
+   - **culling-only residual tail (same-container, same-stage, fully culled, no non-culling activity):** fold the tail back into the predecessor assignment and attach culling there instead of preserving a separate AquaMind assignment fragment.
 5. **Count/biomass consistency:** when status average weight is available, assignment biomass is recomputed from the final chosen count to prevent impossible implied weights (status average weight is kept at higher internal precision before field rounding).
 
 **Diagnostics:** see `analysis_reports/2026-02-02/conservation_counts_diagnostics_2026-02-02.md`.
@@ -944,6 +953,10 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
   3. destination container bootstrap (create/map missing container + hall from `grouped_organisation.csv` / `containers.csv`).
 - `workflow_grouping=stage-bucket` relies on CSV hall/stage mapping; SQL mode falls back to `workflow_grouping=operation`.
 
+**Rerun behavior (code-verified, updated 2026-03-11):**
+- Before rebuilding transfer workflows/actions for a batch, transfer replay prunes existing FishTalk-mapped transfer workflows from both `TransferStageWorkflowBucket` and `TransferOperation` source models, plus their `PublicTransferEdge` action maps.
+- This prune step is required for idempotent transfer correction: reruns must not leave stale same-operation relay actions from earlier scope logic in place beside the rebuilt `source-in-scope` edge set.
+
 **Workflow grouping & typing logic (code‑verified, updated 2026‑02‑27):**
 - `workflow_grouping=stage-bucket` (default) groups edges by `(component, station_site, workflow_type, source_stage, dest_stage)` using deterministic `TransferStageWorkflowBucket` identifiers.
 - `workflow_grouping=operation` groups by `OperationID`.
@@ -1087,7 +1100,7 @@ FishTalk does not capture a formal “creation workflow.” For each stitched co
 - Resolution behavior is deterministic (dedupe + preserve input order) and emits scope stats (`scope_rows`, rows with/without `batch_key`, resolved/unresolved population rows).
 - If both `--batch-key` and `--scope-file` are supplied, single-batch mode remains authoritative (scope file is ignored with warning).
 - Scope child invocations now forward `--expand-subtransfer-descendants`, `--transfer-edge-scope`, and `--dry-run` so scope replay behavior matches single-batch replay behavior.
-- Recommended for transfer-rich cohorts: `--expand-subtransfer-descendants --transfer-edge-scope internal-only`.
+- Recommended for transfer-rich cohorts: `--expand-subtransfer-descendants --transfer-edge-scope source-in-scope`.
 
 ## 4. Feed & Inventory Mapping
 
@@ -1418,8 +1431,10 @@ RANGE_VALIDATIONS = {
 - Feed amount must be positive
 - Stage transition sanity: population should not increase across lifecycle stages unless mixed-batch composition exists.
 - Bridge-aware stage transition checks use SubTransfer-conserved counts for linked populations (fallback to assignment counts only when conserved count is missing or zero), and only when all stage-entry destinations are linkage-covered for that transition.
-- Full direct SubTransfer linkage (without temporary bridge hops) is treated as bridge-aware count basis in semantic validation (`entry_window_reason=direct_linkage` on those bridge-aware rows).
-- If direct linkage coverage is incomplete, semantic validation performs deterministic predecessor-graph backtrace across SubTransfer roles (`DestPopAfter<-SourcePopBefore`, `DestPopAfter<-DestPopBefore`, `SourcePopAfter<-SourcePopBefore`) with bounded depth (`--lineage-fallback-max-depth`, default `14`); unresolved transitions still fall back to entry-window totals.
+- Temporary bridge classification uses short-lived population timing from `ext_populations.csv`, with fallback seeding from stitched `population_members.csv` when relay populations are omitted from `ext_populations.csv`.
+- Bridge detection and source collection must consider inbound relays on both `DestPopAfter` and `SourcePopAfter`; some real stage-entry populations are linked only through `SourcePopAfter -> SourcePopBefore` relay chains.
+- Full SubTransfer linkage, including temporary bridge hops, is treated as bridge-aware count basis in semantic validation; rows that use only direct predecessor coverage are labeled `entry_window_reason=direct_linkage`, while rows that traverse temporary bridge populations are labeled `entry_window_reason=bridge_aware`.
+- If direct linkage coverage is incomplete, semantic validation performs deterministic predecessor-graph backtrace across SubTransfer roles (`DestPopAfter<-SourcePopBefore`, `DestPopAfter<-DestPopBefore`, `SourcePopAfter<-SourcePopBefore`) with bounded depth (`--lineage-fallback-max-depth`, default `14`); fallback traversal must continue through previous-stage temporary bridge nodes rather than treating them as authoritative count sources. Unresolved transitions still fall back to entry-window totals.
 - If a bridge-aware candidate transition still yields a positive delta with no mixed-batch rows, semantic validation downgrades that transition to `entry_window` with `entry_window_reason=incomplete_linkage` for gate handling when either (a) entry populations receive outside-component incoming sources, (b) lineage-graph fallback was needed, or (c) bridge-aware consolidation shape (`many linked sources -> fewer linked destinations`) indicates likely missing lineage context.
 - Mortality biomass (`FishTalk` vs `AquaMind`) is informational only in semantic reports; FishTalk extract biomass is often zero while AquaMind derives event biomass from status snapshots, and this diff is not a regression gate criterion.
 

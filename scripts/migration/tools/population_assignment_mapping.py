@@ -30,6 +30,7 @@ def get_assignment_external_map(
     population_id: str,
     *,
     component_key: str | None = None,
+    allow_legacy_fallback: bool = True,
 ) -> ExternalIdMap | None:
     pop_id = str(population_id or "").strip()
     if not pop_id:
@@ -50,6 +51,9 @@ def get_assignment_external_map(
         if scoped_map:
             return scoped_map
 
+    if not allow_legacy_fallback:
+        return None
+
     return ExternalIdMap.objects.filter(
         source_system="FishTalk",
         source_model=LEGACY_ASSIGNMENT_SOURCE_MODEL,
@@ -67,7 +71,8 @@ def upsert_assignment_external_maps(
     target_model: str,
     target_object_id: int,
     metadata: dict | None = None,
-) -> tuple[ExternalIdMap, ExternalIdMap]:
+    update_legacy_map: bool = True,
+) -> tuple[ExternalIdMap, ExternalIdMap | None]:
     pop_id = str(population_id or "").strip()
     if not pop_id:
         raise ValueError(
@@ -94,17 +99,27 @@ def upsert_assignment_external_maps(
             "metadata": map_metadata,
         },
     )
-    legacy_map, _ = ExternalIdMap.objects.update_or_create(
-        source_system="FishTalk",
-        source_model=LEGACY_ASSIGNMENT_SOURCE_MODEL,
-        source_identifier=pop_id,
-        defaults={
-            "target_app_label": target_app_label,
-            "target_model": target_model,
-            "target_object_id": target_object_id,
-            "metadata": map_metadata,
-        },
-    )
+    if update_legacy_map:
+        legacy_map, _ = ExternalIdMap.objects.update_or_create(
+            source_system="FishTalk",
+            source_model=LEGACY_ASSIGNMENT_SOURCE_MODEL,
+            source_identifier=pop_id,
+            defaults={
+                "target_app_label": target_app_label,
+                "target_model": target_model,
+                "target_object_id": target_object_id,
+                "metadata": map_metadata,
+            },
+        )
+    else:
+        legacy_map = ExternalIdMap.objects.filter(
+            source_system="FishTalk",
+            source_model=LEGACY_ASSIGNMENT_SOURCE_MODEL,
+            source_identifier=pop_id,
+            target_app_label=target_app_label,
+            target_model=target_model,
+            target_object_id=target_object_id,
+        ).first()
     return scoped_map, legacy_map
 
 
@@ -141,6 +156,12 @@ def build_population_lookup_from_maps(
 ) -> dict[int, str]:
     pop_by_assignment_id: dict[int, str] = {}
     for mapping in mappings:
+        metadata = mapping.metadata or {}
+        if metadata.get("folded_culling_tail"):
+            # Prefer the canonical non-folded population for assignment-level
+            # validation and reporting when multiple FishTalk populations map to
+            # the same AquaMind assignment.
+            continue
         pop_id = extract_population_id(
             mapping.source_model,
             mapping.source_identifier,

@@ -67,7 +67,7 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
      --expected-site \"<Station Name>\" \\
      --use-csv scripts/migration/data/extract/ \\
      --expand-subtransfer-descendants \\
-     --transfer-edge-scope internal-only
+     --transfer-edge-scope source-in-scope
 3b) Migrate a scope/chunk (transfer-rich cohorts)
    - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \\
      python scripts/migration/tools/pilot_migrate_input_batch.py \\
@@ -76,7 +76,7 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
      --migration-profile fw_default \\
      --skip-environmental \\
      --expand-subtransfer-descendants \\
-     --transfer-edge-scope internal-only
+     --transfer-edge-scope source-in-scope
 3c) Guarded FW->Sea continuation (selected provisional candidates only)
    - PYTHONPATH=/path/to/AquaMind SKIP_CELERY_SIGNALS=1 \\
      python scripts/migration/tools/pilot_migrate_input_batch.py \\
@@ -87,7 +87,7 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
      --include-fw-batch "<FWInputName>|<InputNumber>|<YearClass>" \\
      --batch-number "<Existing FW batch number>" \\
      --sea-anchor-population-id "<SeaPopulationID>" \\
-     --transfer-edge-scope internal-only
+     --transfer-edge-scope source-in-scope
    - Linked continuation is now blocked by default unless anchor scope is provided. Use full sea-component ingestion only with explicit operator override.
 4) Full action replays (per component, CSV)
    - python scripts/migration/tools/pilot_migrate_component_transfers.py
@@ -115,9 +115,9 @@ Avoid preloading `analysis_reports/*` at startup; open only the report directly 
    - python scripts/migration/tools/pilot_migrate_environmental_all.py \\
      --use-sqlite scripts/migration/data/extract/environmental_readings.sqlite --workers 16
 
-## Current status snapshot (2026-03-05)
+## Current status snapshot (2026-03-06)
 - FW stabilization is materially complete:
-  - mapped FW replay is stable with descendant expansion + `internal-only` transfer edges,
+  - mapped FW replay is stable when SubTransfers are expanded to root-source conservation edges before scope filtering,
   - scope-60 feed/infra lineage is complete,
   - scope-60 core/health/environmental residuals are complete,
   - scoped FW environmental mapping now has `0` remaining parameter mismatches.
