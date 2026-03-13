@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
             name="batch_container_assignment",
             field=models.ForeignKey(
                 blank=True,
+                db_constraint=False,
                 help_text="Direct link to the batch-container assignment for precise salmon CV tracking",
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,

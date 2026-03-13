@@ -75,6 +75,7 @@ class EnvironmentalReading(models.Model):
         null=True,
         blank=True,
         related_name='environmental_readings',
+        db_constraint=False,
         help_text="Direct link to the batch-container assignment for precise salmon CV tracking"
     )
     value = models.DecimalField(max_digits=10, decimal_places=4)
