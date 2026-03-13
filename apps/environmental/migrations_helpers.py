@@ -73,6 +73,14 @@ def run_timescale_sql(schema_editor, sql, params=None, description="TimescaleDB 
             print(f"[OK] Successfully executed: {description}")
             return True
         except Exception as e:
+            # A failed TimescaleDB statement can leave the PostgreSQL transaction
+            # in an aborted state. Clear it so later migration bookkeeping can
+            # continue in environments where we intentionally treat these
+            # operations as best-effort.
+            try:
+                schema_editor.connection.rollback()
+            except Exception:
+                pass
             print(f"[WARNING] TimescaleDB operation failed ({description}): {e}")
             return False
     else:
@@ -169,7 +177,11 @@ def set_compression(schema_editor, table_name, compression_params):
     if success and 'compress_after' in compression_params:
         interval = compression_params['compress_after']
         compression_policy_sql = f"""
-            SELECT add_compression_policy('{table_name}', INTERVAL '{interval}');
+            SELECT add_compression_policy(
+                '{table_name}',
+                INTERVAL '{interval}',
+                if_not_exists => TRUE
+            );
         """
         run_timescale_sql(
             schema_editor, 
