@@ -4,21 +4,27 @@ on:
   push:
     branches: [ main, develop, test ]
     paths:
-      - 'Dockerfile.dev'
-      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.dockerignore'
       - 'requirements.txt'
+      - 'manage.py'
       - 'aquamind/**'
       - 'apps/**'
-      - 'scripts/**'
+      - 'config/**'
+      - 'static/**'
+      - 'templates/**'
   pull_request:
     branches: [ main, develop, test ]
     paths:
-      - 'Dockerfile.dev'
-      - 'docker-compose.yml'
+      - 'Dockerfile'
+      - '.dockerignore'
       - 'requirements.txt'
+      - 'manage.py'
       - 'aquamind/**'
       - 'apps/**'
-      - 'scripts/**'
+      - 'config/**'
+      - 'static/**'
+      - 'templates/**'
 
 jobs:
   build-and-push:
@@ -57,7 +63,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile.dev
+        file: ./Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

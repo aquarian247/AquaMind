@@ -1,130 +1,117 @@
 name: Deploy to Test Environment
 
 on:
-  push:
-    branches: [ test ]
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy to'
+      backend_tag:
+        description: 'Backend image tag to deploy'
         required: true
-        default: 'test'
-        type: choice
-        options:
-        - test
-        - staging
+        default: 'main'
+        type: string
+      frontend_tag:
+        description: 'Frontend image tag to deploy'
+        required: true
+        default: 'main'
+        type: string
+      run_migrations:
+        description: 'Run Django migrations during deploy'
+        required: true
+        default: true
+        type: boolean
+      collect_static:
+        description: 'Run collectstatic during deploy'
+        required: true
+        default: true
+        type: boolean
+      bootstrap_admin:
+        description: 'Ensure an admin user exists after deploy'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     environment: test
+    permissions:
+      contents: read
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.TEST_SSH_PRIVATE_KEY }}
-
-    - name: Add test server to known hosts
-      run: |
-        mkdir -p ~/.ssh
-        ssh-keyscan -H ${{ secrets.TEST_SERVER_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Deploy to test server
+    - name: Deploy to test environment
+      env:
+        DEPLOY_PATH: /opt/bakkamind
+        BACKEND_IMAGE: ghcr.io/aquarian247/aquamind/backend:${{ inputs.backend_tag }}
+        FRONTEND_IMAGE: ghcr.io/aquarian247/aquamind-frontend/frontend:${{ inputs.frontend_tag }}
+        GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        PUBLIC_HOST: ${{ vars.TEST_PUBLIC_HOST }}
+        TEST_ADMIN_USERNAME: ${{ secrets.TEST_ADMIN_USERNAME }}
+        TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
+        TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
       run: |
         echo "🚀 Starting deployment to test environment..."
+        set -euo pipefail
+        cd "${DEPLOY_PATH}"
 
-        # Create deployment directory on remote server
-        ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
-          mkdir -p ~/aquamind-test
-          cd ~/aquamind-test
+        : "${PUBLIC_HOST:?Missing TEST_PUBLIC_HOST repository variable}"
 
-          # Backup current deployment
-          if [ -f "docker-compose.yml" ]; then
-            echo "📦 Backing up current deployment..."
-            cp docker-compose.yml docker-compose.yml.backup.$(date +%Y%m%d_%H%M%S)
-          fi
-        EOF
+        echo "🔐 Logging into GHCR for image pulls..."
+        echo "${GHCR_PULL_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 
-        # Copy updated files to server
-        echo "📤 Copying deployment files..."
-        scp docker-compose.yml ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
-        scp -r scripts ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }}:~/aquamind-test/
+        export BAKKAMIND_BACKEND_IMAGE="${BACKEND_IMAGE}"
+        export BAKKAMIND_FRONTEND_IMAGE="${FRONTEND_IMAGE}"
 
-        # Deploy on remote server
-        ssh ${{ secrets.TEST_SSH_USER }}@${{ secrets.TEST_SERVER_HOST }} << 'EOF'
-          cd ~/aquamind-test
+        echo "📥 Pulling latest application images..."
+        docker compose pull web celery-worker frontend
 
-          echo "🐳 Pulling latest Docker images..."
-          docker-compose pull
+        echo "⚙️ Ensuring data services are up..."
+        docker compose up -d timescale-db redis
 
-          echo "🔄 Restarting services..."
-          docker-compose down
-          docker-compose up -d
+        if [ "${{ inputs.run_migrations }}" = "true" ]; then
+          echo "🗄️ Running migrations..."
+          docker compose run --rm web python manage.py migrate
+        fi
 
-          echo "⏳ Waiting for services to start..."
-          sleep 30
+        if [ "${{ inputs.collect_static }}" = "true" ]; then
+          echo "🧹 Collecting static files..."
+          docker compose run --rm web python manage.py collectstatic --noinput
+        fi
 
-          echo "🩺 Running health checks..."
-          # Check if services are running
-          if docker-compose ps | grep -q "Up"; then
-            echo "✅ Services are running"
-          else
-            echo "❌ Services failed to start"
-            docker-compose logs
-            exit 1
-          fi
+        if [ "${{ inputs.bootstrap_admin }}" = "true" ]; then
+          : "${TEST_ADMIN_USERNAME:?Missing TEST_ADMIN_USERNAME secret}"
+          : "${TEST_ADMIN_EMAIL:?Missing TEST_ADMIN_EMAIL secret}"
+          : "${TEST_ADMIN_PASSWORD:?Missing TEST_ADMIN_PASSWORD secret}"
 
-          # Run database migrations and setup
-          echo "🗄️ Setting up database..."
-          docker-compose exec -T web python manage.py migrate
-          docker-compose exec -T web python manage.py shell < scripts/create_admin_user.py
+          echo "👤 Ensuring admin user exists..."
+          docker compose run --rm \
+            -e DJANGO_SUPERUSER_USERNAME="${TEST_ADMIN_USERNAME}" \
+            -e DJANGO_SUPERUSER_EMAIL="${TEST_ADMIN_EMAIL}" \
+            -e DJANGO_SUPERUSER_PASSWORD="${TEST_ADMIN_PASSWORD}" \
+            web python manage.py ensure_admin_user
+        fi
 
-          echo "📊 Loading test data..."
-          docker-compose exec -T web python manage.py shell < scripts/init_test_data.py
+        echo "🔄 Starting application services..."
+        docker compose up -d web celery-worker frontend caddy
 
-          echo "🔍 Running final health check..."
-          # Test API endpoints
-          if curl -f http://localhost:8000/api/v1/infrastructure/geographies/ > /dev/null 2>&1; then
-            echo "✅ Backend API is responding"
-          else
-            echo "❌ Backend API is not responding"
-            exit 1
-          fi
+        echo "⏳ Waiting for services to start..."
+        sleep 20
 
-          if curl -f http://localhost:3000 > /dev/null 2>&1; then
-            echo "✅ Frontend is responding"
-          else
-            echo "❌ Frontend is not responding"
-            exit 1
-          fi
-        EOF
+        echo "🩺 Running health checks..."
+        docker compose ps
+        curl -fsS -H "Host: ${PUBLIC_HOST}" http://127.0.0.1/ > /dev/null
+        curl -fsS -H "Host: ${PUBLIC_HOST}" http://127.0.0.1/api/v1/infrastructure/geographies/ > /dev/null
 
     - name: Notify deployment status
       if: always()
+      env:
+        PUBLIC_HOST: ${{ vars.TEST_PUBLIC_HOST }}
       run: |
+        PUBLIC_HOST_EFFECTIVE="${PUBLIC_HOST:-test-host-not-set}"
         if [ ${{ job.status }} == 'success' ]; then
           echo "🎉 Deployment to test environment successful!"
-          echo "🌐 Frontend: http://${{ secrets.TEST_SERVER_HOST }}:3000"
-          echo "🔗 Backend API: http://${{ secrets.TEST_SERVER_HOST }}:8000"
+          echo "🌐 Frontend: https://${PUBLIC_HOST_EFFECTIVE}"
+          echo "🔗 Backend API: https://${PUBLIC_HOST_EFFECTIVE}/api/"
         else
           echo "💥 Deployment to test environment failed!"
           echo "Check the logs above for details."
-        fi
-
-  notify:
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-    - name: Send notification
-      run: |
-        if [ ${{ needs.deploy.result }} == 'success' ]; then
-          echo "✅ Test deployment completed successfully"
-        else
-          echo "❌ Test deployment failed"
         fi
