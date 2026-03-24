@@ -1,6 +1,6 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-03-05
+**Last updated:** 2026-03-24
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
@@ -78,11 +78,21 @@ Batch Key = InputName + InputNumber + YearClass
 
 ## 4) Current Migration Status
 
-**Latest evidence-backed state: 2026-03-05 (FW stabilized + guarded FWSEA candidate/continuation package)**
+**Latest evidence-backed state: 2026-03-24 (FW transfer replay baseline stabilized; four FW canaries GUI-confirmed PASS; FW-only broadening is next)**
 
 **Note:** The migration DB was wiped via `clear_migration_db.py` before the 2026-03-02 FW replay baseline. March 3-5 work then layered scope-60 residual domains, environmental realignment, sea infrastructure materialization, and guarded FWSEA continuation artifacts onto that same `migr_dev` database.
 
-**Key changes since 2026‑03‑02:**
+**Key changes since 2026‑03‑05:**
+- FW canaries `1344`, `1348`, `1349`, and `1352` are now GUI-confirmed `PASS`.
+- Transfer replay hardening now includes:
+  - same-day superseded destination canonicalization only onto genuinely longer-lived companion assignments,
+  - preservation of explicit `DestPopBefore -> DestPopAfter` bridge continuity edges during `source-in-scope` replay,
+  - self-loop assignment-edge suppression after destination resolution.
+- Wave 2 transfer-only reruns were completed for the `15` eligible mapped-scope FW rows; the `4` manual-reconstruction exceptions remained intentionally excluded from bulk rerun.
+- The apparent Hall `J` / post-smolt gap in canary `1352` was confirmed to be a frontend pagination/render issue, not missing migration data.
+- Broad FW->Sea continuation remains paused. The approved next move is to broaden freshwater-only `<30 months` from cutoff `2026-01-22` across both geographies, stabilize that scope, and only then resume FW->Sea mapping work.
+
+**Historical baseline from 2026‑03‑02 -> 2026‑03‑05:**
 - Added migration coverage for **culling, escapes, and harvest** (CSV-supported).
 - Added **semantic validation reports** to compare FishTalk vs AquaMind per batch.
 - Fixed **weight samples** (use `Ext_WeightSamples_v2` only; weights are **grams**).
@@ -132,6 +142,11 @@ See:
 - `analysis_reports/2026-02-06/semantic_validation_sf_nov_23_2026-02-06.md`
 - `analysis_reports/2026-02-06/semantic_validation_stofnfiskur_s21_nov23_2026-02-06.md`
 - `analysis_reports/2026-02-06/semantic_validation_pilot_cohort_2026-03-02.md`
+- `analysis_reports/2026-03-24/fw_1348_same_stage_superseded_destination_trace_fix_2026-03-24.md`
+- `analysis_reports/2026-03-24/fw_1349_same_stage_superseded_destination_trace_fix_2026-03-24.md`
+- `analysis_reports/2026-03-24/fw_1349_dest_before_bridge_continuity_fix_2026-03-24.md`
+- `analysis_reports/2026-03-24/fw_1344_bridge_baseline_rerun_and_self_loop_guard_2026-03-24.md`
+- `analysis_reports/2026-03-24/fw_1352_bridge_baseline_rerun_and_post_smolt_presence_check_2026-03-24.md`
 
 These reports are now the **primary validation artifact** alongside counts.
 

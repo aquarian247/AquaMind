@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 5.9  
-**Date:** 2026-03-11  
-**Status:** Updated - sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + transfer rerun prune-and-rebuild contract + semantic bridge lineage fallback hardening + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
+**Version:** 5.10  
+**Date:** 2026-03-24  
+**Status:** Updated - same-day superseded destination canonicalization contract + destination-lane bridge continuity preservation contract + transfer self-loop guard + sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + transfer rerun prune-and-rebuild contract + semantic bridge lineage fallback hardening + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
 
 ## 1. Overview
 
@@ -29,6 +29,11 @@ This document provides detailed field-level mapping specifications for migrating
 **Key Revision Notes (v5.9 - 2026-03-11):**
 - **Transfer rerun prune-and-rebuild contract:** transfer-only reruns must prune existing FishTalk-mapped transfer workflows/actions for the target batch before rebuilding current scoped edges. Otherwise stale internal relay actions can survive alongside corrected `source-in-scope` edges and distort semantic validation.
 - **Bridge lineage fallback hardening:** semantic validation may seed missing temporary-bridge timing metadata from stitched `population_members.csv` when `ext_populations.csv` omits a relay population. Temporary bridge detection must consider inbound `SourcePopAfter` relays as well as `DestPopAfter`, and predecessor-graph fallback must continue through previous-stage temporary bridge nodes instead of treating them as authoritative count sources.
+
+**Key Revision Notes (v5.10 - 2026-03-24):**
+- **Same-day superseded destination canonicalization contract:** transfer replay may canonicalize a same-container, same-stage, same-day destination assignment only when the resolved row is a short-lived relay/dead-end and a genuinely longer-lived companion assignment exists for that same container/stage/day. This fixes dead-end `R -> 5M` style bindings without collapsing legitimate same-day parallel siblings.
+- **Destination-lane bridge continuity contract:** `source-in-scope` replay must preserve explicit `DestPopBefore -> DestPopAfter` bridge edges in addition to root-source conservation edges. Without those edges, staged/0-day destination lanes can appear to receive fish correctly and then lose all later downstream fanout as FishTalk rolls the destination population forward.
+- **Transfer self-loop guard:** if destination canonicalization / bridge resolution causes an edge to resolve back onto the source assignment, that edge is a replay no-op and must be skipped rather than persisted as an assignment-to-itself transfer action.
 
 **Key Revision Notes (v5.8 - 2026-03-03):**
 - **OrgUnit fallback anchoring (lineage feed stores):** when `FeedStore` cannot be anchored through `FeedStore*Assignment` containers or consumption-container mappings, fallback anchoring is allowed via `FeedStore.OrgUnitID` to FW station/hall (`OrgUnit_FW`) for scoped freshwater replay. This fallback is auditable (`resolution_method=orgunit`) and must still respect deterministic idempotent mapping through `ExternalIdMap`.
@@ -957,6 +962,12 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 - Before rebuilding transfer workflows/actions for a batch, transfer replay prunes existing FishTalk-mapped transfer workflows from both `TransferStageWorkflowBucket` and `TransferOperation` source models, plus their `PublicTransferEdge` action maps.
 - This prune step is required for idempotent transfer correction: reruns must not leave stale same-operation relay actions from earlier scope logic in place beside the rebuilt `source-in-scope` edge set.
 
+**Bridge-aware destination resolution (code-verified, updated 2026-03-24):**
+- `source-in-scope` replay keeps the root-source conservation expansion, but that is not sufficient on its own for staged/0-day destination lanes.
+- The transfer migrator must also preserve explicit in-operation `DestPopBefore -> DestPopAfter` bridge continuity edges when both populations are in scope and distinct. These edges carry already-arrived contributors forward when FishTalk re-materializes a mixed destination population as a new population in the same container.
+- Destination assignment resolution may promote a same-day same-container same-stage relay row onto a companion assignment only when that companion is genuinely longer-lived (`departure_date` after the same day, or open-ended). Promotion among only zero-duration same-day siblings is not allowed.
+- After destination resolution, edges where `source_assignment == dest_assignment` are treated as replay artifacts and skipped (`self_loop_assignment_edge`) rather than written as `TransferAction` rows.
+
 **Workflow grouping & typing logic (code‑verified, updated 2026‑02‑27):**
 - `workflow_grouping=stage-bucket` (default) groups edges by `(component, station_site, workflow_type, source_stage, dest_stage)` using deterministic `TransferStageWorkflowBucket` identifiers.
 - `workflow_grouping=operation` groups by `OperationID`.
@@ -1016,6 +1027,7 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 |-------|-------------|
 | SourcePopBefore | Population ID before transfer (source) |
 | SourcePopAfter | Population ID after transfer (remnant in source container) |
+| DestPopBefore | Population ID representing the destination lane before the move; needed to preserve destination-lane bridge continuity across staged/0-day successor populations |
 | DestPopAfter | Population ID after transfer (fish moved to new location) |
 | ShareCountFwd | Fraction of count transferred (0–1) |
 | ShareBiomFwd | Fraction of biomass transferred (0–1) |

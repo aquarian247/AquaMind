@@ -34,7 +34,7 @@ import sys
 from bisect import bisect_right
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timezone as dt_timezone
+from datetime import date, datetime, timezone as dt_timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -169,6 +169,76 @@ def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
     if "BROODSTOCK" in upper:
         return "Adult"
     return None
+
+
+def canonicalize_same_stage_superseded_assignment(
+    assignment: BatchContainerAssignment | None,
+    *,
+    batch: Batch,
+    dest_stage: LifeCycleStage | None,
+    op_date: date,
+) -> BatchContainerAssignment | None:
+    """Promote same-day superseded relay rows to their surviving companion.
+
+    Component migration can leave short same-container/same-stage relay populations
+    as dead-end history rows. Some are zero-suppressed, while others keep their
+    direct transfer count. Transfer traceability should bind to the longer-lived
+    companion assignment that carries the merged downstream lineage instead.
+    """
+    if assignment is None:
+        return None
+    if assignment.batch_id != batch.id:
+        return assignment
+    if assignment.assignment_date != op_date:
+        return assignment
+    if assignment.departure_date is None or assignment.departure_date > assignment.assignment_date:
+        return assignment
+
+    stage_id = dest_stage.id if dest_stage is not None else assignment.lifecycle_stage_id
+    if not stage_id:
+        return assignment
+
+    companions = list(
+        BatchContainerAssignment.objects.filter(
+            batch=batch,
+            container_id=assignment.container_id,
+            lifecycle_stage_id=stage_id,
+            assignment_date=assignment.assignment_date,
+        )
+        .exclude(pk=assignment.pk)
+        .order_by("id")
+    )
+    if not companions:
+        return assignment
+
+    longer_lived_companions = [
+        candidate
+        for candidate in companions
+        if candidate.departure_date is None
+        or candidate.departure_date > assignment.assignment_date
+    ]
+    if not longer_lived_companions:
+        return assignment
+
+    def candidate_key(candidate: BatchContainerAssignment) -> tuple[int, int, int, int, int]:
+        longer_lived = int(
+            candidate.departure_date is None
+            or candidate.departure_date > candidate.assignment_date
+        )
+        non_zero = int(int(candidate.population_count or 0) > 0)
+        departure_ordinal = (candidate.departure_date or date.max).toordinal()
+        return (
+            longer_lived,
+            non_zero,
+            departure_ordinal,
+            int(candidate.population_count or 0),
+            candidate.pk,
+        )
+
+    canonical = max(longer_lived_companions, key=candidate_key)
+    if candidate_key(canonical) <= candidate_key(assignment):
+        return assignment
+    return canonical
 
 
 STAGE_ORDER = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"]
@@ -582,7 +652,7 @@ def expand_subtransfer_rows_for_source_scope(
     raw_rows: list[dict],
     source_population_ids: set[str],
 ) -> list[dict]:
-    """Expand SubTransfers chains to effective root-source edges per operation.
+    """Expand SubTransfers chains to root-source edges plus explicit bridge edges.
 
     FishTalk often models an in-scope split as:
       root SourcePopBefore -> SourcePopAfter (remnant)
@@ -596,8 +666,17 @@ def expand_subtransfer_rows_for_source_scope(
     - SourcePopAfter (residual branch), or
     - DestPopAfter (moved branch promoted to the next SourcePopBefore).
 
-    The safe behavior is: expand to root-source terminal edges first, then
-    optionally filter the expanded edges by destination scope.
+    The safe behavior is:
+    - expand to root-source terminal edges first, then
+    - preserve explicit DestPopBefore -> DestPopAfter bridge continuity edges
+      so earlier contributors remain connected when FishTalk re-materializes a
+      mixed destination population as a new population in the same container.
+
+    Those bridge edges are required for GUI traceability through staged/0-day
+    destination-population handoffs such as 5M -> A -> B chains. Without them,
+    the first arriving assignment is visible but its later downstream fanout
+    becomes disconnected as soon as FishTalk rolls the destination lane forward
+    into a successor population.
     """
     rows_by_operation: dict[str, list[tuple[int, dict]]] = defaultdict(list)
     for idx, row in enumerate(raw_rows):
@@ -762,6 +841,23 @@ def expand_subtransfer_rows_for_source_scope(
                 key = (op_id, op_time_fallback, root_source, dest_pop)
                 aggregates[key]["share_count"] += share_count
                 aggregates[key]["share_biomass"] += share_biomass
+
+        # Preserve explicit destination-lane bridge continuity inside the same
+        # operation. FishTalk emits these as DestPopBefore -> DestPopAfter when a
+        # destination lane is re-materialized as a successor population after a
+        # staged/0-day redistribution. They carry full continuity of the prior
+        # destination population and are distinct from root-source conservation
+        # edges.
+        for _, row in ordered_rows:
+            dest_before = (row.get("DestPopBefore") or "").strip()
+            dest_after = (row.get("DestPopAfter") or row.get("DestPop") or "").strip()
+            if not dest_before or not dest_after or dest_before == dest_after:
+                continue
+            if dest_before not in source_population_ids or dest_after not in source_population_ids:
+                continue
+            key = (op_id, op_time_fallback, dest_before, dest_after)
+            aggregates[key]["share_count"] = max(aggregates[key]["share_count"], 1.0)
+            aggregates[key]["share_biomass"] = max(aggregates[key]["share_biomass"], 1.0)
 
     expanded_rows: list[dict] = []
     for (op_id, op_time, source_pop, dest_pop), shares in sorted(aggregates.items()):
@@ -1237,6 +1333,7 @@ def main() -> int:
     created_wf = updated_wf = created_actions = updated_actions = skipped = 0
     created_stage_wf = updated_stage_wf = created_stage_actions = updated_stage_actions = skipped_stage = 0
     created_dest_assignments = reused_dest_assignments = 0
+    canonicalized_dest_assignments = 0
     synced_dest_assignments = 0
     synced_source_stage_assignments = 0
     synced_source_count_assignments = 0
@@ -1414,9 +1511,19 @@ def main() -> int:
             source_assignment: BatchContainerAssignment,
         ) -> BatchContainerAssignment | None:
             nonlocal created_dest_assignments, reused_dest_assignments
+            nonlocal canonicalized_dest_assignments
             existing = assignment_by_pop.get(dest_pop)
             if existing:
-                return existing
+                canonical = canonicalize_same_stage_superseded_assignment(
+                    existing,
+                    batch=batch,
+                    dest_stage=dest_stage,
+                    op_date=op_date,
+                )
+                if canonical is not existing:
+                    canonicalized_dest_assignments += 1
+                    assignment_by_pop[dest_pop] = canonical
+                return canonical
 
             scoped_identifier = f"{component_key}:{dest_pop}"
             scoped_map = ExternalIdMap.objects.filter(
@@ -1427,6 +1534,22 @@ def main() -> int:
             if scoped_map:
                 assignment = BatchContainerAssignment.objects.filter(pk=scoped_map.target_object_id).first()
                 if assignment:
+                    canonical = canonicalize_same_stage_superseded_assignment(
+                        assignment,
+                        batch=batch,
+                        dest_stage=dest_stage,
+                        op_date=op_date,
+                    )
+                    if canonical is not assignment:
+                        canonicalized_dest_assignments += 1
+                        scoped_map.target_object_id = canonical.pk
+                        scoped_map.metadata = {
+                            **(scoped_map.metadata or {}),
+                            "canonicalized_same_stage_superseded_destination": True,
+                            "original_target_object_id": assignment.pk,
+                        }
+                        scoped_map.save(update_fields=["target_object_id", "metadata", "updated_at"])
+                        assignment = canonical
                     assignment_by_pop[dest_pop] = assignment
                     dest_assignment_ids_for_sync.add(assignment.id)
                     return assignment
@@ -1435,6 +1558,15 @@ def main() -> int:
             if mapped_assignment:
                 assignment = BatchContainerAssignment.objects.filter(pk=mapped_assignment.target_object_id).first()
                 if assignment:
+                    canonical = canonicalize_same_stage_superseded_assignment(
+                        assignment,
+                        batch=batch,
+                        dest_stage=dest_stage,
+                        op_date=op_date,
+                    )
+                    if canonical is not assignment:
+                        canonicalized_dest_assignments += 1
+                        assignment = canonical
                     assignment_by_pop[dest_pop] = assignment
                     return assignment
 
@@ -1514,6 +1646,32 @@ def main() -> int:
                     },
                 },
             )
+            canonical = canonicalize_same_stage_superseded_assignment(
+                assignment,
+                batch=batch,
+                dest_stage=dest_stage,
+                op_date=op_date,
+            )
+            if canonical is not assignment:
+                canonicalized_dest_assignments += 1
+                assignment = canonical
+                ExternalIdMap.objects.update_or_create(
+                    source_system="FishTalk",
+                    source_model=DEST_ASSIGNMENT_SOURCE_MODEL,
+                    source_identifier=scoped_identifier,
+                    defaults={
+                        "target_app_label": assignment._meta.app_label,
+                        "target_model": assignment._meta.model_name,
+                        "target_object_id": assignment.pk,
+                        "metadata": {
+                            "component_key": component_key,
+                            "population_id": dest_pop,
+                            "container_id": dest_container_id,
+                            "created_for_transfer_migration": True,
+                            "canonicalized_same_stage_superseded_destination": True,
+                        },
+                    },
+                )
             assignment_by_pop[dest_pop] = assignment
             dest_assignment_ids_for_sync.add(assignment.id)
             return assignment
@@ -1604,6 +1762,17 @@ def main() -> int:
                 workflow_source_identifier = op_id
 
             dest_assignment = assignment_by_pop.get(dst)
+            if dest_assignment is not None:
+                canonical = canonicalize_same_stage_superseded_assignment(
+                    dest_assignment,
+                    batch=batch,
+                    dest_stage=dest_stage,
+                    op_date=op_date,
+                )
+                if canonical is not dest_assignment:
+                    canonicalized_dest_assignments += 1
+                    assignment_by_pop[dst] = canonical
+                    dest_assignment = canonical
             source_assignment_count = int(source_assignment.population_count or 0)
             if (
                 args.workflow_grouping == "stage-bucket"
@@ -1629,6 +1798,10 @@ def main() -> int:
             if dest_assignment is None:
                 skipped += 1
                 skipped_reasons["missing_destination_assignment"] += 1
+                continue
+            if source_assignment.id == dest_assignment.id:
+                skipped += 1
+                skipped_reasons["self_loop_assignment_edge"] += 1
                 continue
 
             workflow_group = workflow_groups.setdefault(
@@ -2112,7 +2285,8 @@ def main() -> int:
         f"Migrated transfers for component_key={component_key} into batch={batch.batch_number} "
         f"(workflows created={created_wf}, updated={updated_wf}, pruned={pruned_transfer_workflows}; "
         f"actions created={created_actions}, updated={updated_actions}, pruned={pruned_transfer_actions}, skipped={skipped}; "
-        f"dest assignments created={created_dest_assignments}, reused={reused_dest_assignments}, synced={synced_dest_assignments}; "
+        f"dest assignments created={created_dest_assignments}, reused={reused_dest_assignments}, "
+        f"canonicalized={canonicalized_dest_assignments}, synced={synced_dest_assignments}; "
         f"source stage backfilled={synced_source_stage_assignments}, source count backfilled={synced_source_count_assignments}; "
         f"forced static workflows={forced_static_workflows}; "
         f"stage workflows created={created_stage_wf}, updated={updated_stage_wf}; "
