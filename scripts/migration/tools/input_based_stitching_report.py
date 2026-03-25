@@ -43,6 +43,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.migration.extractors.base import BaseExtractor, ExtractionContext
+from scripts.migration.tools.hall_stage_rules import canonicalize_stage_sequence
 
 
 DATETIME_FORMATS = (
@@ -71,28 +72,6 @@ def parse_float(value: str) -> float:
         return float(value)
     except (ValueError, TypeError):
         return 0.0
-
-
-def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
-    """Map FishTalk stage names to AquaMind lifecycle stages."""
-    if not stage_name:
-        return None
-    upper = stage_name.upper()
-    if any(token in upper for token in ("EGG", "ALEVIN", "SAC", "GREEN", "EYE")):
-        return "Egg&Alevin"
-    if "FRY" in upper:
-        return "Fry"
-    if "PARR" in upper:
-        return "Parr"
-    if "SMOLT" in upper and ("POST" in upper or "LARGE" in upper):
-        return "Post-Smolt"
-    if "SMOLT" in upper:
-        return "Smolt"
-    if any(token in upper for token in ("ONGROW", "GROWER", "GRILSE")):
-        return "Adult"
-    if "BROODSTOCK" in upper:
-        return "Adult"
-    return None
 
 
 AQUAMIND_STAGES_ORDERED = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"]
@@ -435,13 +414,18 @@ def main() -> int:
                 SELECT 
                     CONVERT(varchar(36), ContainerID) AS ContainerID,
                     Site,
-                    SiteGroup
+                    SiteGroup,
+                    ContainerGroup
                 FROM dbo.Ext_GroupedOrganisation_v2
             """,
-            headers=["ContainerID", "Site", "SiteGroup"],
+            headers=["ContainerID", "Site", "SiteGroup", "ContainerGroup"],
         )
-        container_geo_lookup: dict[str, tuple[str, str]] = {
-            row["ContainerID"]: (row.get("Site", "") or "", row.get("SiteGroup", "") or "")
+        container_geo_lookup: dict[str, dict[str, str]] = {
+            row["ContainerID"]: {
+                "site": row.get("Site", "") or "",
+                "site_group": row.get("SiteGroup", "") or "",
+                "container_group": row.get("ContainerGroup", "") or "",
+            }
             for row in grouped_org_raw
         }
         print(f"  Loaded {len(grouped_org_raw):,} grouped org records")
@@ -541,16 +525,20 @@ def main() -> int:
             org_unit_name = org_unit_lookup.get(org_unit_id, "")
             
             # Get geography
-            site_info = container_geo_lookup.get(container_id, ("", ""))
-            geography = determine_geography(site_info[0] or org_unit_name, site_info[1])
+            site_info = container_geo_lookup.get(container_id, {})
+            geography = determine_geography(
+                site_info.get("site") or org_unit_name,
+                site_info.get("site_group"),
+            )
             
             # Get stages
             stage_events = stage_events_by_pop.get(inp.population_id, [])
-            stage_names = [s[1] for s in stage_events]
-            aquamind_stages = {
-                fishtalk_stage_to_aquamind(s) for s in stage_names 
-                if fishtalk_stage_to_aquamind(s)
-            }
+            stage_names, aquamind_stage_names = canonicalize_stage_sequence(
+                [stage_name for _, stage_name in stage_events],
+                site=site_info.get("site"),
+                container_group=site_info.get("container_group"),
+            )
+            aquamind_stages = set(aquamind_stage_names)
             
             pop_info = PopulationInfo(
                 population_id=inp.population_id,

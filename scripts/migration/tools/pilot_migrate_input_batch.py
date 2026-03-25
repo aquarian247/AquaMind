@@ -48,6 +48,7 @@ from scripts.migration.tools.extract_freshness_guard import (
     evaluate_extract_freshness,
     print_summary as print_extract_freshness_summary,
 )
+from scripts.migration.tools.hall_stage_rules import canonicalize_stage_sequence
 from scripts.migration.tools.migration_profiles import MIGRATION_PROFILE_NAMES
 
 configure_migration_environment()
@@ -290,25 +291,6 @@ def has_duplicate_input_name(input_name: str) -> bool:
     return False
 
 
-def fishtalk_stage_to_aquamind(stage_name: str) -> str | None:
-    if not stage_name:
-        return None
-    upper = stage_name.upper()
-    if any(token in upper for token in ("EGG", "ALEVIN", "SAC FRY", "GREEN EGG", "EYE-EGG")):
-        return "Egg&Alevin"
-    if "FRY" in upper:
-        return "Fry"
-    if "PARR" in upper:
-        return "Parr"
-    if "SMOLT" in upper and ("POST" in upper or "LARGE" in upper):
-        return "Post-Smolt"
-    if "SMOLT" in upper:
-        return "Smolt"
-    if any(token in upper for token in ("ONGROW", "GROWER", "GRILSE", "BROODSTOCK")):
-        return "Adult"
-    return None
-
-
 def load_input_populations(
     batch_key: str,
     *,
@@ -499,14 +481,11 @@ def load_input_populations(
         org_unit_id = (container_row.get("OrgUnitID") or "").strip()
 
         stage_events = stage_events_by_population.get(pop_id, [])
-        fishtalk_tokens: list[str] = []
-        aquamind_tokens: list[str] = []
-        for _, stage_name in stage_events:
-            if stage_name not in fishtalk_tokens:
-                fishtalk_tokens.append(stage_name)
-            mapped_stage = fishtalk_stage_to_aquamind(stage_name)
-            if mapped_stage and mapped_stage not in aquamind_tokens:
-                aquamind_tokens.append(mapped_stage)
+        fishtalk_tokens, aquamind_tokens = canonicalize_stage_sequence(
+            [stage_name for _, stage_name in stage_events],
+            site=grouped_row.get("Site"),
+            container_group=grouped_row.get("ContainerGroup"),
+        )
 
         extra_members.append(
             PopulationMember(

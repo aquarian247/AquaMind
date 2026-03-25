@@ -1,6 +1,6 @@
 # FishTalk → AquaMind Migration (Canonical Guide + Status)
 
-**Last updated:** 2026-03-24
+**Last updated:** 2026-03-25
 
 This is the canonical runbook + status for the FishTalk → AquaMind migration. Best-practice guidance lives in `MIGRATION_BEST_PRACTICES.md`, field-level rules live in `DATA_MAPPING_DOCUMENT.md`, and environment/setup notes live in `ENV_SETUP.md`.
 
@@ -78,11 +78,26 @@ Batch Key = InputName + InputNumber + YearClass
 
 ## 4) Current Migration Status
 
-**Latest evidence-backed state: 2026-03-24 (FW transfer replay baseline stabilized; four FW canaries GUI-confirmed PASS; FW-only broadening is next)**
+**Latest evidence-backed state: 2026-03-25 (FW-only two-geography broadening executed; priority-hall stage backfill closed; FW->Sea still paused)**
 
 **Note:** The migration DB was wiped via `clear_migration_db.py` before the 2026-03-02 FW replay baseline. March 3-5 work then layered scope-60 residual domains, environmental realignment, sea infrastructure materialization, and guarded FWSEA continuation artifacts onto that same `migr_dev` database.
 
-**Key changes since 2026‑03‑05:**
+**Key changes since 2026‑03‑24:**
+- FW-only `<30 months` broadening across both geographies was executed from the `2026-01-22` cutoff:
+  - strict FW scope: `161`
+  - initial classification: `58` eligible, `4` manual exceptions, `99` blocked
+  - eligible transfer rerun queue after corrected-baseline filtering: `52`
+  - corrected-baseline transfer reruns finished `52/52` with no failures
+- Scotland review proved `stage-bucket` is not universally safe there:
+  - `SF AUG 23|15|2023` and `NH FEB 24|1|2024` are concrete `operation`-grouping cases
+  - broad FW->Sea continuation remains paused; no restart authority was granted
+- A separate priority-hall stage bug class was discovered and closed:
+  - the issue was not transfer replay; it was stale/raw stage canonicalization in generated report artifacts
+  - shared source-side hall-stage canonicalization now lives in `scripts/migration/tools/hall_stage_rules.py`
+  - deterministic audits/backfill corrected `67` report dirs and `63` mapped live batches
+  - final residual audits are `0` for both report artifacts and live mapped assignment stages
+
+**Earlier key changes since 2026‑03‑05:**
 - FW canaries `1344`, `1348`, `1349`, and `1352` are now GUI-confirmed `PASS`.
 - Transfer replay hardening now includes:
   - same-day superseded destination canonicalization only onto genuinely longer-lived companion assignments,
@@ -90,7 +105,7 @@ Batch Key = InputName + InputNumber + YearClass
   - self-loop assignment-edge suppression after destination resolution.
 - Wave 2 transfer-only reruns were completed for the `15` eligible mapped-scope FW rows; the `4` manual-reconstruction exceptions remained intentionally excluded from bulk rerun.
 - The apparent Hall `J` / post-smolt gap in canary `1352` was confirmed to be a frontend pagination/render issue, not missing migration data.
-- Broad FW->Sea continuation remains paused. The approved next move is to broaden freshwater-only `<30 months` from cutoff `2026-01-22` across both geographies, stabilize that scope, and only then resume FW->Sea mapping work.
+- Broad FW->Sea continuation remains paused. The approved next move is no longer "broaden FW-only" because that step is complete; the next session should return to the remaining concrete FW-only blockers (report-dir / missing-map / Scotland transfer-grouping classification) before any FW->Sea restart.
 
 **Historical baseline from 2026‑03‑02 -> 2026‑03‑05:**
 - Added migration coverage for **culling, escapes, and harvest** (CSV-supported).
@@ -147,6 +162,8 @@ See:
 - `analysis_reports/2026-03-24/fw_1349_dest_before_bridge_continuity_fix_2026-03-24.md`
 - `analysis_reports/2026-03-24/fw_1344_bridge_baseline_rerun_and_self_loop_guard_2026-03-24.md`
 - `analysis_reports/2026-03-24/fw_1352_bridge_baseline_rerun_and_post_smolt_presence_check_2026-03-24.md`
+- `analysis_reports/2026-03-25/fw_u30_two_geo_scope_and_transfer_rerun_2026-03-25.md`
+- `analysis_reports/2026-03-25/fw_u30_blocked_unblock_pass_2026-03-25.md`
 
 These reports are now the **primary validation artifact** alongside counts.
 

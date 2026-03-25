@@ -2,9 +2,9 @@
 
 > **Blueprint:** This document defines field-level mapping rules. It should not contain run status or counts.
 
-**Version:** 5.10  
-**Date:** 2026-03-24  
-**Status:** Updated - same-day superseded destination canonicalization contract + destination-lane bridge continuity preservation contract + transfer self-loop guard + sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + transfer rerun prune-and-rebuild contract + semantic bridge lineage fallback hardening + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
+**Version:** 5.11  
+**Date:** 2026-03-25  
+**Status:** Updated - priority-hall source-stage canonicalization contract + priority-hall report/assignment audit-backfill contract + same-day superseded destination canonicalization contract + destination-lane bridge continuity preservation contract + transfer self-loop guard + sea-side input initiation model for FWSEA pairing + guarded anchor-scoped provisional continuation contract + FW terminal depletion fallback rule + scope-file child-flag forwarding hardening + transfer-rich descendant replay contract + transfer rerun prune-and-rebuild contract + semantic bridge lineage fallback hardening + lifecycle progression basis interpretation guard + transfer-inclusive scope expansion contract + transfer mix-lineage backfill contract + exact-start duplicate-timestamp tie-break + exact-start transfer count authority + assignment biomass precision guardrail + station-split lineage qualification + scope-60 feed-lineage contract + OrgUnit fallback anchoring for lineage-scoped feed stores  
 
 ## 1. Overview
 
@@ -34,6 +34,10 @@ This document provides detailed field-level mapping specifications for migrating
 - **Same-day superseded destination canonicalization contract:** transfer replay may canonicalize a same-container, same-stage, same-day destination assignment only when the resolved row is a short-lived relay/dead-end and a genuinely longer-lived companion assignment exists for that same container/stage/day. This fixes dead-end `R -> 5M` style bindings without collapsing legitimate same-day parallel siblings.
 - **Destination-lane bridge continuity contract:** `source-in-scope` replay must preserve explicit `DestPopBefore -> DestPopAfter` bridge edges in addition to root-source conservation edges. Without those edges, staged/0-day destination lanes can appear to receive fish correctly and then lose all later downstream fanout as FishTalk rolls the destination population forward.
 - **Transfer self-loop guard:** if destination canonicalization / bridge resolution causes an edge to resolve back onto the source assignment, that edge is a replay no-op and must be skipped rather than persisted as an assignment-to-itself transfer action.
+
+**Key Revision Notes (v5.11 - 2026-03-25):**
+- **Priority-hall source-stage canonicalization contract:** for sites with explicit qualified hall-stage mappings (`S24`, `S03`, `S08`, `S16`, `S21`, `FW22 Applecross`), generated report artifacts must write the authoritative hall-derived lifecycle stage into `first_stage` / `last_stage` rather than preserving conflicting raw FishTalk token sequences.
+- **Priority-hall audit/backfill contract:** manual swimlane review is not a reliable detector for this bug class. Use deterministic report audit + mapped-assignment audit, then backfill affected report dirs and mapped AquaMind assignments from queue artifacts before trusting lifecycle-stage semantics.
 
 **Key Revision Notes (v5.8 - 2026-03-03):**
 - **OrgUnit fallback anchoring (lineage feed stores):** when `FeedStore` cannot be anchored through `FeedStore*Assignment` containers or consumption-container mappings, fallback anchoring is allowed via `FeedStore.OrgUnitID` to FW station/hall (`OrgUnit_FW`) for scoped freshwater replay. This fallback is auditable (`resolution_method=orgunit`) and must still respect deterministic idempotent mapping through `ExternalIdMap`.
@@ -756,7 +760,7 @@ Assignments are created **per PopulationID** from the component stitching output
 | `population_id` | `ExternalIdMap` (Populations) | uuid | `source_model = "Populations"` | Idempotency for assignments. |
 | `container_id` | `batch_batchcontainerassignment.container_id` | bigint | FK lookup | Required. |
 | `start_time` | `batch_batchcontainerassignment.assignment_date` | date | `start_time.date()` | Required; rows without start_time are skipped upstream. |
-| `first_stage` / `last_stage` + hall/site context | `batch_batchcontainerassignment.lifecycle_stage_id` | bigint | Stage resolution order: hall mapping -> component-local unanimous hall fallback -> token mapping (`fishtalk_stage_to_aquamind`). FW22-specific rule: prefer explicit member stage token over static hall mapping when token exists. Last-resort sparse-metadata fallback uses batch lifecycle stage with telemetry. | Requires `LifeCycleStage` master rows. |
+| `first_stage` / `last_stage` + hall/site context | `batch_batchcontainerassignment.lifecycle_stage_id` | bigint | Stage resolution order: priority-hall canonical source rows / hall mapping -> component-local unanimous hall fallback -> token mapping (`fishtalk_stage_to_aquamind`). Last-resort sparse-metadata fallback uses batch lifecycle stage with telemetry. | Requires `LifeCycleStage` master rows. |
 | SubTransfers propagation (see below) | `batch_batchcontainerassignment.population_count` | int | Seed with `Ext_Inputs_v2.InputCount`, propagate via `SubTransfers.ShareCountFwd`, then apply status-authority overlays: completed populations use exact start-time status tie-break resolution (same timestamp: non-zero first, then max count/biomass), and if that resolved snapshot is non-zero, use it as authoritative count; open populations use latest measured status count; otherwise fallback overlays apply (zero-conserved + non-zero status, external-mixing uplift, known-removals floor, same-stage bridge suppression/classification). Optional profile guard suppresses orphan zero assignments lacking stage tokens, SubTransfers touch, and count/removal evidence. | Conservation-based with status-priority overlays for lane-level parity. |
 | Status snapshot (see below) | `batch_batchcontainerassignment.biomass_kg` | numeric | Start from `CurrentBiomassKg`; if status average weight is available, recompute biomass against the chosen assignment count (`count * status_avg_weight / 1000`) | Keeps count/biomass consistency when count source differs from status count. |
 | Derived | `batch_batchcontainerassignment.avg_weight_g` | numeric | Prefer status-implied average weight (`CurrentBiomassKg / CurrentCount * 1000`) at higher internal precision before model rounding; fallback to `biomass_kg / population_count * 1000`; null when count is 0 | Avoids biomass drift when count authority shifts from conserved to status-derived values. |
@@ -855,7 +859,7 @@ Order below uses the migration script’s stage order (`STAGE_ORDER = Egg&Alevin
 
 **Hall‑based override (code‑verified, qualified):**
 - When a hall mapping exists, it **overrides** the token mapping. Hall labels are taken from `Ext_GroupedOrganisation_v2.ContainerGroup` (these are the same labels shown in the FishTalk GUI; “Høll” = “Hall”).
-- **FW22 exception (2026-02-16):** for `FW22 Applecross`, explicit member stage tokens are preferred when present (hall map still applies when tokens are blank).
+- **Priority-hall source canonicalization (2026-03-25):** for qualified priority-hall sites (`S24`, `S03`, `S08`, `S16`, `S21`, `FW22 Applecross`), source-side report generation and descendant expansion must already write the canonical hall-derived stage into `first_stage` / `last_stage`. Component migration should therefore see hall-consistent rows rather than raw conflicting token sequences.
 - **S08 exception (2026-02-23):** hall mappings are enforced before token-stage fallback for mapped halls (`Kleking`, `Startfóðring`, `T‑Høll`); `R-Høll` uses a deterministic dual-stage rule where the first **material** holder in a container (>= 6h lifespan, or open member) resolves to `Parr` and subsequent in-hall redistributions resolve to `Smolt`. Pre-initial micro bridge fragments are retained as zero-count bridge rows for auditability.
 - `Ext_GroupedOrganisation_v2.ProdStage` is treated as **context only** (not lifecycle truth). In the 2026-02-10 station-focused Benchmark replay, populations spanning `Parr/Smolt/Post‑Smolt` lifecycle assignments still classify as `ProdStage=Hatchery` in grouped-organisation output; lifecycle mapping therefore remains stage/hall-driven.
 - If explicit hall mapping is missing, migration can apply a **component-local hall fallback** only when token-mapped rows for the same `(site, container_group)` unanimously resolve to one lifecycle stage.
@@ -924,6 +928,16 @@ Note: several Scotland hall labels are **self‑describing** (e.g., “Parr”, 
 **Progress note (2026‑02‑02):**
 - InputProjectID‑based membership + S21 hall mapping resolved stage‑missing failures for **Bakkafrost S‑21 sep24** and enabled full‑lifecycle migration (transfers + feeding + mortality populated).
 - Full hall inventory captured for Faroe + Scotland stations; only the Faroe list and FW22 Applecross have **explicit stage** mappings so far.
+
+**Progress note (2026‑03‑25):**
+- Priority-hall report/assignment audit and backfill are now part of the standard closure path for this bug class.
+- Executed backfill evidence:
+  - `67` report dirs corrected to zero residual report mismatches,
+  - `63` mapped batches corrected to zero residual assignment-stage mismatches.
+- Use:
+  - `scripts/migration/tools/audit_priority_hall_stage_reports.py`
+  - `scripts/migration/tools/backfill_priority_hall_stage_queue.py`
+  - `scripts/migration/tools/audit_priority_hall_assignment_stages.py`
 
 **Progress note (2026‑02‑11, targeted fix check):**
 - `BF mars 2025|2|2025` (`S08 Gjógv`) previously failed at stage resolution (`R‑Høll` unmapped + missing stage token rows). After adding component-local unanimous hall fallback in `pilot_migrate_component.py`, migration completed and semantic gates passed in station-guarded replay (`analysis_reports/2026-02-11/semantic_validation_bf_mars_2025_2026-02-11_fixcheck.md`).
